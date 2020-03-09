@@ -11,3 +11,8 @@ class Category(Item):
     Each category is an item itself.
     """
     
+class Application(Item):
+    """
+    """
+    
+    

@@ -4,22 +4,20 @@ from django.db import migrations
 
 
 create_items = """
-        CREATE TABLE hyperweb_items
-        (
-            id BIGINT UNSIGNED NOT NULL,
-            data JSON NOT NULL,
+        CREATE TABLE `hyper_items` (
+            `cid` smallint unsigned NOT NULL COMMENT 'IID of the category this item belongs to; must be in <0,65535> range',
+            `iid` bigint unsigned NOT NULL COMMENT 'IID (Item ID) of this item; unique within its category only',
+            `data` json NOT NULL,
             
             -- 2 fractional digits in timestamps to record time with precision of 1/100 sec,
             -- each timestamp value occupies 4B + 1B for fractional part
-            created TIMESTAMP(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2),
-            updated TIMESTAMP(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2) ON UPDATE CURRENT_TIMESTAMP(2),
-
-            CONSTRAINT items_pk PRIMARY KEY (id)
-            
-        ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED;
+            `created` timestamp(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2),
+            `updated` timestamp(2) NOT NULL DEFAULT CURRENT_TIMESTAMP(2) ON UPDATE CURRENT_TIMESTAMP(2),
+            PRIMARY KEY (`cid`,`iid`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin ROW_FORMAT=COMPRESSED        
         """
 
-create_items_revert = "DROP TABLE hyperweb_items;"
+create_items_revert = "DROP TABLE hyper_items;"
 
 
 #####################################################################################################################################################
