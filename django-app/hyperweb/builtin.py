@@ -98,7 +98,7 @@ class Bootstrap:
         
         record = {f'__{key}__': val for key, val in zip(columns, item_row)}
         
-        combine (cid,iid) to a single ID; drop the former
+        # combine (cid,iid) to a single ID; drop the former
         record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
         del record['__cid__']
         del record['__iid__']
@@ -109,7 +109,7 @@ class Bootstrap:
         
         item = item_class(**record)
         
-        impute __category__
+        # impute __category__
         if cid == iid == self.cid["Category"]:        # special case: the Category item is a category for itself
             item.__category__ = item
         else:
