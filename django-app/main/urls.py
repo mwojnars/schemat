@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from .views import item_view
+
 urlpatterns = [
-    path('',       include('hyperweb.urls')),
+    #path('',       include('hyperweb.urls')),
+    path('<space>.<category>:<item_id>', item_view),
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
 ]
