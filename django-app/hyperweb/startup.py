@@ -57,22 +57,42 @@ class Item(object, metaclass = MetaItem):
     
     # class-level functionality...
     
-    def __init__(self, **attrs):        
-        
+    def __init__(self):        
         self.__changed__ = set()
-        if attrs: 
-            self.__set__(**attrs)
-            #self._commit()
-        self._post_init()
         
-    def __set__(self, **attrs):
+    @classmethod
+    def __load__(cls, row, query_args = None):
+        """Like __init__, but creates Item instance from an existing DB row."""
+        
+        if row is None: raise cls.DoesNotExist(*((query_args,) if query_args is not None else ()))
+        
+        record = {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
+        
+        # combine (cid,iid) to a single ID; drop the former
+        record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
+        del record['__cid__']
+        del record['__iid__']
+        
+        item = cls()
 
-        for field, value in attrs.items():
+        for field, value in record.items():
             if value in (None, ''): continue
-            setattr(self, field, value)
+            setattr(item, field, value)
         
-    def _post_init(self):
+        item._post_load()
+        #self._commit()
+        
+        return item
+
+
+    def _post_load(self):
+
+        # impute __category__; note the special case: the root Category item is a category for itself!
+        cid, iid = self.__id__
+        self.__category__ = self if (cid == iid == Categories.CID) else Site.categories[cid]
+
         self._decode_data()
+        
         
     @onchange('__data__')
     def _decode_data(self):
@@ -99,27 +119,6 @@ class Item(object, metaclass = MetaItem):
         
         if cond: return
         print(f'WARNING in item {self.__id__}. {message}')
-
-
-    @classmethod
-    def _decode(cls, row, query_args = None):
-        """Decode information from a given database `row` and return as an item of the current class `cls`."""
-        
-        if row is None: raise cls.DoesNotExist(*((query_args,) if query_args is not None else ()))
-        
-        record = {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
-        
-        # combine (cid,iid) to a single ID; drop the former
-        record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
-        del record['__cid__']
-        del record['__iid__']
-        
-        item = cls(**record)
-        
-        # impute __category__; note the special case: the root Category item is a category for itself!
-        item.__category__ = item if (cid == iid == Categories.CID) else Site.categories[cid]
-        
-        return item
 
 
     ### propagation of attribute value changes, to compute derived attributes and perform conditional actions
@@ -178,9 +177,9 @@ class Category(Item):
 
     __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
 
-    def __init__(self, **attrs):
-        
-        super().__init__(**attrs)
+    def _post_load(self):
+
+        super()._post_load()
         
         # find Python class that represents items of this category
         name = self.__data__.get('name')            # 'name' attribute should exist in all category items
@@ -189,8 +188,10 @@ class Category(Item):
             self.__itemclass__ = itemclass
 
     @classmethod
-    def _load(cls, iid = None, name = None):
+    def __load__(cls, row = None, iid = None, name = None, query_args = None):
         """Load from DB a Category object specified by category name or IID."""
+        
+        if row is not None: return super().__load__(row, query_args = query_args)
         
         cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
         query = f"SELECT {SQL._item_select_cols} FROM hyper_items WHERE cid = {Categories.CID} AND {cond}"
@@ -199,7 +200,7 @@ class Category(Item):
         with db.cursor() as cur:
             cur.execute(query, arg)
             row = cur.fetchone()
-            return cls._decode(row, arg)
+            return cls.__load__(row, query_args = arg)
 
     def get_item(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
@@ -210,7 +211,7 @@ class Category(Item):
         with db.cursor() as cur:
             cur.execute(SQL._item_select_by_id, id)
             row = cur.fetchone()
-            return self.__itemclass__._decode(row, id)
+            return self.__itemclass__.__load__(row, query_args = id)
     
     def all_items(self, limit = None):
         
@@ -220,7 +221,7 @@ class Category(Item):
             
         with db.cursor() as cur:
             cur.execute(query)
-            return [self.__itemclass__._decode(row) for row in cur.fetchall()]        
+            return [self.__itemclass__.__load__(row) for row in cur.fetchall()]        
     
     def first_item(self):
         
@@ -241,7 +242,7 @@ class Categories:
     
     def __init__(self):
         
-        root_category = Category._load(self.CID)        # root Category is a category for itself, hence its IID == CID
+        root_category = Category.__load__(iid = self.CID)           # root Category is a category for itself, hence its IID == CID
         self.cache = {"Category": root_category}
         
     def __getitem__(self, key):
@@ -259,7 +260,7 @@ class Categories:
             assert isinstance(key, int), key
             iid = key
 
-        category = Category._load(iid, name)
+        category = Category.__load__(iid = iid, name = name)
         
         # save in cache for later use
         self.cache[category.__iid__] = category
@@ -288,9 +289,9 @@ class Site(Item):
         root = cls.root = Site.first_item()
         return root
 
-    def _post_init(self):
+    def _post_load(self):
 
-        super()._post_init()
+        super()._post_load()
         self._init_apps()
         self._init_descriptors()
                
