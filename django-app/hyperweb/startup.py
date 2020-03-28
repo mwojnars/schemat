@@ -101,16 +101,6 @@ class Item(object, metaclass = MetaItem):
         print(f'WARNING in item {self.__id__}. {message}')
 
 
-    #@classmethod
-    #def _load(cls, cid, iid):
-        #"""Load from DB an item identified by its (CID, IID). Return as an instance of the current class `cls`."""
-        
-        #id = (cid, iid)
-        #with db.cursor() as cur:
-            #cur.execute(SQL._item_select_by_id, id)
-            #row = cur.fetchone()
-            #return cls._decode(row)
-        
     @classmethod
     def _decode(cls, row, query_args = None):
         """Decode information from a given database `row` and return as an item of the current class `cls`."""
@@ -130,6 +120,7 @@ class Item(object, metaclass = MetaItem):
         item.__category__ = item if (cid == iid == Categories.CID) else Site.categories[cid]
         
         return item
+
 
     ### propagation of attribute value changes, to compute derived attributes and perform conditional actions
     
@@ -190,7 +181,6 @@ class Category(Item):
     def __init__(self, **attrs):
         
         super().__init__(**attrs)
-        #print(f"Category.__init__()\n __data__ = {self.__data__}\n globals = {globals()}")
         
         # find Python class that represents items of this category
         name = self.__data__.get('name')            # 'name' attribute should exist in all category items
@@ -212,6 +202,7 @@ class Category(Item):
             return cls._decode(row, arg)
 
     def get_item(self, iid):
+        """Load from DB an item that belongs to the category represented by self."""
         
         id = (self.__iid__, iid)
         
@@ -227,7 +218,6 @@ class Category(Item):
         if limit is not None:
             query += f" LIMIT {limit}"
             
-        #print("Category.all_items(), query:", query, "__itemclass__:", self.__itemclass__)
         with db.cursor() as cur:
             cur.execute(query)
             return [self.__itemclass__._decode(row) for row in cur.fetchall()]        
@@ -278,14 +268,6 @@ class Categories:
         
         return category 
     
-    #def register(self, categories):
-        #"""Used by Site to register categories under their app-space-category descriptors. `categories` is a dict."""
-        #self.cache.update(categories)
-    
-    #def unregister(self, categories):
-        #for key in categories:
-            #del self.cache[key]
-        
         
 class Site(Item):
     
@@ -339,7 +321,7 @@ class Site(Item):
                     self.descriptors[descriptor] = category
         
     
-    def load_item(self, descriptor, app = None):
+    def load(self, descriptor, app = None):
         
         qualifier, iid = descriptor.split(':')
         category = self.descriptors[qualifier]

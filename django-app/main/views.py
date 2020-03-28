@@ -13,7 +13,7 @@ def item_view(request, item_aspect):
     descriptor = parts[0]
     aspect = parts[1] if len(parts) > 1 else None
     
-    item = site.load_item(descriptor)
+    item = site.load(descriptor)
     
     #qualifier, item_id = descriptor.split(':')
     #item = Item.objects.get(item_id, qualifier)
