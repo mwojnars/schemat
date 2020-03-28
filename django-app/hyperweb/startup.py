@@ -177,16 +177,6 @@ class Category(Item):
 
     __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
 
-    def _post_load(self):
-
-        super()._post_load()
-        
-        # find Python class that represents items of this category
-        name = self.__data__.get('name')            # 'name' attribute should exist in all category items
-        itemclass = globals().get(name)
-        if itemclass and issubclass(itemclass, Item):
-            self.__itemclass__ = itemclass
-
     @classmethod
     def __load__(cls, row = None, iid = None, name = None, query_args = None):
         """Load from DB a Category object specified by category name or IID."""
@@ -201,6 +191,16 @@ class Category(Item):
             cur.execute(query, arg)
             row = cur.fetchone()
             return cls.__load__(row, query_args = arg)
+
+    def _post_load(self):
+
+        super()._post_load()
+        
+        # find Python class that represents items of this category
+        name = self.__data__.get('name')            # 'name' attribute should exist in all category items
+        itemclass = globals().get(name)
+        if itemclass and issubclass(itemclass, Item):
+            self.__itemclass__ = itemclass
 
     def get_item(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
