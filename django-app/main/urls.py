@@ -18,9 +18,19 @@ from django.urls import include, path
 
 from .views import item_view
 
+"""
+How to configure Django on multiple domains:  
+    
+    https://stackoverflow.com/a/25690469/1202674
+
+It is possible to write (sub)domain information into the request object, so it's accesible inside views.
+
+"""
+
+
 urlpatterns = [
-    #path('',       include('hyperweb.urls')),
-    path('<space>.<category>:<item_id>', item_view),
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
+    path('<item_aspect>', item_view),
+    #path('',       include('hyperweb.urls')),
 ]

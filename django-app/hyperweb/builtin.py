@@ -1,3 +1,6 @@
+"""
+"""
+
 import json
 from django.db import connection as db
 
@@ -9,7 +12,9 @@ from django.db import connection as db
 
 class ObjectDoesNotExist(Exception):
     """The requested object does not exist in DB."""
-
+    
+    item_class = None
+    
 
 #####################################################################################################################################################
 #####
@@ -39,21 +44,31 @@ class Bootstrap:
 
     def __init__(self):
         
-        #self.cid = {"Category": self._category_cid}
-        #self.category = {}
-        
         # create name->CID, name->Category() and CID->Category() mappings for core categories
         for name in ["Category", "Site", "Application", "Space"]:
-            self.category[name] = cat = self.get_category(name = name)
+            self.category[name] = cat = self.get_category(name = name)  #Category.objects.get(name = name)
             self.cid[name] = cid = cat.__iid__
             self.category[cid] = cat
         
         # load Site and Application
-        self.site = self.get_site()
-        self.app  = self.get("Application", self.site.apps[0], item_class = Application)
+        self.site = self.all_in_category("Site")[0]
+        self.app  = self.get_item("Application", self.site.apps[0], item_class = Application)
         
 
-    def get(self, *args, item_class = None):
+    @classmethod
+    def get_category(cls, iid = None, name = None):
+        """
+        Retrieve from DB a Category object specified by category name or IID.
+        """
+        cond = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
+        
+        query = f"SELECT {cls._select_cols} FROM hyper_items WHERE cid = {cls.cid['Category']} AND {cond}"
+        
+        with db.cursor() as cur:
+            cur.execute(query, [name or iid])
+            return Category.from_row(cur.fetchone(), query_args = name or iid)
+        
+    def get_item(self, *args, item_class = None):
         """`args` contain `cid` and `iid`, given either as separate arguments (cid, iid), or a single 2-tuple argument (id)."""
         
         cid, iid = args if len(args) == 2 else args[0]
@@ -75,9 +90,6 @@ class Bootstrap:
         else:
             name = None
             
-        if name and not item_class:
-            item_class = vars().get(name)
-            
         if item_class is None and cid in self.category:
             item_class = self.category[cid].__itemclass__
         item_class = item_class or Item
@@ -87,91 +99,75 @@ class Bootstrap:
             cur.execute(query)
             return [item_class.from_row(row) for row in cur.fetchall()]
 
-    def _as_object(self, item_row, item_class = None, columns = _columns, query_args = None):
-        """
-        Convert a row from `items` table into an Item instance. Impute special attributes.
-        Raise exception if item_row is None (no matching row found in DB).
-        """
-        if item_row is None: 
-            ExClass = (item_class or Item).DoesNotExist
-            raise ExClass if query_args is None else ExClass(str(query_args))
-        
-        record = {f'__{key}__': val for key, val in zip(columns, item_row)}
-        
-        # combine (cid,iid) to a single ID; drop the former
-        record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
-        del record['__cid__']
-        del record['__iid__']
-        
-        if item_class is None and cid in self.category:
-            item_class = self.category[cid].__itemclass__
-        item_class = item_class or Item 
-        
-        item = item_class(**record)
-        
-        # impute __category__
-        if cid == iid == self.cid["Category"]:        # special case: the Category item is a category for itself
-            item.__category__ = item
-        else:
-            item.__category__ = self.category.get(cid) or self.get_category(cid)
-        
-        return item
-   
-    def cid_by_name(self, name):
-        return self.get_category(name = name).__iid__
-        
-    @classmethod
-    def get_category(cls, iid = None, name = None):
-        """
-        Retrieve from DB a Category object specified by category name or IID.
-        """
-        cond = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
-        
-        query = f"SELECT {cls._select_cols} FROM hyper_items WHERE cid = {cls.cid['Category']} AND {cond}"
-        
-        with db.cursor() as cur:
-            cur.execute(query, [name or iid])
-            return Category.from_row(cur.fetchone(), query_args = name or iid)
-        
     def get_categories(self):
         """
         Retrieve all category items from DB and return as a list of Category objects.
         These are all items with CID = cid["Category"].
         """
-        return self.all_in_category("Category")
+        return self.all_in_category("Category") #, Category)
         
-    def get_applications(self):
-        """Retrieve from DB all application objects."""
-        return self.all_in_category("Application")
-    
-    def get_site(self):
-        """Retrieve from DB the first Site object (the one with a lowest IID)."""
-        return self.all_in_category("Site")[0]
-
 
 #####################################################################################################################################################
 #####
-#####  ITEM & ITEMS
+#####  ITEMS manager
 #####
 
 class Items:
     
     _columns      = 'cid iid data created updated'.split()
-
-    def get(self, space, category, iid):
+    _select_cols  = ','.join(_columns)
+    
+    def __init__(self, qualifier = None):
+        self.qualifier = qualifier              # default space.category qualifier; if present, items can be retrieved by IID alone
+    
+    def get(self, iid = None, qualifier = None):
+        """`qualifier` is an optional space.category string."""
+        
+        qualifier = qualifier or self.qualifier
+        space, category = qualifier.split('.')
         
         # category retrieved from the application object
         cat = app.get_category(space, category)
         if not cat: return None
     
-        return boot.get(cat.__iid__, int(iid))
+        return boot.get_item(cat.__iid__, int(iid))
+
 
 class Categories(Items):
     
-    pass
+    cache = {}          # cached instances of Category items; indexed by space:name, as well as IID
+    
+    def get(self, iid = None, name = None):
+        """
+        Retrieve from DB a Category object specified by category name or IID.
+        """
+        cond = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
+        
+        query = f"SELECT {self._select_cols} FROM hyper_items WHERE cid = {self.cid['Category']} AND {cond}"
+        
+        with db.cursor() as cur:
+            cur.execute(query, [name or iid])
+            return Category.from_row(cur.fetchone(), query_args = name or iid)
+        
 
     
-class Item:
+#####################################################################################################################################################
+#####
+#####  ITEM & META space
+#####
+
+class MetaItem(type):
+    
+    def __init__(cls, name, bases, dct):
+        
+        class DoesNotExist(ObjectDoesNotExist):
+            item_class = cls
+    
+        cls.DoesNotExist = DoesNotExist
+        cls.objects = Items()
+        
+    
+class Item(object, metaclass = MetaItem):
     
     # item fields & properties...
     
@@ -190,11 +186,10 @@ class Item:
     
     # class-level functionality...
     
-    class DoesNotExist(ObjectDoesNotExist): pass
-
-    objects = Items()
-    
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs):        
+        self.__set__(**kwargs)
+        
+    def __set__(self, **kwargs):
 
         for field, value in kwargs.items():
             if value in (None, ''): continue
@@ -229,10 +224,10 @@ class Item:
 
 
     @classmethod
-    def from_row(item_class, row, query_args = None):
+    def from_row(cls, row, query_args = None):
 
         if row is None:
-            ExClass = item_class.DoesNotExist
+            ExClass = cls.DoesNotExist
             raise ExClass if query_args is None else ExClass(str(query_args))
         
         record = {f'__{key}__': val for key, val in zip(Items._columns, row)}
@@ -242,7 +237,7 @@ class Item:
         del record['__cid__']
         del record['__iid__']
         
-        item = item_class(**record)
+        item = cls(**record)
         
         # impute __category__
         if cid == iid == Bootstrap.cid["Category"]:         # special case: the Category item is a category for itself
@@ -253,16 +248,32 @@ class Item:
         return item
 
 
+class Category(Item):
+
+    __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    
+    items = None                # manager that retrieves from DB items of this category
+    
+    @classmethod
+    def from_row(cls, row, query_args = None):
+        
+        item = super().from_row(row, query_args)
+        
+        name = item.__data__.get('name')            # 'name' attribute should exist for all categories
+        if name in vars():
+            item.__itemclass__ = vars()[name]
+        
+        return item
+        
+
 #####################################################################################################################################################
 #####
-#####  META & SYS
+#####  SYSTEM space
 #####
 
 class Site(Item):
     """
     """
-    class DoesNotExist(ObjectDoesNotExist): pass
-
     apps = None
     
 
@@ -271,15 +282,18 @@ class Application(Item):
     """
     spaces = None
     
+    def get_item(self, qualifier, iid):
+        
+        return
+    
     def get_category(self, space, category):
         
-        space_iid  = self.spaces.get(space)
-        space_item = boot.get("Space", space_iid, item_class = Space)
-        if space_item is None: return None
+        iid = self.spaces.get(space)
+        space = boot.get_item("Space", iid, item_class = Space)
+        # space = Space.objects.get(iid)
+        if space is None: return None
     
-        return space_item.get_category(category)
-        
-    class DoesNotExist(ObjectDoesNotExist): pass
+        return space.get_category(category)
 
         
 class Space(Item):
@@ -290,28 +304,15 @@ class Space(Item):
     def get_category(self, category):
 
         cat_iid  = self.categories.get(category)
-        cat_item = boot.get("Category", cat_iid, item_class = Category)
+        cat_item = boot.get_item("Category", cat_iid, item_class = Category)
         if cat_item is None: return None
         
         return cat_item
         
-    class DoesNotExist(ObjectDoesNotExist): pass
-
     
-class Category(Item):
-    """
-    """
-    __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    
-    objects = Categories()
-    
-    class DoesNotExist(ObjectDoesNotExist): pass
-
-
 class Mapping(Item):
     """
     """
-    class DoesNotExist(ObjectDoesNotExist): pass
 
 
 #####################################################################################################################################################
@@ -319,6 +320,8 @@ class Mapping(Item):
 #####  GLOBALS
 #####
 
+ObjectDoesNotExist.item_class = Item
+
 boot = Bootstrap()
-app  = boot.app  #boot.site.apps[0]
+app  = boot.app
 

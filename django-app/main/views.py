@@ -3,12 +3,20 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-from hyperweb.builtin import Item
+#from hyperweb.builtin import Item
+from hyperweb.startup import site
 
 
-def item_view(request, space, category, item_id):
+def item_view(request, item_aspect):
     
-    item = Item.objects.get(space, category, item_id)
+    parts = item_aspect.split('/')
+    descriptor = parts[0]
+    aspect = parts[1] if len(parts) > 1 else None
+    
+    item = site.load_item(descriptor)
+    
+    #qualifier, item_id = descriptor.split(':')
+    #item = Item.objects.get(item_id, qualifier)
     
     #cat = Item.objects.get_category(name = category)
     #print("Category:", cat.__data__)
