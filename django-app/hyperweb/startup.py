@@ -1,6 +1,9 @@
 import re, json
 from django.db import connection as db
 
+from .data import DataObject, onchange
+
+
 #####################################################################################################################################################
 
 class ItemDoesNotExist(Exception):
@@ -9,16 +12,6 @@ class ItemDoesNotExist(Exception):
 
 class InvalidName(Exception): pass
 
-
-class onchange:
-    """Decorator that marks a given Item method as depending on a given set (tuple) of trigger attributes."""
-    def __init__(self, *triggers):
-        self.triggers = set(triggers)
-        
-    def __call__(self, method):
-        method.triggers = self.triggers
-        return method
-    
 
 class SQL:
     
@@ -40,7 +33,7 @@ class MetaItem(type):
         cls.DoesNotExist = DoesNotExist
         
 
-class Item(object, metaclass = MetaItem):
+class Item(DataObject, metaclass = MetaItem):
     
     # item fields & properties...
     __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
@@ -57,9 +50,6 @@ class Item(object, metaclass = MetaItem):
     
     # class-level functionality...
     
-    def __init__(self):        
-        self.__changed__ = set()
-        
     @classmethod
     def __load__(cls, row, query_args = None):
         """Like __init__, but creates Item instance from an existing DB row."""
@@ -79,23 +69,23 @@ class Item(object, metaclass = MetaItem):
             if value in (None, ''): continue
             setattr(item, field, value)
         
+        # impute __category__; note the special case: the root Category item is a category for itself!
+        cid, iid = self.__id__
+        self.__category__ = self if (cid == iid == Categories.CID) else Site.categories[cid]
+        self.__data_decode()
+        
         item._post_load()
-        #self._commit()
+        #self.commit()
         
         return item
 
 
     def _post_load(self):
+        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
 
-        # impute __category__; note the special case: the root Category item is a category for itself!
-        cid, iid = self.__id__
-        self.__category__ = self if (cid == iid == Categories.CID) else Site.categories[cid]
-
-        self._decode_data()
-        
         
     @onchange('__data__')
-    def _decode_data(self):
+    def __data_decode(self):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
@@ -106,52 +96,40 @@ class Item(object, metaclass = MetaItem):
     
         elif isinstance(data, list):
             for entry in data:
-                if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
-                if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
+                if not self.__assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
+                if not self.__assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
                 attr, value = entry
                 setattr(self, attr, value)
                 
         else:
-            self._assert(False, f'Incorrect data format, expected list or dict: {data}')
+            self.__assert(False, f'Incorrect data format, expected list or dict: {data}')
             
             
-    def _assert(self, cond, message = ''):
+    def __assert(self, cond, message = ''):
         
         if cond: return
         print(f'WARNING in item {self.__id__}. {message}')
 
 
-    ### propagation of attribute value changes, to compute derived attributes and perform conditional actions
-    
-    __changed__  = None     # set of attrs assigned since the last _commit(); does NOT include structural attributes if only their nested elements have changed; includes non-modifying assignments
-    __actions__  = None     # list of action methods, i.e., those annotated with @onchange; filled out by metaclass based on method annotations added by @onchange decorator
-    __incommit__ = False    # flag to prevent multiple _commit() being executed one inside another
-    
-    def __setattr__(self, name, value):
+    def insert(self):
+        """
+        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it. 
+        The item might have already been present in DB, in such case a new copy is still created.
+        """
         
-        if name != '__changed__': self.__changed__.add(name)
-        object.__setattr__(self, name, value)
-    
-    def _commit(self, max_iter = None):
-        """Internal commit that marks the end of attribute changes and triggers propagation of values to other (derived) attrs & actions."""
-        
-        if self.__incommit__: return
-        self.__incommit__ = True
-        iteration = 0
-        
-        # propagation
-        while True:
-            if not self.__changed__ or None != max_iter <= iteration: break
-            changed = self.__changed__
-            self.__changed__ = set()
-            
-            for action in self.__actions__:
-                triggers = action.triggers
-                if not triggers or (triggers & changed):        # call action() if at least 1 attribute it depends on has changed; or there are no triggers defined (= any change triggers the action)
-                    action()
-            iteration += 1
-        
-        self.__incommit__ = False
+    def update(self):
+        """Update the contents of this item's row in DB."""
+
+    def save(self):
+        """
+        Save this item to DB. This means either an update of an existing DB row (if __iid__ is already present), 
+        or an insert of a new row (iid is assigned then and returned).
+        """
+        if self.__iid__ is None:
+            return self.insert()
+        else:
+            self.update()
+            return None
         
 
 ItemDoesNotExist.item_class = Item
@@ -161,22 +139,33 @@ ItemDoesNotExist.item_class = Item
 
 class Items:
 
-    category = None         # instance of Category this Items manager belongs to
+    category = None         # parent category this Items manager belongs to, as an instance of Category
 
     def __init__(self, category):
         self.category = category
 
     def all(self, limit = None):
-        pass
+        return self.category.all_items(limit)
     
     def first(self):
-        return self.all(limit = 1)[0]
+        return self.category.first_item()
+    
+    def new(self, *args, **kwargs):
+        return self.category.new(*args, **kwargs)
     
 
 class Category(Item):
+    """
+    A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
+    and creation of new items within category.
+    """
 
     __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-
+    
+    def __init__(self):
+        super().__init__()
+        self.items = Items(self)
+    
     @classmethod
     def __load__(cls, row = None, iid = None, name = None, query_args = None):
         """Load from DB a Category object specified by category name or IID."""
@@ -194,15 +183,16 @@ class Category(Item):
 
     def _post_load(self):
 
-        super()._post_load()
-        
         # find Python class that represents items of this category
         name = self.__data__.get('name')            # 'name' attribute should exist in all category items
         itemclass = globals().get(name)
         if itemclass and issubclass(itemclass, Item):
             self.__itemclass__ = itemclass
 
-    def get_item(self, iid):
+
+    #####  Items in category  #####
+
+    def load(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
         
         id = (self.__iid__, iid)
@@ -229,6 +219,13 @@ class Category(Item):
         if not items: raise self.__itemclass__.DoesNotExist()
         return items[0]
 
+    def new(self, *args, **kwargs):
+        """Create a new item of this category. This method can be called through __call__, as well, just like instance creation from a Python class."""
+        
+        return self.__itemclass__.__new__(*args, **kwargs)
+
+    __call__ = new
+    
 
 #####################################################################################################################################################
 
@@ -291,7 +288,6 @@ class Site(Item):
 
     def _post_load(self):
 
-        super()._post_load()
         self._init_apps()
         self._init_descriptors()
                
@@ -299,7 +295,7 @@ class Site(Item):
         """Convert IIDs of apps to Application objects."""
         
         Application = self.categories['Application']
-        self.apps = [Application.get_item(iid) for iid in self.apps]
+        self.apps = [Application.load(iid) for iid in self.apps]
         
     def _init_descriptors(self):
         """Initialize self.descriptors based on self.apps."""
@@ -312,11 +308,11 @@ class Site(Item):
         for app in self.apps:
             for space_name, space_iid in app.spaces.items():
                 if not self.re_codename.match(space_name): raise InvalidName(f'Invalid code name "{space_name}" of a space with IID={space_iid}')
-                space = Space.get_item(space_iid)
+                space = Space.load(space_iid)
                 
                 for category_name, category_iid in space.categories.items():
                     if not self.re_codename.match(category_name): raise InvalidName(f'Invalid code name "{category_name}" of a category with IID={category_iid}')
-                    category = Category.get_item(category_iid)
+                    category = Category.load(category_iid)
                     
                     descriptor = f"{space_name}.{category_name}"
                     self.descriptors[descriptor] = category
@@ -326,7 +322,7 @@ class Site(Item):
         
         qualifier, iid = descriptor.split(':')
         category = self.descriptors[qualifier]
-        return category.get_item(int(iid))
+        return category.load(int(iid))
         
         
 #####################################################################################################################################################
