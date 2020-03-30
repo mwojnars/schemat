@@ -48,7 +48,21 @@ class Item(DataObject, metaclass = MetaItem):
     @property
     def __iid__(self): return self.__id__[1]
     
-    # class-level functionality...
+    
+    @classmethod
+    def __create__(cls, **attrs):
+        """Create a new item object fed with data, typically from a form."""
+        
+        errors = []
+        for attr, value in attrs.items():
+            # validate `value`... (TODO)
+            pass
+        if errors: raise InvalidValues(errors)
+        
+        item = cls()
+        for attr, value in attrs.items():
+            setattr(item, attr, value)
+        return item
     
     @classmethod
     def __load__(cls, row, query_args = None):
@@ -70,12 +84,12 @@ class Item(DataObject, metaclass = MetaItem):
             setattr(item, field, value)
         
         # impute __category__; note the special case: the root Category item is a category for itself!
-        cid, iid = self.__id__
-        self.__category__ = self if (cid == iid == Categories.CID) else Site.categories[cid]
-        self.__data_decode()
+        cid, iid = item.__id__
+        item.__category__ = item if (cid == iid == Categories.CID) else Site.categories[cid]
+        item._decode_data()
         
         item._post_load()
-        #self.commit()
+        #item.commit()
         
         return item
 
@@ -84,8 +98,7 @@ class Item(DataObject, metaclass = MetaItem):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
 
         
-    @onchange('__data__')
-    def __data_decode(self):
+    def _decode_data(self):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
@@ -96,16 +109,16 @@ class Item(DataObject, metaclass = MetaItem):
     
         elif isinstance(data, list):
             for entry in data:
-                if not self.__assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
-                if not self.__assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
+                if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
+                if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
                 attr, value = entry
                 setattr(self, attr, value)
                 
         else:
-            self.__assert(False, f'Incorrect data format, expected list or dict: {data}')
+            self._assert(False, f'Incorrect data format, expected list or dict: {data}')
             
             
-    def __assert(self, cond, message = ''):
+    def _assert(self, cond, message = ''):
         
         if cond: return
         print(f'WARNING in item {self.__id__}. {message}')
@@ -222,7 +235,7 @@ class Category(Item):
     def new(self, *args, **kwargs):
         """Create a new item of this category. This method can be called through __call__, as well, just like instance creation from a Python class."""
         
-        return self.__itemclass__.__new__(*args, **kwargs)
+        return self.__itemclass__.__create__(*args, **kwargs)
 
     __call__ = new
     
