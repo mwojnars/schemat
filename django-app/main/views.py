@@ -3,8 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-#from hyperweb.builtin import Item
-from hyperweb.startup import site
+from hyperweb.core import site
 
 
 def item_view(request, item_aspect):
@@ -14,15 +13,6 @@ def item_view(request, item_aspect):
     aspect = parts[1] if len(parts) > 1 else None
     
     item = site.load(descriptor)
-    
-    #qualifier, item_id = descriptor.split(':')
-    #item = Item.objects.get(item_id, qualifier)
-    
-    #cat = Item.objects.get_category(name = category)
-    #print("Category:", cat.__data__)
-    # 
-    ##item = Item.objects.raw("SELECT *, CONCAT(cid,':',iid) as gid FROM hyper_items WHERE cid = %s AND iid = %s", [int(category), int(item_id)])[0]
-    #item = Item.objects.get(cat.__iid__, item_id)
     
     context = {'item': vars(item)}
     #return render(request, 'item.html.j2', context)
