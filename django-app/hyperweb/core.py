@@ -1,10 +1,10 @@
 import re, json, importlib
-from django.db import connection as db
 from django.http import HttpRequest, HttpResponse
 
+from .config import ROOT_CID
 from .data import DataObject, onchange
 from .errors import *
-from .store import SQL, SimpleStore
+from .store import SimpleStore
 
 #####################################################################################################################################################
 
@@ -84,15 +84,8 @@ class Item(DataObject, metaclass = MetaItem):
         return item
     
     @classmethod
-    def __load__(cls, row, query_args = None):
+    def __load__(cls, record):
         """Like __init__, but creates Item instance from an existing DB row."""
-        
-        if row is None: raise cls.DoesNotExist(*((query_args,) if query_args is not None else ()))
-        
-        if isinstance(row, dict):
-            record = row
-        else:
-            record = {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
         
         # combine (cid,iid) to a single ID; drop the former
         record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
@@ -107,7 +100,7 @@ class Item(DataObject, metaclass = MetaItem):
         
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
-        item.__category__ = item if (cid == iid == Categories.CID) else Site.categories[cid]
+        item.__category__ = item if (cid == iid == ROOT_CID) else Site.categories[cid]
         item._decode_data()
         
         item._post_load()
@@ -213,30 +206,24 @@ class Category(Item):
     __handlers__  = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
     
     itemclass = Item
-    store     = SimpleStore()   # data store to be used for items of this category
+    
+    bootstore = SimpleStore()   # data store to be used during startup
+    store     = None            # data store to be used for items of this category, for regular access
     
     def __init__(self):
         super().__init__()
+        self.store = SimpleStore()
         self.items = Items(self)
     
     @classmethod
-    def __load__(cls, row = None, iid = None, name = None, itemclass = None, query_args = None):
+    def __load__(cls, record = None, iid = None, name = None, itemclass = None):
         """Load from DB a Category object specified by category name, its class name, or IID."""
         
-        if row is not None: return super().__load__(row, query_args = query_args)
+        if record is not None: return super().__load__(record)
         
-        def JSON(path):
-            return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
-        
-        #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"        
-        cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
-        query = f"SELECT {SQL._item_select_cols} FROM hyper_items WHERE cid = {Categories.CID} AND {cond}"
-        arg   = [itemclass or name or iid]
-        
-        with db.cursor() as cur:
-            cur.execute(query, arg)
-            row = cur.fetchone()
-            return cls.__load__(row, query_args = arg)
+        record = cls.bootstore.load_category(iid, name, itemclass)
+        return cls.__load__(record)
+
 
     def _post_load(self):
         
@@ -323,13 +310,11 @@ class Categories:
     """
     Flat collection of all categories found in DB, accessible by their names and CIDs (category's IID). Provides caching.
     """    
-    CID = 0             # predefined CID of items that represent categories
-
     cache = None
     
     def __init__(self):
         
-        root_category = Category.__load__(iid = self.CID)           # root Category is a category for itself, hence its IID == CID
+        root_category = Category.__load__(iid = ROOT_CID)           # root Category is a category for itself, hence its IID == CID
         self.cache = {"Category": root_category}
         
     def __getitem__(self, key):

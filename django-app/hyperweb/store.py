@@ -3,7 +3,15 @@ DATA STORE -- an abstract DB storage layer for items. Handles sharding, replicat
 """
 
 from django.db import connection as db
+
+from .config import ROOT_CID
 from .errors import ItemDoesNotExist
+
+
+#####################################################################################################################################################
+#####
+#####  PREDEFINED & UTILITIES
+#####
 
 class SQL:
     
@@ -40,7 +48,7 @@ class SimpleStore(DataStore):
         with db.cursor() as cur:
             cur.execute(SQL._item_select_by_id, id)
             row = cur.fetchone()
-            return self._make_record(row, query_args = id)
+            return self._make_record(row, id)
 
     def load_all(self, cid, limit = None):
         """
@@ -55,6 +63,21 @@ class SimpleStore(DataStore):
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
+    def load_category(self, iid = None, name = None, itemclass = None):
+        """Special method for loading category items during startup, based on their IID or name."""
+
+        def JSON(path):
+            return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
+        
+        #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
+        cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
+        query = f"SELECT {SQL._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
+        arg   = [itemclass or name or iid]
+        
+        with db.cursor() as cur:
+            cur.execute(query, arg)
+            row = cur.fetchone()
+            return self._make_record(row, arg)
     
     def insert(self, item):
         """
