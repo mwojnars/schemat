@@ -10,19 +10,6 @@ from .errors import ItemDoesNotExist
 
 #####################################################################################################################################################
 #####
-#####  PREDEFINED & UTILITIES
-#####
-
-class SQL:
-    
-    _item_columns       = 'cid iid data created updated'.split()
-    _item_select_cols   = ','.join(_item_columns)
-    _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
-    _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"
-    
-
-#####################################################################################################################################################
-#####
 #####  DATA STORE
 #####
 
@@ -32,12 +19,18 @@ class DataStore:
 class SimpleStore(DataStore):
     """Data store that uses only local DB, no sharding."""
 
+    _item_columns       = 'cid iid data created updated'.split()
+    _item_select_cols   = ','.join(_item_columns)
+    _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
+    _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"
+    
+
     def _make_record(self, row, query_args = None):
         
         if row is None:
             raise ItemDoesNotExist(*((query_args,) if query_args is not None else ()))
         
-        return {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
+        return {f'__{key}__': val for key, val in zip(self._item_columns, row)}
 
     def load(self, cid, iid):
         """Load from DB an item with a given ID = (CID,IID) and return as a record (dict)."""
@@ -46,7 +39,7 @@ class SimpleStore(DataStore):
         
         # select row from DB and convert to record (dict with field names)
         with db.cursor() as cur:
-            cur.execute(SQL._item_select_by_id, id)
+            cur.execute(self._item_select_by_id, id)
             row = cur.fetchone()
             return self._make_record(row, id)
 
@@ -55,7 +48,7 @@ class SimpleStore(DataStore):
         Load from DB all items of a given category (CID) ordered by IID, possibly with a limit.
         Items are returned as an iterable of records (dicts).
         """
-        query = SQL._item_select + f"WHERE cid = {cid} ORDER BY iid"
+        query = self._item_select + f"WHERE cid = {cid} ORDER BY iid"
         if limit is not None:
             query += f" LIMIT {limit}"
             
@@ -64,14 +57,14 @@ class SimpleStore(DataStore):
             return map(self._make_record, cur.fetchall())
         
     def load_category(self, iid = None, name = None, itemclass = None):
-        """Special method for loading category items during startup, based on their IID or name."""
+        """Special method for loading category items during startup based on their IID or name."""
 
         def JSON(path):
             return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
         
         #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
         cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
-        query = f"SELECT {SQL._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
+        query = f"SELECT {self._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
         arg   = [itemclass or name or iid]
         
         with db.cursor() as cur:
