@@ -3,7 +3,7 @@ DATA STORE -- an abstract DB storage layer for items. Handles sharding, replicat
 """
 
 import json
-#from pymysql.cursors import DictCursor
+from pymysql.cursors import DictCursor
 #from django.db import connection as db
 from nifty.db import MySQL
 
@@ -95,19 +95,25 @@ class SimpleStore(DataStore):
         The item might have already been present in DB, but still a new copy is created.
         """
         cid = item.__cid__
-        data = json.dumps(self.__data__)
         
         max_iid = self.db.select_one(f"SELECT MAX(iid) FROM hyper_items WHERE cid = {cid} FOR UPDATE")[0]
         if max_iid is None:
             max_iid = 0
         
-        record = {'cid':   item.__cid__,
-                  'iid':   max_iid + 1,
-                  'data':  json.dumps(self.__data__),
-                  }
+        iid = max_iid + 1
+        item.__id__ = (cid, iid)
         
+        record = {'cid':   cid,
+                  'iid':   iid,
+                  'data':  json.dumps(item.__data__),
+                  }
         self.db.insert_dict('hyper_items', record)
+        
+        # get imputed fields from DB
+        (item.__created__, item.__updated__) = self.db.select_one(f"SELECT created, updated FROM hyper_items WHERE cid = {cid} AND iid = {iid}")
+        
         self.db.commit()
+        return iid
         
         # # here, it is possible to split SELECT out from INSERT, but then SELECT ... FOR UPDATE must be used,
         # # so as to create a stronger lock on the DB rows involved and enable correct concurrent INSERTs

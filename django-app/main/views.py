@@ -6,13 +6,12 @@ from django.shortcuts import render
 from hyperweb.core import site
 
 
-def item_view(request, item_handler):
-    
-    parts = item_handler.split('/')
-    descriptor = parts[0]
-    handler = parts[1] if len(parts) > 1 else None
+def item_view(request, descriptor, handler = None):
     
     item = site.load(descriptor)
+    
+    if handler:
+        return item.__handle__(request, handler)
     
     context = {'item': vars(item)}
     #return render(request, 'item.html.j2', context)

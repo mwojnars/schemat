@@ -1,5 +1,6 @@
 import re, json, importlib
 from django.http import HttpRequest, HttpResponse
+from nifty.text import html_escape
 
 from .config import ROOT_CID
 from .data import DataObject, onchange
@@ -15,6 +16,7 @@ class handler:
     If name=None, the name of handler is the same as method's.
     """
     def __init__(self, name = None):
+        if callable(name): raise Exception("Incorrect use of @handler: missing ()")
         self.name = name
         
     def __call__(self, method):
@@ -38,6 +40,20 @@ class MetaItem(type):
     
         cls.DoesNotExist = DoesNotExist
         
+        # fill out the dict of handlers
+        cls.__handlers__ = handlers = {}
+        for attr in dir(cls):
+            method = getattr(cls, attr)
+            if not (callable(method) and hasattr(method, 'handler') and isinstance(method.handler, handler)):
+                continue
+            name = method.handler.name
+            if name in handlers:
+                raise DuplicateHandler(f'Duplicate name of a web handler, "{name}", in {cls}')
+            # bound_method = method.__get__(cls, Category)       # binding method to `self`
+            handlers[name] = method #bound_method
+            
+        # print(cls, handlers)
+
 
 class Item(DataObject, metaclass = MetaItem):
     
@@ -47,6 +63,8 @@ class Item(DataObject, metaclass = MetaItem):
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     __category__ = None         # instance of Category this item belongs to
+
+    __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods) exposed by items of the current Item subclass
 
     @property
     def __cid__(self): return self.__id__[0]
@@ -108,6 +126,17 @@ class Item(DataObject, metaclass = MetaItem):
         
         return item
 
+    def __encode__(self):
+        """Encode regular instance attributes of this item into __data__ dict, for subsequent save in DB."""
+
+        data = self.__data__ = self.__dict__.copy()
+        
+        # remove special attributes
+        for attr in list(data.keys()):
+            if attr.startswith('_'): del data[attr]
+            
+        return data
+        
 
     def _post_load(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
@@ -165,8 +194,8 @@ class Item(DataObject, metaclass = MetaItem):
         """
         Route a web request to a handler function/method of a given name. Handler functions are stored in a parent category object.
         """
-        hdl = self.__category__.handlers.get(handler, None)
-        if hdl is None: raise InvalidHandler(f'Handler {handler} not found in {self.__category__}')
+        hdl = self.__handlers__.get(handler, None)
+        if hdl is None: raise InvalidHandler(f'Handler "{handler}" not found in {self} ({self.__class__}), handlers: {self.__handlers__}')
         return hdl(self, request)
         
 
@@ -202,7 +231,7 @@ class Category(Item):
     """
 
     itemclass     = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    handlers      = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
+    # handlers      = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
     
     boot_store    = SimpleStore()   # data store used during startup
     store         = None            # data store used for regular access to items of this category
@@ -234,16 +263,6 @@ class Category(Item):
             if itemclass and issubclass(itemclass, Item):
                 self.itemclass = itemclass
             
-        # fill out the dict of handlers
-        self.handlers = {}
-        for method in dir(self.itemclass):
-            if callable(method) and hasattr(method, 'handler') and isinstance(method.handler, handler):
-                name = method.handler.name
-                if name in self.handlers:
-                    raise DuplicateHandler(f'Duplicate name of a web handler, "{name}", in {self}')
-                bound_method = method.__get__(self, Category)       # binding method to `self`
-                self.handlers[name] = bound_method
-
 
     #####  Items in category  #####
 
@@ -276,18 +295,21 @@ class Category(Item):
 
     def __call__(self, *args, **kwargs):
         """Create a new item of this category through a direct function call. For web-based item creation, see the new() handler."""
-        return self.itemclass.__create__(*args, **kwargs)
+        item = self.itemclass.__create__(*args, **kwargs)
+        item.__id__ = (self.__iid__, None)
+        item.__category__ = self
+        return item
 
-    @handler
-    def new(self, category_item, request):
-        """Web handler that creates a new item of the category represented by `category_item`, based on `request` data."""
+    @handler()
+    def new(self, request):
+        """Web handler that creates a new item of this category, based on `request` data."""
         
         # translate `request` into `args` / `kwargs`
         item = self.__call__() #*args, **kwargs)
         item.save()
-        return f"Item created: {item}"
+        return HttpResponse(html_escape(f"Item created: {item}"))
         
-    @handler
+    @handler()
     def __view__(self, item, request):
         """
         Default handler invoked to render a response to item request when no handler name was given.
