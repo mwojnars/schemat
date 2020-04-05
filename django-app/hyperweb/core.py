@@ -84,8 +84,8 @@ class Item(DataObject, metaclass = MetaItem):
         return item
     
     @classmethod
-    def __load__(cls, record):
-        """Like __init__, but creates Item instance from an existing DB row."""
+    def __decode__(cls, record):
+        """Creates an Item instance from an existing DB record."""
         
         # combine (cid,iid) to a single ID; drop the former
         record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
@@ -165,7 +165,7 @@ class Item(DataObject, metaclass = MetaItem):
         """
         Route a web request to a handler function/method of a given name. Handler functions are stored in a parent category object.
         """
-        hdl = self.__category__.__handlers__.get(handler, None)
+        hdl = self.__category__.handlers.get(handler, None)
         if hdl is None: raise InvalidHandler(f'Handler {handler} not found in {self.__category__}')
         return hdl(self, request)
         
@@ -201,14 +201,11 @@ class Category(Item):
     and creation of new items within category.
     """
 
-    __name__      = None        # code name of this category
-    __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    __handlers__  = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
+    itemclass     = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    handlers      = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
     
-    itemclass = Item
-    
-    bootstore = SimpleStore()   # data store to be used during startup
-    store     = None            # data store to be used for items of this category, for regular access
+    boot_store    = SimpleStore()   # data store used during startup
+    store         = None            # data store used for regular access to items of this category
     
     def __init__(self):
         super().__init__()
@@ -216,14 +213,11 @@ class Category(Item):
         self.items = Items(self)
     
     @classmethod
-    def __load__(cls, record = None, iid = None, name = None, itemclass = None):
+    def __load__(cls, iid = None, name = None, itemclass = None):
         """Load from DB a Category object specified by category name, its class name, or IID."""
         
-        if record is not None: return super().__load__(record)
-        
-        record = cls.bootstore.load_category(iid, name, itemclass)
-        return cls.__load__(record)
-
+        record = cls.boot_store.load_category(iid, name, itemclass)
+        return cls.__decode__(record)
 
     def _post_load(self):
         
@@ -232,23 +226,23 @@ class Category(Item):
             if '.' in self.itemclass:
                 path, classname = self.itemclass.rsplit('.', 1)
                 module = importlib.import_module(path)
-                self.__itemclass__ = getattr(module, classname)
+                self.itemclass = getattr(module, classname)
             else:
-                self.__itemclass__ = globals().get(self.itemclass)
+                self.itemclass = globals().get(self.itemclass)
         else:
             itemclass = globals().get(self.name)
             if itemclass and issubclass(itemclass, Item):
-                self.__itemclass__ = itemclass
+                self.itemclass = itemclass
             
         # fill out the dict of handlers
-        self.__handlers__ = {}
-        for method in dir(self.__itemclass__):
+        self.handlers = {}
+        for method in dir(self.itemclass):
             if callable(method) and hasattr(method, 'handler') and isinstance(method.handler, handler):
                 name = method.handler.name
-                if name in self.__handlers__:
+                if name in self.handlers:
                     raise DuplicateHandler(f'Duplicate name of a web handler, "{name}", in {self}')
                 bound_method = method.__get__(self, Category)       # binding method to `self`
-                self.__handlers__[name] = bound_method
+                self.handlers[name] = bound_method
 
 
     #####  Items in category  #####
@@ -257,7 +251,7 @@ class Category(Item):
         """Load from DB an item that belongs to the category represented by self."""
         
         record = self.store.load(self.__iid__, iid)
-        return self.__itemclass__.__load__(record)
+        return self.itemclass.__decode__(record)
         
     def all_items(self, limit = None):
         """
@@ -265,12 +259,12 @@ class Category(Item):
         Return an iterable, but not a list.
         """
         records = self.store.load_all(self.__iid__, limit)
-        return map(self.__itemclass__.__load__, records)
+        return map(self.itemclass.__decode__, records)
         
     def first_item(self):
         
         items = list(self.all_items(limit = 1))
-        if not items: raise self.__itemclass__.DoesNotExist()
+        if not items: raise self.itemclass.DoesNotExist()
         return items[0]
 
     def insert(self, item):
@@ -282,7 +276,7 @@ class Category(Item):
 
     def __call__(self, *args, **kwargs):
         """Create a new item of this category through a direct function call. For web-based item creation, see the new() handler."""
-        return self.__itemclass__.__create__(*args, **kwargs)
+        return self.itemclass.__create__(*args, **kwargs)
 
     @handler
     def new(self, category_item, request):
@@ -297,7 +291,7 @@ class Category(Item):
     def __view__(self, item, request):
         """
         Default handler invoked to render a response to item request when no handler name was given.
-        In category's __handlers__ dict, this method is saved under the None key.
+        Inside category's handlers dict, this method is saved under the None key.
         """
         
 
@@ -314,7 +308,7 @@ class Categories:
     
     def __init__(self):
         
-        root_category = Category.__load__(iid = ROOT_CID)           # root Category is a category for itself, hence its IID == CID
+        root_category = Category.__load__(iid = ROOT_CID)       # root Category is a category for itself, hence its IID == CID
         self.cache = {"Category": root_category}
         
     def __getitem__(self, key):
