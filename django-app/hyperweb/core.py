@@ -1,27 +1,33 @@
-import re, json
+import re, json, importlib
 from django.db import connection as db
+from django.http import HttpRequest, HttpResponse
 
 from .data import DataObject, onchange
-
-
-#####################################################################################################################################################
-
-class ItemDoesNotExist(Exception):
-    """The requested object does not exist in DB."""
-    item_class = None
-
-class InvalidName(Exception): pass
-
-
-class SQL:
-    
-    _item_columns       = 'cid iid data created updated'.split()
-    _item_select_cols   = ','.join(_item_columns)
-    _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
-    _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"
-    
+from .errors import *
+from .store import SQL, SimpleStore
 
 #####################################################################################################################################################
+
+class handler:
+    """
+    Decorator of Item methods that marks a given method as a handler of web requests: wsgi, asgi...
+    Only the methods decorated with @handler can be assigned to URLs and called by the view processing function.
+    If name=None, the name of handler is the same as method's.
+    """
+    def __init__(self, name = None):
+        self.name = name
+        
+    def __call__(self, method):
+        method.handler = self
+        if method.__name__ != '__view__':
+            self.name = self.name or method.__name__
+        return method
+        
+
+#####################################################################################################################################################
+#####
+#####  ITEM
+#####
 
 class MetaItem(type):
     
@@ -35,29 +41,42 @@ class MetaItem(type):
 
 class Item(DataObject, metaclass = MetaItem):
     
-    # item fields & properties...
+    # builtin attributes & properties, not user-editable ...
     __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
     __data__     = None         # raw data before/after conversion to/from object attributes, as a list of (attr-name, value) pairs
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     __category__ = None         # instance of Category this item belongs to
-        
+
     @property
     def __cid__(self): return self.__id__[0]
     
     @property
     def __iid__(self): return self.__id__[1]
     
+    # user-editable attributes & properties; can be missing in a particular item
+    name         = None        # name of item; constraints on length and character set depend on category
+
+        
+    def __str__(self, max_len_name = 30):
+        
+        category = f'{self.__category__.name}' if self.__category__.name else f'CID({self.__cid__})'
+        name     = f' {self.name}' if self.name is not None else ''
+        if len(name) > max_len_name:
+            name = name[:max_len_name-3] + '...'
+        
+        return f'<{category}:{self.__iid__}{name}>'
+        
     
     @classmethod
     def __create__(cls, **attrs):
-        """Create a new item object fed with data, typically from a form."""
+        """Create a new item with `attrs` attribute values, typically passed from a web form."""
         
         errors = []
         for attr, value in attrs.items():
             # validate `value`... (TODO)
             pass
-        if errors: raise InvalidValues(errors)
+        #if errors: raise InvalidValues(errors)
         
         item = cls()
         for attr, value in attrs.items():
@@ -70,7 +89,10 @@ class Item(DataObject, metaclass = MetaItem):
         
         if row is None: raise cls.DoesNotExist(*((query_args,) if query_args is not None else ()))
         
-        record = {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
+        if isinstance(row, dict):
+            record = row
+        else:
+            record = {f'__{key}__': val for key, val in zip(SQL._item_columns, row)}
         
         # combine (cid,iid) to a single ID; drop the former
         record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
@@ -126,12 +148,14 @@ class Item(DataObject, metaclass = MetaItem):
 
     def insert(self):
         """
-        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it. 
-        The item might have already been present in DB, in such case a new copy is still created.
+        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
+        The item might have already been present in DB, but still a new copy is created.
         """
+        self.__category__.insert(self)
         
     def update(self):
         """Update the contents of this item's row in DB."""
+        self.__category__.update(self)
 
     def save(self):
         """
@@ -144,11 +168,22 @@ class Item(DataObject, metaclass = MetaItem):
             self.update()
             return None
         
+    def __handle__(self, request, handler):
+        """
+        Route a web request to a handler function/method of a given name. Handler functions are stored in a parent category object.
+        """
+        hdl = self.__category__.__handlers__.get(handler, None)
+        if hdl is None: raise InvalidHandler(f'Handler {handler} not found in {self.__category__}')
+        return hdl(self, request)
+        
 
 ItemDoesNotExist.item_class = Item
 
         
 #####################################################################################################################################################
+#####
+#####  CATEGORY
+#####
 
 class Items:
 
@@ -173,21 +208,30 @@ class Category(Item):
     and creation of new items within category.
     """
 
+    __name__      = None        # code name of this category
     __itemclass__ = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    __handlers__  = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
+    
+    itemclass = Item
+    store     = SimpleStore()   # data store to be used for items of this category
     
     def __init__(self):
         super().__init__()
         self.items = Items(self)
     
     @classmethod
-    def __load__(cls, row = None, iid = None, name = None, query_args = None):
-        """Load from DB a Category object specified by category name or IID."""
+    def __load__(cls, row = None, iid = None, name = None, itemclass = None, query_args = None):
+        """Load from DB a Category object specified by category name, its class name, or IID."""
         
         if row is not None: return super().__load__(row, query_args = query_args)
         
-        cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
+        def JSON(path):
+            return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
+        
+        #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"        
+        cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
         query = f"SELECT {SQL._item_select_cols} FROM hyper_items WHERE cid = {Categories.CID} AND {cond}"
-        arg   = [name or iid]
+        arg   = [itemclass or name or iid]
         
         with db.cursor() as cur:
             cur.execute(query, arg)
@@ -195,12 +239,29 @@ class Category(Item):
             return cls.__load__(row, query_args = arg)
 
     def _post_load(self):
-
+        
         # find Python class that represents items of this category
-        name = self.__data__.get('name')            # 'name' attribute should exist in all category items
-        itemclass = globals().get(name)
-        if itemclass and issubclass(itemclass, Item):
-            self.__itemclass__ = itemclass
+        if isinstance(self.itemclass, str):
+            if '.' in self.itemclass:
+                path, classname = self.itemclass.rsplit('.', 1)
+                module = importlib.import_module(path)
+                self.__itemclass__ = getattr(module, classname)
+            else:
+                self.__itemclass__ = globals().get(self.itemclass)
+        else:
+            itemclass = globals().get(self.name)
+            if itemclass and issubclass(itemclass, Item):
+                self.__itemclass__ = itemclass
+            
+        # fill out the dict of handlers
+        self.__handlers__ = {}
+        for method in dir(self.__itemclass__):
+            if callable(method) and hasattr(method, 'handler') and isinstance(method.handler, handler):
+                name = method.handler.name
+                if name in self.__handlers__:
+                    raise DuplicateHandler(f'Duplicate name of a web handler, "{name}", in {self}')
+                bound_method = method.__get__(self, Category)       # binding method to `self`
+                self.__handlers__[name] = bound_method
 
 
     #####  Items in category  #####
@@ -208,39 +269,55 @@ class Category(Item):
     def load(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
         
-        id = (self.__iid__, iid)
+        record = self.store.load(self.__iid__, iid)
+        return self.__itemclass__.__load__(record)
         
-        # select row from DB and convert to record (dict with field names)
-        with db.cursor() as cur:
-            cur.execute(SQL._item_select_by_id, id)
-            row = cur.fetchone()
-            return self.__itemclass__.__load__(row, query_args = id)
-    
     def all_items(self, limit = None):
+        """
+        Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
+        Return an iterable, but not a list.
+        """
+        records = self.store.load_all(self.__iid__, limit)
+        return map(self.__itemclass__.__load__, records)
         
-        query = SQL._item_select + f"WHERE cid = {self.__iid__} ORDER BY iid"
-        if limit is not None:
-            query += f" LIMIT {limit}"
-            
-        with db.cursor() as cur:
-            cur.execute(query)
-            return [self.__itemclass__.__load__(row) for row in cur.fetchall()]        
-    
     def first_item(self):
         
-        items = self.all_items(limit = 1)
+        items = list(self.all_items(limit = 1))
         if not items: raise self.__itemclass__.DoesNotExist()
         return items[0]
 
-    def new(self, *args, **kwargs):
-        """Create a new item of this category. This method can be called through __call__, as well, just like instance creation from a Python class."""
+    def insert(self, item):
+        self.store.insert(item)
         
+    def update(self, item):
+        self.store.update(item)
+
+
+    def __call__(self, *args, **kwargs):
+        """Create a new item of this category through a direct function call. For web-based item creation, see the new() handler."""
         return self.__itemclass__.__create__(*args, **kwargs)
 
-    __call__ = new
-    
+    @handler
+    def new(self, category_item, request):
+        """Web handler that creates a new item of the category represented by `category_item`, based on `request` data."""
+        
+        # translate `request` into `args` / `kwargs`
+        item = self.__call__() #*args, **kwargs)
+        item.save()
+        return f"Item created: {item}"
+        
+    @handler
+    def __view__(self, item, request):
+        """
+        Default handler invoked to render a response to item request when no handler name was given.
+        In category's __handlers__ dict, this method is saved under the None key.
+        """
+        
 
 #####################################################################################################################################################
+#####
+#####  SITE
+#####
 
 class Categories:
     """
@@ -261,16 +338,17 @@ class Categories:
         category = self.cache.get(key)
         if category: return category
         
-        iid = name = None
+        iid = name = itemclass = None
 
         # not in cache? load from DB
         if isinstance(key, str):
-            name = key
+            if '.' in key:  itemclass = key
+            else:           name = key
         else:
             assert isinstance(key, int), key
             iid = key
 
-        category = Category.__load__(iid = iid, name = name)
+        category = Category.__load__(iid = iid, name = name, itemclass = itemclass)
         
         # save in cache for later use
         self.cache[category.__iid__] = category
@@ -279,6 +357,12 @@ class Categories:
         
         return category 
     
+
+class Application(Item):
+    pass
+
+class Space(Item):
+    pass
         
 class Site(Item):
     
