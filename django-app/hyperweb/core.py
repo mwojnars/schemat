@@ -304,8 +304,22 @@ class Category(Item):
     def new(self, request):
         """Web handler that creates a new item of this category, based on `request` data."""
         
-        # translate `request` into `args` / `kwargs`
-        item = self.__call__() #*args, **kwargs)
+        # retrieve attribute values from GET/POST
+        print("POST:", request.POST)
+        print("GET:", request.GET)
+        print("GET[name]:", request.GET['name'])
+        
+        ## this is risky, because QueryDict has some internal handling of repeated parameters (values encoded as lists)
+        # attrs = request.POST.copy()
+        # attrs.update(request.GET)
+        
+        attrs = {}
+        for attr, value in request.POST.items():
+            attrs[attr] = value
+        for attr, value in request.GET.items():
+            attrs[attr] = value
+
+        item = self.__call__(**attrs)
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
         
