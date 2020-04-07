@@ -3,9 +3,11 @@ from django.http import HttpRequest, HttpResponse
 from nifty.text import html_escape
 
 from .config import ROOT_CID
-from .data import DataObject, onchange
+from .data import DataObject
 from .errors import *
 from .store import SimpleStore
+from .multidict import MultiDict
+
 
 #####################################################################################################################################################
 
@@ -44,9 +46,14 @@ class MetaItem(type):
         cls.__handlers__ = handlers = {}
         for attr in dir(cls):
             method = getattr(cls, attr)
-            if not (callable(method) and hasattr(method, 'handler') and isinstance(method.handler, handler)):
+            if not callable(method): continue
+            try:
+                hdl = method.handler
+            except AttributeError:
                 continue
-            name = method.handler.name
+            if not isinstance(hdl, handler): continue
+
+            name = hdl.name
             if name in handlers:
                 raise DuplicateHandler(f'Duplicate name of a web handler, "{name}", in {cls}')
             # bound_method = method.__get__(cls, Category)       # binding method to `self`
@@ -55,11 +62,11 @@ class MetaItem(type):
         # print(cls, handlers)
 
 
-class Item(DataObject, metaclass = MetaItem):
+class Item(object, metaclass = MetaItem):
     
     # builtin attributes & properties, not user-editable ...
     __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
-    __data__     = None         # raw data before/after conversion to/from object attributes, as a list of (attr-name, value) pairs
+    __data__     = None         # raw data before/after conversion to/from object attributes, as a dict or MultiDict
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     __category__ = None         # instance of Category this item belongs to
@@ -75,6 +82,39 @@ class Item(DataObject, metaclass = MetaItem):
     # user-editable attributes & properties; can be missing in a particular item
     name         = None        # name of item; constraints on length and character set depend on category
 
+    def __init__(self):
+        self.__data__ = {}
+
+    # def __getattr__(self, name):
+    #     if not self.__data__ or name not in self.__data__:
+    #         raise AttributeError(name)
+    #     return self.__data__[name]
+    
+    def __getattribute__(self, name):
+        
+        data = object.__getattribute__(self, '__data__')
+        if name == '__data__':
+            return data
+        if name in data:
+            return data[name]
+        # TODO: search `name` in __category__'s default values
+        return object.__getattribute__(self, name)
+
+    def __setattr__(self, name, value):
+        
+        # keep special attributes in __dict__, not __data__
+        if name[0] == '_':
+            object.__setattr__(self, name, value)
+            return
+        
+        data = object.__getattribute__(self, '__data__')
+        data[name] = value
+        
+
+    def __dir__(self):
+        attrs = set(super().__dir__())
+        attrs.update(self.__data__.keys())
+        return attrs
         
     def __str__(self, max_len_name = 30):
         
@@ -84,8 +124,7 @@ class Item(DataObject, metaclass = MetaItem):
             name = name[:max_len_name-3] + '...'
         
         return f'<{category}:{self.__iid__}{name}>'
-        
-    
+
     @classmethod
     def __create__(cls, **attrs):
         """Create a new item with `attrs` attribute values, typically passed from a web form."""
@@ -148,16 +187,18 @@ class Item(DataObject, metaclass = MetaItem):
         if not self.__data__: return
         data = self.__data__ = json.loads(self.__data__)
         
+        # if 'name' in data:
+        #     self.name = data['name']
+        
         if isinstance(data, dict):
             self.__dict__.update(data)
-    
+
         elif isinstance(data, list):
             for entry in data:
                 if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
                 if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
                 attr, value = entry
                 setattr(self, attr, value)
-                
         else:
             self._assert(False, f'Incorrect data format, expected list or dict: {data}')
             
@@ -207,21 +248,21 @@ ItemDoesNotExist.item_class = Item
 #####  CATEGORY
 #####
 
-class Items:
-
-    category = None         # parent category this Items manager belongs to, as an instance of Category
-
-    def __init__(self, category):
-        self.category = category
-
-    def all(self, limit = None):
-        return self.category.all_items(limit)
-    
-    def first(self):
-        return self.category.first_item()
-    
-    def new(self, *args, **kwargs):
-        return self.category.new(*args, **kwargs)
+# class Items:
+#
+#     category = None         # parent category this Items manager belongs to, as an instance of Category
+#
+#     def __init__(self, category):
+#         self.category = category
+#
+#     def all(self, limit = None):
+#         return self.category.all_items(limit)
+#
+#     def first(self):
+#         return self.category.first_item()
+#
+#     def new(self, *args, **kwargs):
+#         return self.category.new(*args, **kwargs)
     
 
 class Category(Item):
@@ -233,19 +274,19 @@ class Category(Item):
     itemclass     = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
     # handlers      = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
     
-    boot_store    = SimpleStore()   # data store used during startup
-    store         = None            # data store used for regular access to items of this category
+    _boot_store   = SimpleStore()   # data store used during startup
+    _store        = None            # data store used for regular access to items of this category
     
     def __init__(self):
         super().__init__()
-        self.store = SimpleStore()
-        self.items = Items(self)
+        self._store = SimpleStore()
+        # self.items = Items(self)
     
     @classmethod
     def __load__(cls, iid = None, name = None, itemclass = None):
         """Load from DB a Category object specified by category name, its class name, or IID."""
         
-        record = cls.boot_store.load_category(iid, name, itemclass)
+        record = cls._boot_store.load_category(iid, name, itemclass)
         return cls.__decode__(record)
 
     def _post_load(self):
@@ -269,7 +310,7 @@ class Category(Item):
     def load(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
         
-        record = self.store.load(self.__iid__, iid)
+        record = self._store.load(self.__iid__, iid)
         return self.itemclass.__decode__(record)
         
     def all_items(self, limit = None):
@@ -277,7 +318,7 @@ class Category(Item):
         Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
         Return an iterable, but not a list.
         """
-        records = self.store.load_all(self.__iid__, limit)
+        records = self._store.load_all(self.__iid__, limit)
         return map(self.itemclass.__decode__, records)
         
     def first_item(self):
@@ -287,10 +328,10 @@ class Category(Item):
         return items[0]
 
     def insert(self, item):
-        self.store.insert(item)
+        self._store.insert(item)
         
     def update(self, item):
-        self.store.update(item)
+        self._store.update(item)
 
 
     def __call__(self, *args, **kwargs):
@@ -367,9 +408,15 @@ class Categories:
         
         # save in cache for later use
         self.cache[category.__iid__] = category
-        if hasattr(category, 'name'):
-            self.cache[category.name] = category
         
+        # if hasattr(category, 'name'):
+        try:
+            name = category.name
+        except AttributeError:
+            name = None
+        if name:
+            self.cache[category.name] = category
+
         return category 
     
 
@@ -444,3 +491,4 @@ class Site(Item):
 
 site = Site.boot()
 
+print("categories:", Site.categories.cache)

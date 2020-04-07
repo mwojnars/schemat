@@ -20,6 +20,8 @@ class MultiDict(MultiValueDict):
     1) __getitem__() and get() methods return the FIRST value for a key, not the last one;
     2) __getitem__ does NOT return an empty list [] for a missing value, but instead raises an exception.
     3) getlist() does NOT copy the returned internal list of values by default.
+    
+    Side note: as of Python 3.7, dict keeps insertion order, as a language feature not an implementation detail.
     """
 
     def __getitem__(self, key):
