@@ -3,11 +3,9 @@ from django.http import HttpRequest, HttpResponse
 from nifty.text import html_escape
 
 from .config import ROOT_CID
-from .data import DataObject
+from .data import Data
 from .errors import *
 from .store import SimpleStore
-from .multidict import MultiDict
-
 
 #####################################################################################################################################################
 
@@ -66,7 +64,7 @@ class Item(object, metaclass = MetaItem):
     
     # builtin attributes & properties, not user-editable ...
     __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
-    __data__     = None         # raw data before/after conversion to/from object attributes, as a dict or MultiDict
+    __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     __category__ = None         # instance of Category this item belongs to
@@ -83,13 +81,8 @@ class Item(object, metaclass = MetaItem):
     name         = None        # name of item; constraints on length and character set depend on category
 
     def __init__(self):
-        self.__data__ = {}
+        self.__data__ = Data()
 
-    # def __getattr__(self, name):
-    #     if not self.__data__ or name not in self.__data__:
-    #         raise AttributeError(name)
-    #     return self.__data__[name]
-    
     def __getattribute__(self, name):
         
         data = object.__getattribute__(self, '__data__')
@@ -110,7 +103,6 @@ class Item(object, metaclass = MetaItem):
         data = object.__getattribute__(self, '__data__')
         data[name] = value
         
-
     def __dir__(self):
         attrs = set(super().__dir__())
         attrs.update(self.__data__.keys())
@@ -165,16 +157,16 @@ class Item(object, metaclass = MetaItem):
         
         return item
 
-    def __encode__(self):
-        """Encode regular instance attributes of this item into __data__ dict, for subsequent save in DB."""
-
-        data = self.__data__ = self.__dict__.copy()
-        
-        # remove special attributes
-        for attr in list(data.keys()):
-            if attr.startswith('_'): del data[attr]
-            
-        return data
+    # def __encode__(self):
+    #     """Encode regular instance attributes of this item into __data__ dict, for subsequent save in DB."""
+    #
+    #     data = self.__data__ = self.__dict__.copy()
+    #
+    #     # remove special attributes
+    #     for attr in list(data.keys()):
+    #         if attr.startswith('_'): del data[attr]
+    #
+    #     return data
         
 
     def _post_load(self):
@@ -185,22 +177,20 @@ class Item(object, metaclass = MetaItem):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
+        # data = self.__data__ = Data.from_json(self.__data__)
         data = self.__data__ = json.loads(self.__data__)
         
-        # if 'name' in data:
-        #     self.name = data['name']
-        
-        if isinstance(data, dict):
-            self.__dict__.update(data)
-
-        elif isinstance(data, list):
-            for entry in data:
-                if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
-                if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
-                attr, value = entry
-                setattr(self, attr, value)
-        else:
-            self._assert(False, f'Incorrect data format, expected list or dict: {data}')
+        # if isinstance(data, dict):
+        #     self.__dict__.update(data)
+        #
+        # elif isinstance(data, list):
+        #     for entry in data:
+        #         if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
+        #         if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
+        #         attr, value = entry
+        #         setattr(self, attr, value)
+        # else:
+        #     self._assert(False, f'Incorrect data format, expected list or dict: {data}')
             
             
     def _assert(self, cond, message = ''):
@@ -270,12 +260,13 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
-
-    itemclass     = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    # handlers      = None        # dict {handler_name: method} of all handlers (= public web methods) exposed by items of this category
     
+    # internal attributes
     _boot_store   = SimpleStore()   # data store used during startup
     _store        = None            # data store used for regular access to items of this category
+
+    # public item attributes
+    itemclass = Item  # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
     
     def __init__(self):
         super().__init__()

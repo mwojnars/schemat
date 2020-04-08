@@ -103,7 +103,7 @@ class SimpleStore(DataStore):
         iid = max_iid + 1
         item.__id__ = (cid, iid)
         
-        item.__encode__()
+        # item.__encode__()
         assert item.__data__ is not None
         
         record = {'cid':   cid,

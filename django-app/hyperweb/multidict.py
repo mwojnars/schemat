@@ -24,6 +24,12 @@ class MultiDict(MultiValueDict):
     Side note: as of Python 3.7, dict keeps insertion order, as a language feature not an implementation detail.
     """
 
+    @classmethod
+    def from_dict(cls, values):
+        """Create a new MultiDict initialized with values from a standard dict (no multi-values)."""
+        
+        return cls((key, [value]) for key, value in values.items())
+
     def __getitem__(self, key):
         """
         Return the first data value for this key; raise MultiDictKeyError if not found.

@@ -13,7 +13,12 @@ def item_view(request, descriptor, handler = None):
     if handler:
         return item.__handle__(request, handler)
     
-    context = {'item': vars(item)}
+    # attrs = dir(item)
+    # values = {attr: getattr(item, attr) for attr in attrs}
+    values = vars(item)
+    values.update(item.__data__)
+    
+    context = {'item': values}
     #return render(request, 'item.html.j2', context)
     
     template = loader.get_template('item.html.j2')
