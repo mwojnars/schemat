@@ -35,7 +35,7 @@ class MultiDict(MultiValueDict):
         Return the first data value for this key; raise MultiDictKeyError if not found.
         """
         try:
-            list_ = super().__getitem__(key)
+            list_ = dict.__getitem__(self, key)
         except KeyError:
             raise MultiDictKeyError(key)
         

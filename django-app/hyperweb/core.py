@@ -167,18 +167,17 @@ class Item(object, metaclass = MetaItem):
     #         if attr.startswith('_'): del data[attr]
     #
     #     return data
-        
 
     def _post_load(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
-
         
     def _decode_data(self):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
-        # data = self.__data__ = Data.from_json(self.__data__)
-        data = self.__data__ = json.loads(self.__data__)
+        data = self.__data__ = Data.from_json(self.__data__)
+        # data = self.__data__ = json.loads(self.__data__)
+        print(data.dict())
         
         # if isinstance(data, dict):
         #     self.__dict__.update(data)
@@ -399,14 +398,16 @@ class Categories:
         
         # save in cache for later use
         self.cache[category.__iid__] = category
-        
-        # if hasattr(category, 'name'):
-        try:
-            name = category.name
-        except AttributeError:
-            name = None
-        if name:
-            self.cache[category.name] = category
+
+        assert category.name, key
+        self.cache[category.name] = category
+
+        # try:
+        #     name = category.name
+        # except AttributeError:
+        #     name = None
+        # if name:
+        #     self.cache[category.name] = category
 
         return category 
     
@@ -482,4 +483,4 @@ class Site(Item):
 
 site = Site.boot()
 
-print("categories:", Site.categories.cache)
+# print("categories:", Site.categories.cache)
