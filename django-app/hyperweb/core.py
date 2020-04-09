@@ -375,6 +375,10 @@ class Space(Item):
     pass
         
 class Site(Item):
+    """
+    The global `site` object is created in hyperweb/__init__.py and can be imported with:
+      from hyperweb import site
+    """
     
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
     
@@ -432,11 +436,3 @@ class Site(Item):
         return category.load(int(iid))
         
         
-#####################################################################################################################################################
-#####
-#####  GLOBALS
-#####
-
-site = Site.boot()
-
-# print("categories:", Site.categories.cache)
