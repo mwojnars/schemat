@@ -16,7 +16,7 @@ def item_view(request, descriptor, handler = None):
     # attrs = dir(item)
     # values = {attr: getattr(item, attr) for attr in attrs}
     values = vars(item)
-    values.update(item.__data__)
+    values.update(item.__data__.first_values())
     
     context = {'item': values}
     #return render(request, 'item.html.j2', context)

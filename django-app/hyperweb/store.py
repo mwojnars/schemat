@@ -105,10 +105,11 @@ class SimpleStore(DataStore):
         
         # item.__encode__()
         assert item.__data__ is not None
+        # print("store:", list(item.__data__.lists()))
         
         record = {'cid':   cid,
                   'iid':   iid,
-                  'data':  json.dumps(item.__data__),
+                  'data':  item.__data__.to_json(),
                   }
         self.db.insert_dict('hyper_items', record)
         

@@ -118,8 +118,11 @@ class Item(object, metaclass = MetaItem):
         return f'<{category}:{self.__iid__}{name}>'
 
     @classmethod
-    def __create__(cls, **attrs):
-        """Create a new item with `attrs` attribute values, typically passed from a web form."""
+    def __create__(cls, _data = None, **attrs):
+        """
+        Create a new item initialized with `attrs` attribute values, typically passed from a web form;
+        or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
+        """
         
         errors = []
         for attr, value in attrs.items():
@@ -128,8 +131,12 @@ class Item(object, metaclass = MetaItem):
         #if errors: raise InvalidValues(errors)
         
         item = cls()
+        if _data is not None:
+            item.__data__ = _data
+            
         for attr, value in attrs.items():
-            setattr(item, attr, value)
+            item.__data__[attr] = value
+            
         return item
     
     @classmethod
@@ -177,7 +184,7 @@ class Item(object, metaclass = MetaItem):
         if not self.__data__: return
         data = self.__data__ = Data.from_json(self.__data__)
         # data = self.__data__ = json.loads(self.__data__)
-        print(data.dict())
+        # print(data.dict())
         
         # if isinstance(data, dict):
         #     self.__dict__.update(data)
@@ -335,22 +342,20 @@ class Category(Item):
     def new(self, request):
         """Web handler that creates a new item of this category, based on `request` data."""
         
+        # print("POST:", request.POST)
+        # print("GET:", request.GET)
+        # print("GET[name]:", request.GET['name'])
+        
+        data = Data()
+        
         # retrieve attribute values from GET/POST
-        print("POST:", request.POST)
-        print("GET:", request.GET)
-        print("GET[name]:", request.GET['name'])
-        
-        ## this is risky, because QueryDict has some internal handling of repeated parameters (values encoded as lists)
-        # attrs = request.POST.copy()
-        # attrs.update(request.GET)
-        
-        attrs = {}
-        for attr, value in request.POST.items():
-            attrs[attr] = value
-        for attr, value in request.GET.items():
-            attrs[attr] = value
+        # POST & GET internally store multi-valued parameters (lists of values for each parameter)
+        for attr, values in request.POST.lists():
+            data.set_values(attr, values)
+        for attr, values in request.GET.lists():
+            data.set_values(attr, values)
 
-        item = self.__call__(**attrs)
+        item = self.__call__(data)
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
         

@@ -10,18 +10,29 @@ class Data(MultiDict):
     """
     Representation of an item's attribute values (item data).
     """
+
+    class_aliases = {
+        "hyperweb.data.Data": "Data",
+    }
     
-    json = JsonPickle()
+    _json = JsonPickle(aliases = class_aliases)
+    
     
     @classmethod
     def from_json(cls, dump):
         
-        data = cls.json.loads(dump)
+        data = cls._json.loads(dump)
         
-        # for now, we assume `data` is a plain dict, no multi-values
         if isinstance(data, dict):
-            return cls.from_dict(data)
+            return cls(singular = data)
         
         assert isinstance(data, Data)
         return data
     
+    def to_json(self):
+        
+        getstate = getattr(self, '__getstate__', None)
+        print("getstate:", getstate)
+
+        return self._json.dumps(self)
+        
