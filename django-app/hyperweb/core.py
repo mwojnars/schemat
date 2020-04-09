@@ -164,17 +164,6 @@ class Item(object, metaclass = MetaItem):
         
         return item
 
-    # def __encode__(self):
-    #     """Encode regular instance attributes of this item into __data__ dict, for subsequent save in DB."""
-    #
-    #     data = self.__data__ = self.__dict__.copy()
-    #
-    #     # remove special attributes
-    #     for attr in list(data.keys()):
-    #         if attr.startswith('_'): del data[attr]
-    #
-    #     return data
-
     def _post_load(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
@@ -182,28 +171,12 @@ class Item(object, metaclass = MetaItem):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
-        data = self.__data__ = Data.from_json(self.__data__)
-        # data = self.__data__ = json.loads(self.__data__)
-        # print(data.dict())
+        self.__data__ = Data.from_json(self.__data__)
         
-        # if isinstance(data, dict):
-        #     self.__dict__.update(data)
-        #
-        # elif isinstance(data, list):
-        #     for entry in data:
-        #         if not self._assert(isinstance(entry, list), f'Incorrect data format, expected list: {entry}'): continue
-        #         if not self._assert(len(entry) == 2, f'Incorrect data format, expected 2-element list: {entry}'): continue
-        #         attr, value = entry
-        #         setattr(self, attr, value)
-        # else:
-        #     self._assert(False, f'Incorrect data format, expected list or dict: {data}')
-            
-            
     def _assert(self, cond, message = ''):
         
         if cond: return
         print(f'WARNING in item {self.__id__}. {message}')
-
 
     def insert(self):
         """
@@ -244,23 +217,6 @@ ItemDoesNotExist.item_class = Item
 #####  CATEGORY
 #####
 
-# class Items:
-#
-#     category = None         # parent category this Items manager belongs to, as an instance of Category
-#
-#     def __init__(self, category):
-#         self.category = category
-#
-#     def all(self, limit = None):
-#         return self.category.all_items(limit)
-#
-#     def first(self):
-#         return self.category.first_item()
-#
-#     def new(self, *args, **kwargs):
-#         return self.category.new(*args, **kwargs)
-    
-
 class Category(Item):
     """
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
@@ -277,7 +233,6 @@ class Category(Item):
     def __init__(self):
         super().__init__()
         self._store = SimpleStore()
-        # self.items = Items(self)
     
     @classmethod
     def __load__(cls, iid = None, name = None, itemclass = None):
@@ -341,10 +296,6 @@ class Category(Item):
     @handler()
     def new(self, request):
         """Web handler that creates a new item of this category, based on `request` data."""
-        
-        # print("POST:", request.POST)
-        # print("GET:", request.GET)
-        # print("GET[name]:", request.GET['name'])
         
         data = Data()
         

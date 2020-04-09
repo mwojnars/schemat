@@ -102,40 +102,6 @@ class JsonPickle:
             obj.__dict__ = value
         return obj
         
-    # def _decode(self, value):
-    #     """
-    #     If `value` is a dict with CLASS_ATTR, convert it to an object of a corresponding class.
-    #     Apply _decode recursively to nested collections.
-    #     """
-    #     if isinstance(value, dict):
-    #
-    #         classname = value.pop(self.CLASS_ATTR, None)
-    #
-    #         # convert nested collections
-    #         value = {key: self._decode(val) for key, val in value.items()}
-    #         if not classname: return value
-    #
-    #         # load class by its name
-    #         try:
-    #             cls = self._import(classname)
-    #         except:
-    #             print(f"WARNING in JsonPickle._decode(): failed to load class '{classname}', no decoding")
-    #             return value
-    #
-    #         # create an object
-    #         obj = cls()
-    #         setstate = getattr(obj, '__setstate__', None)
-    #         if setstate:
-    #             setstate(value)
-    #         else:
-    #             obj.__dict__ = value
-    #         return obj
-    #
-    #     elif isinstance(value, list):
-    #         return list(map(self._decode, value))
-    #     else:
-    #         return value
-        
     def _import(self, classname):
         """
         Dynamic import of a class given its full (dotted) package-module-class name.
