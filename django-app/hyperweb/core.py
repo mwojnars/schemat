@@ -1,11 +1,12 @@
-import re, json, importlib
+import re, importlib
 from django.http import HttpRequest, HttpResponse
 from nifty.text import html_escape
 
-from .config import ROOT_CID
+from .config import ROOT_CID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore
+
 
 #####################################################################################################################################################
 
@@ -62,7 +63,7 @@ class MetaItem(type):
 
 class Item(object, metaclass = MetaItem):
     
-    # builtin attributes & properties, not user-editable ...
+    # builtin instance attributes & properties, not user-editable ...
     __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
     __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     __created__  = None         # datetime when this item was created in DB; no timezone
@@ -85,12 +86,27 @@ class Item(object, metaclass = MetaItem):
 
     def __getattribute__(self, name):
         
+        # get special attributes from __dict__, not __data__
+        if name[0] == '_':
+            return object.__getattribute__(self, name)
+        
         data = object.__getattribute__(self, '__data__')
-        if name == '__data__':
-            return data
+        
+        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
+            listname = name[:-len(MULTI_SUFFIX)]
+            return data.getlist(listname)
+        
         if name in data:
             return data[name]
-        # TODO: search `name` in __category__'s default values
+        
+        # # TODO: search `name` in __category__'s default values
+        # category = object.__getattribute__(self, '__category__')
+        # if category:
+        #     try:
+        #         return category.get_default(name)
+        #     except AttributeError:
+        #         pass
+        
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
@@ -171,7 +187,7 @@ class Item(object, metaclass = MetaItem):
         """Convert __data__ from JSON string to a struct and then to object attributes."""
         
         if not self.__data__: return
-        self.__data__ = Data.from_json(self.__data__)
+        self.__data__ = Data.from_json(self.__data__, self.__category__.schema)
         
     def _assert(self, cond, message = ''):
         
@@ -228,7 +244,8 @@ class Category(Item):
     _store        = None            # data store used for regular access to items of this category
 
     # public item attributes
-    itemclass = Item  # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    itemclass = Item    # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    schema    = None    # an instance of Schema containing a list of attributes allowed in this category and their Types
     
     def __init__(self):
         super().__init__()
@@ -384,7 +401,17 @@ class Site(Item):
     
     root = None             # the global Site object created during boot()
     
+    # schema = Schema(
+    #     {
+    #         'name': String,
+    #         'app':  Type(Link, "An Application deployed in this Site"),
+    #     },
+    # )
+    
+    # item attributes...
     apps = None             # list of Applications
+    
+    # internal variables
     categories = None       # flat collection of all categories found in DB, as a class-global singleton instance of Categories; after boot(), it can be accessed as Site.categories
     descriptors = None      # {app-space-category descriptor: Category}
 

@@ -10,16 +10,12 @@ class Data(MultiDict):
     """
     Representation of an item's attribute values (item data).
     """
-
-    class_aliases = {
-        "hyperweb.data.Data": "Data",
-    }
     
-    _json = JsonPickle(aliases = class_aliases)
+    _json = JsonPickle()
     
     
     @classmethod
-    def from_json(cls, dump):
+    def from_json(cls, dump, schema = None):
         
         data = cls._json.loads(dump)
         
@@ -29,10 +25,10 @@ class Data(MultiDict):
         assert isinstance(data, Data)
         return data
     
-    def to_json(self):
+    def to_json(self, schema = None):
         
-        getstate = getattr(self, '__getstate__', None)
-        print("getstate:", getstate)
+        # getstate = getattr(self, '__getstate__', None)
+        # print("getstate:", getstate)
 
         return self._json.dumps(self)
         

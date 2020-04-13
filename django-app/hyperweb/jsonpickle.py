@@ -3,7 +3,7 @@ Custom implementation of JSON-pickling of objects of arbitrary classes.
 """
 
 import json
-from nifty.util import isbound
+from .utils import import_
 
 
 #####################################################################################################################################################
@@ -27,16 +27,20 @@ class JsonPickle:
     # name of attribute that stores a class name (with package) inside JSON dumps
     CLASS_ATTR = "@"
     
-    aliases     = None      # dict that maps full names of selected classes to their short names for use in JSON strings
-    aliases_rev = None      # like `aliases`, but reversed: short name -> full name
+    # aliases     = None      # dict that maps full names of selected classes to their short names for use in JSON strings
+    # aliases_rev = None      # like `aliases`, but reversed: short name -> full name
+    #
+    # def __init__(self, aliases = None):
+    #
+    #     self.aliases = aliases or {}
+    #     self.aliases_rev = {short: full for full, short in self.aliases.items()}
+    #     if len(self.aliases_rev) < len(self.aliases):
+    #         raise Exception("The dict of aliases contains duplicate values in JsonPickle.__init__():", aliases)
     
-    def __init__(self, aliases = None):
-        
-        self.aliases = aliases or {}
-        self.aliases_rev = {short: full for full, short in self.aliases.items()}
-        if len(self.aliases_rev) < len(self.aliases):
-            raise Exception("The dict of aliases contains duplicate values in JsonPickle.__init__():", aliases)
-    
+    def __init__(self):
+        from .globals import aliases
+        self.aliases = aliases
+
     def dumps(self, obj, **kwargs):
         # kwargs.setdefault('separators', (',', ':'))     # most compact separators (no whitespace)
         kwargs.setdefault('ensure_ascii', False)        # non-ascii chars left as UTF-8
@@ -57,7 +61,8 @@ class JsonPickle:
         def with_classname(_state):
             cls = obj.__class__
             classname = cls.__module__ + "." + cls.__name__
-            classname = self.aliases.get(classname, classname)
+            classname = self.aliases.encode(classname)
+            # classname = self.aliases.get(classname, classname)
             _state = _state.copy()
             _state[JsonPickle.CLASS_ATTR] = classname
             return _state
@@ -86,9 +91,10 @@ class JsonPickle:
         if not classname: return value
 
         # load class by its full name
-        classname = self.aliases_rev.get(classname, classname)
+        # classname = self.aliases_rev.get(classname, classname)
+        classname = self.aliases.decode(classname)
         try:
-            cls = self._import(classname)
+            cls = import_(classname)
         except:
             print(f"WARNING in JsonPickle._decode(): failed to load class '{classname}', no decoding")
             return value
@@ -102,23 +108,7 @@ class JsonPickle:
             obj.__dict__ = value
         return obj
         
-    def _import(self, classname):
-        """
-        Dynamic import of a class given its full (dotted) package-module-class name.
-        If no module name is present, __main__ is used.
-    
-        >>> JsonPickle()._import('nifty.util.Object')
-        <class 'nifty.util.Object'>
-        """
-        if '.' not in classname:
-            mod, name = '__main__', classname
-            #raise Exception("Can't import an object without module/package name: %s" % path)
-        else:
-            mod, name = classname.rsplit('.', 1)
-        module = __import__(mod, fromlist = [mod])
-        return getattr(module, name)
-        
-        
+
 #####################################################################################################################################################
 #####
 #####  GLOBAL
