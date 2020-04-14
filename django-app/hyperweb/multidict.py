@@ -28,38 +28,35 @@ class MultiDict:
     """
     
     _values = None          # dict {key: list_of_values}
-    _singletons = None      # predefined set of keys to be stored as singletons (no multi-values; no lists as wrappers)
+    # _singletons = None      # predefined set of keys to be stored as singletons (no multi-values; no lists as wrappers)
     
-    def __init__(self, singular = None, multiple = None, singletons = None):
+    def __init__(self, singular = None, multiple = None, compact = None): #singletons = None):
         """
         MultiDict can be initialized with a dict of values, either `singular`
         (each dict value is a value), or `multiple` (each dict value is a *list* of values).
         """
-        assert not (singular and multiple)
+        assert bool(singular) + bool(multiple) + bool(compact) <= 1
         if singular:
             self._values = {key: [value] for key, value in singular.items()}
         elif multiple:
             self._values = multiple.copy()
+        elif compact:
+            self.set_compact(compact)
         else:
             self._values = {}
             
-        self._singletons = singletons or set()
+        # self._singletons = singletons or set()
     
     def __getstate__(self, compact = True):
         
-        return self._compact_state() if compact else self._values
+        return self.get_compact() if compact else self._values
     
     def __setstate__(self, values, compact = True):
 
-        self._values = values
-        if not compact: return
+        if compact: self.set_compact(values)
+        else:
+            self._values = values
         
-        # turn singleton non-list values back to a list (de-compactify)
-        for key, value in values.items():
-            if isinstance(value, list): continue
-            values[key] = [value]
-        
-
     def __getitem__(self, key):
         """Return the first value for the key; raise MultiDictKeyError if not found."""
         try:
@@ -68,14 +65,14 @@ class MultiDict:
             raise MultiDictKeyError(key)
         
         # assert len(list_) >= 1
-        if key in self._singletons: return values
+        # if key in self._singletons: return values
         return values[0]
 
     def __setitem__(self, key, value):
-        if key in self._singletons:
-            self._values[key] = value
-        else:
-            self._values[key] = [value]
+        # if key in self._singletons:
+        #     self._values[key] = value
+        # else:
+        self._values[key] = [value]
 
     def __contains__(self, key):
         return key in self._values
@@ -85,8 +82,8 @@ class MultiDict:
         
     def get(self, key, default = None):
         """Return the first value for the key; or `default` if the key doesn't exist."""
-        if key in self._singletons:
-            return self._values.get(key, default)
+        # if key in self._singletons:
+        #     return self._values.get(key, default)
         values = self._values.get(key, None)
         if values is None: return default
         return values[0]
@@ -101,8 +98,8 @@ class MultiDict:
             if default is None: return []
             return default
         
-        if key in self._singletons:
-            return [self._values[key]]
+        # if key in self._singletons:
+        #     return [self._values[key]]
             
         # values = self._values.get(key, None)
         # if values is None:
@@ -128,7 +125,7 @@ class MultiDict:
     def set_values(self, key, values):
         self._values[key] = list(values)
 
-    def _compact_state(self):
+    def get_compact(self):
         """Like all_values(), but singleton lists whose value is NOT a list are replaced with this value."""
         
         state = self.all_values()
@@ -140,6 +137,16 @@ class MultiDict:
             
         return state
         
+    def set_compact(self, values):
+        
+        self._values = values
+        
+        # turn singleton non-list values back to a list (de-compactify)
+        for key, value in values.items():
+            if isinstance(value, list): continue
+            values[key] = [value]
+        
+
     def append(self, key, value):
         if key in self._values:
             self._values[key].append(value)

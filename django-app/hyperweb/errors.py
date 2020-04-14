@@ -15,7 +15,14 @@ class InvalidHandler(InvalidName): pass
 class DuplicateName(Exception): pass
 class DuplicateHandler(DuplicateName): pass
 
-class SerializationError(Exception): pass
-class StateError(Exception):
-    """State passed to deserialization (Value.setstate()) is incorrect and can't be decoded back into a Value instance."""
+class SchemaError(Exception): pass
+# class ValidationError(SchemaError):
+# class DeserializationError(SchemaError):
+
+class EncodeError(SchemaError):
+    """Python value passed to validation or serialization (Type.encode()) doesn't match the schema."""
+class EncodeErrors(EncodeError):
+    """Raised by Schema to inform about multiple validation errors in attributes."""
+class DecodeError(SchemaError):
+    """Raw value passed to deserialization (Type.decode()) is incorrect and can't be decoded."""
 

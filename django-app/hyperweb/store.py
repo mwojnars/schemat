@@ -109,7 +109,7 @@ class SimpleStore(DataStore):
         
         record = {'cid':   cid,
                   'iid':   iid,
-                  'data':  item.__data__.to_json(),
+                  'data':  item._to_json(),
                   }
         self.db.insert_dict('hyper_items', record)
         

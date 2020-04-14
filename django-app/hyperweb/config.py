@@ -27,6 +27,7 @@ CLASS_ALIASES = {
 }
 
 ALIASES = [
-    ('hyperweb.data.',  '$', ['Data']),
-    ('hyperweb.value.', '$', ['Value', 'String', 'Dict', 'Link']),
+    # special names are mapped from "package.module.name" to "$name" during serialization
+    ('hyperweb.data.',   '$', ['Data']),
+    ('hyperweb.schema.', '$', ['Value', 'String', 'Dict', 'Link']),
 ]

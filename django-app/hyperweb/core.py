@@ -6,6 +6,7 @@ from .config import ROOT_CID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore
+from .schema import Schema
 
 
 #####################################################################################################################################################
@@ -184,10 +185,17 @@ class Item(object, metaclass = MetaItem):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
     def _decode_data(self):
-        """Convert __data__ from JSON string to a struct and then to object attributes."""
+        """Convert __data__ from JSON string to a struct."""
         
         if not self.__data__: return
-        self.__data__ = Data.from_json(self.__data__, self.__category__.schema)
+        schema = self.__category__.schema
+        self.__data__ = schema.decode_json(self.__data__)
+        # self.__data__ = Data.from_json(self.__data__, schema)
+        
+    def _to_json(self):
+        schema = self.__category__.schema
+        return schema.encode_json(self.__data__)
+        # return self.__data__.to_json(schema)
         
     def _assert(self, cond, message = ''):
         
@@ -244,8 +252,8 @@ class Category(Item):
     _store        = None            # data store used for regular access to items of this category
 
     # public item attributes
-    itemclass = Item    # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    schema    = None    # an instance of Schema containing a list of attributes allowed in this category and their Types
+    itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+    schema    = Schema()    # a Schema that sets constraints on attribute names and values allowed in this category
     
     def __init__(self):
         super().__init__()
