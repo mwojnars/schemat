@@ -1,7 +1,5 @@
 
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .utils import import_
-from .globals import aliases
 from .jsonpickle import JsonPickle
 from .multidict import MultiDict
 
@@ -120,49 +118,5 @@ class Schema(Type):
                 
         data = MultiDict(multiple = data)
         return data
-    
-
-#####################################################################################################################################################
-#####
-#####  ATOMIC types
-#####
-
-class String(Type):
-    
-    def encode(self, value):
-        return value
-
-    def decode(self, value):
-        if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        return value
-
-class Python(Type):
-    """Wrapper around a python object/class specified by its full package-module name."""
-    
-    def encode(self, value):
-        if value is None: return None
-        cls = value
-        fullname = cls.__module__ + "." + cls.__name__
-        fullname = aliases.encode(fullname)
-        return fullname
-    
-    def decode(self, value):
-        if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        fullname = aliases.decode(value)
-        return import_(fullname)
-        
-
-class Dict(Type):
-    """Specification of a key-value mapping where every key must be unique; wrapper for a standard <dict> type."""
-
-class Link(Type):
-    """Outgoing link to another item."""
-    
-    cid = None
-    iid = None
-    
-    @property
-    def id(self):
-        return self.cid, self.iid
     
 

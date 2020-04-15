@@ -1,11 +1,3 @@
-from hyperweb.core import Site
+from hyperweb.core import site
 
 
-#####################################################################################################################################################
-#####
-#####  GLOBALS
-#####
-
-site = Site.boot()
-
-# print("categories:", Site.categories.cache)

@@ -73,16 +73,17 @@ class SimpleStore(DataStore):
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
-    def load_category(self, iid = None, name = None, itemclass = None):
+    def load_category(self, iid = None, name = None):
         """Special method for loading category items during startup based on their IID or name."""
 
         def JSON(path):
             return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
         
         #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
-        cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
+        #cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
+        cond  = JSON(f'$.name') if name else f"iid = %s"
         query = f"SELECT {self._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
-        arg   = [itemclass or name or iid]
+        arg   = [name or iid]
         
         with self.db.cursor() as cur:
             cur.execute(query, arg)

@@ -70,20 +70,35 @@ class Item(object, metaclass = MetaItem):
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     __category__ = None         # instance of Category this item belongs to
-
+    __loaded__   = False        # True if this item's data has been fully loaded from DB; for implementation of lazy loading of linked items
+    
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods) exposed by items of the current Item subclass
 
     @property
     def __cid__(self): return self.__id__[0]
     
+    @__cid__.setter
+    def __cid__(self, cid): self.__id__ = (cid, self.__id__[1]) if self.__id__ else (cid, None)
+
     @property
     def __iid__(self): return self.__id__[1]
+
+    @__iid__.setter
+    def __iid__(self, iid): self.__id__ = (self.__id__[0], iid) if self.__id__ else (None, iid)
     
     # user-editable attributes & properties; can be missing in a particular item
     name         = None        # name of item; constraints on length and character set depend on category
 
-    def __init__(self):
+    def __init__(self, **attrs):
+        # cid = category.__iid__ if category else None
+        # self.__category__ = category
+        # self.__id__ = (cid, iid)
+        
         self.__data__ = Data()
+        for attr, value in attrs.items():
+            setattr(self, attr, value)
+        if self.__category__:
+            self.__cid__ = self.__category__.__iid__
 
     def __getattribute__(self, name):
         
@@ -127,7 +142,8 @@ class Item(object, metaclass = MetaItem):
         
     def __str__(self, max_len_name = 30):
         
-        category = f'{self.__category__.name}' if self.__category__.name else f'CID({self.__cid__})'
+        cat = self.__category__
+        category = f'{cat.name}' if cat and cat.name else f'CID({self.__cid__})'
         name     = f' {self.name}' if self.name is not None else ''
         if len(name) > max_len_name:
             name = name[:max_len_name-3] + '...'
@@ -156,8 +172,22 @@ class Item(object, metaclass = MetaItem):
             
         return item
     
+    def __load__(self):
+        """
+        Load into self the entire data for this item as stored in its item row in DB.
+        The row is found using any information that is currently present in self, typically by __id__.
+        This method can be called at any point in time, not necessarily during initialization.
+        Importantly, __load__() can be delayed until a value of a missing (not loaded) attribute
+        is requested (lazy loading).
+        """
+        store = self.__category__._store
+        record = store.load(self.__cid__, self.__iid__)
+        self.__decode__(record, item = self)
+        return self
+
+
     @classmethod
-    def __decode__(cls, record):
+    def __decode__(cls, record, item = None):
         """Creates an Item instance from an existing DB record."""
         
         # combine (cid,iid) to a single ID; drop the former
@@ -165,7 +195,7 @@ class Item(object, metaclass = MetaItem):
         del record['__cid__']
         del record['__iid__']
         
-        item = cls()
+        item = item or cls()
 
         for field, value in record.items():
             if value in (None, ''): continue
@@ -248,24 +278,23 @@ class Category(Item):
     """
     
     # internal attributes
-    _boot_store   = SimpleStore()   # data store used during startup
+    _boot_store   = SimpleStore()   # data store used during startup for accessing category-items
     _store        = None            # data store used for regular access to items of this category
 
     # public item attributes
     itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
     schema    = Schema()    # a Schema that sets constraints on attribute names and values allowed in this category
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **attrs):
+        attrs['__cid__'] = ROOT_CID
+        super().__init__(**attrs)
         self._store = SimpleStore()
-    
-    @classmethod
-    def __load__(cls, iid = None, name = None, itemclass = None):
-        """Load from DB a Category object specified by category name, its class name, or IID."""
         
-        record = cls._boot_store.load_category(iid, name, itemclass)
-        return cls.__decode__(record)
-
+    def __load__(self):
+        record = self._boot_store.load_category(self.__iid__, self.name)
+        self.__decode__(record, item = self)
+        return self
+    
     def _post_load(self):
         
         # find Python class that represents items of this category
@@ -286,9 +315,8 @@ class Category(Item):
 
     def load(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
-        
-        record = self._store.load(self.__iid__, iid)
-        return self.itemclass.__decode__(record)
+
+        return self.itemclass(__category__ = self, __iid__ = iid).__load__()
         
     def all_items(self, limit = None):
         """
@@ -311,16 +339,18 @@ class Category(Item):
         self._store.update(item)
 
 
-    def __call__(self, *args, **kwargs):
+    def new(self, *args, **kwargs):
         """Create a new item of this category through a direct function call. For web-based item creation, see the new() handler."""
         item = self.itemclass.__create__(*args, **kwargs)
         item.__id__ = (self.__iid__, None)
         item.__category__ = self
         return item
 
-    @handler()
-    def new(self, request):
-        """Web handler that creates a new item of this category, based on `request` data."""
+    __call__ = new
+
+    @handler('new')
+    def new_h(self, request):
+        """Web handler that creates a new item of this category based on `request` data."""
         
         data = Data()
         
@@ -331,7 +361,7 @@ class Category(Item):
         for attr, values in request.GET.lists():
             data.set_values(attr, values)
 
-        item = self.__call__(data)
+        item = self.new(data)
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
         
@@ -356,7 +386,8 @@ class Categories:
     
     def __init__(self):
         
-        root_category = Category.__load__(iid = ROOT_CID)       # root Category is a category for itself, hence its IID == CID
+        # root_category = Category.__load__(iid = ROOT_CID)       # root Category is a category for itself, hence its IID == CID
+        root_category = Category(__iid__ = ROOT_CID).__load__()       # root Category is a category for itself, hence its IID == CID
         self.cache = {"Category": root_category}
         
     def __getitem__(self, key):
@@ -365,17 +396,17 @@ class Categories:
         category = self.cache.get(key)
         if category: return category
         
-        iid = name = itemclass = None
+        iid = name = None
 
         # not in cache? load from DB
         if isinstance(key, str):
-            if '.' in key:  itemclass = key
-            else:           name = key
+            name = key
         else:
             assert isinstance(key, int), key
             iid = key
 
-        category = Category.__load__(iid = iid, name = name, itemclass = itemclass)
+        category = Category(__iid__ = iid, name = name).__load__()
+        # category = Category.__load__(iid = iid, name = name)
         
         # save in cache for later use
         self.cache[category.__iid__] = category
@@ -392,6 +423,8 @@ class Categories:
 
         return category 
     
+    get = __getitem__
+
 
 class Application(Item):
     pass
@@ -463,7 +496,9 @@ class Site(Item):
                     descriptor = f"{space_name}.{category_name}"
                     self.descriptors[descriptor] = category
         
-    
+    def get_category(self, cid):
+        return self.categories.get(cid)
+
     def load(self, descriptor, app = None):
         
         qualifier, iid = descriptor.split(':')
@@ -471,3 +506,12 @@ class Site(Item):
         return category.load(int(iid))
         
         
+        
+#####################################################################################################################################################
+#####
+#####  GLOBALS
+#####
+
+site = Site.boot()
+
+# print("categories:", Site.categories.cache)
