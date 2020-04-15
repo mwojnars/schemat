@@ -90,13 +90,15 @@ class Item(object, metaclass = MetaItem):
     name         = None        # name of item; constraints on length and character set depend on category
 
     def __init__(self, **attrs):
+        """None values in `attrs` are IGNORED when copying `attrs` to self."""
+        
         # cid = category.__iid__ if category else None
         # self.__category__ = category
         # self.__id__ = (cid, iid)
         
         self.__data__ = Data()
         for attr, value in attrs.items():
-            setattr(self, attr, value)
+            if value is not None: setattr(self, attr, value)
         if self.__category__:
             self.__cid__ = self.__category__.__iid__
 
@@ -180,7 +182,7 @@ class Item(object, metaclass = MetaItem):
         Importantly, __load__() can be delayed until a value of a missing (not loaded) attribute
         is requested (lazy loading).
         """
-        store = self.__category__._store
+        store = self.__category__.store
         record = store.load(self.__cid__, self.__iid__)
         self.__decode__(record, item = self)
         return self
@@ -188,12 +190,17 @@ class Item(object, metaclass = MetaItem):
 
     @classmethod
     def __decode__(cls, record, item = None):
-        """Creates an Item instance from an existing DB record."""
+        """
+        Decode fields from a DB record into `item` attributes (new instance of <cls> if None).
+        Return `item`.
+        """
         
         # combine (cid,iid) to a single ID; drop the former
         record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
         del record['__cid__']
         del record['__iid__']
+        
+        data = record.pop('__data__')
         
         item = item or cls()
 
@@ -204,7 +211,12 @@ class Item(object, metaclass = MetaItem):
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
         item.__category__ = item if (cid == iid == ROOT_CID) else Site.categories[cid]
-        item._decode_data()
+
+        # convert __data__ from JSON string to a struct
+        if data:
+            schema = item.__category__.schema
+            data = schema.decode_json(data)
+            item.__data__.update(data)
         
         item._post_load()
         #item.commit()
@@ -213,14 +225,6 @@ class Item(object, metaclass = MetaItem):
 
     def _post_load(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
-        
-    def _decode_data(self):
-        """Convert __data__ from JSON string to a struct."""
-        
-        if not self.__data__: return
-        schema = self.__category__.schema
-        self.__data__ = schema.decode_json(self.__data__)
-        # self.__data__ = Data.from_json(self.__data__, schema)
         
     def _to_json(self):
         schema = self.__category__.schema
@@ -278,8 +282,8 @@ class Category(Item):
     """
     
     # internal attributes
-    _boot_store   = SimpleStore()   # data store used during startup for accessing category-items
-    _store        = None            # data store used for regular access to items of this category
+    boot_store   = SimpleStore()   # data store used during startup for accessing category-items
+    store        = None            # data store used for regular access to items of this category
 
     # public item attributes
     itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
@@ -288,10 +292,10 @@ class Category(Item):
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
         super().__init__(**attrs)
-        self._store = SimpleStore()
+        self.store = SimpleStore()
         
     def __load__(self):
-        record = self._boot_store.load_category(self.__iid__, self.name)
+        record = self.boot_store.load_category(self.__iid__, self.name)
         self.__decode__(record, item = self)
         return self
     
@@ -323,7 +327,7 @@ class Category(Item):
         Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
         Return an iterable, but not a list.
         """
-        records = self._store.load_all(self.__iid__, limit)
+        records = self.store.load_all(self.__iid__, limit)
         return map(self.itemclass.__decode__, records)
         
     def first_item(self):
@@ -333,10 +337,10 @@ class Category(Item):
         return items[0]
 
     def insert(self, item):
-        self._store.insert(item)
+        self.store.insert(item)
         
     def update(self, item):
-        self._store.update(item)
+        self.store.update(item)
 
 
     def new(self, *args, **kwargs):

@@ -154,3 +154,40 @@ class MultiDict:
             self._values[key] = [value]
     
     
+    def update(self, d):
+        """Replace existing key lists. Leave a list unchanged if its key is not in `d`."""
+        if isinstance(d, MultiDict):
+            self._values.update(d.copy()._values)
+        else:
+            assert isinstance(d, dict)
+            self._values.update({key: [value] for key, value in d.items()})
+        
+        
+    def extend(self, d):
+        """Extend rather than replace existing key lists."""
+        if isinstance(d, MultiDict):
+            if not self._values:
+                self._values = d._values.copy()
+            else:
+                for key, values in d._values.items():
+                    oldvals = self._values.get(key)
+                    self._values[key] = oldvals + values if oldvals else values
+
+        else:
+            assert isinstance(d, dict)
+            for key, value in d.items():
+                oldvals = self._values.get(key)
+                self._values[key] = oldvals + [value] if oldvals else [value]
+    
+            
+    def copy(self):
+        """
+        A shallow copy of self, but with value lists copied, too (!) -
+        so that it's safe to modify value lists on both copies.
+        """
+        dup = MultiDict()
+        dup._values = {key: values.copy() for key, values in self._values.items()}
+        return dup
+    
+        
+        
