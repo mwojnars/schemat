@@ -49,10 +49,8 @@ class SimpleStore(DataStore):
         
         return {f'__{key}__': val for key, val in zip(self._item_columns, row)}
 
-    def load(self, cid, iid):
+    def load(self, id):
         """Load from DB an item with a given ID = (CID,IID) and return as a record (dict)."""
-        
-        id = (cid, iid)
         
         # select row from DB and convert to record (dict with field names)
         with self.db.cursor() as cur:

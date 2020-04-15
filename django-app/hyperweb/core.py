@@ -65,7 +65,9 @@ class MetaItem(type):
 class Item(object, metaclass = MetaItem):
     
     # builtin instance attributes & properties, not user-editable ...
-    __id__       = None         # (__cid__, __iid__) tuple that identifies this item; globally unique; primary key in DB
+    __cid__      = None         # __cid__ (Category ID) of this item
+    __iid__      = None         # __iid__ (Item ID within category) of this item
+                                # ... the (CID,IID) tuple is a globally unique ID of item and a primary key in DB
     __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
@@ -75,26 +77,17 @@ class Item(object, metaclass = MetaItem):
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods) exposed by items of the current Item subclass
 
     @property
-    def __cid__(self): return self.__id__[0]
+    def __id__(self): return self.__cid__, self.__iid__
     
-    @__cid__.setter
-    def __cid__(self, cid): self.__id__ = (cid, self.__id__[1]) if self.__id__ else (cid, None)
+    @__id__.setter
+    def __id__(self, id): self.__cid__, self.__iid__ = id
 
-    @property
-    def __iid__(self): return self.__id__[1]
-
-    @__iid__.setter
-    def __iid__(self, iid): self.__id__ = (self.__id__[0], iid) if self.__id__ else (None, iid)
     
     # user-editable attributes & properties; can be missing in a particular item
     name         = None        # name of item; constraints on length and character set depend on category
 
     def __init__(self, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
-        
-        # cid = category.__iid__ if category else None
-        # self.__category__ = category
-        # self.__id__ = (cid, iid)
         
         self.__data__ = Data()
         for attr, value in attrs.items():
@@ -183,7 +176,7 @@ class Item(object, metaclass = MetaItem):
         is requested (lazy loading).
         """
         store = self.__category__.store
-        record = store.load(self.__cid__, self.__iid__)
+        record = store.load(self.__id__)
         self.__decode__(record, item = self)
         return self
 
@@ -194,15 +187,8 @@ class Item(object, metaclass = MetaItem):
         Decode fields from a DB record into `item` attributes (new instance of <cls> if None).
         Return `item`.
         """
-        
-        # combine (cid,iid) to a single ID; drop the former
-        record['__id__'] = (cid, iid) = (record['__cid__'], record['__iid__'])
-        del record['__cid__']
-        del record['__iid__']
-        
-        data = record.pop('__data__')
-        
         item = item or cls()
+        data = record.pop('__data__')
 
         for field, value in record.items():
             if value in (None, ''): continue
@@ -390,8 +376,7 @@ class Categories:
     
     def __init__(self):
         
-        # root_category = Category.__load__(iid = ROOT_CID)       # root Category is a category for itself, hence its IID == CID
-        root_category = Category(__iid__ = ROOT_CID).__load__()       # root Category is a category for itself, hence its IID == CID
+        root_category = Category(__iid__ = ROOT_CID).__load__()     # root Category is a category for itself, hence its IID == CID
         self.cache = {"Category": root_category}
         
     def __getitem__(self, key):
@@ -410,7 +395,6 @@ class Categories:
             iid = key
 
         category = Category(__iid__ = iid, name = name).__load__()
-        # category = Category.__load__(iid = iid, name = name)
         
         # save in cache for later use
         self.cache[category.__iid__] = category

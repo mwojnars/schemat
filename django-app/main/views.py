@@ -16,6 +16,7 @@ def item_view(request, descriptor, handler = None):
     # attrs = dir(item)
     # values = {attr: getattr(item, attr) for attr in attrs}
     values = vars(item)
+    values['__id__'] = item.__id__
     values.update(item.__data__.all_values())
     
     context = {'item': values}
