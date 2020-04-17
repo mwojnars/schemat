@@ -75,7 +75,8 @@ class MultiDict:
         self._values[key] = [value]
 
     def __contains__(self, key):
-        return key in self._values
+        values = self._values.get(key)
+        return bool(values)
         
     def keys(self):
         return self._values.keys()
@@ -110,6 +111,14 @@ class MultiDict:
         if copy_list: return list(values)
         return values
         
+    def setlist(self, key, values):
+        values = list(values)
+        if not values:
+            self._values.pop(key, None)             # do NOT store empty lists, they are implicit
+        else:
+            self._values[key] = values
+
+        
     def first_values(self):
         """Return all first values per key as a standard dict."""
         return {key: values[0] for key, values in self._values.items()}
@@ -121,9 +130,6 @@ class MultiDict:
     def all_values(self):
         """Return a dict of lists of values per key; same as self._values.copy()."""
         return self._values.copy()
-
-    def set_values(self, key, values):
-        self._values[key] = list(values)
 
     def get_compact(self):
         """Like all_values(), but singleton lists whose value is NOT a list are replaced with this value."""

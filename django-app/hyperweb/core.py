@@ -26,7 +26,13 @@ class handler:
         if method.__name__ != '__view__':
             self.name = self.name or method.__name__
         return method
-        
+
+class _RAISE_:
+    """A token used to indicate that an exception should be raised if an attribute value is not found."""
+
+# shorthand for use inside Item.__getattribute__()
+_get_ = object.__getattribute__
+
 
 #####################################################################################################################################################
 #####
@@ -67,7 +73,7 @@ class Item(object, metaclass = MetaItem):
     # builtin instance attributes & properties, not user-editable ...
     __cid__      = None         # __cid__ (Category ID) of this item
     __iid__      = None         # __iid__ (Item ID within category) of this item
-                                # ... the (CID,IID) tuple is a globally unique ID of item and a primary key in DB
+                                # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
     __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
@@ -75,7 +81,7 @@ class Item(object, metaclass = MetaItem):
     __loaded__   = False        # True if this item's data has been fully loaded from DB; for implementation of lazy loading of linked items
     
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods) exposed by items of the current Item subclass
-
+    
     @property
     def __id__(self): return self.__cid__, self.__iid__
     
@@ -83,52 +89,103 @@ class Item(object, metaclass = MetaItem):
     def __id__(self, id): self.__cid__, self.__iid__ = id
 
     
-    # user-editable attributes & properties; can be missing in a particular item
-    name         = None        # name of item; constraints on length and character set depend on category
-
     def __init__(self, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
         self.__data__ = Data()
+
+        # user-editable attributes & properties; can be missing in a particular item
+        self.name = None        # name of item; constraints on length and character set depend on category
+
         for attr, value in attrs.items():
             if value is not None: setattr(self, attr, value)
-        if self.__category__:
+        
+        # impute __cid__ to/from __category__
+        if self.__category__ and self.__cid__ is not None:
+            assert self.__cid__ == self.__category__.__iid__
+        elif self.__category__:
             self.__cid__ = self.__category__.__iid__
+        elif self.__cid__:
+            self.__category__ = site.get_category(self.__cid__)
 
-    def __getattribute__(self, name):
+
+    def get(self, name, default = _RAISE_):
+        """Get attribute value from:
+           - self.__data__ OR
+           - self.__category__'s schema defaults OR
+           - self.__class__'s class-level defaults.
+           If `name` is not found, `default` is returned if present, or AttributeError raised otherwise.
+        """
+        try:
+            return self.__data__[name]
+        except KeyError: pass
         
-        # get special attributes from __dict__, not __data__
-        if name[0] == '_':
-            return object.__getattribute__(self, name)
+        try:
+            getattr(self.__class__, name)
+        except AttributeError: pass
         
-        data = object.__getattribute__(self, '__data__')
-        
+        if default is _RAISE_:
+            raise AttributeError(name)
+        return default
+
+    def getlist(self, name, default = None, copy_list = False):
+        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.getlist()"""
+        return self.__data__.getlist(name, default, copy_list)
+
+    def __getattr__(self, name):
+        """Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`."""
         if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-            listname = name[:-len(MULTI_SUFFIX)]
-            return data.getlist(listname)
-        
-        if name in data:
-            return data[name]
-        
-        # # TODO: search `name` in __category__'s default values
-        # category = object.__getattribute__(self, '__category__')
-        # if category:
-        #     try:
-        #         return category.get_default(name)
-        #     except AttributeError:
-        #         pass
-        
-        return object.__getattribute__(self, name)
+            basename = name[:-len(MULTI_SUFFIX)]
+            return self.getlist(basename)
+        return self.get(name)
+
+    # def __getattribute__(self, name):
+    #
+    #     # get special attributes from __dict__, not __data__
+    #     if name[0] == '_':
+    #         return _get_(self, name)
+    #
+    #     data   = _get_(self, '__data__')
+    #     loaded = _get_(self, '__loaded__')
+    #     load   = _get_(self, '__load__')
+    #
+    #     if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
+    #         basename = name[:-len(MULTI_SUFFIX)]
+    #         if not (loaded or basename in data): load()
+    #         return data.getlist(basename)
+    #
+    #     if not (loaded or name in data): load()
+    #     if name in data:
+    #         return data[name]
+    #
+    #     # # TODO: search `name` in __category__'s default values
+    #     # category = object.__getattribute__(self, '__category__')
+    #     # if category:
+    #     #     try:
+    #     #         return category.get_default(name)
+    #     #     except AttributeError:
+    #     #         pass
+    #
+    #     return _get_(self, name)
+
+    def set(self, name, value):
+        """Assigns a singleton `value` to a given name in __data__, also when `name` looks like a private attr."""
+        self.__data__[name] = value
+
+    def setlist(self, name, values):
+        """Assigns a list of 0+ `values` to a given name in __data__."""
+        self.__data__.setlist(name, values)
 
     def __setattr__(self, name, value):
+        """Assigns a singleton `value` to a given name in __data__; or to __dict__ if `name` is a private attr."""
         
-        # keep special attributes in __dict__, not __data__
+        # store private attributes in __dict__, not __data__
         if name[0] == '_':
             object.__setattr__(self, name, value)
-            return
-        
-        data = object.__getattribute__(self, '__data__')
-        data[name] = value
+        else:
+            self.__data__[name] = value
+        # data = object.__getattribute__(self, '__data__')
+        # data[name] = value
         
     def __dir__(self):
         attrs = set(super().__dir__())
@@ -169,25 +226,29 @@ class Item(object, metaclass = MetaItem):
     
     def __load__(self):
         """
-        Load into self the entire data for this item as stored in its item row in DB.
-        The row is found using any information that is currently present in self, typically by __id__.
+        Load into self the entire data of this item as stored in its item row in DB.
+        The row is found using any information that's currently available in self, typically the __id__.
         This method can be called at any point in time, not necessarily during initialization.
-        Importantly, __load__() can be delayed until a value of a missing (not loaded) attribute
+        Importantly, __load__() call can be delayed until a value of a missing (not loaded) attribute
         is requested (lazy loading).
         """
-        store = self.__category__.store
+        self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+        store = self.__category__._store
         record = store.load(self.__id__)
         self.__decode__(record, item = self)
         return self
-
+    
 
     @classmethod
-    def __decode__(cls, record, item = None):
+    def __decode__(cls, record, item = None, loaded = True):
         """
-        Decode fields from a DB record into `item` attributes (new instance of <cls> if None).
-        Return `item`.
+        Decode fields from a DB `record` into item's attributes; or into a new instance
+        of <cls> if `item` is None. Return the resulting item.
+        If loaded=True, the resulting item is marked as fully loaded (__loaded__).
         """
         item = item or cls()
+        item.__loaded__ = loaded
+        
         data = record.pop('__data__')
 
         for field, value in record.items():
@@ -196,7 +257,7 @@ class Item(object, metaclass = MetaItem):
         
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
-        item.__category__ = item if (cid == iid == ROOT_CID) else Site.categories[cid]
+        item.__category__ = item if (cid == iid == ROOT_CID) else Site._categories[cid]
 
         # convert __data__ from JSON string to a struct
         if data:
@@ -213,7 +274,7 @@ class Item(object, metaclass = MetaItem):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
     def _to_json(self):
-        schema = self.__category__.schema
+        schema = self.__category__.get('schema')
         return schema.encode_json(self.__data__)
         # return self.__data__.to_json(schema)
         
@@ -268,20 +329,21 @@ class Category(Item):
     """
     
     # internal attributes
-    boot_store   = SimpleStore()   # data store used during startup for accessing category-items
-    store        = None            # data store used for regular access to items of this category
+    _boot_store   = SimpleStore()   # data store used during startup for accessing category-items
+    _store        = None            # data store used for regular access to items of this category
 
-    # public item attributes
-    itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    schema    = Schema()    # a Schema that sets constraints on attribute names and values allowed in this category
-    
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
         super().__init__(**attrs)
-        self.store = SimpleStore()
+        self._store = SimpleStore()
+        
+        # public item attributes
+        self.itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+        self.schema    = Schema()    # a Schema that sets constraints on attribute names and values allowed in this category
         
     def __load__(self):
-        record = self.boot_store.load_category(self.__iid__, self.name)
+        self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+        record = self._boot_store.load_category(self.__iid__, self.name)
         self.__decode__(record, item = self)
         return self
     
@@ -313,7 +375,7 @@ class Category(Item):
         Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
         Return an iterable, but not a list.
         """
-        records = self.store.load_all(self.__iid__, limit)
+        records = self._store.load_all(self.__iid__, limit)
         return map(self.itemclass.__decode__, records)
         
     def first_item(self):
@@ -323,10 +385,10 @@ class Category(Item):
         return items[0]
 
     def insert(self, item):
-        self.store.insert(item)
+        self._store.insert(item)
         
     def update(self, item):
-        self.store.update(item)
+        self._store.update(item)
 
 
     def new(self, *args, **kwargs):
@@ -347,9 +409,9 @@ class Category(Item):
         # retrieve attribute values from GET/POST
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
         for attr, values in request.POST.lists():
-            data.set_values(attr, values)
+            data.setlist(attr, values)
         for attr, values in request.GET.lists():
-            data.set_values(attr, values)
+            data.setlist(attr, values)
 
         item = self.new(data)
         item.save()
@@ -437,18 +499,18 @@ class Site(Item):
     #     },
     # )
     
-    # item attributes...
-    apps = None             # list of Applications
+    # # item attributes...
+    # apps = None             # list of Applications
     
     # internal variables
-    categories = None       # flat collection of all categories found in DB, as a class-global singleton instance of Categories; after boot(), it can be accessed as Site.categories
-    descriptors = None      # {app-space-category descriptor: Category}
+    _categories = None       # flat collection of all categories found in DB, as a class-global singleton instance of Categories; after boot(), it can be accessed as Site.categories
+    _descriptors = None      # {app-space-category descriptor: Category}
 
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
-        categories = cls.categories = Categories()   
+        categories = cls._categories = Categories()
         Site = categories['Site']
         root = cls.root = Site.first_item()
         return root
@@ -461,16 +523,16 @@ class Site(Item):
     def _init_apps(self):
         """Convert IIDs of apps to Application objects."""
         
-        Application = self.categories['Application']
+        Application = self._categories['Application']
         self.apps = [Application.load(iid) for iid in self.apps]
         
     def _init_descriptors(self):
         """Initialize self.descriptors based on self.apps."""
 
-        Space = self.categories['Space']
-        Category = self.categories['Category']
+        Space = self._categories['Space']
+        Category = self._categories['Category']
         
-        self.descriptors = {}
+        self._descriptors = {}
         
         for app in self.apps:
             for space_name, space_iid in app.spaces.items():
@@ -482,15 +544,15 @@ class Site(Item):
                     category = Category.load(category_iid)
                     
                     descriptor = f"{space_name}.{category_name}"
-                    self.descriptors[descriptor] = category
+                    self._descriptors[descriptor] = category
         
     def get_category(self, cid):
-        return self.categories.get(cid)
+        return self._categories.get(cid)
 
     def load(self, descriptor, app = None):
         
         qualifier, iid = descriptor.split(':')
-        category = self.descriptors[qualifier]
+        category = self._descriptors[qualifier]
         return category.load(int(iid))
         
         
