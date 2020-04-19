@@ -3,7 +3,7 @@ Custom implementation of JSON-pickling of objects of arbitrary classes.
 """
 
 import json
-from .utils import import_
+from .utils import import_, getstate
 
 
 #####################################################################################################################################################
@@ -53,37 +53,40 @@ class JsonPickle:
         # return self._decode(obj)
     
     def _getstate(self, obj):
-        """
-        Retrieve object's state with __getstate__(), or take it from __dict__.
-        Append class name in the resulting dictionary.
-        """
-
-        def with_classname(_state):
-            cls = obj.__class__
-            classname = cls.__module__ + "." + cls.__name__
-            classname = self.aliases.encode(classname)
-            # classname = self.aliases.get(classname, classname)
-            _state = _state.copy()
-            _state[JsonPickle.CLASS_ATTR] = classname
-            return _state
-
-        getstate = getattr(obj, '__getstate__', None)
-
-        # call __getstate__() if present and bound;
-        # 'obj' can be a class! then __getstate__ is present but unbound
-        if hasattr(getstate, '__self__'):
-            state = getstate()
-            if isinstance(state, dict): return with_classname(state)
-            raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
-            # return {'__state__': state}                         # wrap up a non-dict state in dict
-
-        # otherwise use __dict__
-        else:
-            state = getattr(obj, '__dict__', None)
-            if state is None:
-                raise TypeError(f"__dict__ not present in {obj}")
-            else:
-                return with_classname(state)
+        return getstate(obj, self.aliases, self.CLASS_ATTR)
+        
+    # def _getstate(self, obj):
+    #     """
+    #     Retrieve object's state with __getstate__(), or take it from __dict__.
+    #     Append class name in the resulting dictionary.
+    #     """
+    #
+    #     def with_classname(_state):
+    #         cls = obj.__class__
+    #         classname = cls.__module__ + "." + cls.__name__
+    #         classname = self.aliases.encode(classname)
+    #         # classname = self.aliases.get(classname, classname)
+    #         _state = _state.copy()
+    #         _state[JsonPickle.CLASS_ATTR] = classname
+    #         return _state
+    #
+    #     getstate = getattr(obj, '__getstate__', None)
+    #
+    #     # call __getstate__() if present and bound;
+    #     # 'obj' can be a class! then __getstate__ is present but unbound
+    #     if hasattr(getstate, '__self__'):
+    #         state = getstate()
+    #         if isinstance(state, dict): return with_classname(state)
+    #         raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
+    #         # return {'__state__': state}                         # wrap up a non-dict state in dict
+    #
+    #     # otherwise use __dict__
+    #     else:
+    #         state = getattr(obj, '__dict__', None)
+    #         if state is None:
+    #             raise TypeError(f"__dict__ not present in {obj}")
+    #         else:
+    #             return with_classname(state)
         
     def _decode(self, value):
 

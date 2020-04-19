@@ -29,5 +29,7 @@ CLASS_ALIASES = {
 ALIASES = [
     # special names are mapped from "package.module.name" to "$name" during serialization
     ('hyperweb.data.',   '$', ['Data']),
-    ('hyperweb.schema.', '$', ['Value', 'String', 'Dict', 'Link']),
+    ('hyperweb.schema.', '$', ['Schema']),
+    ('hyperweb.fields.', '$', ['Object', 'Python', 'String', 'Dict', 'Link']),
+    ('hyperweb.core.',   '$', ['Item', 'Category', 'Site', 'Application', 'Space']),
 ]

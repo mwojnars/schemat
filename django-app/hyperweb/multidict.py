@@ -74,9 +74,18 @@ class MultiDict:
         # else:
         self._values[key] = [value]
 
+    def __delitem__(self, key):
+        del self._values[key]
+
     def __contains__(self, key):
         values = self._values.get(key)
         return bool(values)
+        
+    def __len__(self):
+        return len(self._values)
+        
+    def __bool__(self):
+        return bool(self._values)
         
     def keys(self):
         return self._values.keys()

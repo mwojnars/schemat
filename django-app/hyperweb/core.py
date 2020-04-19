@@ -6,7 +6,7 @@ from .config import ROOT_CID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore
-from .schema import Schema
+from .schema import Field, Schema
 
 
 #####################################################################################################################################################
@@ -88,15 +88,18 @@ class Item(object, metaclass = MetaItem):
     @__id__.setter
     def __id__(self, id): self.__cid__, self.__iid__ = id
 
+    # @property
+    # def data(self):
+    #     return Data(self.__data__)
     
     def __init__(self, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
         self.__data__ = Data()
-
+        
         # user-editable attributes & properties; can be missing in a particular item
         self.name = None        # name of item; constraints on length and character set depend on category
-
+        
         for attr, value in attrs.items():
             if value is not None: setattr(self, attr, value)
         
@@ -117,11 +120,20 @@ class Item(object, metaclass = MetaItem):
            If `name` is not found, `default` is returned if present, or AttributeError raised otherwise.
         """
         try:
+            if not (self.__loaded__ or name in self.__data__):
+                self.__load__()
             return self.__data__[name]
         except KeyError: pass
         
+        # # TODO: search `name` in __category__'s default values
+        # category = _get_(self, '__category__')
+        # if category:
+        #     try:
+        #         return category.get_default(name)
+        #     except AttributeError: pass
+        
         try:
-            getattr(self.__class__, name)
+            return getattr(self.__class__, name)
         except AttributeError: pass
         
         if default is _RAISE_:
@@ -130,6 +142,8 @@ class Item(object, metaclass = MetaItem):
 
     def getlist(self, name, default = None, copy_list = False):
         """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.getlist()"""
+        if not (self.__loaded__ or name in self.__data__):
+            self.__load__()
         return self.__data__.getlist(name, default, copy_list)
 
     def __getattr__(self, name):
@@ -157,14 +171,6 @@ class Item(object, metaclass = MetaItem):
     #     if not (loaded or name in data): load()
     #     if name in data:
     #         return data[name]
-    #
-    #     # # TODO: search `name` in __category__'s default values
-    #     # category = object.__getattribute__(self, '__category__')
-    #     # if category:
-    #     #     try:
-    #     #         return category.get_default(name)
-    #     #     except AttributeError:
-    #     #         pass
     #
     #     return _get_(self, name)
 
@@ -263,14 +269,15 @@ class Item(object, metaclass = MetaItem):
         if data:
             schema = item.__category__.schema
             data = schema.decode_json(data)
+            # print(f"__decode__ in {item}, data:", data.first_values())
             item.__data__.update(data)
         
-        item._post_load()
+        item._post_decode()
         #item.commit()
         
         return item
 
-    def _post_load(self):
+    def _post_decode(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
     def _to_json(self):
@@ -331,7 +338,7 @@ class Category(Item):
     # internal attributes
     _boot_store   = SimpleStore()   # data store used during startup for accessing category-items
     _store        = None            # data store used for regular access to items of this category
-
+    
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
         super().__init__(**attrs)
@@ -345,22 +352,30 @@ class Category(Item):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         record = self._boot_store.load_category(self.__iid__, self.name)
         self.__decode__(record, item = self)
+        if self.__iid__ == ROOT_CID:
+            self.itemclass = Category
         return self
     
-    def _post_load(self):
-        
-        # find Python class that represents items of this category
-        if isinstance(self.itemclass, str):
-            if '.' in self.itemclass:
-                path, classname = self.itemclass.rsplit('.', 1)
-                module = importlib.import_module(path)
-                self.itemclass = getattr(module, classname)
-            else:
-                self.itemclass = globals().get(self.itemclass)
-        else:
-            itemclass = globals().get(self.name)
-            if itemclass and issubclass(itemclass, Item):
-                self.itemclass = itemclass
+    # def _post_decode(self):
+    #
+    #     # find Python class that represents items of this category
+    #     itemclass = self.itemclass
+    #     if issubclass(itemclass, Item) and itemclass is not Item:
+    #         print("auto-loaded itemclass:", itemclass)
+    #         return
+    #     if isinstance(itemclass, str):
+    #         if '.' in itemclass:
+    #             path, classname = itemclass.rsplit('.', 1)
+    #             module = importlib.import_module(path)
+    #             itemclass = getattr(module, classname)
+    #         else:
+    #             itemclass = globals().get(itemclass)
+    #     else:
+    #         cls = globals().get(self.name)
+    #         if cls and issubclass(cls, Item):
+    #             itemclass = cls
+    #
+    #     self.itemclass = itemclass
             
 
     #####  Items in category  #####
@@ -492,13 +507,6 @@ class Site(Item):
     
     root = None             # the global Site object created during boot()
     
-    # schema = Schema(
-    #     {
-    #         'name': String,
-    #         'app':  Type(Link, "An Application deployed in this Site"),
-    #     },
-    # )
-    
     # # item attributes...
     # apps = None             # list of Applications
     
@@ -515,7 +523,7 @@ class Site(Item):
         root = cls.root = Site.first_item()
         return root
 
-    def _post_load(self):
+    def _post_decode(self):
 
         self._init_apps()
         self._init_descriptors()
@@ -558,6 +566,37 @@ class Site(Item):
         
         
 #####################################################################################################################################################
+
+"""
+Schema...
+
+Category.schema = Schema({
+    'itemclass': Python(),
+    'schema':    Object(Schema, True),
+})
+
+Site.schema = Schema({
+    'name': String(),
+    'app':  Link(cid=2),
+},)
+
+
+Category:
+"schema": {
+    "fields": {"itemclass": {"@": "$Python"}, "schema": {"class_": "$Schema", "strict": true, "@": "$Object"}},
+    "@": "$Schema"
+}
+
+Site:
+"schema": {
+    "fields": {"app": {"cid": 2, "@": "$Link"}, "name": {"@": "$String"}}
+},
+"itemclass": "$Site"
+
+"""
+
+
+#####################################################################################################################################################
 #####
 #####  GLOBALS
 #####
@@ -565,3 +604,5 @@ class Site(Item):
 site = Site.boot()
 
 # print("categories:", Site.categories.cache)
+print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
+print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
