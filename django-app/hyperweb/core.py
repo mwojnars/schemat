@@ -198,7 +198,7 @@ class Item(object, metaclass = MetaItem):
         attrs.update(self.__data__.keys())
         return attrs
         
-    def __str__(self, max_len_name = 30):
+    def __repr__(self, max_len_name = 30):
         
         cat = self.__category__
         category = f'{cat.name}' if cat and cat.name else f'CID({self.__cid__})'
@@ -207,7 +207,7 @@ class Item(object, metaclass = MetaItem):
             name = name[:max_len_name-3] + '...'
         
         return f'<{category}:{self.__iid__}{name}>'
-
+    
     @classmethod
     def __create__(cls, _data = None, **attrs):
         """
@@ -352,31 +352,12 @@ class Category(Item):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         record = self._boot_store.load_category(self.__iid__, self.name)
         self.__decode__(record, item = self)
+        
+        # root Category don't have a schema, yet; attributes must be set or decoded manually
         if self.__iid__ == ROOT_CID:
             self.itemclass = Category
+        
         return self
-    
-    # def _post_decode(self):
-    #
-    #     # find Python class that represents items of this category
-    #     itemclass = self.itemclass
-    #     if issubclass(itemclass, Item) and itemclass is not Item:
-    #         print("auto-loaded itemclass:", itemclass)
-    #         return
-    #     if isinstance(itemclass, str):
-    #         if '.' in itemclass:
-    #             path, classname = itemclass.rsplit('.', 1)
-    #             module = importlib.import_module(path)
-    #             itemclass = getattr(module, classname)
-    #         else:
-    #             itemclass = globals().get(itemclass)
-    #     else:
-    #         cls = globals().get(self.name)
-    #         if cls and issubclass(cls, Item):
-    #             itemclass = cls
-    #
-    #     self.itemclass = itemclass
-            
 
     #####  Items in category  #####
 
@@ -533,6 +514,7 @@ class Site(Item):
         
         Application = self._categories['Application']
         self.apps = [Application.load(iid) for iid in self.apps]
+        print("apps:", self.apps)
         
     def _init_descriptors(self):
         """Initialize self.descriptors based on self.apps."""
@@ -571,7 +553,7 @@ class Site(Item):
 Schema...
 
 Category.schema = Schema({
-    'itemclass': Python(),
+    'itemclass': Class(),
     'schema':    Object(Schema, True),
 })
 
@@ -583,15 +565,22 @@ Site.schema = Schema({
 
 Category:
 "schema": {
-    "fields": {"itemclass": {"@": "$Python"}, "schema": {"class_": "$Schema", "strict": true, "@": "$Object"}},
+    "fields": {
+        "itemclass": {"@": "$Class"},
+        "schema": {"class_": {"=": "$Schema", "@": "!type"}, "strict": true, "@": "$Object"}
+    },
     "@": "$Schema"
 }
 
 Site:
-"schema": {
-    "fields": {"app": {"cid": 2, "@": "$Link"}, "name": {"@": "$String"}}
-},
-"itemclass": "$Site"
+"schema": {"fields": {"app": {"cid": 2, "@": "$Link"}}}
+
+Application:
+"schema": {"fields": {"spaces": {"key_type": "$String", "value_type": {"cid": 3, "@": "$Link"}, "@": "$Dict"}}}
+
+Space:
+"schema": {"fields": {"categories": {"key_type": "$String", "value_type": {"cid": 0, "@": "$Link"}, "@": "$Dict"}}}
+
 
 """
 

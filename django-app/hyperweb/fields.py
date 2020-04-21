@@ -1,5 +1,4 @@
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .utils import import_, getstate, setstate
 from .globals import aliases
 from .jsonpickle import JsonPickle
 
@@ -19,9 +18,18 @@ class Field:
        FORM       ---      DATA      ---      STATE
                < form             < decode
     
+    Exceptions:
+    - ValidationError in sanitize() -- invalid value submitted from a form
+    - SchemaError in encode() -- input object doesn't fit the schema
+    - DataError in decode() -- inconsistent data in DB
     """
     
+    # class-level global object
     _json = JsonPickle()
+    
+    # instance-level settings
+    blank = True            # if True, None is a valid input value and is encoded as None; no other valid value can produce None as its serializable state
+
     
     def encode_json(self, value):
         
@@ -35,6 +43,26 @@ class Field:
     
 
     def encode(self, value):
+        if value is None:
+            if self.blank: return None
+            raise EncodeError("missing value (None) not permitted")
+        
+        state = self._encode(value)
+        if self.blank:
+            assert state is not None, f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true"
+
+        return state
+        
+    def decode(self, state):
+        if self.blank and state is None:
+            return None
+        
+        value = self._decode(state)
+        assert value is not None
+        return value
+
+        
+    def _encode(self, value):
         """
         Override in subclasses to encode and compactify `value` into serializable python types (a "flat" structure).
         This is similar to value.__getstate__(), but depends and relies on schema definition,
@@ -51,9 +79,9 @@ class Field:
         """
         return value
 
-    def decode(self, value):
+    def _decode(self, value):
         """
-        Override in subclasses to decode a "flat" value returned by encode()
+        Override in subclasses to decode a "flat" value returned by _encode()
         back into custom python types.
         """
         return value
@@ -72,20 +100,20 @@ class Object(Field):
 
     class_ = None       # python class to be implied for objects during decoding; if strict=True, only objects of this class can be encoded
     strict = False      # [bool] if True, only instances of <class_> are allowed in encode/decode, otherwise an exception is raised
-    #skip_empty = False # if True, empty collections (list/tuple/set/dict) in the object being encoded are removed
+    #skip_empty = False # if True, empty collections (list/tuple/set/dict) in the object are removed during encoding
     
     def __init__(self, class_ = None, strict = False):
         self.class_ = class_
         self.strict = strict
 
-    def encode(self, obj):
+    def _encode(self, obj):
         cls = self.class_
         if not cls: return obj
         
         if isinstance(obj, cls):
             if self._json_primitive(obj): return obj
             try:
-                return getstate(obj, aliases, None)
+                return aliases.getstate(obj, class_attr = None)
             except TypeError as ex:
                 raise EncodeError(f"can't retrieve state of an object: {ex}")
             
@@ -94,13 +122,14 @@ class Object(Field):
         else:
             return obj
 
-    def decode(self, state):
+    def _decode(self, state):
         cls = self.class_
+        print("Object.decode:", cls, state)
         if not cls or isinstance(state, cls): return state
         
         # cast a <dict> to an instance of the implicit class
         if isinstance(state, dict):
-            return setstate(cls, state)
+            return aliases.setstate(cls, state)
         if self.strict:
             raise DecodeError(f"the object decoded is not an instance of {cls}: {state}")
         return state
@@ -110,35 +139,38 @@ class Object(Field):
         return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
 
 
-class Python(Field):
-    """Accepts any python variable/class and encodes to a string containing its full package-module name."""
+class Class(Field):
+    """
+    Accepts any global python class and encodes as a string containing its full package-module name.
+    The name is transformed through global `aliases`.
+    """
     
-    def encode(self, value):
+    def _encode(self, value):
         if value is None: return None
-        cls = value
-        fullname = cls.__module__ + "." + cls.__name__
-        fullname = aliases.encode(fullname)
-        return fullname
+        return aliases.classname(cls = value)
     
-    def decode(self, value):
+    def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        fullname = aliases.decode(value)
-        return import_(fullname)
+        return aliases.import_(value)
         
 
 class String(Field):
     
-    def encode(self, value):
+    def _encode(self, value):
         if not isinstance(value, str): raise EncodeError(f"expected a <str>, not {value}")
         return value
 
-    def decode(self, value):
+    def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return value
 
 
 class Dict(Field):
     """Specification of a key-value mapping where every key must be unique; wrapper for a standard <dict> type."""
+
+    key_type = None
+    value_type = None
+    
 
 class Link(Field):
     """
@@ -152,7 +184,7 @@ class Link(Field):
     def __init__(self, cid = None):
         self.cid = cid
     
-    def encode(self, item):
+    def _encode(self, item):
         
         if None in item.__id__:
             raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.__id__}")
@@ -162,7 +194,7 @@ class Link(Field):
         
         return item.__id__
 
-    def decode(self, value):
+    def _decode(self, value):
         
         cid = iid = None
         

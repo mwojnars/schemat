@@ -27,7 +27,7 @@ class Schema(Field):
         # self.attrs = []
         self.fields = {}
     
-    def encode(self, data):
+    def _encode(self, data):
         
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, not {data}")
         errors = []
@@ -52,7 +52,7 @@ class Schema(Field):
         return encoded
         
         
-    def decode(self, data):
+    def _decode(self, data):
         
         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
 

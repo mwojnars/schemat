@@ -30,6 +30,7 @@ ALIASES = [
     # special names are mapped from "package.module.name" to "$name" during serialization
     ('hyperweb.data.',   '$', ['Data']),
     ('hyperweb.schema.', '$', ['Schema']),
-    ('hyperweb.fields.', '$', ['Object', 'Python', 'String', 'Dict', 'Link']),
+    ('hyperweb.fields.', '$', ['Object', 'Class', 'String', 'Dict', 'Link']),
     ('hyperweb.core.',   '$', ['Item', 'Category', 'Site', 'Application', 'Space']),
+    ('builtins.',        '!', ['type', 'set'])
 ]

@@ -3,7 +3,7 @@ Custom implementation of JSON-pickling of objects of arbitrary classes.
 """
 
 import json
-from .utils import import_, getstate
+from hyperweb.errors import DecodeError
 
 
 #####################################################################################################################################################
@@ -24,21 +24,14 @@ class JsonPickle:
     which is compatible with MySQL: JSON columns use utf8mb4 charset.
     """
     
-    # name of attribute that stores a class name (with package) inside JSON dumps
+    # special attribute that stores a class name (with package) in a dict {} object inside JSON dumps
     CLASS_ATTR = "@"
     
-    # aliases     = None      # dict that maps full names of selected classes to their short names for use in JSON strings
-    # aliases_rev = None      # like `aliases`, but reversed: short name -> full name
-    #
-    # def __init__(self, aliases = None):
-    #
-    #     self.aliases = aliases or {}
-    #     self.aliases_rev = {short: full for full, short in self.aliases.items()}
-    #     if len(self.aliases_rev) < len(self.aliases):
-    #         raise Exception("The dict of aliases contains duplicate values in JsonPickle.__init__():", aliases)
+    # special attribute that stores a non-dict state of data types normally not handled by JSON: tuple, set, type ...
+    STATE_ATTR = "="
     
     def __init__(self):
-        from .globals import aliases
+        from hyperweb.globals import aliases
         self.aliases = aliases
 
     def dumps(self, obj, **kwargs):
@@ -53,40 +46,8 @@ class JsonPickle:
         # return self._decode(obj)
     
     def _getstate(self, obj):
-        return getstate(obj, self.aliases, self.CLASS_ATTR)
+        return self.aliases.getstate(obj, self.CLASS_ATTR, self.STATE_ATTR)
         
-    # def _getstate(self, obj):
-    #     """
-    #     Retrieve object's state with __getstate__(), or take it from __dict__.
-    #     Append class name in the resulting dictionary.
-    #     """
-    #
-    #     def with_classname(_state):
-    #         cls = obj.__class__
-    #         classname = cls.__module__ + "." + cls.__name__
-    #         classname = self.aliases.encode(classname)
-    #         # classname = self.aliases.get(classname, classname)
-    #         _state = _state.copy()
-    #         _state[JsonPickle.CLASS_ATTR] = classname
-    #         return _state
-    #
-    #     getstate = getattr(obj, '__getstate__', None)
-    #
-    #     # call __getstate__() if present and bound;
-    #     # 'obj' can be a class! then __getstate__ is present but unbound
-    #     if hasattr(getstate, '__self__'):
-    #         state = getstate()
-    #         if isinstance(state, dict): return with_classname(state)
-    #         raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
-    #         # return {'__state__': state}                         # wrap up a non-dict state in dict
-    #
-    #     # otherwise use __dict__
-    #     else:
-    #         state = getattr(obj, '__dict__', None)
-    #         if state is None:
-    #             raise TypeError(f"__dict__ not present in {obj}")
-    #         else:
-    #             return with_classname(state)
         
     def _decode(self, value):
 
@@ -94,22 +55,15 @@ class JsonPickle:
         if not classname: return value
 
         # load class by its full name
-        # classname = self.aliases_rev.get(classname, classname)
-        classname = self.aliases.decode(classname)
         try:
-            cls = import_(classname)
+            cls = self.aliases.import_(classname)
         except:
-            print(f"WARNING in JsonPickle._decode(): failed to load class '{classname}', no decoding")
-            return value
+            raise DecodeError(f"failed to load class '{classname}' during decoding")
+            # print(f"WARNING in JsonPickle._decode(): failed to load class '{classname}', no decoding")
+            # return value
             
-        # create an object
-        obj = cls()
-        setstate = getattr(obj, '__setstate__', None)
-        if setstate:
-            setstate(value)
-        else:
-            obj.__dict__ = value
-        return obj
+        # create an object with `value` as its state
+        return self.aliases.setstate(cls, value, state_attr = self.STATE_ATTR)
         
 
 #####################################################################################################################################################
@@ -128,15 +82,17 @@ if __name__ == "__main__":
     
     class C:
         x = 5.0
+        s = {'A','B','C'}
+        t = (1,2,3)
         def f(self): return 1
     
     c = C()
     c.d = C()
     c.y = [3,4,'5']
     
-    s = dumps([{'a':1, 'łąęńÓŚŹŻ':2, 3:[]}, None, c])
+    s = dumps([{'a':1, 'łąęńÓŚŹŻ':2, 3:[]}, None, c, C])
     print(s)
     d = loads(s)
     print(d)
-    print(d[-1].d, d[-1].y)
+    print(d[2].d, d[2].y)
     

@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-from hyperweb import site
+from hyperweb.core import site
 
 
 def item_view(request, descriptor, handler = None):
