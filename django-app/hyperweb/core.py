@@ -6,7 +6,7 @@ from .config import ROOT_CID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore
-from .schema import Field, Schema
+from .schema import Schema
 
 
 #####################################################################################################################################################
@@ -30,8 +30,8 @@ class handler:
 class _RAISE_:
     """A token used to indicate that an exception should be raised if an attribute value is not found."""
 
-# shorthand for use inside Item.__getattribute__()
-_get_ = object.__getattribute__
+# # shorthand for use inside Item.__getattribute__()
+# _get_ = object.__getattribute__
 
 
 #####################################################################################################################################################
@@ -112,6 +112,13 @@ class Item(object, metaclass = MetaItem):
             self.__category__ = site.get_category(self.__cid__)
 
 
+    def __getattr__(self, name):
+        """Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`."""
+        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
+            basename = name[:-len(MULTI_SUFFIX)]
+            return self.getlist(basename)
+        return self.get(name)
+
     def get(self, name, default = _RAISE_):
         """Get attribute value from:
            - self.__data__ OR
@@ -145,34 +152,6 @@ class Item(object, metaclass = MetaItem):
         if not (self.__loaded__ or name in self.__data__):
             self.__load__()
         return self.__data__.getlist(name, default, copy_list)
-
-    def __getattr__(self, name):
-        """Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`."""
-        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-            basename = name[:-len(MULTI_SUFFIX)]
-            return self.getlist(basename)
-        return self.get(name)
-
-    # def __getattribute__(self, name):
-    #
-    #     # get special attributes from __dict__, not __data__
-    #     if name[0] == '_':
-    #         return _get_(self, name)
-    #
-    #     data   = _get_(self, '__data__')
-    #     loaded = _get_(self, '__loaded__')
-    #     load   = _get_(self, '__load__')
-    #
-    #     if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-    #         basename = name[:-len(MULTI_SUFFIX)]
-    #         if not (loaded or basename in data): load()
-    #         return data.getlist(basename)
-    #
-    #     if not (loaded or name in data): load()
-    #     if name in data:
-    #         return data[name]
-    #
-    #     return _get_(self, name)
 
     def set(self, name, value):
         """Assigns a singleton `value` to a given name in __data__, also when `name` looks like a private attr."""
@@ -214,13 +193,6 @@ class Item(object, metaclass = MetaItem):
         Create a new item initialized with `attrs` attribute values, typically passed from a web form;
         or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
         """
-        
-        errors = []
-        for attr, value in attrs.items():
-            # validate `value`... (TODO)
-            pass
-        #if errors: raise InvalidValues(errors)
-        
         item = cls()
         if _data is not None:
             item.__data__ = _data
@@ -283,13 +255,7 @@ class Item(object, metaclass = MetaItem):
     def _to_json(self):
         schema = self.__category__.get('schema')
         return schema.encode_json(self.__data__)
-        # return self.__data__.to_json(schema)
         
-    def _assert(self, cond, message = ''):
-        
-        if cond: return
-        print(f'WARNING in item {self.__id__}. {message}')
-
     def insert(self):
         """
         Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
@@ -319,6 +285,13 @@ class Item(object, metaclass = MetaItem):
         hdl = self.__handlers__.get(handler, None)
         if hdl is None: raise InvalidHandler(f'Handler "{handler}" not found in {self} ({self.__class__}), handlers: {self.__handlers__}')
         return hdl(self, request)
+        
+    @handler()
+    def __view__(self, request):
+        """
+        Default handler invoked to render a response to item request when no handler name was given.
+        Inside category's handlers dict, this method is saved under the None key.
+        """
         
 
 ItemDoesNotExist.item_class = Item
@@ -396,12 +369,6 @@ class Category(Item):
         if not items: raise self.itemclass.DoesNotExist()
         return items[0]
 
-    # def insert(self, item):
-    #     self._store.insert(item)
-    #
-    # def update(self, item):
-    #     self._store.update(item)
-
     @handler('new')
     def _handle_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
@@ -418,13 +385,6 @@ class Category(Item):
         item = self.new_item(data)
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
-        
-    @handler()
-    def __view__(self, item, request):
-        """
-        Default handler invoked to render a response to item request when no handler name was given.
-        Inside category's handlers dict, this method is saved under the None key.
-        """
         
 
 #####################################################################################################################################################
@@ -465,13 +425,6 @@ class Categories:
 
         assert category.name, key
         self.cache[category.name] = category
-
-        # try:
-        #     name = category.name
-        # except AttributeError:
-        #     name = None
-        # if name:
-        #     self.cache[category.name] = category
 
         return category 
     
@@ -517,24 +470,6 @@ class Site(Item):
                     descriptor = f"{space_name}.{category_name}"
                     self._descriptors[descriptor] = category
 
-        # Application = self._categories['Application']
-        # self.apps = [Application.load(iid) for iid in self.apps]
-        #
-        # Space = self._categories['Space']
-        # Category = self._categories['Category']
-        #
-        # for app in self.apps:
-        #     for space_name, space_iid in app.spaces.items():
-        #         if not self.re_codename.match(space_name): raise InvalidName(f'Invalid code name "{space_name}" of a space with IID={space_iid}')
-        #         space = Space.load(space_iid)
-        #
-        #         for category_name, category_iid in space.categories.items():
-        #             if not self.re_codename.match(category_name): raise InvalidName(f'Invalid code name "{category_name}" of a category with IID={category_iid}')
-        #             category = Category.load(category_iid)
-        #
-        #             descriptor = f"{space_name}.{category_name}"
-        #             self._descriptors[descriptor] = category
-        
     def get_category(self, cid):
         return self._categories.get(cid)
 

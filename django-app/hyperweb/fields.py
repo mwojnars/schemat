@@ -124,7 +124,6 @@ class Object(Field):
 
     def _decode(self, state):
         cls = self.class_
-        print("Object.decode:", cls, state)
         if not cls or isinstance(state, cls): return state
         
         # cast a <dict> to an instance of the implicit class
