@@ -166,11 +166,46 @@ class String(Field):
 
 
 class Dict(Field):
-    """Specification of a key-value mapping where every key must be unique; wrapper for a standard <dict> type."""
+    """
+    Field that accepts <dict> objects as data values and ensures that keys and values of the dict
+    are interpreted as fields of particular Field types.
+    """
 
-    key_type = None
-    value_type = None
+    # optional specification of Fields to be used for interpreting keys/values of incoming dicts
+    keys   = None
+    values = None
     
+    def __init__(self, keys = None, values = None):
+        
+        if keys is not None: self.keys = keys
+        if values is not None: self.values = values
+        
+    def _encode(self, d):
+        
+        if not isinstance(d, dict): raise EncodeError(f"expected a <dict>, not {d}")
+        state = {}
+        
+        # encode keys & values through predefined field types
+        for key, value in d.items():
+            k = self.keys.encode(key) if self.keys else key
+            if k in state: raise EncodeError(f"duplicate state ({k}) returned by field's {self.keys} encode() for 2 different values, one of them: {key}")
+            state[k] = self.values.encode(value) if self.values else value
+        
+        return state
+        
+    def _decode(self, state):
+        
+        if not isinstance(state, dict): raise DecodeError(f"expected a <dict>, not {state}")
+        d = {}
+        
+        # decode keys & values through predefined field types
+        for key, value in state.items():
+            k = self.keys.decode(key) if self.keys else key
+            if k in d: raise DecodeError(f"duplicate value ({k}) returned by field's {self.keys} decode() for 2 different states, one of them: {key}")
+            d[k] = self.values.decode(value) if self.values else value
+            
+        return d
+
 
 class Link(Field):
     """
@@ -196,7 +231,7 @@ class Link(Field):
 
     def _decode(self, value):
         
-        cid = iid = None
+        cid = None
         
         if isinstance(value, int):
             iid = value
@@ -223,5 +258,5 @@ class Link(Field):
 
         from .core import Site
         category = Site._categories[cid]
-        return category.new(__id__ = (cid, iid))
+        return category.get_item(iid)
         

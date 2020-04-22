@@ -32,5 +32,5 @@ ALIASES = [
     ('hyperweb.schema.', '$', ['Schema']),
     ('hyperweb.fields.', '$', ['Object', 'Class', 'String', 'Dict', 'Link']),
     ('hyperweb.core.',   '$', ['Item', 'Category', 'Site', 'Application', 'Space']),
-    ('builtins.',        '!', ['type', 'set'])
+    ('builtins.',        '!', ['type', 'set', 'str'])
 ]

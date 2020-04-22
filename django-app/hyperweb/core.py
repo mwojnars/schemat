@@ -1,4 +1,4 @@
-import re, importlib
+import re
 from django.http import HttpRequest, HttpResponse
 from nifty.text import html_escape
 
@@ -295,11 +295,11 @@ class Item(object, metaclass = MetaItem):
         Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
-        self.__category__.insert(self)
+        self.__category__._store.insert(self)
         
     def update(self):
         """Update the contents of this item's row in DB."""
-        self.__category__.update(self)
+        self.__category__._store.update(self)
 
     def save(self):
         """
@@ -336,35 +336,51 @@ class Category(Item):
     """
     
     # internal attributes
-    _boot_store   = SimpleStore()   # data store used during startup for accessing category-items
-    _store        = None            # data store used for regular access to items of this category
+    _boot_store   = SimpleStore()       # data store used during startup for accessing category-items
+    _store        = None                # data store used for regular access to items of this category
     
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
         super().__init__(**attrs)
         self._store = SimpleStore()
-        
-        # public item attributes
-        self.itemclass = Item        # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-        self.schema    = Schema()    # a Schema that sets constraints on attribute names and values allowed in this category
-        
+
+        # public attributes of a category
+        self.schema = Schema()          # a Schema that puts constraints on attribute names and values allowed in this category
+
     def __load__(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
-        record = self._boot_store.load_category(self.__iid__, self.name)
-        self.__decode__(record, item = self)
-        
-        # root Category don't have a schema, yet; attributes must be set or decoded manually
+
+        # root Category doesn't have a schema, yet; attributes must be set or decoded manually
         if self.__iid__ == ROOT_CID:
             self.itemclass = Category
+        else:
+            self.itemclass = Item       # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+        
+        record = self._boot_store.load_category(self.__iid__, self.name)
+        self.__decode__(record, item = self)
         
         return self
 
     #####  Items in category  #####
+    
+    def new_item(self, *args, **kwargs):
+        """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
+        item = self.itemclass.__create__(*args, **kwargs)
+        item.__id__ = (self.__iid__, None)
+        item.__category__ = self
+        return item
+
+    def get_item(self, iid):
+        """
+        Instantiate an Item and seed it with IID (the IID being present in DB, presumably),
+        but do NOT load remaining contents from DB (lazy loading).
+        """
+        return self.itemclass(__category__ = self, __iid__ = iid)
 
     def load(self, iid):
         """Load from DB an item that belongs to the category represented by self."""
 
-        return self.itemclass(__category__ = self, __iid__ = iid).__load__()
+        return self.get_item(iid).__load__()
         
     def all_items(self, limit = None):
         """
@@ -380,24 +396,14 @@ class Category(Item):
         if not items: raise self.itemclass.DoesNotExist()
         return items[0]
 
-    def insert(self, item):
-        self._store.insert(item)
-        
-    def update(self, item):
-        self._store.update(item)
-
-
-    def new(self, *args, **kwargs):
-        """Create a new item of this category through a direct function call. For web-based item creation, see the new() handler."""
-        item = self.itemclass.__create__(*args, **kwargs)
-        item.__id__ = (self.__iid__, None)
-        item.__category__ = self
-        return item
-
-    __call__ = new
+    # def insert(self, item):
+    #     self._store.insert(item)
+    #
+    # def update(self, item):
+    #     self._store.update(item)
 
     @handler('new')
-    def new_h(self, request):
+    def _handle_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
         data = Data()
@@ -409,7 +415,7 @@ class Category(Item):
         for attr, values in request.GET.lists():
             data.setlist(attr, values)
 
-        item = self.new(data)
+        item = self.new_item(data)
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
         
@@ -488,9 +494,6 @@ class Site(Item):
     
     root = None             # the global Site object created during boot()
     
-    # # item attributes...
-    # apps = None             # list of Applications
-    
     # internal variables
     _categories = None       # flat collection of all categories found in DB, as a class-global singleton instance of Categories; after boot(), it can be accessed as Site.categories
     _descriptors = None      # {app-space-category descriptor: Category}
@@ -506,35 +509,31 @@ class Site(Item):
 
     def _post_decode(self):
 
-        self._init_apps()
-        self._init_descriptors()
-               
-    def _init_apps(self):
-        """Convert IIDs of apps to Application objects."""
-        
-        Application = self._categories['Application']
-        self.apps = [Application.load(iid) for iid in self.apps]
-        print("apps:", self.apps)
-        
-    def _init_descriptors(self):
-        """Initialize self.descriptors based on self.apps."""
-
-        Space = self._categories['Space']
-        Category = self._categories['Category']
-        
         self._descriptors = {}
         
-        for app in self.apps:
-            for space_name, space_iid in app.spaces.items():
-                if not self.re_codename.match(space_name): raise InvalidName(f'Invalid code name "{space_name}" of a space with IID={space_iid}')
-                space = Space.load(space_iid)
-                
-                for category_name, category_iid in space.categories.items():
-                    if not self.re_codename.match(category_name): raise InvalidName(f'Invalid code name "{category_name}" of a category with IID={category_iid}')
-                    category = Category.load(category_iid)
-                    
+        for app in self.app_list:
+            for space_name, space in app.spaces.items():
+                for category_name, category in space.categories.items():
                     descriptor = f"{space_name}.{category_name}"
                     self._descriptors[descriptor] = category
+
+        # Application = self._categories['Application']
+        # self.apps = [Application.load(iid) for iid in self.apps]
+        #
+        # Space = self._categories['Space']
+        # Category = self._categories['Category']
+        #
+        # for app in self.apps:
+        #     for space_name, space_iid in app.spaces.items():
+        #         if not self.re_codename.match(space_name): raise InvalidName(f'Invalid code name "{space_name}" of a space with IID={space_iid}')
+        #         space = Space.load(space_iid)
+        #
+        #         for category_name, category_iid in space.categories.items():
+        #             if not self.re_codename.match(category_name): raise InvalidName(f'Invalid code name "{category_name}" of a category with IID={category_iid}')
+        #             category = Category.load(category_iid)
+        #
+        #             descriptor = f"{space_name}.{category_name}"
+        #             self._descriptors[descriptor] = category
         
     def get_category(self, cid):
         return self._categories.get(cid)
@@ -552,17 +551,6 @@ class Site(Item):
 """
 Schema...
 
-Category.schema = Schema({
-    'itemclass': Class(),
-    'schema':    Object(Schema, True),
-})
-
-Site.schema = Schema({
-    'name': String(),
-    'app':  Link(cid=2),
-},)
-
-
 Category:
 "schema": {
     "fields": {
@@ -576,11 +564,10 @@ Site:
 "schema": {"fields": {"app": {"cid": 2, "@": "$Link"}}}
 
 Application:
-"schema": {"fields": {"spaces": {"key_type": "$String", "value_type": {"cid": 3, "@": "$Link"}, "@": "$Dict"}}}
+"schema": {"fields": {"spaces": {"keys": {"@": "$String"}, "values": {"cid": 3, "@": "$Link"}, "@": "$Dict"}}}
 
 Space:
-"schema": {"fields": {"categories": {"key_type": "$String", "value_type": {"cid": 0, "@": "$Link"}, "@": "$Dict"}}}
-
+"schema": {"fields": {"categories": {"keys": {"@": "$String"}, "values": {"cid": 0, "@": "$Link"}, "@": "$Dict"}}}
 
 """
 
@@ -593,5 +580,5 @@ Space:
 site = Site.boot()
 
 # print("categories:", Site.categories.cache)
-print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
-print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
+# print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
+# print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
