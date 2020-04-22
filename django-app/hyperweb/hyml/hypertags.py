@@ -70,14 +70,14 @@ CHEATSHEET of HYPERML
   <img src="bullet.png" height="16" width="16">
 </:bullet>                                                    
                                                     >>> render("<:H>This is a hypertag.</:H> - <H></H> - <H />")
-                                                    u' - This is a hypertag. - This is a hypertag.'
+                                                    ' - This is a hypertag. - This is a hypertag.'
                                                     
                                                     >>> hyml = '''
                                                     ...           <:Message>Press <b>OK</b> to accept.</:Message>
                                                     ...           <Message /> | Page content..... | <Message />
                                                     ...        '''
                                                     >>> render(hyml).strip()
-                                                    u'Press <b>OK</b> to accept. | Page content..... | Press <b>OK</b> to accept.'
+                                                    'Press <b>OK</b> to accept. | Page content..... | Press <b>OK</b> to accept.'
 
 <H ~ ></:H>
 
@@ -191,123 +191,123 @@ UNIT TESTS
 *** General markup & HTML/XML compatibility.
 
 >>> render("")
-u''
+''
 
 HTML comments ARE parsed and transformed like normal text.
 >>> render("<!-- ala <ma/> <:kota burek> $burek </:kota> \\n -->")
-u'<!-- ala <ma />  \\n -->'
+'<!-- ala <ma />  \\n -->'
 
 Elements whose body should stay unparsed: script, style.
 >>> render("<SCRIPT attr=''> $x $y $z <aTag> \\n </SCRIPT  >   <style type='css' > p {color: #001122} $x <ola-ma-psa> </style>")
-u"<SCRIPT attr=''> $x $y $z <aTag> \\n </SCRIPT  >   <style type='css' > p {color: #001122} $x <ola-ma-psa> </style>"
+"<SCRIPT attr=''> $x $y $z <aTag> \\n </SCRIPT  >   <style type='css' > p {color: #001122} $x <ola-ma-psa> </style>"
 
 Void and non-self-closing elements don't need end tags and are parsed without exception.
 >>> render("<img \\n src='/images/img.jpg \\n ' \\n >")
-u'<img src="/images/img.jpg &#10; ">'
+'<img src="/images/img.jpg &#10; ">'
 
 XML names for tags and attributes, with characters from a broader set than recognized by HyperML.
 >>> render(u"<sp:tag.x-y.\\uF900 attr-a:b.c-\\uf900 = ''/>")
-u"<sp:tag.x-y.\\uf900 attr-a:b.c-\\uf900 = ''/>"
+'<sp:tag.x-y.豈 attr-a:b.c-豈="" />'
 
 Suppressing errors.
 >>> render("<p>abc</p></p>", ignore_unpaired_endtags = True)
-u'<p>abc</p></p>'
+'<p>abc</p></p>'
 
 Attribute name without a value.
 >>> render("<:h body style><div disabled style=$style></div></:h> <h style='color:black' /> <h 'color:white' />")
-u' <div disabled style="color:black"></div> <div disabled style="color:white"></div>'
+' <div disabled style="color:black"></div> <div disabled style="color:white"></div>'
 
 
 *** Hypertags.
 
 Basic hypertag definition & usage.
 >>> render("<:A ~ x>$x</:A><A x='Ala'></A>")
-u'Ala'
+'Ala'
 >>> render("<:A body x>$x</:A><A x='Ala'></A>")
-u'Ala'
+'Ala'
 >>> render("<:A x>$x</:A><A x='Ala'></A>", explicit_body_var = False)
-u'Ala'
+'Ala'
 >>> render("<:A x>$x</:A><A x='Ala'></A>")
 Traceback (most recent call last):
     ...
 HypertagsError: Can't assign explicitly to the body attribute 'x' of a non-void hypertag 'A' at line 1, column 14 (<A x='Ala'></A>)
 
 # >>> render("<:A x>$x</:A><A x='Ala & Ola'/>")
-# u'Ala &amp; Ola'
+# 'Ala &amp; Ola'
 # >>> render("<:A x>$x</:A><A 'Ala & Ola'/>")
-# u'Ala &amp; Ola'
+# 'Ala &amp; Ola'
 
 Unsupported syntax def:...
 > > > render("<def:A body x>$x</def:A><A x='Ala'></A>")
-u'Ala'
+'Ala'
 
 Empty tag used for hypertag definition.
 >>> render("<:A body/><A>body</A>")
-u''
+''
 
 Isolated rendering of an arbitrary top-level hypertag.
 >>> doc = HyperML("<:A body x \\n y z>$body $x $y $z</:A> <:B><A>inside B</A></:B> <A>not rendered</A>")
 >>> doc.A("body", "x", z=5)
-u'body x  5'
+'body x  5'
 >>> doc.B()
-u'inside B   '
+'inside B   '
 
 Nested hypertag definitions.
 >>> render("<:A ~ x><:B ~ y=$x>$x$y</:B> <B 'y'></B> <B></B> </:A> <A x='x'></A>")
-u'  xy xx '
+'  xy xx '
 >>> render("<:A x><:B y=$x>$x$y</:B> <:C>$x$body<B 'z'></B></:C> [[ $null || <C><B 'y'></B></C> || $x ]] </:A> <A x='x'></A>", explicit_body_var=0)
-u'    xxyxz  '
+'    xxyxz  '
 >>> render("<:A ~ x><:B ~ y=$x>$x$y</:B> <:C body>$x$body<B 'z'></B></:C> [[ $null || <C><B 'y'></B></C> || $x ]] </:A> <A x='x'></A>")
-u'    xxyxz  '
+'    xxyxz  '
 >>> render("<:A ~ x><:B ~ y=$x>$y</:B> <B 'y'></B> <B></B> </:A> <A x='x'></A>")
-u'  y x '
+'  y x '
 
 Hypertag definition inside occurence.
 >>> render("<:A x>$x$body</:A> <A x='x'><:B y>$y</:B> <B 'y'></B></A>", explicit_body_var=0)
-u' x y'
+' x y'
 >>> render("<:A body x>$x$body</:A> <A x='x'><:B ~ y>$y</:B> <B 'y'></B></A>")
-u' x y'
+' x y'
 
 Redefinition of a hypertag.
 >>> render("<:A body x>$x$body</:A> <:B>first</:B> <A x='x'><:B>second</:B> <B></B></A> <B></B>")
-u'  x second first'
+'  x second first'
 
 
 *** Attributes.
 
 Null (missing value) printed as attribute value.
 >>> render("<:A x><div style=$x /></:A><A/>")
-u'<div style="" />'
+'<div style="" />'
 
 Number printed as attribute value.
 >>> HyperML("<:A x><div style=$x /></:A>").A(5)
-u'<div style="5" />'
+'<div style="5" />'
 
 Number value parsed as number object, not string, from attributes list.
 >>> render("<:A ~ x>$(x+1)</:A> <A 3/>")
-u' 4'
+' 4'
 
 Passing arguments from one hypertag to another.
 >>> render("<:A ~ x>$x</:A> <:B ~ y><A x=$y></A></:B> <B y='Ala'></B>")
-u'  Ala'
+'  Ala'
 >>> render("<:A x y z>$z $y $x</:A> <:B t><A y=$t \\n x='x' z='z'></A></:B> <B t='Ala'></B>", explicit_body_var=0)
-u'  z Ala x'
+'  z Ala x'
 >>> render("<:A ~ x y z>$z $y $x</:A> <:B body t><A y=$t \\n x='x' z='z'></A></:B> <B t='Ala'></B>")
-u'  z Ala x'
+'  z Ala x'
 
 Special attribute $body.
 >>> render("<:A body a>$a $body</:A> <A a='Ala'><i>Ola</i></A>")
-u' Ala <i>Ola</i>'
+' Ala <i>Ola</i>'
 >>> render("<:A text a>$a $text</:A> <A a='Ala'><i>Ola</i></A>")
-u' Ala <i>Ola</i>'
+' Ala <i>Ola</i>'
 >>> render("<:A bodyA a>$a $bodyA</:A> <:B bodyB b><A a=$b><i>Ola</i> $bodyB</A></:B> <B b='Ala'><A a='Ela'></A></B>")
-u'  Ala <i>Ola</i> Ela '
+'  Ala <i>Ola</i> Ela '
 
 Default values of attributes.
 >>> render("<:A a='A' b c=''>$a$(b)$c;D</:A><A></A>", explicit_body_var=0)
-u'A;D'
+'A;D'
 >>> render("<:A ~ a='A' b c=''>$a$(b)$c;D</:A><A></A>")
-u'A;D'
+'A;D'
 >>> render("<:A body='disallowed' a='A' b c=''>$a$(b)$c;D</:A><A></A>")
 Traceback (most recent call last):
     ...
@@ -316,11 +316,11 @@ HypertagsError: The body attribute 'body' must not have any default value at lin
 When null value is passed explicitly, the default is still used, unlike in Python.
 Semantics of $null is exactly that of a "missing" value, and the missingness propagates down the call chain.
 >>> render("<:A ~ x='X'>$x</:A> <:B ~ x><A x=$x></A></:B> <A></A>,<B></B>,<B $null></B>,<B x=$null></B>,$B(),$B(null)")
-u'  X,X,X,X,X,X'
+'  X,X,X,X,X,X'
 
 Encoding of expression values inside tags (value representation vs. rendering).
 >>> render("<:A ~ url><img src=$url/> $url</:A><A url='http://abc.com/path\\\\file' />")
-u'<img src="http://abc.com/path\\\\file" /> http://abc.com/path\\\\file'
+'<img src="http://abc.com/path\\\\file" /> http://abc.com/path\\\\file'
 
 Variable attribute list.
 > > > render("<:A ~ x y z>$x$y$z</:A><:B ~ *attrs><A></A></:B> <B/>")
@@ -330,42 +330,42 @@ Variable attribute list.
 
 Escape characters for special symbols.
 >>> render("<p>$23.99 $<$> $$24.50 = $$price</p>")
-u'<p>$23.99 <> $24.50 = $price</p>'
+'<p>$23.99 <> $24.50 = $price</p>'
 
 Literals of different types.
 >>> render("$(12) $(1.) $(.12) $(3.14) $('a \\n string') $('')")
-u'12 1.0 0.12 3.14 a \\n string '
+'12 1.0 0.12 3.14 a \\n string '
 
 Leading $ before variables can be nested inside $(...), for convenience and to avoid parsing errors, but doesn't have to.
 >>> render("<:A ~ x> $(x) $($x) </:A> <A 3 /> $strip($str(5)) $strip(str(5))")
-u'  3 3  5 5'
+'  3 3  5 5'
 
 Sequence indexes & slices.
->>> HyperML("<:A list>$list[3] $list[:] $list[:2] $list[3:] $list[::3] $list[ : 3 : ] $list[ -3: $null : (2-1) ]</:A>").A(range(5))
-u'3 [0, 1, 2, 3, 4] [0, 1] [3, 4] [0, 3] [0, 1, 2] [2, 3, 4]'
+>>> HyperML("<:A list>$list[3] $list[:] $list[:2] $list[3:] $list[::3] $list[ : 3 : ] $list[ -3: $null : (2-1) ]</:A>").A(list(range(5)))
+'3 [0, 1, 2, 3, 4] [0, 1] [3, 4] [0, 3] [0, 1, 2] [2, 3, 4]'
 
 Operators: additive, multiplicative.
->>> render("$(-12 + 1.-.12 +3.14) $(\\n 'string' + ' of text' )")
-u'-7.98 string of text'
+>>> render("$(-12 + 1.-.12 +3.1) $(\\n 'string' + ' of text' )")
+'-8.02 string of text'
 >>> render("$(5//2) $(- 5 % (-2)) $(- 12 * 1./.12 +3.14*2*(3//2+5))")
-u'2 1 -62.32'
+'2 1 -62.32'
 
 Operators: implicit + when no operator given.
 >>> render("<:A name>$('my' (' friend ' $name) ' is great ' 123)</:A><A>Bobby</A>")
-u'my friend Bobby is great 123'
+'my friend Bobby is great 123'
 
 Operators: shifts, bitwise.
 >>> expr = r"3 << 6 >> 4 & 123 | 321 ^ 555 << (1 | 23 >> 1+2*3)"
 >>> render("$(%s)" % expr), eval(expr)
-(u'1311', 1311)
+('1311', 1311)
 
 Conditional operators.
 >>> render("$(3 and 4 or 5 and not 6) $(3 if true else 9) $(1 if (3.0 and '') else 2 if 0.0 else 7) $(3 < 5 < 7 != 8 > 0 != $null)")
-u'4 3 7 True'
+'4 3 7 True'
 >>> render("$('a' in 'ala') $('ola' not in 'ola') $(true is true and false is not true)")
-u'True False True'
+'True False True'
 >>> render("$(5 if true) $len('ala' if false) $('/' 'ola' if false)")
-u'5 0 '
+'5 0 '
 
 Lazy evaluation of conditional operators.
 >>> def f0(): print('f0'); return 0
@@ -373,122 +373,122 @@ Lazy evaluation of conditional operators.
 >>> g = {'f0': f0, 'f1': f1}
 >>> render("$(f0() and f0())", globals = g)
 f0
-u'0'
+'0'
 >>> render("$(f1() or f1())", globals = g)
 f1
-u'1'
+'1'
 >>> render("$(f1() if false else f1())", globals = g)
 f1
-u'1'
+'1'
 
 
 *** Escaping & filters.
 
 HTML escaping.
 >>> HyperML("<:A body x>$body $x.strip(' ') $(x[2])</:A>").A(body = "<b>ala &amp; ola</b>", x = "  ala <>& ")
-u'<b>ala &amp; ola</b> ala &lt;&gt;&amp; a'
+'<b>ala &amp; ola</b> ala &lt;&gt;&amp; a'
 
 Filters.
 >>> filt = Filter(lambda s, param = None: "__filtered(%s)__%s__" % (param, s))
 >>> render("$('ala' | filt) $('ola' | filt(5))", globals = {'filt':filt})
-u'__filtered(None)__ala__ __filtered(5)__ola__'
+'__filtered(None)__ala__ __filtered(5)__ola__'
 
 Any 1-arg function can be used as a filter without decorating.
 >>> def quoted(s): return "`%s`" % s
 >>> render("$('ala'|quoted)", globals = {'quoted':quoted})
-u'`ala`'
+'`ala`'
 
 
 *** Built-in variables & filters.
 
 Basic.
 >>> render("$str(3.14) $len('ala'+'ola') $newline")
-u'3.14 6 \\n'
+'3.14 6 \\n'
 >>> render("<strip>  ala ma $strip(' kota \\n ') i psa  </strip>")
-u'ala ma kota i psa'
+'ala ma kota i psa'
 
 Null values rendered as empty strings by default.
 >>> render("-$null-")
-u'--'
+'--'
 
 
 *** Built-in hypertags.
 
 Import.
->>> render("<import 'xml.sax' names='parse xmlreader'> $parse.func_name <import 'xml.sax'> [[$xml.sax.parse $null]] <import 'xml'>")
-u' parse   '
+>>> render("<import 'xml.sax' names='parse xmlreader'> $parse.__name__ <import 'xml.sax'> [[$xml.sax.parse $null]] <import 'xml'>")
+' parse   '
 
 Include.
 >>> from loaders import DictLoader
 >>> loader = DictLoader(myfile = u"<:doc text title> <h1>$title</h1> <p>$text</p> \u017c\u017a\u0142\u015b\u0119\u0107 \\u0250 \\u0390 \\u1300</:doc>")
 >>> HyperML("<include 'myfile' /> <doc 'My Title'>This is a story about...</doc>", loader = loader).render()
-u'  <h1>My Title</h1> <p>This is a story about...</p> \u017c\u017a\u0142\u015b\u0119\u0107 \u0250 \u0390 \\u1300'
+'  <h1>My Title</h1> <p>This is a story about...</p> \u017c\u017a\u0142\u015b\u0119\u0107 \u0250 \u0390 \\u1300'
 
 Loops <for>.
 >>> HyperML("<:A items><for item=$items> * $item</for></:A>").A(range(5))
-u' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
+' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
 >>> HyperML("<:A ~ items><for item=$items> * $item</for></:A>").A(range(0))
-u''
+''
 >>> HyperML("<:row x> * $x</:row> <:A items><for $items print=$row/></:A>").A(range(5))
-u' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
+' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
 
 Local assignments <with>.
 >>> render("<with s='ala' n=3> $s $n $(s*n) </with>")
-u' ala 3 alaalaala '
+' ala 3 alaalaala '
 >>> render("<with s='ala' n=5><with n=2> $s $n $(s*n) </with></with>")
-u' ala 2 alaala '
+' ala 2 alaala '
 
 HTML.
 >>> render("$HTML('<p>&</p>') $('<p>&</p>'|HTML) $str('<p>&</p>')")
-u'<p>&</p> <p>&</p> &lt;p&gt;&amp;&lt;/p&gt;'
+'<p>&</p> <p>&</p> &lt;p&gt;&amp;&lt;/p&gt;'
 
 Unescaping HTML to plain text when inserting in an attribute.
 >>> render("<:A text><a t=$text/></:A> <A>ala &amp; ola</A> <A>ala & ola</A>")
-u' <a t="ala &amp; ola" /> <a t="ala &amp; ola" />'
+' <a t="ala &amp; ola" /> <a t="ala &amp; ola" />'
 >>> render("<:A text><a t=$text/></:A> <A>ala &amp; &quot; ola</A>")
-u' <a t=\\'ala &amp; " ola\\' />'
+' <a t=\\'ala &amp; " ola\\' />'
 
 join() filter, <join> hypertag, joinlines().
 >>> HyperML("<:A ~ l>$(l|join(cast=str))</:A>").A([1,2,3])
-u'123'
+'123'
 >>> HyperML("<:A text>$(text|join(' '))</:A>").A(HTML("<i>ala</i>\\nma\\nkota"))
-u'<i>ala</i> ma kota'
+'<i>ala</i> ma kota'
 >>> render("<:A text><join ' '>$text</join></:A> <A><i>ala</i>\\nma\\nkota</A>")
-u' <i>ala</i> ma kota'
+' <i>ala</i> ma kota'
 
 
 *** Using hypertags like variables.
 
 >>> render("<:A>$null</:A> $A.definition()")
-u' <:A>$null</:A>'
+' <:A>$null</:A>'
 
 >>> render("<:A ~ x><:B ~ y>$x$y</:B> $B('y') </:A><A 'x'/>")
-u' xy '
+' xy '
 
 Hypertag's output passed as an attribute.
 >>> doc = HyperML("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x $y</:C> <C x=$A() y=$B()></C>")
 >>> doc.render()
-u'   in A &amp; <i>B</i>'
+'   in A &amp; <i>B</i>'
 >>> doc.C(doc.A(), doc.B())
-u'in A &amp; <i>B</i>'
+'in A &amp; <i>B</i>'
 
 Hypertag itself passed as an attribute.
 >>> doc = HyperML("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x() $y()</:C> <C x=$A y=$B></C>")
 >>> doc.render()
-u'   in A &amp; <i>B</i>'
+'   in A &amp; <i>B</i>'
 >>> doc.C(doc.A, doc.B)
-u'in A &amp; <i>B</i>'
+'in A &amp; <i>B</i>'
 
 Inner hypertag called like a function. This can be done inside HyperML doc, because due to HyperML syntax, 
 the hypertag can only be passed downwards through the tree, never upwards, so all the necessary frames 
 are still on the stack when the hypertag is to be expanded.
 >>> render("<:A ~ x><:B ~ y>$x$y</:B><:C ~ h>$h('-in-C')</:C> <B 'y'/> $B('y') <C h=$B/> </:A> <A 'x'/>", compact = True)
-u'  xy xy x-in-C '
+'  xy xy x-in-C '
 
 Inner hypertag passed as an argument and expanded in a different context, at a lower depth
 - stack branching (StackBranch + Closure classes) is necessary to handle this correctly.
 >>> render("<:A ~ f>$f()</:A> <:B x> <:H>$x</:H><A $H/> </:B> <B>ala</B>")
-u'   ala '
+'   ala '
 
 Recursion becomes possible when hypertags are being passed as values. 
 >>> render("<:A ~ h>$h(h)</:A> <A $A/>")   # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -501,124 +501,124 @@ HypertagsError: Can't evaluate expression at line 1, column 10 (h(h)) because of
 
 HyperML comments and escape strings.
 >>> render("[# inside comment #] $[# outside comment $#] $< $> $$ $[[ $|| $]] $[= $=]")
-u' [# outside comment #] < > $ [[ || ]] [= =]'
+' [# outside comment #] < > $ [[ || ]] [= =]'
 
 HyperML no-parse blocks.
 >>> render("one [= two =] three")
-u'one  two  three'
+'one  two  three'
 >>> render("one [= [[<if $false>unparsed</if>||two]] =] three")
-u'one  [[<if $false>unparsed</if>||two]]  three'
+'one  [[<if $false>unparsed</if>||two]]  three'
 >>> render("one [[<if $false>unparsed</if>||two]] three")
-u'one two three'
+'one two three'
 
 
 *** Variant & conditional elements.
 
 Simple variants.
 >>> render("[[ala ma $$ $[[ $|| <$| <kota/>]] [[||]]")
-u'ala ma $ [[ || <$| <kota /> '
+'ala ma $ [[ || <$| <kota /> '
 >>> render("<:A ~ x y>[[ $x || $y ]]</:A> <A y='y'/>")
-u'  y '
+'  y '
 
 Variant inside hypertag definition.
 >>> render("<:A ~ x>[[ala ma $|| <$| <kota/>]] [[||]]</:A> <A/>")
-u' ala ma || <$| <kota /> '
+' ala ma || <$| <kota /> '
 >>> doc = HyperML("<:A ~ x y>[[ $x || $y ]]</:A>  <:user ~ name surname>[[ $surname[[, $name]] || $name || <i>anonymous</i> ]]</:user>")
 >>> doc.A(x = ''), doc.A(y = 'y')
-(u'  ', u' y ')
+('  ', ' y ')
 >>> doc.user(name = "John"), doc.user(surname = "Smith")
-(u' John ', u' Smith ')
+(' John ', ' Smith ')
 >>> doc.user(name = "John", surname = "Smith"), doc.user()
-(u' Smith, John ', u' <i>anonymous</i> ')
+(' Smith, John ', ' <i>anonymous</i> ')
 
 Hypertag occurence inside variant block.
 Null values must not appear in the literal occurence of a hypertag (in occurence body or on attributes list),
 but they can still appear in hypertag definition body.
 >>> render("<:user name surname>$surname, $name</:user>[[<user 'John' />]]", explicit_body_var=0)
-u', John'
+', John'
 >>> render("<:user ~ name surname>$surname, $name</:user>[[<user 'John' />]]")
-u', John'
+', John'
 >>> render("<:user ~ name surname>$surname, $name</:user>[[<user 'John' $null />]]")
-u''
+''
 >>> render("<:H ~ x>x=$x</:H> <:A ~ x> [[ x is missing: <H x=$x /> || second]] </:A> <A/>")
-u'    second '
+'    second '
 
 Hypertag definition inside variant block. Behaves exactly the same as if it were located outside the block:
 null values are allowed within the definition body and don't affect rendering of the block.
 >>> render("[[<:user ~ name surname>$surname, $name</:user><user 'John' 'Smith' />]]")
-u'Smith, John'
+'Smith, John'
 >>> render("[[<:user ~ name surname>$surname, $name, $null</:user><user 'John' />]]")
-u', John, '
+', John, '
 
 TODO: if a hypertag definition located in a variant block references a variable from outside the block
 and this variable is null in a given expansion, such a definition might possibly expand to invalid markup (raise NullValue).
 However, this is not that important, let's leave it for deeper investigation in the future.
 >>> render("<:A x>[[<:user ~ name>$name, $x</:user><user 'John' /> || hypertag not defined]]</:A> <A/>")
-u' John,  '
+' John,  '
 
 If-then-ELSE using <if> inside [[...]]
 >>> doc = HyperML("<:A x>[[<if $x> first </if>|| second ]]</:A>")
 >>> doc.A(x = 'true')
-u' first '
+' first '
 >>> doc.A(x = '')
-u' second '
+' second '
 
 Variant containing <for> with null argument. -- CHANGED semantics. Now this example raises an exception, instead of returning: u'  pass '
 >>> render("<:A ~ items>[[ <for x=$items[:3]>item</for> || pass ]]</:A> <A/>", compact = False)
 Traceback (most recent call last):
     ...
-HypertagsError: Can't evaluate attribute at line 1, column 21 (x=$items[:3]) because of TypeError: 'NoneType' object has no attribute '__getitem__'
+HypertagsError: Can't evaluate attribute at line 1, column 21 (x=$items[:3]) because of TypeError: 'NoneType' object is not subscriptable
 
 Null value.
 Explicit $null inside variant block behaves like every other null value: invalidates a given choice.
 >>> render("$null <a href=$null/> [[ $null || <b val=$null/> || last]]")
-u' <a href="" />  last'
+' <a href="" />  last'
 
 Explicit $null used inside variant block: 
 if inside an expression that returns a non-null value/contents overall, the branch can still be rendered.
 >>> render("[[ $(null is null) <if $(null is null)> first </if> || second ]]")
-u' True  first  '
+' True  first  '
 >>> render("[[ <if $true else=$null> first </if> || second ]]")
-u' second '
+' second '
 >>> render("[[ <if $true> first </if> || second ]]")
-u'  first  '
+'  first  '
 
 (NOT TRUE). In expressions inside [[...]], null value propagates up the tree through all operators 
 where null doesn't make sense and would raise an exception otherwise.
 > > > render("[[$('/' + null) $(null * 5) $(-null | split)]]")
-u''
+''
 > > > render("[[ $(null[3](3).three * 3 / 3 // 3 % 3 + 3 - 3 '3' >> 3 << 3 & 3 ^ 3 | 3) ]]")
-u''
+''
 
 Conditional hypertags.
 >>> render("<if $null else='else'>then</if> <ifnull $null>yes-null</ifnull> <ifnull '' else=$('not-null') />")
-u'else yes-null not-null'
+'else yes-null not-null'
 >>> doc = HyperML("<:A seq><ifnot $seq else=$str(seq)> sequence is empty </ifnot></:A>")
 >>> doc.A([])
-u' sequence is empty '
+' sequence is empty '
 >>> doc.A([3,4,5])
-u'[3, 4, 5]'
+'[3, 4, 5]'
 >>> doc = HyperML("<:A seq><if $seq else='sequence is empty'> $seq </if></:A>")
 >>> doc.A([])
-u'sequence is empty'
+'sequence is empty'
 >>> doc.A([3,4,5])
-u' [3, 4, 5] '
+' [3, 4, 5] '
 
 Lazy evaluation of conditional hypertags.
 >>> def f(): print('f')
 >>> render("<if $false>$f()</if>", globals = {'f': f})
-u''
+''
 >>> render("<ifnot $true>$f()</ifnot>", globals = {'f': f})
-u''
+''
 >>> render("<ifnull 'ala'>$f()</ifnull>", globals = {'f': f})
-u''
+''
 
 
 *** Null value in expressions
 
 Null value outside variant blocks behaves like '' in concatenation operator, but is evaluated normally (like Python's None) with other operators.
 >>> render("$('/' null '/')")
-u'//'
+'//'
 >>> render("$(null + 5)")
 Traceback (most recent call last):
     ...
@@ -629,47 +629,47 @@ Null in concatenation raises NullValue (terminates all node rendering) if inside
    Nullity inside [[...]] is checked only at the end, for the entire expression. 
 >>> def quoted(s): return "`%s`" % s
 >>> render("$quoted('ala' 'ma' 'kota')", globals = {'quoted':quoted})
-u'`alamakota`'
+'`alamakota`'
 >>> render("$quoted('ala' 'ma' x)", globals = {'quoted':quoted, 'x':None})
-u'`alama`'
+'`alama`'
 >>> render("[[$quoted('ala' 'ma' x)]]", globals = {'quoted':quoted, 'x':None})
-u'`alama`'
+'`alama`'
 >>> render("$quoted(x)", globals = {'quoted':quoted, 'x':None})
-u'`None`'
+'`None`'
 >>> render("[[$quoted(x)]]", globals = {'quoted':quoted, 'x':None})
-u'`None`'
+'`None`'
 
 Filter functions marked explicitly as @Filter propagate null values automatically, without explicit handling in the function code.
 The propagated null result can influence rendering of neighboring elements if inside a variant block.
 >>> quoted = Filter(lambda s, rep=1 : ("`"*rep + "%s" + "`"*rep) % s)
 >>> render("$('ala' | quoted) $('ola' | quoted(3))", globals = {'quoted':quoted})
-u'`ala` ```ola```'
+'`ala` ```ola```'
 >>> render("$(null | quoted) kot $(null | quoted(3))", globals = {'quoted':quoted})
-u' kot '
+' kot '
 >>> render("[[$(null | quoted) kot $(null | quoted(3))]]", globals = {'quoted':quoted})
-u''
+''
 
 Plain function in a filter operator receives and processes null values normally, like every other value, unless inside a variant block.
 -- CHANGED SEMANTICS. Now, null propagates through expressions, as a valid argument of functions and operators.
    Nullity inside [[...]] is checked only at the end, for the entire expression. 
 >>> def quoted(s): return "`%s`" % s
 >>> render("$(null | quoted)", globals = {'quoted':quoted})
-u'`None`'
+'`None`'
 >>> render("[[$(null | quoted)]]", globals = {'quoted':quoted})
-u'`None`'
+'`None`'
 >>> render("[[$fun(null | quoted)]]", globals = {'quoted':quoted, 'fun':lambda s:'fun-'+s})
-u'fun-`None`'
+'fun-`None`'
 
 
 *** Bug fixes.
 
 Reserved symbols can be a prefix of a variable name.
 >>> render("<:A ~ issn input notify ifa aif>$(issn input) $notify $ifa$aif</:A> <A 'a' 'b' 'c' 'd' 'e'></A>")
-u' ab c de'
+' ab c de'
 
 Compactification of an inner hypertag using internally a top-level hypertag caused assertion error related to "access link" calculation.
 >>> render("<:A text>$text</:A> <:B> <:C><A>ala</A></:C> <C></C> </:B> <B></B>")
-u'    ala '
+'    ala '
 
 
 @author:  Marcin Wojnarski
@@ -680,10 +680,10 @@ import sys, re, operator
 from copy import copy
 from collections import OrderedDict
 from importlib import import_module
-from itertools import imap
 from xml.sax.saxutils import quoteattr
 from parsimonious.grammar import Grammar
-from six import reraise
+from six import reraise, string_types, text_type as unicode
+basestring = string_types[0]
 
 from nifty.util import escape, flatten, isstring, isint, isfunction, asnumber, getattrs, printdict, ObjDict
 from nifty.text import html_escape, html_unescape, Text
@@ -726,7 +726,7 @@ def _addFirst(name, item, orddict):
     "Add name:item pair to the beginning of OrderedDict 'orddict'. New OrderedDict is created and returned."
     assert name not in orddict
     d = OrderedDict([(name, item)])
-    for name, attr in orddict.iteritems(): d[name] = attr
+    for name, attr in orddict.items(): d[name] = attr
     return d
 
 
@@ -833,11 +833,11 @@ class MultiDict(object):
         if idx is None: return default
         return self.stack[idx][1]
     
-    def iterkeys(self): return self.lookup.iterkeys()
-    def itervalues(self):
-        for i in self.lookup.itervalues(): yield self.stack[i][1]
-    def iteritems(self):
-        for k in self.lookup.iterkeys(): yield k, self[k]
+    def keys(self): return self.lookup.keys()
+    def values(self):
+        for i in self.lookup.values(): yield self.stack[i][1]
+    def items(self):
+        for k in self.lookup.keys(): yield k, self[k]
         
     def push(self, name, value):
         prev = self.lookup.get(name, None)
@@ -854,7 +854,7 @@ class MultiDict(object):
     
     def pushall(self, items):
         "A repeated push(), of all items in the name->value dictionary 'items'."
-        for name, value in items.iteritems():
+        for name, value in items.items():
             self.push(name, value)
 
     def reset(self, state):
@@ -1021,7 +1021,7 @@ class HypertagSpec(object):
                         # to give the function access to global parser settings, like the target language, encoding configuration etc.
 
     def __init__(self, **params):
-        for name, val in params.iteritems():
+        for name, val in params.items():
             if not hasattr(self, name):
                 raise Exception("Unrecognized parameter passed to HypertagSpec: %s" % name)
             setattr(self, name, val)
@@ -1044,8 +1044,8 @@ def special_hypertag(**translation):
     """
     def decorator(fun):
         def translated(*args, **kwargs):       # a function like 'fun', but with some attribute names translated
-            for dst, src in translation.iteritems():
-                if dst in kwargs: raise TypeError("hypertag function '%s' got an unexpected keyword argument '%s'" % (fun.func_name, dst))
+            for dst, src in translation.items():
+                if dst in kwargs: raise TypeError("hypertag function '%s' got an unexpected keyword argument '%s'" % (fun.__name__, dst))
                 if src not in kwargs: continue
                 kwargs[dst] = kwargs[src]
                 del kwargs[src]
@@ -1163,7 +1163,7 @@ ifnull.ishypertag.lazybody = True
 # jinja_filters = {}
 # try:
 #     from jinja2.filters import FILTERS as _jFILTERS
-#     jinja_filters = {k: Filter(v) for k, v in _jFILTERS.iteritems()}
+#     jinja_filters = {k: Filter(v) for k, v in _jFILTERS.items()}
 # except:
 #     pass
 
@@ -1184,7 +1184,7 @@ def split(text): return text.split()
 @Filter
 def splitlines(text, strip = True): 
     lines = text.splitlines()
-    if strip: lines = filter(None, [line.strip() for line in lines])
+    if strip: lines = list(filter(None, [line.strip() for line in lines]))
     return lines
 
 @hypertag
@@ -1206,7 +1206,7 @@ def join(seq, sep = Text(u''), cast = None):
     """
     if not isinstance(sep, Text): sep = Text(sep)
     if isinstance(seq, basestring): seq = seq.split()
-    if cast is not None: seq = imap(cast, seq)
+    if cast is not None: seq = map(cast, seq)
     return sep.join(seq)
 
 @hypertag
@@ -1241,9 +1241,9 @@ def list_(text, sep = None, strip = True, cast = None):
     elif sep == "chars": items = list(text)
     else:
         items = text.split(sep)
-        if strip: items = filter(None, [item.strip() for item in items])
+        if strip: items = list(filter(None, [item.strip() for item in items]))
     
-    if cast is not None: items = imap(cast, items)
+    if cast is not None: items = list(map(cast, items))
     return items
 
 
@@ -1259,7 +1259,7 @@ def url(start = u'', *parts, **query):
     on arguments list of a function, that's why None handling is implemented here in the function code).
     """
     parts = u''.join(_quote1(p) for p in parts if p is not None)
-    query = u'&'.join(_quote2(k) + '=' + _quote2(v) for k, v in query.iteritems() if v is not None)
+    query = u'&'.join(_quote2(k) + '=' + _quote2(v) for k, v in query.items() if v is not None)
     return start + parts + ('?' + query if query else '')
     
 
@@ -1666,7 +1666,7 @@ class NODES(object):
                 self.ex = (ex, sys.exc_info()[2])
     
         def render(self, stack, ifnull = ''):
-            if self.ex: reraise(self.ex[0], None, self.ex[1])
+            if self.ex: reraise(None, self.ex[0], self.ex[1])
             return self.value
         
         def info(self):
@@ -1710,7 +1710,7 @@ class NODES(object):
                 val = self.evaluate(stack, self._convertIfNull(ifnull))
             except HypertagsError: raise
             except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
-                reraise(HypertagsError("Can't evaluate expression", self, cause = e), None, sys.exc_info()[2])
+                reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
             
             val = self._checkNull(val, ifnull)
             
@@ -1780,7 +1780,7 @@ class NODES(object):
             except NullValue as ex:
                 self.ex = (ex, sys.exc_info()[2])
         def evaluate(self, stack, ifnull):
-            if self.ex: reraise(self.ex[0], None, self.ex[1])      # re-raise the exception caught during pre-evaluation?
+            if self.ex: reraise(None, self.ex[0], self.ex[1])      # re-raise the exception caught during pre-evaluation?
             return self.value
         
     
@@ -1918,7 +1918,7 @@ class NODES(object):
             Missing values are replaced with '' in regular elements, or None (null value) on hypertag definition list.            
             """
             unnamed = [arg.expr.evaluate(stack, ifnull) for arg in self.unnamed]
-            kwargs = OrderedDict((name, arg.expr.evaluate(stack, ifnull)) for name, arg in self.named.iteritems())
+            kwargs = OrderedDict((name, arg.expr.evaluate(stack, ifnull)) for name, arg in self.named.items())
             return unnamed, kwargs
         
     class xcall(expression):
@@ -1997,10 +1997,13 @@ class NODES(object):
         name  = None        # textual representation of the operator, for possible rendering back into the document
         apply = None        # corresponding function from 'operator' module
         
-        ops = ['+ add', '- sub', '* mul', '/ div', '// floordiv', '% mod', '<< lshift', '>> rshift', '& and_', '| or_', '^ xor',
+        ops = ['+ add', '- sub', '* mul', '// floordiv', '% mod', '<< lshift', '>> rshift', '& and_', '| or_', '^ xor',
                '< lt', '> gt', '== eq', '>= ge', '<= le', '!= ne', 'is is_', 'is not is_not']
         ops = [m.rsplit(' ', 1) for m in ops]
         ops = {op: getattr(operator, fun) for op, fun in ops}
+        
+        # '/' must be added separately, because it has different names (and behavior) in Python 2 vs. 3
+        ops['/'] = getattr(operator, 'div', None) or operator.truediv
         
         # extra operators, implemented by ourselves
         ops['in'] = lambda x, d: x in d                         # operator.contains() is not suitable bcs it takes operands in reversed order
@@ -2203,7 +2206,7 @@ class NODES(object):
             
             except HypertagsError: raise
             except Exception as e:                # chain external exception with HypertagsError to inform about the place of occurence
-                reraise(HypertagsError("Can't evaluate attribute", self, cause = e), None, sys.exc_info()[2])
+                reraise(None, HypertagsError("Can't evaluate attribute", self, cause = e), sys.exc_info()[2])
 
             if self.hypertag: return None       # definition of a variable without explicit default value? return None as default
             return ""                           # regular named attribute without value? empty string is the value
@@ -2272,7 +2275,7 @@ class NODES(object):
                     raise NullValue()
                 
             unnamed = [checkNull(attr.evaluate(stack, ifnull)) for attr in self.unnamed]
-            kwattrs = OrderedDict((name, checkNull(attr.evaluate(stack, ifnull))) for name, attr in self.named.iteritems())
+            kwattrs = OrderedDict((name, checkNull(attr.evaluate(stack, ifnull))) for name, attr in self.named.items())
             return unnamed, kwattrs
             
     class xattrs_empty(BaseTree.virtual, xattrs):
@@ -2470,7 +2473,7 @@ class NODES(object):
                 content = fun(*unnamed, **kwattrs)
             except HypertagsError: raise
             except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
-                reraise(HypertagsError("Can't expand external hypertag", self, cause = e), None, sys.exc_info()[2])
+                reraise(None, HypertagsError("Can't expand external hypertag", self, cause = e), sys.exc_info()[2])
             
             content = self._checkNull(content, ifnull)      # nullity check of the result: external hypertags can't do this by themselves
             return content
@@ -2523,7 +2526,7 @@ class NODES(object):
         def markSymbols(self, symbols):
             "Mark given attributes as symbols: definitions of variables; set their offset and backlink to the containing hypertag."
             total = len(symbols)
-            for pos, (name, attr) in enumerate(symbols.iteritems()):
+            for pos, (name, attr) in enumerate(symbols.items()):
                 self.tree._check_name(name, attr)       # we have stricter rules for symbol names than for other attributes - must check
                 attr.makeSymbol(self, pos - total)
 
@@ -2553,7 +2556,7 @@ class NODES(object):
             # hypertag's expand() is pure when its subtree (attr values and body) doesn't reference any non-pure
             # variable/hypertag defined higher in the tree than 'self' (i.e., defined at a smaller depth)
             self.ref_depth = ctx.ref_depth
-            self.ispure_expand = (self.ref_depth >= self.depth)      
+            self.ispure_expand = (self.ref_depth is None or self.ref_depth >= self.depth)
             #if DEBUG: print(' ', ':' + self.name, 'ispure_expand =', self.ispure_expand, self.depth, ctx.ref_depth)
             ctx.add_refdepth(ref_depth, '_back_')       # add back the initial ref_depth to account for preceeding siblings
             
@@ -2598,7 +2601,7 @@ class NODES(object):
 
             # create a new execution frame and push onto the stack
             top = stack.position()
-            stack.pushall(attrs.values())       # attrs is an OrderedDict, thus it preserves the ordering of attributes from hypertag def
+            stack.pushall(list(attrs.values()))       # attrs is an OrderedDict, thus it preserves the ordering of attributes from hypertag def
             stack.push(accesslink)
             if DEBUG: print("expand", ":" + self.name, accesslink, stack)
             
@@ -2772,7 +2775,7 @@ class NODES(object):
             hdoc = self.tree.load(file)
             if names is None:                                       # include all symbols + contents, or only the symbols listed by name?
                 self.content = hdoc.render()
-                names = hdoc.symbols.iterkeys()                                       
+                names = list(hdoc.symbols.keys())
             else:
                 names = names.split()
                 names = filter(None, [n.strip(',') for n in names]) # be forgiving: names are normally space-separated, but let's handle commas, too
@@ -2897,7 +2900,7 @@ class NODES(object):
             
             # create an execution frame and push onto the stack
             top = stack.position()
-            stack.pushall(kwattrs.values()) 
+            stack.pushall(list(kwattrs.values()))
             stack.push(top)             # 'top' is the access link; no need to use _find_accesslink(): occurence depth = definition depth
             
             out = u''.join(n.render(stack, ifnull) for n in self.body)          # render the body
@@ -2930,7 +2933,7 @@ class NODES(object):
         WARNING: the 'default' dictionary is modified here and used to pass the result out to the calling function.
         """
         # verify names of keyword attributes
-        for name in kwattrs.iterkeys():
+        for name in kwattrs.keys():
             if name not in default: raise HypertagsError("Hypertag '%s' got an unexpected keyword attribute '%s'" % (hname, name), node)
         
         # ensure that the body attribute is NOT explicitly assigned (this is forbidden and usually unintended),
@@ -2947,7 +2950,7 @@ class NODES(object):
         
         # assign unnamed values to proper attributes in 'attr'
         attrs = default                                         # NO copy(), we reuse the same 'default' dictionary to store the result (!)
-        for name, val in zip(default.iterkeys(), unnamed):
+        for name, val in zip(default.keys(), unnamed):
             #if name in kwattrs and (name != bodyattr or not selfclosing):   # body attr CAN be assigned explicitly in a selfclosing <.../> tag
             if name in kwattrs:
                 raise HypertagsError("Hypertag got multiple values for keyword attribute '%s'" % name, node)
@@ -2955,7 +2958,7 @@ class NODES(object):
                 attrs[name] = val
             
         # assign keyword attributes
-        for name, val in kwattrs.iteritems():
+        for name, val in kwattrs.items():
             if val is not None:                                 # null value, even if explicit, is replaced with the default
                 attrs[name] = val
         
@@ -3073,7 +3076,7 @@ class HyperML(BaseTree):
     # returning (or having) always the same value for a given fixed input and never having any side effects.
     # Such functions are pre-computed already during analysis, for efficiency, if only their arguments are pure (same across all render() calls).
     # See: https://en.wikipedia.org/wiki/Pure_function
-    pure_externals = set(BUILT_IN.values() + FILTERS.values())
+    pure_externals = set(list(BUILT_IN.values()) + list(FILTERS.values()))
     
     # escaping...
     language = "HTML"   # name of the target language of the document, to mark rendered parts as Text(language) and avoid autoescaping
@@ -3236,8 +3239,8 @@ class HyperML(BaseTree):
         # and remains accessible by self.hypertags[name] or self[name] only! Use the latter syntax if you need a bullet-proof code.
         
         self.symbols = ctx.asdict(state)
-        self.hypertags = {name: obj for name, obj in self.symbols.iteritems() if isinstance(obj, NODES.xhypertag)}
-        for name, htag in self.hypertags.iteritems():
+        self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xhypertag)}
+        for name, htag in self.hypertags.items():
             if not hasattr(self, name):
                 setattr(self, name, htag)
     
@@ -3268,7 +3271,7 @@ class HyperML(BaseTree):
     def __str__(self):
         doc = BaseTree.__str__(self)
         if not self.symbols: return doc
-        symbols = [self.info(node) for node in self.symbols.itervalues()]
+        symbols = [self.info(node) for node in self.symbols.values()]
         return '\n'.join([doc] + flatten(symbols))
 
         
