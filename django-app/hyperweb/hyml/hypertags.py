@@ -685,7 +685,7 @@ from parsimonious.grammar import Grammar
 from six import reraise, string_types, text_type as unicode
 basestring = string_types[0]
 
-from nifty.util import escape, flatten, isstring, isint, isfunction, asnumber, getattrs, printdict, ObjDict
+from nifty.util import escape, flatten, isstring, isint, isfunction, asnumber, getattrs, printdict, ObjDict, Timer
 from nifty.text import html_escape, html_unescape, Text
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree, ParserError
 
@@ -732,69 +732,27 @@ def _addFirst(name, item, orddict):
 
 ########################################################################################################################################################
 
-class Stack(object):
-    """Stack implementation. Similar to a list, but with pre-allocation of the internal list (buffer) 
-    and with backward indexing of elements relative to the top of the current stack.
-    """
-    stack = None        # buffer that holds stack elements
-    size  = None        # current length of the stack and a position of the 1st element after the top
+class Stack(list):
+    """Stack implementation based on list."""
     
-    def __init__(self, maxlen = 10):
-        self.stack = [None] * maxlen if maxlen else []
-        self.size = 0
-    def alloc(self, n):
-        """Make sure that the buffer can accomodate additional 'n' elements, resize if too little space. 
-        If n is small, the buffer gets extended by more than 'n'."""
-        if self.size + n > len(self.stack):
-            self.stack += [None] * max(n, self.size)            # double the size if 'n' is small
-    
-    def push(self, x):
-        if self.size >= len(self.stack):                        # buffer too small? double its size 
-            self.stack += [None] * (self.size + 1)
-        self.stack[self.size] = x
-        self.size += 1
-    def pop(self):
-        self.size -= 1
-        return self.stack[self.size]
-    def pushall(self, elems):
-        "A repeated push(), of all elements in a given list, done faster."
-        n = len(elems)
-        self.alloc(n)
-        self.stack[self.size : self.size+n] = elems
-        self.size += n
-                
-    def __getitem__(self, pos):
-        # slices not supported!
-        if not 0 <= pos < self.size: raise IndexError("Stack index out of range (%s)" % pos)
-        return self.stack[pos]
-    def get(self, pos):
-        """
-        'pos' is a position in the stack: either a non-negative integer representing a regular index,
-        or a negative integer that's interpreted as a negative offset relative to the current 'size', 
-        like in list indexing: mylist[-1] is the 1st element from the tail.
-        """
-        if pos >= 0: return self.stack[pos]
-        return self.stack[self.size + pos]
-    def set(self, pos, val):
-        if pos >= 0: self.stack[pos] = val
-        else: self.stack[self.size + pos] = val
-    
-    def position(self): 
-        return self.size
+    @property
+    def size(self):
+        return len(self)
+    @size.setter
+    def size(self, _size_):
+        del self[_size_:]
+
+    push     = list.append
+    pushall  = list.extend
+    get      = list.__getitem__
+    set      = list.__setitem__
+    position = list.__len__
+
     def reset(self, state):
         "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
-        if self.size < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
-        self.size = state
-            
-    def copy(self):
-        "Shallow copy of self."
-        dup = copy(self)
-        dup.stack = copy(self.stack)
-        return dup
-    
-    def __repr__(self): 
-        return repr(self.stack[:self.size])
-
+        # if len(self) < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
+        del self[state:]
+        
 
 class MultiDict(object):
     """
@@ -819,7 +777,7 @@ class MultiDict(object):
     lookup = None           # {name: index} dict of current names and their most recent positions in the stack
         
     def __init__(self, maxlen = 10):
-        self.stack = Stack(maxlen)
+        self.stack = Stack()
         self.lookup = {}
     
     def __contains__(self, name):
@@ -899,10 +857,11 @@ class StackBranch(object):
     """A stack that exposes Stack interface, but internally consists of 2 disjoint parts, each one being a Stack object:
     1) the "lower" Stack or StackBranch object (the "trunk") containing stack of a fixed length - can only be used for read access;
     2) the "upper" Stack object (the "branch") that initially has 0 length, but can grow and shrink like any regular Stack
+    StackBranch is used in Closure implementation.
     """
     def __init__(self, lower):
         self.lower = lower
-        self.upper = Stack(0)
+        self.upper = Stack()
         self.lowersize = self.lower.size
         
     ### all Stack methods delegated to the appropriate Stack object...
@@ -1708,6 +1667,7 @@ class NODES(object):
             # calculate the value and check against null
             try:
                 val = self.evaluate(stack, self._convertIfNull(ifnull))
+                
             except HypertagsError: raise
             except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
                 reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
@@ -3211,7 +3171,13 @@ class HyperML(BaseTree):
 
     ###  DOCUMENT PROCESSING  ###
 
-    def pair(self): 
+    def pair(self):
+        """
+        Tag pairing. Walk through the tree to find matching start/end tags (xstart_tag, xend_tag)
+        and replace them with instances of <xelement> or its subclasses.
+        This is the 1st step of semantic analysis and must be called before analyse().
+        Unlike analyse(), tag pairing does NOT need to maintain current Context when walking down the tree.
+        """
         self.root.pair()
         
     def analyse(self):
@@ -3225,7 +3191,7 @@ class HyperML(BaseTree):
         
         ctx = Context()
         ctx.pushall(BUILT_IN)           # seed the context with built-in symbols
-        ctx.pushall(FILTERS)            # ...and standard filter
+        ctx.pushall(FILTERS)            # ...and standard filters
         ctx.pushall(self.globals)       # seed the context with initial global symbols configured by the user
         state = ctx.getstate()          # keep the state, so that after analysis we can retrieve newly defined symbols alone
         if DEBUG:
@@ -3388,8 +3354,12 @@ except TypeError, e:
 
 
 if __name__ == '__main__':
+    
+    timer = Timer()
+
     import doctest
     print(doctest.testmod())
+    print("Time elapsed:      ", timer)
 
     exit()
 
