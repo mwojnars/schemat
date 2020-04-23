@@ -1713,25 +1713,26 @@ class NODES(object):
                 reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
             
             val = self._checkNull(val, ifnull)
+            isText = isinstance(val, Text)
             
             # value will be printed on attributes list? unescape it from markup text and put in quotes
             lang = self.tree.language
             if inattr: 
-                if getattr(val, 'language', None) == lang:  # 'val' is a Text instance in the markup language? unescape to plain text
+                if isText and val.language == lang:     # 'val' is a Text instance in the markup language? unescape to plain text
                     val = self.tree.unescape(val)
                 if self.tree.quote_attr_values or isstring(val):
                     return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
                 return repr(val)
-        
+            
             # value will be printed in the main (markup) part of the document? 
             # -> no quoting, but escaping for the target language may be needed
-            if getattr(val, 'language', None) == lang:      # 'val' is a Text instance in the target language already? don't do any escaping
+            if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
                 return val
-            if getattr(val, '__text__', None):              # 'val' has __text__() method and can produce representation in the target lang?
+            if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
                 text = val.__text__(lang)
                 if text is not None: return text
             if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
-                return val.__html__()                       # 'val' has __html__() method? use it if the target language is HTML
+                return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
             
             # otherwise, convert 'val' to a string and perform default escaping
             val = unicode(val)                 
@@ -2610,7 +2611,7 @@ class NODES(object):
                 out = self.body[0].render(stack)
             else:
                 out = u''.join(n.render(stack) for n in self.body)
-            if isstring(out) and getattr(out, 'language', None) is None:
+            if isstring(out) and (not isinstance(out, Text) or out.language is None):
                 out = Text(out, self.tree.language)             # set language of the resulting text, for proper (non-)escaping later on
             
             stack.reset(top)
@@ -2636,7 +2637,7 @@ class NODES(object):
             # To guarantee no escaping, the string is wrapped up in Text instance and marked to contain target language.
             # Otherwise, if 'body' is a *non-string* object, its occurence inside markup will be 
             # evaluated to a string and then escaped appropriately. 
-            if isinstance(body, basestring) and getattr(body, 'language', None) is None:
+            if isinstance(body, basestring) and (not isinstance(body, Text) or body.language is None):
                 body = Text(body, self.tree.language)
             return self.expand([body] + list(unnamed), kwattrs, Stack(), 0)
         
