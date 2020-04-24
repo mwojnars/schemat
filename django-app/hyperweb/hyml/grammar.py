@@ -1,3 +1,13 @@
+"""
+Grammar for a Parsimonious parser. See: https://github.com/erikrose/parsimonious
+
+WARNING:
+Parsimonious has a BUG that needs to be worked around in several places in grammar definition.
+Namely, Pasimonious silently reduces (removes) non-terminals from AST which are equal (by definition)
+to some nother non-terminal, like in expressions:   T = S
+
+"""
+
 from parsimonious.grammar import Grammar
 
 
@@ -7,7 +17,7 @@ from parsimonious.grammar import Grammar
 ###
 
 # Grammar for a Parsimonious parser. Actually a template that needs to be formatted with a few additional parameters (see below).
-# See: https://github.com/erikrose/parsimonious
+
 grammar_spec = r"""
 
 # Tagged text is a flat sequence of markup (tags, variables/functions, variants) mixed with plain text.
@@ -16,11 +26,8 @@ grammar_spec = r"""
 
 document    =  (markup / text)*
 
-markup      =  noparse / noparse_hyml / comment / tag / variant / escape / value
+markup      =  noparse / noparse_hyml / comment / tag / variant / escape / value_in_markup
 text        =  ~".[^<$[]*"s                  # plain text is a 1+ sequence of any chars till the next special symbol '<$['. Can begin with a special symbol if no other rule can be matched
-
-#value_in_markup = value
-
 
 ###  BASIC TOKENS
 
@@ -51,7 +58,7 @@ str_unquoted =  !'$' ~"[^\s\"'`=<>]+"        # in attributes only, for HTML comp
 number       =  ~"((\.\d+)|(\d+(\.\d*)?))([eE][+-]?\d+)?"      # like nifty.text.regex.float regex pattern, only without leading +-
 literal      =  number / str1 / str2
 
-var          =  eval? var_id                 # occurence (use) of a variable; trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
+var          =  eval? var_id                 # occurence (use) of a variable
 subexpr      =  '(' ws expr ws ')'
 
 # tail operators: negation, function call, collection indexing, member access ...
@@ -114,17 +121,17 @@ escape       =  eval ('$' / '<' / '>' / '[[' / '||' / ']]' / '[#' / '#]' / '[=' 
 # attributes inside a tag: space-separated, embedded expressions ($...), any XML-compatible names, names can go without values
 
 value_attr_common  =  literal / value
-value_attr         =  value_attr_common / str_unquoted
-value_attr_named   =  value_attr
-value_attr_unnamed =  value_attr_common
+value_attr_named   =  value_attr_common / str_unquoted
+value_attr_unnamed =  value_attr_common ''              # trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
+value_in_markup    =  value ''                          # trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
 
 kwattr      =  ident (ws '=' ws value_attr_named)?      # HTML syntax: name OR name="value" OR name=value ... HyperML syntax: name=$(...)
 attr        =  kwattr / value_attr_unnamed              # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
+attrs       =  attr (space attr)*
 
 #value_attr  =  value / literal / str_unquoted
 #kwattr      =  ident (ws '=' ws value_attr)?          # HTML syntax: name OR name="value" OR name=value ... HyperML syntax: name=$(...)
 #attr        =  kwattr / value / literal               # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
-attrs       =  attr (space attr)*
 
 
 # arguments inside a function call: comma-separated, expressions in abstract form (no $), only regular names, names must have values assigned
@@ -161,7 +168,8 @@ comment      =  ~"\[#((?!#\]).)*#\]"s                 # [# .. #] string with no 
 
 ###  VARIANT ELEMENTS
 
-# plain text inside variant elements: a 1+ sequence of any chars until the 1st '||', ']]' or a special symbol '<$['. Can begin with a special symbol if no other rule can be matched
+# plain text inside variant elements: a 1+ sequence of any chars until the 1st '||', ']]' or a special symbol '<$['.
+# Can begin with a special symbol if no other rule can be matched
 # regex: 1 char that doesn't start || nor ]], followed by 0+ non-special chars that don't start || nor ]]
 text_variant =  ~"(?!\|\|)(?!\]\]).((?!\|\|)(?!\]\])[^<$[])*"s
 

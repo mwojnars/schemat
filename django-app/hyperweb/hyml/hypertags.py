@@ -616,13 +616,14 @@ Lazy evaluation of conditional hypertags.
 
 *** Null value in expressions
 
-Null value outside variant blocks behaves like '' in concatenation operator, but is evaluated normally (like Python's None) with other operators.
+Null value outside variant blocks behaves like '' in concatenation operator,
+but is evaluated normally (like Python's None) with other operators.
 >>> render("$('/' null '/')")
 '//'
->>> render("$(null + 5)")
+>>> render("$(1 - null + 5)")
 Traceback (most recent call last):
     ...
-HypertagsError: Can't evaluate expression at line 1, column 3 (null + 5) because of TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+HypertagsError: Can't evaluate expression at line 1, column 1 ($(1 - null + 5)) because of TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'
 
 Null in concatenation raises NullValue (terminates all node rendering) if inside a variant block, also when inside a function.
 -- CHANGED SEMANTICS. Now, null propagates through expressions, as a valid argument of functions and operators; in concatenation behaves like "".
@@ -1378,6 +1379,9 @@ class NODES(object):
         def __str__(self): return "<%s>" % self.__class__.__name__  #object.__str__(self)
         #def __repr__(self): return self.__class__.__name__
 
+
+    ###  STATIC nodes  ###
+    
     class static(node):
         "A node that represents static text and has self.value known already during parsing or analysis, before render() is called."
         isstatic = True
@@ -1470,47 +1474,51 @@ class NODES(object):
                 return NODES.evaluated(self, stack, ifnull)
             self.children = [n.compactify(stack, ifnull) if n.isexpression else n for n in self.children]   # operators excluded from compactification
             return self
-            
-        def render(self, stack, ifnull = '', inattr = False):
-            """If inattr=True, encodes the value to its quoted string representation that can be used as an attribute value.
-            Otherwise, renders for direct inclusion in a markup part of the document.
-            render() is called only for the root node of an expression, while subexpression nodes only undergo evaluation,
-            so as to compute the value of the entire expression tree.
-            """
-            # calculate the value and check against null
-            try:
-                val = self.evaluate(stack, self._convertIfNull(ifnull))
 
-            except HypertagsError: raise
-            except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
-                reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
+        # def render(self, stack, ifnull = '', inattr = False):
+        #     print(f"<{self.type}.render() called from {self.parent.type}>")
+        #     raise NotImplementedError(self)
 
-            val = self._checkNull(val, ifnull)
-            isText = isinstance(val, Text)
-
-            # value will be printed on attributes list? unescape it from markup text and put in quotes
-            lang = self.tree.language
-            if inattr:
-                if isText and val.language == lang:     # 'val' is a Text instance in the target markup language? unescape to plain text, to use as an attr value
-                    val = self.tree.unescape(val)
-                if self.tree.quote_attr_values or isstring(val):
-                    return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
-                return repr(val)
-
-            # value will be printed in the main (markup) part of the document?
-            # -> no quoting, but escaping for the target language may be needed
-            if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
-                return val
-            if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
-                text = val.__text__(lang)
-                if text is not None: return text
-            if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
-                return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
-
-            # otherwise, convert 'val' to a string and perform default escaping
-            val = unicode(val)
-            if self.tree.autoescape: return self.tree.escape(val)
-            return val
+        # def render(self, stack, ifnull = '', inattr = False):
+        #     """If inattr=True, encodes the value to its quoted string representation that can be used as an attribute value.
+        #     Otherwise, renders for direct inclusion in a markup part of the document.
+        #     render() is called only for the root node of an expression, while subexpression nodes only undergo evaluation,
+        #     so as to compute the value of the entire expression tree.
+        #     """
+        #     # calculate the value and check against null
+        #     try:
+        #         val = self.evaluate(stack, self._convertIfNull(ifnull))
+        #
+        #     except HypertagsError: raise
+        #     except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
+        #         reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
+        #
+        #     val = self._checkNull(val, ifnull)
+        #     isText = isinstance(val, Text)
+        #
+        #     # value will be printed on attributes list? unescape it from markup text and put in quotes
+        #     lang = self.tree.language
+        #     if inattr:
+        #         if isText and val.language == lang:     # 'val' is a Text instance in the target markup language? unescape to plain text, to use as an attr value
+        #             val = self.tree.unescape(val)
+        #         if self.tree.quote_attr_values or isstring(val):
+        #             return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
+        #         return repr(val)
+        #
+        #     # value will be printed in the main (markup) part of the document?
+        #     # -> no quoting, but escaping for the target language may be needed
+        #     if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
+        #         return val
+        #     if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
+        #         text = val.__text__(lang)
+        #         if text is not None: return text
+        #     if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
+        #         return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
+        #
+        #     # otherwise, convert 'val' to a string and perform default escaping
+        #     val = unicode(val)
+        #     if self.tree.autoescape: return self.tree.escape(val)
+        #     return val
             
         def evaluate(self, stack, ifnull):
             raise NotImplementedError(self)
@@ -1764,58 +1772,69 @@ class NODES(object):
                 obj = op.apply(obj, stack, ifnull)
             return obj
     
-    class xexpr_markup(xfactor):
+    class xexpr_markup(xfactor): pass
+
+
+    class root_expression(expression):
         """
-        After reduction of tree nodes during parsing, this becomes the root node of every $... expression,
-        embedded either in markup text or in an attribute list within a tag.
+        Base class for the nodes which after reduction of tree nodes during parsing become root nodes
+        of all expressions, both the ones embedded in markup and those in attribute list within a tag.
         """
-        # def render(self, stack, ifnull = '', inattr = False):
-        #     """If inattr=True, encodes the value to its quoted string representation that can be used as an attribute value.
-        #     Otherwise, renders for direct inclusion in a markup part of the document.
-        #     render() is called only for the root node of an expression, while subexpression nodes only undergo evaluation,
-        #     so as to compute the value of the entire expression tree.
-        #     """
-        #     # calculate the value and check against null
-        #     try:
-        #         val = self.evaluate(stack, self._convertIfNull(ifnull))
-        #
-        #     except HypertagsError: raise
-        #     except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
-        #         reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
-        #
-        #     # # `val` is a text string containing HyML code? parse it into HyML tree and render
-        #     # if isinstance(val, Text) and val.language == 'HyML':
-        #     #     subtree = HyperML(val, _hyperml_context = self.context)
-        #     #     val = subtree.render()
-        #
-        #     val = self._checkNull(val, ifnull)
-        #     isText = isinstance(val, Text)
-        #
-        #     # value will be printed on attributes list? unescape it from markup text and put in quotes
-        #     lang = self.tree.language
-        #     if inattr:
-        #         if isText and val.language == lang:     # 'val' is a Text instance in the target markup language? unescape to plain text, to use as an attr value
-        #             val = self.tree.unescape(val)
-        #         if self.tree.quote_attr_values or isstring(val):
-        #             return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
-        #         return repr(val)
-        #
-        #     # value will be printed in the main (markup) part of the document?
-        #     # -> no quoting, but escaping for the target language may be needed
-        #     if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
-        #         return val
-        #     if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
-        #         text = val.__text__(lang)
-        #         if text is not None: return text
-        #     if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
-        #         return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
-        #
-        #     # otherwise, convert 'val' to a string and perform default escaping
-        #     val = unicode(val)
-        #     if self.tree.autoescape: return self.tree.escape(val)
-        #     return val
-            
+        def evaluate(self, stack, ifnull):
+            assert len(self.children) == 1
+            return self.children[0].evaluate(stack, ifnull)
+
+        def render(self, stack, ifnull = '', inattr = False):
+            """If inattr=True, encodes the value to its quoted string representation that can be used as an attribute value.
+            Otherwise, renders for direct inclusion in a markup part of the document.
+            render() is called only for the root node of an expression, while subexpression nodes only undergo evaluation,
+            so as to compute the value of the entire expression tree.
+            """
+            # calculate the value and check against null
+            try:
+                val = self.evaluate(stack, self._convertIfNull(ifnull))
+
+            except HypertagsError: raise
+            except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
+                reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
+
+            # # `val` is a text string containing HyML code? parse it into HyML tree and render
+            # if isinstance(val, Text) and val.language == 'HyML':
+            #     subtree = HyperML(val, _hyperml_context = self.context)
+            #     val = subtree.render()
+
+            val = self._checkNull(val, ifnull)
+            isText = isinstance(val, Text)
+
+            # value will be printed on attributes list? unescape it from markup text and put in quotes
+            lang = self.tree.language
+            if inattr:
+                if isText and val.language == lang:     # 'val' is a Text instance in the target markup language? unescape to plain text, to use as an attr value
+                    val = self.tree.unescape(val)
+                if self.tree.quote_attr_values or isstring(val):
+                    return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
+                return repr(val)
+
+            # value will be printed in the main (markup) part of the document?
+            # -> no quoting, but escaping for the target language may be needed
+            if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
+                return val
+            if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
+                text = val.__text__(lang)
+                if text is not None: return text
+            if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
+                return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
+
+            # otherwise, convert 'val' to a string and perform default escaping
+            val = unicode(val)
+            if self.tree.autoescape: return self.tree.escape(val)
+            return val
         
+    
+    class xvalue_in_markup(root_expression): pass
+    class xvalue_attr_named(root_expression): pass
+    class xvalue_attr_unnamed(root_expression): pass
+    
     
     class static_operator(static):
         name  = None        # textual representation of the operator, for possible rendering back into the document
@@ -2852,14 +2871,13 @@ class HyperML(BaseTree):
     # when - after symbols are resolved - we find out that some parts of the tree will always render to the same string
     # and thus they can be pre-rendered during analysis.
     _ignore_  = "space ws lt gt slash eval comment html_comment".split() + parser.noparse_names
-    _reduce_  = "def_id literal subexpr slice subscript trailer atom value_attr kwattr kwarg " \
-                "tag tag_namecore tag_core tag_name tag_name_start tag_name_end markup " \
-                "value_in_markup value_attr_common value_attr_named value_attr_unnamed"
+    _reduce_  = "def_id literal subexpr slice subscript trailer atom kwattr kwarg " \
+                "tag tag_namecore tag_core tag_name tag_name_start tag_name_end markup value_attr_common"
     _compact_ = "factor term arith_expr concat_expr shift_expr and_expr xor_expr or_expr comparison " \
                 "not_test and_test or_test ifelse_test expr expr_markup value"
 
     _reduce_anonym_ = True      # reduce all anonymous nodes, i.e., nodes generated by unnamed expressions, typically groupings (...)
-    _reduce_string_ = True      # if a node to be reduce has no children but matched a non-empty part of the text, it shall be replaced with a 'string' node 
+    _reduce_string_ = True      # if a node to be reduced has no children but matched a non-empty part of the text, it shall be replaced with a 'string' node
 
     
     ###  Configuration of semantic analysis (configurable by the user)  ###
@@ -3244,6 +3262,7 @@ if __name__ == '__main__':
     #exit()
 
     #txt = """<html> <:psa rasa>$rasa Burka</:psa> 'ala' <ma href="www" style=""> "kota" </ma> i <psa rasa="terier"/> oraz <psa></psa> </unpaired> </html>"""
+    txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
     tree = HyperML(txt, stopAfter = "rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
     print()
     print("===== AST =====")
