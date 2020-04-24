@@ -303,10 +303,15 @@ Special attribute $body.
 >>> render("<:A bodyA a>$a $bodyA</:A> <:B bodyB b><A a=$b><i>Ola</i> $bodyB</A></:B> <B b='Ala'><A a='Ela'></A></B>")
 '  Ala <i>Ola</i> Ela '
 
+Anonymous "body" can be written without preceeding space and can take on different forms: ~ (tilde) or . (dot)
+Hypertag definition can start with a colon following a name.
+>>> render("<A:. x>$(x+1)</:A> <A 3/>")
+' 4'
+
 Default values of attributes.
 >>> render("<:A a='A' b c=''>$a$(b)$c;D</:A><A></A>", explicit_body_var=0)
 'A;D'
->>> render("<:A ~ a='A' b c=''>$a$(b)$c;D</:A><A></A>")
+>>> render("<:A . a='A' b c=''>$a$(b)$c;D</:A><A></A>")
 'A;D'
 >>> render("<:A body='disallowed' a='A' b c=''>$a$(b)$c;D</:A><A></A>")
 Traceback (most recent call last):
@@ -665,10 +670,13 @@ Using an alternative hypertag definition syntax, with colon ":" following not pr
 >>> render("<H:>kot</:H><H/>")
 'kot'
 
-Embedding of a variable that renders to a Text()  of type "HyML" or exposes __hyml__ method.
+Embedding a variable that renders to a Text() of type "HyML" or exposes __hyml__ method.
 >>> hyml = HyML("<H/>")
 >>> render("<H:>hypertag embedded through external variable</:H>$hyml", globals = {'hyml': hyml})
 'hypertag embedded through external variable'
+>>> render("<H: body x>$x ... $body</:H>val x=$hyml", globals = {'hyml': HyML("<H x=5.05>yes!</H>")})
+'val x=5.05 ... yes!'
+
 
 *** Bug fixes.
 
@@ -686,7 +694,7 @@ Compactification of an inner hypertag using internally a top-level hypertag caus
 """
 
 import sys, re, operator
-from copy import copy
+from copy import copy, deepcopy
 from collections import OrderedDict
 from importlib import import_module
 from xml.sax.saxutils import quoteattr
@@ -762,6 +770,9 @@ class Stack(list):
         "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
         # if len(self) < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
         del self[state:]
+        
+    def copy(self):
+        return Stack(self)
         
 
 class MultiDict(object):
@@ -842,6 +853,12 @@ class MultiDict(object):
 
     def getstate(self):
         return self.stack.size
+
+    def copy(self):
+        dup = copy(self)
+        dup.stack = self.stack.copy()
+        dup.lookup = self.lookup.copy()
+        return dup
     
     def __unicode__(self): return unicode(self.lookup)
     def __repr__(self): 
@@ -1475,51 +1492,6 @@ class NODES(object):
             self.children = [n.compactify(stack, ifnull) if n.isexpression else n for n in self.children]   # operators excluded from compactification
             return self
 
-        # def render(self, stack, ifnull = '', inattr = False):
-        #     print(f"<{self.type}.render() called from {self.parent.type}>")
-        #     raise NotImplementedError(self)
-
-        # def render(self, stack, ifnull = '', inattr = False):
-        #     """If inattr=True, encodes the value to its quoted string representation that can be used as an attribute value.
-        #     Otherwise, renders for direct inclusion in a markup part of the document.
-        #     render() is called only for the root node of an expression, while subexpression nodes only undergo evaluation,
-        #     so as to compute the value of the entire expression tree.
-        #     """
-        #     # calculate the value and check against null
-        #     try:
-        #         val = self.evaluate(stack, self._convertIfNull(ifnull))
-        #
-        #     except HypertagsError: raise
-        #     except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
-        #         reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
-        #
-        #     val = self._checkNull(val, ifnull)
-        #     isText = isinstance(val, Text)
-        #
-        #     # value will be printed on attributes list? unescape it from markup text and put in quotes
-        #     lang = self.tree.language
-        #     if inattr:
-        #         if isText and val.language == lang:     # 'val' is a Text instance in the target markup language? unescape to plain text, to use as an attr value
-        #             val = self.tree.unescape(val)
-        #         if self.tree.quote_attr_values or isstring(val):
-        #             return quoteattr(unicode(val))  #return Text(val).encode("HTML-attr")
-        #         return repr(val)
-        #
-        #     # value will be printed in the main (markup) part of the document?
-        #     # -> no quoting, but escaping for the target language may be needed
-        #     if isText and val.language == lang:         # 'val' is a Text instance in the target language already? don't do any escaping
-        #         return val
-        #     if getattr(val, '__text__', None):          # 'val' has __text__() method and can produce representation in the target lang?
-        #         text = val.__text__(lang)
-        #         if text is not None: return text
-        #     if lang in ('HTML', 'XHTML') and getattr(val, '__html__', None):
-        #         return val.__html__()                   # 'val' has __html__() method? use it if the target language is HTML
-        #
-        #     # otherwise, convert 'val' to a string and perform default escaping
-        #     val = unicode(val)
-        #     if self.tree.autoescape: return self.tree.escape(val)
-        #     return val
-            
         def evaluate(self, stack, ifnull):
             raise NotImplementedError(self)
     
@@ -1780,6 +1752,13 @@ class NODES(object):
         Base class for the nodes which after reduction of tree nodes during parsing become root nodes
         of all expressions, both the ones embedded in markup and those in attribute list within a tag.
         """
+        context = None      # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
+                            # in case if the expression evaluates to yet another (dynamic) piece of HyML code
+        
+        def analyse(self, ctx):
+            self.context = ctx.copy()
+            super(NODES.root_expression, self).analyse(ctx)            # analyse child nodes
+            
         def evaluate(self, stack, ifnull):
             assert len(self.children) == 1
             return self.children[0].evaluate(stack, ifnull)
@@ -1798,10 +1777,10 @@ class NODES(object):
             except Exception as e:                            # chain external exception with HypertagsError to inform about the place of occurence
                 reraise(None, HypertagsError("Can't evaluate expression", self, cause = e), sys.exc_info()[2])
 
-            # # `val` is a text string containing HyML code? parse it into HyML tree and render
-            # if isinstance(val, Text) and val.language == 'HyML':
-            #     subtree = HyperML(val, _hyperml_context = self.context)
-            #     val = subtree.render()
+            # `val` is a text string containing HyML code? parse it into HyML tree and render
+            if isinstance(val, Text) and val.language == 'HyML':
+                subtree = HyperML(val, _hyperml_context = self.context)
+                val = subtree.render()
 
             val = self._checkNull(val, ifnull)
             isText = isinstance(val, Text)

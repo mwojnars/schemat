@@ -39,7 +39,7 @@ eval        =  '$'                           # special symbol denoting expressio
 lt          =  '<'                           # special symbols for tags ...
 gt          =  '>'
 slash       =  '/'
-void        =  '~'                           # void marker in hypertag's opening tag: <:htag ~ ...>
+void        =  ~"[~\.]"                      # void marker in hypertag's opening tag, either ~ (tilde) or . (dot):  <:htag ~ ...>
 
 ident       =  ~"[%s][%s]*"                      # [XML_StartChar][XML_Char]* -- names of tags and attributes as used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 var_id      =  !reserved ~"[a-z_][a-z0-9_]*"i    # names of variables/hypertags/attributes that can appear in expressions; a much more restricted set of names than 'ident', to enable proper parsing of operators and mapping of the names to external execution environment
@@ -148,7 +148,7 @@ tag_name_start =  (var_id def) / tag_name_end
 
 tag_name     =  (def var_id) / (var_id def) / ident
 tag_core     =  (space attrs)? ws
-tag_namecore =  lt tag_name_start (space void)? tag_core
+tag_namecore =  lt tag_name_start (ws void)? tag_core
 
 start_tag    =  tag_namecore gt                       # opening (start) tag, regular or hypertag definition
 empty_tag    =  tag_namecore slash gt                 # empty tag: no body, opening + closing in a single tag
