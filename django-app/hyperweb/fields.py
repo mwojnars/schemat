@@ -14,10 +14,13 @@ class Field:
     Provides schema-based validation of form values and schema-aware serialization.
     Fields can be nested.
     
-               sanitize >          encode >
-       FORM       ---      DATA      ---      STATE
-               < form             < decode
-    
+                            RESPONSE
+                               ^^
+                             render
+               sanitize >                encode >
+       FORM       ---         DATA         ---      STATE
+                < form                  < decode
+
     Exceptions:
     - ValidationError in sanitize() -- invalid value submitted from a form
     - SchemaError in encode() -- input object doesn't fit the schema
@@ -86,6 +89,24 @@ class Field:
         """
         return value
 
+    #############################################
+    
+    def render(self, value, target = "HTML"):
+        return value
+    
+    class Render:
+        
+        def __init__(self, value): self.value = value
+        
+        def __hyml__(self):
+            return html_escape(str(self.value))
+            
+            # Link:
+            # item = self.value
+            # cid, iid = item.__id__
+            # url = item.get_url()
+            # return f"<link href='{url}'>{item.data.name or item.data.title}</link>"
+        
 
 #####################################################################################################################################################
 #####
