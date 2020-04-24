@@ -55,7 +55,8 @@ hypertag rendering on their own, on the client side. This would have many benefi
 CHEATSHEET of HYPERML
 ---------------------
 
-<:H>This is a hypertag.</:H>                     -- Basic hypertag definition.
+<H:>This is a hypertag.</:H>                     -- Basic hypertag definition.
+<:H>This is a hypertag.</:H>                     -- The special symbol ":" indicating a definition can be put before name.
 <:Message>Press <b>OK</b> to accept.</:Message>     Body of a hypertag may contain any markup, including other hypertags.
 
 <:bullet>
@@ -66,7 +67,7 @@ CHEATSHEET of HYPERML
 <H></H>                                          -- Basic hypertag usage.
 <H />                                               Hypertags are used in a similar way as regular tags. Their occurences
                                                     are replaced with hypertag's definition body; recursively, if a hypertag
-<:bullet>                                           is used inside another hypertag.
+<bullet:>                                           is used inside another hypertag.
   <img src="bullet.png" height="16" width="16">
 </:bullet>
                                                     >>> render("<:H>This is a hypertag.</:H> - <H></H> - <H />")
@@ -84,8 +85,8 @@ CHEATSHEET of HYPERML
 --------------------
 Parsing and rendering HyML documents.
 
-HyperML("....")
-HyperML("....").render()
+HyML_Parser("....")
+HyML_Parser("....").render()
 render("....")
 
 
@@ -246,7 +247,7 @@ Empty tag used for hypertag definition.
 ''
 
 Isolated rendering of an arbitrary top-level hypertag.
->>> doc = HyperML("<:A body x \\n y z>$body $x $y $z</:A> <:B><A>inside B</A></:B> <A>not rendered</A>")
+>>> doc = HyML_Tree("<:A body x \\n y z>$body $x $y $z</:A> <:B><A>inside B</A></:B> <A>not rendered</A>")
 >>> doc.A("body", "x", z=5)
 'body x  5'
 >>> doc.B()
@@ -280,7 +281,7 @@ Null (missing value) printed as attribute value.
 '<div style="" />'
 
 Number printed as attribute value.
->>> HyperML("<:A x><div style=$x /></:A>").A(5)
+>>> HyML_Tree("<:A x><div style=$x /></:A>").A(5)
 '<div style="5" />'
 
 Number value parsed as number object, not string, from attributes list.
@@ -346,7 +347,7 @@ Leading $ before variables can be nested inside $(...), for convenience and to a
 '  3 3  5 5'
 
 Sequence indexes & slices.
->>> HyperML("<:A list>$list[3] $list[:] $list[:2] $list[3:] $list[::3] $list[ : 3 : ] $list[ -3: $null : (2-1) ]</:A>").A(list(range(5)))
+>>> HyML_Tree("<:A list>$list[3] $list[:] $list[:2] $list[3:] $list[::3] $list[ : 3 : ] $list[ -3: $null : (2-1) ]</:A>").A(list(range(5)))
 '3 [0, 1, 2, 3, 4] [0, 1] [3, 4] [0, 3] [0, 1, 2] [2, 3, 4]'
 
 Operators: additive, multiplicative.
@@ -390,7 +391,7 @@ f1
 *** Escaping & filters.
 
 HTML escaping.
->>> HyperML("<:A body x>$body $x.strip(' ') $(x[2])</:A>").A(body = "<b>ala &amp; ola</b>", x = "  ala <>& ")
+>>> HyML_Tree("<:A body x>$body $x.strip(' ') $(x[2])</:A>").A(body = "<b>ala &amp; ola</b>", x = "  ala <>& ")
 '<b>ala &amp; ola</b> ala &lt;&gt;&amp; a'
 
 Filters.
@@ -426,15 +427,15 @@ Import.
 Include.
 >>> from loaders import DictLoader
 >>> loader = DictLoader(myfile = u"<:doc text title> <h1>$title</h1> <p>$text</p> \u017c\u017a\u0142\u015b\u0119\u0107 \\u0250 \\u0390 \\u1300</:doc>")
->>> HyperML("<include 'myfile' /> <doc 'My Title'>This is a story about...</doc>", loader = loader).render()
+>>> HyML_Tree("<include 'myfile' /> <doc 'My Title'>This is a story about...</doc>", loader = loader).render()
 '  <h1>My Title</h1> <p>This is a story about...</p> \u017c\u017a\u0142\u015b\u0119\u0107 \u0250 \u0390 \\u1300'
 
 Loops <for>.
->>> HyperML("<:A items><for item=$items> * $item</for></:A>").A(range(5))
+>>> HyML_Tree("<:A items><for item=$items> * $item</for></:A>").A(range(5))
 ' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
->>> HyperML("<:A ~ items><for item=$items> * $item</for></:A>").A(range(0))
+>>> HyML_Tree("<:A ~ items><for item=$items> * $item</for></:A>").A(range(0))
 ''
->>> HyperML("<:row x> * $x</:row> <:A items><for $items print=$row/></:A>").A(range(5))
+>>> HyML_Tree("<:row x> * $x</:row> <:A items><for $items print=$row/></:A>").A(range(5))
 ' * 0\\n * 1\\n * 2\\n * 3\\n * 4'
 
 Local assignments <with>.
@@ -454,9 +455,9 @@ Unescaping HTML to plain text when inserting in an attribute.
 ' <a t=\\'ala &amp; " ola\\' />'
 
 join() filter, <join> hypertag, joinlines().
->>> HyperML("<:A ~ l>$(l|join(cast=str))</:A>").A([1,2,3])
+>>> HyML_Tree("<:A ~ l>$(l|join(cast=str))</:A>").A([1,2,3])
 '123'
->>> HyperML("<:A text>$(text|join(' '))</:A>").A(HTML("<i>ala</i>\\nma\\nkota"))
+>>> HyML_Tree("<:A text>$(text|join(' '))</:A>").A(HTML("<i>ala</i>\\nma\\nkota"))
 '<i>ala</i> ma kota'
 >>> render("<:A text><join ' '>$text</join></:A> <A><i>ala</i>\\nma\\nkota</A>")
 ' <i>ala</i> ma kota'
@@ -471,14 +472,14 @@ join() filter, <join> hypertag, joinlines().
 ' xy '
 
 Hypertag's output passed as an attribute.
->>> doc = HyperML("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x $y</:C> <C x=$A() y=$B()></C>")
+>>> doc = HyML_Tree("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x $y</:C> <C x=$A() y=$B()></C>")
 >>> doc.render()
 '   in A &amp; <i>B</i>'
 >>> doc.C(doc.A(), doc.B())
 'in A &amp; <i>B</i>'
 
 Hypertag itself passed as an attribute.
->>> doc = HyperML("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x() $y()</:C> <C x=$A y=$B></C>")
+>>> doc = HyML_Tree("<:A>in A</:A> <:B>&amp; <i>B</i></:B> <:C ~ x y>$x() $y()</:C> <C x=$A y=$B></C>")
 >>> doc.render()
 '   in A &amp; <i>B</i>'
 >>> doc.C(doc.A, doc.B)
@@ -528,7 +529,7 @@ Simple variants.
 Variant inside hypertag definition.
 >>> render("<:A ~ x>[[ala ma $|| <$| <kota/>]] [[||]]</:A> <A/>")
 ' ala ma || <$| <kota /> '
->>> doc = HyperML("<:A ~ x y>[[ $x || $y ]]</:A>  <:user ~ name surname>[[ $surname[[, $name]] || $name || <i>anonymous</i> ]]</:user>")
+>>> doc = HyML_Tree("<:A ~ x y>[[ $x || $y ]]</:A>  <:user ~ name surname>[[ $surname[[, $name]] || $name || <i>anonymous</i> ]]</:user>")
 >>> doc.A(x = ''), doc.A(y = 'y')
 ('  ', ' y ')
 >>> doc.user(name = "John"), doc.user(surname = "Smith")
@@ -562,7 +563,7 @@ However, this is not that important, let's leave it for deeper investigation in 
 ' John,  '
 
 If-then-ELSE using <if> inside [[...]]
->>> doc = HyperML("<:A x>[[<if $x> first </if>|| second ]]</:A>")
+>>> doc = HyML_Tree("<:A x>[[<if $x> first </if>|| second ]]</:A>")
 >>> doc.A(x = 'true')
 ' first '
 >>> doc.A(x = '')
@@ -598,12 +599,12 @@ where null doesn't make sense and would raise an exception otherwise.
 Conditional hypertags.
 >>> render("<if $null else='else'>then</if> <ifnull $null>yes-null</ifnull> <ifnull '' else=$('not-null') />")
 'else yes-null not-null'
->>> doc = HyperML("<:A seq><ifnot $seq else=$str(seq)> sequence is empty </ifnot></:A>")
+>>> doc = HyML_Tree("<:A seq><ifnot $seq else=$str(seq)> sequence is empty </ifnot></:A>")
 >>> doc.A([])
 ' sequence is empty '
 >>> doc.A([3,4,5])
 '[3, 4, 5]'
->>> doc = HyperML("<:A seq><if $seq else='sequence is empty'> $seq </if></:A>")
+>>> doc = HyML_Tree("<:A seq><if $seq else='sequence is empty'> $seq </if></:A>")
 >>> doc.A([])
 'sequence is empty'
 >>> doc.A([3,4,5])
@@ -712,7 +713,7 @@ from hyperweb.hyml.structs import *
 
 # Public symbols. When using "from fireweb.hypertags import *" only these symbols will be imported, all others are for internal use of the module:
 
-__all__ = "HyperML hypertag Filter FilterWith parse render HypertagsError UndefinedVariable".split()
+__all__ = "HyML_Parser hypertag Filter FilterWith parse render HypertagsError UndefinedVariable".split()
 
 
 ########################################################################################################################################################
@@ -1520,7 +1521,7 @@ class NODES(object):
 
             # `val` is a text string containing HyML code? parse it into HyML tree and render
             if isinstance(val, Text) and val.language == 'HyML':
-                subtree = HyperML(val, _hyperml_context = self.context)
+                subtree = HyML_Tree(val, _hyperml_context = self.context)
                 val = subtree.render()
 
             val = self._checkNull(val, ifnull)
@@ -2123,7 +2124,7 @@ class NODES(object):
             #if DEBUG: print(' ', ':' + self.name, 'ispure_expand =', self.ispure_expand, self.depth, ctx.ref_depth)
             ctx.add_refdepth(ref_depth, '_back_')       # add back the initial ref_depth to account for preceeding siblings
             
-            # compactify the subtree already now, from analyse(), because the top-level compacification launched from HyperML
+            # compactify the subtree already now, from analyse(), because the top-level compacification launched from HyML_Tree
             # will never call compactify() on this subtree, as the hypertag's render() is always pure and gets compactified
             # by some ancestor node, without going down to this node's compactify()
             
@@ -2553,7 +2554,7 @@ class NODES(object):
 ###  HYPERML document tree
 ###
 
-class HyperML(BaseTree):
+class HyML_Tree(BaseTree):
     """Syntax tree of a parsed HyML document and the parsing routines. Subsequent transformations of the tree:
     - parsing - parses source text to AST, with generic syntax nodes as used by a given parser generator (Parsimonious)
     - rewriting - from AST to NODES.x*** nodes; the tree contains primitive expressions: tags, attributes, identifiers, numbers, strings, ...
@@ -2690,9 +2691,9 @@ class HyperML(BaseTree):
             if val is not None: setattr(self, name, val)
         
         # set all configuration parameters passed by the user, those not equal None
-        names = HyperML.__dict__.keys()
+        names = HyML_Tree.__dict__.keys()
         for name in names: setparam(name)
-        if params: raise Exception("Unrecognized parameter(s) passed to HyperML: %s" % ', '.join(params.keys()))
+        if params: raise Exception("Unrecognized parameter(s) passed to HyML_Tree: %s" % ', '.join(params.keys()))
         
         if self.void is None:
             self.void = self.html5_void + ' ' + self.hyperml_void
@@ -2702,7 +2703,7 @@ class HyperML(BaseTree):
         
         # launch parsing...
         text = unicode(text)                                    # make sure that all parsing and rendering is done consistently on Unicode
-        super(HyperML, self).__init__(text, ast, stopAfter)
+        super(HyML_Tree, self).__init__(text, ast, stopAfter)
         if self.root is None:                                   # workaround for Parsimonious bug in the special case when text="" (Parsimonious returns None instead of a tree root)
             self.root = NODES.xdocument(self, ObjDict(start=0, end=0, children=[], expr_name='document'))
         assert isinstance(self.root, NODES.xdocument)
@@ -2716,8 +2717,8 @@ class HyperML(BaseTree):
         
     def load(self, resource, parse = True, dependency = True, **params):
         """Load a document from a given external resource, typically a file identified by path name,
-        parse and return as a new HyperML object (unless parse=False, in which case the plain text is returned).
-        If a new HyperML instance is created, it inherits initialization parameters from 'self',
+        parse and return as a new HyML_Tree object (unless parse=False, in which case the plain text is returned).
+        If a new HyML_Tree instance is created, it inherits initialization parameters from 'self',
         possibly extended with custom parameters 'params'.
         If a cached and up-to-date copy of the resource is already present in the loader's cache, this copy is returned,
         in such case the parameters of the document are NOT modified! ('params' is not used).
@@ -2750,14 +2751,14 @@ class HyperML(BaseTree):
         
         # try to get the cached copy first
         fullname = loader.canonical(resource, referrer)
-        #print("HyperML.load(%s):" % fullname)
+        #print("HyML_Tree.load(%s):" % fullname)
         #printdict(loader.cached)
         hdoc = loader.get(fullname)
         #if hdoc is not None: print("HyML document retrieved from CACHE:", fullname)
         
         # if present, 'hdoc' is either raw contents of the file or a parsed HyML doc;
         # return the doc only if this is what we're looking for, otherwise we have to load and/or parse the doc again
-        if isinstance(hdoc, HyperML):
+        if isinstance(hdoc, HyML_Tree):
             res = hdoc.text if not parse else hdoc
             return res, fullname
         if isstring(hdoc) and not parse:
@@ -2772,7 +2773,7 @@ class HyperML(BaseTree):
             loader.cache(fullname, doc, meta, set())            # cache raw document for later use; no dependencies for raw files
             return doc, fullname
             
-        hdoc = HyperML(doc, filename = fullname, loader = loader, **params)
+        hdoc = HyML_Tree(doc, filename = fullname, loader = loader, **params)
         loader.cache(fullname, hdoc, meta, hdoc.dependencies)   # cache parsed document for later use; loader can ignore this if it doesn't handle caching
         return hdoc, fullname
         
@@ -2909,8 +2910,10 @@ class HyperML(BaseTree):
 ###  Shorthands
 ###
 
-def parse(doc, **params): return HyperML(doc, **params)
-def render(doc, **params): return HyperML(doc, **params).render()
+HyML_Parser = HyML_Tree
+
+def parse(doc, **params): return HyML_Tree(doc, **params)
+def render(doc, **params): return HyML_Tree(doc, **params).render()
 
 DEBUG = False
 _debug_ctx_start = None             # position where the actual local context begins (after built-in & global symbols)
@@ -2983,7 +2986,7 @@ if __name__ == '__main__':
 
     #txt = """<html> <:psa rasa>$rasa Burka</:psa> 'ala' <ma href="www" style=""> "kota" </ma> i <psa rasa="terier"/> oraz <psa></psa> </unpaired> </html>"""
     txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
-    tree = HyperML(txt, stopAfter = "rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
+    tree = HyML_Tree(txt, stopAfter ="rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
     print()
     print("===== AST =====")
     print(tree.ast)
