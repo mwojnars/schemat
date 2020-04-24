@@ -129,10 +129,6 @@ kwattr      =  ident (ws '=' ws value_attr_named)?      # HTML syntax: name OR n
 attr        =  kwattr / value_attr_unnamed              # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
 attrs       =  attr (space attr)*
 
-#value_attr  =  value / literal / str_unquoted
-#kwattr      =  ident (ws '=' ws value_attr)?          # HTML syntax: name OR name="value" OR name=value ... HyperML syntax: name=$(...)
-#attr        =  kwattr / value / literal               # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
-
 
 # arguments inside a function call: comma-separated, expressions in abstract form (no $), only regular names, names must have values assigned
 

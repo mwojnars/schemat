@@ -1,51 +1,51 @@
 # -*- coding: utf-8 -*-
 """
-HyperML is a higher-level markup language that extends (X)HTML/XML with the ability to define and use **"hypertags"**:
-custom tags created right in the document to factor out recurring code patterns 
+HyML is a higher-level markup language that extends (X)HTML/XML with the ability to define and use **"hypertags"**:
+custom tags created right in the document to factor out recurring code patterns
 and allow easy code re-use in multiple places around the document.
 Hypertags can be viewed as markup analogs of **functions** present in all programming languages.
 Hypertags can be parameterized, embedded in other hypertags, imported to other documents and
 exported to application code where they can be used like regular functions.
 Whenever a client requests a document (typically a web page), hypertags are expanded and replaced with their contents
 in the original language - typically (X)HTML/XML, but any target language can be used, in general.
-HyperML provides also many features beyond hypertags: variant blocks [[...]], embedded compound expressions $(...), 
-references to external objects - all of those greatly simplifying web programming and improving interoperability 
+HyML provides also many features beyond hypertags: variant blocks [[...]], embedded compound expressions $(...),
+references to external objects - all of those greatly simplifying web programming and improving interoperability
 between the application's logic and presentational code.
 
-We paid close attention to provide full compatibility of HyperML with (X)HTML/XML.
-HyperML can be viewed as an extension of HTML and XML that - for the first time! - adds native server-side modularity to these languages,
+We paid close attention to provide full compatibility of HyML with (X)HTML/XML.
+HyML can be viewed as an extension of HTML and XML that - for the first time! - adds native server-side modularity to these languages,
 enables code reuse and de-duplication, and provides full interoperatibility with the application's computational code.
 
-HyperML facilitates the use of best programming practices in web development and finally brings DRY principle to (X)HTML/XML programming.
+HyML facilitates the use of best programming practices in web development and finally brings DRY principle to (X)HTML/XML programming.
 It helps break away from the flawed principle of MVC (Model-View-Controller) design, where all application code was modularized around
 technical features of the code and its language of implementation, rather than around functionalities
 (SQL models separated from HTML views, separated from php/py/ruby/java controllers, even if implementing the same feature)
 - this enforced a break-up of each functionality into numerous pieces, scattered all over the application code base.
-By introducing deep interoperability between computational and presentational code, HyperML enables flexible modularization of the project,
-with heterogenous multi-language modules combining code of different types and thus preserving integrity of each functionality 
+By introducing deep interoperability between computational and presentational code, HyML enables flexible modularization of the project,
+with heterogenous multi-language modules combining code of different types and thus preserving integrity of each functionality
 within the entire project.
 
-HyperML can be also viewed as an advanced templating language, whose syntax - unlike this of existing template languages -
+HyML can be also viewed as an advanced templating language, whose syntax - unlike this of existing template languages -
 is tightly integrated with the native syntax of markup documents.
-HyperML parses all tags and markup elements of the document, thus it fully understands the document's structure and contents,
+HyML parses all tags and markup elements of the document, thus it fully understands the document's structure and contents,
 and can provide full two-way interoperability between the document and the applicaton:
 not only some application objects can be injected into the document in predefined locations, as it is done in (one-way) templating languages,
-but also native elements of the document - the hypertags and their markup contents - can be extracted and used 
-both in the application and in other places around the same document. This is a unique feature of hypertags and HyperML, 
+but also native elements of the document - the hypertags and their markup contents - can be extracted and used
+both in the application and in other places around the same document. This is a unique feature of hypertags and HyML,
 one that incredibly simplifies the development of large web applications.
 
-Rendering of HyperML documents is extremely fast thanks to in-memory caching of parsed documents and hypertags,
+Rendering of HyML documents is extremely fast thanks to in-memory caching of parsed documents and hypertags,
 as well as compactification of static blocks of markup and pre-computation of pure expressions.
 
-Strictly speaking, HyperML is a transformation language, like, for example, XSLT: 
-a document written in HyperML is typically not intended for consumption by the end user, 
-rather it must be parsed and rendered to its final form of the target language, with all hypertags resolved, 
-before it is handed over to the user. 
+Strictly speaking, HyML is a transformation language, like, for example, XSLT:
+a document written in HyML is typically not intended for consumption by the end user,
+rather it must be parsed and rendered to its final form of the target language, with all hypertags resolved,
+before it is handed over to the user.
 
-However, it is possible that in the future, web browsers will accept HyperML documents and perform 
+However, it is possible that in the future, web browsers will accept HyML documents and perform
 hypertag rendering on their own, on the client side. This would have many benefits:
 * semantic information for crawlers and search engines,
-* smaller web traffic: thanks to de-duplication, HyperML performs implicit compression of markup documents as a side effect
+* smaller web traffic: thanks to de-duplication, HyML performs implicit compression of markup documents as a side effect
 * lower load on the server
 * ability to use hypertags defined on the client side
 
@@ -60,7 +60,7 @@ CHEATSHEET of HYPERML
 
 <:bullet>
   <img src="bullet.png" height="16" width="16">
-</:bullet>                                                    
+</:bullet>
 
 
 <H></H>                                          -- Basic hypertag usage.
@@ -68,7 +68,7 @@ CHEATSHEET of HYPERML
                                                     are replaced with hypertag's definition body; recursively, if a hypertag
 <:bullet>                                           is used inside another hypertag.
   <img src="bullet.png" height="16" width="16">
-</:bullet>                                                    
+</:bullet>
                                                     >>> render("<:H>This is a hypertag.</:H> - <H></H> - <H />")
                                                     ' - This is a hypertag. - This is a hypertag.'
                                                     
@@ -82,61 +82,61 @@ CHEATSHEET of HYPERML
 <H ~ ></:H>
 
 --------------------
-Parsing and rendering HyperML documents.
-                                                    
+Parsing and rendering HyML documents.
+
 HyperML("....")
 HyperML("....").render()
 render("....")
 
-                                                    
+
 =====================================================================================================================================================
 
 OTHER REMARKS...
 
 SYNTAX
-- undefined tags: if a given tag is undefined, it's left in the source as it is (obviously that's necessary, 
+- undefined tags: if a given tag is undefined, it's left in the source as it is (obviously that's necessary,
   as hypertags are only and addition to regular tags)
 - undefined variables: in strict mode, exception is raised; otherwise left in the source in their $NAME form
-- nested hypertag definitions: you can define a hypertag inside a definition of another hypertag, 
+- nested hypertag definitions: you can define a hypertag inside a definition of another hypertag,
   just like in Python function definitions can be nested in each other.
-  Inner hypertag definition can make use of the attributes of the outer hypertag, which will be replaced with their actual values 
+  Inner hypertag definition can make use of the attributes of the outer hypertag, which will be replaced with their actual values
   upon hypertag expansion.
-- hypertags passed as attributes/arguments, just like atomic values 
-- NO recursion. Recursion is syntactically impossible, because every hypertag can only use hypertags defined earlier 
+- hypertags passed as attributes/arguments, just like atomic values
+- NO recursion. Recursion is syntactically impossible, because every hypertag can only use hypertags defined earlier
   in the source document and also it cannot use itself.
   Besides, recursion is not needed, because the language would become recursive then and it would belong to a higher class of languages
-  than the class of context-sensitive languages (https://en.wikipedia.org/wiki/Recursive_language) and most likely it would become 
+  than the class of context-sensitive languages (https://en.wikipedia.org/wiki/Recursive_language) and most likely it would become
   recursively enumerable (Turing machine), because it will have conditional operations and has parameter passing.
 - Names.
-  All valid XML identifiers can be used as names of tags and attributes in HyperML, including the ones that contain
+  All valid XML identifiers can be used as names of tags and attributes in HyML, including the ones that contain
   Unicode characters or special characters allowed by XML: colon (':'), dot ('.') and minus ('-').
   Detailed specification of characters allowed can be found at: http://www.w3.org/TR/REC-xml/#NT-NameStartChar
   (NameStartChar, NameChar, Name productions).
   However, for hypertag definitions, only *regular* identifiers can be used as the name or attributes of the hypertag
   (further in the hypertag body all identifiers are allowed again).
-  Regular identifiers are the ones built in a similar way as in most programming languages: 
+  Regular identifiers are the ones built in a similar way as in most programming languages:
   the name must being with an ASCII letter or underscore [a-zA-Z_], and then it can be followed by
   a mix of ASCII letters, digits and underscores: [a-zA-Z0-9_]*.
   
 SEMANTICS
 - Attribute minimization.
-  For compatibility with HTML, HyperML allows attribute minimization, where a tag contains attribute name without a value, for example: 
+  For compatibility with HTML, HyML allows attribute minimization, where a tag contains attribute name without a value, for example:
      <textarea readonly>
-  In such case, HyperML assumes empty string '' as the attribute value, which is one of valid ways in HTML to interpret minimized attributes
+  In such case, HyML assumes empty string '' as the attribute value, which is one of valid ways in HTML to interpret minimized attributes
   (another way is: attr="attr"). For details of HTML specification, see: http://www.w3.org/TR/html5/infrastructure.html#boolean-attributes
 
 Other details:
 - the same hypertag can be redefined multiple times
 - [# .. #] comments cannot be nested
-- unquoted attr values must not start with $ (permitted in HTML) to avoid ambiguity with embedded expressions; 
+- unquoted attr values must not start with $ (permitted in HTML) to avoid ambiguity with embedded expressions;
   although $ is allowed further in the value string
 - unary minus '-x' operator: in Python, it has the highest priority, higher than that of multiplicative * / % // and exponent **.
-  In HyperML, it has low priority, the same as binary + and -.
+  In HyML, it has low priority, the same as binary + and -.
 - spaces are obligatory around: not, and, or, if, else - even if subexpressions are enclosed in (...). This is unlike in Python,
   where "(True)or(False)" is a correct expression.
-- <> operator, which exists in Python 2 but is removed in Python 3, is not supported in HyperML. Use != for inequalities.
-- other missing operators: ** (exponent), lambda, unary +, *args **kwargs, collections: [...] (...) {...} 
-  
+- <> operator, which exists in Python 2 but is removed in Python 3, is not supported in HyML. Use != for inequalities.
+- other missing operators: ** (exponent), lambda, unary +, *args **kwargs, collections: [...] (...) {...}
+
 ------------------------
 IMPLEMENTATION
 
@@ -147,7 +147,7 @@ are calculated additionally.
 Calling convention...
 During runtime, hypertag expansion is similar to execution of a function in programming languages.
 The key data structure is the *stack* that is passed down to the hypertag definition node (callee) upon expansion
-and contains a sequence of *frames* of all outer hypertag expansions (calls). Each frame contains the actual values 
+and contains a sequence of *frames* of all outer hypertag expansions (calls). Each frame contains the actual values
 of attributes of a given hypertag, together with hidden attributes ($body), possibly some local variables (in the future)
 and an *access link* that points to the activation frame of the immediate lexical encapsulating hypertag of the callee
 (which in case of nested hypertag definitions is different than the all-document initial frame).
@@ -165,14 +165,14 @@ The frame is pushed and popped entirely by the caller.
 - wartość tagowa: węzeł xhypertag, funkcja hipertagowa, ...
 - linkowanie <A>,$x,... do węzła w drzewie (:A, x=, ...)
   - $x zmienna - linkowana do atrybutu x= (pozycja w stosie) lub hipertaga <:x>
-  - <A> tag - nielinkowany (tag statyczny) lub linkowany do hipertaga <:A> (tag własny, link do węzła) lub do atrybutu A= (tag dynamiczny, pozycja w stosie) 
-- linkowanie <A>,$x,... do pozycji w stosie wartości; bez nazw, 
+  - <A> tag - nielinkowany (tag statyczny) lub linkowany do hipertaga <:A> (tag własny, link do węzła) lub do atrybutu A= (tag dynamiczny, pozycja w stosie)
+- linkowanie <A>,$x,... do pozycji w stosie wartości; bez nazw,
   - pozycja atrybutu = offset ujemny wzgl. końca ramki hipertaga definiującego dany atrybut, ramka w aktualnym stosie
   - pozycja ramki = offset ujemny
 - OrderedMultiDict for context repr. (push/pop/key)
 
 ------------------------
-TODO: 
+TODO:
 - $escape()/e() builtin for HTML-escaping of strings produced by expressions and embedded in the output markup (e = Escape/Embed/Expression)
 
 DRAFT
@@ -205,7 +205,7 @@ Void and non-self-closing elements don't need end tags and are parsed without ex
 >>> render("<img \\n src='/images/img.jpg \\n ' \\n >")
 '<img src="/images/img.jpg &#10; ">'
 
-XML names for tags and attributes, with characters from a broader set than recognized by HyperML.
+XML names for tags and attributes, with characters from a broader set than recognized by HyML.
 >>> render(u"<sp:tag.x-y.\\uF900 attr-a:b.c-\\uf900 = ''/>")
 "<sp:tag.x-y.豈 attr-a:b.c-豈 = ''/>"
 
@@ -484,8 +484,8 @@ Hypertag itself passed as an attribute.
 >>> doc.C(doc.A, doc.B)
 'in A &amp; <i>B</i>'
 
-Inner hypertag called like a function. This can be done inside HyperML doc, because due to HyperML syntax, 
-the hypertag can only be passed downwards through the tree, never upwards, so all the necessary frames 
+Inner hypertag called like a function. This can be done inside HyML, because due to HyML syntax,
+the hypertag can only be passed downwards through the tree, never upwards, so all the necessary frames
 are still on the stack when the hypertag is to be expanded.
 >>> render("<:A ~ x><:B ~ y>$x$y</:B><:C ~ h>$h('-in-C')</:C> <B 'y'/> $B('y') <C h=$B/> </:A> <A 'x'/>", compact = True)
 '  xy xy x-in-C '
@@ -495,7 +495,7 @@ Inner hypertag passed as an argument and expanded in a different context, at a l
 >>> render("<:A ~ f>$f()</:A> <:B x> <:H>$x</:H><A $H/> </:B> <B>ala</B>")
 '   ala '
 
-Recursion becomes possible when hypertags are being passed as values. 
+Recursion becomes possible when hypertags are being passed as values.
 >>> render("<:A ~ h>$h(h)</:A> <A $A/>")   # doctest: +IGNORE_EXCEPTION_DETAIL
 Traceback (most recent call last):
     ...
@@ -504,11 +504,11 @@ HypertagsError: Can't evaluate expression at line 1, column 10 (h(h)) because of
 
 *** Special elements: no-parse blocks, escape strings.
 
-HyperML comments and escape strings.
+HyML comments and escape strings.
 >>> render("[# inside comment #] $[# outside comment $#] $< $> $$ $[[ $|| $]] $[= $=]")
 ' [# outside comment #] < > $ [[ || ]] [= =]'
 
-HyperML no-parse blocks.
+HyML no-parse blocks.
 >>> render("one [= two =] three")
 'one  two  three'
 >>> render("one [= [[<if $false>unparsed</if>||two]] =] three")
@@ -579,7 +579,7 @@ Explicit $null inside variant block behaves like every other null value: invalid
 >>> render("$null <a href=$null/> [[ $null || <b val=$null/> || last]]")
 ' <a href="" />  last'
 
-Explicit $null used inside variant block: 
+Explicit $null used inside variant block:
 if inside an expression that returns a non-null value/contents overall, the branch can still be rendered.
 >>> render("[[ $(null is null) <if $(null is null)> first </if> || second ]]")
 ' True  first  '
@@ -588,7 +588,7 @@ if inside an expression that returns a non-null value/contents overall, the bran
 >>> render("[[ <if $true> first </if> || second ]]")
 '  first  '
 
-(NOT TRUE). In expressions inside [[...]], null value propagates up the tree through all operators 
+(NOT TRUE). In expressions inside [[...]], null value propagates up the tree through all operators
 where null doesn't make sense and would raise an exception otherwise.
 > > > render("[[$('/' + null) $(null * 5) $(-null | split)]]")
 ''
@@ -632,7 +632,7 @@ HypertagsError: Can't evaluate expression at line 1, column 1 ($(1 - null + 5)) 
 
 Null in concatenation raises NullValue (terminates all node rendering) if inside a variant block, also when inside a function.
 -- CHANGED SEMANTICS. Now, null propagates through expressions, as a valid argument of functions and operators; in concatenation behaves like "".
-   Nullity inside [[...]] is checked only at the end, for the entire expression. 
+   Nullity inside [[...]] is checked only at the end, for the entire expression.
 >>> def quoted(s): return "`%s`" % s
 >>> render("$quoted('ala' 'ma' 'kota')", globals = {'quoted':quoted})
 '`alamakota`'
@@ -657,7 +657,7 @@ The propagated null result can influence rendering of neighboring elements if in
 
 Plain function in a filter operator receives and processes null values normally, like every other value, unless inside a variant block.
 -- CHANGED SEMANTICS. Now, null propagates through expressions, as a valid argument of functions and operators.
-   Nullity inside [[...]] is checked only at the end, for the entire expression. 
+   Nullity inside [[...]] is checked only at the end, for the entire expression.
 >>> def quoted(s): return "`%s`" % s
 >>> render("$(null | quoted)", globals = {'quoted':quoted})
 '`None`'
@@ -707,6 +707,8 @@ from nifty.text import html_escape, html_unescape, Text, HyML
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree, ParserError
 
 from hyperweb.hyml.grammar import *
+from hyperweb.hyml.structs import *
+
 
 # Public symbols. When using "from fireweb.hypertags import *" only these symbols will be imported, all others are for internal use of the module:
 
@@ -733,7 +735,7 @@ class NullValue(HypertagsError):
     Null value was encountered during rendering of a node or evaluation of an expression.
     This exception is used to communicate null (None) values back to higher-level nodes during rendering
     and can be caught by xvariant node to choose the right variant from among multiple choices.
-    Or, if raised by an expression, it can substitute TypeError for communicating a disallowed use 
+    Or, if raised by an expression, it can substitute TypeError for communicating a disallowed use
     of None value as an operand - in such, the exception can be passed all the way up to the client.
     """
     def __init__(self, msg = "Null value encountered during rendering of a node"):
@@ -749,267 +751,6 @@ def _addFirst(name, item, orddict):
 
 
 ########################################################################################################################################################
-
-class Stack(list):
-    """Stack implementation based on list."""
-    
-    @property
-    def size(self):
-        return len(self)
-    @size.setter
-    def size(self, _size_):
-        del self[_size_:]
-
-    push     = list.append
-    pushall  = list.extend
-    get      = list.__getitem__
-    set      = list.__setitem__
-    position = list.__len__
-
-    def reset(self, state):
-        "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
-        # if len(self) < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
-        del self[state:]
-        
-    def copy(self):
-        return Stack(self)
-        
-
-class MultiDict(object):
-    """
-    An ordered multi-dictionary with push/pop operations. Or, in other words, a stack of (name,value) pairs that additionally 
-    keeps a dict of the names and their most recent values, for fast name lookup.
-    Each element of the stack keeps also an index of the previous element with the same name,
-    to enable pop() implementation that replaces a dictionary value of a given name with its previous value. 
-    
-    >>> md = MultiDict()
-    >>> md.push('a', 123); md.push('b', 321); md.push('a', 9)
-    >>> md.pop()
-    ('a', 9)
-    >>> md['a']
-    123
-    >>> md.push('b', 456); md.push('b', 654)
-    >>> md.reset(md.getstate() - 2)
-    >>> md['b']
-    321
-    """
-    
-    stack = None            # Stack object; elements are triples of the form: (name, value, index_of_previous)
-    lookup = None           # {name: index} dict of current names and their most recent positions in the stack
-        
-    def __init__(self, maxlen = 10):
-        self.stack = Stack()
-        self.lookup = {}
-    
-    def __contains__(self, name):
-        return name in self.lookup
-    def __getitem__(self, name):
-        "Current value assigned to 'name'."
-        idx = self.lookup[name]
-        return self.stack[idx][1]
-    def get(self, name, default = None):
-        idx = self.lookup.get(name, None)
-        if idx is None: return default
-        return self.stack[idx][1]
-    
-    def keys(self): return self.lookup.keys()
-    def values(self):
-        for i in self.lookup.values(): yield self.stack[i][1]
-    def items(self):
-        for k in self.lookup.keys(): yield k, self[k]
-        
-    def push(self, name, value):
-        prev = self.lookup.get(name, None)
-        self.lookup[name] = self.stack.size
-        self.stack.push((name, value, prev))
-        
-    def pop(self):
-        "Pop the top element of the stack and return as a (name, value) pair, with proper update of the lookup dictionary."
-        top = self.stack.pop()
-        name, value, prev = top
-        if prev is None: del self.lookup[name]
-        else: self.lookup[name] = prev
-        return (name, value)
-    
-    def pushall(self, items):
-        "A repeated push(), of all items in the name->value dictionary 'items'."
-        for name, value in items.items():
-            self.push(name, value)
-
-    def reset(self, state):
-        "Do the same as a repeated pop() would do, but a bit more efficiently."
-        size = self.stack.size
-        if size < state: raise Exception("MultiDict.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, size))
-        for i in range(size-1, state-1, -1):
-            name, _, prev = self.stack[i]
-            if prev is None: del self.lookup[name]
-            else: self.lookup[name] = prev
-        self.stack.size = state
-
-    def asdict(self, state = 0):
-        "Return all current elements as an OrderedDict. If state is given, only the elements pushed since 'state' are returned."
-        rng = range(state, self.stack.size)
-        return OrderedDict((name, value) for name, value, _ in [self.stack[i] for i in rng])
-
-    def getstate(self):
-        return self.stack.size
-
-    def copy(self):
-        dup = copy(self)
-        dup.stack = self.stack.copy()
-        dup.lookup = self.lookup.copy()
-        return dup
-    
-    def __unicode__(self): return unicode(self.lookup)
-    def __repr__(self): 
-        items = [(repr(self.stack[i][0]), self.stack[i][1]) for i in sorted(self.lookup.values())]
-        return "{%s}" % ', '.join("%s: %s" % item for item in items)
-
-
-class Context(MultiDict):
-    "Context data passed through a HyperML syntax tree during semantic analysis."
-    
-    depth = 0               # current depth of nested hypertag definitions during analyse()
-    ref_depth = None        # the top-most (minimum as a value) def-depth of a non-pure variable or hypertag referenced inside the current subtree;
-                            # this value is passed bottom-up through the tree, from inner nodes (variable occurences)
-                            # to outer nodes (hypertag def-nodes); def-depth = -1 indicates an external non-pure variable/hypertag
-    
-    def add_refdepth(self, d, symbol = None):
-        """Update self.ref_depth with the depth of one more definition of a variable/hypertag.
-        'symbol': optional name of the variable/hypertag being referenced, for debugging.
-        """
-        if d is None: return                            # special case, for adding back initial ref_depth value, which can be None
-        if self.ref_depth is None:                      # when ref_depth is still uninitialized, just use 'd'
-            self.ref_depth = d
-        else:                                           # otherwise, use 'd' if it's lower than the current value
-            self.ref_depth = min(self.ref_depth, d)
-        #if DEBUG: print(' ', symbol or '', d, 'ref_depth =', self.ref_depth)
-
-
-# class Frame(object):
-#     """Activation frame. A list of actual values of hypertag/function arguments, plus values of local variables. 
-#     Parent-linked to the caller's activation frame and linked through *access link* to the frame of the immediate lexical encapsulating hypertag.
-#     Through the parent link, frames create an *activation list*, a counterpart of a stack in traditional runtime implementations. 
-#     Activation list enables easy creation of a parent-pointer-tree for representation of execution of closures (hypertags passed as variables):
-#     https://en.wikipedia.org/wiki/Parent_pointer_tree
-#     """
-#     name = None             # name of the hypertag that created this frame, for debugging
-#     
-#     vars = []               # the fixed stack of variables' values
-#     parent = None
-#     accesslink = None
-
-
-class StackBranch(object):
-    """A stack that exposes Stack interface, but internally consists of 2 disjoint parts, each one being a Stack object:
-    1) the "lower" Stack or StackBranch object (the "trunk") containing stack of a fixed length - can only be used for read access;
-    2) the "upper" Stack object (the "branch") that initially has 0 length, but can grow and shrink like any regular Stack
-    StackBranch is used in Closure implementation.
-    """
-    def __init__(self, lower):
-        self.lower = lower
-        self.upper = Stack()
-        self.lowersize = self.lower.size
-        
-    ### all Stack methods delegated to the appropriate Stack object...
-        
-    def push(self, x):
-        self.upper.push(x)
-    def pop(self):
-        return self.upper.pop()
-    def pushall(self, elems):
-        self.upper.pushall(elems)
-                
-    def __getitem__(self, pos):
-        if pos < self.lowersize:
-            return self.lower[pos]
-        return self.upper[pos - self.lowersize]
-    def get(self, pos):
-        if pos < 0:
-            pos += self.lowersize + self.upper.size
-        return self[pos]
-    def set(self, pos, val):
-        # transform 'pos' to a positive index in the 'upper' stack
-        if pos < 0:
-            upos = pos + self.upper.size
-        else:
-            upos = pos - self.lowersize
-        if upos < 0:
-            raise Exception("StackBranch.set(), can't modify an element (#%s) that's located on the trunk (size %s)" % (pos, self.lowersize))
-        self.upper.set(upos, val)
-    
-    def position(self):
-        return self.lowersize + self.upper.size
-    def reset(self, state):
-        "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
-        size = self.lowersize + self.upper.size
-        if state > size:
-            raise Exception("StackBranch.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, size))
-        if state < self.lowersize:
-            raise Exception("StackBranch.reset(), can't return to a point (%s) that is located on the trunk (size %s)" % (state, self.lowersize))
-        self.upper.reset(state - self.lowersize)
-    
-    def __repr__(self): 
-        return repr(self.lower) + '/' + repr(self.upper)
-
-    
-class Closure(object):
-    """
-    Frozen hypertag expansion, created when a hypertag is passed as a variable for later execution: $H ... $fun(H). 
-    Closure keeps the stack as was present at the point of closure creation, to pass it to the hypertag's expand()
-    even if the original stack has changed before the point of expansion.
-    Note that in HyperML, hypertags can only be passed downwards through the chain of hypertag expansions or function calls, 
-    not upwards, so the stack can only grow, never shrink, before the closure execution point, and consequently
-    all the frames that the closure needs are still on the stack. However, the closure may need to extend the stack in its own way
-    starting from the stack position from the point of closure creation, which would override the frames added between closure creation
-    and execution. To avoid this, we have to implement *stack branching*, done by temporary re-mapping of stack indices
-    to "hide" a part of the stack without its physical removal. The hidden part can be unhidden in constant time, and there can be many
-    overlapping parts hidden at the same time (happens when a chain of several closures are executed).
-    """
-    ishypertag = None       # the HypertagSpec
-    hypertag = None         # the xhypertag node to be expanded when the request comes
-    stack = None            # current stack from the point of closure creation
-    occurDepth = None       # call depth at the point of closure creation
-    
-    def __init__(self, hypertag, stack, occurDepth):
-        self.ishypertag = hypertag.ishypertag
-        self.hypertag = hypertag
-        self.occurDepth = occurDepth
-        self.stack = StackBranch(stack)
-        #self.stack = stack.copy()
-     
-    def definition(self): return self.hypertag.definition()
-     
-    def expand(self, unnamed, kwattrs, caller = None):
-        # now we use the recorded stack and depth from the place of closure creation, instead of the ones from the point of expansion
-        return self.hypertag.expand(unnamed, kwattrs, self.stack, self.occurDepth, caller)
-        
-
-class LazyVariable(object):
-    """
-    A variable whose value calculation is delayed until the first use.
-    If the variable is never used, its value won't be calculated at all.
-    The value is calculated from a "value function" set during initialization and
-    should be retrieved with getvalue() method. Repeated calls to getvalue() return 
-    the same value as calculated on the 1st call, without further re-calculation.
-    """
-    def __init__(self, fun):
-        self.fun = fun          # no-arg "value function"; will be called to calculate the actual value of the variable
-        self.value = None
-        self.hasvalue = False
-        #self.getvalue()
-
-    def getvalue(self):
-        if not self.hasvalue:
-            self.value = self.fun()
-            self.hasvalue = True
-        return self.value
-
-lazyEmptyString = LazyVariable(lambda: '')
-lazyEmptyString.getvalue()
-
-    
-########################################################################################################################################################
 ###
 ###  EXTERNAL HYPERTAGS & FILTERS
 ###
@@ -1018,12 +759,12 @@ class HypertagSpec(object):
     """
     Properties of hypertags when defined as functions:
     - void / non-void - body attribute should be passed in as the 1st argument or not?
-    - with / without a backlink to the containing HyperML document (TODO)
+    - with / without a backlink to the containing HyML document (TODO)
     """
     void     = False    # if True, the hypertag does NOT accept a body attribute and it must always be used without body: <H.../> or <H...></H>
     lazybody = False    # if True, the body attribute should be passed as a LazyVariable instead of a pre-rendered string;
                         # the LazyVariable object must be handled appropriately in the function code, with calls to getvalue() where necessary
-    backlink = False    # (TODO) if True, the HyperML document of this hypertag's occurence (call) is passed in the keyword argument 'hyperdoc'
+    backlink = False    # (TODO) if True, the HyML document of this hypertag's occurence (call) is passed in the keyword argument 'hyperdoc'
                         # to give the function access to global parser settings, like the target language, encoding configuration etc.
 
     def __init__(self, **params):
@@ -1044,7 +785,7 @@ def hypertag(fun):
 #     return fun
 
 def special_hypertag(**translation):
-    """A decorator like @hypertag, but additionally performs translation of attribute names of the hypertag function, 
+    """A decorator like @hypertag, but additionally performs translation of attribute names of the hypertag function,
     so that the resulting function can handle names that are reserved words in Python.
     The translation is given as a list of keyword arguments named after translated attributes: python_name = 'HyperML_name'
     """
@@ -1064,12 +805,12 @@ class Filter(object):
     """
     A wrapper and a decorator that creates a Filter instance to replace a given function:
     * fun = Filter(lambda ...)
-    * @Filter 
+    * @Filter
       def fun(...): ...
 
-    In HyperML, in general, a filter is an object of Filter class. The function call syntax - f(...) - used to a filter object 
+    In HyML, in general, a filter is an object of Filter class. The function call syntax - f(...) - used to a filter object
     always means parameterization, never a real function call.  Only '|' invokes a real function call.
-    However, 1-arg functions  can be used as filters (unparameterized) directly, 
+    However, 1-arg functions  can be used as filters (unparameterized) directly,
     without wrapping in a Filter class: x | f.
 
     A filter object 'f' behaves like a function with a special call protocol:
@@ -1089,7 +830,7 @@ class Filter(object):
     propagate_null = True       # if True, when the null (None) value is passed to the filter, it's automatically propagated to the output,
                                 # so that the filter function fun/apply doesn't have to worry about None's
     
-    def __init__(self, fun, parameterized = True, propagate_null = True, *params, **kwparams):    
+    def __init__(self, fun, parameterized = True, propagate_null = True, *params, **kwparams):
         self.fun = fun
         self.params = params
         self.kwparams = kwparams
@@ -1097,7 +838,7 @@ class Filter(object):
         self.propagate_null = propagate_null
     
     def __call__(self, *params, **kwparams):                                    # in expression:  ... | fun(params)
-        """If self.parameterized=True, sets parameters of the filter and creates a new Filter instance 
+        """If self.parameterized=True, sets parameters of the filter and creates a new Filter instance
         to allow multiple re-use of the initial (abstract) filter object, with different parameterizations.
         Otherwise, calls the filter function with the arguments and parameters passed here only.
         """
@@ -1112,7 +853,7 @@ class Filter(object):
     
     def apply(self, arg, *params, **kwparams):
         """Direct call of the wrapped function, with all arguments/params passed at once.
-        You can override this method if you sublass Filter and want to provide an alternative 
+        You can override this method if you sublass Filter and want to provide an alternative
         implementation of the filter function.
         """
         return self.fun(arg, *params, **kwparams)
@@ -1136,36 +877,36 @@ def FilterWith(**settings):
 
 @special_hypertag(else_ = 'else')
 def if_(body = lazyEmptyString, condition = None, then = None, else_ = None):
-    "Signature inside HyperML: if(body = '', condition = None, then = None, else = None)"
+    "Signature inside HyML: if(body = '', condition = None, then = None, else = None)"
     if condition:
-        return then if then is not None else body.getvalue() 
+        return then if then is not None else body.getvalue()
     return else_
 
 @special_hypertag(else_ = 'else')
 def ifnot(body = lazyEmptyString, condition = None, then = None, else_ = None):
-    "Signature inside HyperML: ifnot(body = '', condition = None, then = None, else = None)"
+    "Signature inside HyML: ifnot(body = '', condition = None, then = None, else = None)"
     if not condition:
-        return then if then is not None else body.getvalue() 
+        return then if then is not None else body.getvalue()
     return else_
 
 @special_hypertag(else_ = 'else')
 def ifnull(body = lazyEmptyString, value = None, then = None, else_ = None):
-    "Signature inside HyperML: ifnull(body = '', value = None, then = None, else = None)"
+    "Signature inside HyML: ifnull(body = '', value = None, then = None, else = None)"
     if value is None:
-        return then if then is not None else body.getvalue() 
+        return then if then is not None else body.getvalue()
     return else_
 
 # in all conditional hypertags, the body attribute must be evaluated in a lazy fashion,
-# so that we don't try to render the body when the condition is false 
+# so that we don't try to render the body when the condition is false
 # (and possibly an attempt to render the body would raise an exception, not to mention efficiency issues)
 if_.ishypertag.lazybody = True
 ifnot.ishypertag.lazybody = True
 ifnull.ishypertag.lazybody = True
-    
 
-# ###  If Jinja2 is available, import all Jinja2 standard filters and wrap up in Filter class to work with HyperML.
-# ###  If Jinja2 is not installed, leave the 'jinja_filters' dict empty. 
-# 
+
+# ###  If Jinja2 is available, import all Jinja2 standard filters and wrap up in Filter class to work with HyML.
+# ###  If Jinja2 is not installed, leave the 'jinja_filters' dict empty.
+#
 # jinja_filters = {}
 # try:
 #     from jinja2.filters import FILTERS as _jFILTERS
@@ -1188,7 +929,7 @@ def split(text): return text.split()
 
 @hypertag
 @Filter
-def splitlines(text, strip = True): 
+def splitlines(text, strip = True):
     lines = text.splitlines()
     if strip: lines = list(filter(None, [line.strip() for line in lines]))
     return lines
@@ -1203,10 +944,10 @@ def join(seq, sep = Text(u''), cast = None):
     If 'seq' is a string, it's split on line boundaries, each line stripped and then non-empty lines joined.
     If 'cast' is given, all input items are first mapped through cast(), only than joined. In such case,
     the resulting string has no language declared, even if original items had some language specified.
-    If 'plain' is not False (it's True, '' or anything else), the resulting Text is unescaped 
+    If 'plain' is not False (it's True, '' or anything else), the resulting Text is unescaped
     if in the document's target language.
     
-    Usage in HyperML:
+    Usage in HyML:
     1) seq|join ... seq|join{params}
     2) <join> line... line... </join>
     """
@@ -1219,7 +960,7 @@ def join(seq, sep = Text(u''), cast = None):
 @Filter
 def joinlines(text, sep = Text(u''), strip = True):
     """
-    Split given text on line boundaries, strip each line and remove the empty ones if strip=True, 
+    Split given text on line boundaries, strip each line and remove the empty ones if strip=True,
     and join the remaining ones with a given separator.
     """
     if not isinstance(sep, Text): sep = Text(sep)
@@ -1235,7 +976,7 @@ def list_(text, sep = None, strip = True, cast = None):
     'sep' tells where to split the text and is one of ("blocks", "lines", "words", "chars")
     or a separator string that should be passed to string's split() method.
     If sep=None, either "lines" or "words" mode is used, depending on whether 'text'
-    contains a newline character or not. 
+    contains a newline character or not.
     In the "blocks" mode (TODO), an empty (whitespace-only) line is the item separator.
     NOTE: if used inside a hypertag, <list>...</list> must be the ONLY element in this hypertag,
     without ANY surrounding markup, even whitespace, otherwise an exception will be raised
@@ -1255,13 +996,13 @@ def list_(text, sep = None, strip = True, cast = None):
 
 def _quote1(x): return quote(unicode(x).encode('utf-8'), safe='/')      # URL quoting, all special chars escaped except '/'
 def _quote2(x): return quote(unicode(x).encode('utf-8'), safe='')       # URL quoting, all special chars escaped
-    
+
 def url(start = u'', *parts, **query):
-    """Build a URL (full) or URL query string from parts: a static string 'start' (no quoting), 
-    followed by 'parts' (all special chars quoted except for '/'), followed by a key=value query string 
+    """Build a URL (full) or URL query string from parts: a static string 'start' (no quoting),
+    followed by 'parts' (all special chars quoted except for '/'), followed by a key=value query string
     built from 'query' (key & value strings fully quoted, including '/').
     Components that contain None values (in 'parts', 'query') are automatically excluded from the result,
-    like if each of them were placed inside a variant block (variant blocks are not allowed in expressions, 
+    like if each of them were placed inside a variant block (variant blocks are not allowed in expressions,
     on arguments list of a function, that's why None handling is implemented here in the function code).
     """
     parts = u''.join(_quote1(p) for p in parts if p is not None)
@@ -1276,7 +1017,7 @@ def comma000(x):
 
 BUILT_IN = {
     # variables (not callable)
-    'python':       __builtin__,    # Python's all standard symbols, accessible through python.* even if a given symbol has different meaning in HyperML 
+    'python':       __builtin__,    # Python's all standard symbols, accessible through python.* even if a given symbol has different meaning in HyML
     
     'true':         True,           # $true
     'false':        False,          # $false
@@ -1317,7 +1058,7 @@ FILTERS = {
 ###
 
 class NODES(object):
-    "A lexical container for definitions of all HyperML tree node classes."
+    "A lexical container for definitions of all HyML tree node classes."
 
     class node(BaseTree.node):
         isstatic     = False        # True in <static>, <literal> and their subclasses
@@ -1327,7 +1068,7 @@ class NODES(object):
         isspecial    = False        # True in <special> and subclasses - nodes that mix element/hypertag functionality
         
         ispure       = None         # True if this node's render() is a pure constant function: will always return the exact same value
-                                    # regardless of the context of execution and without side effects. 
+                                    # regardless of the context of execution and without side effects.
                                     # Is set in analyse() or compactify(), not __init__()!
         
         depth        = None         # no. of nested hypertag definitions that surround this node; set and used only in a part of node classes
@@ -1359,7 +1100,7 @@ class NODES(object):
             if self.check_pure(): return NODES.merged(self, stack, ifnull)
             self.compactify(stack, ifnull)
             return self
-                        
+            
         def analyse(self, ctx):
             "'ctx' is a dict of name->node mapping."
             self.depth = ctx.depth
@@ -1368,7 +1109,7 @@ class NODES(object):
         def render(self, stack, ifnull = ''):
             """
             Node rendering. An equivalent of "expression evaluation" in programming languages.
-            Every render() not only returns a string - a product of rendering - but also may have side effects: 
+            Every render() not only returns a string - a product of rendering - but also may have side effects:
             modification of the 'stack' if new variables/hypertags were defined during node rendering, at the node's top level.
             'ifnull': what to do if a missing (null) element/value is encountered during rendering of this node
             (see _checkNull() for details).
@@ -1376,11 +1117,11 @@ class NODES(object):
             return self.text()
 
         def _checkNull(self, value, ifnull):
-            """For use in subclasses in places where null values should be detected and either 
+            """For use in subclasses in places where null values should be detected and either
             raised as an exception (ifnull = node.RAISE) or converted to another value (the value of 'ifnull', typically '').
-            Other special values of 'ifnull', not used currently: 
-             - node.MESSAGE: replace the null value with an inline (in the document) error message, using the template configured in HyperML settings
-             - node.ORIGINAL: keep the original text of the expression, maybe it will undergo another pass of HyperML parsing (e.g., on the client side)
+            Other special values of 'ifnull', not used currently:
+             - node.MESSAGE: replace the null value with an inline (in the document) error message, using the template configured in HyML settings
+             - node.ORIGINAL: keep the original text of the expression, maybe it will undergo another pass of HyML parsing (e.g., on the client side)
                            and then the missing values will be filled out?
             """
             if value is not None: return value
@@ -1484,7 +1225,7 @@ class NODES(object):
             """For expressions, compactify() only pre-computes the evaluate() function, not render().
             For this reason it converts 'ifnull' to a value understood by evaluate() - None or ''.
             Unlike compactify() for markup items, compactify() for expressions can replace 'self' with a newly created
-            node object - this (or 'self') object is returned as a result. 
+            node object - this (or 'self') object is returned as a result.
             """
             if ifnull is self.RAISE: ifnull = None
             if not self.isstatic and self.check_pure():
@@ -1551,7 +1292,7 @@ class NODES(object):
         depth    = None         # no. of nested hypertag definitions that surround this variable; for proper linking to non-local variables in nested hypertag definitions
         defnode  = None         # the node that defines this variable - an xattr node inside a hypertag definition
         nested   = None         # no. of outer hypertag definitions between the declaration of this variable and its occurence here; for finding the right frame in nested hypertags
-        offset   = None         # position in the stack frame where the value of this variable is stored, as a negative offset from the top of the frame 
+        offset   = None         # position in the stack frame where the value of this variable is stored, as a negative offset from the top of the frame
         
         def init(self, tree, _):
             self.name = self.children[0].text()
@@ -1565,7 +1306,7 @@ class NODES(object):
             if not isinstance(value, NODES.xattr):            # xhypertag node, or external variable defined in Python, not natively in the document?
                 if isinstance(value, NODES.xhypertag):        # "$H" xhypertag node?
                     self.hypertag = value
-                    self.ispure = value.ispure_expand             
+                    self.ispure = value.ispure_expand
                     ctx.add_refdepth(value.depth, '$' + self.name)
                     return
                 
@@ -1596,7 +1337,7 @@ class NODES(object):
             
             defdepth = hypertag.depth                               # depth of the definition node (at what depth the variable is defined)
             ctx.add_refdepth(defdepth, '$' + self.name)
-                        
+            
         def evaluate(self, stack, ifnull):
             msg = "eval   $" + self.name
             if self.hypertag:                                       # hypertag used like a variable? return a Closure
@@ -1618,7 +1359,7 @@ class NODES(object):
             return self._checkNullVal(value, ifnull)
         
         def _checkNullVal(self, val, ifnull):
-            if val is None is ifnull and self.tree.check_null_in_var: 
+            if val is None is ifnull and self.tree.check_null_in_var:
                 raise NullValue("Variable '%s' has null value" % self.name)
             return val
             
@@ -1632,7 +1373,7 @@ class NODES(object):
             for n in self.children:
                 if n.type == 'var_id': self.name = n.text()             # regular (more strict than XML) name of the argument
                 else:
-                    assert n.isexpression 
+                    assert n.isexpression
                     self.expr = n                                       # value of the argument
 
         def compactify(self, stack, ifnull = ''):
@@ -1668,8 +1409,8 @@ class NODES(object):
             """Evaluate name/value expressions of the arguments and return as a pair of:
             1) list of values of unnamed attributes,
             2) name->value OrderedDict of subsequent keyword attributes, withOUT the hidden 'body' attr.
-            OrderedDict is used to preserve the order of attributes, needed later on when building a stack frame. 
-            Missing values are replaced with '' in regular elements, or None (null value) on hypertag definition list.            
+            OrderedDict is used to preserve the order of attributes, needed later on when building a stack frame.
+            Missing values are replaced with '' in regular elements, or None (null value) on hypertag definition list.
             """
             unnamed = [arg.expr.evaluate(stack, ifnull) for arg in self.unnamed]
             kwargs = OrderedDict((name, arg.expr.evaluate(stack, ifnull)) for name, arg in self.named.items())
@@ -1705,7 +1446,7 @@ class NODES(object):
             
     class xindex(expression):
         """Element access: [...], with any type of subscript: [i], [i:j], [i:j:k], [::] etc.
-        Children after reduction are either a single <xexpr> node (no slicing), 
+        Children after reduction are either a single <xexpr> node (no slicing),
         or a list of 2-3 <xslice_value> nodes in case of a slice.
         """
         title = 'sequence index [...]'
@@ -1829,7 +1570,7 @@ class NODES(object):
         
         # extra operators, implemented by ourselves
         ops['in'] = lambda x, d: x in d                         # operator.contains() is not suitable bcs it takes operands in reversed order
-        ops['not in'] = lambda x, d: x not in d 
+        ops['not in'] = lambda x, d: x not in d
         ops[''] = ops['+']                                      # missing operator mapped to '+' (implicit +)
         
         def init(self, tree, astnode):
@@ -1843,13 +1584,13 @@ class NODES(object):
     class xop_comp(static_operator): pass
     class xneg(static): pass
     class xnot(static): pass
-        
+    
     class chain_expression(expression):
         "A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."
         raise_null = True           # if True, any intermediate null (None) value will raise NullValue exception
         
         def _checkNullVal(self, val, ifnull, side, name):
-            if val is None is ifnull and self.raise_null and self.tree.check_null_in_oper: 
+            if val is None is ifnull and self.raise_null and self.tree.check_null_in_oper:
                 raise NullValue(side + " operand of a '%s' operator is null" % name)
 
         def evaluate(self, stack, ifnull):
@@ -1865,7 +1606,7 @@ class NODES(object):
                 self._checkNullVal(res, ifnull, "right", op.name)
                 res = op.apply(res, val)                    # calulate: <res> = <res> op <val>
             
-            return res    
+            return res
         
         def _prepare(self, stack, ifnull):
             """Pre-processesing of the 1st item of the chain for evaluate(). Returns the chain as (head, tail) for actual evaluation.
@@ -1909,7 +1650,7 @@ class NODES(object):
         raise_null = True           # if True and inside variant block, any intermediate null (None) value will raise NullValue exception
         oper = None                 # the operator function to be applied
         def _checkNullVal(self, val, ifnull, side):
-            if val is None is ifnull and self.raise_null and self.tree.check_null_in_oper: 
+            if val is None is ifnull and self.raise_null and self.tree.check_null_in_oper:
                 raise NullValue(side + " operand of a '%s' operator is null" % self.name)
         
         def evaluate(self, stack, ifnull):
@@ -1979,7 +1720,7 @@ class NODES(object):
             val = self.children[-1].evaluate(stack, ifnull)
             return not val if neg else val
     
-    # these nodes should be reduced during rewriting, right after being created (they always have 1 child and are listed in _compact_ setting) 
+    # these nodes should be reduced during rewriting, right after being created (they always have 1 child and are listed in _compact_ setting)
     class xexpr (expression): pass
     class xvalue (expression): pass
     
@@ -2000,8 +1741,8 @@ class NODES(object):
             for n in self.children:
                 if n.type == 'ident': self.name = n.text()              # XML name of the attribute
                 else:
-                    assert n.isexpression 
-                    self.expr = n                                       # value of the attribute    
+                    assert n.isexpression
+                    self.expr = n                                       # value of the attribute
                     #assert(0), n.info()
         
         def makeSymbol(self, hypertag, offset):
@@ -2020,8 +1761,8 @@ class NODES(object):
             
         def evaluate(self, stack, ifnull):
             """
-            Missing values are replaced with '' in regular elements (hypertag occurences), 
-            or None (null value) on hypertag definition lists.            
+            Missing values are replaced with '' in regular elements (hypertag occurences),
+            or None (null value) on hypertag definition lists.
             """
             try:
                 if self.expr: return self.expr.evaluate(stack, self._convertIfNull(ifnull))
@@ -2084,7 +1825,7 @@ class NODES(object):
             """Evaluate (render) name/value expressions of the attributes in a given context and return as a pair of:
             1) list of values of unnamed attributes,
             2) name->value OrderedDict of subsequent keyword attributes, withOUT the hidden 'body' attr.
-            OrderedDict is used to preserve the order of attributes, needed later on when building a stack frame. 
+            OrderedDict is used to preserve the order of attributes, needed later on when building a stack frame.
             """
             # in hypertag occurences we may need to check against nulls on attribute list;
             # the function below is an optimized version of self._checkNull()
@@ -2111,12 +1852,12 @@ class NODES(object):
         isvoid = False          # True in hypertag's opening tag with explicit void marker: <:H ~ ...>
         
         name  = None
-        attrs = None            # <xattrs> node with a list of attributes 
+        attrs = None            # <xattrs> node with a list of attributes
         
         def init(self, tree, _):
             for c in self.children:
                 if   c.type == 'def': self.ishypertag = True
-                elif c.type == 'void': 
+                elif c.type == 'void':
                     if not self.ishypertag: raise HypertagsError("Void marker '~' not allowed in elements other than hypertag definitions", self)
                     self.isvoid = True
                 elif c.type in ('ident', 'var_id'): self.name = c.text()
@@ -2148,7 +1889,7 @@ class NODES(object):
     class xelement(node):
         """Any markup element: a start tag matched with its corresponding end tag, together with all contents in between (the body).
         Produced in the tree after tag pairing, pair(), which is a part of semantic analysis. Replaces the original tags in the tree.
-        Can represent both a hyper-element (hypertag occurence, to be replaced with hypertag definition body during compilation), 
+        Can represent both a hyper-element (hypertag occurence, to be replaced with hypertag definition body during compilation),
         or a regular tag-element that should stay in the document as it is and be rendered at the end.
         Hypertag definition is a special type of element and it's represented by the xhypertag subclass.
         """
@@ -2169,8 +1910,8 @@ class NODES(object):
         
         def __init__(self, tree, start, end, body):
             """
-            'end': None for an empty element <.../> 
-            'body': always a list of nodes, possibly empty 
+            'end': None for an empty element <.../>
+            'body': always a list of nodes, possibly empty
             """
             self.tree = tree
             self.fulltext = tree.text
@@ -2186,7 +1927,7 @@ class NODES(object):
             self.bodypos = (start.pos[1], max(start.pos[1], end.pos[0]))        # empty tag <.../> has start=end= start.pos[1]
         
         def setBody(self, body):
-            """'children' are fully derived from start/body/end, thus a separate method is necessary to ensure consistency 
+            """'children' are fully derived from start/body/end, thus a separate method is necessary to ensure consistency
             between redundant 'body' and 'children'. 'children' attribute is needed for printout and debugging of the tree.
             """
             self.body = body
@@ -2230,7 +1971,7 @@ class NODES(object):
 
             # is this hypertag a pure function, i.e., guaranteed to return the same value on every call, without side effects?
             # we never mark user-defined functions as pure, except for those listed in 'pure_externals',
-            # bcs their behavior (and a returned value) may vary between calls through side effects or internal state, 
+            # bcs their behavior (and a returned value) may vary between calls through side effects or internal state,
             # even if the function is the same all the time
 
             if not self.ispure: return              # if any attribute or body element is not pure, this element is not pure either - don't bother
@@ -2243,9 +1984,9 @@ class NODES(object):
         def compactify(self, stack, ifnull):
             if DEBUG: print("compact", (':' if self.ishypertag else '') + self.name, stack)
             
-            # compactify the entire start/end tags (if self is a regular node) or just self.attrs 
-            # (if self is a hypertag occurence or definition); in the latter case, only individual expressions 
-            # on attributes list can be compactified (full=False) 
+            # compactify the entire start/end tags (if self is a regular node) or just self.attrs
+            # (if self is a hypertag occurence or definition); in the latter case, only individual expressions
+            # on attributes list can be compactified (full=False)
             if self.start:
                 isregular = not (self.htag or self.ishypertag)
                 if isregular:
@@ -2327,7 +2068,7 @@ class NODES(object):
             In a regular hypertag definition, these are all attributes present in the opening tag.
             However, in special node subclassed the set of symbols being defined can be different.
             """
-            if self.attrs.unnamed: 
+            if self.attrs.unnamed:
                 raise HypertagsError("Unnamed attributes not allowed in a hypertag definition", self.attrs.unnamed[0])
             
             # the special attribute $body must not have any default value
@@ -2392,11 +2133,11 @@ class NODES(object):
                     stack.push(d)                       # chain of mock-up "access links" for correct expansion of inner hypertag occurences
                 self.compactify(stack, '')              # assert: inner hypertags will never need true frames, bcs they're known to be PURE
             
-        def definition(self): 
+        def definition(self):
             return Text(self.text(), "HTML")
         
         def render(self, stack, ifnull = ''):
-            """Hypertag definitions should be removed from the final output, thus returning an empty string. 
+            """Hypertag definitions should be removed from the final output, thus returning an empty string.
             For rendering of a hypertag body in the place of hypertag occurence, expand() is used instead."""
             return u""
         
@@ -2405,7 +2146,7 @@ class NODES(object):
             The special 'body' attribute, if present, must be passed as the 1st 'unnamed' value.
             'occurDepth' is the ctx.depth (no. of surrounding hypertag definitions) of the occurence element being expanded,
             for proper calculation of positions in the stack of non-local variables used in this hypertag.
-            Hypertag is always expanded in non-variant mode, even if the definition and/or occurence is enclosed 
+            Hypertag is always expanded in non-variant mode, even if the definition and/or occurence is enclosed
             in a [[...]] variant block. That's why expand() takes a 'stack' argument but no 'ifnull', unlike typical render().
             """
             # merge actual attribute values with default values where missing
@@ -2440,7 +2181,7 @@ class NODES(object):
         
         def __call__(self, *unnamed, **kwattrs):
             "For external use of the node like a function. Applicable to top-level hypertags only."
-            if self.depth > 0: 
+            if self.depth > 0:
                 raise HypertagsError("xhypertag '%s' is defined inside another hypertag (depth=%s) and so it can't be used as a function" % (self.name, self.depth))
             
             # void hypertag? no need to pass 'body' attribute
@@ -2454,10 +2195,10 @@ class NODES(object):
                 body = kwattrs.pop(self.bodyattr, "")
             
             # If 'body' is a *string*, it's assumed to be in the target language (typically HTML) already,
-            # so it shall NOT be escaped when evaluated inside the hypertag definition body. 
+            # so it shall NOT be escaped when evaluated inside the hypertag definition body.
             # To guarantee no escaping, the string is wrapped up in Text instance and marked to contain target language.
-            # Otherwise, if 'body' is a *non-string* object, its occurence inside markup will be 
-            # evaluated to a string and then escaped appropriately. 
+            # Otherwise, if 'body' is a *non-string* object, its occurence inside markup will be
+            # evaluated to a string and then escaped appropriately.
             if isinstance(body, basestring) and (not isinstance(body, Text) or body.language is None):
                 body = Text(body, self.tree.language)
             return self.expand([body] + list(unnamed), kwattrs, Stack(), 0)
@@ -2517,7 +2258,7 @@ class NODES(object):
         def infoName(self): return "<%s>" % self.name
 
         def analyse(self, ctx):
-            "Preparatory steps of analysis: analyse static attributes and calculate their values 'static_vals'."            
+            "Preparatory steps of analysis: analyse static attributes and calculate their values 'static_vals'."
             if DEBUG: print("x" + self.name, ctx.asdict(_debug_ctx_start))
             try:
                 # perform analysis of attributes in empty context - they must NOT reference any variables, we only handle constant attrs in special tags
@@ -2538,7 +2279,7 @@ class NODES(object):
         static_attrs = OrderedDict.fromkeys(['module', 'names', 'as', 'namesAs'], None)
         
         def analyse(self, ctx):
-            "Load the included file as HyperML tree and add top-level symbols to the current context."
+            "Load the included file as HyML tree and add top-level symbols to the current context."
             super(NODES.ximport, self).analyse(ctx)             # analyse attributes list & compute their actual values
             
             moduleName = self.static_vals['module']
@@ -2568,7 +2309,7 @@ class NODES(object):
             
             
     class xinclude(special):
-        "Special element <include>. Loads a given file as HyperML tree and adds top-level symbols to the current context. Created during tag pairing."
+        "Special element <include>. Loads a given file as HyML tree and adds top-level symbols to the current context. Created during tag pairing."
         name = "include"
         
         # all attributes accepted by this tag
@@ -2577,7 +2318,7 @@ class NODES(object):
         content = u""       # contents rendered from the included file
         
         def analyse(self, ctx):
-            "Load the file as HyperML tree and add top-level symbols to the current context."
+            "Load the file as HyML tree and add top-level symbols to the current context."
             super(NODES.xinclude, self).analyse(ctx)                # analyse attributes list & compute their actual values
 
             file = self.static_vals['file']                                                                  # @ReservedAssignment
@@ -2593,7 +2334,7 @@ class NODES(object):
                 self.content = self.tree.load(file, parse = False)
                 return
             
-            # load the file as a parsed HyperML, possibly retrieved from loader's cache
+            # load the file as a parsed HyML, possibly retrieved from loader's cache
             hdoc = self.tree.load(file)
             if names is None:                                       # include all symbols + contents, or only the symbols listed by name?
                 self.content = hdoc.render()
@@ -2612,9 +2353,9 @@ class NODES(object):
         
     
     class special_hyper(special, xhypertag):
-        """A special element that additionally behaves like a hypertag: it has a body and defines new variables 
+        """A special element that additionally behaves like a hypertag: it has a body and defines new variables
         that can be referenced by body nodes (not only by siblings, as in non-hyper special elements).
-        """        
+        """
         def analyse(self, ctx):
             NODES.xhypertag.analyse(self, ctx)
             self.ispure = self.ispure_expand
@@ -2628,10 +2369,10 @@ class NODES(object):
         2)  <:X item>...</:X>
             <for $items print=$X />
         
-        In the 1st form, 'item' (any attribute name is allowed) becomes a local variable for the body nodes, 
+        In the 1st form, 'item' (any attribute name is allowed) becomes a local variable for the body nodes,
         which are rendered multiple times, once for each item of the collection $items.
         
-        Both forms accept an optional attribute sep='\n' - the separator to be added between iterations' outputs. 
+        Both forms accept an optional attribute sep='\n' - the separator to be added between iterations' outputs.
         """
         name = "for"
         loopvar = None      # name of the loop variable if present (<for item=$items>...</for>), None otherwise (<for $items print=$H ... />)
@@ -2641,14 +2382,14 @@ class NODES(object):
         
         def symbols(self, ctx):
             # the form with a hypertag: <for $items print=$H .../>  (empty body, H is expanded for each item)
-            if self.attrs.unnamed: 
+            if self.attrs.unnamed:
                 if self.body: raise HypertagsError("<for> without a loop variable must have empty body", self)
                 return {}
             
             # the form with a loop variable: <for item=$items>...</for>  (body is expanded for each item)
             loopattr = self.attrs.attrs[0]
             self.loopvar = loopattr.name
-            return {self.loopvar: loopattr}            
+            return {self.loopvar: loopattr}
         
         def render(self, stack, ifnull = ''):
             if DEBUG: print("render", "<for>", stack)
@@ -2658,7 +2399,7 @@ class NODES(object):
             # <for $items print=$H ... />   OR   <for $items $H ... />
             if unnamed:
                 attrs = NODES._actual_attrs(self.runtime_attrs.copy(), unnamed, kwattrs, None, self, self.name)
-                if 'print' not in attrs: 
+                if 'print' not in attrs:
                     raise HypertagsError("<for> tag must contain either a named loop variable or a 'print' attribute, both are missing", self)
                 expanded = self.expand_htag(attrs)
             
@@ -2708,7 +2449,7 @@ class NODES(object):
         
         """
         name = "with"
-         
+        
         def symbols(self, ctx):
             if self.attrs.unnamed: raise HypertagsError("Unnamed attributes not allowed in a <with> tag", self)
             for attr in self.attrs.attrs:
@@ -2735,7 +2476,7 @@ class NODES(object):
     
     @staticmethod
     def _find_accesslink(stack, defDepth, occurDepth):
-        """find access link: position in the 'stack' of the frame of the immediate lexical encapsulating hypertag 
+        """find access link: position in the 'stack' of the frame of the immediate lexical encapsulating hypertag
         of a given hypertag defined at nestedness depth 'defDepth'.
         """
         assert occurDepth >= defDepth
@@ -2750,7 +2491,7 @@ class NODES(object):
     
     @staticmethod
     def _actual_attrs(default, unnamed, kwattrs, bodyattr, node, hname, selfclosing = False):
-        """Compute actual parameters of hypertag expansion by merging attribute values given in the occurence ('unnamed' list, 'kwattrs' dict) 
+        """Compute actual parameters of hypertag expansion by merging attribute values given in the occurence ('unnamed' list, 'kwattrs' dict)
         with their default values (OrderedDict). Perform name checking. 'node' is the occurence element that refers to the hypertag.
         WARNING: the 'default' dictionary is modified here and used to pass the result out to the calling function.
         """
@@ -2796,10 +2537,10 @@ class NODES(object):
             #print(' ', node, node.check_pure())
             if node.check_pure():                               # a pure node that can be reduced into a <merged> node?
                 if last: last.merge(node, stack, ifnull, sep)
-                else: 
+                else:
                     last = NODES.merged(node, stack, ifnull)
-                    out.append(last) 
-            else:                                               # non-pure node? let's compactify recursively its subtree and append 
+                    out.append(last)
+            else:                                               # non-pure node? let's compactify recursively its subtree and append
                 node.compactify(stack, ifnull)
                 out.append(node)
                 last = None
@@ -2813,7 +2554,7 @@ class NODES(object):
 ###
 
 class HyperML(BaseTree):
-    """Syntax tree of a parsed HyperML document and the parsing routines. Subsequent transformations of the tree:
+    """Syntax tree of a parsed HyML document and the parsing routines. Subsequent transformations of the tree:
     - parsing - parses source text to AST, with generic syntax nodes as used by a given parser generator (Parsimonious)
     - rewriting - from AST to NODES.x*** nodes; the tree contains primitive expressions: tags, attributes, identifiers, numbers, strings, ...
     - pairing - rewrites a flat list of x*tag/xtext/expression body nodes into a structured tree of xelements, by pairing corresponding start/end tags
@@ -2822,26 +2563,26 @@ class HyperML(BaseTree):
 
     TODO configuration settings:
     - case sensitive/insensitive tag names
-    - error handling: strict/inline 
+    - error handling: strict/inline
       - in strict mode, exceptions are raised
       - in inline mode, a message is pasted into the output, using the provided template (usually an HTML comment)
     - unpaired tags handling: strict (all tags must be paired) / ignore /
         limited support (a list of tag names that can be left unpaired, typically those in HTML set of empty tags)
     - leading/trailing whitespaces stripped from hypertag definition body or not
     - self-closing slash '.../>' with a leading space or without when printed to the output?
-    - xhypertag rendering: ON/OFF? If we want to process a Hyper file several times (e.g., on the server, then by the client), 
+    - xhypertag rendering: ON/OFF? If we want to process a Hyper file several times (e.g., on the server, then by the client),
       xhypertag rendering to the output should be ON.
     ? $body declared implicitly or explicitly?
       the latter allows for the use of a different name, which may be useful in nested hypertags, when we want to refer to $body attributes
       of several nested hypertags at the same time; the latter is also clearer and more explicit, but creates more boilerplate code.
-    ? character encoding of the output and input, to override automatic detection (the user can decode/encode to Unicode outside HyperML)
+    ? character encoding of the output and input, to override automatic detection (the user can decode/encode to Unicode outside HyML)
     """
     
     ###  Configuration of the parsing process (fixed)  ###
     
     parser  = HyperParser()     # parses input text to the 1st version of AST, which undergoes further rewriting to NODES classes later on
     NODES   = NODES             # tell the parser's rewriting routine where node classes can be found
-        
+    
 
     # nodes to be automatically pruned, reduced (replaced with their children) or compactified (replaced with a single child)
     # during rewriting, right after parsing completes; warning: the '_compact_' here corresponds to a *different* compactification
@@ -2878,9 +2619,9 @@ class HyperML(BaseTree):
     hyperml_void = "import include"
     void         = None
 
-    # Semantics of HyperML language. 
-    # The triggers below correspond to design decisions that were difficult to take and may possibly change in the future, 
-    # if applications of HyperML show that some other settings are more convenient in practice. 
+    # Semantics of HyML language.
+    # The triggers below correspond to design decisions that were difficult to take and may possibly change in the future,
+    # if applications of HyML show that some other settings are more convenient in practice.
     ignore_unpaired_endtags   = False   # if True, unpaired end tags are allowed
     allow_html_tags_redefine  = True    # TODO: if False, trying to define a hypertag named like a standard HTML tag (case-INsensitive) will cause an exception
     quote_attr_values         = True    # if True, all values on attribute list, including numerical etc., are converted to string and quoted when rendering
@@ -2888,7 +2629,7 @@ class HyperML(BaseTree):
     check_null_in_var         = False   # if True, variables inside expressions will check nullity of their values and raise NullValue inside variant blocks
     check_null_in_oper        = False   # if True, some operator nodes will check nullity of operands and raise NullValue inside variant blocks
     
-    # Loader that was used to load this HyperML source file and should be used for including other related files.
+    # Loader that was used to load this HyML source file and should be used for including other related files.
     # Can perform caching and dependencies tracking. See loaders.Loader
     loader = None
     
@@ -2927,14 +2668,14 @@ class HyperML(BaseTree):
     
     symbols   = None            # after _pull(), dict of all top-level symbols as name->node pairs
     hypertags = None            # after _pull(), dict of top-level hypertags indexed by name, for use by the client as hypertag functions;
-                                # includes imported hypertags (!), but not external ones, only the native ones defined in HyperML
+                                # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
     
     ###  INSTANTIATION  ###
 
     def __init__(self, text = None, ast = None, stopAfter = None, _hyperml_context = None, **params):
         """
         :param stopAfter: a string that tells after which phase of analysis to stop; one of: parse, rewrite, pair
-        :param _hyperml_context: a Context instance from an outer HyperML tree that should be used as a starting point
+        :param _hyperml_context: a Context instance from an outer HyML tree that should be used as a starting point
             for semantic analysis of this (sub)tree; used when an expression evaluates to HyML code during rendering,
             and this code should be parsed and analysed in a proper context from the main tree (_hyperml_context),
             AFTER the main tree analysis was already completed.
@@ -2953,9 +2694,9 @@ class HyperML(BaseTree):
         for name in names: setparam(name)
         if params: raise Exception("Unrecognized parameter(s) passed to HyperML: %s" % ', '.join(params.keys()))
         
-        if self.void is None: 
+        if self.void is None:
             self.void = self.html5_void + ' ' + self.hyperml_void
-        if isstring(self.void): 
+        if isstring(self.void):
             self.void = self.void.lower().split()
         self.void = set(self.void)
         
@@ -2974,16 +2715,16 @@ class HyperML(BaseTree):
         if stopAfter == "analyse": return
         
     def load(self, resource, parse = True, dependency = True, **params):
-        """Load a document from a given external resource, typically a file identified by path name, 
+        """Load a document from a given external resource, typically a file identified by path name,
         parse and return as a new HyperML object (unless parse=False, in which case the plain text is returned).
         If a new HyperML instance is created, it inherits initialization parameters from 'self',
         possibly extended with custom parameters 'params'.
         If a cached and up-to-date copy of the resource is already present in the loader's cache, this copy is returned,
         in such case the parameters of the document are NOT modified! ('params' is not used).
-        self.loader is used for resource identification & loading, plus caching of the resulting HyperML 
+        self.loader is used for resource identification & loading, plus caching of the resulting HyML
         or plain text document for possible later use.
         """
-        # append main settings from self to 'params', so that the child document inherits non-default settings, 
+        # append main settings from self to 'params', so that the child document inherits non-default settings,
         # except possibly for those given explicitly in 'params'
         settings = "globals language autoescape compact".split()
         cls = self.__class__
@@ -3004,7 +2745,7 @@ class HyperML(BaseTree):
         This method requires more parameters to be specified than load():
         - 'loader': a subclass of fireweb.loaders.Loader or any class exposing the same interface;
         - 'referrer': name of the file that requested loading of the resource, for file name resolving.
-        Returns a pair: the document (HyperML or string) and its canonical name (as calculated from 'resource' and 'referrer').
+        Returns a pair: the document (HyML or string) and its canonical name (as calculated from 'resource' and 'referrer').
         """
         
         # try to get the cached copy first
@@ -3012,9 +2753,9 @@ class HyperML(BaseTree):
         #print("HyperML.load(%s):" % fullname)
         #printdict(loader.cached)
         hdoc = loader.get(fullname)
-        #if hdoc is not None: print("HyperML document retrieved from CACHE:", fullname)
+        #if hdoc is not None: print("HyML document retrieved from CACHE:", fullname)
         
-        # if present, 'hdoc' is either raw contents of the file or a parsed HyperML doc;
+        # if present, 'hdoc' is either raw contents of the file or a parsed HyML doc;
         # return the doc only if this is what we're looking for, otherwise we have to load and/or parse the doc again
         if isinstance(hdoc, HyperML):
             res = hdoc.text if not parse else hdoc
@@ -3022,10 +2763,10 @@ class HyperML(BaseTree):
         if isstring(hdoc) and not parse:
             return hdoc, fullname
         
-        # only if the resource is not present in cache, or not in the desired form (of a parsed doc), 
+        # only if the resource is not present in cache, or not in the desired form (of a parsed doc),
         # or has been modified on disk (cache copy is dirty), load it from scratch; parse if necessary
         doc, meta = loader.load(fullname)
-        #print("HyperML document loaded from DISK:", fullname)
+        #print("HyML document loaded from DISK:", fullname)
         
         if not parse:
             loader.cache(fullname, doc, meta, set())            # cache raw document for later use; no dependencies for raw files
@@ -3067,7 +2808,7 @@ class HyperML(BaseTree):
         
         self.root.analyse(ctx)          # now we have all top-level symbols in 'ctx'
         
-        # pull top-level symbols & hypertags from the tree and make them into attributes of self that can be accessed directly by the user, 
+        # pull top-level symbols & hypertags from the tree and make them into attributes of self that can be accessed directly by the user,
         # for rendering of arbitrary hypertags in isolation from the rest of the document.
         # Warning: if there is a name clash between a hypertag and an existing property of 'self', the hypertag is not assigned to the property
         # and remains accessible by self.hypertags[name] or self[name] only! Use the latter syntax if you need a bullet-proof code.
@@ -3079,13 +2820,13 @@ class HyperML(BaseTree):
                 setattr(self, name, htag)
     
         # perform compactification; a part of it was already done during analysis, because every hypertag launches
-        # compactification in its subtree on its own, during analysis; what's left is compactification 
+        # compactification in its subtree on its own, during analysis; what's left is compactification
         # of the top-level document only
         if self.compact: self.compactify()
         
     def compactify(self):
         """
-        Replace pure nodes in the document tree with static string/value nodes containg pre-computed render() result 
+        Replace pure nodes in the document tree with static string/value nodes containg pre-computed render() result
         of a given node, so that this pre-computed string/value is returned on all future render() calls on the new node.
         
         The document node doesn't take any arguments, so its render() is often a pure function, if only there are no non-pure
@@ -3101,7 +2842,7 @@ class HyperML(BaseTree):
     def __getitem__(self, tagname):
         "Returns a given top-level hypertag node wrapped up in Hypertag, for isolated rendering. Analysis must have been performed first."
         return self.hypertags[tagname]
-                
+        
     def __str__(self):
         doc = BaseTree.__str__(self)
         if not self.symbols: return doc
@@ -3183,7 +2924,7 @@ _debug_ctx_start = None             # position where the actual local context be
 txt = """
 <:pagin ~ letter searchKeyword searchPublisher>
     <:url page><join>        [# this URL is HTML-encoded on output, but when used as an attribute value href=$url(...) it gets auto-unescaped #]
-        /journals/$page 
+        /journals/$page
         [[ /$letter ]]
         [[ ?q=$(searchKeyword) ]]
         [[ ?publisher=$(searchPublisher) ]]
