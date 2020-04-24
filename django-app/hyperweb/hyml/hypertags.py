@@ -207,7 +207,7 @@ Void and non-self-closing elements don't need end tags and are parsed without ex
 
 XML names for tags and attributes, with characters from a broader set than recognized by HyperML.
 >>> render(u"<sp:tag.x-y.\\uF900 attr-a:b.c-\\uf900 = ''/>")
-'<sp:tag.x-y.豈 attr-a:b.c-豈="" />'
+"<sp:tag.x-y.豈 attr-a:b.c-豈 = ''/>"
 
 Suppressing errors.
 >>> render("<p>abc</p></p>", ignore_unpaired_endtags = True)
@@ -659,6 +659,14 @@ Plain function in a filter operator receives and processes null values normally,
 '`None`'
 >>> render("[[$fun(null | quoted)]]", globals = {'quoted':quoted, 'fun':lambda s:'fun-'+s})
 'fun-`None`'
+
+Using an alternative hypertag definition syntax, with colon ":" following not preceeding a hyperag name in the opening tag
+>>> render("<H:>kot</:H><H/>")
+'kot'
+
+Embedding of a variable that renders to a Text()  of type "HyML" or exposes __hyml__ method.
+> > > def f(): print('f')
+> > > render("<H:></:H>", globals = {'s': f})
 
 
 *** Bug fixes.
@@ -1272,7 +1280,6 @@ FILTERS = {
 
 # Grammar for a Parsimonious parser. Actually a template that needs to be formatted with a few additional parameters (see below).
 # See: https://github.com/erikrose/parsimonious
-
 grammar_spec = r"""
 
 # Tagged text is a flat sequence of markup (tags, variables/functions, variants) mixed with plain text.
@@ -1291,7 +1298,7 @@ space       =  ~"\s+"                        # obligatory whitespace; can includ
 ws          =  space?                        # optional whitespace; can include newline
 
 def         =  ':'                           # tag name prefix that starts hypertag definition
-eval        =  '$'                           # special symbol denoting expression evaluation 
+eval        =  '$'                           # special symbol denoting expression evaluation
 lt          =  '<'                           # special symbols for tags ...
 gt          =  '>'
 slash       =  '/'
@@ -1328,15 +1335,15 @@ index        =  '[' subscript ']'            # handles atomic indices [i] and al
 member       =  '.' var_id                   # no space after '.' allowed
 trailer      =  call / index / member
 
-# the expression... 
-# built bottom-up, starting with inner-most components built of high-priority operators (arithmetic) 
+# the expression...
+# built bottom-up, starting with inner-most components built of high-priority operators (arithmetic)
 # and proceeding outwards, to operators of lower and lower priority (logical);
-# after parsing, the expression nodes with only 1 child are reduced (compactified), 
+# after parsing, the expression nodes with only 1 child are reduced (compactified),
 # to avoid long (~10 nodes) branches in the syntax tree that don't perform any operations
 # other than blindly propagating method calls down to the leaf node.
 
 op_multiplic =  '*' / '//' / '/' / '%%'        # double percent means single percent, only we need to escape for grammar string formatting
-op_additive  =  '+' / '-' 
+op_additive  =  '+' / '-'
 op_shift     =  '<<' / '>>'
 neg          =  '-'                            # multiple negation, e.g., "---x", not allowed -- unlike in Python
 
@@ -1390,13 +1397,16 @@ args        =  arg (ws ',' ws arg)*
 
 ###  TAGS & ELEMENTS
 
-tag_name     =  (def var_id) / ident
+tag_name_end   =  (def var_id) / ident
+tag_name_start =  (var_id def) / tag_name_end
+
+tag_name     =  (def var_id) / (var_id def) / ident
 tag_core     =  (space attrs)? ws
-tag_namecore =  lt tag_name (space void)? tag_core
+tag_namecore =  lt tag_name_start (space void)? tag_core
 
 start_tag    =  tag_namecore gt                       # opening (start) tag, regular or hypertag definition
 empty_tag    =  tag_namecore slash gt                 # empty tag: no body, opening + closing in a single tag
-end_tag      =  lt slash tag_name ws gt               # closing (end) tag, regular or hypertag definition
+end_tag      =  lt slash tag_name_end ws gt           # closing (end) tag, regular or hypertag definition
 tag          =  start_tag / empty_tag / end_tag
 
 # elements whose body should stay unparsed
@@ -1420,6 +1430,7 @@ choice       =  (markup / text_variant)*
 variant      =  '[[' choice ('||' choice)* ']]'
 
 """
+
 
 # Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
 # XML identifiers differ substantially from typical name patterns in other computer languages. Main differences: 
@@ -2989,8 +3000,10 @@ class HyperML(BaseTree):
     # when - after symbols are resolved - we find out that some parts of the tree will always render to the same string
     # and thus they can be pre-rendered during analysis.
     _ignore_  = "space ws lt gt slash eval comment html_comment".split() + parser.noparse_names
-    _reduce_  = "def_id literal subexpr slice subscript trailer atom value_attr kwattr kwarg tag tag_namecore tag_core tag_name markup"
-    _compact_ = "factor term arith_expr concat_expr shift_expr and_expr xor_expr or_expr comparison not_test and_test or_test ifelse_test expr expr_markup value"
+    _reduce_  = "def_id literal subexpr slice subscript trailer atom value_attr kwattr kwarg " \
+                "tag tag_namecore tag_core tag_name tag_name_start tag_name_end markup"
+    _compact_ = "factor term arith_expr concat_expr shift_expr and_expr xor_expr or_expr comparison " \
+                "not_test and_test or_test ifelse_test expr expr_markup value"
 
     _reduce_anonym_ = True      # reduce all anonymous nodes, i.e., nodes generated by unnamed expressions, typically groupings (...)
     _reduce_string_ = True      # if a node to be reduce has no children but matched a non-empty part of the text, it shall be replaced with a 'string' node 
