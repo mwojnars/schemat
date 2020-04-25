@@ -304,15 +304,10 @@ Special attribute $body.
 >>> render("<:A bodyA a>$a $bodyA</:A> <:B bodyB b><A a=$b><i>Ola</i> $bodyB</A></:B> <B b='Ala'><A a='Ela'></A></B>")
 '  Ala <i>Ola</i> Ela '
 
-Anonymous "body" can be written without preceeding space and can take on different forms: ~ (tilde) or . (dot)
-Hypertag definition can start with a colon following a name.
->>> render("<A:. x>$(x+1)</:A> <A 3/>")
-' 4'
-
 Default values of attributes.
 >>> render("<:A a='A' b c=''>$a$(b)$c;D</:A><A></A>", explicit_body_var=0)
 'A;D'
->>> render("<:A . a='A' b c=''>$a$(b)$c;D</:A><A></A>")
+>>> render("<:A ~ a='A' b c=''>$a$(b)$c;D</:A><A></A>")
 'A;D'
 >>> render("<:A body='disallowed' a='A' b c=''>$a$(b)$c;D</:A><A></A>")
 Traceback (most recent call last):
@@ -688,6 +683,17 @@ Reserved symbols can be a prefix of a variable name.
 Compactification of an inner hypertag using internally a top-level hypertag caused assertion error related to "access link" calculation.
 >>> render("<:A text>$text</:A> <:B> <:C><A>ala</A></:C> <C></C> </:B> <B></B>")
 '    ala '
+
+
+*** SYNTAX CHANGE: "body" attribute of a hypertag declared explicitly as '.' (dot) or '.NAME',
+    which must be the last element on attribute definition list
+
+>>> render("<H: x='X' .body>$.body with $x</:H><H x='Y'>this is body</H>")
+'this is body with Y'
+>>> render("<H: .text>$.text without x</:H><H>this is body</H>")
+'this is body without x'
+>>> render("<H: .>$. without x</:H><H/>")
+' without x'
 
 
 @author:  Marcin Wojnarski
@@ -1296,7 +1302,9 @@ class NODES(object):
         offset   = None         # position in the stack frame where the value of this variable is stored, as a negative offset from the top of the frame
         
         def init(self, tree, _):
-            self.name = self.children[0].text()
+            name = self.text()
+            self.name = name[1:] if name[0] == '$' else name
+            # self.name = self.children[0].text()
         
         def analyse(self, ctx):
             self.depth = ctx.depth
@@ -1721,9 +1729,11 @@ class NODES(object):
             val = self.children[-1].evaluate(stack, ifnull)
             return not val if neg else val
     
-    # these nodes should be reduced during rewriting, right after being created (they always have 1 child and are listed in _compact_ setting)
+    # these nodes should be reduced during rewriting, right after being created
+    # - they always have 1 child and are listed in _compact_ setting
     class xexpr (expression): pass
     class xvalue (expression): pass
+    class xbody_var (xvar_id): pass
     
 
     ###  TAGS & ELEMENTS  ###
@@ -1784,6 +1794,20 @@ class NODES(object):
     class xattr_body(BaseTree.virtual, xattr):
         "special class to represent the hidden attribute 'body'"
         name = "body"
+
+    class xbody_attr(xattr):
+        "The 'body' attribute for the new .BODY syntax."
+        
+        def init(self, tree, _):
+            self.name = self.text()
+        def compactify(self, stack, ifnull):
+            pass
+        # def evaluate(self, stack, ifnull):
+        #     return ""
+        def render(self, stack, ifnull = ''):
+            return self.name
+            # print("xattr_body.name: '%s'" % self.name)
+            # super(xattr_body, self).render(stack, ifnull)
         
     class xattrs(node):
         "List of attributes."
@@ -1820,7 +1844,7 @@ class NODES(object):
             
         def render(self, stack, ifnull = ''):
             "Called to render regular markup elements (not hypertag definitions)."
-            return u' '.join(a.render(stack, ifnull) for a in self.attrs)
+            return u' '.join(a.render(stack, ifnull) for a in self.attrs) if self.attrs else {}
             
         def evaluate(self, stack, ifnull = ''):
             """Evaluate (render) name/value expressions of the attributes in a given context and return as a pair of:
@@ -1854,6 +1878,7 @@ class NODES(object):
         
         name  = None
         attrs = None            # <xattrs> node with a list of attributes
+        bodyattr = None         # <xbody_attr> node, if present after attributes list; NOT included in `attrs`; .BODY syntax
         
         def init(self, tree, _):
             for c in self.children:
@@ -1863,6 +1888,7 @@ class NODES(object):
                     self.isvoid = True
                 elif c.type in ('ident', 'var_id'): self.name = c.text()
                 elif c.type == 'attrs': self.attrs = c
+                elif c.type == 'body_attr': self.bodyattr = c               # .BODY syntax
                 else: assert(0)
             
             # if a hypertag, check if the name is a regular identifier and not reserved
@@ -1871,8 +1897,11 @@ class NODES(object):
         def render(self, stack, ifnull = ''):
             slash1 = '/' if (self.isend and not self.isstart) else ''       # leading slash </... in a closing tag
             slash2 = ' /' if (self.isend and self.isstart) else ''          # trailing slash .../> in an empty (self-closing) element
-            name   = (':' if self.ishypertag else '') + self.name           # :name or name
-            attrs  = ' ' + self.attrs.render(stack, ifnull) if self.attrs else ''
+            name   = self.name                                              # name
+            if self.ishypertag:
+                name = name + ':' if self.isstart else ':' + name           # name: or :name
+            attrs  = self.attrs.render(stack, ifnull) if self.attrs else ''
+            if attrs: attrs = ' ' + attrs
             tokens = ['<', slash1, name, attrs, slash2, '>']
             return u''.join(tokens)
             
@@ -1892,7 +1921,7 @@ class NODES(object):
         Produced in the tree after tag pairing, pair(), which is a part of semantic analysis. Replaces the original tags in the tree.
         Can represent both a hyper-element (hypertag occurence, to be replaced with hypertag definition body during compilation),
         or a regular tag-element that should stay in the document as it is and be rendered at the end.
-        Hypertag definition is a special type of element and it's represented by the xhypertag subclass.
+        Hypertag definition is a special type of element and is represented by the xhypertag subclass.
         """
         type = "element"                                                                                                #@ReservedAssignment
         name = None
@@ -2023,7 +2052,11 @@ class NODES(object):
                                                             # the expand() method would modify the stack before evaluation
                 else:
                     body = bodyfun()                        # not lazy? pre-render the body right now
-                unnamed = [body] + unnamed
+
+                if not self.htag_external and self.htag.start.bodyattr:        # .BODY syntax
+                    kwattrs['__body__'] = body
+                else:
+                    unnamed = [body] + unnamed
             
             else:                                           # void hypertag? omit 'body' when passing arguments
                 assert not self.body                        # if body is non-empty, exception should have been raised in analyse()
@@ -2043,7 +2076,7 @@ class NODES(object):
             return content
 
     class xhypertag(xelement):
-        "Element with a hypertag definition: <:name>...</:name>. Produced during semantic analysis, in pair()."
+        "Element with a hypertag definition: <name:>...</:name>. Produced during semantic analysis, in pair()."
         
         ishypertag      = None      # HypertagSpec object with specificiation of this hypertag's interface and behavior
         ispure          = True      # hypertag's render() is always pure, because it returns an empty string, but...
@@ -2061,7 +2094,12 @@ class NODES(object):
             self.ishypertag.void = self.start.isvoid or (self.attrs.isempty() and self.tree.explicit_body_var)
             if not self.ishypertag.void:
                 self.bodyattr = self.attrs.children[0].name if self.tree.explicit_body_var else 'body'
-        
+                
+            # .BODY syntax
+            self.ishypertag.void = self.ishypertag.void and not self.start.bodyattr
+            if self.start.bodyattr:
+                self.bodyattr = self.start.bodyattr.name
+
         def infoName(self): return "<def %s>" % self.name
 
         def symbols(self, ctx):
@@ -2072,8 +2110,15 @@ class NODES(object):
             if self.attrs.unnamed:
                 raise HypertagsError("Unnamed attributes not allowed in a hypertag definition", self.attrs.unnamed[0])
             
-            # the special attribute $body must not have any default value
-            if self.bodyattr and self.tree.explicit_body_var:
+            # new .BODY syntax - add .BODY attribute as the last symbol
+            if self.start.bodyattr:
+                named = self.attrs.named.copy()
+                named[self.bodyattr] = body = self.start.bodyattr
+                body.analyse(ctx)
+                return named
+
+            # check that the special attribute $body does not have any default value (old syntax only, not .BODY)
+            if self.bodyattr and not self.start.bodyattr and self.tree.explicit_body_var:
                 bodyattr = self.attrs.named[self.bodyattr]
                 if bodyattr.expr:
                     raise HypertagsError("The body attribute '%s' must not have any default value" % bodyattr.name, self)
@@ -2082,11 +2127,12 @@ class NODES(object):
             if self.ishypertag.void or self.tree.explicit_body_var:
                 return self.attrs.named                 # no need to declare implicit $body: it doesn't exist or was declared explicitly
             
+            # old syntax...
             # return all named attributes (self.attrs.named), but with 'body' added implicitly as the 1st symbol
             body = NODES.xattr_body(self.tree)
             body.analyse(ctx)
             return _addFirst('body', body, self.attrs.named)
-        
+
         def markSymbols(self, symbols):
             "Mark given attributes as symbols: definitions of variables; set their offset and backlink to the containing hypertag."
             total = len(symbols)
@@ -2150,27 +2196,35 @@ class NODES(object):
             Hypertag is always expanded in non-variant mode, even if the definition and/or occurence is enclosed
             in a [[...]] variant block. That's why expand() takes a 'stack' argument but no 'ifnull', unlike typical render().
             """
-            # merge actual attribute values with default values where missing
+            # retrieve all default values of attributes, in case if an actual value in occurrence is missing
             _, default = self.attrs.evaluate(stack, '')         # all valid attrs and their default values, as an OrderedDict
             implicitBody = not self.tree.explicit_body_var      # a shortcut name
             if implicitBody and not self.ishypertag.void:       # implicit and existing (non-void) 'body'? add to valid attrs
                 bodyDefault = lazyEmptyString if self.ishypertag.lazybody else ""
                 default = _addFirst('body', bodyDefault, default)
             
+            # new .BODY syntax
+            body = kwattrs.pop('__body__', '')
+            
+            # create an OrderedDict of all actual values by overriding default values with explicit actual values
             selfclosing = getattr(occurence, 'selfclosing', False)
             attrs = NODES._actual_attrs(default, unnamed, kwattrs, self.bodyattr, occurence, self.name, selfclosing = selfclosing)
             
+            # new .BODY syntax
+            if self.start.bodyattr:
+                attrs[self.bodyattr] = body
+
             # find "access link": position in the 'stack' of the frame of the immediate lexical encapsulating hypertag of self
             accesslink = NODES._find_accesslink(stack, self.depth, occurDepth)
 
             # create a new execution frame and push onto the stack
             top = stack.position()
-            stack.pushall(list(attrs.values()))       # attrs is an OrderedDict, thus it preserves the ordering of attributes from hypertag def
+            stack.pushall(list(attrs.values()))       # attrs is an OrderedDict, so it preserves the ordering of attributes from hypertag def
             stack.push(accesslink)
             if DEBUG: print("expand", ":" + self.name, accesslink, stack)
             
             # render hypertag's definition body
-            if len(self.body) == 1:                             # special case: when only 1 child, the result may be of any type, not only string
+            if len(self.body) == 1:                     # special case: when only 1 child, the result may be of any type, not only string
                 out = self.body[0].render(stack)
             else:
                 out = u''.join(n.render(stack) for n in self.body)
@@ -2592,7 +2646,7 @@ class HyML_Tree(BaseTree):
     # when - after symbols are resolved - we find out that some parts of the tree will always render to the same string
     # and thus they can be pre-rendered during analysis.
     _ignore_  = "space ws lt gt slash eval comment html_comment".split() + parser.noparse_names
-    _reduce_  = "def_id literal subexpr slice subscript trailer atom kwattr kwarg " \
+    _reduce_  = "def_id literal subexpr slice subscript trailer atom kwattr kwarg xbody_var " \
                 "tag tag_namecore tag_core tag_name tag_name_start tag_name_end markup value_attr_common"
     _compact_ = "factor term arith_expr concat_expr shift_expr and_expr xor_expr or_expr comparison " \
                 "not_test and_test or_test ifelse_test expr expr_markup value"
@@ -2604,7 +2658,7 @@ class HyML_Tree(BaseTree):
     ###  Configuration of semantic analysis (configurable by the user)  ###
 
     # Only regular names can be used for attributes inside hypertags and for hypertags themselves.
-    regular_name = re.compile(r"^[a-z_][a-z0-9_]*$", re.IGNORECASE)
+    regular_name = re.compile(r"^[\.a-z_][a-z0-9_]*$", re.IGNORECASE)
 
     # Special tags. They have dedicated x*** node classes, instantiated during tag pairing and providing custom behavior during analysis. Reserved.
     special_tags = set("import include for with".split())
@@ -2985,7 +3039,8 @@ if __name__ == '__main__':
     #exit()
 
     #txt = """<html> <:psa rasa>$rasa Burka</:psa> 'ala' <ma href="www" style=""> "kota" </ma> i <psa rasa="terier"/> oraz <psa></psa> </unpaired> </html>"""
-    txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
+    # txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
+    txt = "<H: .text>$.text without x</:H><H>this is body</H>"
     tree = HyML_Tree(txt, stopAfter ="rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
     print()
     print("===== AST =====")
@@ -2995,12 +3050,12 @@ if __name__ == '__main__':
     print("===== After rewriting =====")
     print(tree)
     print()
-    
+
     print("===== After tag pairing =====")
     tree.pair()
     print(tree)
     print()
-    
+
     print("===== After semantic analysis =====")
     tree.analyse()
     print()

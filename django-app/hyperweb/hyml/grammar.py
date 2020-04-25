@@ -39,7 +39,7 @@ eval        =  '$'                           # special symbol denoting expressio
 lt          =  '<'                           # special symbols for tags ...
 gt          =  '>'
 slash       =  '/'
-void        =  ~"[~\.]"                      # void marker in hypertag's opening tag, either ~ (tilde) or . (dot):  <:htag ~ ...>
+void        =  '~'                           # void marker in hypertag's opening tag, either ~ (tilde) or . (dot):  <:htag ~ ...>
 
 ident       =  ~"[%s][%s]*"                      # [XML_StartChar][XML_Char]* -- names of tags and attributes as used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 var_id      =  !reserved ~"[a-z_][a-z0-9_]*"i    # names of variables/hypertags/attributes that can appear in expressions; a much more restricted set of names than 'ident', to enable proper parsing of operators and mapping of the names to external execution environment
@@ -58,7 +58,7 @@ str_unquoted =  !'$' ~"[^\s\"'`=<>]+"        # in attributes only, for HTML comp
 number       =  ~"((\.\d+)|(\d+(\.\d*)?))([eE][+-]?\d+)?"      # like nifty.text.regex.float regex pattern, only without leading +-
 literal      =  number / str1 / str2
 
-var          =  eval? var_id                 # occurence (use) of a variable
+var          =  eval? (var_id / body_var)    # occurence (use) of a variable, which can be a body attribute .VAR (body_var)
 subexpr      =  '(' ws expr ws ')'
 
 # tail operators: negation, function call, collection indexing, member access ...
@@ -113,7 +113,14 @@ value        =  eval expr_markup                  # $x, $x.y[z], $f(x), $(...), 
 escape       =  eval ('$' / '<' / '>' / '[[' / '||' / ']]' / '[#' / '#]' / '[=' / '=]')
 
 
-###  LISTS OF ATTRIBUTES & ARGUMENTS
+###  LISTS OF ARGUMENTS (in function calls) & ATTRIBUTES (in tags)
+
+# arguments inside a function call: comma-separated, expressions in abstract form (no $), only regular names, names must have values assigned
+
+kwarg       =  var_id ws '=' ws expr
+arg         =  kwarg / expr
+args        =  arg (ws ',' ws arg)*
+
 
 # Here, like in HTML, tags can have attributes without values, equiv. to attr=""; on the other hand, strings must always be quoted (other types not).
 # Additionally, unlike in HTML, values (unnamed) are allowed as arguments instead of attributes (named) - like in typical programming.
@@ -126,16 +133,11 @@ value_attr_unnamed =  value_attr_common ''              # trailing '' to work ar
 value_in_markup    =  value ''                          # trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
 
 kwattr      =  ident (ws '=' ws value_attr_named)?      # HTML syntax: name OR name="value" OR name=value ... HyperML syntax: name=$(...)
-attr        =  kwattr / value_attr_unnamed              # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
-attrs       =  attr (space attr)*
+attr        =  value_attr_unnamed / kwattr              # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
+attrs       =  (space attr)+
 
-
-# arguments inside a function call: comma-separated, expressions in abstract form (no $), only regular names, names must have values assigned
-
-kwarg       =  var_id ws '=' ws expr
-arg         =  kwarg / expr
-args        =  arg (ws ',' ws arg)*
-
+body_attr   =  '.' var_id?
+body_var    =  '.' var_id?
 
 ###  TAGS & ELEMENTS
 
@@ -143,7 +145,7 @@ tag_name_end   =  (def var_id) / ident
 tag_name_start =  (var_id def) / tag_name_end
 
 tag_name     =  (def var_id) / (var_id def) / ident
-tag_core     =  (space attrs)? ws
+tag_core     =  attrs? (space body_attr)? ws
 tag_namecore =  lt tag_name_start (ws void)? tag_core
 
 start_tag    =  tag_namecore gt                       # opening (start) tag, regular or hypertag definition
@@ -189,7 +191,7 @@ variant      =  '[[' choice ('||' choice)* ']]'
 XML_StartChar  =  u":_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
 
 # human-readable:  XML_StartChar | [0-9.\u00B7-] | [\u0300-\u036F] | [\u203F-\u2040]
-XML_Char       =  XML_StartChar + u"0-9.\-\u00B7\u0300-\u036F\u203F-\u2040"
+XML_Char       =  XML_StartChar + u"0-9\.\-\u00B7\u0300-\u036F\u203F-\u2040"
 
 # Template of the no-parse rules to be injected into the grammar:
 #                noparse_script =  ~"<script"i tag_core ~">((?!</script\s*>).)*</script\s*>"i
