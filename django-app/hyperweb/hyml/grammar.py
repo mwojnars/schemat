@@ -27,7 +27,7 @@ grammar_spec = r"""
 document    =  (markup / text)*
 
 markup      =  noparse / noparse_hyml / comment / tag / variant / escape / value_in_markup
-text        =  ~".[^<$[]*"s                  # plain text is a 1+ sequence of any chars till the next special symbol '<$['. Can begin with a special symbol if no other rule can be matched
+text        =  ~".[^<$[{]*"s                  # plain text is a 1+ sequence of any chars till the next special symbol '<$[{'. Can begin with a special symbol if no other rule can be matched
 
 ###  BASIC TOKENS
 
@@ -40,10 +40,12 @@ lt          =  '<'                           # special symbols for tags ...
 gt          =  '>'
 slash       =  '/'
 void        =  '~'                           # void marker in hypertag's opening tag, either ~ (tilde) or . (dot):  <:htag ~ ...>
+lbrace      =  '{{'
+rbrace      =  '}}'
 
 ident       =  ~"[%s][%s]*"                      # [XML_StartChar][XML_Char]* -- names of tags and attributes as used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 var_id      =  !reserved ~"[a-z_][a-z0-9_]*"i    # names of variables/hypertags/attributes that can appear in expressions; a much more restricted set of names than 'ident', to enable proper parsing of operators and mapping of the names to external execution environment
-reserved    =  ~"(if|else|is|in|not|and|or)\\b"  # names with special meaning inside expressions, can't be used for variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+reserved    =  ~"(if|else|is|in|not|and|or|__body__)\\b"    # names with special meaning inside expressions, can't be used for variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 
 
 ###  EXPRESSIONS
@@ -108,9 +110,11 @@ expr         =  ifelse_test
 # the use of an expression within markup ...
 
 expr_markup  =  (var / subexpr) trailer*
-value        =  eval expr_markup                  # $x, $x.y[z], $f(x), $(...), $(...).x[y](z)
+value1       =  eval expr_markup                              # $x, $x.y[z], $f(x), $(...), $(...).x[y](z)
+value2       =  lbrace ws expr ws rbrace                      # {{ expression }}
+value        =  value1 / value2
 
-escape       =  eval ('$' / '<' / '>' / '[[' / '||' / ']]' / '[#' / '#]' / '[=' / '=]')
+escape       =  eval ('$' / '<' / '>' / '[[' / '||' / ']]' / '[#' / '#]' / '[=' / '=]' / '{{' / '}}')
 
 
 ###  LISTS OF ARGUMENTS (in function calls) & ATTRIBUTES (in tags)
