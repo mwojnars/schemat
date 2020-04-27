@@ -700,6 +700,12 @@ Compactification of an inner hypertag using internally a top-level hypertag caus
 '<a>10</a>'
 >>> render('<a>{{ "text " + ("o" "f") + " anchor" }}</a>')
 '<a>text of anchor</a>'
+>>> render("<H: x='X' .body>{{.body ' with ' $x}}</:H><H x='Z'>this is body</H>")
+'this is body with Z'
+>>> render("<H: body x='X'>{{body ' &amp;'}} {{x ' &'}}</:H><H x='Z'>body</H> static {{'&'}}")
+'body &amp; Z &amp; static &amp;'
+>>> render("<H: x='X' .body>{{.body.unescape_html() ' &'}} {{x ' &'}}</:H><H x='Z'>body</H> static {{'&'}}")
+'body &amp; Z &amp; static &amp;'
 
 
 @author:  Marcin Wojnarski
@@ -1263,13 +1269,13 @@ class NODES(object):
             self.value = asnumber(self.text())
     
     class xstr    (literal):
-        def _decode(self, s):
-            "For now, we assume that string values in expressions are encoded like HTML attributes, using &apos; &quot; &amp; for special chars."
-            # decode entities: &apos; &quot; &amp; (others NOT!)
-            return s.replace('&apos;', "'").replace('&quot;', '"').replace("&amp;", "&")
+        # def _decode(self, s):
+        #     "For now, we assume that string values in expressions are encoded like HTML attributes, using &apos; &quot; &amp; for special chars."
+        #     # decode entities: &apos; &quot; &amp; (others NOT!)
+        #     return s.replace('&apos;', "'").replace('&quot;', '"').replace("&amp;", "&")
         def init(self, tree, _):
             s = self.text()[1:-1]                           # remove surrounding quotes: '"
-            self.value = self._decode(s)
+            self.value = s #self._decode(s)
     xstr1 = xstr2 = xstr
     
     class xstr_unquoted(xstr):
@@ -3046,7 +3052,7 @@ if __name__ == '__main__':
 
     #txt = """<html> <:psa rasa>$rasa Burka</:psa> 'ala' <ma href="www" style=""> "kota" </ma> i <psa rasa="terier"/> oraz <psa></psa> </unpaired> </html>"""
     # txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
-    txt = "<H: .text>$.text without x</:H><H>this is body</H>"
+    txt = "<H: .body>{{.body ' &amp;'}}</:H><H>body</H>"
     tree = HyML_Tree(txt, stopAfter ="rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
     print()
     print("===== AST =====")
@@ -3069,7 +3075,7 @@ if __name__ == '__main__':
     print()
     
     print("===== After rendering =====")
-    print(tree.A())
-    #print(tree.render())
+    print(tree.render())
+    # print(tree.A())
     print()
     

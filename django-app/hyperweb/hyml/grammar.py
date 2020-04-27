@@ -52,8 +52,8 @@ reserved    =  ~"(if|else|is|in|not|and|or|__body__)\\b"    # names with special
 
 # atoms: string, number, variable, sub-expression ...
 
-str1         =  ~'"[^"]*"'                   # "string", may contain entities: &apos; &quot; &amp; (others left undecoded!)
-str2         =  ~"'[^']*'"                   # 'string', may contain entities: &apos; &quot; &amp; (others left undecoded!)
+str1         =  ~"'[^']*'"                   # 'string', may contain entities: &apos; &quot; &amp; (others left undecoded!)
+str2         =  ~'"[^"]*"'                   # "string", may contain entities: &apos; &quot; &amp; (others left undecoded!)
 str_unquoted =  !'$' ~"[^\s\"'`=<>]+"        # in attributes only, for HTML compatibility; see https://html.spec.whatwg.org/multipage/syntax.html#syntax-attributes
 #string      =  regex.escaped_string
 
