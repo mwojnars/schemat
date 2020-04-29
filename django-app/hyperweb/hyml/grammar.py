@@ -4,7 +4,7 @@ Grammar for a Parsimonious parser. See: https://github.com/erikrose/parsimonious
 WARNING:
 Parsimonious has a BUG that needs to be worked around in several places in grammar definition.
 Namely, Pasimonious silently reduces (removes) non-terminals from AST which are equal (by definition)
-to some nother non-terminal, like in expressions:   T = S
+to another non-terminal, like in:   T = S
 
 """
 
@@ -136,8 +136,8 @@ value_attr_named   =  value_attr_common / str_unquoted
 value_attr_unnamed =  value_attr_common ''              # trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
 value_in_markup    =  value ''                          # trailing '' to work around Parsimonious bug of reducing non-terminals equal to another non-terminal
 
-kwattr      =  ident (ws '=' ws value_attr_named)?      # HTML syntax: name OR name="value" OR name=value ... HyperML syntax: name=$(...)
-attr        =  value_attr_unnamed / kwattr              # 2nd and 3rd options are for unnamed attributes (HyperML syntax)
+kwattr      =  ident (ws '=' ws value_attr_named)?      # HTML syntax: name OR name="value" OR name=value ... HyML syntax: name=$(...)
+attr        =  value_attr_unnamed / kwattr              # 2nd and 3rd options are for unnamed attributes (HyML syntax)
 attrs       =  (space attr)+
 
 body_attr   =  '.' var_id?
@@ -208,13 +208,13 @@ noparse_rule = r'noparse_%s     =  ~"<%s"i tag_core ~">((?!</%s\s*>).)*</%s\s*>"
 ###
 
 class HyperParser(Grammar):
-    """Parser of HyperML grammar. Produces the 1st version of AST composed of Parsimonious node classes,
+    """Parser of HyML grammar. Produces the 1st version of AST composed of Parsimonious node classes,
     which undergo further rewriting to our custom NODES.x*** classes as the last stage of parsing,
-    and then are passed to semantic analysis in HyperML class.
+    and then are passed to semantic analysis in HyML class.
     """
     
     # The default list of markup elements that contain injected non-markup code and so their body should stay unparsed and rendered as-is.
-    # Hypertags, expressions, variant blocks and HyperML comments are NOT resolved inside these elements. Names are treated case-insensitive.
+    # Hypertags, expressions, variant blocks and HyML comments are NOT resolved inside these elements. Names are treated case-insensitive.
     noparse = ["script", "style"]
     noparse_names = ['noparse_%s' % tag for tag in noparse]
     

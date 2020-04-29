@@ -704,9 +704,10 @@ Compactification of an inner hypertag using internally a top-level hypertag caus
 'this is body with Z'
 >>> render("<H: body x='X'>{{body ' &amp;'}} {{x ' &'}}</:H><H x='Z'>body</H> static {{'&'}}")
 'body &amp; Z &amp; static &amp;'
->>> render("<H: x='X' .body>{{.body.unescape_html() ' &'}} {{x ' &'}}</:H><H x='Z'>body</H> static {{'&'}}")
+>>> render("<H: x='X' .body>{{.body.html_unescape() ' &'}} {{x ' &'}}</:H><H x='Z'>body</H> static {{'&'}}")
 'body &amp; Z &amp; static &amp;'
 
+<H.body />
 
 @author:  Marcin Wojnarski
 """
@@ -3052,7 +3053,7 @@ if __name__ == '__main__':
 
     #txt = """<html> <:psa rasa>$rasa Burka</:psa> 'ala' <ma href="www" style=""> "kota" </ma> i <psa rasa="terier"/> oraz <psa></psa> </unpaired> </html>"""
     # txt = "<:A ~ x>$x</:A><A x='Ala'></A>"
-    txt = "<H: .body>{{.body ' &amp;'}}</:H><H>body</H>"
+    txt = "<H: .body>{{.body.html_unescape() ' &'}}</:H><H>body</H>"
     tree = HyML_Tree(txt, stopAfter ="rewrite", compact=True, globals = FILTERS) # jinja_filters.copy())
     print()
     print("===== AST =====")
