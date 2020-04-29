@@ -94,18 +94,10 @@ grammar = r"""
 ###  except for places where they get inserted during translation.
 ###
 
-###  DOCUMENT
-
-document         =  body_blocks
-body_blocks      =  vs (body_ind / block (nl block)*) vs
-body_ind         =  indent_s body_blocks dedent_s / indent_t body_blocks dedent_t
-block            =  block_normal / block_markup / block_verbatim / block_control / block_comment / block_def / block_tag
-
-###  BODY
-
 # Types of grammatic structures:
+#  [ open ]  document
 #  [open-r]  block  = head + body, terminated with <nl>; indentation-agnostic (start and end positioned at the same indentation level)
-#  [closed]  head   = specification of type and parameters of a block
+#  [open-r]  head   = specification of type and parameters of a block
 #  [closed]  body   = contents of a node, as "short tail" (inline text next to header), "long tail" (below header), and/or sequence of blocks
 #  [closed]  blocks = sequence of blocks of any type
 #  [closed]  tail   = 1-space indentation with a core inside
@@ -114,27 +106,31 @@ block            =  block_normal / block_markup / block_verbatim / block_control
 #  [ open ]  line   = part of body contents that fits on a single line, either at the end of a header line, or within a block
 #
 #  Closed structure:  no whitespace allowed at the edges (1st & last characters are non-whitespace); non-empty (min. 1 character)
-#  Open structure:    whitespace allowed at one or both of the edges; can be empty ''
+#  Open structure:    whitespace allowed at one (L/R) or both of the edges; can be empty ''
 #
 # Styles of body layout:
 # - short tail (inline)
 # - long tail (below header, but without block header)
 # - blocks
 # - empty
-# - short + long tail
 # - short + blocks
 # (long tail and blocks are mutually exclusive)
 
-body             =  body_inline? (nl body_ind)?
-body_inline      =  sign_normal ' '? (line_normal nl tail_normal?)? / sign_markup ' '? line_markup? / sign_verbatim ' '? line_verbatim?
+###  DOCUMENT
 
-body             =  (body_normal / body_markup / body_verbat)
+document         =  vs blocks_core
 
-body_normal      =  sign_normal ' '? line_normal? (nl tail_normal / blocks)?
-body_markup      =  sign_markup ' '? line_markup? (nl tail_markup / blocks)?
-body_verbat      =  sign_verbat ' '? line_verbat? (nl tail_verbat / blocks)?
-
+blocks_core      =  blocks / block+
 blocks           =  indent_s block+ dedent_s / indent_t block+ dedent_t
+block            =  block_normal / block_markup / block_verbatim / block_control / block_comment / block_def / block_tag
+
+###  BODY
+
+body             =  nl blocks? / body_normal / body_markup / body_verbat
+
+body_normal      =  sign_normal (nl tail_normal / ' '? line_normal nl blocks? / nl)
+body_markup      =  sign_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
+body_verbat      =  sign_verbat (nl tail_verbat / ' '? line_verbat nl blocks? / nl)
 
 line_normal      =  (embedded_text / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
 line_markup      =  (embedded_markup / embedded_text / text)+
@@ -152,10 +148,7 @@ sign_verbat      =  '!'
 
 ###  BLOCKS
 
-verbatim         =  (texts / verbatim_ind)*
-verbatim_ind     =  indent_s verbatim dedent_s / indent_t verbatim dedent_t
-
-block_def        =  def head_tag ws tail_tag
+block_def        =  def head_tag ws body
 
 block_tag        =  head_tag ws tail_tag
 head_tag         =  tag (ws '>' ws tag)*
@@ -163,9 +156,6 @@ tail_tag         =  ':' nl verbatim / text_line? (nl body_ind)?
 tag              =  tag_name attrs?
 
 ###  BASIC TOKENS
-
-# markup      = text ''
-# markups     = texts ''
 
 text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"s     # single line of plain text
 texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s]*"s       # lines of plain text, all at the same (baseline) indentation level
