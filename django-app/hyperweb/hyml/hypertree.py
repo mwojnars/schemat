@@ -3,6 +3,7 @@ HyperTree Markup Language (HyML variant B).
 An indentation-based document description & templating language with modularity through inline function defitions.
 
 ***Names (?):  HyML, PyML, Sleek,
+- indented tags, tree of tags (TRoT, ToT, Treet) markup lang (TreML, TreeML, BranchML)
 
 Key features:
  1. Tree structure. Document is written as a hierarchy of nested nodes, with INDENTATION indicating nesting level, like in Python.
@@ -29,8 +30,8 @@ Types of body contents:
  /  markup:    markup text with embedded expressions; is NOT escaped during rendering;
                values of {...} and $... expressions within markup undergo escaping before they get embedded;
                values of {{...}} expressions get embedded without escaping
- $  expr:      like embedded expression $..., but may contain whitespace after $ sign and within expression
- 
+ $  eval:      like embedded expression $..., but may contain whitespace after $ sign and within expression
+ :  struct     tags that create nodes; this can be used after control statements
  
 | text node ...
   ....
@@ -48,16 +49,22 @@ NODE attrs...
 NODE attrs :
   text node
 
-NODE /   -- creates a void tag <.../> (body is None, not empty '')
-%NAME    -- definition of a new node type
-var X    -- local variable
+% NAME    -- definition of a new tag (node type, hypertag)
+% hypertag attr1 attr2=default @header @body @footer > subtag > subtag ....
+  tag1
+  body
+  tag2
+  / {{ body tag(...) }}
+  % subtree | ...       -- local structural variable, for use as a node or inside markup {{...}} expressions
+
+x = $expr       -- local variable for use in plain-text {...} expressions (also in control statements)
 
 {...} and $...  -- plain-text expression; will undergo encoding during its evaluation (if inside markup block) or during rendering of the entire body
 {{...}}         -- markup expression
 
-# In control statements, below, colons can be replaced with |, and/or dropped entirely
+# In control statements, colon ':' indicates the start of structural mode
 
-if expr:
+if expr: tag1 > tag2
   BODY
 elif expr:
   BODY
@@ -69,6 +76,10 @@ either
 or
   BODY2 ...
 
+either
+- BODY1
+- BODY2
+
 for name in $expr:
   BODY
   
@@ -76,15 +87,7 @@ for name in $expr:
 
 -- comment line
 
-
 """
-
-"""
-/
-|
-!
-"""
-
 grammar = r"""
 
 ###
@@ -97,7 +100,7 @@ grammar = r"""
 # Types of grammatic structures:
 #  [ open ]  document
 #  [open-r]  block  = head + body, terminated with <nl>; indentation-agnostic (start and end positioned at the same indentation level)
-#  [open-r]  head   = specification of type and parameters of a block
+#  [closed]  head   = specification of type and parameters of a block
 #  [closed]  body   = contents of a node, as "short tail" (inline text next to header), "long tail" (below header), and/or sequence of blocks
 #  [closed]  blocks = sequence of blocks of any type
 #  [closed]  tail   = 1-space indentation with a core inside
@@ -110,7 +113,7 @@ grammar = r"""
 #
 # Styles of body layout:
 # - short tail (inline)
-# - long tail (below header, but without block header)
+# - long tail (below header, but without the leading block symbol)
 # - blocks
 # - empty
 # - short + blocks
@@ -118,47 +121,76 @@ grammar = r"""
 
 ###  DOCUMENT
 
-document         =  vs blocks_core
+document         =  vs blocks_core?
 
 blocks_core      =  blocks / block+
-blocks           =  indent_s block+ dedent_s / indent_t block+ dedent_t
-block            =  block_normal / block_markup / block_verbatim / block_control / block_comment / block_def / block_tag
+blocks           =  indent_s blocks_core dedent_s / indent_t blocks_core dedent_t
+block            =  block_normal / block_markup / block_verbatim / block_control / block_comment / block_def / block_tags
 
 ###  BODY
 
-body             =  nl blocks? / body_normal / body_markup / body_verbat
+body             =  ':'? nl blocks? / body_normal / body_markup / body_verbat
 
-body_normal      =  sign_normal (nl tail_normal / ' '? line_normal nl blocks? / nl)
-body_markup      =  sign_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
-body_verbat      =  sign_verbat (nl tail_verbat / ' '? line_verbat nl blocks? / nl)
+body_normal      =  mark_normal (nl tail_normal / ' '? line_normal nl blocks? / nl)
+body_markup      =  mark_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
+body_verbat      =  mark_verbat (nl tail_verbat / ' '? line_verbat nl blocks? / nl)
 
 line_normal      =  (embedded_text / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
 line_markup      =  (embedded_markup / embedded_text / text)+
-line_verbat      =  text ''
+line_verbat      =  verbatim ''
 
-block_normal     =  sign_normal (' ' line_normal (nl tail2_normal)? / line_normal (nl tail_normal)?)
+block_normal     =  mark_normal (' ' line_normal (nl tail2_normal)? / line_normal (nl tail_normal)?)
+block_markup     =  mark_markup (' ' line_markup (nl tail2_markup)? / line_markup (nl tail_markup)?)
+block_verbat     =  mark_verbat (' ' line_verbat (nl tail2_verbat)? / line_verbat (nl tail_verbat)?)
+
 tail_normal      =  indent_s core_normal dedent_s
+tail_markup      =  indent_s core_markup dedent_s
+tail_verbat      =  indent_s core_verbat dedent_s
+
 tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
+tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
+tail2_verbat     =  indent_s indent_s core_verbat dedent_s dedent_s         # like tail_verbat, but with 2-space indentation
 
 core_normal      =  ((tail_normal / line_normal) nl)*
+core_markup      =  ((tail_markup / line_markup) nl)*
+core_verbat      =  ((tail_verbat / line_verbat) nl)*
 
-sign_normal      =  '|'
-sign_markup      =  '/'
-sign_verbat      =  '!'
+mark_normal      =  '|'
+mark_markup      =  '/'
+mark_verbat      =  '!'
 
 ###  BLOCKS
 
-block_def        =  def head_tag ws body
+block_tags       =  head_tags ws body
+head_tags        =  tag_apply (ws '>' ws tag_apply)*
+tag_apply        =  tag_name attrs_set?
 
-block_tag        =  head_tag ws tail_tag
-head_tag         =  tag (ws '>' ws tag)*
-tail_tag         =  ':' nl verbatim / text_line? (nl body_ind)?
-tag              =  tag_name attrs?
+block_def        =  'TODO'     #def head_tag ws body
+block_control    =  'TODO'
+block_comment    =  'TODO'
+
+###  EMBEDDINGS
+
+embedded_text    =  embedded_braces / embedded_eval
+embedded_markup  =  '{{' ws expr ws '}}'
+embedded_braces  =  '{' ws expr ws '}'
+embedded_eval    =  '$' expr
+
+###  ATTRIBUTES of tags
+
+
+
+###  ARGUMENTS of functions
+
+###  EXPRESSIONS
+
+expr             =  ''
 
 ###  BASIC TOKENS
 
-text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"s     # single line of plain text
-texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s]*"s       # lines of plain text, all at the same (baseline) indentation level
+verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"s     # 1 line of plain text, may include special symbols (left unparsed)
+text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]*"s   # 1 line of plain text, special symbols excluded: { }
+texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]*"s     # lines of plain text, all at the same (baseline) indentation level
 
 indent_s    = "%(INDENT_S)s"
 dedent_s    = "%(DEDENT_S)s"
@@ -170,6 +202,10 @@ vs          =  ~"([ \t]*\n)*"                # optional vertical space = 0+ newl
 
 space       =  ~"[ \t]+"                     # obligatory whitespace, no newlines
 ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
+
+###  SYMBOLS that mark TYPES of blocks or text spans
+
+
 
 
 def         =  ':'                           # tag name prefix that starts hypertag definition
@@ -317,3 +353,4 @@ choice       =  (markup / text_variant)*
 variant      =  '[[' choice ('||' choice)* ']]'
 
 """
+
