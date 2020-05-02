@@ -38,3 +38,4 @@ def item_view(request, descriptor, handler = None):
     #content = f'<ul>{content}</ul>'
     
     #return HttpResponse(head + content)
+

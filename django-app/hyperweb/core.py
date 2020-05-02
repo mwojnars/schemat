@@ -292,7 +292,23 @@ class Item(object, metaclass = MetaItem):
         Default handler invoked to render a response to item request when no handler name was given.
         Inside category's handlers dict, this method is saved under the None key.
         """
-        
+
+    
+    """
+    from catalog.web import header, footer
+    
+    % __view__ self:
+        header
+        / $self.header()
+        for (name, value), class in alternate(self.data.items(), 'odd', 'even'):
+            field = self.get_field(name)
+            tr .$class
+                td | $name
+                td | $field.render(value)
+                td / ala ma kota
+        footer
+    
+    """
 
 ItemDoesNotExist.item_class = Item
 
