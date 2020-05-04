@@ -79,7 +79,7 @@ NODE attrs :
   footer x=10             -- node `footer` with appended value of `x` attr (overrides default value and/or any value assigned before `footer` was passed to hypertag)
   htag @sidebox=footer(x=10)   -- passing a hypertag `footer` as a value of another hypertag's attribute
   tag2
-  / {{ @body @tag(...) }}
+  / {{ body tag(...) }}
   % subtree | ...       -- local structural variable, for use as a node or inside markup {{...}} expressions
 
 hypertag(attr1).subtree(attr2)    -- nested hypertags can be accessed from outside, even if they reference
@@ -116,9 +116,15 @@ select [strict=True] -- pick the 1st branch that yields a non-empty result AND a
 for name in $expr:
   BODY
   
-"pass" node: for internal use, to enclose body of a control statement, where head (with tag) is missing.
+"pass" node: for internal use, to enclose body of a control statement where head (with tag) is missing.
 
 -- comment line
+
+[NAME:zone_class]           -- declaration of a "zone" for non-linear insertion of content (a la "goto")
+[zone] << tag ...           -- non-linear insertion of content to a given "zone"; a given passage is
+                               passed to Zone.add() method, which by default appends rendered passage to zone,
+                               but only once (removal of duplicates); alternative operands:  <| </ <! <$
+                               <$ passes to zone an original python object as returned by expression (NO rendering!)
 
 """
 grammar = r"""
@@ -192,15 +198,22 @@ mark_normal      =  '|'
 mark_markup      =  '/'
 mark_verbat      =  '!'
 
-###  BLOCKS
 
-block_tags       =  head_tags ws body
-head_tags        =  tag_apply (ws '>' ws tag_apply)*
-tag_apply        =  tag_name attrs_val?
+###  TAG BLOCKS
 
-block_def        =  'TODO'     #def head_tag ws body
+block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
+tag_def          =  name_code attrs_def
+
+block_tags       =  tags_expand ws body
+tags_expand      =  tag_expand (ws '>' ws tag_expand)*
+tag_expand       =  name_code attrs_val?
+
+
+###  SPECIAL BLOCKS
+
 block_control    =  'TODO'
 block_comment    =  'TODO'
+
 
 ###  EMBEDDINGS
 
@@ -211,27 +224,31 @@ embedded_eval    =  '$' expr
 
 ###  ATTRIBUTES of tags
 
+# formal attributes as declared in hypertag definition; structural attributes @... must always go at the end
+attrs_def        =  (space attr_named)* (space attr_body)*
+
 # actual attributes as passed to a tag
 attrs_val        =  (ws attr_short+ / space attr_val) (space (attr_short+ / attr_val))*
 attr_val         =  attr_named / attr_unnamed
 
-attr_short       =  ~"[\.#][a-z0-9_-]+"i                        # shorthand: .class for class="class" and #id for id="id"
+attr_body        =  '@' name_code
+attr_short       =  ~"[\.#][a-z0-9_-]+"i                        # shorthands: .class for class="class", #id for id="id"
 attr_named       =  name_xml (ws '=' ws value_named)?           # name OR name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_unnamed ''
 
-name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"       # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 value_named      =  value_unnamed / str_unquoted
 value_unnamed    =  embedded_text / number / string
 
-# formal attributes as declared in hypertag definition
-attrs_def
+name_code        =  !name_reserved ~"[a-z_][a-z0-9_]*"i
+name_reserved    =  ~"(if|else|is|in|not|and|or)\\b"            # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 
-
-###  ARGUMENTS of functions
 
 ###  EXPRESSIONS
 
 expr             =  ''
+
+###  ARGUMENTS of functions
 
 ###  ATOMS
 
