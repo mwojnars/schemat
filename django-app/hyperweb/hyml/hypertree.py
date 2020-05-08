@@ -81,6 +81,10 @@ NODE attrs :
   tag2
   / {{ body tag(...) }}
   % subtree | ...       -- local structural variable, for use as a node or inside markup {{...}} expressions
+  [section1]            -- sections returned as
+    tag...
+  [section2]
+    ...
 
 hypertag(attr1).subtree(attr2)    -- nested hypertags can be accessed from outside, even if they reference
                                      local vars or attrs from outer scope (?) ... hypertag is an equivalent
@@ -125,6 +129,25 @@ for name in $expr:
                                passed to Zone.add() method, which by default appends rendered passage to zone,
                                but only once (removal of duplicates); alternative operands:  <| </ <! <$
                                <$ passes to zone an original python object as returned by expression (NO rendering!)
+
+-- multi-modal document, with extra sections (zones) for special types of information
+[zone]
+    tag1
+    tag2 ...
+
+@zone                       -- `zone` content rendered through ZoneClass and inserted
+[cookies,styles] < widget[cookies,styles]     -- include only these named zones from widget; default zone is always included
+
+widget(...) [cookies: ..., styles: ...]
+@widget(...)
+    > [cookies]
+    > [styles]
+
+clause / zone / section / block / paragraph / area / body / branch
+
+structural objects: tag, hypertag, widget (instance of Widget), "@..." argument of hypertag
+ - their values are of type Passage / Content / Body / MultiBody / Structure,
+   cannot be used in expressions nor text blocks, only in top-level HyML code
 
 """
 grammar = r"""
@@ -202,7 +225,7 @@ mark_verbat      =  '!'
 ###  TAG BLOCKS
 
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_code attrs_def
+tag_def          =  name_code (attrs_def / '(' attrs_def ')')
 
 block_tags       =  tags_expand ws body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
@@ -220,15 +243,16 @@ block_comment    =  'TODO'
 embedded_text    =  embedded_braces / embedded_eval
 embedded_markup  =  '{{' ws expr (space expr)* ws '}}'          # results of multiple space-separated expressions are space-concatenated: ' '.join()
 embedded_braces  =  '{' ws expr (space expr)* ws '}'
-embedded_eval    =  '$' expr
+embedded_eval    =  '$' var trailer*
 
 ###  ATTRIBUTES of tags
 
 # formal attributes as declared in hypertag definition; structural attributes @... must always go at the end
 attrs_def        =  (space attr_named)* (space attr_body)*
+#attrs_def_comma =  ws '(' (attr_named (',' ws attr_val)* (',' ws attr_body)* / attr_body (',' ws attr_body)* ) ')'
 
 # actual attributes as passed to a tag
-attrs_val        =  (ws attr_short+ / space attr_val) (space (attr_short+ / attr_val))*
+attrs_val        =  (ws attr_short+ / space attr_val) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
 attr_body        =  '@' name_code
@@ -237,20 +261,73 @@ attr_named       =  name_xml (ws '=' ws value_named)?           # name OR name="
 attr_unnamed     =  value_unnamed ''
 
 value_named      =  value_unnamed / str_unquoted
-value_unnamed    =  embedded_text / number / string
-
-name_code        =  !name_reserved ~"[a-z_][a-z0-9_]*"i
-name_reserved    =  ~"(if|else|is|in|not|and|or)\\b"            # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
-name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
-
-
-###  EXPRESSIONS
-
-expr             =  ''
+value_unnamed    =  embedded_text / literal
 
 ###  ARGUMENTS of functions
 
+# .....
+
+###  EXPRESSIONS
+
+# the expression...
+# built bottom-up, starting with inner-most components built of high-priority operators (arithmetic)
+# and proceeding outwards, to operators of lower and lower priority (logical);
+# after parsing, the expression nodes with only 1 child are reduced (compactified),
+# to avoid long (~10 nodes) branches in the syntax tree that don't perform any operations
+# other than blindly propagating method calls down to the leaf node.
+
+expr         =  ifelse_test ''
+subexpr      =  '(' ws expr ws ')'
+var          =  name_code ''
+
+atom         =  literal / var / subexpr
+factor       =  atom trailer*                                 # operators: () [] .
+term         =  factor (ws op_multiplic ws factor)*           # operators: * / // percent
+arith_expr   =  neg? ws term (ws op_additive ws term)*        # operators: neg + -
+concat_expr  =  arith_expr (space arith_expr)*                # string concatenation: space-delimited list of items
+shift_expr   =  concat_expr (ws op_shift ws arith_expr)*
+and_expr     =  shift_expr (ws '&' ws shift_expr)*
+xor_expr     =  and_expr (ws '^' ws and_expr)*
+or_expr      =  xor_expr (ws '|' ws xor_expr)*
+
+comparison   =  or_expr (ws op_comp ws or_expr)*
+not_test     =  (not space)* comparison                       # spaces are obligatory around: not, and, or, if, else,
+and_test     =  not_test (space 'and' space not_test)*        # even if subexpressions are enclosed in (...) - unlike in Python
+or_test      =  and_test (space 'or' space and_test)*
+ifelse_test  =  or_test (space 'if' space or_test (space 'else' space ifelse_test)?)?
+
+###  TAIL OPERATORS:  call, slice, member access ...
+
+slice_value  =  ws (expr ws)?                # empty value '' serves as a placeholder, so that we know which part of *:*:* we're at
+slice        =  slice_value ':' slice_value (':' slice_value)?
+subscript    =  slice / (ws expr ws)
+
+call         =  '(' ws (args ws)? ')'        # no leading space allowed before () [] . -- unlike in Python
+index        =  '[' subscript ']'            # handles atomic indices [i] and all types of [*:*:*] slices
+member       =  '.' name_code                # no space after '.' allowed
+trailer      =  call / index / member
+
+###  SIMPLE OPERATORS
+
+op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
+not          =  'not'
+
+neg          =  '-'                            # multiple negation, e.g., "---x", not allowed -- unlike in Python
+op_multiplic =  '*' / '//' / '/' / '%%'        # double percent means single percent, only we need to escape for grammar string formatting
+op_additive  =  '+' / '-'
+op_shift     =  '<<' / '>>'
+
+
+###  IDENTIFIERS
+
+name_code        =  !name_reserved ~"[a-z_][a-z0-9_]*"i
+name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
+
+
 ###  ATOMS
+
+literal          =  number / string
 
 number_signed    =  ~"[+-]?" number
 number           =  ~"((\.\d+)|(\d+(\.\d*)?))([eE][+-]?\d+)?"      # the leading +- is added during expression construction (<neg>)
@@ -276,8 +353,6 @@ space       =  ~"[ \t]+"                     # obligatory whitespace, no newline
 ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 
 ###  SYMBOLS that mark TYPES of blocks or text spans
-
-
 
 """
 

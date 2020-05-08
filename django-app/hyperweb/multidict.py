@@ -127,23 +127,40 @@ class MultiDict:
         else:
             self._values[key] = values
 
+    #####
         
-    def first_values(self):
+    def dict_first(self):
         """Return all first values per key as a standard dict."""
         return {key: values[0] for key, values in self._values.items()}
     
-    def last_values(self):
+    def dict_last(self):
         """Return all last values per key as a standard dict."""
         return {key: values[-1] for key, values in self._values.items()}
 
-    def all_values(self):
+    def dict_all(self):
         """Return a dict of lists of values per key; same as self._values.copy()."""
         return self._values.copy()
 
+    def items_first(self):
+        """Generator of (key, first value) pairs."""
+        for key, values in self._values.items():
+            yield key, values[0]
+    
+    def items_last(self):
+        """Generator of (key, last value) pairs."""
+        for key, values in self._values.items():
+            yield key, values[-1]
+
+    def items_all(self):
+        """Generator of (key, list_of_values) pairs."""
+        return self._values.items()
+    
+    #####
+
     def get_compact(self):
-        """Like all_values(), but singleton lists whose value is NOT a list are replaced with this value."""
+        """Like dict_all(), but singleton lists whose value is NOT a list are replaced with this value."""
         
-        state = self.all_values()
+        state = self.dict_all()
         for key, values in state.items():
             if len(values) != 1: continue
             value = values[0]

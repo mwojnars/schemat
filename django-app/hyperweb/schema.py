@@ -33,7 +33,7 @@ class Schema(Field):
         errors = []
         
         # encode & compactify values of fields through per-field type definitions
-        encoded = data.all_values()
+        encoded = data.dict_all()
         for field, values in encoded.items():
             
             # type-aware encoding

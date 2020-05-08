@@ -7,6 +7,7 @@ from .data import Data
 from .errors import *
 from .store import SimpleStore
 from .schema import Schema
+from .document import Document
 
 
 #####################################################################################################################################################
@@ -16,6 +17,7 @@ class handler:
     Decorator of Item methods that marks a given method as a handler of web requests: wsgi, asgi...
     Only the methods decorated with @handler can be assigned to URLs and called by the view processing function.
     If name=None, the name of handler is the same as method's.
+    Special method __view__ is mapped to handler's name=None.
     """
     def __init__(self, name = None):
         if callable(name): raise Exception("Incorrect use of @handler: missing ()")
@@ -241,7 +243,7 @@ class Item(object, metaclass = MetaItem):
         if data:
             schema = item.__category__.schema
             data = schema.decode_json(data)
-            # print(f"__decode__ in {item}, data:", data.first_values())
+            # print(f"__decode__ in {item}, data:", data.dict_first())
             item.__data__.update(data)
         
         item._post_decode()
@@ -292,16 +294,47 @@ class Item(object, metaclass = MetaItem):
         Default handler invoked to render a response to item request when no handler name was given.
         Inside category's handlers dict, this method is saved under the None key.
         """
+        h = html_escape
 
+        # attrs = [f"<li><b>{attr}</b>: {values}</li>" for attr, values in self.__data__.items_all()]
+        # attrs = '\n'.join(attrs)
+        
+        doc = Document()
+        doc << f"<h1>{h(str(self))} -- ID {self.__id__}</h1>"
+        doc << f"<ul>"
+        for attr, values in self.__data__.items_all():
+            doc << f"<li><b>{attr}</b>: {values}</li>"
+        doc << f"</ul>"
+        
+        doc << hyml(
+            """
+            h1 | {item} -- ID {item.__id__}
+            ul
+                for attr, values in item.__data__.items_all()
+                    li / <b>{attr}</b>: {values}
+                    
+            -- embedding of a widget: method __embed__(doc) is called instead of __str__
+            -- __embed__() returns contents to insert here, but also may modify `doc`: add contents to other zones, create zones
+            widget
+            """,
+            context = {'item': self}
+        )
+        
+        return doc
+        
+        # return f"""
+        #     <h1>{h(str(self))} -- ID {self.__id__}</h1>
+        #     <ul>{attrs}</ul>
+        # """
     
     """
     from catalog.web import header, footer
     
-    % __view__ self:
+    % __view__ item:
         header
-        / $self.header()
-        for (name, value), class in alternate(self.data.items(), 'odd', 'even'):
-            field = self.get_field(name)
+        / $item.header()
+        for (name, value), class in alternate(item.data.items(), 'odd', 'even'):
+            field = item.get_field(name)
             tr .$class
                 td | $name
                 td | $field.render(value)

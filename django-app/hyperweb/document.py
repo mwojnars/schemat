@@ -13,7 +13,7 @@ class Document:
     Content can be written to predefined, named "zones" (Zone class).
     Typically, a zone accepts strings or Widgets - "bits" of content - and appends them to existing content,
     however, some types of zones may perform deduplication of submitted bits
-    (e.g., to avoid creating multiple <link>s to the same resource);
+    (e.g., to avoid creating multiple <link>s to the same asset);
     and/or accept data of other types, for example, custom objects for cookies specification.
     Zones can be nested. New zones can be created by putting a Zone object in the input stream
     - this object can already be filled in, and/or can be written to later on.
@@ -34,35 +34,35 @@ class Document:
     in particular, they shall not contain dots.
     """
     
-    zones   = None          # dict of special Zones that hold HTTP metadata: cookies, status code etc.
-    root    = None          # root Zone, the one which encloses all text contents; may include nested zones
+    http    = None          # dict of special Zones that hold HTTP header data: cookies, status code etc.
+    text    = None          # the root Zone that encloses all text contents; may include nested zones
     default = None          # default zone to append to when no other was specified (`root` should only be used during initialization)
     
     def __init__(self):
-        self.root = self.default = Zone('', self)
-        self.zones = {}
+        self.text = self.default = Zone('', self)
+        self.http = {}
         self.init_template()
     
     def init_template(self):
         
         # create metadata zones
         cookies = CookiesZone('cookies')
-        self.zones['cookies'] = cookies
-        for zone in self.zones:
+        self.http['cookies'] = cookies
+        for zone in self.http.values():
             zone.set_document(self)
         
         # create top-level text zones
-        meta    = Zone('meta')          # all <meta> information, put at the beginning of <head>
-        include = Zone('include')       # external resources to be loaded in <head>: css, js, ico ... converted to <link> / <script> tags, appropriately
-        head    = Zone('head')          # other tags to be put inside <head> that don't fit elsewhere
-        styles  = Zone('styles')        # inline CSS styles, put in <head>
-        main    = Zone('main')          # main HTML contents, put in <body>
-        scripts = Zone('scripts')       # inline scripts put at the end of <body>
+        meta    = HtmlZone('meta')          # <meta> information at the beginning of <head>, before assets
+        assets  = HtmlZone('assets')        # external assets loaded in <head>: css, js, ico ... converted to <link> / <script> tags, appropriately
+        head    = HtmlZone('head')          # other tags to be put inside <head> that don't fit elsewhere
+        styles  = HtmlZone('styles')        # inline CSS styles, put in <head>
+        main    = HtmlZone('main')          # main HTML contents, put in <body>
+        scripts = HtmlZone('scripts')       # inline scripts put at the end of <body>
         
         self \
             << "<!DOCTYPE html><html><head>"    \
                 << meta                         \
-                << include                      \
+                << assets                       \
                 << head                         \
                 << styles                       \
             << "</head><body>"                  \
@@ -76,13 +76,13 @@ class Document:
         
         if '.' in name:
             head, tail = name.split('.', 1)
-            zone = self.zones.get(head)
+            zone = self.http.get(head)
             if zone: return zone[tail]
-            return self.root[head][tail]
+            return self.text[head][tail]
         else:
-            zone = self.zones.get(name)
+            zone = self.http.get(name)
             if zone: return zone
-            return self.root[name]
+            return self.text[name]
     
     __getitem__ = get_zone
     __getattr__ = get_zone
@@ -98,15 +98,13 @@ class Document:
     __lt__     = append
     __lshift__ = append_block
 
-
-#####################################################################################################################################################
-
-class DjangoDocument(Document):
-    """A Document that can be turned into Django's HttpResponse object."""
-
-    def as_django_response(self):
+    def django_response(self):
         """Return contents of this Document as a Django's HttpResponse object."""
-        
+
+        from django.http import HttpResponse
+        text = self.text.render()
+        return HttpResponse(text)
+    
 
 #####################################################################################################################################################
 #####
@@ -117,9 +115,9 @@ class Zone:
     """
     """
     
-    doc     = None          # Document that contains this zone
-    name    = None          # last component of the (nested) zone name
-    content = None          # list of bits that will be rendered into strings and combined
+    doc     = None          # parent Document that contains this zone
+    name    = None          # last component of the name of this (nested) zone
+    content = None          # list of elements that will be rendered into strings and combined
     zones   = None          # dict of nested child zones
     
     def __init__(self, name, doc = None):
@@ -174,18 +172,33 @@ class Zone:
         if name in self.zones:
             if zone is self.zones[name]: return
             raise Exception(f"Repeated insertion of two different Zone objects under the name `{name}`")
-        self.zones[name] = zone
         zone.set_document(self.doc)
+        self.zones[name] = zone
+        self.content.append(zone)
     
     def render(self):
-        return ''.join(map(str, self.content))
+        return ''.join(self.render_stream())
     
     def render_stream(self):
-        first = True
-        for bit in self.content:
-            yield str(bit) if first else '\n' + str(bit)
-            first = False
-            
+        return map(str, self.content)
+    
+    __str__ = render
+    
+    
+#####################################################################################################################################################
+
+class HtmlZone(Zone):
+    
+    debug_comments = True
+    
+    def render_stream(self):
+        if self.debug_comments:
+            yield f"<!-- zone start: {self.name} -->"
+        for passage in map(str, self.content):
+            yield passage
+        if self.debug_comments:
+            yield f"<!-- zone end: {self.name} -->"
+
             
 #####################################################################################################################################################
 #####
@@ -215,7 +228,7 @@ class Widget:
     """
     An element of web document that can write (embed) itself to a given Zone of a Document,
     possibly with appending necessary metadata (e.g., cookies) and dependencies
-    (e.g., links to CSS or JS resources) to some other zones of the document.
+    (e.g., links to CSS assets or JS resources) to some other zones of the document.
     """
     
     def embed(self, zone, doc):
