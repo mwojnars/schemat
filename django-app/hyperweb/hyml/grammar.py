@@ -150,14 +150,15 @@ structural objects: tag, hypertag, widget (instance of Widget), "@..." argument 
    cannot be used in expressions nor text blocks, only in top-level HyML code
 
 """
-grammar = r"""
 
-###
+#####################################################################################################################################################
+
+hyml_grammar = r"""
+
 ###  Before the grammar is applied, indentation in the input text must be translated into
 ###  "indent" and "dedent" special characters: INDENT_S/DEDENT_S for spaces, INDENT_T/DEDENT_T for tabs.
 ###  These characters must be unique and don't occur anywhere else in input text,
 ###  except for places where they get inserted during translation.
-###
 
 # Types of grammatic structures:
 #  [ open ]  document
@@ -187,63 +188,77 @@ document         =  vs blocks_core?
 
 blocks_core      =  blocks / block+
 blocks           =  indent_s blocks_core dedent_s / indent_t blocks_core dedent_t
-block            =  block_normal / block_markup / block_verbatim / block_control / block_comment / block_def / block_tags
+block            =  block_verbatim / block_normal / block_control / block_def / block_tags         #/ block_markup
 
 ###  BODY
 
-body             =  ':'? nl blocks? / body_normal / body_markup / body_verbat
+body             =  ':'? nl blocks? / body_verbat / body_normal    #/ body_markup
 
 body_normal      =  mark_normal (nl tail_normal / ' '? line_normal nl blocks? / nl)
-body_markup      =  mark_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
+#body_markup      =  mark_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
 body_verbat      =  mark_verbat (nl tail_verbat / ' '? line_verbat nl blocks? / nl)
 
 line_normal      =  (embedded_text / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
-line_markup      =  (embedded_markup / embedded_text / text)+
+#line_markup      =  (embedded_markup / embedded_text / text)+
 line_verbat      =  verbatim ''
 
 block_normal     =  mark_normal (' ' line_normal (nl tail2_normal)? / line_normal (nl tail_normal)?)
-block_markup     =  mark_markup (' ' line_markup (nl tail2_markup)? / line_markup (nl tail_markup)?)
+#block_markup     =  mark_markup (' ' line_markup (nl tail2_markup)? / line_markup (nl tail_markup)?)
 block_verbat     =  mark_verbat (' ' line_verbat (nl tail2_verbat)? / line_verbat (nl tail_verbat)?)
 
 tail_normal      =  indent_s core_normal dedent_s
-tail_markup      =  indent_s core_markup dedent_s
+#tail_markup      =  indent_s core_markup dedent_s
 tail_verbat      =  indent_s core_verbat dedent_s
 
 tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
-tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
+#tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
 tail2_verbat     =  indent_s indent_s core_verbat dedent_s dedent_s         # like tail_verbat, but with 2-space indentation
 
 core_normal      =  ((tail_normal / line_normal) nl)*
-core_markup      =  ((tail_markup / line_markup) nl)*
+#core_markup      =  ((tail_markup / line_markup) nl)*
 core_verbat      =  ((tail_verbat / line_verbat) nl)*
 
 mark_normal      =  '|'
-mark_markup      =  '/'
+#mark_markup      =  '/'
 mark_verbat      =  '!'
 
 
 ###  TAG BLOCKS
 
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_code (attrs_def / '(' attrs_def ')')
+tag_def          =  name_ident (attrs_def / '(' attrs_def ')')
 
 block_tags       =  tags_expand ws body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
-tag_expand       =  name_code attrs_val?
+tag_expand       =  name_ident attrs_val?
 
 
-###  SPECIAL BLOCKS
+###  CONTROL BLOCKS
 
-block_control    =  'TODO'
-block_comment    =  'TODO'
+block_control    =  block_for / block_if / block_assign
+
+block_assign     =  target '=' expr_augment
+block_for        =  'for' space target space 'in' space expr_augment ws body
+block_if         =  'if' clause_if ('elif' clause_if)* ('else' body)?
+
+clause_if        =  space expr ws body
+
+target           =  '(' ws target ws ')' / target_var / target_tuple    # left side of assignment: a variable, or a tuple of variables/sub-tuples
+target_var       =  var ''
+target_tuple     =  target comma (target comma)* target?        # result object must be unpacked wherever `target_tuple` was parsed
 
 
 ###  EMBEDDINGS
 
+# below, results of multiple space-separated expressions are ''-concatenated,
+# while results of ','-separated expressions (a tuple) are  ' '-concatenated
+
 embedded_text    =  embedded_braces / embedded_eval
-embedded_markup  =  '{{' ws expr (space expr)* ws '}}'          # results of multiple space-separated expressions are space-concatenated: ' '.join()
-embedded_braces  =  '{' ws expr (space expr)* ws '}'
+embedded_braces  =  '{' ws expr_augment ws '}'
 embedded_eval    =  '$' var trailer*
+
+#embedded_markup =  '{{' ws expr_augment ws '}}'
+
 
 ###  ATTRIBUTES of tags
 
@@ -255,9 +270,10 @@ attrs_def        =  (space attr_named)* (space attr_body)*
 attrs_val        =  (ws attr_short+ / space attr_val) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
-attr_body        =  '@' name_code
-attr_short       =  ~"[\.#][a-z0-9_-]+"i                        # shorthands: .class for class="class", #id for id="id"
-attr_named       =  name_xml (ws '=' ws value_named)?           # name OR name="value" OR name=value OR name=$(...)
+attr_body        =  '@' name_ident
+attr_short       =  ('.' / '#') (attr_short_lit / embedded_text)    # shorthands: .class for class="class", #id for id="id"
+attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shortand literal value MAY contain "-", unlike python identifiers!
+attr_named       =  name_xml (ws '=' ws value_named)?               # name OR name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_unnamed ''
 
 value_named      =  value_unnamed / str_unquoted
@@ -265,7 +281,9 @@ value_unnamed    =  embedded_text / literal
 
 ###  ARGUMENTS of functions
 
-# .....
+args             =  arg (comma arg)*
+arg              =  kwarg / expr
+kwarg            =  name_ident ws '=' ws expr
 
 ###  EXPRESSIONS
 
@@ -276,51 +294,59 @@ value_unnamed    =  embedded_text / literal
 # to avoid long (~10 nodes) branches in the syntax tree that don't perform any operations
 # other than blindly propagating method calls down to the leaf node.
 
+expr_augment = expr / expr_tuple            # augmented form of expression: includes unbounded tuples (without parenth.); used in augmented assignments
+
 expr         =  ifelse_test ''
 subexpr      =  '(' ws expr ws ')'
-var          =  name_code ''
+expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
 
-atom         =  literal / var / subexpr
+var          =  name_ident ''
+tuple_atom   =  '(' ws ((expr comma)+ (expr ws)?)? ')'
+list         =  '[' ws (expr comma)* (expr ws)? ']'
+
+atom         =  literal / var / subexpr / tuple_atom / list
 factor       =  atom trailer*                                 # operators: () [] .
-term         =  factor (ws op_multiplic ws factor)*           # operators: * / // percent
+pow_expr     =  factor (ws op_power ws factor)?
+term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent
 arith_expr   =  neg? ws term (ws op_additive ws term)*        # operators: neg + -
-concat_expr  =  arith_expr (space arith_expr)*                # string concatenation: space-delimited list of items
-shift_expr   =  concat_expr (ws op_shift ws arith_expr)*
+shift_expr   =  arith_expr (ws op_shift ws arith_expr)*
 and_expr     =  shift_expr (ws '&' ws shift_expr)*
 xor_expr     =  and_expr (ws '^' ws and_expr)*
 or_expr      =  xor_expr (ws '|' ws xor_expr)*
+concat_expr  =  or_expr (space or_expr)*                      # string concatenation: space-delimited list of items
 
-comparison   =  or_expr (ws op_comp ws or_expr)*
+comparison   =  concat_expr (ws op_comp ws concat_expr)*
 not_test     =  (not space)* comparison                       # spaces are obligatory around: not, and, or, if, else,
 and_test     =  not_test (space 'and' space not_test)*        # even if subexpressions are enclosed in (...) - unlike in Python
 or_test      =  and_test (space 'or' space and_test)*
 ifelse_test  =  or_test (space 'if' space or_test (space 'else' space ifelse_test)?)?
 
+
 ###  TAIL OPERATORS:  call, slice, member access ...
 
 slice_value  =  ws (expr ws)?                # empty value '' serves as a placeholder, so that we know which part of *:*:* we're at
 slice        =  slice_value ':' slice_value (':' slice_value)?
-subscript    =  slice / (ws expr ws)
+subscript    =  slice / (ws expr_augment ws)
 
 call         =  '(' ws (args ws)? ')'        # no leading space allowed before () [] . -- unlike in Python
 index        =  '[' subscript ']'            # handles atomic indices [i] and all types of [*:*:*] slices
-member       =  '.' name_code                # no space after '.' allowed
+member       =  '.' name_ident               # no space after '.' allowed
 trailer      =  call / index / member
 
 ###  SIMPLE OPERATORS
 
-op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
-not          =  'not'
-
+op_power     =  '**'
 neg          =  '-'                            # multiple negation, e.g., "---x", not allowed -- unlike in Python
 op_multiplic =  '*' / '//' / '/' / '%%'        # double percent means single percent, only we need to escape for grammar string formatting
 op_additive  =  '+' / '-'
 op_shift     =  '<<' / '>>'
 
+not          =  'not'
+op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
-name_code        =  !name_reserved ~"[a-z_][a-z0-9_]*"i
+name_ident       =  !name_reserved ~"[a-z_][a-z0-9_]*"i
 name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 
@@ -337,9 +363,9 @@ str_unquoted     =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HT
 
 ###  BASIC TOKENS
 
-verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"s     # 1 line of plain text, may include special symbols (left unparsed)
-text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]*"s   # 1 line of plain text, special symbols excluded: { }
-texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]*"s     # lines of plain text, all at the same (baseline) indentation level
+verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"su     # 1 line of plain text, may include special symbols (left unparsed)
+text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]*"su   # 1 line of plain text, special symbols excluded: { }
+texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]*"su     # lines of plain text, all at the same (baseline) indentation level
 
 indent_s    = "%(INDENT_S)s"
 dedent_s    = "%(DEDENT_S)s"
@@ -349,10 +375,29 @@ dedent_t    = "%(DEDENT_T)s"
 nl          =  ~"([ \t]*\n)+"                # obligatory vertical space = 1+ newlines, possibly with a leading horizontal space and/or empty lines in between
 vs          =  ~"([ \t]*\n)*"                # optional vertical space = 0+ newlines
 
+comma       =  ws ',' ws
 space       =  ~"[ \t]+"                     # obligatory whitespace, no newlines
 ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
+
+########################################################################################################################################################
+###
+###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
+###  XML identifiers differ substantially from typical name patterns in other computer languages. Main differences:
+###   1) national Unicode characters are allowed, specified by ranges of unicode point values
+###   2) special characters are allowed:  ':' (colon) '.' (dot) '-' (minus)
+###      Colon is allowed as the 1st character according to XML syntax spec., although such a name may be treated as malformed during semantic analysis.
+###      Others (dot, minus), are allowed on further positions in the string, after the 1st character.
+###  Specification: http://www.w3.org/TR/REC-xml/#NT-NameStartChar
+###
+
+# human-readable:  [:_A-Za-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\U00010000-\U000EFFFF]
+XML_StartChar  =  u":_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
+
+# human-readable:  XML_StartChar | [0-9.\u00B7-] | [\u0300-\u036F] | [\u203F-\u2040]
+XML_Char       =  XML_StartChar + u"0-9\.\-\u00B7\u0300-\u036F\u203F-\u2040"
+
 

@@ -1582,7 +1582,7 @@ class NODES(object):
         name  = None        # textual representation of the operator, for possible rendering back into the document
         apply = None        # corresponding function from 'operator' module
         
-        ops = ['+ add', '- sub', '* mul', '// floordiv', '% mod', '<< lshift', '>> rshift', '& and_', '| or_', '^ xor',
+        ops = ['+ add', '- sub', '** pow', '* mul', '// floordiv', '% mod', '<< lshift', '>> rshift', '& and_', '| or_', '^ xor',
                '< lt', '> gt', '== eq', '>= ge', '<= le', '!= ne', 'is is_', 'is not is_not']
         ops = [m.rsplit(' ', 1) for m in ops]
         ops = {op: getattr(operator, fun) for op, fun in ops}
@@ -1602,6 +1602,7 @@ class NODES(object):
             
     class xop_multiplic(static_operator): pass
     class xop_additive(static_operator): pass
+    class xop_power(static_operator): pass
     class xop_shift(static_operator): pass
     class xop_comp(static_operator): pass
     class xneg(static): pass

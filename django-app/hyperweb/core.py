@@ -334,7 +334,7 @@ class Item(object, metaclass = MetaItem):
         header
         / $item.header()
         for (name, value), class in alternate(item.data.items(), 'odd', 'even'):
-            field = item.get_field(name)
+            field, something = item.get_field(name), something_else
             tr .$class
                 td | $name
                 td | $field.render(value)
