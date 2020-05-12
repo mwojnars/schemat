@@ -284,6 +284,8 @@ class Item(object, metaclass = MetaItem):
         """
         Route a web request to a handler function/method of a given name. Handler functions are stored in a parent category object.
         """
+        # TODO: route through a predefined pipeline of handlers
+        
         hdl = self.__handlers__.get(handler, None)
         if hdl is None: raise InvalidHandler(f'Handler "{handler}" not found in {self} ({self.__class__}), handlers: {self.__handlers__}')
         return hdl(self, request)

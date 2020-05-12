@@ -2,7 +2,7 @@
 Hypertags Markup Language (HyML Essential).
 An indentation-based document description & templating language with modularity through inline function defitions.
 
-***Names (?):  HyML, PyML, Sleek, HypeML
+***Names (?):  HyML, PyML, Sleek, HypeML, OneML
 - tree of tags (TRoT, ToT, Treet) markup lang (TreML, TreeML, BranchML), HyTree
 
 Key features:
@@ -187,46 +187,48 @@ hyml_grammar = r"""
 document         =  vs blocks_core?
 
 blocks_core      =  blocks / block+
-blocks           =  indent_s blocks_core dedent_s / indent_t blocks_core dedent_t
-block            =  block_verbatim / block_normal / block_control / block_def / block_tags         #/ block_markup
+blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
+block            =  block_verbat / block_normal / block_markup / block_tags / block_def / block_control
 
 ###  BODY
 
-body             =  ':'? nl blocks? / body_verbat / body_normal    #/ body_markup
+body             =  body_struct / body_verbat / body_normal / body_markup
 
-body_normal      =  mark_normal (nl tail_normal / ' '? line_normal nl blocks? / nl)
-#body_markup      =  mark_markup (nl tail_markup / ' '? line_markup nl blocks? / nl)
-body_verbat      =  mark_verbat (nl tail_verbat / ' '? line_verbat nl blocks? / nl)
+body_struct      =  mark_struct? nl blocks?
+body_verbat      =  mark_verbat ((nl tail_verbat) / (' '? line_verbat nl blocks?) / nl)
+body_normal      =  mark_normal ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
+body_markup      =  mark_markup ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
 
-line_normal      =  (embedded_text / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
-#line_markup      =  (embedded_markup / embedded_text / text)+
-line_verbat      =  verbatim ''
+block_verbat     =  mark_verbat ((' ' line_verbat? nl tail2_verbat?) / (line_verbat? nl tail_verbat?))
+block_normal     =  mark_normal ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
+block_markup     =  mark_markup ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
 
-block_normal     =  mark_normal (' ' line_normal (nl tail2_normal)? / line_normal (nl tail_normal)?)
-#block_markup     =  mark_markup (' ' line_markup (nl tail2_markup)? / line_markup (nl tail_markup)?)
-block_verbat     =  mark_verbat (' ' line_verbat (nl tail2_verbat)? / line_verbat (nl tail_verbat)?)
+tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
+tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
+#tail_markup     =  (indent_s core_markup dedent_s) / (indent_t core_markup dedent_t)
 
-tail_normal      =  indent_s core_normal dedent_s
-#tail_markup      =  indent_s core_markup dedent_s
-tail_verbat      =  indent_s core_verbat dedent_s
-
-tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
-#tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
 tail2_verbat     =  indent_s indent_s core_verbat dedent_s dedent_s         # like tail_verbat, but with 2-space indentation
+tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
+#tail2_markup    =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
 
-core_normal      =  ((tail_normal / line_normal) nl)*
-#core_markup      =  ((tail_markup / line_markup) nl)*
-core_verbat      =  ((tail_verbat / line_verbat) nl)*
+core_verbat      =  (tail_verbat / (line_verbat nl))+
+core_normal      =  (tail_normal / (line_normal nl))+
+#core_markup     =  (tail_markup / (line_markup nl))+
 
-mark_normal      =  '|'
-#mark_markup      =  '/'
+line_verbat      =  verbatim ''
+line_normal      =  (text_embedded / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
+#line_markup     =  (markup_embedded / text_embedded / text)+
+
+mark_struct      =  ':'
 mark_verbat      =  '!'
+mark_normal      =  '|'
+mark_markup      =  '/'
 
 
 ###  TAG BLOCKS
 
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_ident (attrs_def / '(' attrs_def ')')
+tag_def          =  name_ident (attrs_def / ('(' attrs_def ')'))
 
 block_tags       =  tags_expand ws body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
@@ -237,15 +239,14 @@ tag_expand       =  name_ident attrs_val?
 
 block_control    =  block_for / block_if / block_assign
 
-block_assign     =  target '=' expr_augment
-block_for        =  'for' space target space 'in' space expr_augment ws body
+block_assign     =  targets '=' expr_augment
+block_for        =  'for' space targets space 'in' space expr_augment ws body
 block_if         =  'if' clause_if ('elif' clause_if)* ('else' body)?
 
 clause_if        =  space expr ws body
 
-target           =  '(' ws target ws ')' / target_var / target_tuple    # left side of assignment: a variable, or a tuple of variables/sub-tuples
-target_var       =  var ''
-target_tuple     =  target comma (target comma)* target?        # result object must be unpacked wherever `target_tuple` was parsed
+targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
+target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
 
 
 ###  EMBEDDINGS
@@ -253,31 +254,31 @@ target_tuple     =  target comma (target comma)* target?        # result object 
 # below, results of multiple space-separated expressions are ''-concatenated,
 # while results of ','-separated expressions (a tuple) are  ' '-concatenated
 
-embedded_text    =  embedded_braces / embedded_eval
+text_embedded    =  embedded_braces / embedded_eval
 embedded_braces  =  '{' ws expr_augment ws '}'
 embedded_eval    =  '$' var trailer*
 
-#embedded_markup =  '{{' ws expr_augment ws '}}'
+#markup_embedded =  '{{' ws expr_augment ws '}}'
 
 
 ###  ATTRIBUTES of tags
 
 # formal attributes as declared in hypertag definition; structural attributes @... must always go at the end
 attrs_def        =  (space attr_named)* (space attr_body)*
-#attrs_def_comma =  ws '(' (attr_named (',' ws attr_val)* (',' ws attr_body)* / attr_body (',' ws attr_body)* ) ')'
+#attrs_def_comma =  (ws '(' (attr_named (',' ws attr_val)* (',' ws attr_body)*) / (attr_body (',' ws attr_body)* ) ')')
 
 # actual attributes as passed to a tag
-attrs_val        =  (ws attr_short+ / space attr_val) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
+attrs_val        =  ((ws attr_short+) / (space attr_val)) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
 attr_body        =  '@' name_ident
-attr_short       =  ('.' / '#') (attr_short_lit / embedded_text)    # shorthands: .class for class="class", #id for id="id"
+attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id"
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shortand literal value MAY contain "-", unlike python identifiers!
 attr_named       =  name_xml (ws '=' ws value_named)?               # name OR name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_unnamed ''
 
 value_named      =  value_unnamed / str_unquoted
-value_unnamed    =  embedded_text / literal
+value_unnamed    =  text_embedded / literal
 
 ###  ARGUMENTS of functions
 
@@ -364,8 +365,8 @@ str_unquoted     =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HT
 ###  BASIC TOKENS
 
 verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"su     # 1 line of plain text, may include special symbols (left unparsed)
-text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]*"su   # 1 line of plain text, special symbols excluded: { }
-texts       =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]*"su     # lines of plain text, all at the same (baseline) indentation level
+text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]+"su   # 1 line of plain text, special symbols excluded: { }
+#texts      =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]+"su     # lines of plain text, all at the same (baseline) indentation level
 
 indent_s    = "%(INDENT_S)s"
 dedent_s    = "%(DEDENT_S)s"
