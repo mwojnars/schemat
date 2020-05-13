@@ -1,6 +1,6 @@
 from parsimonious.grammar import Grammar as Parsimonious
 
-from nifty.util import ObjDict
+from nifty.util import asnumber, ObjDict
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree, ParserError
 
 from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
@@ -247,23 +247,84 @@ class NODES(object):
 
     ###  BLOCKS & BODY  ###
 
-    class xbody(node): pass
+    class block(node): pass
+    class xblock_verbat(block): pass
+    class xblock_normal(block): pass
+    class xblock_markup(block): pass
+        # TODO
     
-    class base_block(node): pass
-    class xblock_tags(base_block): pass
+    class xblock_tagged(block): pass
+    class xblock_def(block): pass
+    class xblock_for(block): pass
+    class xblock_if (block): pass
+    class xblock_assign(block): pass
 
     class xtag_expand(node):
         """Occurrence of a tag."""
 
-    class base_body(node): pass
-    class xbody_struct(base_body): pass
-    class xbody_verbat(base_body): pass
-    class xbody_normal(base_body): pass
-    class xbody_markup(base_body): pass
+    class body(node): pass
+    class xbody_struct(body): pass
+    class xbody_verbat(body): pass
+    class xbody_normal(body): pass
+    class xbody_markup(body): pass
     
     # all intermediate non-terminals within "body" get reduced (flattened), down to these elements of a line:
     #    verbatim, text, text_embedded
     # also, the blocks that comprise a body get preserved; they always strictly follow the above atomic elements
+    
+    
+    ###  ATTRIBUTES & ARGUMENTS  ###
+    
+    class xattrs_val(node):
+        """List of attributes inside a tag occurrence (NOT in a definition)."""
+    class xattrs_def(node):
+        """List of attributes inside a tag definition (NOT in an occurrence)."""
+
+    class xattr_val(node):
+        """Attribute inside a tag occurrence OR tag definition:
+            named / unnamed / short (only in tag occurence) / body (only in tag definition.
+        """
+
+    ###  EXPRESSIONS  ###
+    
+    class expression(node):
+        """Base class for all nodes that represent an expression, or its part (a subexpression)."""
+    
+    class expression_root(expression):
+        """Base class for root nodes of all embedded expressions, either in markup or attribute/argument lists.
+        """
+        context = None      # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
+                            # in case if the expression evaluates to yet another (dynamic) piece of HyML code
+    
+    class xexpr(expression_root): pass
+    class xexpr_var(expression_root): pass
+    class xexpr_augment(expression_root): pass
+    
+    class xfactor(expression): pass
+    class xfactor_var(xfactor): pass
+
+
+    ###  EXPRESSIONS - LITERAL  ###
+
+    class literal(expression):
+        isstatic = True
+        ispure   = True
+        value    = None
+        def analyse(self, ctx): pass
+        def evaluate(self, stack, ifnull):
+            return self.value
+        
+    class xnumber(literal):
+        def init(self, tree, _):
+            self.value = asnumber(self.text())
+    
+    class xstring(literal):
+        def init(self, tree, _):
+            self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
+    
+    class xstr_unquoted(xstring):
+        def init(self, tree, _):
+            self.value = self.text()
     
     
     ###  STATIC nodes  ###
@@ -281,8 +342,20 @@ class NODES(object):
         def __str__(self):
             return self.value
         
-    class xname_ident(static): pass
-    class xtext (static): pass
+    class xname_id(static): pass
+    class xname_xml(static): pass
+    class xtext(static): pass
+    
+    class xescape(static):
+        def init(self, tree, astnode):
+            escape = self.text()
+            assert len(escape) == 2 and escape[0] == escape[1]
+            self.value = escape[0]                          # the duplicated char is dropped
+    
+    class xindent_s(static): pass
+    class xindent_t(static): pass
+    class xdedent_s(static): pass
+    class xdedent_t(static): pass
 
 
 #####################################################################################################################################################
@@ -301,12 +374,16 @@ class HyML_Tree(BaseTree):
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
-    _reduce_  = "target blocks_core block body tags_expand " \
-                "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal line_verbat line_normal"
+    _reduce_  = "target blocks_core blocks block block_control body " \
+                "tags_expand attr_named value_named value_unnamed kwarg " \
+                "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal line_verbat line_normal " \
+                "text_embedded embedded_braces embedded_eval " \
+                "expr_root subexpr slice subscript trailer atom literal"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
     # they must have a corresponding x... node class, because pruning is done after rewriting, not before
-    _compact_ = ""
+    _compact_ = "factor factor_var pow_expr term arith_expr shift_expr and_expr xor_expr or_expr concat_expr " \
+                "comparison not_test and_test or_test ifelse_test expr_tuple"
 
     _reduce_anonym_ = True      # reduce all anonymous nodes, i.e., nodes generated by unnamed expressions, typically groupings (...)
     _reduce_string_ = True      # if a node to be reduced has no children but matched a non-empty part of the text, it shall be replaced with a 'string' node
@@ -355,9 +432,11 @@ if __name__ == '__main__':
     text = """
         h1 >a href="http://xxx.com"|This is <h1> title
             p  / And a paragraph.
-        h2
+        div
+            | Ala
+            |kot.
+            / i pies
         """
-    text = "p | paragraph"
     
     tree = HyML_Tree(text, stopAfter = "rewrite")
     print()

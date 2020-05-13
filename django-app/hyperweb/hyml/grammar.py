@@ -153,6 +153,9 @@ structural objects: tag, hypertag, widget (instance of Widget), "@..." argument 
 
 #####################################################################################################################################################
 
+
+########################################################################################################################################################
+###
 hyml_grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -188,7 +191,7 @@ document         =  vs blocks_core?
 
 blocks_core      =  blocks / block+
 blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
-block            =  block_verbat / block_normal / block_markup / block_tags / block_def / block_control
+block            =  block_verbat / block_normal / block_markup / block_tagged / block_def / block_control
 
 ###  BODY
 
@@ -216,8 +219,8 @@ core_normal      =  (tail_normal / (line_normal nl))+
 #core_markup     =  (tail_markup / (line_markup nl))+
 
 line_verbat      =  verbatim ''
-line_normal      =  (text_embedded / text)+                             # line of plain text with {...} or $... expressions; no markup; escaped during rendering
-#line_markup     =  (markup_embedded / text_embedded / text)+
+line_normal      =  (escape / text_embedded / text)+                        # line of plain text with {...} or $... expressions; no markup; HTML-escaped during rendering
+#line_markup     =  (escape / markup_embedded / text_embedded / text)+
 
 mark_struct      =  ':'
 mark_verbat      =  '!'
@@ -228,11 +231,11 @@ mark_markup      =  '/'
 ###  TAG BLOCKS
 
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_ident (attrs_def / ('(' attrs_def ')'))
+tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
-block_tags       =  tags_expand ws body
+block_tagged     =  tags_expand ws body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
-tag_expand       =  name_ident attrs_val?
+tag_expand       =  name_id attrs_val?
 
 
 ###  CONTROL BLOCKS
@@ -256,7 +259,7 @@ target           =  ('(' ws targets ws ')') / var               # left side of a
 
 text_embedded    =  embedded_braces / embedded_eval
 embedded_braces  =  '{' ws expr_augment ws '}'
-embedded_eval    =  '$' var trailer*
+embedded_eval    =  '$' expr_var
 
 #markup_embedded =  '{{' ws expr_augment ws '}}'
 
@@ -271,8 +274,8 @@ attrs_def        =  (space attr_named)* (space attr_body)*
 attrs_val        =  ((ws attr_short+) / (space attr_val)) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
-attr_body        =  '@' name_ident
-attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id"
+attr_body        =  '@' name_id
+attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shortand literal value MAY contain "-", unlike python identifiers!
 attr_named       =  name_xml (ws '=' ws value_named)?               # name OR name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_unnamed ''
@@ -284,7 +287,7 @@ value_unnamed    =  text_embedded / literal
 
 args             =  arg (comma arg)*
 arg              =  kwarg / expr
-kwarg            =  name_ident ws '=' ws expr
+kwarg            =  name_id ws '=' ws expr
 
 ###  EXPRESSIONS
 
@@ -295,17 +298,19 @@ kwarg            =  name_ident ws '=' ws expr
 # to avoid long (~10 nodes) branches in the syntax tree that don't perform any operations
 # other than blindly propagating method calls down to the leaf node.
 
-expr_augment = expr / expr_tuple            # augmented form of expression: includes unbounded tuples (without parenth.); used in augmented assignments
+expr         =  expr_root ''                # basic (standard) form of an expression
+expr_var     =  factor_var ''               # reduced form of an expression: a variable, with optional trailer; used for inline $... embedding (embedded_eval) only
+expr_augment =  expr_root / expr_tuple      # augmented form of an expression: includes unbounded tuples (no parentheses); used in augmented assignments
 
-expr         =  ifelse_test ''
-subexpr      =  '(' ws expr ws ')'
 expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
+subexpr      =  '(' ws expr ws ')'
 
-var          =  name_ident ''
+var          =  name_id ''
 tuple_atom   =  '(' ws ((expr comma)+ (expr ws)?)? ')'
 list         =  '[' ws (expr comma)* (expr ws)? ']'
 
 atom         =  literal / var / subexpr / tuple_atom / list
+factor_var   =  var trailer*                                  # reduced form of `factor` for use in expr_var
 factor       =  atom trailer*                                 # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)?
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent
@@ -322,6 +327,8 @@ and_test     =  not_test (space 'and' space not_test)*        # even if subexpre
 or_test      =  and_test (space 'or' space and_test)*
 ifelse_test  =  or_test (space 'if' space or_test (space 'else' space ifelse_test)?)?
 
+expr_root    =  ifelse_test ''
+
 
 ###  TAIL OPERATORS:  call, slice, member access ...
 
@@ -331,7 +338,7 @@ subscript    =  slice / (ws expr_augment ws)
 
 call         =  '(' ws (args ws)? ')'        # no leading space allowed before () [] . -- unlike in Python
 index        =  '[' subscript ']'            # handles atomic indices [i] and all types of [*:*:*] slices
-member       =  '.' name_ident               # no space after '.' allowed
+member       =  '.' name_id               # no space after '.' allowed
 trailer      =  call / index / member
 
 ###  SIMPLE OPERATORS
@@ -347,7 +354,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
-name_ident       =  !name_reserved ~"[a-z_][a-z0-9_]*"i
+name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
 name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 
@@ -364,8 +371,10 @@ str_unquoted     =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HT
 
 ###  BASIC TOKENS
 
+escape      =  '$$' / '{{' / '}}'
+
 verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"su     # 1 line of plain text, may include special symbols (left unparsed)
-text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n{}]+"su   # 1 line of plain text, special symbols excluded: { }
+text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}]+"su   # 1 line of plain text, special symbols excluded: $ { }
 #texts      =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]+"su     # lines of plain text, all at the same (baseline) indentation level
 
 indent_s    = "%(INDENT_S)s"
@@ -383,9 +392,6 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
-
-########################################################################################################################################################
-###
 ###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
 ###  XML identifiers differ substantially from typical name patterns in other computer languages. Main differences:
 ###   1) national Unicode characters are allowed, specified by ranges of unicode point values
