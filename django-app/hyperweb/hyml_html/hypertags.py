@@ -792,7 +792,7 @@ class HypertagSpec(object):
             if not hasattr(self, name):
                 raise Exception("Unrecognized parameter passed to HypertagSpec: %s" % name)
             setattr(self, name, val)
-    
+            
 
 def hypertag(fun):
     "Decorator that marks a given function as a hypertag (standard one: non-void, without backlink)."
@@ -2679,7 +2679,7 @@ class HyML_Tree(BaseTree):
 
     # These names are reserved and can't be redefined, neither by hypertags nor by hyper-attributes. Case-sensitive match.
     reserved_names = set("true false null if ifnot ifnull".split()) .union (special_tags)
-
+    
     # 'void' is a set of element names that should be treated as void and closed automatically by the parser after encountering an opening tag.
     # By default it's a complete list of HTML void elements, according to: http://www.w3.org/TR/html-markup/syntax.html#syntax-elements
     # The names are compared in case-insensitive way, like in HTML.
@@ -2705,7 +2705,7 @@ class HyML_Tree(BaseTree):
     # dictionary of external global hypertags/variables imported automatically on parser start-up, just after 'BUILT_IN' symbols;
     # can be overriden in __init__
     globals = {}
-
+    
     # 'pure_externals': a set of external hypertags/variables that are assumed to be pure functions:
     # returning (or having) always the same value for a given fixed input and never having any side effects.
     # Such functions are pre-computed already during analysis, for efficiency, if only their arguments are pure (same across all render() calls).

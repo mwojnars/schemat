@@ -105,18 +105,23 @@ elif expr:
 else:
   BODY
 
-select nonempty      -- pick the 1st branch that yields a non-empty result (not null and not ''); pass if no such branch exists
+select nonempty      -- pick the 1st branch whose all embedded expressions ({..} or $..) evaluate to not-None and don't raise exceptions; pass if no such branch exists
+- BODY1 ...
+- BODY2 ...
+select defined       -- pick the 1st branch whose ALL variables occuring inside expressions are not-None
 - BODY1 ...
 - BODY2 ...
 
-select defined       -- pick the 1st branch whose ALL variables occuring inside expressions are defined (not-null)
-- BODY1 ...
-- BODY2 ...
+try                  -- pick the 1st branch that doesn't raise an exception (embedding None inside text block raises NoneExpression)
+  BODY1 ...             if "else" branch is present, it is selected if all previous branches fail; othwerwise <void> is returned
+or                   -- behaves similar to python's "except Exception ..."; allows another "or..." branch(es) to be appended
+  BODY2 ...             and executed if the current branch fails, as well
+else
+  BODY3
 
-select [strict=True] -- pick the 1st branch that yields a non-empty result AND all variables inside are defined;
-- BODY1 ...             if strict=False, the LAST branch is selected if all branches fail; othwerwise <void> is returned
-- BODY2 ...
-
+? BLOCK              -- an optional tag-block; equivalent to:       try
+                                                                      BLOCK
+  
 for name in $expr:
   BODY
   
@@ -149,9 +154,179 @@ structural objects: tag, hypertag, widget (instance of Widget), "@..." argument 
  - their values are of type Passage / Content / Body / MultiBody / Structure,
    cannot be used in expressions nor text blocks, only in top-level HyML code
 
+special tags:
+    return
+    break
+    continue
+    pass
+    void
+
 """
 
 #####################################################################################################################################################
+
+"""
+title
+    | {fulltitle or (title " | Paperity")}
+    
+<title>[[$fulltitle||$title | Paperity]]</title>
+
+%Breadcrumb items widgets
+    try | $widgets
+
+<:Breadcrumb bodyitems items widgets>
+    [[$widgets]]
+
+?Breadcrumb items=$breadcrumb
+[[<Breadcrumb items=$breadcrumb />]]
+
+% _date sep:
+    if showDate and paper.birth:
+        span .bib-date | {paper.birth|strftime('%b %Y')}
+        select         / $sep
+        or             / <br/>
+
+    <:_date ~ sep>
+        <if $(showDate and paper.birth)><span class="bib-date">$(paper.birth|strftime('%b %Y'))</span> [[$sep || <br/>]] </if>
+    </:_date>
+
+if paper.title_snippet  / $paper.title_snippet
+else                    | {paper.title | striptags}
+
+try    / $paper.title_snippet
+else   | {paper.title | striptags}
+
+         [[<if $paper.title_snippet>
+              $(paper.title_snippet|HTML)
+            </if>
+          ||  $(paper.title|striptags)
+         ]]
+
+if paper.snippet                         / $paper.snippet
+elif paper.grey == 0 and paper.abstract  | {paper.abstract | striptags | truncate(385, ellipsis="...")}
+
+      [[<if $paper.snippet> $(paper.snippet|HTML) </if>
+      ||<if $(paper.grey == 0 and paper.abstract)> $(paper.abstract|striptags|truncate(385, ellipsis="...")) </if>
+      ]]
+      
+%Pagination pageurl start end current total
+	-- pageurl: a 1-arg function/hypertag that renders URL of a subpage given its number
+	ul .pagination .text-center
+		if current > 1
+		    li > a href=$pageurl(1)   / &laquo;
+		else
+		    liDisabled                / &laquo;
+
+		for page in range(start, end+1)
+			if page == current:   li .active > a href="javascript:void(0);"  / $page
+			else:                 li         > a href=$pageurl(page)         / $page
+
+		if current < total
+		    li > a href=$pageurl(total)   / &raquo;
+		else:
+		    liDisabled                    / &raquo;
+
+<:Pagination ~ pageurl start end current total>
+	[# pageurl: a 1-arg function/hypertag that renders URL of a subpage given its number #]
+	<ul class="pagination text-center">
+		[[<if $(current > 1)> <li><a href=$pageurl(1)>&laquo;</a></li> </if>
+		||<liDisabled>&laquo;</liDisabled>
+		]]
+		<for page=$range(start, end+1)>
+			[[<if $(page != current)> <li><a href=$pageurl(page)>$page</a></li> </if>
+			||<li class="active"><a href="javascript:void(0);">$page</a></li>
+			]]
+		</for>
+		[[<if $(current < total)> <li><a href=$pageurl(total)>&raquo;</a></li> </if>
+		||<liDisabled>&raquo;</liDisabled>
+		]]
+	</ul>
+	
+	
+% extra_head paper journal:
+    ? meta name="citation_journal_title" content={journal.title|striptags}
+    if paper.date:
+        meta name="citation_date" content={paper.date|strftime('%Y/%m/%d')}
+        meta name="citation_publication_date" content={paper.date|strftime('%Y/%m/%d')}
+    else:
+        meta name="citation_date" content=$paper.year
+
+    for author in paper.authors[:100]
+        meta name="citation_author" content=$author
+        
+    meta name="citation_pdf_url" content=$paper.url_pdf
+    
+    [[meta name="citation_journal_title" content={journal.title|striptags} ]]
+    [[<meta name="citation_publisher" content=$journal.publisher >]]
+    [[<meta name="citation_title" content=$(paper.title|striptags) >]]
+    [[<meta name="citation_year" content=$paper.year >]]
+    [[<if $paper.date><meta name="citation_date" content=$(paper.date|strftime('%Y/%m/%d')) >
+                      <meta name="citation_publication_date" content=$(paper.date|strftime('%Y/%m/%d')) >
+             </if> || <meta name="citation_date" content=$paper.year > ]]
+    [[<meta name="citation_issue" content=$paper.issue >]]
+
+
+if isAndroid or (isMac and isSafari):
+    Google_Viewer paper
+    rawtext paper hidden=ON
+else:
+    -- default native PDF viewer on all other devices
+    pdfObject paper
+        pdfAlert paper
+        rawtext paper
+
+		[[
+		<if $(isAndroid or (isMac and isSafari)) >          [# fallback PDF viewer (Google Docs) on Android and Safari/Mac #]
+            <Google_Viewer $paper />
+            <rawtext $paper hidden=$true />
+		</if>
+		||
+		<pdfObject $paper>                                  [# default native PDF viewer on all other devices #]
+	    	<pdfAlert $paper />
+	        <rawtext $paper />
+		</pdfObject>
+        ]]
+
+if paper.abstract:
+    div .row
+        div .col-lg-3 .col-md-3 .col-xs-12
+            p .hidden-md .hidden-lg .author-names style="margin-top:0"
+                | {paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join(', ')}
+            div .hidden-xs .hidden-sm .lead .author-names .text-right
+                / {paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join('<div class="author-break"></div>')}
+        div .col-lg-9 .col-md-9 .col-xs-12
+            blockquote | {paper.abstract|pstriptags}
+else:
+    p .author-names | {paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join(', ')}
+
+           [[ <if $paper.abstract>
+            <div class="row">
+                <div class="col-lg-3 col-md-3 col-xs-12">
+            		<p class="hidden-md hidden-lg author-names" style="margin-top:0">$(paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join(', '))</p>
+                    <div class="hidden-xs hidden-sm lead author-names text-right">
+                        $HTML(paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join('<div class="author-break"></div>'))
+                    </div>
+                </div>
+                <div class="col-lg-9 col-md-9 col-xs-12">
+                    <blockquote>$(paper.abstract|pstriptags)</blockquote>
+                </div>
+            </div>
+            </if>
+            || <p class="author-names">$(paper.authors|et_al(10, '<em>et al.</em>')|authorlink|join(', '))</p>
+            ]]
+            
+? i | {paper.title|striptags},
+try | {journal.title|striptags},
+try | $paper.year,
+try | pp. $paper.pages,
+try | $paper.issue,
+try | DOI: $paper.doi
+            
+            [[<i>$(paper.title|striptags)</i>,]]
+            [[$(journal.title|striptags),]]
+            [[$paper.year,]] [[pp. $paper.pages,]] [[$paper.issue,]] [[DOI: $paper.doi]]
+            
+"""
 
 
 ########################################################################################################################################################
@@ -191,12 +366,13 @@ document         =  vs blocks_core?
 
 blocks_core      =  blocks / block+
 blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
-block            =  block_verbat / block_normal / block_markup / block_tagged / block_def / block_control
+block            =  block_verbat / block_normal / block_markup / block_control / block_def / block_tagged
 
 ###  BODY
 
 body             =  body_struct / body_verbat / body_normal / body_markup
 
+#body_struct_in   =  mark_struct ((ws block_tagged) / (nl blocks))
 body_struct      =  mark_struct? nl blocks?
 body_verbat      =  mark_verbat ((nl tail_verbat) / (' '? line_verbat nl blocks?) / nl)
 body_normal      =  mark_normal ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
@@ -233,20 +409,23 @@ mark_markup      =  '/'
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
 tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
-block_tagged     =  tags_expand ws body
+block_tagged     =  tags_expand ws_body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
-tag_expand       =  name_id attrs_val?
+tag_expand       =  (name_id / attr_short) attrs_val?
 
 
 ###  CONTROL BLOCKS
 
-block_control    =  block_for / block_if / block_assign
+block_control    =  block_assign / block_if / block_try / block_for
 
-block_assign     =  targets '=' expr_augment
-block_for        =  'for' space targets space 'in' space expr_augment ws body
-block_if         =  'if' clause_if ('elif' clause_if)* ('else' body)?
+block_assign     =  targets '=' (expr_augment / text_embedded)
+block_try        =  ('try' ws_body ('or' ws_body)* ('else' ws_body)?) / try_short
+block_for        =  'for' space targets space 'in' space (expr_augment / text_embedded) ws_body
+block_if         =  'if' clause_if ('elif' clause_if)* ('else' ws_body)?
 
-clause_if        =  space expr ws body
+try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
+clause_if        =  space (expr / text_embedded) ws_body
+ws_body          =  ws body
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
 target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
@@ -277,11 +456,12 @@ attr_val         =  attr_named / attr_unnamed
 attr_body        =  '@' name_id
 attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shortand literal value MAY contain "-", unlike python identifiers!
-attr_named       =  name_xml (ws '=' ws value_named)?               # name OR name="value" OR name=value OR name=$(...)
-attr_unnamed     =  value_unnamed ''
+attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
+attr_unnamed     =  value_of_attr ''
+value_of_attr    =  text_embedded / literal
 
-value_named      =  value_unnamed / str_unquoted
-value_unnamed    =  text_embedded / literal
+#value_named      =  value_unnamed / str_unquoted
+#value_unnamed    =  text_embedded / literal
 
 ###  ARGUMENTS of functions
 
@@ -361,12 +541,14 @@ name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags 
 
 ###  ATOMS
 
-literal          =  number / string
+literal          =  number / string / boolean / none
 
 number_signed    =  ~"[+-]?" number
 number           =  ~"((\.\d+)|(\d+(\.\d*)?))([eE][+-]?\d+)?"      # the leading +- is added during expression construction (<neg>)
 string           =  ~"'[^']*'" / ~'"[^"]*"'         # '...' or "..." string; no escaping of ' and " inside!
-str_unquoted     =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HTML compatibility; see https://html.spec.whatwg.org/multipage/syntax.html#syntax-attributes
+#str_unquoted    =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HTML compatibility; see https://html.spec.whatwg.org/multipage/syntax.html#syntax-attributes
+boolean          =  'True' / 'False'
+none             =  'None'
 
 
 ###  BASIC TOKENS
