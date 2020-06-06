@@ -244,7 +244,17 @@ class NODES(object):
     class xblock_markup(block): pass
         # TODO
     
-    class xblock_tagged(block): pass
+    class xblock_tagged(block):
+        def setup(self):
+            # all children should be of type 'tag_expand' except the last one which should be 'body_*'
+            assert all(child.type == 'tag_expand' for child in self.children[:-1])
+            assert self.children[-1].type.startswith('body_')
+            
+        def render(self, stack):
+            # only need to render the 1st child, other children should already be linked as its "body"
+            head = self.children[0]
+            return head.render(stack) + '\n'
+
     class xblock_def(block): pass
     class xblock_for(block): pass
     class xblock_if (block): pass
