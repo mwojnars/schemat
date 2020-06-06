@@ -24,17 +24,17 @@ class HTMLTag(Hypertag):
     
     name = None         # tag name
     void = False        # if True, __body__ is expected to be empty and the returned element is self-closing
-
+    
     def render(self, __body__, *args, **kwargs):
         
         name = self.name
-        body = __body__.render()
-
+        # __body__ = __body__.render()
+        
         if self.void:
-            if body: raise BodyDisallowed(f"body must be empty for a void HTML tag <{name}>")
+            if __body__: raise BodyDisallowed(f"body must be empty for a void HTML tag <{name}>")
             return f"<{name} />"
         else:
-            return f"<{name}>{body}</{name}>"
+            return f"<{name}>{__body__}</{name}>"
 
 
 ########################################################################################################################################################

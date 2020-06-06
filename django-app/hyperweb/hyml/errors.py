@@ -9,7 +9,7 @@ class HyMLError(ParserError):
         if self.pos:
             return msg + " at line %s, column %s (%s)" % (self.line, self.column, self.text)
 
-class UndefinedVariable(HyMLError):
+class UndefinedTag(HyMLError):
     pass
 
 class NullValue(HyMLError):

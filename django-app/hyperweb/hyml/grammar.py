@@ -376,26 +376,29 @@ body             =  body_struct / body_verbat / body_normal / body_markup
 body_struct      =  mark_struct? nl blocks?
 body_verbat      =  mark_verbat ((nl tail_verbat) / (' '? line_verbat nl blocks?) / nl)
 body_normal      =  mark_normal ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
-body_markup      =  mark_markup ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
+body_markup      =  mark_markup ((nl tail_markup) / (' '? line_markup nl blocks?) / nl)
 
 block_verbat     =  mark_verbat ((' ' line_verbat? nl tail2_verbat?) / (line_verbat? nl tail_verbat?))
 block_normal     =  mark_normal ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
-block_markup     =  mark_markup ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
+block_markup     =  mark_markup ((' ' line_markup? nl tail2_markup?) / (line_markup? nl tail_markup?))
 
 tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
 tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
-#tail_markup     =  (indent_s core_markup dedent_s) / (indent_t core_markup dedent_t)
+tail_markup      =  (indent_s core_markup dedent_s) / (indent_t core_markup dedent_t)
 
 tail2_verbat     =  indent_s indent_s core_verbat dedent_s dedent_s         # like tail_verbat, but with 2-space indentation
 tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
-#tail2_markup    =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
+tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
 
 core_verbat      =  (tail_verbat / (line_verbat nl))+
 core_normal      =  (tail_normal / (line_normal nl))+
-#core_markup     =  (tail_markup / (line_markup nl))+
+core_markup      =  (tail_markup / (line_markup nl))+
 
 line_verbat      =  verbatim ''
-line_normal      =  (escape / text_embedded / text)+                        # line of plain text with {...} or $... expressions; no markup; HTML-escaped during rendering
+line_normal      =  line_markup ''                                          # same as line_markup during parsing, but renders differently (performs HTML-escaping)
+line_markup      =  (escape / text_embedded / text)+                        # line of plain text with {...} or $... expressions; no HTML-escaping during rendering
+
+#line_normal     =  (escape / text_embedded / text)+
 #line_markup     =  (escape / markup_embedded / text_embedded / text)+
 
 mark_struct      =  ':'
@@ -411,7 +414,7 @@ tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
 block_tagged     =  tags_expand ws_body
 tags_expand      =  tag_expand (ws '>' ws tag_expand)*
-tag_expand       =  (name_id / attr_short) attrs_val?
+tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
 
 ###  CONTROL BLOCKS

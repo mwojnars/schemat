@@ -1,14 +1,15 @@
-import sys
+import sys, re
 from parsimonious.grammar import Grammar as Parsimonious
 from six import reraise, string_types, text_type as unicode
 
-from nifty.util import asnumber, escape, ObjDict
+from nifty.util import asnumber, escape as slash_escape, ObjDict
+from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hyml.errors import NullValue
+from hyperweb.hyml.errors import NullValue, UndefinedTag
 from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
 from hyperweb.hyml.structs import Context, Stack
-from hyperweb.hyml.builtin_html import BUILTIN_HTML
+from hyperweb.hyml.builtin_html import Hypertag, BUILTIN_HTML
 
 DEBUG = False
 
@@ -190,7 +191,9 @@ class NODES(object):
             return self
             
         def analyse(self, ctx):
-            "'ctx' is a dict of name->node mapping."
+            """
+            `ctx` is an instance of Context. For read access, it can be used like a dict of current name->node mappings.
+            """
             self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
             
@@ -200,7 +203,10 @@ class NODES(object):
             Every render() not only returns a string - a product of rendering - but also may have side effects:
             modification of the 'stack' if new variables/hypertags were defined during node rendering, at the node's top level.
             """
-            return self.text()
+            if self.children:
+                return u''.join(c.render(stack) for c in self.children)
+            else:
+                return self.text()
 
         # def _checkNull(self, value, ifnull):
         #     """For use in subclasses in places where null values should be detected and either
@@ -228,9 +234,6 @@ class NODES(object):
         def compactify(self, stack, ifnull):
             # if DEBUG: print("compact", "DOC", stack)
             self.children = NODES._compactify_siblings_(self.children, stack, ifnull)
-            
-        def render(self, stack):
-            return u''.join(c.render(stack) for c in self.children)
 
 
     ###  BLOCKS & BODY  ###
@@ -252,25 +255,82 @@ class NODES(object):
     class xbody_verbat(body): pass
     class xbody_normal(body): pass
     class xbody_markup(body): pass
-    
+
+    class xline_verbat(node):
+        def render(self, _):
+            return self.text() + '\n'
+
+    class xline_normal(node):
+        def render(self, stack):
+            assert len(self.children) == 1
+            child = self.children[0]
+            assert child.type == 'line_markup'
+            text = child.render(stack)                      # this calls xline_markup.render()
+            escape = self.tree.config['escape_function']
+            return escape(text)
+        
+    class xline_markup(node):
+        def render(self, stack):
+            markup = NODES.node.render(self, stack)         # this renders embedded expressions, in addition to static text
+            return markup + '\n'
+
     # all intermediate non-terminals within "body" get reduced (flattened), down to these elements of a line:
     #    verbatim, text, text_embedded
     # also, the blocks that comprise a body get preserved; they always strictly follow the above atomic elements
     
     
-    ###  TAG & HYPERTAG  ###
+    ###  TAGS & HYPERTAGS  ###
 
     class xtag_expand(node):
         """Occurrence of a tag."""
+        
+        DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz)
+        name  = None        # tag name: a, A, h1, div ...
+        body  = None        # subtree that will be rendered as body of this tag occurrence; initialized from a sibling node,
+                            # bcs in grammar, body is parsed as a sibling not child; always not-None
+        attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
+        tag   = None        # resolved definition of this tag, either as <tag_def>, or Hypertag instance
+        
+        def setup(self):
+            
+            # retrieve `name` of this tag
+            head = self.children[0]
+            if head.type == 'name_id':
+                self.name = head.value
+                self.attrs = self.children[1:]
+            else:
+                self.name = self.DEFAULT
+                self.attrs = self.children
 
+            # retrieve `body` of this tag occurrence
+            self.body = self.sibling_next       # always present, as either <tag_expand> or <body_*> node
+            
+            # if not self.body:
+            #     print(f'MISSING BODY: {self}')
+            assert self.body
+            assert self.body.type == 'tag_expand' or self.body.type.startswith('body_')
+            
+        def analyse(self, ctx):
+            self.depth = ctx.depth
+            for c in self.attrs: c.analyse(ctx)
+            
+            self.tag = ctx.get(self.name)
+            if self.tag is None: raise UndefinedTag("Undefined tag '%s'" % self.name, self)
+            
+        def render(self, stack):
+            body = self.body.render(stack)
+            if isinstance(self.tag, Hypertag):
+                return self.tag.render(body)
+
+            
     class xtag_def(node):
         """Definition of a tag (hypertag)."""
 
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
-    class xattrs_val(node):
-        """List of attributes inside a tag occurrence (NOT in a definition)."""
+    # class xattrs_val(node):
+    #     """List of attributes inside a tag occurrence (NOT in a definition)."""
     class xattrs_def(node):
         """List of attributes inside a tag definition (NOT in an occurrence)."""
 
@@ -309,19 +369,19 @@ class NODES(object):
             return self.value
         
     class xnumber(literal):
-        def init(self, tree, _):
+        def setup(self):
             self.value = asnumber(self.text())
     
     class xstring(literal):
-        def init(self, tree, _):
+        def setup(self):
             self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
     
     class xstr_unquoted(xstring):
-        def init(self, tree, _):
+        def setup(self):
             self.value = self.text()
     
     class xboolean(literal):
-        def init(self, tree, _):
+        def setup(self):
             self.value = (self.text() == 'True')
 
     class xnone(literal): pass
@@ -335,7 +395,7 @@ class NODES(object):
         ispure   = True
         value    = None
         
-        def init(self, tree, astnode):
+        def setup(self):
             self.value = self.text()
         def render(self, stack):
             return self.value
@@ -348,7 +408,7 @@ class NODES(object):
     class xtext(static): pass
     
     class xescape(static):
-        def init(self, tree, astnode):
+        def setup(self):
             escape = self.text()
             assert len(escape) == 2 and escape[0] == escape[1]
             self.value = escape[0]                          # the duplicated char is dropped
@@ -365,6 +425,11 @@ class NODES(object):
     class xindent_t(xindent): pass
     class xdedent_s(xdedent): pass
     class xdedent_t(xdedent): pass
+    
+    class xvs(static):
+        def setup(self, _drop = re.compile(r'[^\n]')):
+            self.value = _drop.sub('', self.text())         # only keep newlines, drop other whitespace
+
 
 
     ###  SYNTHETIC nodes  ###
@@ -400,7 +465,7 @@ class NODES(object):
             return self.value
         
         def info(self):
-            return "%s at position %s rendering: %s" % (self.infoName(), self.pos, escape(str(self.value)))
+            return "%s at position %s rendering: %s" % (self.infoName(), self.pos, slash_escape(str(self.value)))
     
     
     ###  UTILITY METHODS  ###
@@ -433,19 +498,19 @@ class NODES(object):
 
 class HyML_Tree(BaseTree):
 
-    NODES   = NODES             # must tell the BaseTree's rewriting routine where node classes can be found
-
+    NODES = NODES                           # must tell the BaseTree's rewriting routine where node classes can be found
+    _use_init = False
 
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "ws space comma nl vs " \
+    _ignore_  = "ws space comma nl verbatim " \
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "target blocks_core blocks block block_control ws_body body " \
-                "tags_expand attr_named value_named value_unnamed value_of_attr kwarg " \
-                "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal line_verbat line_normal " \
+                "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
+                "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal " \
                 "text_embedded embedded_braces embedded_eval " \
                 "expr_root subexpr slice subscript trailer atom literal"
     
@@ -468,15 +533,20 @@ class HyML_Tree(BaseTree):
     dependencies = None         # files included/imported by self, as a set of canonical names; for caching and dep. tracking
     # init_params = None          # dict of initialization parameters, for passing to a child document in load()
     
-    target  = None              # target language; currently only "HTML" is supported
     
+    ###  Run-time parameters of parsing process  ###
+    
+    config_default = {
+        'target_language':      "HTML",             # target language; currently only "HTML" is supported
+        'escape_function':      html_escape,        # plaintext-to-markup conversion (escaping) function
+        'compact':              True,               # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
+                                                    # which are returned on all subsequent render() requests; this improves performance when
+                                                    # a document contains many static parts and variables occur rarely
+    }
+    config = None
+
     # dict of external global hypertags/vars to be created on parsing start-up after built-in symbols; set in __init__ through a `context` argument
     globals = {}
-
-    # if True, pure (static, constant) nodes in the document tree will be replaced with their pre-computed render() values
-    # and these values will be returned on all future render() requests; this gives large speed improvement, especially when
-    # the document comprises mainly static parts and variables occur only occasionally
-    do_compactify = True
 
     
     ###  Output of parsing and analysis  ###
@@ -490,14 +560,15 @@ class HyML_Tree(BaseTree):
                                 # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
 
     
-    def __init__(self, text, context = {}, target = 'HTML', compact = True, stopAfter = None):
+    def __init__(self, text, context = {}, stopAfter = None, **config):
         """
         :param text: input document to be parsed
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
         """
         self.globals = context.copy()
-        self.do_compactify = compact
-        self.target = target
+        
+        self.config = self.config_default.copy()
+        self.config.update(**config)
         
         self.parser = HyML_Grammar.get_parser(text)
         text = self.parser.preprocess(text)
@@ -522,7 +593,7 @@ class HyML_Tree(BaseTree):
         # ctx = ctx.copy() if ctx else Context()
         ctx = Context()
 
-        assert self.target == 'HTML'
+        assert self.config['target_language'] == 'HTML'
         ctx.pushall(BUILTIN_HTML)       # seed the context with built-in symbols
         # ctx.pushall(FILTERS)          # ...and standard filters
         
@@ -542,7 +613,7 @@ class HyML_Tree(BaseTree):
         # perform compactification; a part of it was already done during analysis, because every hypertag launches
         # compactification in its subtree on its own, during analysis; what's left is compactification
         # of the top-level document only
-        if self.do_compactify: self.compactify()
+        if self.config['compact']: self.compactify()
         
     def compactify(self):
         """
@@ -584,10 +655,10 @@ if __name__ == '__main__':
     
     text = """
         h1 >a href="http://xxx.com"|This is <h1> title
-            p  / And a paragraph.
+            p  / And <a> paragraph.
         div
             | Ala
-            |kot.
+              kot.
             / i pies
         """
     
