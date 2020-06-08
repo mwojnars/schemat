@@ -362,7 +362,7 @@ hyml_grammar = r"""
 
 ###  DOCUMENT
 
-document         =  vs blocks_core?
+document         =  nl? blocks_core?
 
 blocks_core      =  blocks / block+
 blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
@@ -563,8 +563,7 @@ dedent_s    = "%(DEDENT_S)s"
 indent_t    = "%(INDENT_T)s"
 dedent_t    = "%(DEDENT_T)s"
 
-nl          =  ~"([ \t]*\n)+"                # obligatory vertical space = 1+ newlines, possibly with a leading horizontal space and/or empty lines in between
-vs          =  ~"([ \t]*\n)*"                # optional vertical space = 0+ newlines
+nl          =  ~"\n+"                        # vertical space = 1+ newlines
 
 comma       =  ws ',' ws
 space       =  ~"[ \t]+"                     # obligatory whitespace, no newlines

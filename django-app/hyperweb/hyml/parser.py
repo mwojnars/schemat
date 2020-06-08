@@ -428,7 +428,8 @@ class NODES(object):
     class xname_id(static): pass
     class xname_xml(static): pass
     class xtext(static): pass
-    
+    class xnl(static): pass
+
     class xescape(static):
         def setup(self):
             escape = self.text()
@@ -455,12 +456,6 @@ class NODES(object):
         whitechar = ' '
     class xdedent_t(xdedent):
         whitechar = '\t'
-    
-    class xvs(static):
-        def setup(self, _drop = re.compile(r'[^\n]')):
-            self.value = _drop.sub('', self.text())         # only keep newlines, drop other whitespace
-            
-    class xnl(xvs): pass
 
 
     ###  SYNTHETIC nodes  ###

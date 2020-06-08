@@ -17,20 +17,8 @@ class Hypertag:
     
     def expand(self, __body__, *args, **kwargs):
         """
-        In terms of inline/outline layout, __body__ can consist of either of:
-        - inline string - occupies the 1st line, no terminating \n; the closing tag should be put on the same line;
-        - outline string - starts with \n  on the 1st line of __body__ to indicate there's no inline part;
-                           each line is \n-terminated and may contain relative indentation;
-        - mixed inline+outline - 1st line contains a \n-terminated inline part (starting tag should be put on this line);
-                           subsequent 1+ lines comprise a (multi-line) outline block of the same format as described above
-        
-        If __body__ includes \n (empty line) as the last character, the tag should be expanded in "block" mode:
-        the expansion method should assume that surrounding contents will be printed on separate lines,
-        and it should keep or append \n as the last character of the returned block.
-        
-        Otherwise, "inline" mode should be used, with no
-        
-        Subclasses should NOT append trailing \n nor add extra indentation - both things will be added by caller if needed.
+        Subclasses should NOT append trailing \n nor add extra indentation
+        - both things will be added by the caller if needed.
         """
         raise NotImplementedError
 
