@@ -18,10 +18,14 @@ class Hypertag:
     
     def expand(self, __body__, *args, **kwargs):
         """
-        Subclasses should assume zero-level indentation for the output string
-        (proper indentation will be added by caller).
-        __body__ can be an inline string (no leading \n) or an outlined block
-        (contains leading \n and may contain multiple lines with relative indentation included).
+        In terms of inline/outline layout, __body__ can consist of either of:
+        - inline string - occupies the 1st line, no terminating \n; the closing tag should be put on the same line;
+        - outline string - starts with \n  on the 1st line of __body__ to indicate there's no inline part;
+                           each line is \n-terminated and may contain relative indentation;
+        - mixed inline+outline - 1st line contains a \n-terminated inline part (starting tag should be put on this line);
+                           subsequent 1+ lines comprise a (multi-line) outline block of the same format as described above
+        
+        Subclasses should assume zero-level indentation for the output string, as proper indentation will be added by caller.
         No trailing \n should be added to the returned output.
         """
         raise NotImplementedError

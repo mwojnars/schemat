@@ -20,12 +20,12 @@ DEBUG = False
 ###
 
 def _add_indent(text, indent):
-    """Append `indent` string at the beginning of each line of `text`."""
+    """Append `indent` string at the beginning of each line of `text`, including the 1st line."""
     if not text: return text
     return indent + text.replace('\n', '\n' + indent)
     
 def _del_indent(text, indent):
-    """Remove `indent` string from the beginning of each line of `text`, wherever it's present."""
+    """Remove `indent` string from the beginning of each line of `text`, if it's present; 1st line is left unmodified!"""
     if text.startswith(indent): text = text[len(indent):]
     return text.replace('\n' + indent, '\n')
 
@@ -248,26 +248,29 @@ class NODES(object):
         def render(self, stack):
             
             body = self.body.render(stack)
+            if self.body.is_inline():
+                body = body.rstrip('\n')
+            
             indent = stack.indentation
             output = _del_indent(body, indent)
             
             # expand a chain of tags that enclose `body`
-            for tag in self.tags:
+            for tag in reversed(self.tags):
                 output = tag.expand(output)
                 
             output = _add_indent(output, indent)
             return output + '\n'
-            
-            # # only need to render the 1st child, other children should already be linked as its "body"
-            # head = self.children[0]
-            # return head.render(stack) + '\n'
 
     class xblock_def(block): pass
     class xblock_for(block): pass
     class xblock_if (block): pass
     class xblock_assign(block): pass
 
-    class body(node): pass
+    class body(node):
+        def is_inline(self):
+            """Inline body (no blocks) is terminated with a newline, while outline body has dedent(s) at the end."""
+            return self.children[-1].type == 'nl'
+        
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
     class xbody_normal(body): pass
@@ -275,9 +278,9 @@ class NODES(object):
 
     class line(node):
         def render(self, stack):
-            return stack.indentation + self.render_inline(stack) + '\n'
+            return stack.indentation + self.render_inline(stack)
         def render_inline(self, stack):
-            """Render contents of the line: everything except indentation and trailing newline. Implemented by subclasses."""
+            """Render contents of the line, i.e., everything except indentation. Implemented by subclasses."""
             raise NotImplementedError
 
     class xline_verbat(line):
@@ -298,10 +301,6 @@ class NODES(object):
             markup = NODES.node.render(self, stack)         # call to super-method that renders embedded expressions, in addition to static text
             return markup
 
-    # all intermediate non-terminals within "body" get reduced (flattened), down to these elements of a line:
-    #    verbatim, text, text_embedded
-    # also, the blocks that comprise a body get preserved; they always strictly follow the above atomic elements
-    
     
     ###  TAGS & HYPERTAGS  ###
 
@@ -310,8 +309,6 @@ class NODES(object):
         
         DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz)
         name  = None        # tag name: a, A, h1, div ...
-        #body  = None       # subtree that will be rendered as body of this tag occurrence; initialized from a sibling node,
-                            # bcs in grammar, body is parsed as a sibling not child; always not-None
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         tag   = None        # resolved definition of this tag, either as <tag_def>, or Hypertag instance
         
@@ -326,14 +323,6 @@ class NODES(object):
                 self.name = self.DEFAULT
                 self.attrs = self.children
 
-            # # retrieve `body` of this tag occurrence
-            # self.body = self.sibling_next       # always present, as either <tag_expand> or <body_*> node
-            #
-            # # if not self.body:
-            # #     print(f'MISSING BODY: {self}')
-            # assert self.body
-            # assert self.body.type == 'tag_expand' or self.body.type.startswith('body_')
-            
         def analyse(self, ctx):
             self.depth = ctx.depth
             for c in self.attrs: c.analyse(ctx)
@@ -346,7 +335,6 @@ class NODES(object):
                 return self.tag.expand(body)
             else:
                 raise NotATag(f"Name '{self.name}' is not a tag", self)
-            
             
             
     class xtag_def(node):
@@ -459,11 +447,11 @@ class NODES(object):
     class xdedent_t(xdedent):
         whitechar = '\t'
     
-    
     class xvs(static):
         def setup(self, _drop = re.compile(r'[^\n]')):
             self.value = _drop.sub('', self.text())         # only keep newlines, drop other whitespace
-
+            
+    class xnl(xvs): pass
 
 
     ###  SYNTHETIC nodes  ###
@@ -538,7 +526,7 @@ class HyML_Tree(BaseTree):
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "ws space comma nl verbatim " \
+    _ignore_  = "ws space comma verbatim " \
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
@@ -694,6 +682,8 @@ if __name__ == '__main__':
             | Ala
               kot.
             / i pies
+        
+        div
         """
     
     tree = HyML_Tree(text, stopAfter = "rewrite")

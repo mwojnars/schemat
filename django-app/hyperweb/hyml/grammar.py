@@ -374,9 +374,9 @@ body             =  body_struct / body_verbat / body_normal / body_markup
 
 #body_struct_in   =  mark_struct ((ws block_tagged) / (nl blocks))
 body_struct      =  mark_struct? nl blocks?
-body_verbat      =  mark_verbat ((nl tail_verbat) / (' '? line_verbat nl blocks?) / nl)
-body_normal      =  mark_normal ((nl tail_normal) / (' '? line_normal nl blocks?) / nl)
-body_markup      =  mark_markup ((nl tail_markup) / (' '? line_markup nl blocks?) / nl)
+body_verbat      =  mark_verbat ((nl tail_verbat?) / (' '? line_verbat nl blocks?))
+body_normal      =  mark_normal ((nl tail_normal?) / (' '? line_normal nl blocks?))
+body_markup      =  mark_markup ((nl tail_markup?) / (' '? line_markup nl blocks?))
 
 block_verbat     =  mark_verbat ((' ' line_verbat? nl tail2_verbat?) / (line_verbat? nl tail_verbat?))
 block_normal     =  mark_normal ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
@@ -397,9 +397,6 @@ core_markup      =  (tail_markup / (line_markup nl))+
 line_verbat      =  verbatim ''
 line_normal      =  line_markup ''                                          # same as line_markup during parsing, but renders differently (performs HTML-escaping)
 line_markup      =  (escape / text_embedded / text)+                        # line of plain text with {...} or $... expressions; no HTML-escaping during rendering
-
-#line_normal     =  (escape / text_embedded / text)+
-#line_markup     =  (escape / markup_embedded / text_embedded / text)+
 
 mark_struct      =  ':'
 mark_verbat      =  '!'
@@ -558,9 +555,8 @@ none             =  'None'
 
 escape      =  '$$' / '{{' / '}}'
 
-verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]*"su     # 1 line of plain text, may include special symbols (left unparsed)
+verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]+"su      # 1 line of plain text, may include special symbols (left unparsed)
 text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}]+"su   # 1 line of plain text, special symbols excluded: $ { }
-#texts      =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s{}]+"su     # lines of plain text, all at the same (baseline) indentation level
 
 indent_s    = "%(INDENT_S)s"
 dedent_s    = "%(DEDENT_S)s"
