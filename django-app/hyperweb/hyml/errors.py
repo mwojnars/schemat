@@ -11,6 +11,8 @@ class HyMLError(ParserError):
 
 class UndefinedTag(HyMLError):
     pass
+class NotATag(HyMLError):
+    pass
 
 class NullValue(HyMLError):
     """

@@ -9,7 +9,12 @@ from six import text_type as unicode
 ########################################################################################################################################################
 
 class Stack(list):
-    """Stack implementation based on list."""
+    """
+    Stack of current symbols encountered during semantic analysis. Implementation based on standard <list>.
+    Additionally, it keeps track of current indentation.
+    """
+    
+    indentation = ''        # current indentation string, as a combination of ' ' and '\t' characters
     
     @property
     def size(self):
@@ -22,15 +27,32 @@ class Stack(list):
     pushall  = list.extend
     get      = list.__getitem__
     set      = list.__setitem__
-    position = list.__len__
+    
+    def indent(self, whitechar):
+        self.indentation += whitechar
+    
+    def dedent(self, whitechar):
+        assert self.indentation[-1] == whitechar, 'Trying to dedent a different character than was appended'
+        self.indentation = self.indentation[:-1]
+    
+    def position(self):
+        """
+        Position in a Stack that can be passed to reset().
+        Takes a form of a pair: (length of stack of symbols, length of indentation).
+        """
+        return len(self), len(self.indentation)
 
-    def reset(self, state):
+    def reset(self, position):
         "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
         # if len(self) < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
-        del self[state:]
+        pos_symbols, pos_indent = position
+        self.indentation = self.indentation[:pos_indent]
+        del self[pos_symbols:]
         
     def copy(self):
-        return Stack(self)
+        dup = Stack(self)
+        dup.indentation = self.indentation
+        return dup
         
 
 class MultiDict(object):

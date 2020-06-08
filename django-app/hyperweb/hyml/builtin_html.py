@@ -16,7 +16,14 @@ class Hypertag:
     """
     __hypertag__ = True
     
-    def render(self, __body__, *args, **kwargs):
+    def expand(self, __body__, *args, **kwargs):
+        """
+        Subclasses should assume zero-level indentation for the output string
+        (proper indentation will be added by caller).
+        __body__ can be an inline string (no leading \n) or an outlined block
+        (contains leading \n and may contain multiple lines with relative indentation included).
+        No trailing \n should be added to the returned output.
+        """
         raise NotImplementedError
 
 
@@ -25,7 +32,7 @@ class HTMLTag(Hypertag):
     name = None         # tag name
     void = False        # if True, __body__ is expected to be empty and the returned element is self-closing
     
-    def render(self, __body__, *args, **kwargs):
+    def expand(self, __body__, *args, **kwargs):
         
         name = self.name
         # __body__ = __body__.render()
