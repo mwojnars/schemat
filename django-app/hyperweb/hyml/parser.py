@@ -87,7 +87,8 @@ class HyML_Grammar(Parsimonious):
         """
         Preprocessing:
         - INDENT_* / DEDENT_* inserted in place of leading spaces/tabs
-        - empty lines passed unmodified
+        - trailing whitespace removed
+        - whitespace-only lines changed to empty lines (but \n preserved)
         - comment lines (--) removed
         """
         INDENT_S = self.symbols['INDENT_S']
@@ -100,16 +101,17 @@ class HyML_Grammar(Parsimonious):
         current = ''            # current indentation, as a string
 
         text = text.rstrip('\n')
-        total = len(text.splitlines())
-        text += '\n\n'          # a clear line (zero chars) is appended to ensure equal no. of DEDENT as INDENT
+        code = text.splitlines() + ['']             # empty line is appended to ensure equal no. of DEDENT as INDENT
+        total = len(code) - 1
         
-        for line in text.splitlines():
+        for line in code:
             linenum += 1
+            line = line.rstrip()                    # trailing whitespace removed
             tail = line.lstrip()
             indent = line[: len(line) - len(tail)]
             
-            if not tail and linenum <= total:        # empty line, append without changes
-                lines.append(line)
+            if not tail and linenum <= total:       # only whitespace in line? append empty line
+                lines.append('')
                 
             elif tail.startswith('--'):             # comment line, ignore
                 pass
@@ -245,21 +247,26 @@ class NODES(object):
             assert self.tags and all(tag.type == 'tag_expand' for tag in self.tags)
             assert self.body.type.startswith('body_')
             
-        def render(self, stack):
+        def render(self, stack, _re_space = re.compile(r'^\s*')):
             
             body = self.body.render(stack)
-            if self.body.is_inline():
-                body = body.rstrip('\n')
+            stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
+            skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
+            body = body[:stop]
+            assert skip >= 1
             
+            if self.body.is_block():
+                body += '\n'
+                
             indent = stack.indentation
             output = _del_indent(body, indent)
             
-            # expand a chain of tags that enclose `body`
+            # expand the chain of tags that enclose `body`
             for tag in reversed(self.tags):
                 output = tag.expand(output)
                 
             output = _add_indent(output, indent)
-            return output + '\n'
+            return output + skip * '\n'
 
     class xblock_def(block): pass
     class xblock_for(block): pass
@@ -268,9 +275,11 @@ class NODES(object):
 
     class body(node):
         def is_inline(self):
-            """Inline body (no blocks) is terminated with a newline, while outline body has dedent(s) at the end."""
+            """Inline body (no blocks) is terminated with a newline, while outline (block) body has dedent(s) at the end."""
             return self.children[-1].type == 'nl'
-        
+        def is_block(self):
+            return not self.is_inline()
+
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
     class xbody_normal(body): pass

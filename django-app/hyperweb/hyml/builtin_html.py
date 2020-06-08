@@ -14,7 +14,6 @@ class Hypertag:
     - it may accept any number of plain (non-markup) arguments
     - it should always return an unnamed markup value; additionally, it may return a dict of named markup values (sections) ??
     """
-    __hypertag__ = True
     
     def expand(self, __body__, *args, **kwargs):
         """
@@ -25,8 +24,13 @@ class Hypertag:
         - mixed inline+outline - 1st line contains a \n-terminated inline part (starting tag should be put on this line);
                            subsequent 1+ lines comprise a (multi-line) outline block of the same format as described above
         
-        Subclasses should assume zero-level indentation for the output string, as proper indentation will be added by caller.
-        No trailing \n should be added to the returned output.
+        If __body__ includes \n (empty line) as the last character, the tag should be expanded in "block" mode:
+        the expansion method should assume that surrounding contents will be printed on separate lines,
+        and it should keep or append \n as the last character of the returned block.
+        
+        Otherwise, "inline" mode should be used, with no
+        
+        Subclasses should NOT append trailing \n nor add extra indentation - both things will be added by caller if needed.
         """
         raise NotImplementedError
 
