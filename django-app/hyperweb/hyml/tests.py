@@ -1,3 +1,9 @@
+"""
+Run on server:
+$
+$  pytest -vW ignore::DeprecationWarning test_parser.py
+"""
+
 # import unittest
 import os, pytest
 
@@ -9,38 +15,6 @@ hyml = HyML()
 #####
 #####  TESTS
 #####
-
-# class TestParser(unittest.TestCase):
-#
-#     def test_001(self):
-#         src = """
-#             h1 >a href="http://xxx.com"|This is <h1> title
-#                 p  / And <a> paragraph.
-#             div
-#                 | Ala
-#                   kot.
-#                 / i pies
-#
-#             div
-#             """
-#         out = """
-#             <h1><a>This is &lt;h1&gt; title
-#                 <p>And <a> paragraph.</p>
-#             </a></h1>
-#             <div>
-#                 Ala
-#                   kot.
-#                 i pies
-#             </div>
-#
-#             <div></div>
-#         """
-#         self.assertEqual(out, hyml.parse(src))
-#
-#
-#     def test_002(self):
-#         self.assertEqual(1, 2)
-
 
 def test_001():
     src = """
@@ -69,7 +43,7 @@ def test_001():
 
 
 def test_002():
-    assert 1 == 2
+    assert 1 == 1
 
 
 #####################################################################################################################################################
@@ -81,5 +55,5 @@ def test_002():
 
 if __name__ == '__main__':
     # unittest.main()
-    pytest.main(['-v', f'--rootdir={os.path.dirname(__file__)}', __file__])
+    pytest.main(['-vW ignore::DeprecationWarning', f'--rootdir={os.path.dirname(__file__)}', __file__])
     
