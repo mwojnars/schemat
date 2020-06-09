@@ -15,9 +15,9 @@ DEBUG = False
 
 
 ########################################################################################################################################################
-###
-###  UTILITIES
-###
+#####
+#####  UTILITIES
+#####
 
 def _add_indent(text, indent):
     """Append `indent` string at the beginning of each line of `text`, including the 1st line."""
@@ -140,8 +140,8 @@ class HyML_Grammar(Parsimonious):
         assert current == '', f"'{current}'"
         
         output = '\n'.join(lines)
-        print("HyML_Grammar.preprocess() output:")
-        print(output)
+        # print("HyML_Grammar.preprocess() output:")
+        # print(output)
         
         return output
         
@@ -150,9 +150,9 @@ HyML_Grammar.default = HyML_Grammar(special_chars = HyML_Grammar.CHARS_DEFAULT)
 
         
 ########################################################################################################################################################
-###
-###  NODES
-###
+#####
+#####  NODES
+#####
 
 class NODES(object):
     "A lexical container for definitions of all HyML tree node classes."
@@ -255,7 +255,7 @@ class NODES(object):
             body = body[:stop]
             assert skip >= 1
             
-            if self.body.is_block():
+            if self.body.has_blocks():
                 body += '\n'
                 
             indent = stack.indentation
@@ -274,11 +274,9 @@ class NODES(object):
     class xblock_assign(block): pass
 
     class body(node):
-        def is_inline(self):
-            """Inline body (no blocks) is terminated with a newline, while outline (block) body has dedent(s) at the end."""
-            return self.children[-1].type == 'nl'
-        def is_block(self):
-            return not self.is_inline()
+        def has_blocks(self):
+            """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
+            return self.children[-1].type != 'nl'
 
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
@@ -607,6 +605,10 @@ class HyML_Tree(BaseTree):
         assert isinstance(self.root, NODES.xdocument)
         if stopAfter == "rewrite": return
 
+        self.analyse()
+        if stopAfter == "analyse": return
+
+
     def analyse(self):
         "Link occurences of variables and hypertags with their definition nodes, collect all symbols defined in the document."
         
@@ -666,14 +668,23 @@ class HyML_Tree(BaseTree):
 #####  HYML_PARSER
 #####
 
-class HyML_Parser:
+class HyML:
     """
+    HyML Parser.
     """
+    def __init__(self, **config):
+        self.config = config
+        
+    def parse(self, source):
+        
+        tree = HyML_Tree(source, **self.config)
+        return tree.render()
     
+
 ########################################################################################################################################################
-###
-###  MAIN
-###
+#####
+#####  MAIN
+#####
 
 if __name__ == '__main__':
     
