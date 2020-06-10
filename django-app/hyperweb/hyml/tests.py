@@ -1,7 +1,7 @@
 """
 Run on server:
 $
-$  pytest -vW ignore::DeprecationWarning test_parser.py
+$  pytest -vW ignore::DeprecationWarning tests.py
 """
 
 # import unittest
@@ -28,7 +28,7 @@ def test_001():
         div
         """
     out = """
-        <h1><a>This is &lt;h1&gt; title
+        <h1><a href="http://xxx.com">This is &lt;h1&gt; title
             <p>And <a> paragraph.</p>
         </a></h1>
         <div>

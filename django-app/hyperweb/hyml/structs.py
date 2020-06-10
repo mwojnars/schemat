@@ -288,3 +288,16 @@ class LazyVariable(object):
 lazyEmptyString = LazyVariable(lambda: '')
 lazyEmptyString.getvalue()
 
+
+class MultiBody:
+    """
+    Multi-body of a document being rendered. Consists of:
+    1) main body (unnamed), as a string
+    2) dict of sections: {section_name: section_blocks},
+       where `section_blocks` is a list of 1 or more strings (lines, blocks) that fall into a given section.
+    
+    The most important operation on MultiBody instances is concatenation:
+    - of two MultiBody instances: mb1 + mb2  (corresponding parts - main bodies and sections_blocks - get concatenated)
+    - or MultiBody and a plain string: mb + s  (the string is appended to main body).
+    """
+    

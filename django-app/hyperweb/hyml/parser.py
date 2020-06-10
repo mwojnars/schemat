@@ -1,4 +1,6 @@
 import sys, re
+from collections import OrderedDict
+
 from parsimonious.grammar import Grammar as Parsimonious
 from six import reraise, string_types, text_type as unicode
 
@@ -6,10 +8,10 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hyml.errors import NullValue, UndefinedTag, NotATag
+from hyperweb.hyml.errors import NullValue, UndefinedTag, NotATag, DuplicateAttribute
 from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
 from hyperweb.hyml.structs import Context, Stack
-from hyperweb.hyml.builtin_html import Hypertag, BUILTIN_HTML
+from hyperweb.hyml.builtin_html import ExternalTag, BUILTIN_HTML
 
 DEBUG = False
 
@@ -263,7 +265,7 @@ class NODES(object):
             
             # expand the chain of tags that enclose `body`
             for tag in reversed(self.tags):
-                output = tag.expand(output)
+                output = tag.expand(output, stack)
                 
             output = _add_indent(output, indent)
             return output + skip * '\n'
@@ -316,9 +318,11 @@ class NODES(object):
         
         DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz)
         name  = None        # tag name: a, A, h1, div ...
-        attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         tag   = None        # resolved definition of this tag, either as <tag_def>, or Hypertag instance
-        
+        attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
+        unnamed = None      # list of <expression> nodes of unnamed attributes from `attrs`
+        named   = None      # OrderedDict of {name: <expression>} of named attributes from `attrs`
+
         def setup(self):
             
             # retrieve `name` of this tag
@@ -329,17 +333,38 @@ class NODES(object):
             else:
                 self.name = self.DEFAULT
                 self.attrs = self.children
-
+                
+            self.unnamed = []
+            self.named = OrderedDict()
+            
+            # collect attributes: their names (optional) and expressions (obligatory);
+            # NOTE: unnamed attrs can be *mixed* with named ones (unlike in python) -
+            # during tag expansion all unnamed attrs are passed first to a tag, followed by all named (keyword-) ones
+            for attr in self.attrs:
+                name = attr.name
+                expr = attr.expr
+                if name is None:
+                    self.unnamed.append(expr)
+                else:
+                    if name in self.named: raise DuplicateAttribute(f"Attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
+                    self.named[name] = expr
+                
         def analyse(self, ctx):
+            
             self.depth = ctx.depth
             for c in self.attrs: c.analyse(ctx)
             
             self.tag = ctx.get(self.name)
             if self.tag is None: raise UndefinedTag(f"Undefined tag '{self.name}'", self)
             
-        def expand(self, body):
-            if isinstance(self.tag, Hypertag):
-                return self.tag.expand(body)
+        def expand(self, body, stack):
+            
+            # evaluate attributes to calculate actual values
+            unnamed = [attr.evaluate(stack) for attr in self.unnamed]
+            named = {name: expr.evaluate(stack) for name, expr in self.named.items()}      # here, OrderedDict is no longer needed, as order matters for evaluation only
+            
+            if isinstance(self.tag, ExternalTag):
+                return self.tag.expand(body, *unnamed, **named)
             else:
                 raise NotATag(f"Name '{self.name}' is not a tag", self)
             
@@ -350,23 +375,34 @@ class NODES(object):
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
-    # class xattrs_val(node):
-    #     """List of attributes inside a tag occurrence (NOT in a definition)."""
     class xattrs_def(node):
         """List of attributes inside a tag definition (NOT in an occurrence)."""
+        
+        
+    class attr(node):
+        name = None         # [str] name of this attribute; or None if unnamed
+        expr = None         # <expression> node of this attribute; or None if no expression present (for attr definition without default)
 
-    class xattr_val(node):
+    class xattr_val(attr):
         """Attribute inside a tag occurrence OR tag definition:
-            named / unnamed / short (only in tag occurence) / body (only in tag definition.
+            unnamed / named / short (only in tag occurence) / body (only in tag definition).
         """
+        def setup(self):
+            assert 1 <= len(self.children) <= 2
+            if len(self.children) == 2:
+                self.name = self.children[0].value
+            self.expr = self.children[-1]
+            
 
     ###  EXPRESSIONS  ###
     
     class expression(node):
         """Base class for all nodes that represent an expression, or its part (a subexpression)."""
-    
+        def evaluate(self, stack):
+            raise NotImplementedError
+
     class expression_root(expression):
-        """Base class for root nodes of all embedded expressions, either in markup or attribute/argument lists.
+        """Base class for root nodes of all non-literal embedded expressions, either in markup or attribute/argument lists.
         """
         context = None      # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
                             # in case if the expression evaluates to yet another (dynamic) piece of HyML code

@@ -14,6 +14,10 @@ class UndefinedTag(HyMLError):
 class NotATag(HyMLError):
     pass
 
+class DuplicateAttribute(HyMLError):
+    pass
+
+
 class NullValue(HyMLError):
     """
     Null value was encountered during rendering of a node or evaluation of an expression.
@@ -31,9 +35,9 @@ class NoneExpression(HyMLError):
     def __init__(self, msg = "expression embedded in text evaluates to None"):
         Exception.__init__(self, msg)
     
-class BodyDisallowed(HyMLError):
+class VoidTag(HyMLError):
     """
-    Raised when non-empty body is provided for a void tag.
+    Raised when non-empty body is passed to a void tag (i.e., a tag that doesn't accept body).
     """
     def __init__(self, msg = "body must be empty for a void tag"):
         Exception.__init__(self, msg)

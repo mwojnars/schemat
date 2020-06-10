@@ -455,7 +455,7 @@ attr_val         =  attr_named / attr_unnamed
 
 attr_body        =  '@' name_id
 attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
-attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shortand literal value MAY contain "-", unlike python identifiers!
+attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shorthand literal value MAY contain "-", unlike python identifiers!
 attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_of_attr ''
 value_of_attr    =  text_embedded / literal
