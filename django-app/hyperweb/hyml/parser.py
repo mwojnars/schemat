@@ -335,19 +335,22 @@ class NODES(object):
                 self.attrs = self.children
                 
             self.unnamed = []
-            self.named = OrderedDict()
+            self.named = [] #OrderedDict()
             
             # collect attributes: their names (optional) and expressions (obligatory);
-            # NOTE: unnamed attrs can be *mixed* with named ones (unlike in python) -
+            # NOTE #1: unnamed attrs can be *mixed* with named ones (unlike in python) -
             # during tag expansion all unnamed attrs are passed first to a tag, followed by all named (keyword-) ones
+            # NOTE #2: same attr can appear more than once, in such case its string values are space-concatenated;
+            # this is particularly useful for "class" attibute and its short form:  div .top.left.darkbg
             for attr in self.attrs:
                 name = attr.name
                 expr = attr.expr
                 if name is None:
                     self.unnamed.append(expr)
                 else:
-                    if name in self.named: raise DuplicateAttribute(f"Attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
-                    self.named[name] = expr
+                    self.named.append((name, expr))
+                    # if name in self.named: raise DuplicateAttribute(f"Attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
+                    # self.named[name] = expr
                 
         def analyse(self, ctx):
             
@@ -361,7 +364,15 @@ class NODES(object):
             
             # evaluate attributes to calculate actual values
             unnamed = [attr.evaluate(stack) for attr in self.unnamed]
-            named = {name: expr.evaluate(stack) for name, expr in self.named.items()}      # here, OrderedDict is no longer needed, as order matters for evaluation only
+            # named = {name: expr.evaluate(stack) for name, expr in self.named}      # here, OrderedDict is no longer needed, as order matters for evaluation only
+            
+            named = {}
+            for name, expr in self.named:
+                value = expr.evaluate(stack)
+                if name in named:
+                    named[name] = f'{named[name]} {value}'
+                else:
+                    named[name] = value
             
             if isinstance(self.tag, ExternalTag):
                 return self.tag.expand(body, *unnamed, **named)
@@ -380,19 +391,27 @@ class NODES(object):
         
         
     class attr(node):
+        """Attribute inside a tag occurrence OR tag definition:
+            unnamed / named / short (only in tag occurence) / body (only in tag definition).
+        """
         name = None         # [str] name of this attribute; or None if unnamed
         expr = None         # <expression> node of this attribute; or None if no expression present (for attr definition without default)
 
     class xattr_val(attr):
-        """Attribute inside a tag occurrence OR tag definition:
-            unnamed / named / short (only in tag occurence) / body (only in tag definition).
-        """
         def setup(self):
             assert 1 <= len(self.children) <= 2
             if len(self.children) == 2:
                 self.name = self.children[0].value
             self.expr = self.children[-1]
             
+    class xattr_short(attr):
+        def setup(self):
+            symbol = self.fulltext[self.pos[0]]
+            assert symbol in '.#'
+            self.name = 'class' if symbol == '.' else 'id'
+            assert len(self.children) == 1
+            self.expr = self.children[-1]
+        
 
     ###  EXPRESSIONS  ###
     
@@ -421,27 +440,26 @@ class NODES(object):
         isstatic = True
         ispure   = True
         value    = None
-        def analyse(self, ctx): pass
-        def evaluate(self, stack):
-            return self.value
-        
+        def setup(self):            self.value = self.text()
+        def analyse(self, ctx):     pass
+        def evaluate(self, stack):  return self.value
+    
     class xnumber(literal):
         def setup(self):
             self.value = asnumber(self.text())
-    
-    class xstring(literal):
-        def setup(self):
-            self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
-    
-    class xstr_unquoted(xstring):
-        def setup(self):
-            self.value = self.text()
     
     class xboolean(literal):
         def setup(self):
             self.value = (self.text() == 'True')
 
+    class xstring(literal):
+        def setup(self):
+            self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
+    
+    class xstr_unquoted(xstring): pass
+    class xattr_short_lit(literal): pass
     class xnone(literal): pass
+
 
     
     ###  STATIC nodes  ###
@@ -734,7 +752,8 @@ if __name__ == '__main__':
               kot.
             / i pies
         
-        div
+        div#box.top.grey
+        input enabled=True
         """
     
     tree = HyML_Tree(text, stopAfter = "rewrite")

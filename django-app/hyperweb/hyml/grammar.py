@@ -2,7 +2,7 @@
 Hypertags Markup Language (HyML Essential).
 An indentation-based document description & templating language with modularity through inline function defitions.
 
-***Names (?):  HyML, PyML, Sleek, HypeML, OneML
+***Names (?):  HyML, PyML, Sleek, HypeML, OneML, HDML, Coco
 - tree of tags (TRoT, ToT, Treet) markup lang (TreML, TreeML, BranchML), HyTree
 
 Key features:

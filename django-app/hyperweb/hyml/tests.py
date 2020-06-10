@@ -25,7 +25,9 @@ def test_001():
               kot.
             / i pies
         
-        div
+        div #box .top.grey
+        div#box.top .grey
+        input enabled=True
         """
     out = """
         <h1><a href="http://xxx.com">This is &lt;h1&gt; title
@@ -37,7 +39,9 @@ def test_001():
             i pies
         </div>
 
-        <div></div>
+        <div id="box" class="top grey"></div>
+        <div id="box" class="top grey"></div>
+        <input enabled />
     """
     assert out.strip() == hyml.parse(src).strip()
 
