@@ -709,7 +709,7 @@ Compactification of an inner hypertag using internally a top-level hypertag caus
 
 <H.body />
 
-@author:  Marcin Wojnarski
+@author:  Marcin Wojnarski, mwojnars (at) ns.onet.pl
 """
 
 import sys, re, operator

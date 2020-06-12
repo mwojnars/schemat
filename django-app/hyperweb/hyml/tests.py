@@ -26,7 +26,7 @@ def test_001():
             / i pies
         
         div #box .top.grey
-        div#box.top .grey
+        div#box.top .grey-01
         input enabled=True
         """
     out = """
@@ -40,7 +40,7 @@ def test_001():
         </div>
 
         <div id="box" class="top grey"></div>
-        <div id="box" class="top grey"></div>
+        <div id="box" class="top grey-01"></div>
         <input enabled />
     """
     assert out.strip() == hyml.parse(src).strip()

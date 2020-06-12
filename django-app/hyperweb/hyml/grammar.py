@@ -326,6 +326,19 @@ try | DOI: $paper.doi
             [[$(journal.title|striptags),]]
             [[$paper.year,]] [[pp. $paper.pages,]] [[$paper.issue,]] [[DOI: $paper.doi]]
             
+try | Search... ({paperCount|comma000} papers from {journalCount|comma000} journals)
+            
+            [$("Search... (" (paperCount|comma000) " papers from " (journalCount|comma000) " journals)")]
+            
+div class="panel panel-body panel-sidebar" class=$color class=$class class=$extra style=$style
+div class="panel panel-body panel-sidebar" class={' '.join([color, class, extra])} style=$style
+div class="panel panel-body panel-sidebar" class={color class extra} style=$style
+
+            <div class=$("panel panel-body panel-sidebar " color " " class " " extra) style=$style>
+            
+div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compactOnSmall}!
+
+            <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
 
 
@@ -395,8 +408,8 @@ core_normal      =  (tail_normal / (line_normal nl))+
 core_markup      =  (tail_markup / (line_markup nl))+
 
 line_verbat      =  verbatim ''
-line_normal      =  line_markup ''                                          # same as line_markup during parsing, but renders differently (performs HTML-escaping)
-line_markup      =  (escape / text_embedded / text)+                        # line of plain text with {...} or $... expressions; no HTML-escaping during rendering
+line_normal      =  line_markup ''                              # same as line_markup during parsing, but renders differently (performs HTML-escaping)
+line_markup      =  (escape / embedding / text)+                # line of plain text with {...} or $... expressions; no HTML-escaping during rendering
 
 mark_struct      =  ':'
 mark_verbat      =  '!'
@@ -418,13 +431,13 @@ tag_expand       =  (name_id / attr_short) attrs_val?           # if name is mis
 
 block_control    =  block_assign / block_if / block_try / block_for
 
-block_assign     =  targets '=' (expr_augment / text_embedded)
+block_assign     =  targets '=' (expr_augment / embedding)
 block_try        =  ('try' ws_body ('or' ws_body)* ('else' ws_body)?) / try_short
-block_for        =  'for' space targets space 'in' space (expr_augment / text_embedded) ws_body
+block_for        =  'for' space targets space 'in' space (expr_augment / embedding) ws_body
 block_if         =  'if' clause_if ('elif' clause_if)* ('else' ws_body)?
 
 try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
-clause_if        =  space (expr / text_embedded) ws_body
+clause_if        =  space (expr / embedding) ws_body
 ws_body          =  ws body
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
@@ -436,11 +449,9 @@ target           =  ('(' ws targets ws ')') / var               # left side of a
 # below, results of multiple space-separated expressions are ''-concatenated,
 # while results of ','-separated expressions (a tuple) are  ' '-concatenated
 
-text_embedded    =  embedded_braces / embedded_eval
-embedded_braces  =  '{' ws expr_augment ws '}'
-embedded_eval    =  '$' expr_var
-
-#markup_embedded =  '{{' ws expr_augment ws '}}'
+embedding        =  embedding_braces / embedding_eval
+embedding_braces =  '{' ws expr_augment ws '}'
+embedding_eval   =  '$' expr_var
 
 
 ###  ATTRIBUTES of tags
@@ -454,14 +465,14 @@ attrs_val        =  ((ws attr_short+) / (space attr_val)) (space (attr_short+ / 
 attr_val         =  attr_named / attr_unnamed
 
 attr_body        =  '@' name_id
-attr_short       =  ('.' / '#') (attr_short_lit / text_embedded)    # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
+attr_short       =  ('.' / '#') (attr_short_lit / embedding)        # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shorthand literal value MAY contain "-", unlike python identifiers!
 attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_of_attr ''
-value_of_attr    =  text_embedded / literal
+value_of_attr    =  embedding / literal
 
 #value_named      =  value_unnamed / str_unquoted
-#value_unnamed    =  text_embedded / literal
+#value_unnamed    =  embedding / literal
 
 ###  ARGUMENTS of functions
 
@@ -479,7 +490,7 @@ kwarg            =  name_id ws '=' ws expr
 # other than blindly propagating method calls down to the leaf node.
 
 expr         =  expr_root ''                # basic (standard) form of an expression
-expr_var     =  factor_var ''               # reduced form of an expression: a variable, with optional trailer; used for inline $... embedding (embedded_eval) only
+expr_var     =  factor_var ''               # reduced form of an expression: a variable, with optional trailer; used for inline $... embedding (embedding_eval) only
 expr_augment =  expr_root / expr_tuple      # augmented form of an expression: includes unbounded tuples (no parentheses); used in augmented assignments
 
 expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
@@ -490,9 +501,9 @@ tuple_atom   =  '(' ws ((expr comma)+ (expr ws)?)? ')'
 list         =  '[' ws (expr comma)* (expr ws)? ']'
 
 atom         =  literal / var / subexpr / tuple_atom / list
-factor_var   =  var trailer*                                  # reduced form of `factor` for use in expr_var
-factor       =  atom trailer*                                 # operators: () [] .
-pow_expr     =  factor (ws op_power ws factor)?
+factor_var   =  var trailer* qualifier?                       # reduced form of `factor` for use in expr_var
+factor       =  atom trailer* qualifier?                      # operators: () [] .
+pow_expr     =  factor (ws op_power ws factor)*
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent
 arith_expr   =  neg? ws term (ws op_additive ws term)*        # operators: neg + -
 shift_expr   =  arith_expr (ws op_shift ws arith_expr)*
@@ -505,12 +516,14 @@ comparison   =  concat_expr (ws op_comp ws concat_expr)*
 not_test     =  (not space)* comparison                       # spaces are obligatory around: not, and, or, if, else,
 and_test     =  not_test (space 'and' space not_test)*        # even if subexpressions are enclosed in (...) - unlike in Python
 or_test      =  and_test (space 'or' space and_test)*
-ifelse_test  =  or_test (space 'if' space or_test (space 'else' space ifelse_test)?)?
+ifelse_test  =  or_test (space 'if' space or_test (space 'else' space ifelse_test)?)?       # "else" branch is optional, defaults to None
+
+#empty_test  =  ifelse_test op_empty (ifelse_test)?           # test for emptiness (falseness) of 1st operand: if empty, it's replaced with either '' or None, depending on operator: ? or !
 
 expr_root    =  ifelse_test ''
 
 
-###  TAIL OPERATORS:  call, slice, member access ...
+###  TAIL OPERATORS:  call, slice, member access, qualifier ...
 
 slice_value  =  ws (expr ws)?                # empty value '' serves as a placeholder, so that we know which part of *:*:* we're at
 slice        =  slice_value ':' slice_value (':' slice_value)?
@@ -518,8 +531,11 @@ subscript    =  slice / (ws expr_augment ws)
 
 call         =  '(' ws (args ws)? ')'        # no leading space allowed before () [] . -- unlike in Python
 index        =  '[' subscript ']'            # handles atomic indices [i] and all types of [*:*:*] slices
-member       =  '.' name_id               # no space after '.' allowed
+member       =  '.' name_id                  # no space around '.' allowed
 trailer      =  call / index / member
+
+qualifier    =  ~"[?!]"                      # ? = value of None, empty (false), exceptions converted to ''; '!' = empty (false) value triggers exception
+
 
 ###  SIMPLE OPERATORS
 
@@ -528,6 +544,7 @@ neg          =  '-'                            # multiple negation, e.g., "---x"
 op_multiplic =  '*' / '//' / '/' / '%%'        # double percent means single percent, only we need to escape for grammar string formatting
 op_additive  =  '+' / '-'
 op_shift     =  '<<' / '>>'
+op_empty     =  '?' / '!'
 
 not          =  'not'
 op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"

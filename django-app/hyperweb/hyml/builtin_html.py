@@ -90,7 +90,9 @@ BUILTIN_HTML = {
     'str':          text_type,      # $str(var) -- string representation of an object, always in Unicode
     'len':          len,            # $len(s)
     'range':        range,
-
+    'set':          set,
+    'dict':         dict,
+    'list':         list,
 }
 
 BUILTIN_XHTML = BUILTIN_HTML.copy()

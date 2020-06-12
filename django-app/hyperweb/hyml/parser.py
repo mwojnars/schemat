@@ -1,14 +1,19 @@
-import sys, re
+# -*- coding: utf-8 -*-
+"""
+@author:  Marcin Wojnarski
+"""
+
+import sys, re, operator
 from collections import OrderedDict
 
 from parsimonious.grammar import Grammar as Parsimonious
-from six import reraise, string_types, text_type as unicode
+from six import reraise, string_types, text_type as STR
 
 from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hyml.errors import NullValue, UndefinedTag, NotATag, DuplicateAttribute
+from hyperweb.hyml.errors import HyMLError, MissingValue, UndefinedTag, NotATag, DuplicateAttribute
 from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
 from hyperweb.hyml.structs import Context, Stack
 from hyperweb.hyml.builtin_html import ExternalTag, BUILTIN_HTML
@@ -159,9 +164,12 @@ HyML_Grammar.default = HyML_Grammar(special_chars = HyML_Grammar.CHARS_DEFAULT)
 class NODES(object):
     "A lexical container for definitions of all HyML tree node classes."
 
-    # modes of rendering & evaluation of subtrees
-    MODE_STRICT = 1         # strict mode: requires that all variables in the subtree are defined (not MISSING), otherwise UndefinedValue exception is raised
-    MODE_NORMAL = 2         # normal mode: None variables are
+    # # modes of rendering & evaluation of subtrees
+    # MODE_STRICT = 1         # strict mode: requires that all variables in the subtree are defined (not MISSING), otherwise UndefinedValue exception is raised
+    # MODE_NORMAL = 2         # normal mode: None variables are
+
+
+    ###  BASE NODES  ###
 
     class node(BaseTree.node):
         isstatic     = False        # True in <static>, <literal> and their subclasses
@@ -229,6 +237,19 @@ class NODES(object):
             # if DEBUG: print("compact", "DOC", stack)
             self.children = NODES._compactify_siblings_(self.children, stack)
 
+    class static(node):
+        """A node that represents static text: its self.value is already known during parsing or analysis, before render() is called."""
+        isstatic = True
+        ispure   = True
+        value    = None
+        
+        def setup(self):
+            self.value = self.text()
+        def render(self, stack):
+            return self.value
+        def __str__(self):
+            return self.value
+        
 
     ###  BLOCKS & BODY  ###
 
@@ -236,7 +257,6 @@ class NODES(object):
     class xblock_verbat(block): pass
     class xblock_normal(block): pass
     class xblock_markup(block): pass
-        # TODO
     
     class xblock_tagged(block):
         tags = None         # non-empty chain of <tag_expand> nodes
@@ -271,10 +291,17 @@ class NODES(object):
             return output + skip * '\n'
 
     class xblock_def(block): pass
+    class xblock_try(block): pass
     class xblock_for(block): pass
     class xblock_if (block): pass
     class xblock_assign(block): pass
-
+    
+    class xclause_if(node):
+        expr = None         # <expression> node containing a test to be performed
+        body = None         # <body> to be rendered if the clause is positive
+        # def setup(self):
+        #     assert len(children) == 2
+    
     class body(node):
         def has_blocks(self):
             """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
@@ -314,7 +341,13 @@ class NODES(object):
     ###  TAGS & HYPERTAGS  ###
 
     class xtag_expand(node):
-        """Occurrence of a tag."""
+        """
+        Occurrence of a tag.
+        NOTE #1: unnamed attrs can be *mixed* with named ones (unlike in python) -
+                 during tag expansion all unnamed attrs are passed first to a tag, followed by all named (keyword-) ones
+        NOTE #2: same attr can appear more than once, in such case its values (must be strings!) get space-concatenated;
+                 this is particularly useful for "class" attibute and its short form:  div .top.left.darkbg
+        """
         
         DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz)
         name  = None        # tag name: a, A, h1, div ...
@@ -338,10 +371,6 @@ class NODES(object):
             self.named = [] #OrderedDict()
             
             # collect attributes: their names (optional) and expressions (obligatory);
-            # NOTE #1: unnamed attrs can be *mixed* with named ones (unlike in python) -
-            # during tag expansion all unnamed attrs are passed first to a tag, followed by all named (keyword-) ones
-            # NOTE #2: same attr can appear more than once, in such case its string values are space-concatenated;
-            # this is particularly useful for "class" attibute and its short form:  div .top.left.darkbg
             for attr in self.attrs:
                 name = attr.name
                 expr = attr.expr
@@ -370,12 +399,16 @@ class NODES(object):
             for name, expr in self.named:
                 value = expr.evaluate(stack)
                 if name in named:
-                    named[name] = f'{named[name]} {value}'
+                    named[name] += ' ' + value       # = f'{named[name]} {value}'
                 else:
                     named[name] = value
             
             if isinstance(self.tag, ExternalTag):
-                return self.tag.expand(body, *unnamed, **named)
+                try:
+                    return self.tag.expand(body, *unnamed, **named)
+                except HyMLError as ex:
+                    # TODO: add `node` position to error message
+                    raise
             else:
                 raise NotATag(f"Name '{self.name}' is not a tag", self)
             
@@ -413,7 +446,7 @@ class NODES(object):
             self.expr = self.children[-1]
         
 
-    ###  EXPRESSIONS  ###
+    ###  EXPRESSIONS - ROOT NODES  ###
     
     class expression(node):
         """Base class for all nodes that represent an expression, or its part (a subexpression)."""
@@ -430,11 +463,276 @@ class NODES(object):
     class xexpr_var(expression_root): pass
     class xexpr_augment(expression_root): pass
     
-    class xfactor(expression): pass
+
+    ###  EXPRESSIONS - TAIL OPERATORS  ###
+    
+    class tail(node):
+        """Tail operators implement apply() instead of evaluate()."""
+        def apply(self, obj, stack):
+            raise NotImplementedError
+
+    class xcall(tail):
+        title = 'function call (...)'                   # for error messaging
+        
+        def compactify(self, stack):
+            assert len(self.children) <= 1
+            if len(self.children) == 1:
+                assert self.children[0].type == 'args'
+            self.children = [n.compactify(stack) for n in self.children]
+            return self
+        
+        def apply(self, obj, stack):
+            if self.children:                           # any parameters for this call?
+                args, kwargs = self.children[0].evaluate(stack)
+            else:
+                args, kwargs = (), {}
+
+            # # calling a native hypertag like a function? pass the stack to support inner hypertags
+            # if getattr(obj, 'ishypertag', False) and isinstance(obj, Closure):
+            #     return obj.expand(args, kwargs, caller = self)
+            
+            return obj(*args, **kwargs)
+            
+    class xslice_value(expression):
+        def evaluate(self, stack):
+            assert len(self.children) <= 1
+            if self.children: return self.children[0].evaluate(stack)
+            return None                                 # None indicates an empty index, like in 1:, in the slice(...) object
+            
+    class xindex(tail):
+        """Element access: [...], with any type of subscript: [i], [i:j], [i:j:k], [::] etc.
+        Children after reduction are either a single <xexpr> node (no slicing),
+        or a list of 2-3 <xslice_value> nodes in case of a slice.
+        """
+        title = 'sequence index [...]'
+
+        def compactify(self, stack):
+            assert 1 <= len(self.children) <= 3
+            self.children = [n.compactify(stack) for n in self.children]
+            return self
+
+        def apply(self, obj, stack):
+            # simple index: [i]
+            if len(self.children) == 1:
+                index = self.children[0].evaluate(stack)
+                return obj[index]
+            
+            # 2- or 3-element slice index:  i:j[:k]
+            values = [n.evaluate(stack) for n in self.children]
+            return obj[slice(*values)]
+        
+    class xmember(tail):
+        title = 'member access "."'
+        def compactify(self, stack):
+            return self                                 # no compactification, it's only 1 child: a static identifier
+        def apply(self, obj, stack):
+            assert self.children[0].type == "var_id"
+            member = self.children[0].value
+            return getattr(obj, member)
+    
+    class xqualifier(static): pass
+
+    class xfactor(expression):
+        """A chain of tail operators: () [] . with optional trailing qualifier ? or ! """
+        atom      = None
+        tail      = None        # optional chain of tail operators: call / index / member
+        qualifier = None        # optional qualifier: ? or !
+        
+        def setup(self):
+            self.atom = self.children[0]
+            self.tail = self.children[1:]
+            if self.tail and self.tail[-1].type == 'qualifier':
+                qualifier_node = self.tail.pop()
+                self.qualifier = qualifier_node.text().strip()
+            
+        def evaluate(self, stack):
+            try:
+                obj = self.atom.evaluate(stack)
+                for op in self.tail:
+                    assert isinstance(op, NODES.tail)
+                    obj = op.apply(obj, stack)
+            except Exception as ex:
+                if self.qualifier == '?': return ''
+                else: raise
+            
+            if obj: return obj
+            
+            # `obj` is false... check qualifiers to undertake appropriate action
+            if self.qualifier == '?': return ''
+            if self.qualifier == '!': raise MissingValue("Obligatory expression evaluated to a false value", self)
+            return obj
+    
     class xfactor_var(xfactor): pass
+    
+    
+    ###  EXPRESSIONS - OPERATORS (BINARY / TERNARY)  ###
 
+    class static_operator(static):
+        name  = None        # textual representation of the operator, for possible rendering back into the document
+        apply = None        # corresponding function from 'operator' module
+        
+        ops = ['+ add', '- sub', '** pow', '* mul', '// floordiv', '% mod', '<< lshift', '>> rshift', '& and_', '| or_', '^ xor',
+               '< lt', '> gt', '== eq', '>= ge', '<= le', '!= ne', 'is is_', 'is not is_not']
+        ops = [m.rsplit(' ', 1) for m in ops]
+        ops = {op: getattr(operator, fun) for op, fun in ops}
+        
+        # '/' must be added separately, because it has different names (and behavior) in Python 2 vs. 3
+        ops['/'] = getattr(operator, 'div', None) or operator.truediv
+        
+        # extra operators, implemented by ourselves
+        ops['in'] = lambda x, d: x in d                         # operator.contains() is not suitable bcs it takes operands in reversed order
+        ops['not in'] = lambda x, d: x not in d
+        ops[''] = ops['+']                                      # missing operator mapped to '+' (implicit +)
+        
+        def setup(self):
+            self.name = self.text()
+            self.name = ' '.join(self.name.split())             # to replace multiple whitespaces in "not in", "is not"
+            self.apply = self.ops[self.name]
+            
+    class xop_multiplic(static_operator): pass
+    class xop_additive(static_operator): pass
+    class xop_power(static_operator): pass
+    class xop_shift(static_operator): pass
+    class xop_comp(static_operator): pass
+    class xneg(static): pass
+    class xnot(static): pass
+    
+    class chain_expression(expression):
+        """A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."""
 
-    ###  LITERALS  ###
+        def evaluate(self, stack):
+            head, tail = self._prepare(stack)
+            ops = tail[0::2]                            # items 0,2,4,... are operators
+            exprs = tail[1::2]                          # items 1,3,5,... are subsequent expressions, after the initial one
+            assert len(exprs) == len(ops)
+            
+            res = head
+            for op, expr in zip(ops, exprs):                # adding terms one by one to 'res'
+                val = expr.evaluate(stack)
+                res = op.apply(res, val)                    # calulate: <res> = <res> op <val>
+            
+            return res
+        
+        def _prepare(self, stack):
+            """Pre-processesing of the 1st item of the chain for evaluate(). Returns the chain as (head, tail) for actual evaluation.
+            Override in subclasses if the 1st item is treated differently then the others."""
+            head = self.children[0].evaluate(stack)
+            tail = self.children[1:]
+            return head, tail
+    
+    class xpow_expr(chain_expression):
+        """chain of power operators: ** """
+    class xterm(chain_expression):
+        """chain of multiplicative operators: * / // %"""
+    class xshift_expr(chain_expression):
+        """chain of shift operators: << >>"""
+    class xarith_expr(chain_expression):
+        """chain of additive operators: neg + -"""
+        def _prepare(self, stack):
+            if self.children[0].type == 'neg':
+                head = self.children[1].evaluate(stack)
+                if head is not None:
+                    head = -head
+                tail = self.children[2:]
+            else:
+                head = self.children[0].evaluate(stack)
+                tail = self.children[1:]
+            return head, tail
+    
+    class xconcat_expr(expression):
+        """
+        Chain of space-concatenation operators: x1 x2 x3 ... (space-separated expressions)
+        Empty strings '' are silently removed from concatenation.
+        """
+        def evaluate(self, stack):
+            items = (STR(expr.evaluate(stack)) for expr in self.children)
+            return ' '.join(item for item in items if item != '')
+
+    class simple_chain_expression(expression):
+        """A chain built from the same binary operator: x OP y OP z OP ..."""
+        oper = None                 # the operator function to be applied
+        def evaluate(self, stack):
+            res = self.children[0].evaluate(stack)
+            for expr in self.children[1:]:
+                val = expr.evaluate(stack)
+                res = self.oper(res, val)
+            return res
+    
+    class xand_expr(simple_chain_expression):
+        "chain of bitwise-and operators: &"
+        oper = operator.and_
+        name = '&'
+    class xxor_expr(simple_chain_expression):
+        "chain of bitwise-xor operators: ^"
+        oper = operator.xor
+        name = '^'
+    class xor_expr(simple_chain_expression):
+        "chain of bitwise-or (filtering) operators: |"
+        name = '|'
+        @staticmethod
+        def oper(x, y):
+            "x | y. If 'y' is a function or method, returns y(x) (filter application), else calculates x | y in a standard way."
+            #if isfunction(y): return y(x)
+            return x | y                            # here, 'y' can be a Filter instance
+            
+    class xcomparison(chain_expression):
+        "chain of comparison operators: < > == >= <= != in is, not in, is not"
+        raise_null = False
+        
+    class xnot_test(expression):
+        """not not not ..."""
+        def evaluate(self, stack):
+            assert len(self.children) >= 2 and self.children[-1].isexpression
+            neg = not (len(self.children) % 2)              # check parity of 'children' to see if negation appears even or odd no. of times
+            val = self.children[-1].evaluate(stack)
+            return not val if neg else val
+    
+    class xand_test(simple_chain_expression):
+        "chain of logical 'and' operators. Lazy evaluation: if false item is encountered, it's returned without evaluation of subsequent items"
+        name = 'and'
+        def evaluate(self, stack):
+            res = self.children[0].evaluate(stack)
+            for expr in self.children[1:]:
+                if not res: return res
+                res = res and expr.evaluate(stack)
+            return res
+    class xor_test(simple_chain_expression):
+        "chain of logical 'or' operators. Lazy evaluation: if true item is encountered, it's returned without evaluation of subsequent items"
+        name = 'or'
+        def evaluate(self, stack):
+            res = self.children[0].evaluate(stack)
+            for expr in self.children[1:]:
+                if res: return res
+                res = res or expr.evaluate(stack)
+            return res
+    
+    class xifelse_test(expression):
+        """
+        ... if ... else ... Lazy evaluation of arguments: only the true branch of the condition undergoes evaluation.
+        "else" branch is optional, "else None" is assumed if "else" is missing.
+        """
+        def evaluate(self, stack):
+            assert len(self.children) in (2, 3)             # the expression is compactified, that's why a single child is not possible here
+            if self.children[1].evaluate(stack):
+                return self.children[0].evaluate(stack)
+            if len(self.children) == 3:
+                return self.children[2].evaluate(stack)
+            return None                                     # default None when "else..." branch is missing
+    
+    # class xempty_test(expression):
+    #     """
+    #     Test for emptiness: X OP [TEST]
+    #     If the 1st operand (X) evaluates to false, a predefined default value is returned:
+    #     - '' if operator OP is ?
+    #     - None if operator OP is !
+    #     Otherwise, X is returned unmodified. If an optional 2nd operand (TEST) is present and evaluates to false,
+    #     the default ('' or None) is returned regardless of the value of X.
+    #     Additionally, if OP = ?, any exceptions raised during evaluation of X are caught and
+    #     treated the same as if X was false.
+    #     """
+    
+
+    ###  EXPRESSIONS - LITERALS  ###
 
     class literal(expression):
         isstatic = True
@@ -461,22 +759,8 @@ class NODES(object):
     class xnone(literal): pass
 
 
-    
     ###  STATIC nodes  ###
     
-    class static(node):
-        "A node that represents static text and has self.value known already during parsing or analysis, before render() is called."
-        isstatic = True
-        ispure   = True
-        value    = None
-        
-        def setup(self):
-            self.value = self.text()
-        def render(self, stack):
-            return self.value
-        def __str__(self):
-            return self.value
-        
     class xname_id(static): pass
     class xname_xml(static): pass
     class xtext(static): pass
@@ -518,7 +802,7 @@ class NODES(object):
         Values of the original nodes (strings to be concatenated) are retrieved from their render().
         """
         value = None        # pre-rendered output of the compactified nodes
-        ex = None           # if NullValue exception was caught during rendering, it's stored here as an (exception, traceback) pair
+        ex = None           # if MissingValue exception was caught during rendering, it's stored here as an (exception, traceback) pair
         
         def __init__(self, node, stack):
             self.tree = node.tree
@@ -526,7 +810,7 @@ class NODES(object):
             self.pos = node.pos
             try:
                 self.value = node.render(stack)
-            except NullValue as ex:
+            except MissingValue as ex:
                 self.ex = (ex, sys.exc_info()[2])
                 
         def merge(self, node, stack, sep):
@@ -535,7 +819,7 @@ class NODES(object):
             try:
                 nodeValue = node.render(stack)
                 self.value += sep + nodeValue
-            except NullValue as ex:
+            except MissingValue as ex:
                 self.ex = (ex, sys.exc_info()[2])
     
         def render(self, stack):
@@ -594,7 +878,7 @@ class HyML_Tree(BaseTree):
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
     # they must have a corresponding x... node class, because pruning is done after rewriting, not before
-    _compact_ = "factor factor_var pow_expr term arith_expr shift_expr and_expr xor_expr or_expr concat_expr " \
+    _compact_ = "factor_var factor pow_expr term arith_expr shift_expr and_expr xor_expr or_expr concat_expr " \
                 "comparison not_test and_test or_test ifelse_test expr_tuple"
 
     _reduce_anonym_ = True      # reduce all anonymous nodes, i.e., nodes generated by unnamed expressions, typically groupings (...)
@@ -752,8 +1036,12 @@ if __name__ == '__main__':
               kot.
             / i pies
         
-        div#box.top.grey
-        input enabled=True
+        if False:
+            div#box.top.grey
+        elif True
+            div #box class="bottom"
+        else
+            input enabled=True
         """
     
     tree = HyML_Tree(text, stopAfter = "rewrite")

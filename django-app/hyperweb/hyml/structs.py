@@ -238,7 +238,7 @@ class Closure(object):
     Frozen hypertag expansion, created when a hypertag is passed as a variable for later execution: $H ... $fun(H).
     Closure keeps the stack as was present at the point of closure creation, to pass it to the hypertag's expand()
     even if the original stack has changed before the point of expansion.
-    Note that in HyperML, hypertags can only be passed downwards through the chain of hypertag expansions or function calls,
+    Note that in HyML, hypertags can only be passed downwards through the chain of hypertag expansions or function calls,
     not upwards, so the stack can only grow, never shrink, before the closure execution point, and consequently
     all the frames that the closure needs are still on the stack. However, the closure may need to extend the stack in its own way
     starting from the stack position from the point of closure creation, which would override the frames added between closure creation

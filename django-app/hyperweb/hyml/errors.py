@@ -9,6 +9,11 @@ class HyMLError(ParserError):
         if self.pos:
             return msg + " at line %s, column %s (%s)" % (self.line, self.column, self.text)
 
+# class HyMLSyntaxError(ParserError): pass
+# class HyMLRuntimeError(ParserError): pass
+
+########################################################################################################################################################
+
 class UndefinedTag(HyMLError):
     pass
 class NotATag(HyMLError):
@@ -18,22 +23,18 @@ class DuplicateAttribute(HyMLError):
     pass
 
 
-class NullValue(HyMLError):
+class MissingValue(HyMLError):
     """
-    Null value was encountered during rendering of a node or evaluation of an expression.
-    This exception is used to communicate null (None) values back to higher-level nodes during rendering
-    and can be caught by xvariant node to choose the right variant from among multiple choices.
-    Or, if raised by an expression, it can substitute TypeError for communicating a disallowed use
-    of None value as an operand - in such, the exception can be passed all the way up to the client.
+    Empty (false) value was returned by an expression marked with "!" (obligatory) qualifier.
+    Typically, this exception is caught at a higher level with a "try" block.
     """
-    def __init__(self, msg = "Null value encountered during rendering of a node"):
-        Exception.__init__(self, msg)
     
 class NoneExpression(HyMLError):
     """
     """
     def __init__(self, msg = "expression embedded in text evaluates to None"):
         Exception.__init__(self, msg)
+
     
 class VoidTag(HyMLError):
     """
