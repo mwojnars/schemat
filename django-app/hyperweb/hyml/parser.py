@@ -251,7 +251,7 @@ class NODES(object):
             return self.value
         
 
-    ###  BLOCKS & BODY  ###
+    ###  BLOCKS  ###
 
     class block(node): pass
     class xblock_verbat(block): pass
@@ -290,18 +290,42 @@ class NODES(object):
             output = _add_indent(output, indent)
             return output + skip * '\n'
 
+    class xblock_assign(block): pass
     class xblock_def(block): pass
     class xblock_try(block): pass
     class xblock_for(block): pass
-    class xblock_if (block): pass
-    class xblock_assign(block): pass
     
+    class xblock_if (block):
+        clauses  = None         # list of 1+ <clause_if> nodes
+        elsebody = None         # optional <body_*> node for the "else" branch
+        
+        def setup(self):
+            if self.children and self.children[-1].type.startswith('body_'):
+                self.clauses = self.children[:-1]
+                self.elsebody = self.children[-1]
+            else:
+                self.clauses = self.children
+
+        def render(self, stack):
+            for clause in self.clauses:
+                if clause.test.evaluate(stack):
+                    return clause.render(stack)
+            if self.elsebody:
+                return self.elsebody.render(stack)
+            return '' #None
+        
     class xclause_if(node):
-        expr = None         # <expression> node containing a test to be performed
-        body = None         # <body> to be rendered if the clause is positive
-        # def setup(self):
-        #     assert len(children) == 2
-    
+        test = None             # <expression> node containing a test to be performed
+        body = None             # <body> to be rendered if the clause is positive
+        def setup(self):
+            assert len(self.children) == 2
+            self.test, self.body = self.children
+        def render(self, stack):
+            return self.body.render(stack)
+        
+        
+    ###  BODY & LINES  ###
+
     class body(node):
         def has_blocks(self):
             """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
@@ -355,7 +379,7 @@ class NODES(object):
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         unnamed = None      # list of <expression> nodes of unnamed attributes from `attrs`
         named   = None      # OrderedDict of {name: <expression>} of named attributes from `attrs`
-
+        
         def setup(self):
             
             # retrieve `name` of this tag
@@ -387,6 +411,7 @@ class NODES(object):
             for c in self.attrs: c.analyse(ctx)
             
             self.tag = ctx.get(self.name)
+            print('self.tag:', self.tag)
             if self.tag is None: raise UndefinedTag(f"Undefined tag '{self.name}'", self)
             
         def expand(self, body, stack):
@@ -410,7 +435,7 @@ class NODES(object):
                     # TODO: add `node` position to error message
                     raise
             else:
-                raise NotATag(f"Name '{self.name}' is not a tag", self)
+                raise NotATag(f"Name '{self.name}' is {self.tag.__class__} instead of a tag", self)
             
             
     class xtag_def(node):
@@ -458,7 +483,10 @@ class NODES(object):
         """
         context = None      # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
                             # in case if the expression evaluates to yet another (dynamic) piece of HyML code
-    
+        def evaluate(self, stack):
+            assert len(self.children) == 1
+            return self.children[0].evaluate(stack)
+
     class xexpr(expression_root): pass
     class xexpr_var(expression_root): pass
     class xexpr_augment(expression_root): pass
@@ -976,10 +1004,10 @@ class HyML_Tree(BaseTree):
         self.symbols = ctx.asdict(state)
         self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xtag_def)}
         
-        # perform compactification; a part of it was already done during analysis, because every hypertag launches
-        # compactification in its subtree on its own, during analysis; what's left is compactification
-        # of the top-level document only
-        if self.config['compact']: self.compactify()
+        # # perform compactification; a part of it was already done during analysis, because every hypertag launches
+        # # compactification in its subtree on its own, during analysis; what's left is compactification
+        # # of the top-level document only
+        # if self.config['compact']: self.compactify()
         
     def compactify(self):
         """
