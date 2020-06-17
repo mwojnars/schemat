@@ -36,7 +36,82 @@ def _del_indent(text, indent):
     if text.startswith(indent): text = text[len(indent):]
     return text.replace('\n' + indent, '\n')
 
+#####################################################################################################################################################
+
+class Element:
+    """Element of a target document."""
+
+class Block(Element):
+    """
+    Block of markup text to be rendered into a target document.
+    May only be concatenated vertically with other blocks; it is disallowed to prepend/append to existing lines of a block.
+    A block may be indented/dedented and its surrounding vertical space can be altered;
+    other modifications (to the actual text inside block) are disallowed.
+    Internally, a Block is represented as a list of sub-Blocks (ChainBlock), or a plain string (StringBlock).
+    Indentation is stored separately and appended upon rendering.
+    When nested blocks are being rendered, their indentations sum up.
+    A block is ALWAYS rendered with a trailing '\n'. A block may render to None,
+    in such case it is removed from the target document.
+    """
+    indent = None           # indentation of the entire block, to be prepended upon rendering
+    section = None          # name of section this block belongs to; None means main section
     
+    def render(self, base_indent = ''):
+        raise NotImplementedError
+    
+class ChainBlock(Block):
+    
+    blocks = None           # list of sub-blocks as Block instances
+    
+    def render(self, base_indent = ''):
+        indent = base_indent + self.indent
+        blocks = [block.render(indent) for block in self.blocks]            # render sub-blocks
+        blocks = [block for block in blocks if block is not None]           # drop blocks that render to None
+        assert all(block and block[-1] == '\n' for block in blocks)
+        return ''.join(blocks)
+    
+class TextBlock(Block):
+
+    text = None
+    
+    def render(self, base_indent = ''):
+        return
+    
+    
+class SpaceBlock(Block):
+    """1+ empty vertical lines."""
+    
+    height = None           # no. of empty lines to render
+    
+    def __init__(self, height):
+        assert height >= 1
+        self.height = height
+        
+    def render(self, base_indent = ''):
+        return '\n' * self.height                   # empty lines do NOT have indentation
+
+class EmptyBlock(Block):
+    """Empty block to be ignored during rendering of the document."""
+    
+    def render(self, base_indent = ''):
+        return None
+    
+class Inline(Element):
+    """
+    Inline element. Contrary to a Block, an Inline:
+    - has no indentation
+    - has no trailing newline \n
+    - has no nested elements ??
+    - has no label nor nested sections
+    """
+    
+class Content(Element):
+    """Combination of an Inline header and a list of Blocks that together constitute content of an element."""
+    
+    inline = None
+    blocks = None
+    
+
 #####################################################################################################################################################
 #####
 #####  HYML_GRAMMAR
@@ -96,7 +171,7 @@ class HyML_Grammar(Parsimonious):
         - INDENT_* / DEDENT_* inserted in place of leading spaces/tabs
         - trailing whitespace removed
         - whitespace-only lines changed to empty lines (but \n preserved)
-        - comment lines (--) removed
+        - comment lines (-- or #) removed
         """
         INDENT_S = self.symbols['INDENT_S']
         DEDENT_S = self.symbols['DEDENT_S']
@@ -120,7 +195,7 @@ class HyML_Grammar(Parsimonious):
             if not tail and linenum <= total:       # only whitespace in line? append empty line
                 lines.append('')
                 
-            elif tail.startswith('--'):             # comment line, ignore
+            elif tail.startswith('--') or tail.startswith('#'):             # comment line, ignore
                 pass
             
             else:                                   # code line, convert `indent` to INDENT_*/DEDENT_* characters and insert `tail`
@@ -219,9 +294,8 @@ class NODES(object):
             
         def render(self, stack):
             """
-            Node rendering. An equivalent of "expression evaluation" in programming languages.
-            Every render() not only returns a string - a product of rendering - but also may have side effects:
-            modification of the 'stack' if new variables/hypertags were defined during node rendering, at the node's top level.
+            Convert this AST to its textual representation in target markup language.
+            render() may have side effects: modification of the `stack`.
             """
             if self.children:
                 return u''.join(c.render(stack) for c in self.children)
@@ -230,6 +304,10 @@ class NODES(object):
 
         def __str__(self): return "<%s>" % self.__class__.__name__  #object.__str__(self)
 
+    class bnode(node):
+        """A "block" type of node. Returns a Block during rendering."""
+    class inode(node):
+        """An "inline" type of node. Returns a plain (inline) string during rendering."""
 
     class xdocument(node):
         
@@ -475,15 +553,52 @@ class NODES(object):
     
     class expression(node):
         """Base class for all nodes that represent an expression, or its part (a subexpression)."""
+        
+        qualifier = None            # optional qualifier: ? or ! ... used only in a few node types
+        
         def evaluate(self, stack):
             raise NotImplementedError
+
+        def evaluate_with_qualifier(self, stack):
+            """Special variant of evaluate() to be used in these expression nodes that may have a not-None qualifier.
+               They should call this method in evaluate() and implement _eval_inner_qualified().
+            """
+            try:
+                val = self._eval_inner_qualified(stack)
+            except Exception as ex:
+                if self.qualifier == '?': return ''
+                else: raise
+            
+            if val: return val
+            
+            # `val` is false ... check qualifiers to undertake appropriate action
+            if self.qualifier == '?': return ''
+            if self.qualifier == '!': raise MissingValue("Obligatory expression has a false or empty value", self)
+            return val
+
+        def _eval_inner_qualified(self, stack):
+            raise NotImplementedError
+
 
     class expression_root(expression):
         """Base class for root nodes of all non-literal embedded expressions, either in markup or attribute/argument lists.
         """
-        context = None      # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
-                            # in case if the expression evaluates to yet another (dynamic) piece of HyML code
+        qualifier = None        # optional qualifier: ? or !
+        context   = None        # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
+                                # in case if the expression evaluates to yet another (dynamic) piece of HyML code
+        def setup(self):
+            # see if there is a qualifier added as a sibling of this node
+            if self.sibling_next and self.sibling_next.type == 'qualifier':
+                self.qualifier = self.sibling_next.text()
+        
+        def render(self, stack):
+            """Rendering is invoked only for a root node of an expression embedded in xline_* node of text."""
+            return STR(self.evaluate(stack))
+        
         def evaluate(self, stack):
+            return self.evaluate_with_qualifier(stack)
+        
+        def _eval_inner_qualified(self, stack):
             assert len(self.children) == 1
             return self.children[0].evaluate(stack)
 
@@ -558,7 +673,8 @@ class NODES(object):
             member = self.children[0].value
             return getattr(obj, member)
     
-    class xqualifier(static): pass
+    class xqualifier(static):
+        def setup(self): self.value = ''
 
     class xfactor(expression):
         """A chain of tail operators: () [] . with optional trailing qualifier ? or ! """
@@ -571,24 +687,17 @@ class NODES(object):
             self.tail = self.children[1:]
             if self.tail and self.tail[-1].type == 'qualifier':
                 qualifier_node = self.tail.pop()
-                self.qualifier = qualifier_node.text().strip()
+                self.qualifier = qualifier_node.text()
             
         def evaluate(self, stack):
-            try:
-                obj = self.atom.evaluate(stack)
-                for op in self.tail:
-                    assert isinstance(op, NODES.tail)
-                    obj = op.apply(obj, stack)
-            except Exception as ex:
-                if self.qualifier == '?': return ''
-                else: raise
-            
-            if obj: return obj
-            
-            # `obj` is false... check qualifiers to undertake appropriate action
-            if self.qualifier == '?': return ''
-            if self.qualifier == '!': raise MissingValue("Obligatory expression evaluated to a false value", self)
-            return obj
+            return self.evaluate_with_qualifier(stack)
+        
+        def _eval_inner_qualified(self, stack):
+            val = self.atom.evaluate(stack)
+            for op in self.tail:
+                assert isinstance(op, NODES.tail)
+                val = op.apply(val, stack)
+            return val
     
     class xfactor_var(xfactor): pass
     
@@ -669,13 +778,16 @@ class NODES(object):
     
     class xconcat_expr(expression):
         """
-        Chain of space-concatenation operators: x1 x2 x3 ... (space-separated expressions)
-        Empty strings '' are silently removed from concatenation.
+        Chain of concatenation operators: x1 x2 x3 ... (space-separated expressions).
+        Values of subexpressions are converted to strings and concatenated WITHOUT space.
+        This is an extension of the Python syntax of concatenating literal strings, like in:
+               'Python' " is "  'cool'
         """
         def evaluate(self, stack):
-            items = (STR(expr.evaluate(stack)) for expr in self.children)
-            return ' '.join(item for item in items if item != '')
-
+            return ''.join(STR(expr.evaluate(stack)) for expr in self.children)
+            # items = (STR(expr.evaluate(stack)) for expr in self.children)
+            # return ' '.join(item for item in items if item != '')     # empty strings '' silently removed from concatenation
+        
     class simple_chain_expression(expression):
         """A chain built from the same binary operator: x OP y OP z OP ..."""
         oper = None                 # the operator function to be applied
@@ -782,7 +894,7 @@ class NODES(object):
         def setup(self):
             self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
     
-    class xstr_unquoted(xstring): pass
+    #class xstr_unquoted(literal): pass
     class xattr_short_lit(literal): pass
     class xnone(literal): pass
 
@@ -894,14 +1006,14 @@ class HyML_Tree(BaseTree):
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "ws space comma verbatim " \
+    _ignore_  = "ws space comma verbatim comment " \
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "target blocks_core blocks block block_control ws_body body " \
                 "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
                 "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal " \
-                "text_embedded embedded_braces embedded_eval " \
+                "embedding embedding_braces embedding_eval " \
                 "expr_root subexpr slice subscript trailer atom literal"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
@@ -1061,12 +1173,12 @@ if __name__ == '__main__':
             p  / And <a> paragraph.
         div
             | Ala
-              kot.
+              kot { 'Mru' "czek" 123 } {0}? {456}!
             / i pies
         
         if False:
             div#box.top.grey
-        elif True
+        elif True:
             div #box class="bottom"
         else
             input enabled=True

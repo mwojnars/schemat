@@ -1,7 +1,9 @@
 """
 Run on server:
 $
+$  cd ..../hyperweb/hyml
 $  pytest -vW ignore::DeprecationWarning tests.py
+
 """
 
 # import unittest
@@ -21,7 +23,7 @@ def test_001():
         h1 >a href="http://xxx.com"|This is <h1> title
             p  / And <a> paragraph.
         div
-            | Ala
+            | Ala { 'ęłąśźćóÓŁĄĘŚŻŹĆ' } ęłąśźćóÓŁĄĘŚŻŹĆ
               kot.
             / i pies
         
@@ -34,8 +36,8 @@ def test_001():
             <p>And <a> paragraph.</p>
         </a></h1>
         <div>
-            Ala
-              kot.
+            Ala ęłąśźćóÓŁĄĘŚŻŹĆ ęłąśźćóÓŁĄĘŚŻŹĆ
+            kot.
             i pies
         </div>
 
@@ -46,9 +48,21 @@ def test_001():
     assert out.strip() == hyml.parse(src).strip()
 
 
-def test_002():
-    assert 1 == 1
+def test_002_qualifiers():
+    # the code below contains NESTED qualifiers: unsatisfied ! within ?
+    src = """ | kot { 'Mru' "czek" 123 0! }? {456}! {0}? """
+    out = """   kot  456   """
+    assert out.strip() == hyml.parse(src).strip()
 
+    src = """ | kot { 'Mru' "czek" 123 0? }! {456}? {0}? """
+    out = """   kot Mruczek123 456   """
+    assert out.strip() == hyml.parse(src).strip()
+
+    with pytest.raises(Exception, match = 'Obligatory expression') as ex_info:
+        hyml.parse("| {0}!")
+    
+    # assert str(ex_info.value) == 'some info'
+    
 
 #####################################################################################################################################################
 #####

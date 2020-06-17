@@ -73,7 +73,7 @@ NODE attrs :
   text node
 
 % NAME    -- definition of a new tag (node type, hypertag)
-% hypertag attr1 attr2=default @header @body @footer > subtag > subtag ....
+% hypertag attr1 attr2=default @header @body @footer ....
   tag1
   body                    -- node `body` (delayed rendering)
   footer x=10             -- node `footer` with appended value of `x` attr (overrides default value and/or any value assigned before `footer` was passed to hypertag)
@@ -85,6 +85,11 @@ NODE attrs :
     tag...
   [section2]
     ...
+
+% hypertag attr1 attr2=default +inline @blocks
+    | {inline}
+    blocks
+    blocks.section
 
 hypertag(attr1).subtree(attr2)    -- nested hypertags can be accessed from outside, even if they reference
                                      local vars or attrs from outer scope (?) ... hypertag is an equivalent
@@ -128,6 +133,11 @@ for name in $expr:
 "pass" node: for internal use, to enclose body of a control statement where head (with tag) is missing.
 
 -- comment line
+--
+# another comment line
+# comments can be put after block header, on the same line, unless the block contains inline text;
+# be careful not to put literal # or -- at the beginning of a subsequent line within a text block, as the line would get removed;
+# if you need to start a text line with # or --, prepend it with ! or | or /, or print it as an expression {'--'}
 
 [NAME:zone_class]           -- declaration of a "zone" for non-linear insertion of content (a la "goto")
 [zone] << tag ...           -- non-linear insertion of content to a given "zone"; a given passage is
@@ -381,12 +391,39 @@ blocks_core      =  blocks / block+
 blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
 block            =  block_verbat / block_normal / block_markup / block_control / block_def / block_tagged
 
+###  TAG BLOCKS
+
+block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
+tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
+
+block_tagged     =  tags_expand ws_body
+tags_expand      =  tag_expand (ws '>' ws tag_expand)*
+tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
+
+
+###  CONTROL BLOCKS
+
+block_control    =  block_assign / block_if / block_try / block_for
+
+block_assign     =  targets '=' (expr_augment / embedding)
+block_try        =  ('try' ws_body ('or' ws_body)* ('else' ws_body)?) / try_short
+block_for        =  'for' space targets space 'in' space (expr_augment / embedding) ws_body
+block_if         =  'if' clause_if ('elif' clause_if)* ('else' ws_body)?
+
+try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
+clause_if        =  space (expr / embedding) ws_body
+ws_body          =  ws body
+
+targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
+target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
+
+
 ###  BODY
 
 body             =  body_struct / body_verbat / body_normal / body_markup
 
 #body_struct_in   =  mark_struct ((ws block_tagged) / (nl blocks))
-body_struct      =  mark_struct? nl blocks?
+body_struct      =  mark_struct? comment? nl blocks?
 body_verbat      =  mark_verbat ((nl tail_verbat?) / (' '? line_verbat nl blocks?))
 body_normal      =  mark_normal ((nl tail_normal?) / (' '? line_normal nl blocks?))
 body_markup      =  mark_markup ((nl tail_markup?) / (' '? line_markup nl blocks?))
@@ -416,32 +453,7 @@ mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
 
-
-###  TAG BLOCKS
-
-block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
-
-block_tagged     =  tags_expand ws_body
-tags_expand      =  tag_expand (ws '>' ws tag_expand)*
-tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
-
-
-###  CONTROL BLOCKS
-
-block_control    =  block_assign / block_if / block_try / block_for
-
-block_assign     =  targets '=' (expr_augment / embedding)
-block_try        =  ('try' ws_body ('or' ws_body)* ('else' ws_body)?) / try_short
-block_for        =  'for' space targets space 'in' space (expr_augment / embedding) ws_body
-block_if         =  'if' clause_if ('elif' clause_if)* ('else' ws_body)?
-
-try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
-clause_if        =  space (expr / embedding) ws_body
-ws_body          =  ws body
-
-targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
-target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
+comment          =  ~"--|#" verbatim?                           # inline (end-line) comment; full-line comments are parsed at preprocessing stage
 
 
 ###  EMBEDDINGS
@@ -450,7 +462,7 @@ target           =  ('(' ws targets ws ')') / var               # left side of a
 # while results of ','-separated expressions (a tuple) are  ' '-concatenated
 
 embedding        =  embedding_braces / embedding_eval
-embedding_braces =  '{' ws expr_augment ws '}'
+embedding_braces =  '{' ws expr_augment ws '}' qualifier?
 embedding_eval   =  '$' expr_var
 
 
@@ -534,7 +546,9 @@ index        =  '[' subscript ']'            # handles atomic indices [i] and al
 member       =  '.' name_id                  # no space around '.' allowed
 trailer      =  call / index / member
 
-qualifier    =  ~"[?!]"                      # ? = value of None, empty (false), exceptions converted to ''; '!' = empty (false) value triggers exception
+qualifier    =  ~"[\?!]"                      # ? means that None/empty(false)/exceptions shall be converted to '' ... ! means that empty (false) value triggers exception
+# obligatory   =  '!'
+# optional     =  '?'
 
 
 ###  SIMPLE OPERATORS
