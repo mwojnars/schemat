@@ -1,9 +1,47 @@
 """
 Hypertags Markup Language (HyML Essential).
-An indentation-based document description & templating language with modularity through inline function defitions.
+An indentation-based document description & templating language with modularity through inline function definitions.
 
-***Names (?):  HyML, PyML, Sleek, HypeML, OneML, HDML, Coco
+***Names (?):
+- HyML, PyML, Sleek, HypeML, OneML, HDML, Coco, BlueText, DeepText, HyperMark, WideMark, RichMark, Hypertags
+  Limerick, Limeri, verse, well-versed, verses, Versus, strophe, sonnet, Lyric
+  Elm Tree (wiąz) linden (lipa) oak (dąb) fig (figa) lemon plum cone (szyszka) tulip, OakDoc FigTree
+  lapis lazuli, wenge, violet purple lime lilac, iris amber jet lava sea steel, aqua, string stringer stringl
+  DotTag BigTag SoTag GoTag PurpleTag LimeTag BlueTag GreenTag DynaTag SuperTag HighTag HiTag FlexTag SharpTag
 - tree of tags (TRoT, ToT, Treet) markup lang (TreML, TreeML, BranchML), HyTree
+- document model/tree manipulation & markup language (DoMoMaMaLa, DoMMaL, DMML, DoTML, DTML)
+- tree: Text Document Object Model (TDOM)
+- same names on Github:
+  - Hypertag: only abandonded/small projects (https://github.com/AndreasPizsa/hypertag, https://github.com/domalgebra/hypertag)
+              2 small companies on LinkedIn (https://www.linkedin.com/search/results/companies/?keywords=hypertag&origin=SWITCH_SEARCH_VERTICAL)
+              - IT company in Bangladesh (https://hypertagsolutions.com/), na twitterze <100 obserwujących
+              - ad-tech company (https://en.wikipedia.org/wiki/Hypertag), website inactive!, https://www.linkedin.com/company/hypertag-ltd/about/
+  - Limerick: one project quite popular (https://github.com/kalimu/LimeRick)
+  - Versus: no projects
+- domeny wolne:
+  - hypertag.io (135 zł/rok), hypertag.one (36), .pro (62) .network (64) .link (36) .software (104) .zone (104);
+    zajęte hypertag.net, hypertag.dev
+  - limerick.tech (160 zł/rok) limerick.one (36) .pro;
+    zajęte limerick.io, limerick.net, limerick.dev (na sprzedaż 1000 zł)
+- PyPi:
+  - 0 projektów z "hypertag" w nazwie
+  - 0 projektów z "limerick" w nazwie
+  
+LIMERICK is a computer language for writing structured documents. Main features:
+- Can output HTML/XML, as well as any other markup language.
+- Can render to text or to a custom DOM tree that can be further manipulated.
+- Nesting structure is defined through INDENTATION rather than closing tags, to simplify programming and improve readability.
+- Python-like EXPRESSIONS and CONTROL STATEMENTS (if-else, for, while...), as well as
+  custom statements (try-else), are supported natively, without the need to use embedded templating code
+- Custom tags (HYPERTAGS) can be defined: either as external functions or as pieces of (parameterized) Limerick code
+  directly in a document.
+- Tree structure can be MANIPULATED and ANNOTATED (??) during document creation, or later,
+  through the use of native SELECTORS and FILTERS (??).
+  In this way, parts of a tree can be utilized as a store of data and parameters to control rendering of other parts of the tree.
+PR:
+- Let the code read like a poem... Code reads like a poem... Shall code read like a poem
+- $ lim, LimNode, LimTree
+
 
 Key features:
  1. Tree structure. Document is written as a hierarchy of nested nodes, with INDENTATION indicating nesting level, like in Python.
@@ -139,30 +177,23 @@ for name in $expr:
 # be careful not to put literal # or -- at the beginning of a subsequent line within a text block, as the line would get removed;
 # if you need to start a text line with # or --, prepend it with ! or | or /, or print it as an expression {'--'}
 
-[NAME:zone_class]           -- declaration of a "zone" for non-linear insertion of content (a la "goto")
-[zone] << tag ...           -- non-linear insertion of content to a given "zone"; a given passage is
-                               passed to Zone.add() method, which by default appends rendered passage to zone,
-                               but only once (removal of duplicates); alternative operands:  <| </ <! <$
-                               <$ passes to zone an original python object as returned by expression (NO rendering!)
+SELECTORS
 
--- multi-modal document, with extra sections (zones) for special types of information
-[zone]
-    tag1
-    tag2 ...
+Syntax:
+    .       child nodes
+    ..      descendant nodes
+    []      indexing nodes or attributes
 
-@zone                       -- `zone` content rendered through ZoneClass and inserted
-[cookies,styles] < widget[cookies,styles]     -- include only these named zones from widget; default zone is always included
+@body..meta-styles(.[0:3])        - [number] indexes nodes
+@body..meta-styles[attr1]      - [name] indexes attributes of a node
+@body [0:3] meta-styles
+@body [meta-styles] [0:3] [class=xyz]
 
-widget(...) [cookies: ..., styles: ...]
-@widget(...)
-    > [cookies]
-    > [styles]
+@body : h1
+@body :: h2
+@body >> h2
 
 clause / zone / section / block / paragraph / area / body / branch
-
-structural objects: tag, hypertag, widget (instance of Widget), "@..." argument of hypertag
- - their values are of type Passage / Content / Body / MultiBody / Structure,
-   cannot be used in expressions nor text blocks, only in top-level HyML code
 
 special tags:
     return
@@ -170,6 +201,7 @@ special tags:
     continue
     pass
     void
+     -         performs no processing, only used for grouping elements
 
 """
 
@@ -565,7 +597,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
-name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
+name_id          =  !name_reserved ~"[a-z_-][a-z0-9_-]*"i
 name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 

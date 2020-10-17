@@ -44,6 +44,7 @@ class _RAISE_:
 class MetaItem(type):
     
     def __init__(cls, name, bases, dct):
+        super().__init__(name, bases, dct)
         
         class DoesNotExist(ItemDoesNotExist):
             item_class = cls
@@ -297,7 +298,7 @@ class Item(object, metaclass = MetaItem):
         Inside category's handlers dict, this method is saved under the None key.
         """
         h = html_escape
-
+        
         # attrs = [f"<li><b>{attr}</b>: {values}</li>" for attr, values in self.__data__.items_all()]
         # attrs = '\n'.join(attrs)
         

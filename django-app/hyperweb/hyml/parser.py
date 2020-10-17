@@ -37,82 +37,6 @@ def _del_indent(text, indent):
     return text.replace('\n' + indent, '\n')
 
 #####################################################################################################################################################
-
-class Element:
-    """Element of a target document."""
-
-class Block(Element):
-    """
-    Block of markup text to be rendered into a target document.
-    May only be concatenated vertically with other blocks; it is disallowed to prepend/append to existing lines of a block.
-    A block may be indented/dedented and its surrounding vertical space can be altered;
-    other modifications (to the actual text inside block) are disallowed.
-    Internally, a Block is represented as a list of sub-Blocks (ChainBlock), or a plain string (StringBlock).
-    Indentation is stored separately and appended upon rendering.
-    When nested blocks are being rendered, their indentations sum up.
-    A block is ALWAYS rendered with a trailing '\n'. A block may render to None,
-    in such case it is removed from the target document.
-    """
-    indent = None           # indentation of the entire block, to be prepended upon rendering
-    section = None          # name of section this block belongs to; None means main section
-    
-    def render(self, base_indent = ''):
-        raise NotImplementedError
-    
-class ChainBlock(Block):
-    
-    blocks = None           # list of sub-blocks as Block instances
-    
-    def render(self, base_indent = ''):
-        indent = base_indent + self.indent
-        blocks = [block.render(indent) for block in self.blocks]            # render sub-blocks
-        blocks = [block for block in blocks if block is not None]           # drop blocks that render to None
-        assert all(block and block[-1] == '\n' for block in blocks)
-        return ''.join(blocks)
-    
-class TextBlock(Block):
-
-    text = None
-    
-    def render(self, base_indent = ''):
-        return
-    
-    
-class SpaceBlock(Block):
-    """1+ empty vertical lines."""
-    
-    height = None           # no. of empty lines to render
-    
-    def __init__(self, height):
-        assert height >= 1
-        self.height = height
-        
-    def render(self, base_indent = ''):
-        return '\n' * self.height                   # empty lines do NOT have indentation
-
-class EmptyBlock(Block):
-    """Empty block to be ignored during rendering of the document."""
-    
-    def render(self, base_indent = ''):
-        return None
-    
-class Inline(Element):
-    """
-    Inline element. Contrary to a Block, an Inline:
-    - has no indentation
-    - has no trailing newline \n
-    - has no nested elements ??
-    - has no label nor nested sections
-    """
-    
-class Content(Element):
-    """Combination of an Inline header and a list of Blocks that together constitute content of an element."""
-    
-    inline = None
-    blocks = None
-    
-
-#####################################################################################################################################################
 #####
 #####  HYML_GRAMMAR
 #####
@@ -731,7 +655,7 @@ class NODES(object):
     class xop_power(static_operator): pass
     class xop_shift(static_operator): pass
     class xop_comp(static_operator): pass
-    class xneg(static): pass
+    class xneg(static): pass                            # negation is implemented inside <xarith_expr>
     class xnot(static): pass
     
     class chain_expression(expression):
@@ -884,7 +808,12 @@ class NODES(object):
     
     class xnumber(literal):
         def setup(self):
-            self.value = asnumber(self.text())
+            s = self.text()
+            try:
+                self.value = int(s)
+                return
+            except: pass
+            self.value = float(s)
     
     class xboolean(literal):
         def setup(self):
@@ -1000,7 +929,8 @@ class NODES(object):
 
 class HyML_Tree(BaseTree):
 
-    NODES = NODES                           # must tell the BaseTree's rewriting routine where node classes can be found
+    NODES  = NODES              # must tell the BaseTree's rewriting routine where node classes can be found
+    parser = None               # instance of Grammar to be used by super class __init__() and parse() to convert input text to AST
     _use_init = False
 
     ###  Configuration of rewriting process  ###
@@ -1078,6 +1008,7 @@ class HyML_Tree(BaseTree):
         # parse input text to the 1st version of AST (self.ast) as returned by Parsimonious,
         # then rewrite it to custom NODES.* classes rooted at self.root
         super(HyML_Tree, self).__init__(text, stopAfter = stopAfter)
+        
         if self.root is None:                                   # workaround for Parsimonious bug in the special case when text="" (Parsimonious returns None instead of a tree root)
             self.root = NODES.xdocument(self, ObjDict(start = 0, end = 0, children = [], expr_name = 'document'))
         assert isinstance(self.root, NODES.xdocument)
@@ -1168,12 +1099,24 @@ if __name__ == '__main__':
     
     DEBUG = True
     
+    # selectors
+    """
+    :     children
+    ::    descendants
+    %TAG  tag name linked to a hypertag object/function from current scope; filtering by tag identity not name
+    
+    @feed %TAG -contains('kot')
+    @feed : -contains('kot')
+    @feed :: -%TAG
+    """
+    
     text = """
-        h1 >a href="http://xxx.com"|This is <h1> title
+        h1 > a href="http://xxx.com" > b | This is <h1> title
             p  / And <a> paragraph.
         div
             | Ala
               kot { 'Mru' "czek" 123 } {0}? {456}!
+                Ola
             / i pies
         
         if False:
