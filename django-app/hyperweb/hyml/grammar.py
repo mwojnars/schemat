@@ -480,9 +480,9 @@ body             =  body_struct / body_verbat / body_normal / body_markup
 
 #body_struct_in   =  mark_struct ((ws block_tagged) / (nl blocks))
 body_struct      =  mark_struct? comment? nl blocks?
-body_verbat      =  mark_verbat ((nl tail_verbat?) / (' '? line_verbat nl blocks?))
-body_normal      =  mark_normal ((nl tail_normal?) / (' '? line_normal nl blocks?))
-body_markup      =  mark_markup ((nl tail_markup?) / (' '? line_markup nl blocks?))
+body_verbat      =  mark_verbat ((nl tail_verbat?) / (gap? line_verbat nl blocks?))
+body_normal      =  mark_normal ((nl tail_normal?) / (gap? line_normal nl blocks?))
+body_markup      =  mark_markup ((nl tail_markup?) / (gap? line_markup nl blocks?))
 
 block_verbat     =  mark_verbat line_verbat? nl tail_verbat?
 block_normal     =  mark_normal line_normal? nl tail_normal?
@@ -491,10 +491,6 @@ block_markup     =  mark_markup line_markup? nl tail_markup?
 tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
 tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
 tail_markup      =  (indent_s core_markup dedent_s) / (indent_t core_markup dedent_t)
-
-tail2_verbat     =  indent_s indent_s core_verbat dedent_s dedent_s         # like tail_verbat, but with 2-space indentation
-tail2_normal     =  indent_s indent_s core_normal dedent_s dedent_s         # like tail_normal, but with 2-space indentation
-tail2_markup     =  indent_s indent_s core_markup dedent_s dedent_s         # like tail_markup, but with 2-space indentation
 
 core_verbat      =  (tail_verbat / (line_verbat nl))+
 core_normal      =  (tail_normal / (line_normal nl))+
@@ -509,8 +505,7 @@ mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
 
-up_indent        =  ' '                                         # extra 1-space indentation of a headline; marked for further postprocessing
-
+gap              =  ~"[ \t]"                                    # 1-space leading gap before a headline, ignored during rendering
 comment          =  ~"--|#" verbatim?                           # inline (end-line) comment; full-line comments are parsed at preprocessing stage
 
 

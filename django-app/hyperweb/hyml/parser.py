@@ -991,14 +991,13 @@ class HyML_Tree(BaseTree):
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "ws space comma verbatim comment " \
+    _ignore_  = "ws space comma verbatim comment gap " \
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "target blocks_core blocks block block_control ws_body body " \
                 "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
-                "tail_verbat tail_normal tail_markup tail2_verbat tail2_normal tail2_markup " \
-                "core_verbat core_normal core_markup " \
+                "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval " \
                 "expr_root subexpr slice subscript trailer atom literal"
     
@@ -1158,6 +1157,10 @@ if __name__ == '__main__':
     text = """
         h1 : a href="http://xxx.com" : b | This is <h1> title
             p  / And <a> paragraph.
+            p  |
+                tail text
+                  tail text
+               tail text
         div
             | Ala
               kot { 'Mru' "czek" 123 } {0}? {456}!
