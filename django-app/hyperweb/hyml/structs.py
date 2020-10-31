@@ -38,7 +38,7 @@ class Stack(list):
     def position(self):
         """
         Position in a Stack that can be passed to reset().
-        Takes a form of a pair: (length of stack of symbols, length of indentation).
+        As a pair: (length of stack of symbols, length of indentation).
         """
         return len(self), len(self.indentation)
 

@@ -3,7 +3,7 @@ TDOM = Text Document Object Model = Document
 
 Representations during parsing:
 - AST:  expressions, variables, control statements, syntax structures ...
-- TDOM: expressions evaluated, control statements executed; hypertags NOT expanded, selectors NOT resolved
+- TDOM: expressions evaluated, leaf nodes converted to Blocks, control statements executed; hypertags NOT expanded, selectors NOT resolved
 - Elements (tree)
 - plaintext snippets (list/stream) - ready for ''-concatenation
 Transformations:
@@ -30,8 +30,8 @@ Title (inline) vs. Body (blocks)...
                                                  </div>
 * Mixed Title+Body:
 
-- title / head / inline
-- body / feed / blocks
+- title / head / headline / inline
+- body / feed / blocks / tail
 
 Issues:
 - simplicity: hypertag functions may operate on entire content at once, like a string
@@ -128,7 +128,81 @@ document
 
 """
 
+import re
 
+
+#####################################################################################################################################################
+
+class HTree:
+    pass
+
+class HNode:
+    """"""
+    
+    tag  = None         # tag function to be called in a non-terminal node
+    body = None         # HBody holding all child nodes of a non-terminal node
+    
+    indent = None       # indentation of this block relative to its parent; None means this is an inline (title) block
+    
+    def __init__(self, text = None, tag = None, body = None, indent = None):
+        self.text = text
+        self.tag  = tag
+        self.body = body
+        self.indent = indent
+        
+class HText(HNode):
+    """A leaf node containing plain text."""
+    
+    text = None         # text of this node, with special chars encoded if needed; consists of two parts:
+                        #  1) headline (head) - 1st line of `text`, without trailing newline
+                        #  2) tailtext (tail) - all lines after the 1st one including the leading newline (!);
+                        #     tailtext may contain trailing newline(s), but this is not obligatory
+    
+    @property
+    def headtail(self):
+        split = self.text.find('\n')
+        if split < 0: split = len(self.text)
+        return self.text[:split], self.text[split:]
+    
+    @property
+    def head(self): return self.headtail[0]
+    
+    @property
+    def tail(self): return self.headtail[1]
+    
+    def __init__(self, text):
+        self.text = text
+    
+    def __str__(self):
+        return self.text
+        
+    def indent(self, spaces = 1, gap = 0, re_lines = re.compile(r'^(\s*\n)+|\s+$')):
+        """
+        Like self.text, but with leading/trailing empty lines removed and indentation fixed at a given number of `spaces`.
+        Optionally, a fixed number (`gap`) of empty lines are added at the beginning.
+        """
+        text = self.text
+        text = re_lines.sub('', text)           # strip leading and trailing empty lines
+        
+        # replace current indentation with a `spaces` number of spaces; existing tabs treated like a single space
+        lines  = text.splitlines()
+        indent = ' ' * spaces
+        offset = min(len(line) - len(line.lstrip()) for line in lines if line.strip())
+        text   = '\n'.join(indent + line[offset:] for line in lines)
+        return gap * '\n' + text
+    
+    
+    
+class HBody:
+    """List of child nodes that comprise contents of a non-terminal node."""
+    
+    nodes = None        # list of HyperNodes in this body
+    
+    def __init__(self, nodes):
+        self.nodes = nodes
+        assert all(isinstance(n, HNode) for n in nodes)
+    
+    
 #####################################################################################################################################################
 
 class Element:

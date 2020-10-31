@@ -8,7 +8,14 @@ from hyperweb.hyml.errors import VoidTag
 ########################################################################################################################################################
 ###  SDK
 
-class ExternalTag:
+class Tag:
+    """
+    Base class for all tags:
+    - ExternalTag - a tag implemented as a python function
+    - NativeTag - a tag implemented inside Hypertag code
+    """
+
+class ExternalTag(Tag):
     """
     External tag, i.e., a (hyper)tag defined as a python function.
     Every tag behaves like a function, with a few extensions:

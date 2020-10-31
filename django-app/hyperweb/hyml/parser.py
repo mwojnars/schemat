@@ -17,6 +17,7 @@ from hyperweb.hyml.errors import HyMLError, MissingValue, UndefinedTag, NotATag,
 from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
 from hyperweb.hyml.structs import Context, Stack
 from hyperweb.hyml.builtin_html import ExternalTag, BUILTIN_HTML
+from hyperweb.hyml.tree import HBody
 
 DEBUG = False
 
@@ -26,15 +27,36 @@ DEBUG = False
 #####  UTILITIES
 #####
 
-def _add_indent(text, indent):
-    """Append `indent` string at the beginning of each line of `text`, including the 1st line."""
-    if not text: return text
-    return indent + text.replace('\n', '\n' + indent)
+def _add_indent(text, indent, re_start = re.compile(r'(?m)^(?=.)')):
+    """
+    Append `indent` string at the beginning of each line of `text`, including the 1st line.
+    Empty lines (containing zero characters, not even a space) are left untouched!
+    """
+    return re_start.sub(indent, text)
+    # if not text: return text
+    # return indent + text.replace('\n', '\n' + indent)
     
 def _del_indent(text, indent):
-    """Remove `indent` string from the beginning of each line of `text`, if it's present; 1st line is left unmodified!"""
+    """Remove `indent` string from the beginning of each line of `text`, wherever it is present as a line prefix."""
     if text.startswith(indent): text = text[len(indent):]
     return text.replace('\n' + indent, '\n')
+
+def _get_indent(text):
+    """
+    Retrieve the longest indentation string fully composed of whitespace
+    that is shared by ALL non-empty lines in `text`, including the 1st line.
+    """
+    lines = text.split('\n')
+    lines = list(filter(None, [l if l.strip() else '' for l in lines]))          # filter out empty lines
+    if not lines: return ''
+
+    for i, column in enumerate(zip(*lines)):        # zip() only eats up as many characters as the shortest line
+        if not column[0].isspace() or min(column) != max(column):
+            return lines[0][:i]
+    else:
+        size = min(map(len, lines))
+        return lines[0][:size]                      # when all lines are prefixes of each other take the shortest one
+    
 
 #####################################################################################################################################################
 #####
@@ -161,7 +183,7 @@ HyML_Grammar.default = HyML_Grammar(special_chars = HyML_Grammar.CHARS_DEFAULT)
 #####
 
 class NODES(object):
-    "A lexical container for definitions of all HyML tree node classes."
+    """A lexical container for definitions of all HyML tree node classes."""
 
     # # modes of rendering & evaluation of subtrees
     # MODE_STRICT = 1         # strict mode: requires that all variables in the subtree are defined (not MISSING), otherwise UndefinedValue exception is raised
@@ -256,9 +278,33 @@ class NODES(object):
     ###  BLOCKS  ###
 
     class block(node): pass
-    class xblock_verbat(block): pass
-    class xblock_normal(block): pass
-    class xblock_markup(block): pass
+    class block_text(block):
+        def render(self, stack):
+            
+            # temporarily reset indentation to zero for rendering of children; this will be reverted at the end
+            base_indent = stack.indentation
+            stack.indentation = ''
+            
+            # leading space is added to account for the marker character /|! in the headline
+            output = ' ' + u''.join(c.render(stack) for c in self.children)
+
+            # sub_indent = ' '
+            # if self.children and self.children[0].type == 'up_indent':
+            #     sub_indent += ' '
+            
+            sub_indent = _get_indent(output)
+            print(f'sub_indent: "{sub_indent}"')
+            
+            output = _del_indent(output, sub_indent)
+            output = _add_indent(output, base_indent)
+            
+            stack.indentation = base_indent
+
+            return output
+
+    class xblock_verbat(block_text): pass
+    class xblock_normal(block_text): pass
+    class xblock_markup(block_text): pass
     
     class xblock_tagged(block):
         tags = None         # non-empty chain of <tag_expand> nodes
@@ -332,6 +378,10 @@ class NODES(object):
         def has_blocks(self):
             """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
             return self.children[-1].type != 'nl'
+
+        def parse(self, stack):
+            text = u''.join(c.render(stack) for c in self.children)
+            # return HBody([c.parse(stack) for c in self.children])
 
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
@@ -841,6 +891,11 @@ class NODES(object):
             assert len(escape) == 2 and escape[0] == escape[1]
             self.value = escape[0]                          # the duplicated char is dropped
     
+    class xup_indent(static):
+        """Marks occurrence of an extra 1-space indentation in a title line. Renders to empty string."""
+        def render(self, stack):
+            return ''
+    
     class xindent(static):
         whitechar = None
         def render(self, stack):
@@ -942,7 +997,8 @@ class HyML_Tree(BaseTree):
     # nodes that will be replaced with a list of their children
     _reduce_  = "target blocks_core blocks block block_control ws_body body " \
                 "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
-                "tail_verbat tail_normal tail2_verbat tail2_normal core_verbat core_normal " \
+                "tail_verbat tail_normal tail_markup tail2_verbat tail2_normal tail2_markup " \
+                "core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval " \
                 "expr_root subexpr slice subscript trailer atom literal"
     
@@ -1099,25 +1155,15 @@ if __name__ == '__main__':
     
     DEBUG = True
     
-    # selectors
-    """
-    :     children
-    ::    descendants
-    %TAG  tag name linked to a hypertag object/function from current scope; filtering by tag identity not name
-    
-    @feed %TAG -contains('kot')
-    @feed : -contains('kot')
-    @feed :: -%TAG
-    """
-    
     text = """
-        h1 > a href="http://xxx.com" > b | This is <h1> title
+        h1 : a href="http://xxx.com" : b | This is <h1> title
             p  / And <a> paragraph.
         div
             | Ala
               kot { 'Mru' "czek" 123 } {0}? {456}!
                 Ola
             / i pies
+              Azor
         
         if False:
             div#box.top.grey
@@ -1130,8 +1176,8 @@ if __name__ == '__main__':
     tree = HyML_Tree(text, stopAfter = "rewrite")
     print()
     print("===== AST =====")
-    print(tree.ast)
-    print(type(tree.ast))
+    # print(tree.ast)
+    # print(type(tree.ast))
     print()
     print("===== After rewriting =====")
     print(tree)

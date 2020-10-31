@@ -129,6 +129,9 @@ NODE attrs :
     blocks
     blocks.section
 
+def hypertag +self attr1 attr2=defult
+def hypertag @self attr1 attr2=defult
+
 hypertag(attr1).subtree(attr2)    -- nested hypertags can be accessed from outside, even if they reference
                                      local vars or attrs from outer scope (?) ... hypertag is an equivalent
                                      of a function AND a class, at the same time (?)
@@ -162,8 +165,8 @@ or                   -- behaves similar to python's "except Exception ..."; allo
 else
   BODY3
 
-? BLOCK              -- an optional tag-block; equivalent to:       try
-                                                                      BLOCK
+? BLOCK              -- optional tag-block; equivalent to:       try:
+                                                                    BLOCK
   
 for name in $expr:
   BODY
@@ -183,15 +186,37 @@ Syntax:
     .       child nodes
     ..      descendant nodes
     []      indexing nodes or attributes
+or
+    :     children
+    ::    descendants
+    TAG   hypertag object/function from current scope; filtering by tag identity not name
 
 @body..meta-styles(.[0:3])        - [number] indexes nodes
 @body..meta-styles[attr1]      - [name] indexes attributes of a node
 @body [0:3] meta-styles
 @body [meta-styles] [0:3] [class=xyz]
 
-@body : h1
-@body :: h2
-@body >> h2
+@feed : TAG -contains('kot')
+@feed : -contains('kot')
+@feed :: -TAG
+
+@body [:3]          - nodes #0,1,2 from sequence "body"
+@body :TAG          - seq. of nodes in "body" tagged by TAG (next filter applied to each node separately)
+@body [TAG]         - list of nodes in "body" tagged by TAG (next filter applied to entire list at once)
+@body .head         - (problems: (a) head is symbole or keyword? if symbol, it clashes with html's <head>)
+@body .tail
+@body TAG [arg]     - list of values of argument `arg`
+@body TAG [arg=123] - list of TAG nodes whose argument value arg=123
+
+$ self.all(name=123)    self.descendants()
+$ self / TAG
+$ self // TAG
+$ x + y*z
+$ var = 'ala' + ' ma ' + 10
+$ nodes = self[TAG]
+
+$var = 'ala' + ' ma ' + 10
+@nodes = @body[TAG]
 
 clause / zone / section / block / paragraph / area / body / branch
 
@@ -200,8 +225,7 @@ special tags:
     break
     continue
     pass
-    void
-     -         performs no processing, only used for grouping elements
+    void / noop / -           a tag that performs no processing, only used for grouping elements
 
 """
 
@@ -429,7 +453,7 @@ block_def        =  '%%' ws tag_def                             # double percent
 tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
 block_tagged     =  tags_expand ws_body
-tags_expand      =  tag_expand (ws '>' ws tag_expand)*
+tags_expand      =  tag_expand (ws ':' ws tag_expand)*
 tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
 
@@ -460,9 +484,9 @@ body_verbat      =  mark_verbat ((nl tail_verbat?) / (' '? line_verbat nl blocks
 body_normal      =  mark_normal ((nl tail_normal?) / (' '? line_normal nl blocks?))
 body_markup      =  mark_markup ((nl tail_markup?) / (' '? line_markup nl blocks?))
 
-block_verbat     =  mark_verbat ((' ' line_verbat? nl tail2_verbat?) / (line_verbat? nl tail_verbat?))
-block_normal     =  mark_normal ((' ' line_normal? nl tail2_normal?) / (line_normal? nl tail_normal?))
-block_markup     =  mark_markup ((' ' line_markup? nl tail2_markup?) / (line_markup? nl tail_markup?))
+block_verbat     =  mark_verbat line_verbat? nl tail_verbat?
+block_normal     =  mark_normal line_normal? nl tail_normal?
+block_markup     =  mark_markup line_markup? nl tail_markup?
 
 tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
 tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
@@ -484,6 +508,8 @@ mark_struct      =  ':'
 mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
+
+up_indent        =  ' '                                         # extra 1-space indentation of a headline; marked for further postprocessing
 
 comment          =  ~"--|#" verbatim?                           # inline (end-line) comment; full-line comments are parsed at preprocessing stage
 
@@ -597,7 +623,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
-name_id          =  !name_reserved ~"[a-z_-][a-z0-9_-]*"i
+name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
 name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
 
