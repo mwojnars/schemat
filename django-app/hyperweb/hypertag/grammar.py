@@ -441,18 +441,19 @@ grammar = r"""
 
 ###  DOCUMENT
 
-document         =  nl? blocks_core?
+document         =  core_blocks margin?
 
-blocks_core      =  blocks / block+
-blocks           =  (indent_s blocks_core dedent_s) / (indent_t blocks_core dedent_t)
-block            =  block_verbat / block_normal / block_markup / block_control / block_def / block_tagged
+tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
+core_blocks      =  tail_blocks / block+
+
+block            =  margin (block_verbat / block_normal / block_markup / block_control / block_def / block_tagged)
 
 ###  TAG BLOCKS
 
 block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
 tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
-block_tagged     =  tags_expand ws_body
+block_tagged     =  tags_expand ws_body?
 tags_expand      =  tag_expand (ws ':' ws tag_expand)*
 tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
@@ -462,9 +463,9 @@ tag_expand       =  (name_id / attr_short) attrs_val?           # if name is mis
 block_control    =  block_assign / block_if / block_try / block_for
 
 block_assign     =  targets '=' (expr_augment / embedding)
-block_try        =  ('try' ws_body ('or' ws_body)* ('else' ws_body)?) / try_short
+block_try        =  ('try' ws_body (nl 'or' ws_body)* (nl 'else' ws_body)?) / try_short
 block_for        =  'for' space targets space 'in' space (expr_augment / embedding) ws_body
-block_if         =  'if' clause_if ('elif' clause_if)* ('else' ws_body)?
+block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' ws_body)?
 
 try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
 clause_if        =  space (expr / embedding) ws_body
@@ -476,28 +477,25 @@ target           =  ('(' ws targets ws ')') / var               # left side of a
 
 ###  TEXT BLOCKS & BODY
 
-body             =  body_struct / body_verbat / body_normal / body_markup
+body             =  body_verbat / body_normal / body_markup / body_struct
 
-block_verbat     =  mark_verbat line_verbat? nl tail_verbat?
-block_normal     =  mark_normal line_normal? nl tail_normal?
-block_markup     =  mark_markup line_markup? nl tail_markup?
+block_verbat     =  mark_verbat gap? line_verbat? tail_verbat?
+block_normal     =  mark_normal gap? line_normal? tail_normal?
+block_markup     =  mark_markup gap? line_markup? tail_markup?
 
-#body_struct_in   =  mark_struct ((ws block_tagged) / (nl blocks))
-body_struct      =  mark_struct? comment? nl blocks?
-body_verbat      =  mark_verbat ((nl tail_verbat?) / (gap? line_verbat nl blocks?))
-body_normal      =  mark_normal ((nl tail_normal?) / (gap? line_normal nl blocks?))
-body_markup      =  mark_markup ((nl tail_markup?) / (gap? line_markup nl blocks?))
-
-# body_tail_verbat =  nl tail_verbat?
-# body_tail_normal =  nl tail_normal?
+#body_struct_in   =  mark_struct ((ws block_tagged) / tail_blocks)
+body_struct      =  mark_struct? comment? tail_blocks
+body_verbat      =  mark_verbat ((gap? line_verbat tail_blocks?) / tail_verbat)
+body_normal      =  mark_normal ((gap? line_normal tail_blocks?) / tail_normal)
+body_markup      =  mark_markup ((gap? line_markup tail_blocks?) / tail_markup)
 
 tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
 tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
 tail_markup      =  (indent_s core_markup dedent_s) / (indent_t core_markup dedent_t)
 
-core_verbat      =  (tail_verbat / (line_verbat nl))+
-core_normal      =  (tail_normal / (line_normal nl))+
-core_markup      =  (tail_markup / (line_markup nl))+
+core_verbat      =  (tail_verbat / (margin line_verbat))+
+core_normal      =  (tail_normal / (margin line_normal))+
+core_markup      =  (tail_markup / (margin line_markup))+
 
 line_verbat      =  verbatim ''
 line_normal      =  line_markup ''                              # same as line_markup during parsing, but renders differently (performs HTML-escaping)
@@ -650,6 +648,7 @@ dedent_s    = "%(DEDENT_S)s"
 indent_t    = "%(INDENT_T)s"
 dedent_t    = "%(DEDENT_T)s"
 
+margin      =  nl ''                         # top margin of a block; same as `nl` in grammar, but treated differently during analysis (`nl` is ignored)
 nl          =  ~"\n+"                        # vertical space = 1+ newlines
 
 comma       =  ws ',' ws

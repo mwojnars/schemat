@@ -17,7 +17,7 @@ from hyperweb.hypertag.errors import HyMLError, MissingValue, UndefinedTag, NotA
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML
-from hyperweb.hypertag.tree import HBody
+from hyperweb.hypertag.document import HText, HNode, HBody
 
 DEBUG = False
 
@@ -115,31 +115,36 @@ class Grammar(Parsimonious):
         """
         Preprocessing:
         - INDENT_* / DEDENT_* inserted in place of leading spaces/tabs
-        - trailing whitespace removed
-        - whitespace-only lines changed to empty lines (but \n preserved)
+        - trailing whitespace removed in each line
         - comment lines (-- or #) removed
+        - whitespace-only lines replaced with empty lines (\n) and insert *after* any neighboring DEDENT_*,
+          so that DEDENT's always preceed empty lines and the latter can be interpreted as a top margin
+          of the following block (rather than a bottom margin of the preceeding block, which would cause
+          issues with proper indentation etc.)
         """
         INDENT_S = self.symbols['INDENT_S']
         DEDENT_S = self.symbols['DEDENT_S']
         INDENT_T = self.symbols['INDENT_T']
         DEDENT_T = self.symbols['DEDENT_T']
 
-        lines = []
+        lines = ['']            # output lines after preprocessing; empty line prepended for correct parsing of the 1st block;
         linenum = 0             # current line number in input script
         current = ''            # current indentation, as a string
-
-        text = text.rstrip('\n')
-        code = text.splitlines() + ['']             # empty line is appended to ensure equal no. of DEDENT as INDENT
-        total = len(code) - 1
+        margin  = 0             # current no. of empty lines that preceed the next block
         
-        for line in code:
+        # text = text.rstrip('\n')
+        script = text.splitlines() + ['']           # empty line appended to ensure equal no. of DEDENT as INDENT
+        total  = len(script) - 1
+        
+        for line in script:
             linenum += 1
             line = line.rstrip()                    # trailing whitespace removed
             tail = line.lstrip()
             indent = line[: len(line) - len(tail)]
             
-            if not tail and linenum <= total:       # only whitespace in line? append empty line
-                lines.append('')
+            if not tail and linenum <= total:       # only whitespace in line? add to the `margin`
+                margin += 1
+                # lines.append('')
                 
             elif tail.startswith('--') or tail.startswith('#'):             # comment line, ignore
                 pass
@@ -150,15 +155,19 @@ class Grammar(Parsimonious):
 
                 elif indent.startswith(current):
                     increment = indent[len(current):]
-                    symbols = [INDENT_S if char == ' ' else INDENT_T for char in increment]
-                    tail = ''.join(symbols) + tail
                     current = indent
+                    symbols = ''.join(INDENT_S if char == ' ' else INDENT_T for char in increment)
+                    lines[-1] += symbols
+                    tail    = margin * '\n' + tail
+                    margin  = 0
 
                 elif current.startswith(indent):
                     decrement = current[len(indent):]
-                    symbols = [DEDENT_S if char == ' ' else DEDENT_T for char in reversed(decrement)]
-                    tail = ''.join(symbols) + tail
                     current = indent
+                    symbols = ''.join(DEDENT_S if char == ' ' else DEDENT_T for char in reversed(decrement))
+                    lines[-1] += symbols
+                    tail    = margin * '\n' + tail
+                    margin  = 0
                     
                 else:
                     raise IndentationError(f'indentation on line {linenum} is incompatible with previous line')
@@ -166,11 +175,19 @@ class Grammar(Parsimonious):
                 lines.append(tail)
                 
         assert current == '', f"'{current}'"
+
+        # append remaining empty lines
+        output = '\n'.join(lines) + margin * '\n'
         
-        output = '\n'.join(lines)
-        # print("HyML_Grammar.preprocess() output:")
-        # print(output)
+        # drop terminal empty line that was added initially before the loop start
+        assert output[-1] == '\n'
+        output = output[:-1]
         
+        print("HyML_Grammar.preprocess() output:")
+        print('-----')
+        print(output)
+        print('-----')
+
         return output
         
         
@@ -277,6 +294,16 @@ class NODES(object):
 
     ###  BLOCKS  ###
 
+    class xblock(node):
+        """Wrapper around all specific types of blocks that adds top margin to the returned HNode."""
+        def render(self, stack):
+            assert len(self.children) == 2 and self.children[0].type == 'margin'
+            margin = self.children[0].get_margin()
+            hnode  = self.children[1].render(stack)
+            # hnode.margin = (hnode.margin or 0) + margin
+            hnode = margin * '\n' + hnode
+            return hnode
+    
     class block(node): pass
     class block_text(block):
         def render(self, stack):
@@ -289,7 +316,7 @@ class NODES(object):
             output = ' ' + u''.join(c.render(stack) for c in self.children)
 
             sub_indent = _get_indent(output)
-            sub_indent = sub_indent[:1]         # only the 1st space/tab is dropped; remaining sub-indentation is preserved in `output`
+            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
             # print(f'sub_indent: "{sub_indent}"')
             
             output = _del_indent(output, sub_indent)
@@ -308,22 +335,30 @@ class NODES(object):
         body = None         # <body_*> node
         
         def setup(self):
-            # by grammar rules, all children should be of type 'tag_expand' except the last one which should be 'body_*'
-            self.tags = self.children[:-1]
-            self.body = self.children[-1]
+            # by grammar rules, all children should be of type 'tag_expand' except the last one
+            # which should be 'body_*' if present
+            if len(self.children) >= 2:
+                self.tags = self.children[:-1]
+                self.body = self.children[-1]
+            else:
+                self.tags = self.children
             assert self.tags and all(tag.type == 'tag_expand' for tag in self.tags)
-            assert self.body.type.startswith('body_')
+            assert not self.body or self.body.type.startswith('body_')
             
         def render(self, stack, _re_space = re.compile(r'^\s*')):
             
-            body = self.body.render(stack)
-            stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
-            skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
-            body = body[:stop]
-            assert skip >= 1
-            
-            if self.body.has_blocks():
-                body += '\n'
+            if self.body:
+                body = self.body.render(stack)
+                stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
+                skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
+                body = body[:stop]
+                assert skip == 0
+                # assert skip >= 1
+                
+                if self.body.has_blocks():
+                    body += '\n'
+            else:
+                body = ''
                 
             indent = stack.indentation
             output = _del_indent(body, indent)
@@ -333,7 +368,7 @@ class NODES(object):
                 output = tag.expand(output, stack)
                 
             output = _add_indent(output, indent)
-            return output + skip * '\n'
+            return output  #+ skip * '\n'
 
     class xblock_assign(block): pass
     class xblock_def(block): pass
@@ -881,6 +916,11 @@ class NODES(object):
     class xname_xml(static): pass
     class xtext(static): pass
     class xnl(static): pass
+    
+    class xmargin(static):
+        def get_margin(self):
+            # assert self.value == '\n' * len(self.value)
+            return len(self.value)
 
     class xescape(static):
         def setup(self):
@@ -988,11 +1028,11 @@ class HypertagAST(BaseTree):
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "ws space comma verbatim comment gap " \
+    _ignore_  = "nl ws space gap comma verbatim comment " \
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
-    _reduce_  = "target blocks_core blocks block block_control ws_body body " \
+    _reduce_  = "target core_blocks tail_blocks block_control ws_body body " \
                 "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval " \
@@ -1117,7 +1157,9 @@ class HypertagAST(BaseTree):
         self.root.compactify(Stack())
     
     def render(self):
-        return self.root.render(Stack())
+        output = self.root.render(Stack())
+        assert output[0] == '\n'                # extra empty line was prepended by Grammar.preprocess() and must be removed now
+        return output[1:]
 
     def __getitem__(self, tag_name):
         """Returns a top-level hypertag node wrapped up in Hypertag, for isolated rendering. Analysis must have been performed first."""
@@ -1172,6 +1214,13 @@ if __name__ == '__main__':
         else
             input enabled=True
         """
+    
+    # text = """
+    #     if False:
+    #         div | Ala
+    #     elif True:
+    #         div | Ola
+    # """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     
