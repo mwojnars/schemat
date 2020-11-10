@@ -1,5 +1,5 @@
 """
-Data structures for semantic analysis of HyML's AST.
+Data structures for semantic analysis of HyperML's AST.
 """
 
 from collections import OrderedDict
@@ -9,12 +9,7 @@ from six import text_type as unicode
 ########################################################################################################################################################
 
 class Stack(list):
-    """
-    Stack of current symbols encountered during semantic analysis. Implementation based on standard <list>.
-    Additionally, it keeps track of current indentation.
-    """
-    
-    indentation = ''        # current indentation string, as a combination of ' ' and '\t' characters
+    """Stack implementation based on list."""
     
     @property
     def size(self):
@@ -27,32 +22,15 @@ class Stack(list):
     pushall  = list.extend
     get      = list.__getitem__
     set      = list.__setitem__
-    
-    def indent(self, whitechar):
-        self.indentation += whitechar
-    
-    def dedent(self, whitechar):
-        assert self.indentation[-1] == whitechar, 'Trying to dedent a different character than was appended'
-        self.indentation = self.indentation[:-1]
-    
-    def position(self):
-        """
-        Position in a Stack that can be passed to reset().
-        As a pair: (length of stack of symbols, length of indentation).
-        """
-        return len(self), len(self.indentation)
+    position = list.__len__
 
-    def reset(self, position):
+    def reset(self, state):
         "If anything was added on top of the stack, reset the top position to a previous state and forget those elements."
         # if len(self) < state: raise Exception("Stack.reset(), can't return to a point (%s) that is higher than the current size (%s)" % (state, self.size))
-        pos_symbols, pos_indent = position
-        self.indentation = self.indentation[:pos_indent]
-        del self[pos_symbols:]
+        del self[state:]
         
     def copy(self):
-        dup = Stack(self)
-        dup.indentation = self.indentation
-        return dup
+        return Stack(self)
         
 
 class MultiDict(object):
@@ -238,7 +216,7 @@ class Closure(object):
     Frozen hypertag expansion, created when a hypertag is passed as a variable for later execution: $H ... $fun(H).
     Closure keeps the stack as was present at the point of closure creation, to pass it to the hypertag's expand()
     even if the original stack has changed before the point of expansion.
-    Note that in HyML, hypertags can only be passed downwards through the chain of hypertag expansions or function calls,
+    Note that in HyperML, hypertags can only be passed downwards through the chain of hypertag expansions or function calls,
     not upwards, so the stack can only grow, never shrink, before the closure execution point, and consequently
     all the frames that the closure needs are still on the stack. However, the closure may need to extend the stack in its own way
     starting from the stack position from the point of closure creation, which would override the frames added between closure creation
@@ -288,16 +266,3 @@ class LazyVariable(object):
 lazyEmptyString = LazyVariable(lambda: '')
 lazyEmptyString.getvalue()
 
-
-class MultiBody:
-    """
-    Multi-body of a document being rendered. Consists of:
-    1) main body (unnamed), as a string
-    2) dict of sections: {section_name: section_blocks},
-       where `section_blocks` is a list of 1 or more strings (lines, blocks) that fall into a given section.
-    
-    The most important operation on MultiBody instances is concatenation:
-    - of two MultiBody instances: mb1 + mb2  (corresponding parts - main bodies and sections_blocks - get concatenated)
-    - or MultiBody and a plain string: mb + s  (the string is appended to main body).
-    """
-    

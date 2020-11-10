@@ -13,11 +13,11 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hyml.errors import HyMLError, MissingValue, UndefinedTag, NotATag, DuplicateAttribute
-from hyperweb.hyml.grammar import XML_StartChar, XML_Char, hyml_grammar
-from hyperweb.hyml.structs import Context, Stack
-from hyperweb.hyml.builtin_html import ExternalTag, BUILTIN_HTML
-from hyperweb.hyml.tree import HBody
+from hyperweb.hypertag.errors import HyMLError, MissingValue, UndefinedTag, NotATag, DuplicateAttribute
+from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
+from hyperweb.hypertag.structs import Context, Stack
+from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML
+from hyperweb.hypertag.tree import HBody
 
 DEBUG = False
 
@@ -63,7 +63,7 @@ def _get_indent(text):
 #####  HYML_GRAMMAR
 #####
 
-class HyML_Grammar(Parsimonious):
+class Grammar(Parsimonious):
     
     default = None      # class-level default instance of HyML_Parser, the one with standard indentation chars;
                         # can be used for parsing of a given text only if the text doesn't contain any of
@@ -82,11 +82,11 @@ class HyML_Grammar(Parsimonious):
         placeholders = self.symbols.copy()
         placeholders.update({'XML_StartChar': XML_StartChar, 'XML_Char': XML_Char})
         
-        grammar = hyml_grammar % placeholders
-        # print('HyML_Grammar:')
-        # print(grammar)
+        gram = grammar % placeholders
+        # print('Hypertag grammar:')
+        # print(gram)
         
-        super(HyML_Grammar, self).__init__(grammar)
+        super(Grammar, self).__init__(gram)
     
     @staticmethod
     def get_parser(text):
@@ -95,20 +95,20 @@ class HyML_Grammar(Parsimonious):
         The parser must be created with a proper choice of special characters,
         ones that don't collide with character set of `text`.
         """
-        if not (set(HyML_Grammar.CHARS_DEFAULT) & set(text)):
-            return HyML_Grammar.default
+        if not (set(Grammar.CHARS_DEFAULT) & set(text)):
+            return Grammar.default
 
         chars = []
         
         # find 4 unicode characters that are not in `text`; start with CHARS_DEFAULT[0]
-        code = ord(HyML_Grammar.CHARS_DEFAULT[0])
+        code = ord(Grammar.CHARS_DEFAULT[0])
         for _ in range(4):
             while chr(code) in text:
                 code += 1
             chars.append(chr(code))
             code += 1
             
-        return HyML_Grammar(chars)
+        return Grammar(chars)
         
     
     def preprocess(self, text):
@@ -174,7 +174,7 @@ class HyML_Grammar(Parsimonious):
         return output
         
         
-HyML_Grammar.default = HyML_Grammar(special_chars = HyML_Grammar.CHARS_DEFAULT)
+Grammar.default = Grammar(special_chars = Grammar.CHARS_DEFAULT)
 
         
 ########################################################################################################################################################
@@ -285,15 +285,12 @@ class NODES(object):
             base_indent = stack.indentation
             stack.indentation = ''
             
-            # leading space is added to account for the marker character /|! in the headline
+            # leading space is put in place of a marker character /|! in the headline
             output = ' ' + u''.join(c.render(stack) for c in self.children)
 
-            # sub_indent = ' '
-            # if self.children and self.children[0].type == 'up_indent':
-            #     sub_indent += ' '
-            
             sub_indent = _get_indent(output)
-            print(f'sub_indent: "{sub_indent}"')
+            sub_indent = sub_indent[:1]         # only the 1st space/tab is dropped; remaining sub-indentation is preserved in `output`
+            # print(f'sub_indent: "{sub_indent}"')
             
             output = _del_indent(output, sub_indent)
             output = _add_indent(output, base_indent)
@@ -407,7 +404,7 @@ class NODES(object):
             text = child.render_inline(stack)               # this calls xline_markup.render_inline()
             escape = self.tree.config['escape_function']
             return escape(text)
-        
+
     class xline_markup(line):
         def render_inline(self, stack):
             markup = NODES.node.render(self, stack)         # call to super-method that renders embedded expressions, in addition to static text
@@ -979,10 +976,10 @@ class NODES(object):
 
 #####################################################################################################################################################
 #####
-#####  HYML_TREE
+#####  HypertagAST
 #####
 
-class HyML_Tree(BaseTree):
+class HypertagAST(BaseTree):
 
     NODES  = NODES              # must tell the BaseTree's rewriting routine where node classes can be found
     parser = None               # instance of Grammar to be used by super class __init__() and parse() to convert input text to AST
@@ -1057,12 +1054,12 @@ class HyML_Tree(BaseTree):
         self.config = self.config_default.copy()
         self.config.update(**config)
         
-        self.parser = HyML_Grammar.get_parser(text)
+        self.parser = Grammar.get_parser(text)
         text = self.parser.preprocess(text)
 
         # parse input text to the 1st version of AST (self.ast) as returned by Parsimonious,
         # then rewrite it to custom NODES.* classes rooted at self.root
-        super(HyML_Tree, self).__init__(text, stopAfter = stopAfter)
+        super(HypertagAST, self).__init__(text, stopAfter = stopAfter)
         
         if self.root is None:                                   # workaround for Parsimonious bug in the special case when text="" (Parsimonious returns None instead of a tree root)
             self.root = NODES.xdocument(self, ObjDict(start = 0, end = 0, children = [], expr_name = 'document'))
@@ -1084,7 +1081,7 @@ class HyML_Tree(BaseTree):
         
         # ctx = ctx.copy() if ctx else Context()
         ctx = Context()
-
+        
         assert self.config['target_language'] == 'HTML'
         ctx.pushall(BUILTIN_HTML)       # seed the context with built-in symbols
         # ctx.pushall(FILTERS)          # ...and standard filters
@@ -1129,20 +1126,20 @@ class HyML_Tree(BaseTree):
 
 #####################################################################################################################################################
 #####
-#####  HYML_PARSER
+#####  HYPERTAG PARSER
 #####
 
-class HyML:
+class HypertagParser:
     """
-    HyML Parser.
+    Hypertag parser.
     """
     def __init__(self, **config):
         self.config = config
         
     def parse(self, source):
         
-        tree = HyML_Tree(source, **self.config)
-        return tree.render()
+        ast = HypertagAST(source, **self.config)
+        return ast.render()
     
 
 ########################################################################################################################################################
@@ -1165,8 +1162,8 @@ if __name__ == '__main__':
             | Ala
               kot { 'Mru' "czek" 123 } {0}? {456}!
                 Ola
-            / i pies
-              Azor
+            /     i pies
+                  Azor
         
         if False:
             div#box.top.grey
@@ -1176,12 +1173,13 @@ if __name__ == '__main__':
             input enabled=True
         """
     
-    tree = HyML_Tree(text, stopAfter = "rewrite")
-    print()
-    print("===== AST =====")
+    tree = HypertagAST(text, stopAfter ="rewrite")
+    
+    # print()
+    # print("===== AST =====")
     # print(tree.ast)
     # print(type(tree.ast))
-    print()
+    # print()
     print("===== After rewriting =====")
     print(tree)
     print()

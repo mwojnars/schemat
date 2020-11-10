@@ -2,7 +2,7 @@ from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
-from hyperweb.hyml.errors import VoidTag
+from hyperweb.hypertag.errors import VoidTag
 
 
 ########################################################################################################################################################

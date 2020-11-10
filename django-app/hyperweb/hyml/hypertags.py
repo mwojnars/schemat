@@ -725,8 +725,8 @@ from nifty.util import escape, flatten, isstring, isint, isfunction, asnumber, g
 from nifty.text import html_escape, html_unescape, Text, HyML
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree, ParserError
 
-from hyperweb.hyml_html.grammar import *
-from hyperweb.hyml_html.structs import *
+from hyperweb.hyml.grammar import *
+from hyperweb.hyml.structs import *
 
 
 # Public symbols. When using "from fireweb.hypertags import *" only these symbols will be imported, all others are for internal use of the module:
