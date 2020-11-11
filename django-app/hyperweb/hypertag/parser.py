@@ -13,54 +13,18 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HyMLError, MissingValue, UndefinedTag, NotATag, DuplicateAttribute
+from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedTagEx, NotATagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML
-from hyperweb.hypertag.document import HText, HNode, HBody
+from hyperweb.hypertag.document import add_indent, del_indent, get_indent, HText, HNode
 
 DEBUG = False
 
 
-########################################################################################################################################################
-#####
-#####  UTILITIES
-#####
-
-def _add_indent(text, indent, re_start = re.compile(r'(?m)^(?=.)')):
-    """
-    Append `indent` string at the beginning of each line of `text`, including the 1st line.
-    Empty lines (containing zero characters, not even a space) are left untouched!
-    """
-    return re_start.sub(indent, text)
-    # if not text: return text
-    # return indent + text.replace('\n', '\n' + indent)
-    
-def _del_indent(text, indent):
-    """Remove `indent` string from the beginning of each line of `text`, wherever it is present as a line prefix."""
-    if text.startswith(indent): text = text[len(indent):]
-    return text.replace('\n' + indent, '\n')
-
-def _get_indent(text):
-    """
-    Retrieve the longest indentation string fully composed of whitespace
-    that is shared by ALL non-empty lines in `text`, including the 1st line.
-    """
-    lines = text.split('\n')
-    lines = list(filter(None, [l if l.strip() else '' for l in lines]))          # filter out empty lines
-    if not lines: return ''
-
-    for i, column in enumerate(zip(*lines)):        # zip() only eats up as many characters as the shortest line
-        if not column[0].isspace() or min(column) != max(column):
-            return lines[0][:i]
-    else:
-        size = min(map(len, lines))
-        return lines[0][:size]                      # when all lines are prefixes of each other take the shortest one
-    
-
 #####################################################################################################################################################
 #####
-#####  HYML_GRAMMAR
+#####  HYPERTAG GRAMMAR & SCRIPT PREPROCESSING
 #####
 
 class Grammar(Parsimonious):
@@ -91,8 +55,8 @@ class Grammar(Parsimonious):
     @staticmethod
     def get_parser(text):
         """
-        Return HyML_Parser instance suitable for parsing a given `text`.
-        The parser must be created with a proper choice of special characters,
+        Return instance of Grammar class suitable for parsing of a given `text`.
+        The grammar must be created with a proper choice of special characters,
         ones that don't collide with character set of `text`.
         """
         if not (set(Grammar.CHARS_DEFAULT) & set(text)):
@@ -274,9 +238,15 @@ class NODES(object):
 
     class xdocument(node):
         
-        def compactify(self, stack):
-            # if DEBUG: print("compact", "DOC", stack)
-            self.children = NODES._compactify_siblings_(self.children, stack)
+        def translate(self, stack):
+            nodes = filter(None, (c.translate(stack) for c in self.children))
+            hroot = HNode(body = list(nodes), indent = '\n')
+            hroot.indent = ''       # fix indent after all child indents have been relativized
+            return hroot
+
+        # def compactify(self, stack):
+        #     # if DEBUG: print("compact", "DOC", stack)
+        #     self.children = NODES._compactify_siblings_(self.children, stack)
 
     class static(node):
         """A node that represents static text: its self.value is already known during parsing or analysis, before render() is called."""
@@ -284,28 +254,30 @@ class NODES(object):
         ispure   = True
         value    = None
         
-        def setup(self):
-            self.value = self.text()
-        def render(self, stack):
-            return self.value
-        def __str__(self):
-            return self.value
+        def setup(self):            self.value = self.text()
+        def translate(self, stack): return HText(self.value)
+        def render(self, stack):    return self.value
+        def __str__(self):          return self.value
         
 
     ###  BLOCKS  ###
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the returned HNode."""
-        def render(self, stack):
+        def translate(self, stack):
             assert len(self.children) == 2 and self.children[0].type == 'margin'
             margin = self.children[0].get_margin()
-            hnode  = self.children[1].render(stack)
-            # hnode.margin = (hnode.margin or 0) + margin
-            hnode = margin * '\n' + hnode
+            hnode  = self.children[1].translate(stack)
+            hnode.margin = (hnode.margin or 0) + margin
+            # hnode = margin * '\n' + hnode
             return hnode
     
     class block(node): pass
     class block_text(block):
+
+        def translate(self, stack):
+            return HText(self.render(stack), indent = stack.indentation)
+            
         def render(self, stack):
             
             # temporarily reset indentation to zero for rendering of children; this will be reverted at the end
@@ -315,12 +287,12 @@ class NODES(object):
             # leading space is put in place of a marker character /|! in the headline
             output = ' ' + u''.join(c.render(stack) for c in self.children)
 
-            sub_indent = _get_indent(output)
+            sub_indent = get_indent(output)
             sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
             # print(f'sub_indent: "{sub_indent}"')
             
-            output = _del_indent(output, sub_indent)
-            output = _add_indent(output, base_indent)
+            output = del_indent(output, sub_indent)
+            # output = add_indent(output, base_indent)
             
             stack.indentation = base_indent
 
@@ -345,30 +317,40 @@ class NODES(object):
             assert self.tags and all(tag.type == 'tag_expand' for tag in self.tags)
             assert not self.body or self.body.type.startswith('body_')
             
-        def render(self, stack, _re_space = re.compile(r'^\s*')):
+        def translate(self, stack):
+            body = self.body.translate(stack) if self.body else []
+            for tag in reversed(self.tags):         # wrap up `body` in subsequent tags, processed in reverse order
+                body = [tag.translate(body, stack)]
+            assert len(body) == 1
+            hnode = body[0]
+            hnode.set_indent(stack.indentation)
             
-            if self.body:
-                body = self.body.render(stack)
-                stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
-                skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
-                body = body[:stop]
-                assert skip == 0
-                # assert skip >= 1
-                
-                if self.body.has_blocks():
-                    body += '\n'
-            else:
-                body = ''
-                
-            indent = stack.indentation
-            output = _del_indent(body, indent)
-            
-            # expand the chain of tags that enclose `body`
-            for tag in reversed(self.tags):
-                output = tag.expand(output, stack)
-                
-            output = _add_indent(output, indent)
-            return output  #+ skip * '\n'
+            return hnode
+
+        # def render(self, stack, _re_space = re.compile(r'^\s*')):
+        #
+        #     if self.body:
+        #         body = self.body.render(stack)
+        #         stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
+        #         skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
+        #         body = body[:stop]
+        #         assert skip == 0
+        #         # assert skip >= 1
+        #
+        #         if self.body.has_blocks():
+        #             body += '\n'
+        #     else:
+        #         body = ''
+        #
+        #     indent = stack.indentation
+        #     output = del_indent(body, indent)
+        #
+        #     # expand the chain of tags that enclose `body`
+        #     for tag in reversed(self.tags):
+        #         output = tag.expand(output, stack)
+        #
+        #     output = add_indent(output, indent)
+        #     return output  #+ skip * '\n'
 
     class xblock_assign(block): pass
     class xblock_def(block): pass
@@ -411,9 +393,8 @@ class NODES(object):
             """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
             return self.children[-1].type != 'nl'
 
-        def parse(self, stack):
-            text = u''.join(c.render(stack) for c in self.children)
-            # return HBody([c.parse(stack) for c in self.children])
+        def translate(self, stack):
+            return list(filter(None, (c.translate(stack) for c in self.children)))
 
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
@@ -421,6 +402,8 @@ class NODES(object):
     class xbody_markup(body): pass
 
     class line(node):
+        def translate(self, stack):
+            return HText(self.render_inline(stack))
         def render(self, stack):
             return stack.indentation + self.render_inline(stack)
         def render_inline(self, stack):
@@ -496,13 +479,34 @@ class NODES(object):
             
             self.tag = ctx.get(self.name)
             print('self.tag:', self.tag)
-            if self.tag is None: raise UndefinedTag(f"Undefined tag '{self.name}'", self)
+            if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
             
-        def expand(self, body, stack):
+        def translate(self, body, stack):
+    
+            # evaluate attributes to calculate their actual values
+            attrs, kwattrs = self._eval_attrs(stack)
             
-            # evaluate attributes to calculate actual values
+            if isinstance(self.tag, ExternalTag):
+                return HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs)
+            else:
+                raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
+            
+        # def expand(self, body, stack):
+        #
+        #     # evaluate attributes to calculate their actual values
+        #     unnamed, named = self._eval_attrs(stack)
+        #
+        #     if isinstance(self.tag, ExternalTag):
+        #         try:
+        #             return self.tag.expand(body, *unnamed, **named)
+        #         except HError as ex:
+        #             # TODO: add `node` position to error message
+        #             raise
+        #     else:
+        #         raise NotATagEx(f"Name '{self.name}' is {self.tag.__class__} instead of a tag", self)
+            
+        def _eval_attrs(self, stack):
             unnamed = [attr.evaluate(stack) for attr in self.unnamed]
-            # named = {name: expr.evaluate(stack) for name, expr in self.named}      # here, OrderedDict is no longer needed, as order matters for evaluation only
             
             named = {}
             for name, expr in self.named:
@@ -511,16 +515,8 @@ class NODES(object):
                     named[name] += ' ' + value       # = f'{named[name]} {value}'
                 else:
                     named[name] = value
-            
-            if isinstance(self.tag, ExternalTag):
-                try:
-                    return self.tag.expand(body, *unnamed, **named)
-                except HyMLError as ex:
-                    # TODO: add `node` position to error message
-                    raise
-            else:
-                raise NotATag(f"Name '{self.name}' is {self.tag.__class__} instead of a tag", self)
-            
+                    
+            return unnamed, named
             
     class xtag_def(node):
         """Definition of a tag (hypertag)."""
@@ -579,7 +575,7 @@ class NODES(object):
             
             # `val` is false ... check qualifiers to undertake appropriate action
             if self.qualifier == '?': return ''
-            if self.qualifier == '!': raise MissingValue("Obligatory expression has a false or empty value", self)
+            if self.qualifier == '!': raise MissingValueEx("Obligatory expression has a false or empty value", self)
             return val
 
         def _eval_inner_qualified(self, stack):
@@ -933,14 +929,22 @@ class NODES(object):
         def render(self, stack):
             return ''
     
-    class xindent(static):
+    class xindent(node):
         whitechar = None
+        def translate(self, stack):
+            """Called when INDENT/DEDENT surround a block."""
+            stack.indent(self.whitechar)
+            return None
         def render(self, stack):
+            """Called when INDENT/DEDENT surround a line within a text block."""
             stack.indent(self.whitechar)
             return ''
 
-    class xdedent(static):
+    class xdedent(node):
         whitechar = None
+        def translate(self, stack):
+            stack.dedent(self.whitechar)
+            return None
         def render(self, stack):
             stack.dedent(self.whitechar)
             return ''
@@ -963,7 +967,7 @@ class NODES(object):
         Values of the original nodes (strings to be concatenated) are retrieved from their render().
         """
         value = None        # pre-rendered output of the compactified nodes
-        ex = None           # if MissingValue exception was caught during rendering, it's stored here as an (exception, traceback) pair
+        ex = None           # if MissingValueEx exception was caught during rendering, it's stored here as an (exception, traceback) pair
         
         def __init__(self, node, stack):
             self.tree = node.tree
@@ -971,7 +975,7 @@ class NODES(object):
             self.pos = node.pos
             try:
                 self.value = node.render(stack)
-            except MissingValue as ex:
+            except MissingValueEx as ex:
                 self.ex = (ex, sys.exc_info()[2])
                 
         def merge(self, node, stack, sep):
@@ -980,7 +984,7 @@ class NODES(object):
             try:
                 nodeValue = node.render(stack)
                 self.value += sep + nodeValue
-            except MissingValue as ex:
+            except MissingValueEx as ex:
                 self.ex = (ex, sys.exc_info()[2])
     
         def render(self, stack):
@@ -1156,9 +1160,15 @@ class HypertagAST(BaseTree):
         """
         self.root.compactify(Stack())
     
+    def translate(self):
+        dom = self.root.translate(Stack())
+        assert isinstance(dom, HNode)
+        return dom
+
     def render(self):
-        output = self.root.render(Stack())
-        assert output[0] == '\n'                # extra empty line was prepended by Grammar.preprocess() and must be removed now
+        dom = self.translate()
+        output = dom.render()
+        assert output[0] == '\n'        # extra empty line was prepended by Grammar.preprocess() and must be removed now
         return output[1:]
 
     def __getitem__(self, tag_name):
@@ -1221,6 +1231,15 @@ if __name__ == '__main__':
     #     elif True:
     #         div | Ola
     # """
+    
+    text = """
+    h1
+        p | Ala
+        p
+            |     Ola
+                i kot
+        
+    """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     

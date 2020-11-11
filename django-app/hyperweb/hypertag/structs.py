@@ -13,8 +13,10 @@ class Stack(list):
     Stack of current symbols encountered during semantic analysis. Implementation based on standard <list>.
     Additionally, it keeps track of current indentation.
     """
-    
-    indentation = ''        # current indentation string, as a combination of ' ' and '\t' characters
+
+    # current indentation string, as a combination of ' ' and '\t' characters;
+    # initial \n is used to mark that an indentation is absolute rather than relative to a parent node
+    indentation = '\n'
     
     @property
     def size(self):

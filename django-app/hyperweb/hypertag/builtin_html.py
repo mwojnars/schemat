@@ -2,45 +2,14 @@ from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
-from hyperweb.hypertag.errors import VoidTag
+from hyperweb.hypertag.errors import VoidTagEx
+from hyperweb.hypertag.tag import ExternalTag
 
 
 ########################################################################################################################################################
-###  SDK
-
-class Tag:
-    """
-    Base class for all tags:
-    - ExternalTag - a tag implemented as a python function
-    - NativeTag - a tag implemented inside Hypertag code
-    """
-
-class ExternalTag(Tag):
-    """
-    External tag, i.e., a (hyper)tag defined as a python function.
-    Every tag behaves like a function, with a few extensions:
-    - it accepts unnamed body in "__body__" argument, which contains a markup value; some tags may expect body to be empty
-    - it may accept any number of named sections passed in "__NAME__" arguments; they contain markup values
-    - it may accept any number of plain (non-markup) arguments
-    - it should always return an unnamed markup value; additionally, it may return a dict of named markup values (sections) ??
-    """
-    
-    def expand(self, __body__, *args, **kwargs):
-        """
-        Subclasses should NOT append trailing \n nor add extra indentation during tag expansion
-        - both things will be added by the caller later on, if desired so by programmer.
-        
-        :param __body__: rendered main body of tag occurrence, as a string; if a tag is void (doesn't accept body),
-                         it may check whether __body__ is empty and raise VoidTag exception if not
-        :param __sections__: dict of {section_name: section_body}, can be empty
-        :param args, kwargs: tag-specific arguments, listed directly in subclasses and/or using *args/**kwargs notation
-        :return: string containing tag output; optionally, it can be accompanied with a dict of (modified) section bodies,
-                 as a 2nd element of a pair (output_body, output_sections); if output_sections are NOT explicitly returned,
-                 they are assumed to be equal __sections__; also, the __sections__ dict CAN be modified *in place*
-                 and returned without copying
-        """
-        raise NotImplementedError
-
+#####
+#####  HTML TAG
+#####
 
 class HTMLTag(ExternalTag):
     
@@ -58,10 +27,12 @@ class HTMLTag(ExternalTag):
         
         # render output
         if self.void:
-            if __body__: raise VoidTag(f"body must be empty for a void tag <{name}>")
+            if __body__: raise VoidTagEx(f"body must be empty for a void tag <{name}>")
             return f"<{tag} />"
         else:
-            return f"<{tag}>" + __body__ + f"</{name}>"
+            # if the block contains a headline, the closing tag is placed on the same line as __body__
+            nl = '\n' if __body__[:1] == '\n' else ''
+            return f"<{tag}>" + __body__ + nl + f"</{name}>"
 
     def _render_attr(self, name_value):
         

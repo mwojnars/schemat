@@ -479,9 +479,9 @@ target           =  ('(' ws targets ws ')') / var               # left side of a
 
 body             =  body_verbat / body_normal / body_markup / body_struct
 
-block_verbat     =  mark_verbat gap? line_verbat? tail_verbat?
-block_normal     =  mark_normal gap? line_normal? tail_normal?
-block_markup     =  mark_markup gap? line_markup? tail_markup?
+block_verbat     =  mark_verbat line_verbat? tail_verbat?
+block_normal     =  mark_normal line_normal? tail_normal?
+block_markup     =  mark_markup line_markup? tail_markup?
 
 #body_struct_in   =  mark_struct ((ws block_tagged) / tail_blocks)
 body_struct      =  mark_struct? comment? tail_blocks
@@ -522,9 +522,8 @@ embedding_eval   =  '$' expr_var
 
 ###  ATTRIBUTES of tags
 
-# formal attributes as declared in hypertag definition; structural attributes @... must always go at the end
-attrs_def        =  (space attr_named)* (space attr_body)*
-#attrs_def_comma =  (ws '(' (attr_named (',' ws attr_val)* (',' ws attr_body)*) / (attr_body (',' ws attr_body)* ) ')')
+# formal attributes as declared in hypertag definition; body attribute @... must go first if present
+attrs_def        =  (space attr_body)? (space attr_named)*
 
 # actual attributes as passed to a tag
 attrs_val        =  ((ws attr_short+) / (space attr_val)) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
