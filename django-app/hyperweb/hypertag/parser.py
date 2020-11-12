@@ -239,7 +239,6 @@ class NODES(object):
     class xdocument(node):
         
         def translate(self, stack):
-            # nodes = list(filter(None, (c.translate(stack) for c in self.children)))
             nodes = [c.translate(stack) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
@@ -371,13 +370,23 @@ class NODES(object):
                 self.clauses = self.children
 
         def translate(self, stack):
-            """Unlike translate() methods of regular blocks, this one returns a LIST of nodes, not a single HNode!"""
+            feed = self._select_clause(stack)
+            
+            # reduce indentation of nodes in `feed` to match the current stack.indentation
+            assert len(set(n.indent for n in feed)) <= 1, "Unequal indentations of child nodes inside an 'if...' block?"
+            for n in feed:
+                assert n.indent[0] == '\n'          # child indentations are still absolute ones, not relative
+                n.indent = stack.indentation
+                
+            return feed
+        
+        def _select_clause(self, stack):
             for clause in self.clauses:
                 if clause.test.evaluate(stack):
                     return clause.translate(stack)
             if self.elsebody:
                 return self.elsebody.translate(stack)
-            return None
+            return Sequence()
         
     class xclause_if(node):
         test = None             # <expression> node containing a test to be performed
@@ -400,7 +409,6 @@ class NODES(object):
         def translate(self, stack):
             """Generic translate() returns a list of HNodes produced through translation of child nodes."""
             return Sequence(c.translate(stack) for c in self.children)
-            # return list(filter(None, (c.translate(stack) for c in self.children)))
 
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
@@ -496,20 +504,6 @@ class NODES(object):
                 return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
             else:
                 raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
-            
-        # def expand(self, body, stack):
-        #
-        #     # evaluate attributes to calculate their actual values
-        #     unnamed, named = self._eval_attrs(stack)
-        #
-        #     if isinstance(self.tag, ExternalTag):
-        #         try:
-        #             return self.tag.expand(body, *unnamed, **named)
-        #         except HError as ex:
-        #             # TODO: add `node` position to error message
-        #             raise
-        #     else:
-        #         raise NotATagEx(f"Name '{self.name}' is {self.tag.__class__} instead of a tag", self)
             
         def _eval_attrs(self, stack):
             unnamed = [attr.evaluate(stack) for attr in self.unnamed]
@@ -1236,6 +1230,7 @@ if __name__ == '__main__':
             div | Ala
         elif True:
             div | Ola
+        / kot
     """
     
     # text = """

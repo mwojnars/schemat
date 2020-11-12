@@ -255,9 +255,6 @@ class HNode:
             assert self.indent.startswith(parent_indent)
             self.indent = self.indent[len(parent_indent):]
         
-        # assert self.indabs.startswith(parent_indent)
-        # self.indent = self.indabs[len(parent_indent):]
-        
     def render(self, indent = ''):
         
         if self.indent:
