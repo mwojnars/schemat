@@ -17,7 +17,7 @@ from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedTagEx, Not
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML
-from hyperweb.hypertag.document import add_indent, del_indent, get_indent, HText, HNode
+from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 
 DEBUG = False
 
@@ -218,7 +218,7 @@ class NODES(object):
             """
             self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
-            
+
         def render(self, stack):
             """
             Convert this AST to its textual representation in target markup language.
@@ -239,9 +239,10 @@ class NODES(object):
     class xdocument(node):
         
         def translate(self, stack):
-            nodes = filter(None, (c.translate(stack) for c in self.children))
-            hroot = HNode(body = list(nodes), indent = '\n')
-            hroot.indent = ''       # fix indent after all child indents have been relativized
+            # nodes = list(filter(None, (c.translate(stack) for c in self.children)))
+            nodes = [c.translate(stack) for c in self.children]
+            hroot = HRoot(body = nodes, indent = '\n')
+            hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
             return hroot
 
         # def compactify(self, stack):
@@ -255,7 +256,7 @@ class NODES(object):
         value    = None
         
         def setup(self):            self.value = self.text()
-        def translate(self, stack): return HText(self.value)
+        def translate(self, stack): return Sequence(HText(self.value))
         def render(self, stack):    return self.value
         def __str__(self):          return self.value
         
@@ -263,20 +264,23 @@ class NODES(object):
     ###  BLOCKS  ###
 
     class xblock(node):
-        """Wrapper around all specific types of blocks that adds top margin to the returned HNode."""
+        """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
         def translate(self, stack):
             assert len(self.children) == 2 and self.children[0].type == 'margin'
             margin = self.children[0].get_margin()
-            hnode  = self.children[1].translate(stack)
-            hnode.margin = (hnode.margin or 0) + margin
-            # hnode = margin * '\n' + hnode
-            return hnode
+            feed   = self.children[1].translate(stack)
+            
+            if feed:                    # add top margin to the 1st node
+                first = feed[0]
+                first.margin = (first.margin or 0) + margin
+            
+            return feed
     
     class block(node): pass
     class block_text(block):
 
         def translate(self, stack):
-            return HText(self.render(stack), indent = stack.indentation)
+            return Sequence(HText(self.render(stack), indent = stack.indentation))
             
         def render(self, stack):
             
@@ -320,12 +324,10 @@ class NODES(object):
         def translate(self, stack):
             body = self.body.translate(stack) if self.body else []
             for tag in reversed(self.tags):         # wrap up `body` in subsequent tags, processed in reverse order
-                body = [tag.translate(body, stack)]
+                body = tag.translate(body, stack)
             assert len(body) == 1
-            hnode = body[0]
-            hnode.set_indent(stack.indentation)
-            
-            return hnode
+            body[0].set_indent(stack.indentation)
+            return body
 
         # def render(self, stack, _re_space = re.compile(r'^\s*')):
         #
@@ -368,13 +370,14 @@ class NODES(object):
             else:
                 self.clauses = self.children
 
-        def render(self, stack):
+        def translate(self, stack):
+            """Unlike translate() methods of regular blocks, this one returns a LIST of nodes, not a single HNode!"""
             for clause in self.clauses:
                 if clause.test.evaluate(stack):
-                    return clause.render(stack)
+                    return clause.translate(stack)
             if self.elsebody:
-                return self.elsebody.render(stack)
-            return '' #None
+                return self.elsebody.translate(stack)
+            return None
         
     class xclause_if(node):
         test = None             # <expression> node containing a test to be performed
@@ -382,6 +385,8 @@ class NODES(object):
         def setup(self):
             assert len(self.children) == 2
             self.test, self.body = self.children
+        def translate(self, stack):
+            return self.body.translate(stack)
         def render(self, stack):
             return self.body.render(stack)
         
@@ -392,9 +397,10 @@ class NODES(object):
         def has_blocks(self):
             """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
             return self.children[-1].type != 'nl'
-
         def translate(self, stack):
-            return list(filter(None, (c.translate(stack) for c in self.children)))
+            """Generic translate() returns a list of HNodes produced through translation of child nodes."""
+            return Sequence(c.translate(stack) for c in self.children)
+            # return list(filter(None, (c.translate(stack) for c in self.children)))
 
     class xbody_struct(body): pass
     class xbody_verbat(body): pass
@@ -403,7 +409,7 @@ class NODES(object):
 
     class line(node):
         def translate(self, stack):
-            return HText(self.render_inline(stack))
+            return Sequence(HText(self.render_inline(stack)))
         def render(self, stack):
             return stack.indentation + self.render_inline(stack)
         def render_inline(self, stack):
@@ -487,7 +493,7 @@ class NODES(object):
             attrs, kwattrs = self._eval_attrs(stack)
             
             if isinstance(self.tag, ExternalTag):
-                return HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs)
+                return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
             else:
                 raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
             
@@ -1162,7 +1168,7 @@ class HypertagAST(BaseTree):
     
     def translate(self):
         dom = self.root.translate(Stack())
-        assert isinstance(dom, HNode)
+        assert isinstance(dom, HRoot)
         return dom
 
     def render(self):
@@ -1225,21 +1231,21 @@ if __name__ == '__main__':
             input enabled=True
         """
     
-    # text = """
-    #     if False:
-    #         div | Ala
-    #     elif True:
-    #         div | Ola
-    # """
-    
     text = """
-    h1
-        p | Ala
-        p
-            |     Ola
-                i kot
-        
+        if False:
+            div | Ala
+        elif True:
+            div | Ola
     """
+    
+    # text = """
+    # h1
+    #     p : b | Ala
+    #     p
+    #         |     Ola
+    #             i kot
+    #
+    # """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     

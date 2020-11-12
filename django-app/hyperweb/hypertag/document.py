@@ -129,6 +129,7 @@ document
 """
 
 import re
+from types import GeneratorType
 
 
 ########################################################################################################################################################
@@ -170,6 +171,40 @@ def get_indent(text):
 
 ########################################################################################################################################################
 #####
+#####  SEQUENCE OF NODES
+#####
+
+class Sequence:
+    """
+    List of HNodes that comprise (a part of) a body of an HNode, or was produced as an intermediate
+    collection of nodes during nodes filtering.
+    Provides methods for traversing a Hypertag tree and filtering of nodes,
+    as well as flattening and cleaning up the list during node construction.
+    """
+    nodes = None
+    
+    def __init__(self, *nodes):
+        self.nodes = self._flatten(nodes)
+    
+    def __bool__(self):             return bool(self.nodes)
+    def __len__(self):              return len(self.nodes)
+    def __iter__(self):             return iter(self.nodes)
+    def __getitem__(self, pos):     return self.nodes[pos]
+    
+    @staticmethod
+    def _flatten(nodes):
+        """Flatten nested lists of nodes by concatenating them into the top-level list; drop None's."""
+        result = []
+        for n in nodes:
+            if isinstance(n, (list, Sequence, GeneratorType)):
+                result += Sequence._flatten(n)
+            elif n is not None:
+                result.append(n)
+        return result
+        
+
+########################################################################################################################################################
+#####
 #####  DOCUMENT OBJECT MODEL
 #####
 
@@ -180,26 +215,23 @@ class HNode:
     attrs   = None      # list of unnamed attributes to be passed to tag.expand() during rendering
     kwattrs = None      # dict of named attributes to be passed to tag.expand()
     
-    body = None         # list of child nodes, in a non-terminal node
+    body = None         # Sequence of child nodes, in a non-terminal node
     text = None         # headline of this node (if `body` is present), or full text (if `body` is None)
     
     margin = None       # top margin: no. of empty lines to prepend in text output of this node during rendering
     indent = None       # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
 
-    # indabs = None       # absolute indentation; stored temporarily, for delayed calculation of relative `indent` in set_indent()
-    # parent = None       # parent HNode of this node; can be None
-    
-    # def __init__(self, body = None, tag = None, attrs = None, kwattrs = None, text = None, indent = None):
-    #     self.body = body
-    #     self.tag  = tag
-    #     self.text = text
-    #     self.indent = indent
-    
     def __init__(self, body = None, indent = None, **params):
+        
+        # assign secondary parameters
         for name, value in params.items():
             setattr(self, name, value)
-        self.body = body
+            
+        # assign a list of body nodes, with flattening of nested lists and filtering of None's
+        self.body = Sequence(body)
+        
+        # assign indentation, with proper handling of absolute (in parent) vs. relative (in children) indentations
         self.set_indent(indent)
         
     def set_indent(self, indent):
@@ -245,6 +277,9 @@ class HNode:
         return text
         
         
+class HRoot(HNode):
+    """Root node of a Hypertag DOM tree."""
+    
 class HText(HNode):
     """A leaf node containing plain text."""
     
@@ -286,16 +321,6 @@ class HText(HNode):
         text   = '\n'.join(indent + line[offset:] for line in lines)
         return gap * '\n' + text
     
-    
-    
-# class HBody:
-#     """List of child nodes that comprise contents of a non-terminal node."""
-#
-#     nodes = None        # list of HyperNodes in this body
-#
-#     def __init__(self, nodes):
-#         self.nodes = nodes
-#         assert all(isinstance(n, HNode) for n in nodes)
     
     
 #####################################################################################################################################################
