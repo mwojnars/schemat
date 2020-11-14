@@ -2,6 +2,7 @@ from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
+from hyperweb.hypertag.document import Sequence
 from hyperweb.hypertag.errors import VoidTagEx
 from hyperweb.hypertag.tag import ExternalTag
 
@@ -31,8 +32,10 @@ class HTMLTag(ExternalTag):
             return f"<{tag} />"
         else:
             # if the block contains a headline, the closing tag is placed on the same line as __body__
-            nl = '\n' if __body__[:1] == '\n' else ''
-            return f"<{tag}>" + __body__ + nl + f"</{name}>"
+            assert isinstance(__body__, Sequence)
+            body = __body__.render()
+            nl = '\n' if body[:1] == '\n' else ''
+            return f"<{tag}>" + body + nl + f"</{name}>"
 
     def _render_attr(self, name_value):
         

@@ -373,9 +373,10 @@ class NODES(object):
             feed = self._select_clause(stack)
             
             # reduce indentation of nodes in `feed` to match the current stack.indentation
+            # (i.e., ignore sub-indent of a clause block)
             assert len(set(n.indent for n in feed)) <= 1, "Unequal indentations of child nodes inside an 'if...' block?"
             for n in feed:
-                assert n.indent[0] == '\n'          # child indentations are still absolute ones, not relative
+                assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
                 n.indent = stack.indentation
                 
             return feed
@@ -1210,37 +1211,48 @@ if __name__ == '__main__':
                 tail text
                   tail text
                tail text
-        div
-            | Ala
-              kot { 'Mru' "czek" 123 } {0}? {456}!
-                Ola
-            /     i pies
-                  Azor
-        
-        if False:
-            div#box.top.grey
-        elif True:
-            div #box class="bottom"
-        else
-            input enabled=True
         """
-    
+        # """
+        # div
+        #     | Ala
+        #       kot { 'Mru' "czek" 123 } {0}? {456}!
+        #         Ola
+        #     /     i pies
+        #           Azor
+        #
+        # if False:
+        #     div#box.top.grey
+        # elif True:
+        #     div #box class="bottom"
+        # else
+        #     input enabled=True
+        # """
+
     text = """
-        if False:
-            div | Ala
-        elif True:
-            div | Ola
-        / kot
+        p |
+            tail text
+            
+              tail text
+              
+             xxx
     """
     
     # text = """
-    # h1
-    #     p : b | Ala
-    #     p
-    #         |     Ola
-    #             i kot
-    #
+    #     if {False}:
+    #         |Ala
+    #     elif True * 5:
+    #         div | Ola
+    #     / kot
     # """
+    
+    text = """
+    h1
+        p : b | Ala
+        p
+            |     Ola
+                i kot
+
+    """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     

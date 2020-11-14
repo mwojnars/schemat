@@ -468,7 +468,7 @@ block_for        =  'for' space targets space 'in' space (expr_augment / embeddi
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' ws_body)?
 
 try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
-clause_if        =  space (expr / embedding) ws_body
+clause_if        =  space (embedding / expr) ws body_struct     # (embedding ws_body) / ...  -- inline syntax could be handled in the future, but it requires that test expression is enclosed in {..}
 ws_body          =  ws body
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed

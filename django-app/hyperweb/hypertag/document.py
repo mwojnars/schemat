@@ -183,25 +183,32 @@ class Sequence:
     """
     nodes = None
     
-    def __init__(self, *nodes):
-        self.nodes = self._flatten(nodes)
-    
+    def __init__(self, *nodes, _strict = True):
+        self.nodes = self._flatten(nodes) if _strict else list(nodes)
+        
     def __bool__(self):             return bool(self.nodes)
     def __len__(self):              return len(self.nodes)
     def __iter__(self):             return iter(self.nodes)
-    def __getitem__(self, pos):     return self.nodes[pos]
+    def __getitem__(self, pos):
+        if isinstance(pos, slice):
+            return Sequence(self.nodes[pos], _strict = False)
+        return self.nodes[pos]
     
     @staticmethod
     def _flatten(nodes):
         """Flatten nested lists of nodes by concatenating them into the top-level list; drop None's."""
         result = []
         for n in nodes:
+            if n is None: continue
             if isinstance(n, (list, Sequence, GeneratorType)):
                 result += Sequence._flatten(n)
-            elif n is not None:
+            else:
                 result.append(n)
         return result
         
+    def render(self):
+        return ''.join(node.render() for node in self.nodes)
+
 
 ########################################################################################################################################################
 #####
@@ -215,12 +222,28 @@ class HNode:
     attrs   = None      # list of unnamed attributes to be passed to tag.expand() during rendering
     kwattrs = None      # dict of named attributes to be passed to tag.expand()
     
-    body = None         # Sequence of child nodes, in a non-terminal node
-    text = None         # headline of this node (if `body` is present), or full text (if `body` is None)
+    body = None         # Sequence (possibly empty) of child nodes, in a non-terminal node; None in HText
+    # text = None         # headline of this node (if `body` is present), or full text (if `body` is None)
     
     margin = None       # top margin: no. of empty lines to prepend in text output of this node during rendering
     indent = None       # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
+
+    # @property
+    # def headtail(self):
+    #     return self.head, self.tail
+    #
+    # @property
+    # def head(self):
+    #     if self.body and self.body[0].is_headline():
+    #         return self.body[0]
+    #
+    # @property
+    # def tail(self):
+    #     if self.body and self.body[0].is_headline():
+    #         return self.body[1:]
+    #     else:
+    #         return self.body
 
     def __init__(self, body = None, indent = None, **params):
         
@@ -234,6 +257,9 @@ class HNode:
         # assign indentation, with proper handling of absolute (in parent) vs. relative (in children) indentations
         self.set_indent(indent)
         
+    # def is_headline(self):
+    #     return self.indent is None
+    
     def set_indent(self, indent):
         """
         Sets absolute indentation on self. This calls relative_indent() on all children
@@ -241,7 +267,7 @@ class HNode:
         """
         self.indent = indent
         if self.indent:
-            for child in self.body or []:
+            for child in self.body:
                 child.relative_indent(self.indent)
             
     def relative_indent(self, parent_indent):
@@ -250,29 +276,28 @@ class HNode:
         If this node is inline (indent=None), the method is called recursively on child nodes.
         """
         if self.indent is None:
-            for child in self.body or []: child.relative_indent(parent_indent)
+            for child in self.body: child.relative_indent(parent_indent)
         else:
             assert self.indent.startswith(parent_indent)
             self.indent = self.indent[len(parent_indent):]
         
-    def render(self, indent = ''):
+    def render(self):
         
-        if self.indent:
-            assert self.indent[:1] != '\n'      # self.indent must have been converted already to relative
-            indent += (self.indent or '')
-            
-        body = ''.join(node.render(indent) for node in self.body or [])
-        text = (self.text or '') + body
-
-        if self.tag:
-            text = self.tag.expand(text, *(self.attrs or ()), **(self.kwattrs or {}))
+        text = self._render_body()
+        
         if self.margin:
             text = self.margin * '\n' + text
         if self.indent:
+            assert self.indent[:1] != '\n'      # self.indent must have been converted already to relative
             text = add_indent(text, self.indent)
 
         return text
-        
+    
+    def _render_body(self):
+        if self.tag:
+            return self.tag.expand(self.body, *(self.attrs or ()), **(self.kwattrs or {}))
+        else:
+            return self.body.render()
         
 class HRoot(HNode):
     """Root node of a Hypertag DOM tree."""
@@ -280,22 +305,24 @@ class HRoot(HNode):
 class HText(HNode):
     """A leaf node containing plain text."""
     
-    text = None         # text of this node, either plain text or markup; consists of two parts:
+    text = None         # text of this node, either plain text or markup after preprocessing; consists of two parts:
                         #  1) headline (head) - 1st line of `text`, without trailing newline
                         #  2) tailtext (tail) - all lines after the 1st one including the leading newline (!);
                         #     tailtext may contain trailing newline(s), but this is not obligatory
     
-    @property
-    def headtail(self):
-        split = self.text.find('\n')
-        if split < 0: split = len(self.text)
-        return self.text[:split], self.text[split:]
-    
-    @property
-    def head(self): return self.headtail[0]
-    
-    @property
-    def tail(self): return self.headtail[1]
+    # @property
+    # def headtail(self):
+    #     assert not self.body
+    #     split = self.text.find('\n')
+    #     if split < 0: split = len(self.text)
+    #     return self.text[:split], self.text[split:]
+    #
+    # @property
+    # def head(self): return self.headtail[0]
+    #
+    # @property
+    # def tail(self): return self.headtail[1]
+
     
     def __init__(self, text = '', **kwargs):
         super(HText, self).__init__(text = text, **kwargs)
@@ -303,20 +330,26 @@ class HText(HNode):
     def __str__(self):
         return self.text
         
-    def indent(self, spaces = 1, gap = 0, re_lines = re.compile(r'^(\s*\n)+|\s+$')):
-        """
-        Like self.text, but with leading/trailing empty lines removed and indentation fixed at a given number of `spaces`.
-        Optionally, a fixed number (`gap`) of empty lines are added at the beginning.
-        """
-        text = self.text
-        text = re_lines.sub('', text)           # strip leading and trailing empty lines
-        
-        # replace current indentation with a `spaces` number of spaces; existing tabs treated like a single space
-        lines  = text.splitlines()
-        indent = ' ' * spaces
-        offset = min(len(line) - len(line.lstrip()) for line in lines if line.strip())
-        text   = '\n'.join(indent + line[offset:] for line in lines)
-        return gap * '\n' + text
+    def set_indent(self, indent):
+        self.indent = indent
+
+    def _render_body(self):
+        return self.text
+
+    # def indent(self, spaces = 1, gap = 0, re_lines = re.compile(r'^(\s*\n)+|\s+$')):
+    #     """
+    #     Like self.text, but with leading/trailing empty lines removed and indentation fixed at a given number of `spaces`.
+    #     Optionally, a fixed number (`gap`) of empty lines are added at the beginning.
+    #     """
+    #     text = self.text
+    #     text = re_lines.sub('', text)           # strip leading and trailing empty lines
+    #
+    #     # replace current indentation with a `spaces` number of spaces; existing tabs treated like a single space
+    #     lines  = text.splitlines()
+    #     indent = ' ' * spaces
+    #     offset = min(len(line) - len(line.lstrip()) for line in lines if line.strip())
+    #     text   = '\n'.join(indent + line[offset:] for line in lines)
+    #     return gap * '\n' + text
     
     
     
