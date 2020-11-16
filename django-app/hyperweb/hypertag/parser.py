@@ -1237,11 +1237,11 @@ if __name__ == '__main__':
     DEBUG = True
     
     text = """
-        h1 : a href="http://xxx.com" : b | This is <h1> title
+        h1 : a href="http://xxx.com" : b : | This is <h1> title
             p / And <a> paragraph.
             p | tail text
-              |    tail text
-              | tail text
+                  tail text
+               tail text
         """
         # """
         # div
@@ -1259,17 +1259,24 @@ if __name__ == '__main__':
         #     input enabled=True
         # """
 
-    text = """
-        | Ala ma
-          kota
-        p | Ala ma
-            kota
-        p
-          | tail text
-              tail text
-
-             xxx
-    """
+    # text = """
+    #     | Ala ma
+    #       kota
+    #     p | Ala ma
+    #         kota
+    #     p
+    #       | tail text
+    #           tail text
+    #
+    #          xxx
+    # """
+    
+    # text = """
+    #     h1: | This is <h1> title
+    #         p | tail text
+    #           |    tail text
+    #           | tail text
+    # """
     
     # text = """
     #     if {False}:

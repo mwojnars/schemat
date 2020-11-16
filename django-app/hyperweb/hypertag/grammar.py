@@ -472,7 +472,7 @@ tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 ###  STRUCTURED BLOCK
 
 # block_struct     =  tags_expand body?                         # structured block requires min. 1 tag, but body is not obligatory
-block_struct     =  tags_expand mark_struct? (ws headline)? tail_blocks?
+block_struct     =  tags_expand (ws mark_struct)? (ws headline)? tail_blocks?
 
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
 tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
@@ -481,9 +481,9 @@ tag_expand       =  (name_id / attr_short) attrs_val?           # if name is mis
 
 headline         =  head_verbat / head_normal / head_markup
 
-head_verbat      =  mark_verbat gap? line_verbat
-head_normal      =  mark_normal gap? line_normal
-head_markup      =  mark_markup gap? line_markup
+head_verbat      =  mark_verbat gap? line_verbat?
+head_normal      =  mark_normal gap? line_normal?
+head_markup      =  mark_markup gap? line_markup?
 
 body             =  body_text / body_struct
 body_text        =  ws (block_verbat / block_normal / block_markup)
