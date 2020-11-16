@@ -219,15 +219,12 @@ class NODES(object):
             self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
 
-        def _render_children(self, stack):
-            """Render all child nodes and return concatenation of result strings."""
-            return u''.join(c.render(stack) for c in self.children)
+        @staticmethod
+        def _render_all(nodes, stack):
+            return u''.join(n.render(stack) for n in nodes)
             
-        def _translate_children(self, stack):
-            """Translate all children and return as a Sequence."""
-            return Sequence(c.translate(stack) for c in self.children)
-            
-        def _translate_all(self, nodes, stack):
+        @staticmethod
+        def _translate_all(nodes, stack):
             return Sequence(n.translate(stack) for n in nodes)
 
         # def render(self, stack):
@@ -273,61 +270,26 @@ class NODES(object):
 
     ###  BLOCKS  ###
 
-    class block(node):
-        """Base class for all types of blocks providing common methods."""
-        
-        @staticmethod
-        def _apply_tags(tags, body, stack):
-            """Wrap up `body` in subsequent tags processed in reverse order."""
-            if not tags: return body
-            for tag in reversed(tags):
-                body = tag.translate(body, stack)
-            assert len(body) == 1
-            body[0].set_indent(stack.indentation)
-            return body
-        
-        @staticmethod
-        def _render_text(children, stack):
-            """Render a list of `children` nodes and wrap up in a single HText node, with proper indentation of lines."""
-            
-            # temporarily reset indentation to zero for rendering of children; this will be reverted later on
-            indent = stack.indentation
-            stack.indentation = ''
-            
-            # leading space is put in place of a marker character /|! in the headline
-            output = ' ' + u''.join(c.render(stack) for c in children)
-            stack.indentation = indent
-
-            sub_indent = get_indent(output)
-            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
-            # print(f'sub_indent: "{sub_indent}"')
-            return del_indent(output, sub_indent)
-        
+    class block(node): pass
     class block_text(block):
 
         def translate(self, stack):
             return Sequence(HText(self.render(stack), indent = stack.indentation))
             
         def render(self, stack):
-            return self._render_text(self.children, stack)
 
-            # # temporarily reset indentation to zero for rendering of children; this will be reverted at the end
-            # base_indent = stack.indentation
-            # stack.indentation = ''
-            #
-            # # leading space is put in place of a marker character /|! in the headline
-            # output = ' ' + u''.join(c.render(stack) for c in self.children)
-            #
-            # sub_indent = get_indent(output)
-            # sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
-            # # print(f'sub_indent: "{sub_indent}"')
-            #
-            # output = del_indent(output, sub_indent)
-            # # output = add_indent(output, base_indent)
-            #
-            # stack.indentation = base_indent
-            #
-            # return output
+            # temporarily reset indentation to zero for rendering of children; this will be reverted later on
+            indent = stack.indentation
+            stack.indentation = ''
+            
+            # leading space is put in place of a marker character /|! in the headline
+            output = ' ' + u''.join(c.render(stack) for c in self.children)
+            stack.indentation = indent
+
+            sub_indent = get_indent(output)
+            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
+            # print(f'sub_indent: "{sub_indent}"')
+            return del_indent(output, sub_indent)
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
@@ -428,12 +390,7 @@ class NODES(object):
 
     class xbody_struct(node):
         def translate(self, stack):
-            return self._translate_children(stack)
-
-    # class xbody_struct(body): pass
-    # class xbody_verbat(body): pass
-    # class xbody_normal(body): pass
-    # class xbody_markup(body): pass
+            return self._translate_all(self.children, stack)
 
     class line(node):
         def translate(self, stack):
@@ -453,14 +410,13 @@ class NODES(object):
             assert len(self.children) == 1
             child = self.children[0]
             assert child.type == 'line_markup'
-            text = child.render_inline(stack)               # this calls xline_markup.render_inline()
+            text = child.render_inline(stack)                   # this calls xline_markup.render_inline()
             escape = self.tree.config['escape_function']
             return escape(text)
 
     class xline_markup(line):
         def render_inline(self, stack):
-            # markup = NODES.node.render(self, stack)         # call to super-method that renders embedded expressions, in addition to static text
-            markup = self._render_children(stack)           # renders embedded expressions, in addition to static text
+            markup = self._render_all(self.children, stack)     # renders embedded expressions, in addition to static text
             return markup
 
     
@@ -1269,13 +1225,6 @@ if __name__ == '__main__':
     #           tail text
     #
     #          xxx
-    # """
-    
-    # text = """
-    #     h1: | This is <h1> title
-    #         p | tail text
-    #           |    tail text
-    #           | tail text
     # """
     
     # text = """
