@@ -409,7 +409,6 @@ div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compac
 
 
 ########################################################################################################################################################
-###
 grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -446,48 +445,61 @@ document         =  core_blocks margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin (block_verbat / block_normal / block_markup / block_control / block_def / block_tagged)
-
-###  TAG BLOCKS
-
-block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
-tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
-
-block_tagged     =  tags_expand ws_body?
-tags_expand      =  tag_expand (ws ':' ws tag_expand)*
-tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
-
+block            =  margin (block_text / block_control / block_def / block_struct)
 
 ###  CONTROL BLOCKS
 
 block_control    =  block_assign / block_if / block_try / block_for
 
-block_assign     =  targets '=' (expr_augment / embedding)
-block_try        =  ('try' ws_body (nl 'or' ws_body)* (nl 'else' ws_body)?) / try_short
-block_for        =  'for' space targets space 'in' space (expr_augment / embedding) ws_body
-block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' ws_body)?
+block_assign     =  targets '=' (embedding / expr_augment)
+block_try        =  ('try' body (nl 'or' body)* (nl 'else' body)?) / try_short
+block_for        =  'for' space targets space 'in' space (embedding / expr_augment) body_struct
+block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' body)?
 
-try_short        =  '?' ws block_tagged                         # short version of "try" block:  ? tag ... (optional node)
-clause_if        =  space (embedding / expr) ws body_struct     # (embedding ws_body) / ...  -- inline syntax could be handled in the future, but it requires that test expression is enclosed in {..}
-ws_body          =  ws body
+try_short        =  '?' ws (block_text / block_struct)          # short version of "try" block:  ?tag ... or ?|...
+clause_if        =  space (embedding / expr) body_struct        # (embedding body) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
 target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
 
+body_struct      =  (ws mark_struct comment?)? tail_blocks
 
-###  TEXT BLOCKS & BODY
+###  DEFINITION BLOCK
 
-body             =  body_verbat / body_normal / body_markup / body_struct
+block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
+tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
+
+###  STRUCTURED BLOCK
+
+# block_struct     =  tags_expand body?                         # structured block requires min. 1 tag, but body is not obligatory
+block_struct     =  tags_expand mark_struct? (ws headline)? tail_blocks?
+
+tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
+tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
+
+###  HEAD, TAIL, BODY
+
+headline         =  head_verbat / head_normal / head_markup
+
+head_verbat      =  mark_verbat gap? line_verbat
+head_normal      =  mark_normal gap? line_normal
+head_markup      =  mark_markup gap? line_markup
+
+body             =  body_text / body_struct
+body_text        =  ws (block_verbat / block_normal / block_markup)
+
+# body             =  ws (body_verbat / body_normal / body_markup / body_struct)
+# body_verbat      =  mark_verbat gap? line_verbat tail_blocks?       #/ tail_verbat)
+# body_normal      =  mark_normal gap? line_normal tail_blocks?       #/ tail_normal)
+# body_markup      =  mark_markup gap? line_markup tail_blocks?       #/ tail_markup)
+
+###  TEXT BLOCKS & LINES
+
+block_text       =  (tags_expand ws)? (block_verbat / block_normal / block_markup)
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
 block_markup     =  mark_markup line_markup? tail_markup?
-
-#body_struct_in   =  mark_struct ((ws block_tagged) / tail_blocks)
-body_struct      =  mark_struct? comment? tail_blocks
-body_verbat      =  mark_verbat ((gap? line_verbat tail_blocks?) / tail_verbat)
-body_normal      =  mark_normal ((gap? line_normal tail_blocks?) / tail_normal)
-body_markup      =  mark_markup ((gap? line_markup tail_blocks?) / tail_markup)
 
 tail_verbat      =  (indent_s core_verbat dedent_s) / (indent_t core_verbat dedent_t)
 tail_normal      =  (indent_s core_normal dedent_s) / (indent_t core_normal dedent_t)
@@ -657,6 +669,7 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
+###
 ###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
 ###  XML identifiers differ substantially from typical name patterns in other computer languages. Main differences:
 ###   1) national Unicode characters are allowed, specified by ranges of unicode point values

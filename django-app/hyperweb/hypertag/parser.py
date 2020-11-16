@@ -219,15 +219,26 @@ class NODES(object):
             self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
 
-        def render(self, stack):
-            """
-            Convert this AST to its textual representation in target markup language.
-            render() may have side effects: modification of the `stack`.
-            """
-            if self.children:
-                return u''.join(c.render(stack) for c in self.children)
-            else:
-                return self.text()
+        def _render_children(self, stack):
+            """Render all child nodes and return concatenation of result strings."""
+            return u''.join(c.render(stack) for c in self.children)
+            
+        def _translate_children(self, stack):
+            """Translate all children and return as a Sequence."""
+            return Sequence(c.translate(stack) for c in self.children)
+            
+        def _translate_all(self, nodes, stack):
+            return Sequence(n.translate(stack) for n in nodes)
+
+        # def render(self, stack):
+        #     """
+        #     Convert this AST to its textual representation in target markup language.
+        #     render() may have side effects: modification of the `stack`.
+        #     """
+        #     if self.children:
+        #         return u''.join(c.render(stack) for c in self.children)
+        #     else:
+        #         return self.text()
 
         def __str__(self): return "<%s>" % self.__class__.__name__  #object.__str__(self)
 
@@ -262,6 +273,62 @@ class NODES(object):
 
     ###  BLOCKS  ###
 
+    class block(node):
+        """Base class for all types of blocks providing common methods."""
+        
+        @staticmethod
+        def _apply_tags(tags, body, stack):
+            """Wrap up `body` in subsequent tags processed in reverse order."""
+            if not tags: return body
+            for tag in reversed(tags):
+                body = tag.translate(body, stack)
+            assert len(body) == 1
+            body[0].set_indent(stack.indentation)
+            return body
+        
+        @staticmethod
+        def _render_text(children, stack):
+            """Render a list of `children` nodes and wrap up in a single HText node, with proper indentation of lines."""
+            
+            # temporarily reset indentation to zero for rendering of children; this will be reverted later on
+            indent = stack.indentation
+            stack.indentation = ''
+            
+            # leading space is put in place of a marker character /|! in the headline
+            output = ' ' + u''.join(c.render(stack) for c in children)
+            stack.indentation = indent
+
+            sub_indent = get_indent(output)
+            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
+            # print(f'sub_indent: "{sub_indent}"')
+            return del_indent(output, sub_indent)
+        
+    class block_text(block):
+
+        def translate(self, stack):
+            return Sequence(HText(self.render(stack), indent = stack.indentation))
+            
+        def render(self, stack):
+            return self._render_text(self.children, stack)
+
+            # # temporarily reset indentation to zero for rendering of children; this will be reverted at the end
+            # base_indent = stack.indentation
+            # stack.indentation = ''
+            #
+            # # leading space is put in place of a marker character /|! in the headline
+            # output = ' ' + u''.join(c.render(stack) for c in self.children)
+            #
+            # sub_indent = get_indent(output)
+            # sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
+            # # print(f'sub_indent: "{sub_indent}"')
+            #
+            # output = del_indent(output, sub_indent)
+            # # output = add_indent(output, base_indent)
+            #
+            # stack.indentation = base_indent
+            #
+            # return output
+
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
         def translate(self, stack):
@@ -272,86 +339,42 @@ class NODES(object):
             if feed:                    # add top margin to the 1st node
                 first = feed[0]
                 first.margin = (first.margin or 0) + margin
-            
             return feed
-    
-    class block(node): pass
-    class block_text(block):
 
+    class xblock_text(block):
+        """Wrapper around all text blocks that applies tags to the plain text rendered by the inner block."""
+        tags  = None        # optional <tags_expand> node
+        block = None        # inner text block: block_verbatim, block_normal, or block_markup
+        
+        def setup(self):
+            assert 1 <= len(self.children) <= 2
+            self.block = self.children[-1]
+            if len(self.children) > 1:
+                self.tags  = self.children[0]
+                assert self.tags.type == 'tags_expand'
+            assert self.block.type in ('block_verbatim', 'block_normal', 'block_markup')
+            
         def translate(self, stack):
-            return Sequence(HText(self.render(stack), indent = stack.indentation))
-            
-        def render(self, stack):
-            
-            # temporarily reset indentation to zero for rendering of children; this will be reverted at the end
-            base_indent = stack.indentation
-            stack.indentation = ''
-            
-            # leading space is put in place of a marker character /|! in the headline
-            output = ' ' + u''.join(c.render(stack) for c in self.children)
-
-            sub_indent = get_indent(output)
-            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
-            # print(f'sub_indent: "{sub_indent}"')
-            
-            output = del_indent(output, sub_indent)
-            # output = add_indent(output, base_indent)
-            
-            stack.indentation = base_indent
-
-            return output
-
+            body = self.block.translate(stack)
+            return self.tags.apply(body, stack) if self.tags else body
+        
     class xblock_verbat(block_text): pass
     class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
     
-    class xblock_tagged(block):
-        tags = None         # non-empty chain of <tag_expand> nodes
-        body = None         # <body_*> node
+    class xblock_struct(block):
+        tags = None         # obligatory <tags_expand> node
+        body = None         # list of nested nodes
         
         def setup(self):
-            # by grammar rules, all children should be of type 'tag_expand' except the last one
-            # which should be 'body_*' if present
-            if len(self.children) >= 2:
-                self.tags = self.children[:-1]
-                self.body = self.children[-1]
-            else:
-                self.tags = self.children
-            assert self.tags and all(tag.type == 'tag_expand' for tag in self.tags)
-            assert not self.body or self.body.type.startswith('body_')
+            self.tags = self.children[0]
+            self.body = self.children[1:]
+            assert self.tags.type == 'tags_expand'
             
         def translate(self, stack):
-            body = self.body.translate(stack) if self.body else []
-            for tag in reversed(self.tags):         # wrap up `body` in subsequent tags, processed in reverse order
-                body = tag.translate(body, stack)
-            assert len(body) == 1
-            body[0].set_indent(stack.indentation)
-            return body
-
-        # def render(self, stack, _re_space = re.compile(r'^\s*')):
-        #
-        #     if self.body:
-        #         body = self.body.render(stack)
-        #         stop = len(body.rstrip())               # position where actual body ends and trailing whitespace begins
-        #         skip = body.count('\n', stop)           # no. of newlines to be inserted after the expanded block, >= 1
-        #         body = body[:stop]
-        #         assert skip == 0
-        #         # assert skip >= 1
-        #
-        #         if self.body.has_blocks():
-        #             body += '\n'
-        #     else:
-        #         body = ''
-        #
-        #     indent = stack.indentation
-        #     output = del_indent(body, indent)
-        #
-        #     # expand the chain of tags that enclose `body`
-        #     for tag in reversed(self.tags):
-        #         output = tag.expand(output, stack)
-        #
-        #     output = add_indent(output, indent)
-        #     return output  #+ skip * '\n'
+            # body = self.body.translate(stack) if self.body else []
+            body = self._translate_all(self.body, stack)
+            return self.tags.apply(body, stack)
 
     class xblock_assign(block): pass
     class xblock_def(block): pass
@@ -403,18 +426,14 @@ class NODES(object):
         
     ###  BODY & LINES  ###
 
-    class body(node):
-        def has_blocks(self):
-            """Inline body (no blocks) is terminated with a newline <nl>, while blocks have dedent(s) at the end."""
-            return self.children[-1].type != 'nl'
+    class xbody_struct(node):
         def translate(self, stack):
-            """Generic translate() returns a list of HNodes produced through translation of child nodes."""
-            return Sequence(c.translate(stack) for c in self.children)
+            return self._translate_children(stack)
 
-    class xbody_struct(body): pass
-    class xbody_verbat(body): pass
-    class xbody_normal(body): pass
-    class xbody_markup(body): pass
+    # class xbody_struct(body): pass
+    # class xbody_verbat(body): pass
+    # class xbody_normal(body): pass
+    # class xbody_markup(body): pass
 
     class line(node):
         def translate(self, stack):
@@ -440,12 +459,24 @@ class NODES(object):
 
     class xline_markup(line):
         def render_inline(self, stack):
-            markup = NODES.node.render(self, stack)         # call to super-method that renders embedded expressions, in addition to static text
+            # markup = NODES.node.render(self, stack)         # call to super-method that renders embedded expressions, in addition to static text
+            markup = self._render_children(stack)           # renders embedded expressions, in addition to static text
             return markup
 
     
     ###  TAGS & HYPERTAGS  ###
 
+    class xtags_expand(node):
+        """List of tag_expand nodes."""
+        def apply(self, body, stack):
+            """Wrap up `body` in subsequent tags processed in reverse order."""
+            for tag in reversed(self.children):
+                assert tag.type == 'tag_expand'
+                body = tag.translate(body, stack)
+            assert len(body) == 1
+            body[0].set_indent(stack.indentation)
+            return body
+        
     class xtag_expand(node):
         """
         Occurrence of a tag.
@@ -1037,8 +1068,9 @@ class HypertagAST(BaseTree):
                 "mark_struct mark_verbat mark_normal mark_markup"
     
     # nodes that will be replaced with a list of their children
-    _reduce_  = "target core_blocks tail_blocks block_control ws_body body " \
-                "tags_expand attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
+    _reduce_  = "block_control target core_blocks tail_blocks headline body body_text " \
+                "head_verbat head_normal head_markup " \
+                "attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval " \
                 "expr_root subexpr slice subscript trailer atom literal"
@@ -1206,11 +1238,10 @@ if __name__ == '__main__':
     
     text = """
         h1 : a href="http://xxx.com" : b | This is <h1> title
-            p  / And <a> paragraph.
-            p  |
-                tail text
-                  tail text
-               tail text
+            p / And <a> paragraph.
+            p | tail text
+              |    tail text
+              | tail text
         """
         # """
         # div
@@ -1229,11 +1260,14 @@ if __name__ == '__main__':
         # """
 
     text = """
-        p |
-            tail text
-            
+        | Ala ma
+          kota
+        p | Ala ma
+            kota
+        p
+          | tail text
               tail text
-              
+
              xxx
     """
     
@@ -1245,14 +1279,14 @@ if __name__ == '__main__':
     #     / kot
     # """
     
-    text = """
-    h1
-        p : b | Ala
-        p
-            |     Ola
-                i kot
-
-    """
+    # text = """
+    # h1
+    #     p : b | Ala
+    #     p
+    #         |     Ola
+    #             i kot
+    #
+    # """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     

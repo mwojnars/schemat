@@ -222,7 +222,7 @@ class HNode:
     attrs   = None      # list of unnamed attributes to be passed to tag.expand() during rendering
     kwattrs = None      # dict of named attributes to be passed to tag.expand()
     
-    body = None         # Sequence (possibly empty) of child nodes, in a non-terminal node; None in HText
+    body = None         # Sequence (possibly empty) of all child nodes, in a non-terminal node; None in HText
     # text = None         # headline of this node (if `body` is present), or full text (if `body` is None)
     
     margin = None       # top margin: no. of empty lines to prepend in text output of this node during rendering
