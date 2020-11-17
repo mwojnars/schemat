@@ -488,11 +488,6 @@ head_markup      =  mark_markup gap? line_markup?
 body             =  body_text / body_struct
 body_text        =  ws (block_verbat / block_normal / block_markup)
 
-# body             =  ws (body_verbat / body_normal / body_markup / body_struct)
-# body_verbat      =  mark_verbat gap? line_verbat tail_blocks?       #/ tail_verbat)
-# body_normal      =  mark_normal gap? line_normal tail_blocks?       #/ tail_normal)
-# body_markup      =  mark_markup gap? line_markup tail_blocks?       #/ tail_markup)
-
 ###  TEXT BLOCKS & LINES
 
 block_text       =  (tags_expand ws)? (block_verbat / block_normal / block_markup)

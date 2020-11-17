@@ -20,7 +20,7 @@ ht = HypertagParser(verbose = False)
 
 def test_001():
     src = """
-        h1 : a href="http://xxx.com"|This is <h1> title
+        h1 : a href="http://xxx.com": |This is <h1> title
             p  / And <a> paragraph.
         div
             | Ala { 'ęłąśźćóÓŁĄĘŚŻŹĆ' } ęłąśźćóÓŁĄĘŚŻŹĆ
@@ -33,8 +33,7 @@ def test_001():
         """
     out = """
         <h1><a href="http://xxx.com">This is &lt;h1&gt; title
-            <p>And <a> paragraph.</p>
-        </a></h1>
+            <p>And <a> paragraph.</p></a></h1>
         <div>
             Ala ęłąśźćóÓŁĄĘŚŻŹĆ ęłąśźćóÓŁĄĘŚŻŹĆ
             kot.
@@ -86,6 +85,40 @@ def test_003_empty_blocks():
 
         <B></B>
     """
+    assert out.strip() == ht.parse(src).strip()
+
+def test_004():
+    src = """
+    h1
+        p : b | Ala
+        p
+            |     Ola
+                i kot
+    """
+    out = """
+    <h1>
+        <p><b>Ala</b></p>
+        <p>
+                Ola
+              i kot
+        </p>
+    </h1>
+    """
+    assert out.strip() == ht.parse(src).strip()
+
+def test_005_document_margins():
+    src = """\n\n p | text  \n  \n  """
+    out = """\n\n <p>text</p>\n\n"""
+    assert out == ht.parse(src)         # no .strip()
+
+def test_006_if():
+    src = """
+        if {False}:
+            |Ala
+        elif True * 5:
+            div | Ola
+    """
+    out = """<div>Ola</div>"""
     assert out.strip() == ht.parse(src).strip()
 
 

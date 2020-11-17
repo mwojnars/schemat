@@ -365,16 +365,21 @@ class NODES(object):
                 self.clauses = self.children
 
         def translate(self, stack):
-            feed = self._select_clause(stack)
+            body = self._select_clause(stack)
             
-            # reduce indentation of nodes in `feed` to match the current stack.indentation
+            # reduce top margin of `body`, so that +1 margin of <if> block and +1 margin of `body`
+            # translate to +1 margin of the result node, overall
+            if body and body[0].margin > 0:
+                body[0].margin -= 1
+            
+            # reduce indentation of nodes in `body` to match the current stack.indentation
             # (i.e., ignore sub-indent of a clause block)
-            assert len(set(n.indent for n in feed)) <= 1, "Unequal indentations of child nodes inside an 'if...' block?"
-            for n in feed:
+            assert len(set(n.indent for n in body)) <= 1, "Unequal indentations of child nodes inside an 'if...' block?"
+            for n in body:
                 assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
                 n.indent = stack.indentation
                 
-            return feed
+            return body
         
         def _select_clause(self, stack):
             for clause in self.clauses:
@@ -1207,66 +1212,32 @@ if __name__ == '__main__':
             p | tail text
                   tail text
                tail text
+        div
+            | Ala
+              kot { 'Mru' "czek" 123 } {0}? {456}!
+                Ola
+            /     i pies
+                  Azor
+
+        if False:
+            div#box.top.grey
+        elif True:
+            div #box class="bottom"
+        else
+            input enabled=True
         """
-        # """
-        # div
-        #     | Ala
-        #       kot { 'Mru' "czek" 123 } {0}? {456}!
-        #         Ola
-        #     /     i pies
-        #           Azor
-        #
-        # if False:
-        #     div#box.top.grey
-        # elif True:
-        #     div #box class="bottom"
-        # else
-        #     input enabled=True
-        # """
 
-    text = """
-        | Ala ma
-          kota
-        p |
-        p
-        p:
-        p  | Ala ma
-           kota
-        p
-          | tail text
-              tail text
-
-             xxx
-    """
-    
     # text = """
-    #     if {False}:
-    #         |Ala
-    #     elif True * 5:
-    #         div | Ola
-    #     / kot
-    # """
-    
-    # text = """
-    # h1
-    #     p : b | Ala
+    #     | Ala ma
+    #       kota
+    #     p  | Ala ma
+    #        kota
     #     p
-    #         |     Ola
-    #             i kot
+    #       | tail text
+    #           tail text
     #
+    #          xxx
     # """
-    
-    text = """
-        p
-        p:
-        p |
-        div /
-        form !
-        |
-        /
-        !
-        B: |
-    """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     
