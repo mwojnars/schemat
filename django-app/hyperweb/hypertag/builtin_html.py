@@ -31,9 +31,10 @@ class HTMLTag(ExternalTag):
             if __body__: raise VoidTagEx(f"body must be empty for a void tag <{name}>")
             return f"<{tag} />"
         else:
-            # if the block contains a headline, the closing tag is placed on the same line as __body__
             assert isinstance(__body__, Sequence)
             body = __body__.render()
+
+            # if the block contains a headline, the closing tag is placed on the same line as __body__
             nl = '\n' if body[:1] == '\n' else ''
             return f"<{tag}>" + body + nl + f"</{name}>"
 

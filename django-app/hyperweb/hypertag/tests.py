@@ -1,7 +1,7 @@
 """
 Run on server:
 $
-$  cd ..../hyperweb/hyml
+$  cd django-app/hyperweb/hypertag/
 $  pytest -vW ignore::DeprecationWarning tests.py
 
 """
@@ -10,7 +10,7 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 import os, pytest
 
 from hyperweb.hypertag.parser import HypertagParser
-ht = HypertagParser()
+ht = HypertagParser(verbose = False)
 
 
 #####################################################################################################################################################
@@ -20,7 +20,7 @@ ht = HypertagParser()
 
 def test_001():
     src = """
-        h1 >a href="http://xxx.com"|This is <h1> title
+        h1 : a href="http://xxx.com"|This is <h1> title
             p  / And <a> paragraph.
         div
             | Ala { 'ęłąśźćóÓŁĄĘŚŻŹĆ' } ęłąśźćóÓŁĄĘŚŻŹĆ
@@ -63,6 +63,31 @@ def test_002_qualifiers():
     
     # assert str(ex_info.value) == 'some info'
     
+def test_003_empty_blocks():
+    src = """
+        p
+        p:
+        p |
+        div /
+        form !
+        |
+        /
+        !
+        B: |
+    """
+    out = """
+        <p></p>
+        <p></p>
+        <p></p>
+        <div></div>
+        <form></form>
+
+
+
+        <B></B>
+    """
+    assert out.strip() == ht.parse(src).strip()
+
 
 #####################################################################################################################################################
 #####

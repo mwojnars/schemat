@@ -75,7 +75,7 @@ class Grammar(Parsimonious):
         return Grammar(chars)
         
     
-    def preprocess(self, text):
+    def preprocess(self, text, verbose = False):
         """
         Preprocessing:
         - INDENT_* / DEDENT_* inserted in place of leading spaces/tabs
@@ -147,10 +147,11 @@ class Grammar(Parsimonious):
         assert output[-1] == '\n'
         output = output[:-1]
         
-        print("HyML_Grammar.preprocess() output:")
-        print('-----')
-        print(output)
-        print('-----')
+        if verbose:
+            print("Grammar.preprocess() output:")
+            print('-----')
+            print(output)
+            print('-----')
 
         return output
         
@@ -282,14 +283,23 @@ class NODES(object):
             indent = stack.indentation
             stack.indentation = ''
             
-            # leading space is put in place of a marker character /|! in the headline
-            output = ' ' + u''.join(c.render(stack) for c in self.children)
+            # in the headline, spaces are prepended to replace leading tag(s) and a marker character /|!
+            lead = self.column
+            output = ' ' * lead + self._render_all(self.children, stack)
             stack.indentation = indent
 
             sub_indent = get_indent(output)
-            sub_indent = sub_indent[:2]         # max 2 initial spaces/tabs are dropped; remaining sub-indentation is preserved in `output`
+            sub_indent = sub_indent[:lead+1]        # max 1 initial space/tab after the lead is dropped; remaining sub-indentation is preserved in `output`
+            output = del_indent(output, sub_indent)
             # print(f'sub_indent: "{sub_indent}"')
-            return del_indent(output, sub_indent)
+
+            # if tail lines have shorter indent than the headline, drop all the lead + 1 space (gap)
+            if len(sub_indent) < lead:
+                drop = lead - len(sub_indent)
+                if output[drop:drop+1] == ' ': drop += 1
+                output = output[drop:]
+
+            return output
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
@@ -306,7 +316,7 @@ class NODES(object):
     class xblock_text(block):
         """Wrapper around all text blocks that applies tags to the plain text rendered by the inner block."""
         tags  = None        # optional <tags_expand> node
-        block = None        # inner text block: block_verbatim, block_normal, or block_markup
+        block = None        # inner text block: block_verbat, block_normal, or block_markup
         
         def setup(self):
             assert 1 <= len(self.children) <= 2
@@ -314,7 +324,7 @@ class NODES(object):
             if len(self.children) > 1:
                 self.tags  = self.children[0]
                 assert self.tags.type == 'tags_expand'
-            assert self.block.type in ('block_verbatim', 'block_normal', 'block_markup')
+            assert self.block.type in ('block_verbat', 'block_normal', 'block_markup')
             
         def translate(self, stack):
             body = self.block.translate(stack)
@@ -480,7 +490,6 @@ class NODES(object):
             for c in self.attrs: c.analyse(ctx)
             
             self.tag = ctx.get(self.name)
-            print('self.tag:', self.tag)
             if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
             
         def translate(self, body, stack):
@@ -1077,7 +1086,7 @@ class HypertagAST(BaseTree):
                                 # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
 
     
-    def __init__(self, text, context = {}, stopAfter = None, **config):
+    def __init__(self, text, context = {}, stopAfter = None, verbose = True, **config):
         """
         :param text: input document to be parsed
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
@@ -1088,7 +1097,7 @@ class HypertagAST(BaseTree):
         self.config.update(**config)
         
         self.parser = Grammar.get_parser(text)
-        text = self.parser.preprocess(text)
+        text = self.parser.preprocess(text, verbose = verbose)
 
         # parse input text to the 1st version of AST (self.ast) as returned by Parsimonious,
         # then rewrite it to custom NODES.* classes rooted at self.root
@@ -1215,17 +1224,20 @@ if __name__ == '__main__':
         #     input enabled=True
         # """
 
-    # text = """
-    #     | Ala ma
-    #       kota
-    #     p | Ala ma
-    #         kota
-    #     p
-    #       | tail text
-    #           tail text
-    #
-    #          xxx
-    # """
+    text = """
+        | Ala ma
+          kota
+        p |
+        p
+        p:
+        p  | Ala ma
+           kota
+        p
+          | tail text
+              tail text
+
+             xxx
+    """
     
     # text = """
     #     if {False}:
@@ -1243,6 +1255,18 @@ if __name__ == '__main__':
     #             i kot
     #
     # """
+    
+    text = """
+        p
+        p:
+        p |
+        div /
+        form !
+        |
+        /
+        !
+        B: |
+    """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     
