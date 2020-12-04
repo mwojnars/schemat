@@ -25,17 +25,29 @@ class Stack(list):
     def size(self, _size_):
         del self[_size_:]
 
-    push     = list.append
+    #push    = list.append
     pushall  = list.extend
     get      = list.__getitem__
     set      = list.__setitem__
     
+    def push(self, value):
+        """Append `value` to the stack and return its index in the list."""
+        self.append(value)
+        return len(self) - 1
+
     def indent(self, whitechar):
         self.indentation += whitechar
     
     def dedent(self, whitechar):
         assert self.indentation[-1] == whitechar, 'Trying to dedent a different character than was appended'
         self.indentation = self.indentation[:-1]
+    
+    # def next_slot(self):
+    #     """
+    #     Index in the list of symbols where a new symbol will be inserted if push() is called right after.
+    #     This method can be merged with push() in the future.
+    #     """
+    #     return len(self)
     
     def position(self):
         """
@@ -59,8 +71,8 @@ class Stack(list):
 
 class MultiDict(object):
     """
-    An ordered multi-dictionary with push/pop operations. Or, in other words, a stack of (name,value) pairs that additionally
-    keeps a dict of the names and their most recent values, for fast name lookup.
+    An ordered multi-dictionary with push/pop operations. Or, in other words, a stack of (name,value) pairs
+    that additionally keeps a dict of the names and their most recent values, for fast name lookup.
     Each element of the stack keeps also an index of the previous element with the same name,
     to enable pop() implementation that replaces a dictionary value of a given name with its previous value.
     
@@ -135,7 +147,7 @@ class MultiDict(object):
 
     def getstate(self):
         return self.stack.size
-
+    
     def copy(self):
         dup = copy(self)
         dup.stack = self.stack.copy()
@@ -149,7 +161,7 @@ class MultiDict(object):
 
 
 class Context(MultiDict):
-    "Context data passed through a HyperML syntax tree during semantic analysis."
+    """Context data passed through a HyperML syntax tree during semantic analysis."""
     
     depth = 0               # current depth of nested hypertag definitions during analyse()
     ref_depth = None        # the top-most (minimum as a value) def-depth of a non-pure variable or hypertag referenced inside the current subtree;

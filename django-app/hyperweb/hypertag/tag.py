@@ -9,6 +9,9 @@ class Tag:
     - ExternalTag - a tag implemented as a python function
     - NativeTag - a tag implemented inside Hypertag code
     """
+    string_body = False     # if True, the __body__ argument to expand() should be a string (rendered DOM), not DOM;
+                            # setting this to True whenever possible allows speed optimization through better
+                            # compactification of constant subtrees of the AST before their passing to a hypertag
 
 class ExternalTag(Tag):
     """

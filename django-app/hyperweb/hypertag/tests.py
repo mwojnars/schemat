@@ -27,8 +27,8 @@ def test_001():
               kot.
             / i pies
         
-        div #box .top.grey
-        div#box.top .grey-01
+        div #box .top .grey
+        div #box .top .grey-01
         input enabled=True
         """
     out = """

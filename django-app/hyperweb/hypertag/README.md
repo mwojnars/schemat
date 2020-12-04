@@ -1,3 +1,12 @@
+### Introduction
+
+Why to use Hypertag:
+- less typing; no need to remember about closing tags
+- no errors related to incorrect closing tags or open-close tag mismatches
+- unprecedented support for **modularity** and **code re-use**
+- Object-Oriented Programming (**OOP**) inside markup,
+  through native language structures
+
 ### Syntax
 
 #### Blocks
@@ -46,6 +55,14 @@ This works with a default tag specification, as well:
     
 
 #### Expressions
+
+##### Literals
+
+Numbers, strings, ...
+
+##### Collections
+
+Lists, dicts ...
 
 ##### Qualifiers: ? and !
 

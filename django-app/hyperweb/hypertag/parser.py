@@ -13,13 +13,35 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedTagEx, NotATagEx
+from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedVariableEx, UndefinedTagEx, NotATagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack
-from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML
+from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 
 DEBUG = False
+
+
+#####################################################################################################################################################
+#####
+#####  UTILITIES
+#####
+
+def TAG(name):
+    """Convert a tag name to a symbol, for insertion to (and retrieval from) a Context."""
+    return '%' + name
+
+def VAR(name):
+    """Convert a variable name to a symbol, for insertion to (and retrieval from) a Context."""
+    return '$' + name
+
+def TAGS(names):
+    """Mapping of a dict of tag names (and their linked objects) to a dict of symbols."""
+    return {TAG(name): link for name, link in names.items()}
+
+def VARS(names):
+    """Mapping of a dict of variable names (and their linked objects) to a dict of symbols."""
+    return {VAR(name): link for name, link in names.items()}
 
 
 #####################################################################################################################################################
@@ -215,7 +237,10 @@ class NODES(object):
             
         def analyse(self, ctx):
             """
-            `ctx` is an instance of Context. For read access, it can be used like a dict of current name->node mappings.
+            `ctx` is an instance of Context. For read access, it can be used like a dict
+            of current name->node mappings. NOTE: `ctx` contains symbols, not just raw names,
+            every symbol being a concatenation of a name and a namespace qualifier (a tag or a variable),
+            see TAG() and VAR() functions.
             """
             self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
@@ -258,12 +283,16 @@ class NODES(object):
         #     self.children = NODES._compactify_siblings_(self.children, stack)
 
     class static(node):
-        """A node that represents static text: its self.value is already known during parsing or analysis, before render() is called."""
+        """
+        A node that represents static text outside expressions; its self.value is already known
+        during analysis, before translate() is called. See also: class literal (for static values in expressions).
+        """
         isstatic = True
         ispure   = True
         value    = None
         
         def setup(self):            self.value = self.text()
+        def analyse(self, ctx):     pass
         def translate(self, stack): return Sequence(HText(self.value))
         def render(self, stack):    return self.value
         def __str__(self):          return self.value
@@ -271,7 +300,26 @@ class NODES(object):
 
     ###  BLOCKS  ###
 
-    class block(node): pass
+    class block(node):
+        @staticmethod
+        def _align_nodes(body, stack):
+            """
+            Utility function that fixes top margin and indentation of nested nodes after translating a control block.
+            """
+            # reduce top margin of `body`, so that +1 margin of <if> block and +1 margin of `body`
+            # translate to +1 margin of the result node, overall
+            if body and body[0].margin > 0:
+                body[0].margin -= 1
+            
+            # reduce indentation of nodes in `body` to match the current stack.indentation
+            # (i.e., ignore sub-indent of a clause block)
+            assert len(set(n.indent for n in body)) <= 1, "Unequal indentations of child nodes inside a control block?"
+            for n in body:
+                assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
+                n.indent = stack.indentation
+                
+            return body
+        
     class block_text(block):
 
         def translate(self, stack):
@@ -348,11 +396,105 @@ class NODES(object):
             body = self._translate_all(self.body, stack)
             return self.tags.apply(body, stack)
 
-    class xblock_assign(block): pass
     class xblock_def(block): pass
     class xblock_try(block): pass
-    class xblock_for(block): pass
     
+    class xblock_assign(block):
+
+        def setup(self):
+            self.targets = self.children[0]
+            self.expr    = self.children[1]
+
+        def analyse(self, ctx):
+            self.depth = ctx.depth
+            self.expr.analyse(ctx)
+            self.targets.declare_vars(ctx)
+
+        def translate(self, stack):
+            value = self.expr.evaluate(stack)
+            self.targets.assign(stack, value)
+            return None
+    
+    class xblock_for(block):
+        def setup(self):
+            self.targets = self.children[0]         # 1+ loop variables to assign to
+            self.expr    = self.children[1]         # loop expression that returns a sequence (iterable) to be looped over
+            self.body    = self.children[2]
+            assert isinstance(self.expr, NODES.expression)
+            assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
+            
+        def translate(self, stack):
+            sequence = self.expr.evaluate(stack)
+            out = []
+            
+            top = stack.position()
+            self.targets.reserve_slots(stack)       # create slots in `stack` to hold future values of this target's variables instead of pushing/popping every time
+            # stack.push(top)                         # 'top' is the access link; no need to use _find_accesslink(): occurence depth = definition depth
+            
+            for value in sequence:                  # translate self.body multiple times, once for each value in the sequence
+                self.targets.assign(stack, value)   # fill out this variable's slot in `stack` with `value`
+                body = self.body.translate(stack)
+                self._align_nodes(body, stack)
+                out += body.nodes
+            
+            stack.reset(top)
+            return Sequence(*out)
+
+    class xtargets(node):
+        def declare_vars(self, ctx):
+            """Recursively insert all variables that comprise this target into `ctx` context, during analyse()."""
+            for c in self.children: c.declare_vars(ctx)
+
+        def reserve_slots(self, stack):
+            """Recursively create permanent placeholders for the variables of this target on a `stack`."""
+            for c in self.children: c.reserve_slots(stack)
+
+        def assign(self, stack, value):
+            """Unpack `value` and assign to child targets."""
+            N = len(self.children)
+            if N == 1:
+                self.children[0].assign(stack, value)
+                return
+            
+            # unpack and assign to multiple child targets
+            i = 0
+            for i, v in enumerate(value):               # raises TypeError if `value` is not iterable
+                if i >= N: raise ValueError(f"too many values to unpack (expected {N})")
+                self.children[i].assign(v)
+            if i+1 < N:
+                raise ValueError(f"not enough values to unpack (expected {N}, got {i+1})")
+
+    class xvar_def(node):
+        """Definition of a variable, or assignment to a previously defined variable."""
+        name = None
+        slot = None         # after declare_vars(), index in `stack` holding a value of this variable
+        root = None         # <xvar_def> node with the 1st definition of this variable, if self represents a re-assignment
+        
+        def setup(self):
+            self.name = self.text()
+
+        def declare_vars(self, ctx):
+            symbol = VAR(self.name)
+            ctx.push(symbol, self)
+            # root = ctx.get(symbol)
+            # if root and root.level == self.level:
+            #     self.root = root
+            # else:
+            #     ctx.push(symbol, self)
+
+        def reserve_slots(self, stack):
+            self.slot = stack.push(None)        # create a permanent placeholder for this variable on a `stack`
+            
+        def assign(self, stack, value):
+            if self.slot is None:
+                stack.push(value)
+            else:
+                stack.set(self.slot, value)     # WARNING: `stack` must be the same instance as passed to declare_vars()
+    
+        # def definition_node(self):
+        #     return self.root or self
+    
+
     class xblock_if (block):
         clauses  = None         # list of 1+ <clause_if> nodes
         elsebody = None         # optional <body_*> node for the "else" branch
@@ -366,19 +508,7 @@ class NODES(object):
 
         def translate(self, stack):
             body = self._select_clause(stack)
-            
-            # reduce top margin of `body`, so that +1 margin of <if> block and +1 margin of `body`
-            # translate to +1 margin of the result node, overall
-            if body and body[0].margin > 0:
-                body[0].margin -= 1
-            
-            # reduce indentation of nodes in `body` to match the current stack.indentation
-            # (i.e., ignore sub-indent of a clause block)
-            assert len(set(n.indent for n in body)) <= 1, "Unequal indentations of child nodes inside an 'if...' block?"
-            for n in body:
-                assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
-                n.indent = stack.indentation
-                
+            self._align_nodes(body, stack)
             return body
         
         def _select_clause(self, stack):
@@ -494,7 +624,7 @@ class NODES(object):
             self.depth = ctx.depth
             for c in self.attrs: c.analyse(ctx)
             
-            self.tag = ctx.get(self.name)
+            self.tag = ctx.get(TAG(self.name))
             if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
             
         def translate(self, body, stack):
@@ -589,7 +719,7 @@ class NODES(object):
         """
         qualifier = None        # optional qualifier: ? or !
         context   = None        # copy of Context that has been passed to this node during analyse(); kept for re-use by render(),
-                                # in case if the expression evaluates to yet another (dynamic) piece of HyML code
+                                # in case if the expression evaluates to yet another (dynamic) piece of Hypertag code
         def setup(self):
             # see if there is a qualifier added as a sibling of this node
             if self.sibling_next and self.sibling_next.type == 'qualifier':
@@ -610,6 +740,85 @@ class NODES(object):
     class xexpr_var(expression_root): pass
     class xexpr_augment(expression_root): pass
     
+    class xvar_use(expression):
+        """Occurence (use) of a variable."""
+        name     = None
+        
+        # native variable...
+        depth    = None         # no. of nested hypertag definitions that surround this variable;
+                                # for proper linking to non-local variables in nested hypertag definitions
+        defnode  = None         # <xvar_def> or <xattr_def> node that defines this variable
+
+        def setup(self):
+            self.name = self.text()
+        
+        def analyse(self, ctx):
+            self.depth = ctx.depth
+            # if DEBUG: print("analyse", "$" + self.name, self.depth, ctx.asdict(_debug_ctx_start))
+            if self.name not in ctx: raise UndefinedVariableEx(f"Undefined variable '{self.name}'", self)
+            
+            link = ctx[VAR(self.name)]
+            
+            if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
+                self.defnode = link
+                assert self.defnode.offset is not None
+            
+            elif isinstance(link, NODES.xattr_def):
+                assert isinstance(self.defnode.hypertag, NODES.xhypertag)
+                hypertag = self.defnode.hypertag                        # hypertag where the variable is defined
+                self.nested = self.depth - hypertag.depth - 1           # -1 because the current hypertag is not counted in access link backtracking
+                self.offset = self.defnode.offset - 1                   # -1 accounts for the access link that's pushed on the stack at the top of the frame
+                self.ispure = False
+                
+                defdepth = hypertag.depth                               # depth of the definition node (at what depth the variable is defined)
+                ctx.add_refdepth(defdepth, '$' + self.name)
+            else:
+                assert False
+                
+            # if not isinstance(value, NODES.xattr):            # xhypertag node, or external variable defined in Python, not natively in the document?
+            #     # if isinstance(value, NODES.xhypertag):        # "$H" xhypertag node?
+            #     #     self.hypertag = value
+            #     #     self.ispure = value.ispure_expand
+            #     #     ctx.add_refdepth(value.depth, '$' + self.name)
+            #     #     return
+            #
+            #     self.external = True
+            #     self.value = value                            # if external then its value (an object) is known already during analysis
+            #
+            #     # is this variable pure, i.e., guaranteed to return exactly the same value on every render() call, without side effects?
+            #     # This can happen only for external variables or hypertags, bcs they're bound to constant objects;
+            #     # additionally, we never mark user-defined objects as pure, bcs their behavior (and a returned value) may vary between calls
+            #     # through side effects or internal state, even if the function being called is the same all the time.
+            #
+            #     if value in self.tree.pure_externals:
+            #         self.ispure = True
+            #     else:
+            #         self.ispure = False
+            #         ctx.add_refdepth(-1, '$' + self.name)           # mark that this subtree contains an external variable (i.e., defined at depth=-1)
+            #
+            #     return
+            #     #raise HypertagsError("Symbol is not an attribute (%s)" % self.defnode, self)
+            
+        def evaluate(self, stack):
+            msg = "eval   $" + self.name
+            # if self.hypertag:                                       # hypertag used like a variable? return a Closure
+            #     if DEBUG: print(msg, "hypertag")
+            #     return Closure(self.hypertag, stack, self.depth)
+            if self.external:                                       # external variable? return its value without evaluation
+                # if DEBUG: print(msg, "external")
+                return self.value
+            
+            # if self references a non-local variable, we must find the right frame on the stack going back via access links
+            frame = 0                                                       # here, 0 means the "top frame"
+            for _ in range(self.nested): frame = stack.get(frame - 1)       # access link is on [-1] index in each frame
+            assert isinstance(frame, int) and frame >= 0
+            
+            if DEBUG: print(msg, self.nested, frame + self.offset, stack)
+            value = stack.get(frame + self.offset)
+            if isinstance(value, LazyVariable):                     # lazy rendering of $body variable? must call getvalue() method before returning
+                value = value.getvalue()
+            return value
+
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
     
@@ -1035,14 +1244,14 @@ class HypertagAST(BaseTree):
     
     # nodes that will be ignored during rewriting (pruned from the tree)
     _ignore_  = "nl ws space gap comma verbatim comment " \
-                "mark_struct mark_verbat mark_normal mark_markup"
+                "mark_struct mark_verbat mark_normal mark_markup mark_expr mark_def"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body body_text " \
                 "head_verbat head_normal head_markup " \
                 "attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
-                "embedding embedding_braces embedding_eval " \
+                "embedding embedding_braces embedding_eval target " \
                 "expr_root subexpr slice subscript trailer atom literal"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
@@ -1076,8 +1285,10 @@ class HypertagAST(BaseTree):
     }
     config = None
 
-    # dict of external global hypertags/vars to be created on parsing start-up after built-in symbols; set in __init__ through a `context` argument
-    globals = {}
+    # dicts of external custom tags & vars to be declared as global at the beginning of parsing, after built-in symbols;
+    # configured in __init__() by providing `context` dictionary
+    custom_tags = None
+    custom_vars = None
 
     
     ###  Output of parsing and analysis  ###
@@ -1094,9 +1305,11 @@ class HypertagAST(BaseTree):
     def __init__(self, text, context = {}, stopAfter = None, verbose = True, **config):
         """
         :param text: input document to be parsed
+        :param context: custom global symbols (variables and/or tags) that will be available to Hypertag script;
+                        tag names must be prepended with '%'; names without leading '%' are interpreted as variables
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
         """
-        self.globals = context.copy()
+        self._init_global(context)
         
         self.config = self.config_default.copy()
         self.config.update(**config)
@@ -1116,6 +1329,15 @@ class HypertagAST(BaseTree):
         self.analyse()
         if stopAfter == "analyse": return
 
+    def _init_global(self, context):
+        """Set custom_tags and custom_vars based on `context` dictionary."""
+        for name in context:
+            if not isinstance(name, str): raise Exception(f"Incorrect type of a symbol name in context, must be <str>: {name}")
+            if not name or (name[0] in '%$' and len(name) <= 1): raise Exception(f"Empty name of a symbol in context: {name}")
+        
+        self.custom_tags = {name[1:]: link for name, link in context.items() if name.startswith('%')}
+        self.custom_vars = {name[1:]: link for name, link in context.items() if name.startswith('$')}
+        self.custom_vars.update({name: link for name, link in context.items() if name[0] not in '%$'})
 
     def analyse(self):
         "Link occurences of variables and hypertags with their definition nodes, collect all symbols defined in the document."
@@ -1130,10 +1352,18 @@ class HypertagAST(BaseTree):
         ctx = Context()
         
         assert self.config['target_language'] == 'HTML'
-        ctx.pushall(BUILTIN_HTML)       # seed the context with built-in symbols
-        # ctx.pushall(FILTERS)          # ...and standard filters
+        builtin_tags = TAGS(BUILTIN_HTML)
+        builtin_vars = VARS(BUILTIN_VARS)
+        custom_tags  = TAGS(self.custom_tags)
+        custom_vars  = VARS(self.custom_vars)
+
+        # seed the context
+        ctx.pushall(builtin_tags)
+        ctx.pushall(builtin_vars)
+        ctx.pushall(custom_tags)
+        ctx.pushall(custom_vars)
+        # ctx.pushall(FILTERS)
         
-        ctx.pushall(self.globals)       # seed the context with initial global symbols configured by the user
         state = ctx.getstate()          # keep the state, so that after analysis we can retrieve newly defined symbols alone
         
         if DEBUG:
@@ -1220,12 +1450,17 @@ if __name__ == '__main__':
                   Azor
 
         if False:
-            div#box.top.grey
+            div #box .top .grey
         elif True:
             div #box class="bottom"
         else
             input enabled=True
         """
+
+    # text = """
+    # for i in [1,2,3]:
+    #     p | $i
+    # """
 
     # text = """
     #     | Ala ma
@@ -1238,6 +1473,11 @@ if __name__ == '__main__':
     #
     #          xxx
     # """
+    
+    text = """
+        $ x = 5
+        | {x}
+    """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
     

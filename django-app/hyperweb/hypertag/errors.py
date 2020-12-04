@@ -14,14 +14,11 @@ class HError(ParserError):
 
 ########################################################################################################################################################
 
-class UndefinedTagEx(HError):
-    pass
-class NotATagEx(HError):
-    pass
+class UndefinedVariableEx(HError): pass
+class UndefinedTagEx(HError): pass
+class NotATagEx(HError): pass
 
-class DuplicateAttributeEx(HError):
-    pass
-
+class DuplicateAttributeEx(HError): pass
 
 class MissingValueEx(HError):
     """

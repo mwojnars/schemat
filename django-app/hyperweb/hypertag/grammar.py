@@ -227,6 +227,30 @@ special tags:
     pass
     void / noop / -           a tag that performs no processing, only used for grouping elements
 
+CLASSES
+
+%% sidemenu @body width=100
+    $height = width * 2                     -- public "property"
+    %cell @text :  ... {width-20} ...       -- public "method"
+
+    [css] ! ...
+    [js]  ! ...
+    div ... {width+10} ...                  -- result produced (box+meta)
+        @body
+    
+(sidemenu) 150
+    .cell | item 1
+    .cell | item 2
+    | outer box height is {.height}
+    (sidemenu) 50
+        .cell  | subitem 1
+        ..cell | upper-level cell ??
+        if {.height < 100}:
+            p | pathA
+        else:
+            div | pathB
+        | inner box height is {.height}
+
 """
 
 #####################################################################################################################################################
@@ -451,7 +475,7 @@ block            =  margin (block_text / block_control / block_def / block_struc
 
 block_control    =  block_assign / block_if / block_try / block_for
 
-block_assign     =  targets '=' (embedding / expr_augment)
+block_assign     =  mark_expr ws targets ws '=' ws (embedding / expr_augment)
 block_try        =  ('try' body (nl 'or' body)* (nl 'else' body)?) / try_short
 block_for        =  'for' space targets space 'in' space (embedding / expr_augment) body_struct
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' body)?
@@ -460,13 +484,14 @@ try_short        =  '?' ws (block_text / block_struct)          # short version 
 clause_if        =  space (embedding / expr) body_struct        # (embedding body) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
-target           =  ('(' ws targets ws ')') / var               # left side of assignment: a variable, or a tuple of variables/sub-tuples
+target           =  ('(' ws targets ws ')') / var_def           # left side of assignment: a variable, or a tuple of variables/sub-tuples
+var_def          =  name_id ''                                  # definition (assignment) of a variable
 
 body_struct      =  (ws mark_struct comment?)? tail_blocks
 
 ###  DEFINITION BLOCK
 
-block_def        =  '%%' ws tag_def                             # double percent means single percent, only we need to escape for grammar string formatting
+block_def        =  mark_def ws tag_def
 tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 
 ###  STRUCTURED BLOCK
@@ -475,7 +500,8 @@ tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
 block_struct     =  tags_expand (ws mark_struct)? (ws headline)? tail_blocks?
 
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
-tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
+tag_expand       =  name_id attrs_val?
+#tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
 ###  HEAD, TAIL, BODY
 
@@ -513,6 +539,9 @@ mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
 
+mark_expr        =  '$'
+mark_def         =  '%%'                                        # double percent means single percent, only we need to escape for grammar string formatting
+
 gap              =  ~"[ \t]"                                    # 1-space leading gap before a headline, ignored during rendering
 comment          =  ~"--|#" verbatim?                           # inline (end-line) comment; full-line comments are parsed at preprocessing stage
 
@@ -533,7 +562,7 @@ embedding_eval   =  '$' expr_var
 attrs_def        =  (space attr_body)? (space attr_named)*
 
 # actual attributes as passed to a tag
-attrs_val        =  ((ws attr_short+) / (space attr_val)) (space (attr_short+ / attr_val))*      #/ ws '(' attr_val (',' ws attr_val)* ')'
+attrs_val        =  (space (attr_val / attr_short))+       #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
 attr_body        =  '@' name_id
@@ -568,12 +597,12 @@ expr_augment =  expr_root / expr_tuple      # augmented form of an expression: i
 expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
 subexpr      =  '(' ws expr ws ')'
 
-var          =  name_id ''
+var_use      =  name_id ''                                    # occurrence (use) of a variable
 tuple_atom   =  '(' ws ((expr comma)+ (expr ws)?)? ')'
 list         =  '[' ws (expr comma)* (expr ws)? ']'
 
-atom         =  literal / var / subexpr / tuple_atom / list
-factor_var   =  var trailer* qualifier?                       # reduced form of `factor` for use in expr_var
+atom         =  literal / var_use / subexpr / tuple_atom / list
+factor_var   =  var_use trailer* qualifier?                   # reduced form of `factor` for use in expr_var
 factor       =  atom trailer* qualifier?                      # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)*
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent

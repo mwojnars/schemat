@@ -9,14 +9,24 @@ from hyperweb.hypertag.tag import ExternalTag
 
 ########################################################################################################################################################
 #####
-#####  HTML TAG
+#####  STANDARD MARKUP TAG
 #####
 
-class HTMLTag(ExternalTag):
+class MarkupTag(ExternalTag):
+    """
+    A hypertag whose expand() outputs the body unchanged, surrounded by <name>...</name> strings, with proper handling
+    of void tags <name /> and HTML/XHTML format differences for boolean attributes.
+    This class is used for all built-in (X)HTML tags. It can also be used to define custom markup tags in an application.
+    """
     
     name = None         # tag name
     void = False        # if True, __body__ is expected to be empty and the returned element is self-closing
     mode = 'HTML'       # (X)HMTL compatibility mode: either 'HTML' or 'XHTML'
+    
+    def __init__(self, name, void = False, mode = 'HTML'):
+        self.name = name
+        self.void = void
+        self.mode = mode
     
     def expand(self, __body__, **attrs):
         
@@ -61,24 +71,12 @@ class HTMLTag(ExternalTag):
         
 
 ########################################################################################################################################################
+#####
+#####  BUILTIN (X)HTML tags
+#####
 
-BUILTIN_HTML = {
-    
-    # tags are added dynamically, below
-    
-    # objects
-    'python':       builtins,       # Python built-ins accessible through python.* even if a given symbol has different meaning in HyML
-    
-    'str':          text_type,      # $str(var) -- string representation of an object, always in Unicode
-    'len':          len,            # $len(s)
-    'range':        range,
-    'set':          set,
-    'dict':         dict,
-    'list':         list,
-}
-
-BUILTIN_XHTML = BUILTIN_HTML.copy()
-
+BUILTIN_HTML  = {}
+BUILTIN_XHTML = {}
 
 _HTML_TAGS_VOID    = "area base br col embed hr img input link meta param source track wbr".split()
 _HTML_TAGS_NONVOID = "a abbr acronym address applet article aside audio b basefont bdi bdo big blockquote body " \
@@ -89,18 +87,11 @@ _HTML_TAGS_NONVOID = "a abbr acronym address applet article aside audio b basefo
                      "select small span strike strong style sub summary sup svg table tbody td template textarea " \
                      "tfoot th thead time title tr tt u ul var video".split()
 
-def _create_tag(name_, void_, mode_):
-    class _html_tag(HTMLTag):
-        name = name_
-        void = void_
-        mode = mode_
-    return _html_tag()
-
 def _create_tag_triple(name_, void_):
     lname, uname = name_.lower(), name_.upper()
-    BUILTIN_XHTML[lname] = _create_tag(lname, void_, 'XHTML')
-    BUILTIN_HTML[lname]  = _create_tag(lname, void_, 'HTML')
-    BUILTIN_HTML[uname]  = _create_tag(uname, void_, 'HTML')
+    BUILTIN_XHTML[lname] = MarkupTag(lname, void_, 'XHTML')
+    BUILTIN_HTML[lname]  = MarkupTag(lname, void_, 'HTML')
+    BUILTIN_HTML[uname]  = MarkupTag(uname, void_, 'HTML')
 
 def _create_all_tags():
     # HTML tags
@@ -113,3 +104,39 @@ def _create_all_tags():
 ###  append all (X)HTML tags to BUILTIN_HTML and BUILTIN_XHTML
 
 _create_all_tags()
+
+########################################################################################################################################################
+#####
+#####  BUILT-IN functional hypertags
+#####
+
+"""
+TODO
+- dedent all=False    -- remove leading indentation of a block, either at the top level only (all=False), or at all nested levels (all=True)
+- unique strip=True   -- render body to text and remove duplicate lines (or blocks?)
+- unique_lines
+- unique_blocks
+- css                 -- marks its content as a CSS script that shall be moved to a <style> section of the document
+- js                  -- JavaScript code to be put into a <script> section
+- error               -- inserts a standard error message in a place of occurrence; root document node might collect all <error> nodes and produce a combined (hidden) error message
+"""
+
+########################################################################################################################################################
+#####
+#####  BUILTIN variables
+#####
+
+BUILTIN_VARS = {
+    
+    'python':       builtins,       # Python built-ins accessible through python.* even if a given symbol has different meaning in HyML
+    
+    'str':          text_type,      # $str(var) -- string representation of an object, always in Unicode
+    'len':          len,            # $len(s)
+    'range':        range,
+    'set':          set,
+    'dict':         dict,
+    'list':         list,
+    
+    'enumerate':    enumerate,
+}
+
