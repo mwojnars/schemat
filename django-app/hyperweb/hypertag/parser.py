@@ -15,7 +15,7 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
 from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedVariableEx, UndefinedTagEx, NotATagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
-from hyperweb.hypertag.structs import Context, Stack
+from hyperweb.hypertag.structs import Context, Stack, State, UNDEFINED
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 
@@ -423,21 +423,18 @@ class NODES(object):
             assert isinstance(self.expr, NODES.expression)
             assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
             
-        def translate(self, stack):
-            sequence = self.expr.evaluate(stack)
+        def translate(self, state):
+            sequence = self.expr.evaluate(state)
             out = []
             
-            top = stack.position()
-            self.targets.reserve_slots(stack)       # create slots in `stack` to hold future values of this target's variables instead of pushing/popping every time
-            # stack.push(top)                         # 'top' is the access link; no need to use _find_accesslink(): occurence depth = definition depth
+            self.targets.reserve_slots(state)       # create slots in `state` to hold future values of this target's variables instead of pushing/popping every time
             
             for value in sequence:                  # translate self.body multiple times, once for each value in the sequence
-                self.targets.assign(stack, value)   # fill out this variable's slot in `stack` with `value`
-                body = self.body.translate(stack)
-                self._align_nodes(body, stack)
+                self.targets.assign(state, value)   # fill out this variable's slot in `state` with `value`
+                body = self.body.translate(state)
+                self._align_nodes(body, state)
                 out += body.nodes
             
-            stack.reset(top)
             return Sequence(*out)
 
     class xtargets(node):
@@ -445,15 +442,15 @@ class NODES(object):
             """Recursively insert all variables that comprise this target into `ctx` context, during analyse()."""
             for c in self.children: c.declare_vars(ctx)
 
-        def reserve_slots(self, stack):
-            """Recursively create permanent placeholders for the variables of this target on a `stack`."""
-            for c in self.children: c.reserve_slots(stack)
+        # def reserve_slots(self, state):
+        #     """Recursively create permanent placeholders for the variables of this target on a `state`."""
+        #     for c in self.children: c.reserve_slots(state)
 
-        def assign(self, stack, value):
+        def assign(self, state, value):
             """Unpack `value` and assign to child targets."""
             N = len(self.children)
             if N == 1:
-                self.children[0].assign(stack, value)
+                self.children[0].assign(state, value)
                 return
             
             # unpack and assign to multiple child targets
@@ -482,14 +479,17 @@ class NODES(object):
             # else:
             #     ctx.push(symbol, self)
 
-        def reserve_slots(self, stack):
-            self.slot = stack.push(None)        # create a permanent placeholder for this variable on a `stack`
+        def assign(self, state, value):
+            state[self] = value
             
-        def assign(self, stack, value):
-            if self.slot is None:
-                stack.push(value)
-            else:
-                stack.set(self.slot, value)     # WARNING: `stack` must be the same instance as passed to declare_vars()
+        # def reserve_slots(self, stack):
+        #     self.slot = stack.push(None)        # create a permanent placeholder for this variable on a `stack`
+            
+        # def assign(self, stack, value):
+        #     if self.slot is None:
+        #         stack.push(value)
+        #     else:
+        #         stack.set(self.slot, value)     # WARNING: `stack` must be the same instance as passed to declare_vars()
     
         # def definition_node(self):
         #     return self.root or self
@@ -754,26 +754,25 @@ class NODES(object):
         
         def analyse(self, ctx):
             self.depth = ctx.depth
-            # if DEBUG: print("analyse", "$" + self.name, self.depth, ctx.asdict(_debug_ctx_start))
-            if self.name not in ctx: raise UndefinedVariableEx(f"Undefined variable '{self.name}'", self)
+            symbol = VAR(self.name)
+            if symbol not in ctx: raise UndefinedVariableEx(f"variable '{self.name}' is not defined", self)
+            self.defnode = ctx[symbol]
             
-            link = ctx[VAR(self.name)]
-            
-            if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
-                self.defnode = link
-                assert self.defnode.offset is not None
-            
-            elif isinstance(link, NODES.xattr_def):
-                assert isinstance(self.defnode.hypertag, NODES.xhypertag)
-                hypertag = self.defnode.hypertag                        # hypertag where the variable is defined
-                self.nested = self.depth - hypertag.depth - 1           # -1 because the current hypertag is not counted in access link backtracking
-                self.offset = self.defnode.offset - 1                   # -1 accounts for the access link that's pushed on the stack at the top of the frame
-                self.ispure = False
-                
-                defdepth = hypertag.depth                               # depth of the definition node (at what depth the variable is defined)
-                ctx.add_refdepth(defdepth, '$' + self.name)
-            else:
-                assert False
+            # if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
+            #     self.defnode = link
+            #     assert self.defnode.offset is not None
+            #
+            # elif isinstance(link, NODES.xattr_def):
+            #     assert isinstance(self.defnode.hypertag, NODES.xhypertag)
+            #     hypertag = self.defnode.hypertag                        # hypertag where the variable is defined
+            #     self.nested = self.depth - hypertag.depth - 1           # -1 because the current hypertag is not counted in access link backtracking
+            #     self.offset = self.defnode.offset - 1                   # -1 accounts for the access link that's pushed on the stack at the top of the frame
+            #     self.ispure = False
+            #
+            #     defdepth = hypertag.depth                               # depth of the definition node (at what depth the variable is defined)
+            #     ctx.add_refdepth(defdepth, '$' + self.name)
+            # else:
+            #     assert False
                 
             # if not isinstance(value, NODES.xattr):            # xhypertag node, or external variable defined in Python, not natively in the document?
             #     # if isinstance(value, NODES.xhypertag):        # "$H" xhypertag node?
@@ -799,25 +798,26 @@ class NODES(object):
             #     return
             #     #raise HypertagsError("Symbol is not an attribute (%s)" % self.defnode, self)
             
-        def evaluate(self, stack):
-            msg = "eval   $" + self.name
-            # if self.hypertag:                                       # hypertag used like a variable? return a Closure
-            #     if DEBUG: print(msg, "hypertag")
-            #     return Closure(self.hypertag, stack, self.depth)
-            if self.external:                                       # external variable? return its value without evaluation
-                # if DEBUG: print(msg, "external")
-                return self.value
-            
-            # if self references a non-local variable, we must find the right frame on the stack going back via access links
-            frame = 0                                                       # here, 0 means the "top frame"
-            for _ in range(self.nested): frame = stack.get(frame - 1)       # access link is on [-1] index in each frame
-            assert isinstance(frame, int) and frame >= 0
-            
-            if DEBUG: print(msg, self.nested, frame + self.offset, stack)
-            value = stack.get(frame + self.offset)
-            if isinstance(value, LazyVariable):                     # lazy rendering of $body variable? must call getvalue() method before returning
-                value = value.getvalue()
+        def evaluate(self, state):
+            node = self.defnode
+            if node not in state: raise NameError(f"name '{self.name}' is not defined")
+            value = state[node]
+            if value is UNDEFINED: raise UnboundLocalError(f"variable '{self.name}' referenced before assignment")
             return value
+            
+            # msg = "eval   $" + self.name
+            # if self.external:                                       # external variable? return its value without evaluation
+            #     # if DEBUG: print(msg, "external")
+            #     return self.value
+            #
+            # # if self references a non-local variable, we must find the right frame on the stack going back via access links
+            # frame = 0                                                       # here, 0 means the "top frame"
+            # for _ in range(self.nested): frame = stack.get(frame - 1)       # access link is on [-1] index in each frame
+            # assert isinstance(frame, int) and frame >= 0
+            #
+            # if DEBUG: print(msg, self.nested, frame + self.offset, stack)
+            # value = stack.get(frame + self.offset)
+            # return value
 
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
@@ -1364,16 +1364,16 @@ class HypertagAST(BaseTree):
         ctx.pushall(custom_vars)
         # ctx.pushall(FILTERS)
         
-        state = ctx.getstate()          # keep the state, so that after analysis we can retrieve newly defined symbols alone
+        position = ctx.getstate()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
         
         if DEBUG:
             global _debug_ctx_start
-            _debug_ctx_start = state
+            _debug_ctx_start = position
         
         self.root.analyse(ctx)          # now we have all top-level symbols in 'ctx'
         
         # pull top-level symbols & hypertags from the tree
-        self.symbols = ctx.asdict(state)
+        self.symbols = ctx.asdict(position)
         self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xtag_def)}
         
         # # perform compactification; a part of it was already done during analysis, because every hypertag launches
@@ -1391,10 +1391,10 @@ class HypertagAST(BaseTree):
         Although we lose access to the original tree (except the access via self.symbols and self.hypertags),
         this access is normally not needed anymore. If it is, you should disable compactification in parser settings.
         """
-        self.root.compactify(Stack())
+        self.root.compactify(State())
     
     def translate(self):
-        dom = self.root.translate(Stack())
+        dom = self.root.translate(State())
         assert isinstance(dom, HRoot)
         return dom
 
@@ -1476,6 +1476,7 @@ if __name__ == '__main__':
     
     text = """
         $ x = 5
+        | Ala
         | {x}
     """
     

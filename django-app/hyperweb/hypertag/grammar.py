@@ -124,7 +124,7 @@ NODE attrs :
   [section2]
     ...
 
-% hypertag attr1 attr2=default +inline @blocks
+% hypertag @blocks attr1 attr2=default +inline
     | {inline}
     blocks
     blocks.section
@@ -233,8 +233,10 @@ CLASSES
     $height = width * 2                     -- public "property"
     %cell @text :  ... {width-20} ...       -- public "method"
 
-    [css] ! ...
-    [js]  ! ...
+    [doc.head]
+        style | ...
+    [doc.tail]
+        script async=True ! ...
     div ... {width+10} ...                  -- result produced (box+meta)
         @body
     
