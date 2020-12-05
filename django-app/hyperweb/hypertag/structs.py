@@ -90,7 +90,7 @@ class MultiDict(object):
     >>> md['a']
     123
     >>> md.push('b', 456); md.push('b', 654)
-    >>> md.reset(md.getstate() - 2)
+    >>> md.reset(md.position() - 2)
     >>> md['b']
     321
     """
@@ -134,12 +134,17 @@ class MultiDict(object):
         else: self.lookup[name] = prev
         return (name, value)
     
-    def pushall(self, items):
-        "A repeated push(), of all items in the name->value dictionary 'items'."
-        for name, value in items.items():
+    def pushall(self, symbols):
+        """A repeated push() of all symbols from a dictionary."""
+        for name, value in symbols.items():
             self.push(name, value)
 
-    def getstate(self):
+    def pushnew(self, symbols):
+        """A conditional push() of symbols from a dictionary: only the symbols not present yet in self.stack are pushed."""
+        for name, value in symbols.items():
+            if name not in self.lookup: self.push(name, value)
+
+    def position(self):
         """Does NOT include self.stack's indentation, which must be reset manually through dedent()."""
         return self.stack.position()
 
@@ -157,7 +162,7 @@ class MultiDict(object):
         self.stack.size = position
 
     def asdict(self, start_position = 0):
-        """Return all current elements starting at `start_position` as an ordered dict."""
+        """Return all current symbols and their values as an ordered dict, starting at `start_position`."""
         rng = range(start_position, self.stack.size)
         return odict((name, value) for name, value, _ in [self.stack[i] for i in rng])
 
@@ -192,7 +197,7 @@ class Context(MultiDict):
                             # for analysing which hypertags are pure (always produce the same output) and can be compacted
     control_depth  = 0      # no. of control instructions (if/for/try) on the path from tree root to the current node;
                             # hypertag definitions are disallowed inside control blocks
-    regular_depth  = 0      # no. of regular nodes (tagged nodes; control/hypertag-def excluded) on the path from tree root,
+    regular_depth  = 0      # no. of regular nodes (tagged nodes; control/hypertag nodes excluded) on the path from tree root,
                             # or from the closest nesting hypertag definition node, to the current node;
                             # sibling nodes at the same regular_depth share a namespace
     

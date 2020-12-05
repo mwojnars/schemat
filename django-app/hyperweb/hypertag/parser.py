@@ -207,8 +207,6 @@ class NODES(object):
                                     # regardless of the context of execution and without side effects.
                                     # Is set in analyse() or compactify(), not __init__()!
         
-        depth        = None         # no. of nested hypertag definitions that surround this node; set and used only in a part of node classes
-        
         def check_pure(self):
             """Calculate, set and return self.ispure on the basis of check_pure() of children nodes;
             or return self.ispure if it's already set.
@@ -242,7 +240,6 @@ class NODES(object):
             every symbol being a concatenation of a name and a namespace qualifier (a tag or a variable),
             see TAG() and VAR() functions.
             """
-            self.depth = ctx.depth
             for c in self.children: c.analyse(ctx)
 
         @staticmethod
@@ -391,6 +388,11 @@ class NODES(object):
             self.body = self.children[1:]
             assert self.tags.type == 'tags_expand'
             
+        def analyse(self, ctx):
+            ctx.regular_depth += 1
+            for c in self.children: c.analyse(ctx)
+            ctx.regular_depth -= 1
+            
         def translate(self, stack):
             # body = self.body.translate(stack) if self.body else []
             body = self._translate_all(self.body, stack)
@@ -408,7 +410,7 @@ class NODES(object):
         def analyse(self, ctx):
             self.depth = ctx.depth
             self.expr.analyse(ctx)
-            self.targets.declare_vars(ctx)
+            self.targets.analyse(ctx)
 
         def translate(self, stack):
             value = self.expr.evaluate(stack)
@@ -438,13 +440,9 @@ class NODES(object):
             return Sequence(*out)
 
     class xtargets(node):
-        def declare_vars(self, ctx):
-            """Recursively insert all variables that comprise this target into `ctx` context, during analyse()."""
-            for c in self.children: c.declare_vars(ctx)
-
-        # def reserve_slots(self, state):
-        #     """Recursively create permanent placeholders for the variables of this target on a `state`."""
-        #     for c in self.children: c.reserve_slots(state)
+        def analyse(self, ctx):
+            """Recursively insert all variables that comprise this target into context."""
+            for c in self.children: c.analyse(ctx)
 
         def assign(self, state, value):
             """Unpack `value` and assign to child targets."""
@@ -463,34 +461,26 @@ class NODES(object):
 
     class xvar_def(node):
         """Definition of a variable, or assignment to a previously defined variable."""
-        name = None
-        slot = None         # after declare_vars(), index in `stack` holding a value of this variable
-        root = None         # <xvar_def> node with the 1st definition of this variable, if self represents a re-assignment
+        name    = None
+        primary = None          # 1st definition node of this variable, if self represents a re-assignment
+        r_depth = None
         
         def setup(self):
             self.name = self.text()
 
-        def declare_vars(self, ctx):
-            symbol = VAR(self.name)
-            ctx.push(symbol, self)
-            # root = ctx.get(symbol)
-            # if root and root.level == self.level:
-            #     self.root = root
-            # else:
-            #     ctx.push(symbol, self)
+        def analyse(self, ctx):
+            self.r_depth = ctx.regular_depth
+            symbol  = VAR(self.name)
+            primary = ctx.get(symbol)
+            
+            if primary and primary.r_depth == self.r_depth:
+                self.primary = primary
+            else:
+                ctx.push(symbol, self)
 
         def assign(self, state, value):
-            state[self] = value
+            state[self.primary or self] = value
             
-        # def reserve_slots(self, stack):
-        #     self.slot = stack.push(None)        # create a permanent placeholder for this variable on a `stack`
-            
-        # def assign(self, stack, value):
-        #     if self.slot is None:
-        #         stack.push(value)
-        #     else:
-        #         stack.set(self.slot, value)     # WARNING: `stack` must be the same instance as passed to declare_vars()
-    
         # def definition_node(self):
         #     return self.root or self
     
@@ -505,6 +495,23 @@ class NODES(object):
                 self.elsebody = self.children[-1]
             else:
                 self.clauses = self.children
+
+        def analyse(self, ctx):
+            # all top-level symbols declared on branches of this "if" block, and their primary nodes:
+            # if a variable is (re)declared multiple times in separate branches, the first declaration node
+            # is used to represent identity of this variable
+            primary = {}
+            
+            for c in self.children:
+                position = ctx.position()
+                c.analyse(ctx)
+                symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
+                # for symbol, node in symbols.items():
+                #     primary.setdefault(symbol, node)
+                ctx.reset(position)
+                ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
+
+            # ctx.pushall(primary)
 
         def translate(self, stack):
             body = self._select_clause(stack)
@@ -621,9 +628,7 @@ class NODES(object):
                 
         def analyse(self, ctx):
             
-            self.depth = ctx.depth
             for c in self.attrs: c.analyse(ctx)
-            
             self.tag = ctx.get(TAG(self.name))
             if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
             
@@ -804,20 +809,6 @@ class NODES(object):
             value = state[node]
             if value is UNDEFINED: raise UnboundLocalError(f"variable '{self.name}' referenced before assignment")
             return value
-            
-            # msg = "eval   $" + self.name
-            # if self.external:                                       # external variable? return its value without evaluation
-            #     # if DEBUG: print(msg, "external")
-            #     return self.value
-            #
-            # # if self references a non-local variable, we must find the right frame on the stack going back via access links
-            # frame = 0                                                       # here, 0 means the "top frame"
-            # for _ in range(self.nested): frame = stack.get(frame - 1)       # access link is on [-1] index in each frame
-            # assert isinstance(frame, int) and frame >= 0
-            #
-            # if DEBUG: print(msg, self.nested, frame + self.offset, stack)
-            # value = stack.get(frame + self.offset)
-            # return value
 
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
@@ -1364,7 +1355,7 @@ class HypertagAST(BaseTree):
         ctx.pushall(custom_vars)
         # ctx.pushall(FILTERS)
         
-        position = ctx.getstate()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
+        position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
         
         if DEBUG:
             global _debug_ctx_start
@@ -1475,7 +1466,10 @@ if __name__ == '__main__':
     # """
     
     text = """
-        $ x = 5
+        if True:
+            $ x = 5
+        else:
+            $ x = 10
         | Ala
         | {x}
     """
