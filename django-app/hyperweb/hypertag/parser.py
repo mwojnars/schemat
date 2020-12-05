@@ -390,7 +390,9 @@ class NODES(object):
             
         def analyse(self, ctx):
             ctx.regular_depth += 1
+            position = ctx.position()
             for c in self.children: c.analyse(ctx)
+            ctx.reset(position)             # tagged node defines a local namespace, hence need to drop symbols defined inside
             ctx.regular_depth -= 1
             
         def translate(self, stack):
@@ -1472,6 +1474,9 @@ if __name__ == '__main__':
             $ x = 10
         | Ala
         | {x}
+        p
+            $ y = 5
+        | {y}
     """
     
     tree = HypertagAST(text, stopAfter ="rewrite")
