@@ -14,7 +14,8 @@ class HError(ParserError):
 
 ########################################################################################################################################################
 
-class UndefinedVariableEx(HError, NameError): pass
+class NameErrorEx(HError, NameError): pass
+class UnboundLocalEx(HError, UnboundLocalError): pass
 class UndefinedTagEx(HError): pass
 class NotATagEx(HError): pass
 

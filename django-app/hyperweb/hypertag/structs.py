@@ -343,8 +343,8 @@ class Context(MultiDict):
 #####  STATE
 #####
 
-UNDEFINED = ('UNDEFINED',)      # token that marks a variable hasn't been assigned a value, yet; similar to Python:
-                                # UnboundLocalError: local variable 'x' referenced before assignment
+# UNDEFINED = ('UNDEFINED',)      # token that marks a variable hasn't been assigned a value, yet; similar to Python:
+#                                 # UnboundLocalError: local variable 'x' referenced before assignment
 
 class State:
     """

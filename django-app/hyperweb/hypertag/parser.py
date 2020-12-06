@@ -13,9 +13,9 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, MissingValueEx, UndefinedVariableEx, UndefinedTagEx, NotATagEx
+from hyperweb.hypertag.errors import HError, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
-from hyperweb.hypertag.structs import Context, Stack, State, UNDEFINED
+from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 
@@ -762,7 +762,7 @@ class NODES(object):
         def analyse(self, ctx):
             self.depth = ctx.depth
             symbol = VAR(self.name)
-            if symbol not in ctx: raise UndefinedVariableEx(f"variable '{self.name}' is not defined", self)
+            if symbol not in ctx: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
             self.defnode = ctx[symbol]
             
             # if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
@@ -807,10 +807,8 @@ class NODES(object):
             
         def evaluate(self, state):
             node = self.defnode
-            if node not in state: raise NameError(f"name '{self.name}' is not defined")
-            value = state[node]
-            if value is UNDEFINED: raise UnboundLocalError(f"variable '{self.name}' referenced before assignment")
-            return value
+            if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment")
+            return state[node]
 
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
@@ -1474,9 +1472,10 @@ if __name__ == '__main__':
             $ x = 10
         | Ala
         | {x}
+        $ y = 0
         p
             $ y = 5
-        | {y}
+            | {y}
     """
     
     tree = HypertagAST(text, stopAfter ="rewrite")

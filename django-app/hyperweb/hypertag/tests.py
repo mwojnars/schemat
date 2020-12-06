@@ -7,11 +7,19 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 """
 
 # import unittest
-import os, pytest
+import os, re, pytest
 
 from hyperweb.hypertag.parser import HypertagParser
 ht = HypertagParser(verbose = False)
 
+#####################################################################################################################################################
+#####
+#####  UTILITIES
+#####
+
+def merge_spaces(s, pat = re.compile(r'\s+')):
+    """Merge multiple spaces, replace newlines and tabs with spaces, strip leading/trailing space."""
+    return pat.sub(' ', s).strip()
 
 #####################################################################################################################################################
 #####
@@ -121,6 +129,49 @@ def test_006_if():
     out = """<div>Ola</div>"""
     assert out.strip() == ht.parse(src).strip()
 
+def test_007_variables():
+    src = """
+        if True:
+            $ x = 5
+        else:
+            $ x = 10
+        | {x}
+    """
+    assert ht.parse(src).strip() == "5"
+
+    src = """
+        if False:
+            $ x = 5
+        else:
+            $ x = 10
+        | {x}
+    """
+    assert ht.parse(src).strip() == "10"
+
+    src = """
+        $ y = 0
+        div : p
+            $ y = 5
+            | {y}
+    """
+    assert merge_spaces(ht.parse(src)) == "<div><p> 5 </p></div>"
+
+def test_008_variables_err():
+    with pytest.raises(Exception, match = 'referenced before assignment') as ex_info:
+        ht.parse("""
+            if False:
+                $ x = 5
+            else:
+                $ y = 10
+            | {x}
+        """)
+    with pytest.raises(Exception, match = 'not defined') as ex_info:
+        ht.parse("""
+            p
+                $ y = 5
+            | {y}
+        """)
+    
 
 #####################################################################################################################################################
 #####
