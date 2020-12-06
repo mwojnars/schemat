@@ -751,6 +751,10 @@ class NODES(object):
         """Occurence (use) of a variable."""
         name     = None
         
+        # external variable...
+        external = False        # if True, the variable is linked directly to its value, which is stored here in 'value'
+        value    = None         # if external=True, the value of the variable, as found already during analyse()
+        
         # native variable...
         depth    = None         # no. of nested hypertag definitions that surround this variable;
                                 # for proper linking to non-local variables in nested hypertag definitions
@@ -763,7 +767,13 @@ class NODES(object):
             self.depth = ctx.depth
             symbol = VAR(self.name)
             if symbol not in ctx: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
-            self.defnode = ctx[symbol]
+            
+            link = ctx[symbol]
+            if isinstance(link, NODES.node):            # native variable?
+                self.defnode = link
+            else:                                       # external variable...
+                self.external = True
+                self.value = link                       # value of an external variable is known already during analysis
             
             # if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
             #     self.defnode = link
@@ -788,9 +798,6 @@ class NODES(object):
             #     #     ctx.add_refdepth(value.depth, '$' + self.name)
             #     #     return
             #
-            #     self.external = True
-            #     self.value = value                            # if external then its value (an object) is known already during analysis
-            #
             #     # is this variable pure, i.e., guaranteed to return exactly the same value on every render() call, without side effects?
             #     # This can happen only for external variables or hypertags, bcs they're bound to constant objects;
             #     # additionally, we never mark user-defined objects as pure, bcs their behavior (and a returned value) may vary between calls
@@ -806,6 +813,10 @@ class NODES(object):
             #     #raise HypertagsError("Symbol is not an attribute (%s)" % self.defnode, self)
             
         def evaluate(self, state):
+            
+            if self.external:                                       # external variable? return its value without evaluation
+                return self.value
+                
             node = self.defnode
             if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment")
             return state[node]
@@ -1076,6 +1087,30 @@ class NODES(object):
     #     """
     
 
+    ###  EXPRESSIONS - COLLECTIONS  ###
+
+    class xlist(expression):
+        def evaluate(self, state):
+            return [child.evaluate(state) for child in self.children]
+
+    class xtuple(expression):
+        def evaluate(self, state):
+            return tuple(child.evaluate(state) for child in self.children)
+
+    class xset(expression):
+        def evaluate(self, state):
+            return set(child.evaluate(state) for child in self.children)
+
+    class xdict(expression):
+        def evaluate(self, state):
+            items = []
+            assert len(self.children) % 2 == 0          # there's always an even no. of children after reduction of dict_pair
+            for i in range(0, len(self.children), 2):
+                key_child, val_child = self.children[i:i+2]
+                items.append((key_child.evaluate(state), val_child.evaluate(state)))
+            return dict(items)
+
+
     ###  EXPRESSIONS - LITERALS  ###
 
     class literal(expression):
@@ -1243,7 +1278,7 @@ class HypertagAST(BaseTree):
                 "attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval target " \
-                "expr_root subexpr slice subscript trailer atom literal"
+                "expr_root subexpr slice subscript trailer atom literal dict_pair"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
     # they must have a corresponding x... node class, because pruning is done after rewriting, not before
@@ -1449,11 +1484,6 @@ if __name__ == '__main__':
         """
 
     # text = """
-    # for i in [1,2,3]:
-    #     p | $i
-    # """
-
-    # text = """
     #     | Ala ma
     #       kota
     #     p  | Ala ma
@@ -1465,20 +1495,33 @@ if __name__ == '__main__':
     #          xxx
     # """
     
-    text = """
-        if True:
-            $ x = 5
-        else:
-            $ x = 10
-        | Ala
-        | {x}
-        $ y = 0
-        p
-            $ y = 5
-            | {y}
-    """
+    # text = """
+    #     if True:
+    #         $ x = 5
+    #     else:
+    #         $ x = 10
+    #     | Ala
+    #     | {x}
+    #     $ y = 0
+    #     p
+    #         $ y = 5
+    #         | {y}
+    # """
     
-    tree = HypertagAST(text, stopAfter ="rewrite")
+    # text = """
+    #     for i in range(5):
+    #         | $i
+    # """
+    # text = """
+    #     / $range(5)
+    # """
+
+    text = """
+    for i in [1,2,3]:
+        p | $i
+    """
+
+    tree = HypertagAST(text, stopAfter = "rewrite")
     
     # print()
     # print("===== AST =====")

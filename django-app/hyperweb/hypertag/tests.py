@@ -172,6 +172,39 @@ def test_008_variables_err():
             | {y}
         """)
     
+def test_009_collections():
+    src = "| { () }"            # empty tuple
+    assert merge_spaces(ht.parse(src)) == "()"
+    src = "| { (1 , ) }"
+    assert merge_spaces(ht.parse(src)) == "(1,)"
+    src = "| { (1,2, 3) }"
+    assert merge_spaces(ht.parse(src)) == "(1, 2, 3)"
+
+    src = "| { [] }"
+    assert merge_spaces(ht.parse(src)) == "[]"
+    src = "| { [1 , ] }"
+    assert merge_spaces(ht.parse(src)) == "[1]"
+    src = "| { [1,2, 3] }"
+    assert merge_spaces(ht.parse(src)) == "[1, 2, 3]"
+    src = "| { [ 1 ,[2], (), (3,)] }"
+    assert merge_spaces(ht.parse(src)) == "[1, [2], (), (3,)]"
+
+    src = "| {{'set'}}"
+    assert merge_spaces(ht.parse(src)) == "{'set'}"
+    src = "| { { 'set' , } }"
+    assert merge_spaces(ht.parse(src)) == "{'set'}"
+    src = "| { {1, 1 ,1} }"
+    assert merge_spaces(ht.parse(src)) == "{1}"
+
+    src = "| { {} }"
+    assert merge_spaces(ht.parse(src)) == "{}"
+    src = "| { { } }"
+    assert merge_spaces(ht.parse(src)) == "{}"
+    src = "| { {1:1, 2 : 2 , 3 :3,3:4,} }"
+    assert merge_spaces(ht.parse(src)) == "{1: 1, 2: 2, 3: 4}"
+    src = "| {{ }}"
+    assert merge_spaces(ht.parse(src)) == "{ }"         # this is NOT a dict! sequences {{ and }} represent { and } characters escaped
+
 
 #####################################################################################################################################################
 #####

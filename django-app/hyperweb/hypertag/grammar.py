@@ -600,10 +600,13 @@ expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple,
 subexpr      =  '(' ws expr ws ')'
 
 var_use      =  name_id ''                                    # occurrence (use) of a variable
-tuple_atom   =  '(' ws ((expr comma)+ (expr ws)?)? ')'
+tuple        =  '(' ws ((expr comma)+ (expr ws)?)? ')'
 list         =  '[' ws (expr comma)* (expr ws)? ']'
+set          =  '{' ws expr (comma expr)* ws (',' ws)? '}'    # obligatory min. 1 element in a set
+dict         =  '{' ws (dict_pair comma)* (dict_pair ws)? '}'
+dict_pair    =  expr ws ':' ws expr
 
-atom         =  literal / var_use / subexpr / tuple_atom / list
+atom         =  literal / var_use / subexpr / tuple / list / dict / set
 factor_var   =  var_use trailer* qualifier?                   # reduced form of `factor` for use in expr_var
 factor       =  atom trailer* qualifier?                      # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)*

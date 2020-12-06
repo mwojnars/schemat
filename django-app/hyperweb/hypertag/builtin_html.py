@@ -132,11 +132,11 @@ BUILTIN_VARS = {
     
     'str':          text_type,      # $str(var) -- string representation of an object, always in Unicode
     'len':          len,            # $len(s)
-    'range':        range,
     'set':          set,
     'dict':         dict,
     'list':         list,
     
+    'range':        range,
     'enumerate':    enumerate,
 }
 
