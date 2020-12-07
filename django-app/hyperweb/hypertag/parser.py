@@ -299,12 +299,12 @@ class NODES(object):
 
     class block(node):
         @staticmethod
-        def _align_nodes(body, stack):
+        def _pull_block(body, state):
             """
             Utility function that fixes top margin and indentation of nested nodes after translating a control block.
             """
-            # reduce top margin of `body`, so that +1 margin of <if> block and +1 margin of `body`
-            # translate to +1 margin of the result node, overall
+            # reduce top margin of `body`, so that +1 margin of a control block (if/for/try) and +1 margin of `body`
+            # translate to +1 margin of the result node overall
             if body and body[0].margin > 0:
                 body[0].margin -= 1
             
@@ -313,7 +313,7 @@ class NODES(object):
             assert len(set(n.indent for n in body)) <= 1, "Unequal indentations of child nodes inside a control block?"
             for n in body:
                 assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
-                n.indent = stack.indentation
+                n.indent = state.indentation
                 
             return body
         
@@ -410,13 +410,12 @@ class NODES(object):
             self.expr    = self.children[1]
 
         def analyse(self, ctx):
-            self.depth = ctx.depth
-            self.expr.analyse(ctx)
             self.targets.analyse(ctx)
+            self.expr.analyse(ctx)
 
-        def translate(self, stack):
-            value = self.expr.evaluate(stack)
-            self.targets.assign(stack, value)
+        def translate(self, state):
+            value = self.expr.evaluate(state)
+            self.targets.assign(state, value)
             return None
     
     class xblock_for(block):
@@ -425,20 +424,23 @@ class NODES(object):
             self.expr    = self.children[1]         # loop expression that returns a sequence (iterable) to be looped over
             self.body    = self.children[2]
             assert isinstance(self.expr, NODES.expression)
-            assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
+            assert self.targets.type == 'targets'
+            # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
             
+        def analyse(self, ctx):
+            self.targets.analyse(ctx)
+            self.expr.analyse(ctx)
+            self.body.analyse(ctx)
+
         def translate(self, state):
-            sequence = self.expr.evaluate(state)
             out = []
-            
-            self.targets.reserve_slots(state)       # create slots in `state` to hold future values of this target's variables instead of pushing/popping every time
-            
-            for value in sequence:                  # translate self.body multiple times, once for each value in the sequence
-                self.targets.assign(state, value)   # fill out this variable's slot in `state` with `value`
+            sequence = self.expr.evaluate(state)
+            for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
+                self.targets.assign(state, value)
                 body = self.body.translate(state)
-                self._align_nodes(body, state)
                 out += body.nodes
-            
+
+            out = self._pull_block(out, state)
             return Sequence(*out)
 
     class xtargets(node):
@@ -517,7 +519,7 @@ class NODES(object):
 
         def translate(self, stack):
             body = self._select_clause(stack)
-            self._align_nodes(body, stack)
+            self._pull_block(body, stack)
             return body
         
         def _select_clause(self, stack):
@@ -1519,6 +1521,7 @@ if __name__ == '__main__':
     text = """
     for i in [1,2,3]:
         p | $i
+        | {i+10}
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
