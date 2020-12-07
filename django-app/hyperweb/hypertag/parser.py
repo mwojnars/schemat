@@ -459,7 +459,7 @@ class NODES(object):
             i = 0
             for i, v in enumerate(value):               # raises TypeError if `value` is not iterable
                 if i >= N: raise ValueError(f"too many values to unpack (expected {N})")
-                self.children[i].assign(v)
+                self.children[i].assign(state, v)
             if i+1 < N:
                 raise ValueError(f"not enough values to unpack (expected {N}, got {i+1})")
 
@@ -691,6 +691,19 @@ class NODES(object):
             assert len(self.children) == 1
             self.expr = self.children[-1]
         
+    class xkwarg(node):
+        name = None
+        expr = None
+        
+        def setup(self):
+            assert len(self.children) == 2
+            assert self.children[0].type == 'name_id'
+            self.name = self.children[0].value
+            self.expr = self.children[1]
+            
+        def evaluate(self, state):
+            return self.expr.evaluate(state)
+        
 
     ###  EXPRESSIONS - ROOT NODES  ###
     
@@ -834,23 +847,18 @@ class NODES(object):
     class xcall(tail):
         title = 'function call (...)'                   # for error messaging
         
-        def compactify(self, stack):
-            assert len(self.children) <= 1
-            if len(self.children) == 1:
-                assert self.children[0].type == 'args'
-            self.children = [n.compactify(stack) for n in self.children]
-            return self
+        # def compactify(self, stack):
+        #     assert len(self.children) <= 1
+        #     if len(self.children) == 1:
+        #         assert self.children[0].type == 'args'
+        #     self.children = [n.compactify(stack) for n in self.children]
+        #     return self
         
-        def apply(self, obj, stack):
-            if self.children:                           # any parameters for this call?
-                args, kwargs = self.children[0].evaluate(stack)
-            else:
-                args, kwargs = (), {}
-
-            # # calling a native hypertag like a function? pass the stack to support inner hypertags
-            # if getattr(obj, 'ishypertag', False) and isinstance(obj, Closure):
-            #     return obj.expand(args, kwargs, caller = self)
+        def apply(self, obj, state):
             
+            items  = [(c.name if c.type == 'kwarg' else None, c.evaluate(state)) for c in self.children]
+            args   = [value       for name, value in items if name is None]
+            kwargs = {name: value for name, value in items if name is not None}
             return obj(*args, **kwargs)
             
     class xslice_value(expression):
@@ -886,7 +894,7 @@ class NODES(object):
         def compactify(self, stack):
             return self                                 # no compactification, it's only 1 child: a static identifier
         def apply(self, obj, stack):
-            assert self.children[0].type == "var_id"
+            assert self.children[0].type == "name_id"
             member = self.children[0].value
             return getattr(obj, member)
     
@@ -997,7 +1005,7 @@ class NODES(object):
         """
         Chain of concatenation operators: x1 x2 x3 ... (space-separated expressions).
         Values of subexpressions are converted to strings and concatenated WITHOUT space.
-        This is an extension of the Python syntax of concatenating literal strings, like in:
+        This is an extension of Python syntax for concatenation of literal strings, like in:
                'Python' " is "  'cool'
         """
         def evaluate(self, stack):
@@ -1277,7 +1285,7 @@ class HypertagAST(BaseTree):
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body body_text " \
                 "head_verbat head_normal head_markup " \
-                "attrs_val attr_named value_named value_unnamed value_of_attr kwarg " \
+                "attrs_val attr_named value_named value_unnamed value_of_attr args arg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval target " \
                 "expr_root subexpr slice subscript trailer atom literal dict_pair"
@@ -1510,19 +1518,13 @@ if __name__ == '__main__':
     #         | {y}
     # """
     
-    # text = """
-    #     for i in range(5):
-    #         | $i
-    # """
-    # text = """
-    #     / $range(5)
-    # """
-
     text = """
-    for i in [1,2,3]:
-        p | $i
-        | {i+10}
+        for i, val in enumerate(range(3), start = 10):
+            | $val at $i
     """
+    # text = """
+    #     | { {'a':'b'} . get ('c', 123) ' ' 'aaa' }
+    # """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     

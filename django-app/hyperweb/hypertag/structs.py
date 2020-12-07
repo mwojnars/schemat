@@ -348,18 +348,18 @@ class Context(MultiDict):
 
 class State:
     """
-    State of translation/rendering, as an ordered dict of variables nodes and their current values.
+    State of translation/rendering, as a dict of variables nodes and their current values.
     Substitute for a Stack when keeping a history of frames is not necessary and values can be indexed
-    by nodes of an AST instead of integer positions. State class resembles Context more than Stack.
+    by nodes of an AST instead of integer positions in a stack. State class resembles Context more than Stack.
     """
-    values = None       # ordered dict of (node, value) pairs
+    values = None       # dict of (node, value) pairs
     
     # current indentation string, as a combination of ' ' and '\t' characters;
     # initial \n is used to mark that an indentation is absolute rather than relative to a parent node
     indentation = '\n'
 
     def __init__(self):
-        self.values = odict()
+        self.values = {}   #odict()
 
     def __contains__(self, node):
         return node in self.values
@@ -378,16 +378,16 @@ class State:
         assert self.indentation[-1] == whitechar, 'Trying to dedent a different character than was appended'
         self.indentation = self.indentation[:-1]
     
-    def savepoint(self):
-        return len(self.values)
-    
-    def rollback(self, savepoint):
-        """
-        Does NOT rollback indentation, which must always be reset manually through dedent().
-        """
-        size = len(self.values)
-        if size == savepoint: return
-        if size < savepoint: raise Exception("State.rollback(), can't rollback to a point (%s) that is higher than the current size (%s)" % (savepoint, size))
-        for _ in range(size - savepoint):
-            self.values.popitem()
+    # def savepoint(self):
+    #     return len(self.values)
+    #
+    # def rollback(self, savepoint):
+    #     """
+    #     Does NOT rollback indentation, which must always be reset manually through dedent().
+    #     """
+    #     size = len(self.values)
+    #     if size == savepoint: return
+    #     if size < savepoint: raise Exception("State.rollback(), can't rollback to a point (%s) that is higher than the current size (%s)" % (savepoint, size))
+    #     for _ in range(size - savepoint):
+    #         self.values.popitem()
         

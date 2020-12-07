@@ -579,7 +579,7 @@ value_of_attr    =  embedding / literal
 
 ###  ARGUMENTS of functions
 
-args             =  arg (comma arg)*
+args             =  arg (comma arg)* (ws ',')?
 arg              =  kwarg / expr
 kwarg            =  name_id ws '=' ws expr
 
@@ -607,8 +607,8 @@ dict         =  '{' ws (dict_pair comma)* (dict_pair ws)? '}'
 dict_pair    =  expr ws ':' ws expr
 
 atom         =  literal / var_use / subexpr / tuple / list / dict / set
-factor_var   =  var_use trailer* qualifier?                   # reduced form of `factor` for use in expr_var
-factor       =  atom trailer* qualifier?                      # operators: () [] .
+factor_var   =  var_use (ws trailer)* qualifier?              # reduced form of `factor` for use in expr_var
+factor       =  atom (ws trailer)* qualifier?                 # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)*
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent
 arith_expr   =  neg? ws term (ws op_additive ws term)*        # operators: neg + -
@@ -635,9 +635,9 @@ slice_value  =  ws (expr ws)?                # empty value '' serves as a placeh
 slice        =  slice_value ':' slice_value (':' slice_value)?
 subscript    =  slice / (ws expr_augment ws)
 
-call         =  '(' ws (args ws)? ')'        # no leading space allowed before () [] . -- unlike in Python
+call         =  '(' ws (args ws)? ')'
 index        =  '[' subscript ']'            # handles atomic indices [i] and all types of [*:*:*] slices
-member       =  '.' name_id                  # no space around '.' allowed
+member       =  '.' ws name_id
 trailer      =  call / index / member
 
 qualifier    =  ~"[\?!]"                      # ? means that None/empty(false)/exceptions shall be converted to '' ... ! means that empty (false) value triggers exception

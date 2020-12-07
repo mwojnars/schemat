@@ -205,6 +205,80 @@ def test_009_collections():
     src = "| {{ }}"
     assert merge_spaces(ht.parse(src)) == "{ }"         # this is NOT a dict! sequences {{ and }} represent { and } characters escaped
 
+def test_010_for():
+    src = """
+        for i in [1,2,3]:
+            p | $i
+            | {i+10}
+    """
+    out = """
+        <p>1</p>
+        11
+        <p>2</p>
+        12
+        <p>3</p>
+        13
+    """
+    assert out.strip() == ht.parse(src).strip()
+    src = """
+        / pre
+        for i in []:
+            | $i
+        ! post
+    """
+    out = """
+        pre
+        post
+    """
+    assert out.strip() == ht.parse(src).strip()
+
+def test_011_calls():
+    src = """
+        for i in range(3):
+            | $i
+    """
+    out = """
+        0
+        1
+        2
+    """
+    assert out.strip() == ht.parse(src).strip()
+    src = """
+        for i in range( 1 , 7 , 2 ,):
+            | $i
+    """
+    out = """
+        1
+        3
+        5
+    """
+    assert out.strip() == ht.parse(src).strip()
+    src = """
+        for pair in enumerate(range(3), start = 10):
+            | $pair
+    """
+    out = """
+        (10, 0)
+        (11, 1)
+        (12, 2)
+    """
+    assert out.strip() == ht.parse(src).strip()
+    src = """
+        for i, val in enumerate(range(3), start = 10):
+            | $val at $i
+    """
+    out = """
+        0 at 10
+        1 at 11
+        2 at 12
+    """
+    assert out.strip() == ht.parse(src).strip()
+
+    src = "| { {'a':'b'}.get('c', 123) }"
+    assert merge_spaces(ht.parse(src)) == "123"
+    src = "| { { 'a' : 'b' } . get ('c', 123) ' ' 'aaa' }"
+    assert merge_spaces(ht.parse(src)) == "123 aaa"
+
 
 #####################################################################################################################################################
 #####
