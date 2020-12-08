@@ -16,7 +16,7 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 from hyperweb.hypertag.errors import HError, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack, State
-from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS
+from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 
 DEBUG = False
@@ -1388,10 +1388,11 @@ class HypertagAST(BaseTree):
         ctx = Context()
         
         assert self.config['target_language'] == 'HTML'
-        builtin_tags = TAGS(BUILTIN_HTML)
         builtin_vars = VARS(BUILTIN_VARS)
-        custom_tags  = TAGS(self.custom_tags)
+        builtin_tags = TAGS(BUILTIN_TAGS)
+        builtin_tags.update(TAGS(BUILTIN_HTML))
         custom_vars  = VARS(self.custom_vars)
+        custom_tags  = TAGS(self.custom_tags)
 
         # seed the context
         ctx.pushall(builtin_tags)
@@ -1518,13 +1519,19 @@ if __name__ == '__main__':
     #         | {y}
     # """
     
-    text = """
-        for i, val in enumerate(range(3), start = 10):
-            | $val at $i
-    """
     # text = """
-    #     | { {'a':'b'} . get ('c', 123) ' ' 'aaa' }
+    #     $k = 5
+    #     for i, val in enumerate(range(k-2), start = k*2):
+    #         $ i = i + 1
+    #         | $val at $i
+    #     | $i
     # """
+    text = """
+        p | Ala
+        dedent nested=False
+            div: | kot
+                i | pies
+    """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     

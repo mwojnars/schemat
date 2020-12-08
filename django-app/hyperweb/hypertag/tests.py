@@ -273,6 +273,20 @@ def test_011_calls():
         2 at 12
     """
     assert out.strip() == ht.parse(src).strip()
+    src = """
+        $k = 5
+        for i, val in enumerate(range(k-2), start = k*2):
+            $ i = i + 1
+            | $val at $i
+        | $i
+    """
+    out = """
+        0 at 11
+        1 at 12
+        2 at 13
+        13
+    """
+    assert out.strip() == ht.parse(src).strip()
 
     src = "| { {'a':'b'}.get('c', 123) }"
     assert merge_spaces(ht.parse(src)) == "123"

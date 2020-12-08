@@ -136,6 +136,9 @@ document
 import re
 from types import GeneratorType
 
+from hyperweb.hypertag.errors import VoidTagEx
+from hyperweb.hypertag.tag import Tag
+
 
 ########################################################################################################################################################
 #####
@@ -160,7 +163,7 @@ def del_indent(text, indent):
 def get_indent(text):
     """
     Retrieve the longest indentation string fully composed of whitespace
-    that is shared by ALL non-empty lines in `text`, including the 1st line.
+    that is shared by ALL non-empty lines in `text`, including the 1st line (if contains a non-whitespace).
     """
     lines = text.split('\n')
     lines = list(filter(None, [l if l.strip() else '' for l in lines]))          # filter out empty lines
@@ -262,6 +265,8 @@ class HNode:
         # assign indentation, with proper handling of absolute (in parent) vs. relative (in children) indentations
         self.set_indent(indent)
         
+        assert not self.tag or isinstance(self.tag, Tag)
+        
     # def is_headline(self):
     #     return self.indent is None
     
@@ -299,10 +304,18 @@ class HNode:
         return text
     
     def _render_body(self):
-        if self.tag:
-            return self.tag.expand(self.body, *(self.attrs or ()), **(self.kwattrs or {}))
-        else:
+        if not self.tag:
             return self.body.render()
+        
+        if self.tag.void:
+            if self.body: raise VoidTagEx(f"body must be empty for a void tag {self.tag}")
+            body = None
+        elif self.tag.text:
+            body = self.body.render()
+        else:
+            body = self.body
+            
+        return self.tag.expand(body, *(self.attrs or ()), **(self.kwattrs or {}))
         
 class HRoot(HNode):
     """Root node of a Hypertag DOM tree."""

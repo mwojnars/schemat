@@ -1,8 +1,9 @@
+import re
 from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
-from hyperweb.hypertag.document import Sequence
+from hyperweb.hypertag.document import Sequence, get_indent, del_indent
 from hyperweb.hypertag.errors import VoidTagEx
 from hyperweb.hypertag.tag import ExternalTag
 
@@ -19,7 +20,7 @@ class MarkupTag(ExternalTag):
     This class is used for all built-in (X)HTML tags. It can also be used to define custom markup tags in an application.
     """
     
-    name = None         # tag name
+    name = None         # tag <name> to be printed into markup; may differ from the Hypertag name used inside a script (!)
     void = False        # if True, __body__ is expected to be empty and the returned element is self-closing
     mode = 'HTML'       # (X)HMTL compatibility mode: either 'HTML' or 'XHTML'
     
@@ -112,7 +113,7 @@ _create_all_tags()
 
 """
 TODO
-- dedent all=False    -- remove leading indentation of a block, either at the top level only (all=False), or at all nested levels (all=True)
+- dedent full=False   -- remove leading indentation of a block, either at the top level only (full=False), or at all nested levels (full=True)
 - unique strip=True   -- render body to text and remove duplicate lines (or blocks?)
 - unique_lines
 - unique_blocks
@@ -120,6 +121,26 @@ TODO
 - js                  -- JavaScript code to be put into a <script> section
 - error               -- inserts a standard error message in a place of occurrence; root document node might collect all <error> nodes and produce a combined (hidden) error message
 """
+
+class DedentTag(ExternalTag):
+    text = True
+    def expand(self, text, nested = True, _re_indent = re.compile(r'(?m)^\s+')):
+        if nested: return _re_indent.sub('', text)
+        return del_indent(text, get_indent(text))
+        
+
+def _unique():
+    pass
+
+BUILTIN_TAGS = {
+    'dedent':       DedentTag,
+}
+
+# instantiate tag classes
+for name, tag in BUILTIN_TAGS.items():
+    if isinstance(tag, type):
+        BUILTIN_TAGS[name] = tag()
+        
 
 ########################################################################################################################################################
 #####
