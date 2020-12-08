@@ -433,8 +433,6 @@ div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compac
             <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
 
-
-########################################################################################################################################################
 grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -471,35 +469,34 @@ document         =  core_blocks margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin (block_text / block_control / block_def / block_struct)
+block            =  margin (block_control / block_def / block_struct)
 
 ###  CONTROL BLOCKS
 
 block_control    =  block_assign / block_if / block_try / block_for
 
 block_assign     =  mark_expr ws targets ws '=' ws (embedding / expr_augment)
-block_try        =  ('try' body (nl 'or' body)* (nl 'else' body)?) / try_short
-block_for        =  'for' space targets space 'in' space (embedding / expr_augment) body_struct
-block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' body)?
+block_try        =  ('try' generic_control (nl 'or' generic_control)* (nl 'else' generic_control)?) / try_short
+block_for        =  'for' space targets space 'in' space (embedding / expr_augment) body_control
+block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' generic_control)?
 
-try_short        =  '?' ws (block_text / block_struct)          # short version of "try" block:  ?tag ... or ?|...
-clause_if        =  space (embedding / expr) body_struct        # (embedding body) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
+try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
+clause_if        =  space (embedding / expr) body_control       # (embedding generic_control) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
 target           =  ('(' ws targets ws ')') / var_def           # left side of assignment: a variable, or a tuple of variables/sub-tuples
 var_def          =  name_id ''                                  # definition (assignment) of a variable
 
-body_struct      =  (ws mark_struct comment?)? tail_blocks
-
 ###  DEFINITION BLOCK
 
-block_def        =  mark_def ws tag_def
-tag_def          =  name_id (attrs_def / ('(' attrs_def ')'))
+block_def        =  mark_def ws name_id attrs_def? body_struct     #/ ('(' attrs_def ')'))
 
 ###  STRUCTURED BLOCK
 
-# block_struct     =  tags_expand body?                         # structured block requires min. 1 tag, but body is not obligatory
-block_struct     =  tags_expand (ws mark_struct)? (ws headline)? tail_blocks?
+block_struct     =  (tags_expand generic_struct) / body_text    # text block is a special case of a structural block (!), in this case block_struct gets compactified
+                                                                # to the underlying block_verbat/_normal/_markup
+
+# block_struct     =  tags_expand body_struct                     # only matches blocks with nested blocks; for a full-text block (tagged) block, see block_text
 
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
 tag_expand       =  name_id attrs_val?
@@ -507,18 +504,22 @@ tag_expand       =  name_id attrs_val?
 
 ###  HEAD, TAIL, BODY
 
+generic_control  =  (ws body_text) / body_control               # like body_control, but additionally allows full-text body
+generic_struct   =  (ws body_text) / body_struct                # like body_struct, but additionally allows full-text body
+
+body_control     =  (ws mark_struct comment?)? tail_blocks
+body_struct      =  (ws mark_struct)? (ws headline)? tail_blocks?       # this rule matches empty string '' (!)
+
+body_text        =  block_verbat / block_normal / block_markup
 headline         =  head_verbat / head_normal / head_markup
 
 head_verbat      =  mark_verbat gap? line_verbat?
 head_normal      =  mark_normal gap? line_normal?
 head_markup      =  mark_markup gap? line_markup?
 
-body             =  body_text / body_struct
-body_text        =  ws (block_verbat / block_normal / block_markup)
-
 ###  TEXT BLOCKS & LINES
 
-block_text       =  (tags_expand ws)? (block_verbat / block_normal / block_markup)
+# block_text       =  (tags_expand ws)? body_text
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
@@ -561,7 +562,7 @@ embedding_eval   =  '$' expr_var
 ###  ATTRIBUTES of tags
 
 # formal attributes as declared in hypertag definition; body attribute @... must go first if present
-attrs_def        =  (space attr_body)? (space attr_named)*
+attrs_def        =  (space attr_body)? (space attr_oblig)* (space attr_named)*
 
 # actual attributes as passed to a tag
 attrs_val        =  (space (attr_val / attr_short))+       #/ ws '(' attr_val (',' ws attr_val)* ')'
@@ -570,6 +571,7 @@ attr_val         =  attr_named / attr_unnamed
 attr_body        =  '@' name_id
 attr_short       =  ('.' / '#') (attr_short_lit / embedding)        # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shorthand literal value MAY contain "-", unlike python identifiers!
+attr_oblig       =  name_xml ''                                     # only in hypertag definition
 attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_of_attr ''
 value_of_attr    =  embedding / literal
@@ -698,6 +700,8 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
+
+########################################################################################################################################################
 ###
 ###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
 ###  XML identifiers differ substantially from typical name patterns in other computer languages. Main differences:

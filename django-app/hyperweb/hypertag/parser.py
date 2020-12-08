@@ -18,6 +18,7 @@ from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
+from hyperweb.hypertag.tag import Tag
 
 DEBUG = False
 
@@ -246,9 +247,9 @@ class NODES(object):
         def _render_all(nodes, stack):
             return u''.join(n.render(stack) for n in nodes)
             
-        @staticmethod
-        def _translate_all(nodes, stack):
-            return Sequence(n.translate(stack) for n in nodes)
+        # @staticmethod
+        # def _translate_all(nodes, stack):
+        #     return Sequence(n.translate(stack) for n in nodes)
 
         # def render(self, stack):
         #     """
@@ -297,7 +298,20 @@ class NODES(object):
 
     ###  BLOCKS  ###
 
+    class xblock(node):
+        """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
+        def translate(self, stack):
+            assert len(self.children) == 2 and self.children[0].type == 'margin'
+            margin = self.children[0].get_margin()
+            feed   = self.children[1].translate(stack)
+            
+            if feed:                    # add top margin to the 1st node
+                first = feed[0]
+                first.margin = (first.margin or 0) + margin
+            return feed
+
     class block(node):
+        """Base class for block nodes."""
         @staticmethod
         def _pull_block(body, state):
             """
@@ -346,46 +360,34 @@ class NODES(object):
 
             return output
 
-    class xblock(node):
-        """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
-        def translate(self, stack):
-            assert len(self.children) == 2 and self.children[0].type == 'margin'
-            margin = self.children[0].get_margin()
-            feed   = self.children[1].translate(stack)
-            
-            if feed:                    # add top margin to the 1st node
-                first = feed[0]
-                first.margin = (first.margin or 0) + margin
-            return feed
-
-    class xblock_text(block):
-        """Wrapper around all text blocks that applies tags to the plain text rendered by the inner block."""
-        tags  = None        # optional <tags_expand> node
-        block = None        # inner text block: block_verbat, block_normal, or block_markup
-        
-        def setup(self):
-            assert 1 <= len(self.children) <= 2
-            self.block = self.children[-1]
-            if len(self.children) > 1:
-                self.tags  = self.children[0]
-                assert self.tags.type == 'tags_expand'
-            assert self.block.type in ('block_verbat', 'block_normal', 'block_markup')
-            
-        def translate(self, stack):
-            body = self.block.translate(stack)
-            return self.tags.apply(body, stack) if self.tags else body
-        
     class xblock_verbat(block_text): pass
     class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
     
+    # class xblock_text(block):
+    #     """Wrapper around all text blocks that applies tags to plain text rendered by the inner block."""
+    #     tags  = None        # optional <tags_expand> node
+    #     block = None        # inner text block: block_verbat, block_normal, or block_markup
+    #
+    #     def setup(self):
+    #         assert 1 <= len(self.children) <= 2
+    #         self.block = self.children[-1]
+    #         if len(self.children) > 1:
+    #             self.tags  = self.children[0]
+    #             assert self.tags.type == 'tags_expand'
+    #         assert self.block.type in ('block_verbat', 'block_normal', 'block_markup')
+    #
+    #     def translate(self, stack):
+    #         body = self.block.translate(stack)
+    #         return self.tags.apply(body, stack) if self.tags else body
+    
     class xblock_struct(block):
-        tags = None         # obligatory <tags_expand> node
-        body = None         # list of nested nodes
+        tags = None         # <tags_expand> node
+        body = None         # <body_struct> node
         
         def setup(self):
             self.tags = self.children[0]
-            self.body = self.children[1:]
+            self.body = self.children[1]
             assert self.tags.type == 'tags_expand'
             
         def analyse(self, ctx):
@@ -396,11 +398,20 @@ class NODES(object):
             ctx.regular_depth -= 1
             
         def translate(self, stack):
-            # body = self.body.translate(stack) if self.body else []
-            body = self._translate_all(self.body, stack)
+            body = self.body.translate(stack)
             return self.tags.apply(body, stack)
 
-    class xblock_def(block): pass
+    class xblock_def(block, Tag):
+        """Definition of a native hypertag."""
+
+        def setup(self):
+            self.name  = self.children[0]
+            self.attrs = self.children[1:]
+            
+        def expand(self, body, *attrs, **kwattrs):
+            pass
+            
+
     class xblock_try(block): pass
     
     class xblock_assign(block):
@@ -544,9 +555,13 @@ class NODES(object):
         
     ###  BODY & LINES  ###
 
-    class xbody_struct(node):
+    class body(node):
         def translate(self, stack):
-            return self._translate_all(self.children, stack)
+            return Sequence(n.translate(stack) for n in self.children)
+            # return self._translate_all(self.children, stack)
+    
+    class xbody_control(body): pass
+    class xbody_struct (body): pass
 
     class line(node):
         def translate(self, stack):
@@ -597,8 +612,7 @@ class NODES(object):
         NOTE #2: same attr can appear more than once, in such case its values (must be strings!) get space-concatenated;
                  this is particularly useful for "class" attibute and its short form:  div .top.left.darkbg
         """
-        
-        DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz)
+        DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz); UNUSED!
         name  = None        # tag name: a, A, h1, div ...
         tag   = None        # resolved definition of this tag, either as <tag_def>, or Hypertag instance
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
@@ -659,29 +673,38 @@ class NODES(object):
                     
             return unnamed, named
             
-    class xtag_def(node):
-        """Definition of a tag (hypertag)."""
-
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
-    class xattrs_def(node):
-        """List of attributes inside a tag definition (NOT in an occurrence)."""
-        
-        
     class attr(node):
         """Attribute inside a tag occurrence OR tag definition:
-            unnamed / named / short (only in tag occurence) / body (only in tag definition).
+            unnamed / named / short (only in tag occurence) / obligatory / body (only in tag definition).
         """
-        name = None         # [str] name of this attribute; or None if unnamed
-        expr = None         # <expression> node of this attribute; or None if no expression present (for attr definition without default)
-
-    class xattr_val(attr):
+        name = None         # [str] name of this attribute; None if unnamed
+        expr = None         # <expression> node of this attribute; None if no expression present (attr definition with no default)
+        body = False        # True in xattr_body
+        
+    class xattr_oblig(attr):
         def setup(self):
-            assert 1 <= len(self.children) <= 2
-            if len(self.children) == 2:
-                self.name = self.children[0].value
-            self.expr = self.children[-1]
+            assert len(self.children) == 1
+            self.name = self.children[0].value          # <name_xml>
+            
+    class xattr_body(attr):
+        def setup(self):
+            assert len(self.children) == 1
+            self.name = self.children[0].value          # <name_id>
+            self.body = True
+            
+    class xattr_named(attr):
+        def setup(self):
+            assert len(self.children) == 2
+            self.name = self.children[0].value          # <name_xml>
+            self.expr = self.children[1]
+            
+    class xattr_unnamed(attr):
+        def setup(self):
+            assert len(self.children) == 1
+            self.expr = self.children[0]
             
     class xattr_short(attr):
         def setup(self):
@@ -1283,9 +1306,9 @@ class HypertagAST(BaseTree):
                 "mark_struct mark_verbat mark_normal mark_markup mark_expr mark_def"
     
     # nodes that will be replaced with a list of their children
-    _reduce_  = "block_control target core_blocks tail_blocks headline body body_text " \
+    _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
                 "head_verbat head_normal head_markup " \
-                "attrs_val attr_named value_named value_unnamed value_of_attr args arg " \
+                "attrs_val attr_val value_of_attr args arg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval target " \
                 "expr_root subexpr slice subscript trailer atom literal dict_pair"
@@ -1293,7 +1316,8 @@ class HypertagAST(BaseTree):
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
     # they must have a corresponding x... node class, because pruning is done after rewriting, not before
     _compact_ = "factor_var factor pow_expr term arith_expr shift_expr and_expr xor_expr or_expr concat_expr " \
-                "comparison not_test and_test or_test ifelse_test expr_tuple"
+                "comparison not_test and_test or_test ifelse_test expr_tuple " \
+                "block_struct"
 
     _reduce_anonym_ = True      # reduce all anonymous nodes, i.e., nodes generated by unnamed expressions, typically groupings (...)
     _reduce_string_ = True      # if a node to be reduced has no children but matched a non-empty part of text, it shall be replaced with a 'string' node
@@ -1411,7 +1435,7 @@ class HypertagAST(BaseTree):
         
         # pull top-level symbols & hypertags from the tree
         self.symbols = ctx.asdict(position)
-        self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xtag_def)}
+        self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xblock_def)}
         
         # # perform compactification; a part of it was already done during analysis, because every hypertag launches
         # # compactification in its subtree on its own, during analysis; what's left is compactification
@@ -1526,11 +1550,22 @@ if __name__ == '__main__':
     #         | $val at $i
     #     | $i
     # """
+    # text = """
+    #     p | Ala
+    #     dedent nested=False
+    #         div: | kot
+    #             i | pies
+    # """
     text = """
-        p | Ala
-        dedent nested=False
-            div: | kot
-                i | pies
+        %H
+            p | kot
+        H
+    """
+    text = """
+    p |
+        Ala
+        ma kota
+    
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
