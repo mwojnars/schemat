@@ -331,7 +331,7 @@ class NODES(object):
             """
             # reduce top margin of `body`, so that +1 margin of a control block (if/for/try) and +1 margin of `body`
             # translate to +1 margin of the result node overall
-            if body and body[0].margin > 0:
+            if body and body[0].margin:
                 body[0].margin -= 1
             
             # reduce indentation of nodes in `body` to match the current stack.indentation
@@ -765,28 +765,34 @@ class NODES(object):
     ###  ATTRIBUTES & ARGUMENTS  ###
     
     class attribute(variable):
-        """Attribute inside a tag occurrence OR tag definition:
+        """Attribute inside a hypertag occurrence OR tag definition:
             unnamed / named / short (only in tag occurence) / obligatory / body (only in tag definition).
         """
         name   = None       # [str] name of this attribute; None if unnamed
         expr   = None       # <expression> node of this attribute; None if no expression present (attr definition with no default)
         body   = False      # True in xattr_body
         
-        def analyse(self, ctx):
-            super(NODES.attribute, self).analyse(ctx)
-            
         def declare_var(self, ctx):
             self.var_depth = ctx.regular_depth
             ctx.push(VAR(self.name), self)
         
-    class xattr_oblig(attribute):
+    # in-definition attributes:  xattr_body, xattr_def
+    
+    class xattr_body(attribute):
+        body = True
         def setup(self):
             assert len(self.children) == 1
-            self.name = self.children[0].value          # <name_xml> or <name_id>
+            self.name = self.children[0].value          # <name_id>
             
-    class xattr_body(xattr_oblig):
-        body = True
-        
+    class xattr_def(attribute):
+        def setup(self):
+            assert 1 <= len(self.children) <= 2
+            self.name = self.children[0].value          # <name_xml>
+            if len(self.children) == 2:
+                self.expr = self.children[1]
+            
+    # in-occurrence attributes:  xattr_named, xattr_unnamed, xattr_short
+    
     class xattr_named(attribute):
         def setup(self):
             assert len(self.children) == 2
@@ -1653,17 +1659,15 @@ if __name__ == '__main__':
     #     p | kot
     # """
     text = """
-        %H a b c:
-            p | kot $a $b $c
-        H 1 c=3 b=2
-            i | pies
+        %H a b c=4 | $a $b $c
+        H 1 b=2
     """
-    text = """
-        %H a:
-            p | kot $a
-        H 1
-            i | pies
-    """
+    # text = """
+    #     %H a
+    #         p | kot $a
+    #     H 1
+    #         i | pies
+    # """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     

@@ -321,6 +321,31 @@ def test_011_calls():
     src = "| { { 'a' : 'b' } . get ('c', 123) ' ' 'aaa' }"
     assert merge_spaces(ht.parse(src)) == "123 aaa"
 
+def test_012_hypertags():
+    src = """
+        %H a b c:
+            p | $a $b $c
+        H 1 c=3 b=2
+    """
+    assert ht.parse(src).strip() == "<p>1 2 3</p>"
+    src = """
+        %H a b c
+            p | $a $b $c
+        H 1 c=3 b=2
+    """
+    assert ht.parse(src).strip() == "<p>1 2 3</p>"
+    src = """
+        %H a b=4 c='5':
+            p | $a $b $c
+        H 1 b=2
+    """
+    assert ht.parse(src).strip() == "<p>1 2 5</p>"
+    src = """
+        %H a b=4 c='5' | $a $b  $c
+        H 1 b=2
+    """
+    assert ht.parse(src).strip() == "1 2  5"
+
 
 #####################################################################################################################################################
 #####

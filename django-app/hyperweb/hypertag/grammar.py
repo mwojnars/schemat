@@ -432,6 +432,7 @@ div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compac
 
             <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
+
 grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -489,6 +490,10 @@ var_def          =  name_id ''                                  # definition (as
 ###  DEFINITION BLOCK
 
 block_def        =  mark_def ws name_id attrs_def generic_struct
+attrs_def        =  (space attr_body)? (space attr_def)*
+
+attr_body        =  '@' name_id
+attr_def         =  name_xml (ws '=' ws value_of_attr)?
 
 ###  STRUCTURED BLOCK
 
@@ -555,17 +560,16 @@ embedding_eval   =  '$' expr_var
 
 ###  ATTRIBUTES of tags
 
-# formal attributes as declared in hypertag definition; body attribute @... must go first if present
-attrs_def        =  (space attr_body)? (space attr_oblig)* (space attr_named)*
+# # formal attributes as declared in hypertag definition; body attribute @... must go first if present
+# attrs_def        =  (space attr_body)? (space attr_oblig)* (space attr_named)*
+# attr_oblig       =  name_xml ''                                     # only in hypertag definition
 
 # actual attributes as passed to a tag
 attrs_val        =  (space (attr_val / attr_short))+       #/ ws '(' attr_val (',' ws attr_val)* ')'
 attr_val         =  attr_named / attr_unnamed
 
-attr_body        =  '@' name_id
 attr_short       =  ('.' / '#') (attr_short_lit / embedding)        # shorthands: .class for class="class", #id for id="id" ... or #{var} or #$var
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shorthand literal value MAY contain "-", unlike python identifiers!
-attr_oblig       =  name_xml ''                                     # only in hypertag definition
 attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_of_attr ''
 value_of_attr    =  embedding / literal
@@ -698,7 +702,6 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
-
 
 ########################################################################################################################################################
 ###
