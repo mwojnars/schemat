@@ -68,6 +68,10 @@ class Grammar(Parsimonious):
     symbols = None      # dict of special symbols: {symbol_name: character}
     
     def __init__(self, special_chars):
+        """
+        :param special_chars: list of 4 unicode characters that will be used to encode INDENT_* and DEDENT_* symbols;
+                              they should not occur in the script to be parsed
+        """
         
         assert len(special_chars) == len(self.SPECIAL_SYMBOLS)
         self.symbols = dict(zip(self.SPECIAL_SYMBOLS, special_chars))
@@ -90,7 +94,7 @@ class Grammar(Parsimonious):
         """
         if not (set(Grammar.CHARS_DEFAULT) & set(text)):
             return Grammar.default
-
+        
         chars = []
         
         # find 4 unicode characters that are not in `text`; start with CHARS_DEFAULT[0]
@@ -204,6 +208,8 @@ class NODES(object):
     ###  BASE NODES  ###
 
     class node(BaseTree.node):
+        indent = None               # indentation length of this node; for debugging
+        
         isstatic     = False        # True in <static>, <literal> and their subclasses
         isexpression = False        # True in <expression> and subclasses - nodes that implement evaluate() method
         #iselement    = False        # True in <xelement>, <xhypertag> and other xelement subclasses
@@ -1657,11 +1663,11 @@ if __name__ == '__main__':
             i | pies
     """
     text = """
-        for i in [1,2]:
-            p:
-                $i = i + 5
-                | $i in
-            | $i out
+        if False:
+            $x = 1
+        else:
+            $y = 2 + xxxxx
+        | $y
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
