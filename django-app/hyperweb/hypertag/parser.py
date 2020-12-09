@@ -13,7 +13,7 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx
+from hyperweb.hypertag.errors import HError, SyntaxErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, VoidTagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, grammar
 from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
@@ -27,6 +27,12 @@ DEBUG = False
 #####
 #####  UTILITIES
 #####
+
+def duplicate(seq):
+    """Any duplicate in a sequence `seq`; or None if no duplicates are present."""
+    seen = set()
+    dups = set(x for x in seq if x in seen or seen.add(x))
+    return dups.pop() if dups else None
 
 def TAG(name):
     """Convert a tag name to a symbol, for insertion to (and retrieval from) a Context."""
@@ -364,23 +370,6 @@ class NODES(object):
     class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
     
-    # class xblock_text(block):
-    #     """Wrapper around all text blocks that applies tags to plain text rendered by the inner block."""
-    #     tags  = None        # optional <tags_expand> node
-    #     block = None        # inner text block: block_verbat, block_normal, or block_markup
-    #
-    #     def setup(self):
-    #         assert 1 <= len(self.children) <= 2
-    #         self.block = self.children[-1]
-    #         if len(self.children) > 1:
-    #             self.tags  = self.children[0]
-    #             assert self.tags.type == 'tags_expand'
-    #         assert self.block.type in ('block_verbat', 'block_normal', 'block_markup')
-    #
-    #     def translate(self, stack):
-    #         body = self.block.translate(stack)
-    #         return self.tags.apply(body, stack) if self.tags else body
-    
     class xblock_struct(block):
         tags = None         # <tags_expand> node
         body = None         # <body_struct> node
@@ -399,17 +388,111 @@ class NODES(object):
             
         def translate(self, stack):
             body = self.body.translate(stack)
-            return self.tags.apply(body, stack)
+            return self.tags.apply_tags(body, stack)
 
     class xblock_def(block, Tag):
         """Definition of a native hypertag."""
-
+        name       = None
+        attrs      = None
+        attr_body  = None
+        attr_names = None
+        body       = None
+        
         def setup(self):
-            self.name  = self.children[0]
-            self.attrs = self.children[1:]
+            self.name  = self.children[0].value
+            self.attrs = self.children[1:-1]
+            self.body  = self.children[-1]
+            assert all(attr.type.startswith('attr_') for attr in self.attrs)
             
-        def expand(self, body, *attrs, **kwattrs):
-            pass
+            # TODO: check that attr names are Python identifiers (name_id), otherwise they can't be used in expressions
+            
+            # move out a body attribute from `attrs` into `attr_body`
+            if self.attrs and self.attrs[0].body:
+                self.attr_body = self.attrs[0]
+                self.attrs = self.attrs[1:]
+            
+            # names of attributes except @body
+            self.attr_names = {attr.name: attr for attr in self.attrs}
+            
+            # check that attr names are unique
+            if len(self.attr_names) < len(self.attrs):
+                raise SyntaxErrorEx(f"duplicate attribute '{duplicate(self.attrs)}' in hypertag definition '{self.name}'", self)
+            if self.attr_body and self.attr_body.name in self.attr_names:
+                raise SyntaxErrorEx(f"duplicate attribute '{self.attr_body.name}' in hypertag definition '{self.name}'", self)
+            
+            # mark attributes as formal (occuring in hypertag definition)
+            for attr in self.attrs:
+                attr.formal = True
+            
+        def analyse(self, ctx):
+            if ctx.control_depth >= 1: raise SyntaxErrorEx(f'hypertag definition inside a control block is not allowed')
+            
+            ctx.regular_depth  += 1
+            ctx.hypertag_depth += 1
+            position = ctx.position()
+            
+            for c in self.children[1:]:         # this adds formal attributes of this tag as variables in `ctx`
+                c.analyse(ctx)
+
+            ctx.reset(position)
+            ctx.hypertag_depth -= 1
+            ctx.regular_depth  -= 1
+
+            ctx.push(TAG(self.name), self)
+            
+        def translate(self, state):
+            return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
+
+        def expand(self, state, body, attrs, kwattrs):
+    
+            # extend `state` with actual values of tag attributes
+            self._append_attrs(state, body, attrs, kwattrs)
+            
+            # indent = state.indentation
+            # state.indentation = ''
+
+            output = self.body.translate(state)
+            
+            # state.indentation = indent
+            
+            output = self._pull_block(output, state)
+            # assert len(output) == 1
+            # output[0].set_indent(stack.indentation)
+            return output
+
+        translate_tag = expand          # unlike external tags, a native tag gets expanded already during translate_tag()
+        
+        def _append_attrs(self, state, body, attrs, kwattrs):
+            """Extend `state` with actual values of tag attributes."""
+
+            # verify no. of positional attributes & names of keyword attributes
+            if len(attrs) > len(self.attrs): raise TypeErrorEx(f"hypertag '{self.name}' takes {len(self.attrs)} positional attributes but {len(attrs)} was given")
+            for name in kwattrs:
+                if name not in self.attr_names: raise TypeErrorEx(f"hypertag '{self.name}' got an unexpected keyword attribute '{name}'", self)
+            
+            # translate attribute names in `kwattrs` to nodes as keys
+            kwattrs = {self.attr_names[name]: value for name, value in kwattrs.items()}
+            
+            # move positional attributes to `kwattrs`
+            for pos, value in enumerate(attrs):
+                attr = self.attrs[pos]
+                if attr in kwattrs: raise TypeErrorEx(f"hypertag '{self.name}' got multiple values for attribute '{attr.name}'")
+                kwattrs[attr] = value
+                
+            # impute missing values with defaults
+            for attr in self.attrs:
+                if attr not in kwattrs:
+                    if attr.expr is None: raise TypeErrorEx(f"hypertag '{self.name}' missing a required positional attribute '{attr.name}'")
+                    kwattrs[attr] = attr.expr.evaluate(state)
+                    
+            # transfer attribute values from `kwattrs` to `state`
+            state.update(kwattrs)
+            
+            # append `body` to `state`
+            if self.attr_body:
+                state[self.attr_body] = body
+            elif body:
+                raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'")
             
 
     class xblock_try(block): pass
@@ -478,7 +561,8 @@ class NODES(object):
         """Definition of a variable, or assignment to a previously defined variable."""
         name    = None
         primary = None          # 1st definition node of this variable, if self represents a re-assignment
-        r_depth = None
+        r_depth = None          # regular_depth of this node, for correct identification of re-assignments that occur
+                                # at the same depth (in the same namespace)
         
         def setup(self):
             self.name = self.text()
@@ -495,9 +579,6 @@ class NODES(object):
 
         def assign(self, state, value):
             state[self.primary or self] = value
-            
-        # def definition_node(self):
-        #     return self.root or self
     
 
     class xblock_if (block):
@@ -595,11 +676,11 @@ class NODES(object):
 
     class xtags_expand(node):
         """List of tag_expand nodes."""
-        def apply(self, body, stack):
+        def apply_tags(self, body, stack):
             """Wrap up `body` in subsequent tags processed in reverse order."""
             for tag in reversed(self.children):
                 assert tag.type == 'tag_expand'
-                body = tag.translate(body, stack)
+                body = tag.translate_tag(stack, body)
             assert len(body) == 1
             body[0].set_indent(stack.indentation)
             return body
@@ -614,7 +695,7 @@ class NODES(object):
         """
         DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz); UNUSED!
         name  = None        # tag name: a, A, h1, div ...
-        tag   = None        # resolved definition of this tag, either as <tag_def>, or Hypertag instance
+        tag   = None        # resolved definition of this tag, as a Tag instance (either <xblock_def> or ExternalTag)
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         unnamed = None      # list of <expression> nodes of unnamed attributes from `attrs`
         named   = None      # OrderedDict of {name: <expression>} of named attributes from `attrs`
@@ -640,9 +721,8 @@ class NODES(object):
                 if name is None:
                     self.unnamed.append(expr)
                 else:
+                    if name in self.named: raise SyntaxErrorEx(f"attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
                     self.named.append((name, expr))
-                    # if name in self.named: raise DuplicateAttribute(f"Attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
-                    # self.named[name] = expr
                 
         def analyse(self, ctx):
             
@@ -650,13 +730,16 @@ class NODES(object):
             self.tag = ctx.get(TAG(self.name))
             if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
             
-        def translate(self, body, stack):
+        def translate_tag(self, state, body):
     
-            # evaluate attributes to calculate their actual values
-            attrs, kwattrs = self._eval_attrs(stack)
-            
-            if isinstance(self.tag, ExternalTag):
-                return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
+            # if isinstance(self.tag, ExternalTag):
+            #     return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
+            # elif isinstance(self.tag, NODES.xblock_def):
+            #     return self.tag.translate_tag(state, body, attrs, kwattrs)
+
+            if isinstance(self.tag, Tag):
+                attrs, kwattrs = self._eval_attrs(state)                        # calculate actual values of attributes
+                return self.tag.translate_tag(state, body, attrs, kwattrs)
             else:
                 raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
             
@@ -676,37 +759,41 @@ class NODES(object):
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
-    class attr(node):
+    class attribute(node):
         """Attribute inside a tag occurrence OR tag definition:
             unnamed / named / short (only in tag occurence) / obligatory / body (only in tag definition).
         """
-        name = None         # [str] name of this attribute; None if unnamed
-        expr = None         # <expression> node of this attribute; None if no expression present (attr definition with no default)
-        body = False        # True in xattr_body
+        name   = None       # [str] name of this attribute; None if unnamed
+        expr   = None       # <expression> node of this attribute; None if no expression present (attr definition with no default)
+        body   = False      # True in xattr_body
+        formal = False      # True if this is a formal attribute inside a hypertag definition; set by parent <xblock_def>
         
-    class xattr_oblig(attr):
+        def analyse(self, ctx):
+            super(NODES.attribute, self).analyse(ctx)
+            if self.formal: ctx.push(VAR(self.name), self)
+        
+    class xattr_oblig(attribute):
+        body = False
         def setup(self):
             assert len(self.children) == 1
-            self.name = self.children[0].value          # <name_xml>
+            self.name = self.children[0].value          # <name_xml> or <name_id>
             
-    class xattr_body(attr):
-        def setup(self):
-            assert len(self.children) == 1
-            self.name = self.children[0].value          # <name_id>
-            self.body = True
-            
-    class xattr_named(attr):
+    class xattr_body(xattr_oblig):
+        body   = True
+        formal = True
+        
+    class xattr_named(attribute):
         def setup(self):
             assert len(self.children) == 2
             self.name = self.children[0].value          # <name_xml>
             self.expr = self.children[1]
             
-    class xattr_unnamed(attr):
+    class xattr_unnamed(attribute):
         def setup(self):
             assert len(self.children) == 1
             self.expr = self.children[0]
             
-    class xattr_short(attr):
+    class xattr_short(attribute):
         def setup(self):
             symbol = self.fulltext[self.pos[0]]
             assert symbol in '.#'
@@ -1308,7 +1395,7 @@ class HypertagAST(BaseTree):
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
                 "head_verbat head_normal head_markup " \
-                "attrs_val attr_val value_of_attr args arg " \
+                "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "embedding embedding_braces embedding_eval target " \
                 "expr_root subexpr slice subscript trailer atom literal dict_pair"
@@ -1556,16 +1643,15 @@ if __name__ == '__main__':
     #         div: | kot
     #             i | pies
     # """
+    # text = """
+    #     $ x = 5
+    #     p | kot
+    # """
     text = """
         %H
             p | kot
         H
-    """
-    text = """
-    p |
-        Ala
-        ma kota
-    
+            i | pies
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

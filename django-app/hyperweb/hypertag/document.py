@@ -137,7 +137,7 @@ import re
 from types import GeneratorType
 
 from hyperweb.hypertag.errors import VoidTagEx
-from hyperweb.hypertag.tag import Tag
+# from hyperweb.hypertag.tag import Tag
 
 
 ########################################################################################################################################################
@@ -265,7 +265,7 @@ class HNode:
         # assign indentation, with proper handling of absolute (in parent) vs. relative (in children) indentations
         self.set_indent(indent)
         
-        assert not self.tag or isinstance(self.tag, Tag)
+        # assert not self.tag or isinstance(self.tag, Tag)
         
     # def is_headline(self):
     #     return self.indent is None
@@ -287,10 +287,12 @@ class HNode:
         """
         if self.indent is None:
             for child in self.body: child.relative_indent(parent_indent)
-        else:
+        elif self.indent[:1] == '\n':
             assert self.indent.startswith(parent_indent)
             self.indent = self.indent[len(parent_indent):]
-        
+        else:
+            pass        # self.indent is relative already
+            
     def render(self):
         
         text = self._render_body()

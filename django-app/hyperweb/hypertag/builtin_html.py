@@ -39,7 +39,7 @@ class MarkupTag(ExternalTag):
         
         # render output
         if self.void:
-            if __body__: raise VoidTagEx(f"body must be empty for a void tag <{name}>")
+            if __body__: raise VoidTagEx(f"non-empty body passed to a void markup tag <{name}>")
             return f"<{tag} />"
         else:
             assert isinstance(__body__, Sequence)

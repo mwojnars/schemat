@@ -197,9 +197,9 @@ class Context(MultiDict):
                             # for analysing which hypertags are pure (always produce the same output) and can be compacted
     control_depth  = 0      # no. of control instructions (if/for/try) on the path from tree root to the current node;
                             # hypertag definitions are disallowed inside control blocks
-    regular_depth  = 0      # no. of regular nodes (tagged nodes; control/hypertag nodes excluded) on the path from tree root,
+    regular_depth  = 0      # no. of tags or tag-def nodes (control nodes excluded) on the path from tree root,
                             # or from the closest nesting hypertag definition node, to the current node;
-                            # sibling nodes at the same regular_depth share a namespace
+                            # sibling nodes located at the same regular_depth share a namespace
     
     def add_refdepth(self, d, symbol = None):
         """Update self.ref_depth with the depth of one more definition of a variable/hypertag.
@@ -370,7 +370,10 @@ class State:
     def __setitem__(self, node, value):
         #assert node not in self.values     # this assert is not true inside "for" loops
         self.values[node] = value
-
+        
+    def update(self, values):
+        self.values.update(values)
+        
     def indent(self, whitechar):
         self.indentation += whitechar
     

@@ -1,3 +1,6 @@
+from hyperweb.hypertag.document import Sequence, HNode
+
+
 ########################################################################################################################################################
 #####
 #####  SDK
@@ -14,9 +17,25 @@ class Tag:
     pure = True         # if True, the tag is assumed to always return the same result for the same arguments (no side effects),
                         # which potentially enables full compactification of a node tagged with this tag
     
-    # text_body = False       # if True, the __body__ argument to expand() will be a string (rendered DOM), not DOM;
+    xml_attrs = False   # if True, all valid XML names are accepted for attributes, and named attributes are passed
+                        # to expand() as a dict, rather than keywords; in such case, expand() must implement
+                        # the following signature:
+                        #
+                        #   def expand(self, body, kwattrs, *attrs)
+                        #
+                        # It is recommended that xml_attrs are set to False whenever possible.
+    
+    # text_body = False       # if True, the `body` argument to expand() will be a string (rendered DOM), not DOM;
     #                         # setting this to True whenever possible allows speed optimization through better
     #                         # compactification of constant subtrees of the AST before their passing to a hypertag
+
+    # void / non-void ... strict / non-strict
+    # def expand(self, __body__, *attrs, **kwattrs): pass
+    # def expand(self, __body__, kwattrs, *attrs): pass
+    
+    def translate_tag(self, state, body, attrs, kwattrs):
+        raise NotImplementedError
+
 
 class ExternalTag(Tag):
     """
@@ -27,7 +46,11 @@ class ExternalTag(Tag):
     - it may accept any number of custom arguments, regular or keyword
     - it should return either a Sequence of nodes, or plain text, or None
     """
-    
+
+    def translate_tag(self, state, body, attrs, kwattrs):
+        """External tag doesn't depend on a state of script execution, hence `state` is ignored."""
+        return Sequence(HNode(body, tag = self, attrs = attrs, kwattrs = kwattrs))
+
     def expand(self, __body__):     # more attributes can be defined in subclasses
         """
         Subclasses should NOT append trailing \n nor add extra indentation during tag expansion

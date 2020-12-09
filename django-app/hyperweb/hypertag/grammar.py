@@ -489,20 +489,17 @@ var_def          =  name_id ''                                  # definition (as
 
 ###  DEFINITION BLOCK
 
-block_def        =  mark_def ws name_id attrs_def? body_struct     #/ ('(' attrs_def ')'))
+block_def        =  mark_def ws name_id attrs_def? generic_struct
 
 ###  STRUCTURED BLOCK
 
-block_struct     =  (tags_expand generic_struct) / body_text    # text block is a special case of a structural block (!), in this case block_struct gets compactified
-                                                                # to the underlying block_verbat/_normal/_markup
-
-# block_struct     =  tags_expand body_struct                     # only matches blocks with nested blocks; for a full-text block (tagged) block, see block_text
-
+block_struct     =  (tags_expand generic_struct) / body_text    # text block is a special case of a structural block (!), in this case block_struct gets
+                                                                # compactified to the underlying block_verbat/_normal/_markup
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
 tag_expand       =  name_id attrs_val?
 #tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
-###  HEAD, TAIL, BODY
+###  HEAD, BODY
 
 generic_control  =  (ws body_text) / body_control               # like body_control, but additionally allows full-text body
 generic_struct   =  (ws body_text) / body_struct                # like body_struct, but additionally allows full-text body
@@ -517,9 +514,7 @@ head_verbat      =  mark_verbat gap? line_verbat?
 head_normal      =  mark_normal gap? line_normal?
 head_markup      =  mark_markup gap? line_markup?
 
-###  TEXT BLOCKS & LINES
-
-# block_text       =  (tags_expand ws)? body_text
+###  TEXT BLOCKS, TAIL, LINE
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
