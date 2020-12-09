@@ -156,6 +156,16 @@ def test_007_variables():
     """
     assert merge_spaces(ht.parse(src)) == "<div><p> 5 </p></div>"
 
+    src = """
+        $x = 0
+        if False:
+            $x = 1
+        elif x > 0:
+            $x = 2
+        | $x
+    """
+    assert ht.parse(src).strip() == "0"
+
 def test_008_variables_err():
     with pytest.raises(Exception, match = 'referenced before assignment') as ex_info:
         ht.parse("""

@@ -432,7 +432,6 @@ div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compac
 
             <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
-
 grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -489,7 +488,7 @@ var_def          =  name_id ''                                  # definition (as
 
 ###  DEFINITION BLOCK
 
-block_def        =  mark_def ws name_id attrs_def? generic_struct
+block_def        =  mark_def ws name_id attrs_def generic_struct
 
 ###  STRUCTURED BLOCK
 
@@ -656,9 +655,13 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
+#name_attr       =  !name_reserved ~"[a-z_][a-z0-9_-]*"i
 name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
-name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
-name_xml         =  ~"[%(XML_StartChar)s][%(XML_Char)s]*"i      # names of tags and attributes used in XML, defined very liberally, with nearly all characters allowed, to match all valid HTML/XML identifiers, but not all of them can be used as hypertag/variable names
+name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"  # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+
+# names allowed in XML, defined liberally, with nearly all characters allowed to match all valid HTML/XML identifiers (esp. attributes);
+# EXCEPTION: colon ':' is NOT allowed as the 1st or the last character, to avoid collision with a trailing ":" used in blocks
+name_xml         =  ~"[%(XML_StartChar)s]([%(XML_Char)s]*[%(XML_EndChar)s])?"i
 
 
 ###  ATOMS
@@ -696,6 +699,7 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 
 """
 
+
 ########################################################################################################################################################
 ###
 ###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.
@@ -708,9 +712,10 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###
 
 # human-readable:  [:_A-Za-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\U00010000-\U000EFFFF]
-XML_StartChar  =  u":_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
+XML_StartChar  =  u"_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
 
 # human-readable:  XML_StartChar | [0-9.\u00B7-] | [\u0300-\u036F] | [\u203F-\u2040]
-XML_Char       =  XML_StartChar + r"0-9\.\-" + u"\u00B7\u0300-\u036F\u203F-\u2040"
+XML_Char       =  XML_StartChar + r"0-9\.\-" + u"\u00B7\u0300-\u036F\u203F-\u2040" + ":"
 
-
+# XML_EndChar is like XML_Char, but ":" is NOT allowed, to avoid collision with a trailing ":" used in Hypertag blocks
+XML_EndChar    =  XML_Char[:-1]
