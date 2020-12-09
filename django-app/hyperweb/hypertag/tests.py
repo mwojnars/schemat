@@ -231,6 +231,24 @@ def test_010_for():
         post
     """
     assert out.strip() == ht.parse(src).strip()
+    src = """
+        for i in [1,2]:
+            p:
+                $i = i + 5
+                | $i in
+            | $i out
+    """
+    out = """
+        <p>
+            6 in
+        </p>
+        1 out
+        <p>
+            7 in
+        </p>
+        2 out
+    """
+    assert out.strip() == ht.parse(src).strip()
 
 def test_011_calls():
     src = """

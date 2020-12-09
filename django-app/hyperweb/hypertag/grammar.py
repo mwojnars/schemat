@@ -604,7 +604,7 @@ dict         =  '{' ws (dict_pair comma)* (dict_pair ws)? '}'
 dict_pair    =  expr ws ':' ws expr
 
 atom         =  literal / var_use / subexpr / tuple / list / dict / set
-factor_var   =  var_use (ws trailer)* qualifier?              # reduced form of `factor` for use in expr_var
+factor_var   =  var_use trailer* qualifier?              # reduced form of `factor` for use in expr_var
 factor       =  atom (ws trailer)* qualifier?                 # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)*
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent

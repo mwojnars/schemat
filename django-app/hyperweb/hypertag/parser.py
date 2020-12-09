@@ -498,14 +498,15 @@ class NODES(object):
     class xblock_try(block): pass
     
     class xblock_assign(block):
-
+        targets = None
+        expr    = None
+        
         def setup(self):
-            self.targets = self.children[0]
-            self.expr    = self.children[1]
+            self.targets, self.expr = self.children
 
         def analyse(self, ctx):
-            self.targets.analyse(ctx)
             self.expr.analyse(ctx)
+            self.targets.analyse(ctx)
 
         def translate(self, state):
             value = self.expr.evaluate(state)
@@ -513,17 +514,19 @@ class NODES(object):
             return None
     
     class xblock_for(block):
+        targets = None              # 1+ loop variables to assign to
+        expr    = None              # loop expression that returns a sequence (iterable) to be looped over
+        body    = None
+        
         def setup(self):
-            self.targets = self.children[0]         # 1+ loop variables to assign to
-            self.expr    = self.children[1]         # loop expression that returns a sequence (iterable) to be looped over
-            self.body    = self.children[2]
+            self.targets, self.expr, self.body = self.children
             assert isinstance(self.expr, NODES.expression)
             assert self.targets.type == 'targets'
             # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
             
         def analyse(self, ctx):
-            self.targets.analyse(ctx)
             self.expr.analyse(ctx)
+            self.targets.analyse(ctx)
             self.body.analyse(ctx)
 
         def translate(self, state):
@@ -943,7 +946,7 @@ class NODES(object):
                 return self.value
                 
             node = self.defnode
-            if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment")
+            if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
             return state[node]
 
 
@@ -1652,6 +1655,13 @@ if __name__ == '__main__':
             p | kot
         H
             i | pies
+    """
+    text = """
+        for i in [1,2]:
+            p:
+                $i = i + 5
+                | $i in
+            | $i out
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
