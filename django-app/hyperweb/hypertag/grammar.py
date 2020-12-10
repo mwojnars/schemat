@@ -492,7 +492,7 @@ var_def          =  name_id ''                                  # definition (as
 block_def        =  mark_def ws name_id attrs_def generic_struct
 attrs_def        =  (space attr_body)? (space attr_def)*
 
-attr_body        =  '@' name_id
+attr_body        =  mark_embed ws name_id
 attr_def         =  name_xml (ws '=' ws value_of_attr)?
 
 ###  STRUCTURED BLOCK
@@ -501,7 +501,7 @@ block_struct     =  (tags_expand generic_struct) / body_text    # text block is 
                                                                 # compactified to the underlying block_verbat/_normal/_markup
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
 tag_expand       =  name_id attrs_val?
-#tag_expand       =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
+#tag_expand      =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
 
 ###  HEAD, BODY
 
@@ -511,7 +511,7 @@ generic_struct   =  (ws body_text) / body_struct                # like body_stru
 body_control     =  (ws mark_struct comment?)? tail_blocks
 body_struct      =  (ws mark_struct)? (ws headline)? tail_blocks?       # this rule matches empty string '' (!)
 
-body_text        =  block_verbat / block_normal / block_markup
+body_text        =  block_verbat / block_normal / block_markup / block_embed
 headline         =  head_verbat / head_normal / head_markup
 
 head_verbat      =  mark_verbat gap? line_verbat?
@@ -519,6 +519,8 @@ head_normal      =  mark_normal gap? line_normal?
 head_markup      =  mark_markup gap? line_markup?
 
 ###  TEXT BLOCKS, TAIL, LINE
+
+block_embed      =  mark_embed ws expr                          # this is not strictly a text block, but is treated as such to allow inline placement after a tag:  TAG @body ... @ body.child[0]
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
@@ -541,6 +543,7 @@ mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
 
+mark_embed       =  '@'
 mark_expr        =  '$'
 mark_def         =  '%%'                                        # double percent means single percent, only we need to escape for grammar string formatting
 

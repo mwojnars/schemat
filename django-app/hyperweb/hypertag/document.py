@@ -136,7 +136,9 @@ document
 import re
 from types import GeneratorType
 
-from hyperweb.hypertag.errors import VoidTagEx
+from hyperweb.hypertag.errors import VoidTagEx, TypeErrorEx
+
+
 # from hyperweb.hypertag.tag import Tag
 
 
@@ -210,9 +212,33 @@ class Sequence:
             if n is None: continue
             if isinstance(n, (list, Sequence, GeneratorType)):
                 result += Sequence._flatten(n)
-            else:
+            elif isinstance(n, HNode):
                 result.append(n)
+            else:
+                raise TypeErrorEx(f"found {type(n)} instead of an HNode as an element of DOM")
         return result
+        
+    def set_indent(self, indent):
+        for n in self.nodes:
+            n.set_indent(indent)
+            # n.indent = indent
+        
+    def pull(self, indent):
+        """Reduce top margin and indentation of nested nodes after translating a control block."""
+        if not self.nodes: return
+        
+        # reduce top margin, so that +1 margin of a control block (if/for/try) and +1 margin of self
+        # translate to +1 margin of the result node(s) overall
+        if self.nodes[0].margin:
+            self.nodes[0].margin -= 1
+        
+        assert len(set(n.indent for n in self.nodes)) <= 1, "unequal indentation of child nodes in a block?"
+        assert all(n.indent is None or n.indent[0] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
+        
+        # reduce indentation of nodes in `body` to match the current stack.indentation
+        # (i.e., ignore sub-indent of the sub-block)
+        self.set_indent(indent)
+        
         
     def render(self):
         return ''.join(node.render() for node in self.nodes)

@@ -327,21 +327,28 @@ class NODES(object):
         @staticmethod
         def _pull_block(body, state):
             """
-            Utility function that fixes top margin and indentation of nested nodes after translating a control block.
+            Utility function that reduces top margin and indentation of nested nodes after translating a control block.
             """
-            # reduce top margin of `body`, so that +1 margin of a control block (if/for/try) and +1 margin of `body`
-            # translate to +1 margin of the result node overall
-            if body and body[0].margin:
-                body[0].margin -= 1
-            
-            # reduce indentation of nodes in `body` to match the current stack.indentation
-            # (i.e., ignore sub-indent of a clause block)
-            assert len(set(n.indent for n in body)) <= 1, "Unequal indentations of child nodes inside a control block?"
-            for n in body:
-                assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
-                n.indent = state.indentation
-                
+            body.pull(state.indentation)
             return body
+            
+            # # reduce top margin of `body`, so that +1 margin of a control block (if/for/try) and +1 margin of `body`
+            # # translate to +1 margin of the result node overall
+            # if body and body[0].margin:
+            #     body[0].margin -= 1
+            #
+            # assert len(set(n.indent for n in body)) <= 1, "unequal indentation of child nodes in a block?"
+            # assert all(n.indent is None or n.indent[0] == '\n' for n in body), "child indentations are relative instead of absolute?"
+            #
+            # # reduce indentation of nodes in `body` to match the current stack.indentation
+            # # (i.e., ignore sub-indent of the sub-block)
+            # body.set_indent(state.indentation)
+            #
+            # # for n in body:
+            # #     assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
+            # #     n.indent = state.indentation
+            #
+            # return body
         
     class block_text(block):
 
@@ -376,6 +383,27 @@ class NODES(object):
     class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
     
+    class xblock_embed(block):
+        expr = None
+        
+        def setup(self):
+            self.expr = self.children[0]
+            
+        def translate(self, state):
+            body = self.expr.evaluate(state)
+            
+            if isinstance(body, Sequence):
+                return body
+            if isinstance(body, HNode):
+                return Sequence(body)
+            
+            try:
+                body = list(body)
+            except Exception as ex:
+                raise TypeErrorEx(f"embedded @-expression evaluates to {type(body)} instead of a DOM element (HNode, Sequence, or an iterable of HNodes)")
+            
+            return Sequence(*body)
+
     class xblock_struct(block):
         tags = None         # <tags_expand> node
         body = None         # <body_struct> node
@@ -537,8 +565,9 @@ class NODES(object):
                 body = self.body.translate(state)
                 out += body.nodes
 
+            out = Sequence(*out)
             out = self._pull_block(out, state)
-            return Sequence(*out)
+            return out
 
     class xtargets(node):
         def analyse(self, ctx):
@@ -681,13 +710,14 @@ class NODES(object):
 
     class xtags_expand(node):
         """List of tag_expand nodes."""
-        def apply_tags(self, body, stack):
+        def apply_tags(self, body, state):
             """Wrap up `body` in subsequent tags processed in reverse order."""
             for tag in reversed(self.children):
                 assert tag.type == 'tag_expand'
-                body = tag.translate_tag(stack, body)
-            assert len(body) == 1
-            body[0].set_indent(stack.indentation)
+                body = tag.translate_tag(state, body)
+            # assert len(body) == 1
+            # body[0].set_indent(state.indentation)
+            body.set_indent(state.indentation)
             return body
         
     class xtag_expand(node):
@@ -1401,7 +1431,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be ignored during rewriting (pruned from the tree)
     _ignore_  = "nl ws space gap comma verbatim comment " \
-                "mark_struct mark_verbat mark_normal mark_markup mark_expr mark_def"
+                "mark_struct mark_verbat mark_normal mark_markup mark_embed mark_expr mark_def"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
@@ -1659,15 +1689,12 @@ if __name__ == '__main__':
     #     p | kot
     # """
     text = """
-        %H a b c=4 | $a $b $c
-        H 1 b=2
+        %H @body a=0
+            | $a
+            @ body
+        H 1
+            | bodyyy
     """
-    # text = """
-    #     %H a
-    #         p | kot $a
-    #     H 1
-    #         i | pies
-    # """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     
