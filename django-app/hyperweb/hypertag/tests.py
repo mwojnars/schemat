@@ -95,7 +95,7 @@ def test_003_empty_blocks():
     """
     assert out.strip() == ht.parse(src).strip()
 
-def test_004():
+def test_004_layout():
     src = """
     h1
         p : b | Ala
@@ -111,6 +111,25 @@ def test_004():
               i kot
         </p>
     </h1>
+    """
+    assert out.strip() == ht.parse(src).strip()
+    src = """
+        div
+        
+
+        p
+        
+            i
+    """
+    out = """
+
+        <div></div>
+
+
+        <p>
+
+            <i></i>
+        </p>
     """
     assert out.strip() == ht.parse(src).strip()
 

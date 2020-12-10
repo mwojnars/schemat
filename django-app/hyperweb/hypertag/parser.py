@@ -155,20 +155,19 @@ class Grammar(Parsimonious):
                     current = indent
                     symbols = ''.join(INDENT_S if char == ' ' else INDENT_T for char in increment)
                     lines[-1] += symbols
-                    tail    = margin * '\n' + tail
-                    margin  = 0
 
                 elif current.startswith(indent):
                     decrement = current[len(indent):]
                     current = indent
                     symbols = ''.join(DEDENT_S if char == ' ' else DEDENT_T for char in reversed(decrement))
                     lines[-1] += symbols
-                    tail    = margin * '\n' + tail
-                    margin  = 0
                     
                 else:
                     raise IndentationError(f'indentation on line {linenum} is incompatible with previous line')
                     
+                tail   = margin * '\n' + tail
+                margin = 0
+                
                 lines.append(tail)
                 
         assert current == '', f"'{current}'"
@@ -356,6 +355,7 @@ class NODES(object):
     class xblock_markup(block_text): pass
     
     class xblock_embed(node):
+        """Embedding of DOM nodes through @... type of expression."""
         expr = None
         
         def setup(self):
@@ -363,17 +363,18 @@ class NODES(object):
             
         def translate(self, state):
             body = self.expr.evaluate(state)
-            
-            if isinstance(body, Sequence):
-                return body
-            if isinstance(body, HNode):
-                return Sequence(body)
-            
+            body = self._as_sequence(body)
+            body.pull_block(state.indentation)                  # set indentation of the fragment to be inserted
+            return body
+        
+        @staticmethod
+        def _as_sequence(body):
+            if isinstance(body, Sequence): return body
+            if isinstance(body, HNode):    return Sequence(body)
             try:
                 body = list(body)
             except Exception as ex:
-                raise TypeErrorEx(f"embedded @-expression evaluates to {type(body)} instead of a DOM element (HNode, Sequence, or an iterable of HNodes)")
-            
+                raise TypeErrorEx(f"embedded @-expression evaluates to {type(body)} instead of a DOM element (HNode, Sequence, an iterable of HNodes)")
             return Sequence(*body)
 
     class xblock_struct(node):
@@ -687,8 +688,6 @@ class NODES(object):
             for tag in reversed(self.children):
                 assert tag.type == 'tag_expand'
                 body = tag.translate_tag(state, body)
-            # assert len(body) == 1
-            # body[0].set_indent(state.indentation)
             body.set_indent(state.indentation)
             return body
         
@@ -705,7 +704,7 @@ class NODES(object):
         tag   = None        # resolved definition of this tag, as a Tag instance (either <xblock_def> or ExternalTag)
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         unnamed = None      # list of <expression> nodes of unnamed attributes from `attrs`
-        named   = None      # OrderedDict of {name: <expression>} of named attributes from `attrs`
+        named   = None      # list of (name, expression) pairs of named attributes from `attrs`; duplicate names allowed
         
         def setup(self):
             
@@ -719,7 +718,7 @@ class NODES(object):
                 self.attrs = self.children
                 
             self.unnamed = []
-            self.named = [] #OrderedDict()
+            self.named = []
             
             # collect attributes: their names (optional) and expressions (obligatory);
             for attr in self.attrs:
@@ -728,7 +727,7 @@ class NODES(object):
                 if name is None:
                     self.unnamed.append(expr)
                 else:
-                    if name in self.named: raise SyntaxErrorEx(f"attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
+                    # if name in self.named: raise SyntaxErrorEx(f"attribute '{name}' appears twice on attributes list of tag '{self.name}'", attr)
                     self.named.append((name, expr))
                 
         def analyse(self, ctx):
@@ -1665,7 +1664,9 @@ if __name__ == '__main__':
             | $a
             @ body
         H 1
-            | bodyyy
+
+          p: | bodyyy
+              i | kot
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
