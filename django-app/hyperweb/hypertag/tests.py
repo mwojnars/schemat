@@ -52,18 +52,18 @@ def test_001():
         <div id="box" class="top grey-01"></div>
         <input enabled />
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
 
 def test_002_qualifiers():
     # the code below contains NESTED qualifiers: unsatisfied ! within ?
     src = """ | kot { 'Mru' "czek" 123 0! }? {456}! {0}? """
     out = """   kot  456   """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
     src = """ | kot { 'Mru' "czek" 123 0? }! {456}? {0}? """
     out = """   kot Mruczek123 456   """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
     with pytest.raises(Exception, match = 'Obligatory expression') as ex_info:
         ht.parse("| {0}!")
@@ -93,7 +93,7 @@ def test_003_empty_blocks():
 
         <B></B>
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
 def test_004_layout():
     src = """
@@ -112,7 +112,7 @@ def test_004_layout():
         </p>
     </h1>
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         div
         
@@ -131,7 +131,7 @@ def test_004_layout():
             <i></i>
         </p>
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
 def test_005_document_margins():
     src = """\n\n p | text  \n  \n  """
@@ -146,7 +146,7 @@ def test_006_if():
             div | Ola
     """
     out = """<div>Ola</div>"""
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
 def test_007_variables():
     src = """
@@ -248,7 +248,7 @@ def test_010_for():
         <p>3</p>
         13
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         / pre
         for i in []:
@@ -259,7 +259,7 @@ def test_010_for():
         pre
         post
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         for i in [1,2]:
             p:
@@ -277,7 +277,7 @@ def test_010_for():
         </p>
         2 out
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
 def test_011_calls():
     src = """
@@ -289,7 +289,7 @@ def test_011_calls():
         1
         2
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         for i in range( 1 , 7 , 2 ,):
             | $i
@@ -299,7 +299,7 @@ def test_011_calls():
         3
         5
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         for pair in enumerate(range(3), start = 10):
             | $pair
@@ -309,7 +309,7 @@ def test_011_calls():
         (11, 1)
         (12, 2)
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         for i, val in enumerate(range(3), start = 10):
             | $val at $i
@@ -319,7 +319,7 @@ def test_011_calls():
         1 at 11
         2 at 12
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
     src = """
         $k = 5
         for i, val in enumerate(range(k-2), start = k*2):
@@ -333,7 +333,7 @@ def test_011_calls():
         2 at 13
         13
     """
-    assert out.strip() == ht.parse(src).strip()
+    assert ht.parse(src).strip() == out.strip()
 
     src = "| { {'a':'b'}.get('c', 123) }"
     assert merge_spaces(ht.parse(src)) == "123"
@@ -376,6 +376,112 @@ def test_012_hypertags():
     """
     assert ht.parse(src).strip() == "1 20 15"
 
+    src = """
+        %H x | headline
+           text {x} text
+              indented line
+              
+            last line
+        H True
+    """
+    out = """
+        headline
+        text True text
+           indented line
+
+         last line
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        %H @body a=0
+            | $a
+            @ body
+        p
+            H 5
+                i | kot
+    """
+    out = """
+        <p>
+            5
+            <i>kot</i>
+        </p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        %H | xxx
+        p
+            %H @body a=0
+                | $a
+            H 5
+    """
+    out = """
+        <p>
+            5
+        </p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        %H | xxx
+        %H @body a=0
+            | $a
+        H 5
+    """
+    assert ht.parse(src).strip() == "5"
+    src = """
+        %H @body a=0 | $a
+        p : H 5
+    """
+    assert ht.parse(src).strip() == "<p>5</p>"
+    src = """
+        %H @body a=0 @ body
+        p : H 5 | kot
+    """
+    assert ht.parse(src).strip() == "<p>kot</p>"
+
+    src = """
+        $g = 100
+        %G x | xxx {x+g}
+        %H @body a=0
+            | ala
+            @ body
+            $g = 200
+            %F x y={a*2}
+                G {x+y+a+g}
+                | inside F
+            F 10
+        H 5
+            | pies
+    """
+    out = """
+        ala
+        pies
+        xxx 325
+        inside F
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        $g = 100
+        %g x | xxx {x+g}
+        %H @body a=0
+            $g = 200
+            g {a+g}
+        H 5
+    """                     # ^ same name ("g") for a hypertag and a variable works fine (separate namespaces for vars and tags)
+    out = """
+        xxx 305
+    """
+    assert ht.parse(src).strip() == out.strip()
+
+def test_013_hypertags_err():
+    with pytest.raises(Exception, match = 'undefined tag') as ex_info:
+        ht.parse("""
+            p
+                %H @body a=0
+                    | $a
+                    @ body
+            H 1
+        """)
+    
 
 #####################################################################################################################################################
 #####

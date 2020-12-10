@@ -734,7 +734,7 @@ class NODES(object):
             
             for c in self.attrs: c.analyse(ctx)
             self.tag = ctx.get(TAG(self.name))
-            if self.tag is None: raise UndefinedTagEx(f"Undefined tag '{self.name}'", self)
+            if self.tag is None: raise UndefinedTagEx(f"undefined tag '{self.name}'", self)
             
         def translate_tag(self, state, body):
     
@@ -1660,13 +1660,14 @@ if __name__ == '__main__':
     #     p | kot
     # """
     text = """
+        $g = 100
+        %g x | xxx {x+g}
         %H @body a=0
-            | $a
             @ body
-        H 1
-
-          p: | bodyyy
-              i | kot
+            $g = 200
+            g {a+g}
+        H 5
+            | pies
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
