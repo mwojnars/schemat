@@ -223,7 +223,7 @@ class Sequence:
             n.set_indent(indent)
             # n.indent = indent
         
-    def pull(self, indent):
+    def pull_block(self, indent):
         """Reduce top margin and indentation of nested nodes after translating a control block."""
         if not self.nodes: return
         

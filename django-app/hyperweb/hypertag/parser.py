@@ -322,35 +322,7 @@ class NODES(object):
                 first.margin = (first.margin or 0) + margin
             return feed
 
-    class block(node):
-        """Base class for block nodes."""
-        @staticmethod
-        def _pull_block(body, state):
-            """
-            Utility function that reduces top margin and indentation of nested nodes after translating a control block.
-            """
-            body.pull(state.indentation)
-            return body
-            
-            # # reduce top margin of `body`, so that +1 margin of a control block (if/for/try) and +1 margin of `body`
-            # # translate to +1 margin of the result node overall
-            # if body and body[0].margin:
-            #     body[0].margin -= 1
-            #
-            # assert len(set(n.indent for n in body)) <= 1, "unequal indentation of child nodes in a block?"
-            # assert all(n.indent is None or n.indent[0] == '\n' for n in body), "child indentations are relative instead of absolute?"
-            #
-            # # reduce indentation of nodes in `body` to match the current stack.indentation
-            # # (i.e., ignore sub-indent of the sub-block)
-            # body.set_indent(state.indentation)
-            #
-            # # for n in body:
-            # #     assert n.indent is None or n.indent[0] == '\n'      # child indentations are still absolute ones, not relative
-            # #     n.indent = state.indentation
-            #
-            # return body
-        
-    class block_text(block):
+    class block_text(node):
 
         def translate(self, stack):
             return Sequence(HText(self.render(stack), indent = stack.indentation))
@@ -383,7 +355,7 @@ class NODES(object):
     class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
     
-    class xblock_embed(block):
+    class xblock_embed(node):
         expr = None
         
         def setup(self):
@@ -404,7 +376,7 @@ class NODES(object):
             
             return Sequence(*body)
 
-    class xblock_struct(block):
+    class xblock_struct(node):
         tags = None         # <tags_expand> node
         body = None         # <body_struct> node
         
@@ -424,7 +396,7 @@ class NODES(object):
             body = self.body.translate(stack)
             return self.tags.apply_tags(body, stack)
 
-    class xblock_def(block, Tag):
+    class xblock_def(node, Tag):
         """Definition of a native hypertag."""
         name       = None
         attrs      = None           # all attributes as a list of children nodes, including @body
@@ -481,7 +453,7 @@ class NODES(object):
         def expand(self, state, body, attrs, kwattrs):
             self._append_attrs(state, body, attrs, kwattrs)     # extend `state` with actual values of tag attributes
             output = self.body.translate(state)
-            output = self._pull_block(output, state)
+            output.pull_block(state.indentation)
             return output
 
         translate_tag = expand          # unlike external tags, a native tag gets expanded already during translate_tag()
@@ -523,9 +495,9 @@ class NODES(object):
             elif body:
                 raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'")
             
-    class xblock_try(block): pass
+    class xblock_try(node): pass
     
-    class xblock_assign(block):
+    class xblock_assign(node):
         targets = None
         expr    = None
         
@@ -541,7 +513,7 @@ class NODES(object):
             self.targets.assign(state, value)
             return None
     
-    class xblock_for(block):
+    class xblock_for(node):
         targets = None              # 1+ loop variables to assign to
         expr    = None              # loop expression that returns a sequence (iterable) to be looped over
         body    = None
@@ -566,7 +538,7 @@ class NODES(object):
                 out += body.nodes
 
             out = Sequence(*out)
-            out = self._pull_block(out, state)
+            out.pull_block(state.indentation)
             return out
 
     class xtargets(node):
@@ -615,7 +587,7 @@ class NODES(object):
             state[self.primary or self] = value
     
 
-    class xblock_if (block):
+    class xblock_if (node):
         clauses  = None         # list of 1+ <clause_if> nodes
         elsebody = None         # optional <body_*> node for the "else" branch
         
@@ -643,9 +615,9 @@ class NODES(object):
 
             # ctx.pushall(primary)
 
-        def translate(self, stack):
-            body = self._select_clause(stack)
-            self._pull_block(body, stack)
+        def translate(self, state):
+            body = self._select_clause(state)
+            body.pull_block(state.indentation)
             return body
         
         def _select_clause(self, stack):
