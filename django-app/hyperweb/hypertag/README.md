@@ -68,18 +68,23 @@ Lists, dicts ...
 
 Hypertag implements majority of standard operators available in Python.
 
-Arithmetic operators:
+Arithmetic and binary operators:
 
     ** * / // %
     + - unary minus
     << >>
+    & ^ |
 
 Logical operators:
 
-    == != >= <= < > in is
-    not
-    not in 
-    is not
+    == != >= <= < > in is "not in" "is not"
+    not and or
+
+In the ternary "if-else" operator, the "else" branch is optional and defaults to 
+"else None" if missing:
+
+    X if TEST else Y
+    X if TEST
 
 Tail operators:
 
@@ -87,7 +92,7 @@ Tail operators:
     []    indexing
     ()    function call
 
-Slice operator as an index inside [...]:
+Slice operator when used inside [...]:
 
     start : stop : step
 
