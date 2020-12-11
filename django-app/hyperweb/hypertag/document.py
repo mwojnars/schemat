@@ -139,9 +139,6 @@ from types import GeneratorType
 from hyperweb.hypertag.errors import VoidTagEx, TypeErrorEx
 
 
-# from hyperweb.hypertag.tag import Tag
-
-
 ########################################################################################################################################################
 #####
 #####  UTILITIES
@@ -218,22 +215,6 @@ class Sequence:
                 raise TypeErrorEx(f"found {type(n)} instead of an HNode as an element of DOM")
         return result
         
-    # def pull_block(self, indent):
-    #     """Reduce top margin and indentation of nested nodes after translating a control block."""
-    #     if not self.nodes: return
-    #
-    #     # reduce top margin, so that +1 margin of a control block (if/for/try) and +1 margin of self
-    #     # translate to +1 margin of the result node(s) overall
-    #     if self.nodes[0].margin:
-    #         self.nodes[0].margin -= 1
-    #
-    #     assert len(set(n.indent for n in self.nodes)) <= 1, "unequal indentation of child nodes in a block?"
-    #     assert all(not n.indent or n.indent[:1] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
-    #
-    #     # reduce indentation of nodes in `body` to match the current stack.indentation
-    #     # (i.e., ignore sub-indent of the sub-block)
-    #     self.set_indent(indent)
-        
     def set_indent(self, indent):
         for n in self.nodes:
             n.set_indent(indent)
@@ -256,8 +237,7 @@ class HNode:
     
     body    = None      # Sequence (possibly empty) of all child nodes, in a non-terminal node; None in HText
     
-    #margin  = None     # top margin: no. of empty lines to prepend in text output of this node during rendering
-    outline = False     # True in an "outline" block, False in an "inline" node; adds a leading newline during rendering
+    outline = False     # True/False denotes an "outline" block or an "inline" node; adds a leading newline during rendering if True
     indent  = None      # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
 
@@ -295,9 +275,6 @@ class HNode:
         
         # assert not self.tag or isinstance(self.tag, Tag)
         
-    # def set_margin(self, margin):
-    #     self.margin = margin
-
     def set_outline(self):
         self.outline = True
 
@@ -331,8 +308,6 @@ class HNode:
         
         text = self.outline * '\n' + self._render_body()
         
-        # if self.margin:
-        #     text = self.margin * '\n' + text
         if self.indent:
             assert self.indent[:1] != '\n'      # self.indent must have been converted already to relative
             text = add_indent(text, self.indent)

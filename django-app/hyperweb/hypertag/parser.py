@@ -535,11 +535,9 @@ class NODES(object):
             for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
                 self.targets.assign(state, value)
                 body = self.body.translate(state)
-                body.set_indent('')
                 out += body.nodes
                 
             out = Sequence(*out)
-            # out.set_indent(state.indentation)
             out.set_indent(state.indentation)
             return out
 
@@ -606,16 +604,12 @@ class NODES(object):
             # is used to represent identity of this variable
             primary = {}
             
-            for c in self.children:
+            for clause in self.children:
                 position = ctx.position()
-                c.analyse(ctx)
+                clause.analyse(ctx)
                 symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
-                # for symbol, node in symbols.items():
-                #     primary.setdefault(symbol, node)
                 ctx.reset(position)
                 ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
-
-            # ctx.pushall(primary)
 
         def translate(self, state):
             body = self._select_clause(state)
