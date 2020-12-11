@@ -218,29 +218,29 @@ class Sequence:
                 raise TypeErrorEx(f"found {type(n)} instead of an HNode as an element of DOM")
         return result
         
-    def pull_block(self, indent):
-        """Reduce top margin and indentation of nested nodes after translating a control block."""
-        if not self.nodes: return
-        
-        # reduce top margin, so that +1 margin of a control block (if/for/try) and +1 margin of self
-        # translate to +1 margin of the result node(s) overall
-        if self.nodes[0].margin:
-            self.nodes[0].margin -= 1
-        
-        assert len(set(n.indent for n in self.nodes)) <= 1, "unequal indentation of child nodes in a block?"
-        assert all(not n.indent or n.indent[:1] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
-        
-        # reduce indentation of nodes in `body` to match the current stack.indentation
-        # (i.e., ignore sub-indent of the sub-block)
-        self.set_indent(indent)
+    # def pull_block(self, indent):
+    #     """Reduce top margin and indentation of nested nodes after translating a control block."""
+    #     if not self.nodes: return
+    #
+    #     # reduce top margin, so that +1 margin of a control block (if/for/try) and +1 margin of self
+    #     # translate to +1 margin of the result node(s) overall
+    #     if self.nodes[0].margin:
+    #         self.nodes[0].margin -= 1
+    #
+    #     assert len(set(n.indent for n in self.nodes)) <= 1, "unequal indentation of child nodes in a block?"
+    #     assert all(not n.indent or n.indent[:1] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
+    #
+    #     # reduce indentation of nodes in `body` to match the current stack.indentation
+    #     # (i.e., ignore sub-indent of the sub-block)
+    #     self.set_indent(indent)
         
     def set_indent(self, indent):
         for n in self.nodes:
             n.set_indent(indent)
             
-    def add_margin(self, margin):
-        assert self.nodes
-        self.nodes[0].add_margin(margin)
+    # def add_margin(self, margin):
+    #     assert self.nodes
+    #     self.nodes[0].add_margin(margin)
 
     def render(self):
         return ''.join(node.render() for node in self.nodes)
@@ -299,9 +299,12 @@ class HNode:
         
         # assert not self.tag or isinstance(self.tag, Tag)
         
-    def add_margin(self, margin):
-        """Sets self.margin (if None) or increases (if not-None) by a given `margin`."""
-        self.margin = (self.margin or 0) + margin
+    # def add_margin(self, margin):
+    #     """Sets self.margin (if None) or increases (if not-None) by a given `margin`."""
+    #     self.margin = (self.margin or 0) + margin
+
+    def set_margin(self, margin):
+        self.margin = margin
 
     def set_indent(self, indent):
         """

@@ -311,17 +311,10 @@ class NODES(object):
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
-        # def translate(self, state):
-        #     assert len(self.children) == 2 and self.children[0].type == 'margin'
-        #     margin = self.children[0].get_margin()
-        #     feed   = self.children[1].translate(state)
-        #     if feed: feed[0].add_margin(margin)                   # add top margin to the 1st node
-        #     return feed
-        
         def translate(self, state):
             assert len(self.children) == 2 and self.children[0].type == 'margin_out'
             margin, block = (c.translate(state) for c in self.children)
-            if block: block[0].add_margin(1)                # mark the 1st node of the block as being "outline" not "inline"
+            if block: block[0].set_margin(1)                # mark the 1st node of the block as being "outline" not "inline"
             return Sequence(margin, block)
             
     class block_text(node):
@@ -368,7 +361,7 @@ class NODES(object):
         def translate(self, state):
             body = self.expr.evaluate(state)
             body = self._as_sequence(body)
-            body.pull_block(state.indentation)                  # set indentation of the fragment to be inserted
+            body.set_indent(state.indentation)                  # set indentation of the fragment to be inserted
             return body
         
         @staticmethod
@@ -460,7 +453,7 @@ class NODES(object):
         def expand(self, state, body, attrs, kwattrs):
             self._append_attrs(state, body, attrs, kwattrs)     # extend `state` with actual values of tag attributes
             output = self.body.translate(state)
-            output.pull_block(state.indentation)
+            output.set_indent(state.indentation)
             return output
 
         translate_tag = expand          # unlike external tags, a native tag gets expanded already during translate_tag()
@@ -547,7 +540,7 @@ class NODES(object):
                 
             out = Sequence(*out)
             # out.set_indent(state.indentation)
-            out.pull_block(state.indentation)
+            out.set_indent(state.indentation)
             return out
 
     class xtargets(node):
@@ -626,7 +619,7 @@ class NODES(object):
 
         def translate(self, state):
             body = self._select_clause(state)
-            body.pull_block(state.indentation)
+            body.set_indent(state.indentation)
             return body
         
         def _select_clause(self, stack):
