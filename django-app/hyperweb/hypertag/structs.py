@@ -357,9 +357,12 @@ class State:
     # current indentation string, as a combination of ' ' and '\t' characters;
     # initial \n is used to mark that an indentation is absolute rather than relative to a parent node
     indentation = '\n'
-
+    
+    margin = None
+    
     def __init__(self):
         self.values = {}   #odict()
+        self.margin = 0
 
     def __contains__(self, node):
         return node in self.values

@@ -58,7 +58,9 @@ This works with a default tag specification, as well:
 
 ##### Literals
 
-Numbers, strings, ...
+Integers, real numbers, strings, boolean literals (True, False), None.
+
+    True, False, None
 
 ##### Collections
 
@@ -80,8 +82,8 @@ Logical operators:
     == != >= <= < > in is "not in" "is not"
     not and or
 
-In the ternary "if-else" operator, the "else" branch is optional and defaults to 
-"else None" if missing:
+A more general variant of the ternary "if-else" operator is available, 
+with the "else" branch being optional, imputed with "else None" if missing:
 
     X if TEST else Y
     X if TEST

@@ -218,10 +218,6 @@ class Sequence:
                 raise TypeErrorEx(f"found {type(n)} instead of an HNode as an element of DOM")
         return result
         
-    def set_indent(self, indent):
-        for n in self.nodes:
-            n.set_indent(indent)
-        
     def pull_block(self, indent):
         """Reduce top margin and indentation of nested nodes after translating a control block."""
         if not self.nodes: return
@@ -232,13 +228,20 @@ class Sequence:
             self.nodes[0].margin -= 1
         
         assert len(set(n.indent for n in self.nodes)) <= 1, "unequal indentation of child nodes in a block?"
-        assert all(n.indent is None or n.indent[0] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
+        assert all(not n.indent or n.indent[:1] == '\n' for n in self.nodes), "child indentations are relative instead of absolute?"
         
         # reduce indentation of nodes in `body` to match the current stack.indentation
         # (i.e., ignore sub-indent of the sub-block)
         self.set_indent(indent)
         
-        
+    def set_indent(self, indent):
+        for n in self.nodes:
+            n.set_indent(indent)
+            
+    def add_margin(self, margin):
+        assert self.nodes
+        self.nodes[0].add_margin(margin)
+
     def render(self):
         return ''.join(node.render() for node in self.nodes)
 
@@ -261,6 +264,10 @@ class HNode:
     margin = None       # top margin: no. of empty lines to prepend in text output of this node during rendering
     indent = None       # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
+
+    # def is_inline(self):
+    #     assert (self.indent is None) == (self.margin is None)       # `indent` and `margin` are None at the same time
+    #     return self.indent is None
 
     # @property
     # def headtail(self):
@@ -292,19 +299,23 @@ class HNode:
         
         # assert not self.tag or isinstance(self.tag, Tag)
         
-    # def is_headline(self):
-    #     return self.indent is None
-    
+    def add_margin(self, margin):
+        """Sets self.margin (if None) or increases (if not-None) by a given `margin`."""
+        self.margin = (self.margin or 0) + margin
+
     def set_indent(self, indent):
         """
         Sets absolute indentation on self. This calls relative_indent() on all children
         to make their indentations relative to the parent's.
         """
         self.indent = indent
+        # if self.is_inline():
+        #     assert all(child.is_inline() for child in self.body)
+        #     return
         if self.indent:
             for child in self.body:
                 child.relative_indent(self.indent)
-            
+
     def relative_indent(self, parent_indent):
         """
         Convert self.indent from absolute to relative by subtracting `parent_indent`.

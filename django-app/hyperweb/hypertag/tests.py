@@ -144,9 +144,24 @@ def test_006_if():
             |Ala
         elif True * 5:
             div | Ola
+    """                     # ^ here, {False} is interpreted as an embedded expression {...} that evaluates to False
+    assert ht.parse(src).strip() == "<div>Ola</div>"
+    src = """
+        if {} | Ala
+        elif 5 | Ola
+    """                     # ^ here, {} is interpreted as an empty set() not an embedded expression {...} - the latter can't be empty
+    assert ht.parse(src).strip() == "Ola"
+    src = """
+        if {} | Ala
+        else / Ola
     """
-    out = """<div>Ola</div>"""
-    assert ht.parse(src).strip() == out.strip()
+    assert ht.parse(src).strip() == "Ola"
+    src = """
+        $test = False
+        if test ! Ala
+        elif (not test) / Ola
+    """
+    assert ht.parse(src).strip() == "Ola"
 
 def test_007_variables():
     src = """
@@ -278,6 +293,14 @@ def test_010_for():
         2 out
     """
     assert ht.parse(src).strip() == out.strip()
+    # src = """
+    #     for i in [1,2,3] | $i
+    # """
+    # out = """
+    #     pre
+    #     post
+    # """
+    # assert ht.parse(src).strip() == out.strip()
 
 def test_011_calls():
     src = """

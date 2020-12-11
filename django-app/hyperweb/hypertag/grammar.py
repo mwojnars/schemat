@@ -429,6 +429,7 @@ div class="panel panel-body panel-sidebar" class={color class extra} style=$styl
             <div class=$("panel panel-body panel-sidebar " color " " class " " extra) style=$style>
             
 div class="panel-sidebar-container col col-sm-3" class={"col-xs-3" if not compactOnSmall}!
+div class={"panel-sidebar-container col col-sm-3" + (" col-xs-3" if not compactOnSmall)}
 
             <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
@@ -469,7 +470,7 @@ document         =  core_blocks margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin (block_control / block_def / block_struct)
+block            =  margin_out (block_control / block_def / block_struct)
 
 ###  CONTROL BLOCKS
 
@@ -477,15 +478,21 @@ block_control    =  block_assign / block_if / block_try / block_for
 
 block_assign     =  mark_expr ws targets ws '=' ws (embedding / expr_augment)
 block_try        =  ('try' generic_control (nl 'or' generic_control)* (nl 'else' generic_control)?) / try_short
-block_for        =  'for' space targets space 'in' space (embedding / expr_augment) body_control
+block_for        =  'for' space targets space 'in' space tail_for
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' generic_control)?
 
 try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
-clause_if        =  space (embedding / expr) body_control       # (embedding generic_control) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
+clause_if        =  space tail_if
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
 target           =  ('(' ws targets ws ')') / var_def           # left side of assignment: a variable, or a tuple of variables/sub-tuples
 var_def          =  name_id ''                                  # definition (assignment) of a variable
+
+tail_for         =  (embedding_or_factor generic_control) / (expr_augment body_control)
+tail_if          =  (embedding_or_factor generic_control) / (expr         body_control)
+
+# tail_for         =  (embedding / expr_augment) body_control
+# tail_if          =  (embedding / expr) body_control             # (embedding generic_control) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
 
 ###  DEFINITION BLOCK
 
@@ -560,6 +567,8 @@ embedding        =  embedding_braces / embedding_eval
 embedding_braces =  '{' ws expr_augment ws '}' qualifier?
 embedding_eval   =  '$' expr_var
 
+embedding_or_factor = embedding / expr_factor
+
 
 ###  ATTRIBUTES of tags
 
@@ -575,10 +584,8 @@ attr_short       =  ('.' / '#') (attr_short_lit / embedding)        # shorthands
 attr_short_lit   =  ~"[a-z0-9_-]+"i                                 # shorthand literal value MAY contain "-", unlike python identifiers!
 attr_named       =  name_xml ws '=' ws value_of_attr                # name="value" OR name=value OR name=$(...)
 attr_unnamed     =  value_of_attr ''
-value_of_attr    =  embedding / literal
-
-#value_named      =  value_unnamed / str_unquoted
-#value_unnamed    =  embedding / literal
+value_of_attr    =  embedding_or_factor ''
+#value_of_attr   =  embedding / literal
 
 ###  ARGUMENTS of functions
 
@@ -597,6 +604,7 @@ kwarg            =  name_id ws '=' ws expr
 
 expr         =  expr_root ''                # basic (standard) form of an expression
 expr_var     =  factor_var ''               # reduced form of an expression: a variable, with optional trailer; used for inline $... embedding (embedding_eval) only
+expr_factor  =  factor ''                   # reduced form of an expression: any atom, with optional trailer; used for non-embedded attribute values
 expr_augment =  expr_root / expr_tuple      # augmented form of an expression: includes unbounded tuples (no parentheses); used in augmented assignments
 
 expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
@@ -610,12 +618,13 @@ dict         =  '{' ws (dict_pair comma)* (dict_pair ws)? '}'
 dict_pair    =  expr ws ':' ws expr
 
 atom         =  literal / var_use / subexpr / tuple / list / dict / set
-factor_var   =  var_use trailer* qualifier?              # reduced form of `factor` for use in expr_var
+factor_var   =  var_use trailer* qualifier?                   # reduced form of `factor` for use in expr_var
 factor       =  atom (ws trailer)* qualifier?                 # operators: () [] .
 pow_expr     =  factor (ws op_power ws factor)*
 term         =  pow_expr (ws op_multiplic ws pow_expr)*       # operators: * / // percent
 arith_expr   =  neg? ws term (ws op_additive ws term)*        # operators: neg + -
 shift_expr   =  arith_expr (ws op_shift ws arith_expr)*
+
 and_expr     =  shift_expr (ws '&' ws shift_expr)*
 xor_expr     =  and_expr (ws '^' ws and_expr)*
 or_expr      =  xor_expr (ws '|' ws xor_expr)*
@@ -695,6 +704,7 @@ dedent_s    = "%(DEDENT_S)s"
 indent_t    = "%(INDENT_T)s"
 dedent_t    = "%(DEDENT_T)s"
 
+margin_out  =  nl ''                         # margin that preceeds an outlined block; its trailing \n will be moved out into the block before rendering
 margin      =  nl ''                         # top margin of a block; same as `nl` in grammar, but treated differently during analysis (`nl` is ignored)
 nl          =  ~"\n+"                        # vertical space = 1+ newlines
 

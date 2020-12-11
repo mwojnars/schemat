@@ -302,7 +302,7 @@ class NODES(object):
         
         def setup(self):            self.value = self.text()
         def analyse(self, ctx):     pass
-        def translate(self, stack): return Sequence(HText(self.value))
+        def translate(self, stack): return Sequence(HText(self.value) if self.value else None)
         def render(self, stack):    return self.value
         def __str__(self):          return self.value
         
@@ -311,20 +311,24 @@ class NODES(object):
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
-        def translate(self, stack):
-            assert len(self.children) == 2 and self.children[0].type == 'margin'
-            margin = self.children[0].get_margin()
-            feed   = self.children[1].translate(stack)
+        # def translate(self, state):
+        #     assert len(self.children) == 2 and self.children[0].type == 'margin'
+        #     margin = self.children[0].get_margin()
+        #     feed   = self.children[1].translate(state)
+        #     if feed: feed[0].add_margin(margin)                   # add top margin to the 1st node
+        #     return feed
+        
+        def translate(self, state):
+            assert len(self.children) == 2 and self.children[0].type == 'margin_out'
+            margin, block = (c.translate(state) for c in self.children)
+            if block: block[0].add_margin(1)                # mark the 1st node of the block as being "outline" not "inline"
+            return Sequence(margin, block)
             
-            if feed:                    # add top margin to the 1st node
-                first = feed[0]
-                first.margin = (first.margin or 0) + margin
-            return feed
-
     class block_text(node):
 
-        def translate(self, stack):
-            return Sequence(HText(self.render(stack), indent = stack.indentation))
+        def translate(self, state):
+            node = HText(self.render(state), indent = state.indentation)
+            return Sequence(node)
             
         def render(self, stack):
 
@@ -393,9 +397,11 @@ class NODES(object):
             ctx.reset(position)             # tagged node defines a local namespace, hence need to drop symbols defined inside
             ctx.regular_depth -= 1
             
-        def translate(self, stack):
-            body = self.body.translate(stack)
-            return self.tags.apply_tags(body, stack)
+        def translate(self, state):
+            body = self.body.translate(state)
+            body = self.tags.apply_tags(body, state)
+            body.set_indent(state.indentation)
+            return body
 
     class xblock_def(node, Tag):
         """Definition of a native hypertag."""
@@ -536,9 +542,11 @@ class NODES(object):
             for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
                 self.targets.assign(state, value)
                 body = self.body.translate(state)
+                body.set_indent('')
                 out += body.nodes
-
+                
             out = Sequence(*out)
+            # out.set_indent(state.indentation)
             out.pull_block(state.indentation)
             return out
 
@@ -593,11 +601,11 @@ class NODES(object):
         elsebody = None         # optional <body_*> node for the "else" branch
         
         def setup(self):
-            if self.children and self.children[-1].type.startswith('body_'):
+            if self.children[-1].type == 'clause_if':
+                self.clauses = self.children
+            else:
                 self.clauses = self.children[:-1]
                 self.elsebody = self.children[-1]
-            else:
-                self.clauses = self.children
 
         def analyse(self, ctx):
             # all top-level symbols declared on branches of this "if" block, and their primary nodes:
@@ -652,12 +660,13 @@ class NODES(object):
     class xbody_struct (body): pass
 
     class line(node):
-        def translate(self, stack):
-            return Sequence(HText(self.render_inline(stack)))
+        def translate(self, state):
+            node = HText(self.render_inline(state))
+            return Sequence(node)
         def render(self, stack):
             return stack.indentation + self.render_inline(stack)
         def render_inline(self, stack):
-            """Render contents of the line, i.e., everything except indentation. Implemented by subclasses."""
+            """Render contents of the line, i.e., everything except boundary (indentation, margin). Implemented by subclasses."""
             raise NotImplementedError
 
     class xline_verbat(line):
@@ -688,7 +697,6 @@ class NODES(object):
             for tag in reversed(self.children):
                 assert tag.type == 'tag_expand'
                 body = tag.translate_tag(state, body)
-            body.set_indent(state.indentation)
             return body
         
     class xtag_expand(node):
@@ -882,6 +890,7 @@ class NODES(object):
 
     class xexpr(expression_root): pass
     class xexpr_var(expression_root): pass
+    class xexpr_factor(expression_root): pass
     class xexpr_augment(expression_root): pass
     
     class xvar_use(expression):
@@ -1079,7 +1088,7 @@ class NODES(object):
     class xop_shift(static_operator): pass
     class xop_comp(static_operator): pass
     class xneg(static): pass                            # negation is implemented inside <xarith_expr>
-    class xnot(static): pass
+    class xnot(static): pass                            # static keyword "not" must have a node, for counting of repeated "not not not ..." expression
     
     class chain_expression(expression):
         """A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."""
@@ -1125,7 +1134,7 @@ class NODES(object):
     
     class xconcat_expr(expression):
         """
-        Chain of concatenation operators: x1 x2 x3 ... (space-separated expressions).
+        Chain of expressions separated by a space (concatenation operator): x1 x2 x3 ...
         Values of subexpressions are converted to strings and concatenated WITHOUT space.
         This is an extension of Python syntax for concatenation of literal strings, like in:
                'Python' " is "  'cool'
@@ -1169,7 +1178,7 @@ class NODES(object):
     class xnot_test(expression):
         """not not not ..."""
         def evaluate(self, stack):
-            assert len(self.children) >= 2 and self.children[-1].isexpression
+            assert len(self.children) >= 2 and all(c.type == 'not' for c in self.children[:-1])
             neg = not (len(self.children) % 2)              # check parity of 'children' to see if negation appears even or odd no. of times
             val = self.children[-1].evaluate(stack)
             return not val if neg else val
@@ -1281,11 +1290,15 @@ class NODES(object):
     class xname_xml(static): pass
     class xtext(static): pass
     class xnl(static): pass
+    class xmargin(static): pass
     
-    class xmargin(static):
-        def get_margin(self):
-            # assert self.value == '\n' * len(self.value)
-            return len(self.value)
+    class xmargin_out(static):
+        def setup(self):
+            # trailing newline (\n) is truncated from `value` and moved out to a subsequent sibling node as a leading \n
+            # to mark that that node should be rendered in "outline" rather than "inline" mode;
+            # every <margin_out> IS followed by a node (block) by grammar rules; the transition of this singleton
+            # newline is performed by xblock.translate()
+            self.value = self.text()[:-1]
 
     class xescape(static):
         def setup(self):
@@ -1407,9 +1420,9 @@ class HypertagAST(BaseTree):
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
                 "head_verbat head_normal head_markup " \
+                "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
-                "tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
-                "embedding embedding_braces embedding_eval target " \
+                "embedding embedding_braces embedding_eval embedding_or_factor target " \
                 "expr_root subexpr slice subscript trailer atom literal dict_pair"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
@@ -1665,9 +1678,21 @@ if __name__ == '__main__':
         %H @body a=0
             @ body
             $g = 200
-            g {a+g}
-        H 5
+            g (g+5)
+            g a[0] !
+        H [0,6]?
             | pies
+    """
+    text = """
+        for i in [1,2,3] |   $i
+    """
+    text = """
+        / pre
+          line2
+        
+        for i in [2,3]:
+            | $i
+        ! post
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
