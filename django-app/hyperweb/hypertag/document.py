@@ -241,10 +241,6 @@ class HNode:
     indent  = None      # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
 
-    # def is_inline(self):
-    #     assert (self.indent is None) == (self.margin is None)       # `indent` and `margin` are None at the same time
-    #     return self.indent is None
-
     # @property
     # def headtail(self):
     #     return self.head, self.tail
@@ -284,9 +280,6 @@ class HNode:
         to make their indentations relative to the parent's.
         """
         self.indent = indent
-        # if self.is_inline():
-        #     assert all(child.is_inline() for child in self.body)
-        #     return
         if self.indent:
             for child in self.body:
                 child.relative_indent(self.indent)
