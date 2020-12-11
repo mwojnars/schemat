@@ -266,12 +266,16 @@ def test_010_for():
     assert ht.parse(src).strip() == out.strip()
     src = """
         / pre
+
         for i in []:
             | $i
+
         ! post
-    """
+    """                         # 1-line margin that preceeds the <for> block is preserved even despite the block renders empty
     out = """
         pre
+
+
         post
     """
     assert ht.parse(src).strip() == out.strip()

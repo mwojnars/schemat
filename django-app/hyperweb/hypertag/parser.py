@@ -1293,11 +1293,14 @@ class NODES(object):
     class xmargin(static): pass
     
     class xmargin_out(static):
+        """
+        Vertical margin composed of 1+ newlines that preceeds an outlined block.
+        A trailing newline (\n) is truncated from its `value` and moved out to a subsequent sibling node
+        as a leading \n to mark that that node should be rendered in "outline" rather than "inline" mode.
+        Every <margin_out> IS followed by a node (block) by grammar rules. The transition of the singleton
+        newline is performed by xblock.translate().
+        """
         def setup(self):
-            # trailing newline (\n) is truncated from `value` and moved out to a subsequent sibling node as a leading \n
-            # to mark that that node should be rendered in "outline" rather than "inline" mode;
-            # every <margin_out> IS followed by a node (block) by grammar rules; the transition of this singleton
-            # newline is performed by xblock.translate()
             self.value = self.text()[:-1]
 
     class xescape(static):
