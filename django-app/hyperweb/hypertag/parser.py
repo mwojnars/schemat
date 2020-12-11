@@ -310,11 +310,11 @@ class NODES(object):
     ###  BLOCKS  ###
 
     class xblock(node):
-        """Wrapper around all specific types of blocks that adds top margin to the first returned HNode."""
+        """Wrapper around all specific types of blocks that adds top margin and marks "outline" mode for the first returned HNode."""
         def translate(self, state):
             assert len(self.children) == 2 and self.children[0].type == 'margin_out'
             margin, block = (c.translate(state) for c in self.children)
-            if block: block[0].set_margin(1)                # mark the 1st node of the block as being "outline" not "inline"
+            if block: block[0].set_outline()            # mark the 1st node of the block as being "outline" not "inline"
             return Sequence(margin, block)
             
     class block_text(node):
@@ -1291,7 +1291,7 @@ class NODES(object):
         A trailing newline (\n) is truncated from its `value` and moved out to a subsequent sibling node
         as a leading \n to mark that that node should be rendered in "outline" rather than "inline" mode.
         Every <margin_out> IS followed by a node (block) by grammar rules. The transition of the singleton
-        newline is performed by xblock.translate().
+        newline is performed in xblock.translate().
         """
         def setup(self):
             self.value = self.text()[:-1]

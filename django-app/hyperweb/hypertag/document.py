@@ -238,10 +238,6 @@ class Sequence:
         for n in self.nodes:
             n.set_indent(indent)
             
-    # def add_margin(self, margin):
-    #     assert self.nodes
-    #     self.nodes[0].add_margin(margin)
-
     def render(self):
         return ''.join(node.render() for node in self.nodes)
 
@@ -258,11 +254,11 @@ class HNode:
     attrs   = None      # list of unnamed attributes to be passed to tag.expand() during rendering
     kwattrs = None      # dict of named attributes to be passed to tag.expand()
     
-    body = None         # Sequence (possibly empty) of all child nodes, in a non-terminal node; None in HText
-    # text = None         # headline of this node (if `body` is present), or full text (if `body` is None)
+    body    = None      # Sequence (possibly empty) of all child nodes, in a non-terminal node; None in HText
     
-    margin = None       # top margin: no. of empty lines to prepend in text output of this node during rendering
-    indent = None       # indentation string of this block: absolute (when starts with \n) or relative
+    #margin  = None     # top margin: no. of empty lines to prepend in text output of this node during rendering
+    outline = False     # True in an "outline" block, False in an "inline" node; adds a leading newline during rendering
+    indent  = None      # indentation string of this block: absolute (when starts with \n) or relative
                         # to its parent (otherwise); None means this is an inline (headline) block, no indentation
 
     # def is_inline(self):
@@ -299,12 +295,11 @@ class HNode:
         
         # assert not self.tag or isinstance(self.tag, Tag)
         
-    # def add_margin(self, margin):
-    #     """Sets self.margin (if None) or increases (if not-None) by a given `margin`."""
-    #     self.margin = (self.margin or 0) + margin
+    # def set_margin(self, margin):
+    #     self.margin = margin
 
-    def set_margin(self, margin):
-        self.margin = margin
+    def set_outline(self):
+        self.outline = True
 
     def set_indent(self, indent):
         """
@@ -334,10 +329,10 @@ class HNode:
             
     def render(self):
         
-        text = self._render_body()
+        text = self.outline * '\n' + self._render_body()
         
-        if self.margin:
-            text = self.margin * '\n' + text
+        # if self.margin:
+        #     text = self.margin * '\n' + text
         if self.indent:
             assert self.indent[:1] != '\n'      # self.indent must have been converted already to relative
             text = add_indent(text, self.indent)
