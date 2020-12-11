@@ -297,14 +297,14 @@ def test_010_for():
         2 out
     """
     assert ht.parse(src).strip() == out.strip()
-    # src = """
-    #     for i in [1,2,3] | $i
-    # """
-    # out = """
-    #     pre
-    #     post
-    # """
-    # assert ht.parse(src).strip() == out.strip()
+    src = """
+        for i in [1,2,3] | $i
+    """
+    assert ht.parse(src).strip() == "123"
+    src = """
+        for i in [1,2,3] |   $i
+    """
+    assert ht.parse(src).strip() == "1  2  3"
 
 def test_011_calls():
     src = """

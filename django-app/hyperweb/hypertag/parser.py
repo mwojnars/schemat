@@ -1674,15 +1674,15 @@ if __name__ == '__main__':
             | pies
     """
     text = """
-        for i in [1,2,3] |   $i
-    """
-    text = """
         / pre
           line2
         
         for i in [2,3]:
             | $i
         ! post
+    """
+    text = """
+        for i in [1,2,3] |$i
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

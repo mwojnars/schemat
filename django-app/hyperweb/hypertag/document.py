@@ -308,7 +308,7 @@ class HNode:
         
         text = self.outline * '\n' + self._render_body()
         
-        if self.indent:
+        if self.outline and self.indent:
             assert self.indent[:1] != '\n'      # self.indent must have been converted already to relative
             text = add_indent(text, self.indent)
 
