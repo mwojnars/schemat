@@ -64,36 +64,87 @@ Numbers, strings, ...
 
 Lists, dicts ...
 
+##### Operators
+
+Hypertag implements majority of standard operators available in Python.
+
+Arithmetic operators:
+
+    ** * / // %
+    + - unary minus
+    << >>
+
+Logical operators:
+
+    == != >= <= < > in is
+    not
+    not in 
+    is not
+
+Tail operators:
+
+    .     member access
+    []    indexing
+    ()    function call
+
+Slice operator as an index inside [...]:
+
+    start : stop : step
+
+Above these, Hypertag implements a non-standard binary **concatenation operator** (space),
+as well as tail operators: **optional value** ("?") and **obligatory value** ("!").
+They are described in next sections.
+
+
+##### Concatenation operator
+
+If multiple expressions are put one after another separated by 1+ whitespace:
+
+    EXPR1 EXPR2 EXPR3 ...
+
+their values are converted to strings and concatenated.
+This is an extension of Python syntax for concatenating literal strings, like in:
+
+       'Hypertag '  "is"   ' cool'
+
+which is parsed by Python into a single string:
+
+       'Hypertag is cool'
+
+In Hypertag, concatenation using whitespace as an operator is performed on runtime,
+hence all (possibly non-literal) expressions are supported as operands, not just literals;
+and values of other types than `<str>` are automatically converted to strings 
+before concatenation.
+
+The programmer must guarantee that the values of all sub-expressions 
+can be converted to `<str>` through the call: `str(value)`
+
 ##### Qualifiers: ? and !
 
-A qualifier (? or !) can be appended at the end of an atomic expression (X?, X!)
-to test against emptiness (falseness) of its returned value.
+? = _optional value_: fall back to an empty string if an error/None/False/0/... was returned
 
-With ? qualifier, if X evaluates to a false value or an exception was raised during evaluation, 
+! = _obligatory value_: raise an exception if an empty value (None/False/0/''/...) was returned
+
+A qualifier (? or !) can be appended at the end of an atomic expression (X?, X!)
+to test against errors during evaluation, or emptiness (falseness) of the returned value.
+
+With ? qualifier, if X evaluates to a false value or an exception was raised during evaluation,
 empty string '' is returned instead. A value, X, is false, if bool(X) == False.
 Empty string '', None, 0, False are examples of false values.
 
 With ! qualifier, if X is false, MissingValue exception is raised. 
-Typically, this exception is caught at an upper level in the code using a "try" block.
+Typically, this exception is caught with a surrounding "optional value" qualifier:
 
-In both cases (? and !), if X is true, the value of X is returned unmodified.
+    (... expr! ...)?
+
+or with a "try" block higher in the script.
+
+In any case (X? or X!), if X is true, the value of X is returned unchanged.
 
 Examples:
 
-    ...
-    ...
+    {(post.authors ', ')? post.title}  -- prints title only if "authors" field is missing in "post"
     
-
-##### Concatenation Operator
-
-If multiple expressions are put one after another and separated by whitespace, like here:
-
-    EXPR1 EXPR2 EXPR3 ...
-
-their values will be space-concatenated using a `' '.join(...)` type of call.
-Empty strings will be filtered out before concatenation.
-The programmer must guarantee that all sub-expressions evaluate to strings,
-otherwise an exception may be raised by `join()`.
 
 #### Name spaces
 
