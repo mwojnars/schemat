@@ -35,6 +35,7 @@ class NameErrorEx(HError, NameError):               pass
 class UnboundLocalEx(HError, UnboundLocalError):    pass
 class UndefinedTagEx(HError):                       pass
 class NotATagEx(HError):                            pass
+class NoneStringEx(HError):                         pass
 
 class MissingValueEx(HError):
     """
@@ -42,17 +43,8 @@ class MissingValueEx(HError):
     Typically, this exception is caught at a higher level with a "try" block.
     """
     
-class NoneExpressionEx(HError):
-    """
-    """
-    def __init__(self, msg = "expression embedded in text evaluates to None"):
-        Exception.__init__(self, msg)
-
-    
 class VoidTagEx(HError):
-    """
-    Raised when non-empty body is passed to a void tag (i.e., a tag that doesn't accept body).
-    """
+    """Raised when non-empty body is passed to a void tag (i.e., a tag that doesn't accept body)."""
     def __init__(self, msg = "body must be empty for a void tag"):
         Exception.__init__(self, msg)
     

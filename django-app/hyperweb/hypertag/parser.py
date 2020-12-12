@@ -7,13 +7,13 @@ import sys, re, operator
 from collections import OrderedDict
 
 from parsimonious.grammar import Grammar as Parsimonious
-from six import reraise, string_types, text_type as STR
+from six import reraise, text_type
 
 from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, SyntaxErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, VoidTagEx
+from hyperweb.hypertag.errors import HError, SyntaxErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, grammar
 from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
@@ -33,6 +33,11 @@ def duplicate(seq):
     seen = set()
     dups = set(x for x in seq if x in seen or seen.add(x))
     return dups.pop() if dups else None
+
+def STR(value, node = None, msg = "expression to be embedded in markup text evaluates to None"):
+    """Convert `value` to a string for embedding in text markup. Raise NoneStringEx if value=None."""
+    if value is None: raise NoneStringEx(msg, node)
+    return text_type(value)
 
 def TAG(name):
     """Convert a tag name to a symbol, for insertion to (and retrieval from) a Context."""
@@ -866,7 +871,7 @@ class NODES(object):
         
         def render(self, stack):
             """Rendering is invoked only for a root node of an expression embedded in xline_* node of text."""
-            return STR(self.evaluate(stack))
+            return STR(self.evaluate(stack), self)
         
         def evaluate(self, stack):
             return self.evaluate_with_qualifier(stack)
@@ -1126,8 +1131,8 @@ class NODES(object):
         This is an extension of Python syntax for concatenation of literal strings, like in:
                'Python' " is "  'cool'
         """
-        def evaluate(self, stack):
-            return ''.join(STR(expr.evaluate(stack)) for expr in self.children)
+        def evaluate(self, stack, error = "expression to be string-concatenated evaluates to None"):
+            return ''.join(STR(expr.evaluate(stack), expr, error) for expr in self.children)
             # items = (STR(expr.evaluate(stack)) for expr in self.children)
             # return ' '.join(item for item in items if item != '')     # empty strings '' silently removed from concatenation
         
@@ -1258,17 +1263,20 @@ class NODES(object):
             except: pass
             self.value = float(s)
     
-    class xboolean(literal):
-        def setup(self):
-            self.value = (self.text() == 'True')
-
     class xstring(literal):
         def setup(self):
             self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
     
     #class xstr_unquoted(literal): pass
     class xattr_short_lit(literal): pass
-    class xnone(literal): pass
+
+    class xboolean(literal):
+        def setup(self):
+            self.value = (self.text() == 'True')
+
+    class xnone(literal):
+        def setup(self):
+            self.value = None
 
 
     ###  STATIC nodes  ###
@@ -1682,7 +1690,7 @@ if __name__ == '__main__':
         ! post
     """
     text = """
-        for i in [1,2,3] |$i
+        | {None}
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
