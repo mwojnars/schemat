@@ -476,12 +476,13 @@ block            =  margin_out (block_control / block_def / block_struct)
 
 block_control    =  block_assign / block_if / block_try / block_for
 
+block_try        =  try_long / try_short
+try_long         =  'try' generic_control (nl 'else' generic_control)*
+try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
+
 block_assign     =  mark_expr ws targets ws '=' ws (embedding / expr_augment)
-block_try        =  ('try' generic_control (nl 'or' generic_control)* (nl 'else' generic_control)?) / try_short
 block_for        =  'for' space targets space 'in' space tail_for
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' generic_control)?
-
-try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
 clause_if        =  space tail_if
 
 targets          =  target (comma target)* (ws ',')?            # result object must be unpacked whenever at least one ',' was parsed
@@ -505,7 +506,7 @@ attr_def         =  name_xml (ws '=' ws value_of_attr)?
 ###  STRUCTURED BLOCK
 
 block_struct     =  (tags_expand generic_struct) / body_text    # text block is a special case of a structural block (!), in this case block_struct gets
-                                                                # compactified to the underlying block_verbat/_normal/_markup
+                                                                # reduced after parsing to the underlying block_verbat/_normal/_markup
 tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
 tag_expand       =  name_id attrs_val?
 #tag_expand      =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed

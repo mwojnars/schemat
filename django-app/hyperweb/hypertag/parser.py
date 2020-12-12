@@ -233,21 +233,21 @@ class NODES(object):
             self.ispure = (npure == len(self.children))             # is pure only when all children have pure=True
             return self.ispure
         
-        def compactify(self, stack):
+        def compactify(self, state):
             """Replace pure nodes in the subtree rooted at 'self' with static string/value nodes containg pre-computed render() result
             of a given node, so that this pre-computed string/value is returned on all future render() calls on the new node.
             Compactification is a kind of pre-rendering: whatever can be rendered in the tree before runtime variable values are known,
             is rendered and stored in the tree as static values.
-            'stack' is needed for render() calls because the subtree may need to push some local variables internally.
+            'state' is needed for render() calls because the subtree may need to push some local variables internally.
             """
             # push compactification down the tree
-            for c in self.children: c.compactify(stack)
+            for c in self.children: c.compactify(state)
             
-        def compactify_self(self, stack):
+        def compactify_self(self, state):
             "If 'self' is pure and not static, compactify it, otherwise try to compactify children. Return the new node or self."
             if self.isstatic: return self
-            if self.check_pure(): return NODES.merged(self, stack)
-            self.compactify(stack)
+            if self.check_pure(): return NODES.merged(self, state)
+            self.compactify(state)
             return self
             
         def analyse(self, ctx):
@@ -259,21 +259,37 @@ class NODES(object):
             """
             for c in self.children: c.analyse(ctx)
 
+        def _analyse_branches(self, ctx, branches = None):
+            """
+            Utility method that performs analysis of a multi-branch block: xblock_if or xblock_try.
+            Unlike a regular tagged block, if/try block does NOT introduce a new namespace,
+            so all symbols defined in branches must be made visible to sibling nodes that go after the block.
+            Moreover, if a variable is (re)declared multiple times in separate branches, the first declaration
+            must be stored as a reference in all nodes to uniquely represent identity of this variable.
+            """
+            if branches is None: branches = self.children
+            for branch in branches:
+                position = ctx.position()
+                branch.analyse(ctx)
+                symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
+                ctx.reset(position)
+                ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
+
         @staticmethod
-        def _render_all(nodes, stack):
-            return u''.join(n.render(stack) for n in nodes)
+        def _render_all(nodes, state):
+            return u''.join(n.render(state) for n in nodes)
             
         # @staticmethod
-        # def _translate_all(nodes, stack):
-        #     return Sequence(n.translate(stack) for n in nodes)
+        # def _translate_all(nodes, state):
+        #     return Sequence(n.translate(state) for n in nodes)
 
-        # def render(self, stack):
+        # def render(self, state):
         #     """
         #     Convert this AST to its textual representation in target markup language.
-        #     render() may have side effects: modification of the `stack`.
+        #     render() may have side effects: modification of the `state`.
         #     """
         #     if self.children:
-        #         return u''.join(c.render(stack) for c in self.children)
+        #         return u''.join(c.render(state) for c in self.children)
         #     else:
         #         return self.text()
 
@@ -286,15 +302,15 @@ class NODES(object):
 
     class xdocument(node):
         
-        def translate(self, stack):
-            nodes = [c.translate(stack) for c in self.children]
+        def translate(self, state):
+            nodes = [c.translate(state) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
             return hroot
 
-        # def compactify(self, stack):
-        #     # if DEBUG: print("compact", "DOC", stack)
-        #     self.children = NODES._compactify_siblings_(self.children, stack)
+        # def compactify(self, state):
+        #     # if DEBUG: print("compact", "DOC", state)
+        #     self.children = NODES._compactify_siblings_(self.children, state)
 
     class static(node):
         """
@@ -307,8 +323,8 @@ class NODES(object):
         
         def setup(self):            self.value = self.text()
         def analyse(self, ctx):     pass
-        def translate(self, stack): return Sequence(HText(self.value) if self.value else None)
-        def render(self, stack):    return self.value
+        def translate(self, state): return Sequence(HText(self.value) if self.value else None)
+        def render(self, state):    return self.value
         def __str__(self):          return self.value
         
 
@@ -328,16 +344,16 @@ class NODES(object):
             node = HText(self.render(state), indent = state.indentation)
             return Sequence(node)
             
-        def render(self, stack):
+        def render(self, state):
 
             # temporarily reset indentation to zero for rendering of children; this will be reverted later on
-            indent = stack.indentation
-            stack.indentation = ''
+            indent = state.indentation
+            state.indentation = ''
             
             # in the headline, spaces are prepended to replace leading tag(s) and a marker character /|!
             lead = self.column
-            output = ' ' * lead + self._render_all(self.children, stack)
-            stack.indentation = indent
+            output = ' ' * lead + self._render_all(self.children, state)
+            state.indentation = indent
 
             sub_indent = get_indent(output)
             sub_indent = sub_indent[:lead+1]        # max 1 initial space/tab after the lead is dropped; remaining sub-indentation is preserved in `output`
@@ -500,7 +516,31 @@ class NODES(object):
             elif body:
                 raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'")
             
-    class xblock_try(node): pass
+    class xblock_try(node):
+        """
+        A "try" block. Two syntax forms available:
+        - short form:   ?tag... ?|...
+        - long form:    try ... else ... else ...
+        Every "try" block catches ALL exceptions that inherit from Exception class, including all Hypertag exceptions.
+        There is no way to explicitly restrict the scope of exceptions caught, unlike in Python.
+        The block does NOT catch special exceptions that inherit directly from BaseException:
+        SystemExit, KeyboardInterrupt, GeneratorExit.
+        """
+        def analyse(self, ctx):
+            self._analyse_branches(ctx)
+            
+        def translate(self, state):
+            body = self._select_branch(state)
+            body.set_indent(state.indentation)
+            return body
+        
+        def _select_branch(self, state):
+            for branch in self.children:
+                try:
+                    return branch.translate(state)
+                except Exception as ex:
+                    pass
+            return Sequence()
     
     class xblock_assign(node):
         targets = None
@@ -604,29 +644,28 @@ class NODES(object):
                 self.elsebody = self.children[-1]
 
         def analyse(self, ctx):
-            # all top-level symbols declared on branches of this "if" block, and their primary nodes:
-            # if a variable is (re)declared multiple times in separate branches, the first declaration node
-            # is used to represent identity of this variable
-            primary = {}
+            self._analyse_branches(ctx)
             
-            for clause in self.children:
-                position = ctx.position()
-                clause.analyse(ctx)
-                symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
-                ctx.reset(position)
-                ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
+            # # if a variable is (re)declared multiple times in separate branches, the first declaration node
+            # # is used to represent identity of this variable
+            # for clause in self.children:
+            #     position = ctx.position()
+            #     clause.analyse(ctx)
+            #     symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
+            #     ctx.reset(position)
+            #     ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
 
         def translate(self, state):
             body = self._select_clause(state)
             body.set_indent(state.indentation)
             return body
         
-        def _select_clause(self, stack):
+        def _select_clause(self, state):
             for clause in self.clauses:
-                if clause.test.evaluate(stack):
-                    return clause.translate(stack)
+                if clause.test.evaluate(state):
+                    return clause.translate(state)
             if self.elsebody:
-                return self.elsebody.translate(stack)
+                return self.elsebody.translate(state)
             return Sequence()
         
     class xclause_if(node):
@@ -635,18 +674,18 @@ class NODES(object):
         def setup(self):
             assert len(self.children) == 2
             self.test, self.body = self.children
-        def translate(self, stack):
-            return self.body.translate(stack)
-        def render(self, stack):
-            return self.body.render(stack)
+        def translate(self, state):
+            return self.body.translate(state)
+        def render(self, state):
+            return self.body.render(state)
         
         
     ###  BODY & LINES  ###
 
     class body(node):
-        def translate(self, stack):
-            return Sequence(n.translate(stack) for n in self.children)
-            # return self._translate_all(self.children, stack)
+        def translate(self, state):
+            return Sequence(n.translate(state) for n in self.children)
+            # return self._translate_all(self.children, state)
     
     class xbody_control(body): pass
     class xbody_struct (body): pass
@@ -655,9 +694,9 @@ class NODES(object):
         def translate(self, state):
             node = HText(self.render_inline(state))
             return Sequence(node)
-        def render(self, stack):
-            return stack.indentation + self.render_inline(stack)
-        def render_inline(self, stack):
+        def render(self, state):
+            return state.indentation + self.render_inline(state)
+        def render_inline(self, state):
             """Render contents of the line, i.e., everything except boundary (indentation, margin). Implemented by subclasses."""
             raise NotImplementedError
 
@@ -666,17 +705,17 @@ class NODES(object):
             return self.text()
 
     class xline_normal(line):
-        def render_inline(self, stack):
+        def render_inline(self, state):
             assert len(self.children) == 1
             child = self.children[0]
             assert child.type == 'line_markup'
-            text = child.render_inline(stack)                   # this calls xline_markup.render_inline()
+            text = child.render_inline(state)                   # this calls xline_markup.render_inline()
             escape = self.tree.config['escape_function']
             return escape(text)
 
     class xline_markup(line):
-        def render_inline(self, stack):
-            markup = self._render_all(self.children, stack)     # renders embedded expressions, in addition to static text
+        def render_inline(self, state):
+            markup = self._render_all(self.children, state)     # renders embedded expressions, in addition to static text
             return markup
 
     
@@ -749,12 +788,12 @@ class NODES(object):
             else:
                 raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
             
-        def _eval_attrs(self, stack):
-            unnamed = [attr.evaluate(stack) for attr in self.unnamed]
+        def _eval_attrs(self, state):
+            unnamed = [attr.evaluate(state) for attr in self.unnamed]
             
             named = {}
             for name, expr in self.named:
-                value = expr.evaluate(stack)
+                value = expr.evaluate(state)
                 if name in named:
                     named[name] += ' ' + value       # = f'{named[name]} {value}'
                 else:
@@ -834,15 +873,15 @@ class NODES(object):
         
         qualifier = None            # optional qualifier: ? or ! ... used only in a few node types
         
-        def evaluate(self, stack):
+        def evaluate(self, state):
             raise NotImplementedError
 
-        def evaluate_with_qualifier(self, stack):
+        def evaluate_with_qualifier(self, state):
             """Special variant of evaluate() to be used in these expression nodes that may have a not-None qualifier.
                They should call this method in evaluate() and implement _eval_inner_qualified().
             """
             try:
-                val = self._eval_inner_qualified(stack)
+                val = self._eval_inner_qualified(state)
             except Exception as ex:
                 if self.qualifier == '?': return ''
                 else: raise
@@ -854,7 +893,7 @@ class NODES(object):
             if self.qualifier == '!': raise MissingValueEx("Obligatory expression has a false or empty value", self)
             return val
 
-        def _eval_inner_qualified(self, stack):
+        def _eval_inner_qualified(self, state):
             raise NotImplementedError
 
 
@@ -869,16 +908,16 @@ class NODES(object):
             if self.sibling_next and self.sibling_next.type == 'qualifier':
                 self.qualifier = self.sibling_next.text()
         
-        def render(self, stack):
+        def render(self, state):
             """Rendering is invoked only for a root node of an expression embedded in xline_* node of text."""
-            return STR(self.evaluate(stack), self)
+            return STR(self.evaluate(state), self)
         
-        def evaluate(self, stack):
-            return self.evaluate_with_qualifier(stack)
+        def evaluate(self, state):
+            return self.evaluate_with_qualifier(state)
         
-        def _eval_inner_qualified(self, stack):
+        def _eval_inner_qualified(self, state):
             assert len(self.children) == 1
-            return self.children[0].evaluate(stack)
+            return self.children[0].evaluate(state)
 
     class xexpr(expression_root): pass
     class xexpr_var(expression_root): pass
@@ -964,17 +1003,17 @@ class NODES(object):
     
     class tail(node):
         """Tail operators implement apply() instead of evaluate()."""
-        def apply(self, obj, stack):
+        def apply(self, obj, state):
             raise NotImplementedError
 
     class xcall(tail):
         title = 'function call (...)'                   # for error messaging
         
-        # def compactify(self, stack):
+        # def compactify(self, state):
         #     assert len(self.children) <= 1
         #     if len(self.children) == 1:
         #         assert self.children[0].type == 'args'
-        #     self.children = [n.compactify(stack) for n in self.children]
+        #     self.children = [n.compactify(state) for n in self.children]
         #     return self
         
         def apply(self, obj, state):
@@ -985,9 +1024,9 @@ class NODES(object):
             return obj(*args, **kwargs)
             
     class xslice_value(expression):
-        def evaluate(self, stack):
+        def evaluate(self, state):
             assert len(self.children) <= 1
-            if self.children: return self.children[0].evaluate(stack)
+            if self.children: return self.children[0].evaluate(state)
             return None                                 # None indicates an empty index, like in 1:, in the slice(...) object
             
     class xindex(tail):
@@ -997,26 +1036,26 @@ class NODES(object):
         """
         title = 'sequence index [...]'
 
-        def compactify(self, stack):
+        def compactify(self, state):
             assert 1 <= len(self.children) <= 3
-            self.children = [n.compactify(stack) for n in self.children]
+            self.children = [n.compactify(state) for n in self.children]
             return self
 
-        def apply(self, obj, stack):
+        def apply(self, obj, state):
             # simple index: [i]
             if len(self.children) == 1:
-                index = self.children[0].evaluate(stack)
+                index = self.children[0].evaluate(state)
                 return obj[index]
             
             # 2- or 3-element slice index:  i:j[:k]
-            values = [n.evaluate(stack) for n in self.children]
+            values = [n.evaluate(state) for n in self.children]
             return obj[slice(*values)]
         
     class xmember(tail):
         title = 'member access "."'
-        def compactify(self, stack):
+        def compactify(self, state):
             return self                                 # no compactification, it's only 1 child: a static identifier
-        def apply(self, obj, stack):
+        def apply(self, obj, state):
             assert self.children[0].type == "name_id"
             member = self.children[0].value
             return getattr(obj, member)
@@ -1037,14 +1076,14 @@ class NODES(object):
                 qualifier_node = self.tail.pop()
                 self.qualifier = qualifier_node.text()
             
-        def evaluate(self, stack):
-            return self.evaluate_with_qualifier(stack)
+        def evaluate(self, state):
+            return self.evaluate_with_qualifier(state)
         
-        def _eval_inner_qualified(self, stack):
-            val = self.atom.evaluate(stack)
+        def _eval_inner_qualified(self, state):
+            val = self.atom.evaluate(state)
             for op in self.tail:
                 assert isinstance(op, NODES.tail)
-                val = op.apply(val, stack)
+                val = op.apply(val, state)
             return val
     
     class xfactor_var(xfactor): pass
@@ -1085,23 +1124,23 @@ class NODES(object):
     class chain_expression(expression):
         """A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."""
 
-        def evaluate(self, stack):
-            head, tail = self._prepare(stack)
+        def evaluate(self, state):
+            head, tail = self._prepare(state)
             ops = tail[0::2]                            # items 0,2,4,... are operators
             exprs = tail[1::2]                          # items 1,3,5,... are subsequent expressions, after the initial one
             assert len(exprs) == len(ops)
             
             res = head
             for op, expr in zip(ops, exprs):                # adding terms one by one to 'res'
-                val = expr.evaluate(stack)
+                val = expr.evaluate(state)
                 res = op.apply(res, val)                    # calulate: <res> = <res> op <val>
             
             return res
         
-        def _prepare(self, stack):
+        def _prepare(self, state):
             """Pre-processesing of the 1st item of the chain for evaluate(). Returns the chain as (head, tail) for actual evaluation.
             Override in subclasses if the 1st item is treated differently then the others."""
-            head = self.children[0].evaluate(stack)
+            head = self.children[0].evaluate(state)
             tail = self.children[1:]
             return head, tail
     
@@ -1113,14 +1152,14 @@ class NODES(object):
         """chain of shift operators: << >>"""
     class xarith_expr(chain_expression):
         """chain of additive operators: neg + -"""
-        def _prepare(self, stack):
+        def _prepare(self, state):
             if self.children[0].type == 'neg':
-                head = self.children[1].evaluate(stack)
+                head = self.children[1].evaluate(state)
                 if head is not None:
                     head = -head
                 tail = self.children[2:]
             else:
-                head = self.children[0].evaluate(stack)
+                head = self.children[0].evaluate(state)
                 tail = self.children[1:]
             return head, tail
     
@@ -1131,18 +1170,18 @@ class NODES(object):
         This is an extension of Python syntax for concatenation of literal strings, like in:
                'Python' " is "  'cool'
         """
-        def evaluate(self, stack, error = "expression to be string-concatenated evaluates to None"):
-            return ''.join(STR(expr.evaluate(stack), expr, error) for expr in self.children)
-            # items = (STR(expr.evaluate(stack)) for expr in self.children)
+        def evaluate(self, state, error = "expression to be string-concatenated evaluates to None"):
+            return ''.join(STR(expr.evaluate(state), expr, error) for expr in self.children)
+            # items = (STR(expr.evaluate(state)) for expr in self.children)
             # return ' '.join(item for item in items if item != '')     # empty strings '' silently removed from concatenation
         
     class simple_chain_expression(expression):
         """A chain built from the same binary operator: x OP y OP z OP ..."""
         oper = None                 # the operator function to be applied
-        def evaluate(self, stack):
-            res = self.children[0].evaluate(stack)
+        def evaluate(self, state):
+            res = self.children[0].evaluate(state)
             for expr in self.children[1:]:
-                val = expr.evaluate(stack)
+                val = expr.evaluate(state)
                 res = self.oper(res, val)
             return res
     
@@ -1169,29 +1208,29 @@ class NODES(object):
         
     class xnot_test(expression):
         """not not not ..."""
-        def evaluate(self, stack):
+        def evaluate(self, state):
             assert len(self.children) >= 2 and all(c.type == 'not' for c in self.children[:-1])
             neg = not (len(self.children) % 2)              # check parity of 'children' to see if negation appears even or odd no. of times
-            val = self.children[-1].evaluate(stack)
+            val = self.children[-1].evaluate(state)
             return not val if neg else val
     
     class xand_test(simple_chain_expression):
         "chain of logical 'and' operators. Lazy evaluation: if false item is encountered, it's returned without evaluation of subsequent items"
         name = 'and'
-        def evaluate(self, stack):
-            res = self.children[0].evaluate(stack)
+        def evaluate(self, state):
+            res = self.children[0].evaluate(state)
             for expr in self.children[1:]:
                 if not res: return res
-                res = res and expr.evaluate(stack)
+                res = res and expr.evaluate(state)
             return res
     class xor_test(simple_chain_expression):
         "chain of logical 'or' operators. Lazy evaluation: if true item is encountered, it's returned without evaluation of subsequent items"
         name = 'or'
-        def evaluate(self, stack):
-            res = self.children[0].evaluate(stack)
+        def evaluate(self, state):
+            res = self.children[0].evaluate(state)
             for expr in self.children[1:]:
                 if res: return res
-                res = res or expr.evaluate(stack)
+                res = res or expr.evaluate(state)
             return res
     
     class xifelse_test(expression):
@@ -1199,12 +1238,12 @@ class NODES(object):
         ... if ... else ... Lazy evaluation of arguments: only the true branch of the condition undergoes evaluation.
         "else" branch is optional, "else None" is assumed if "else" is missing.
         """
-        def evaluate(self, stack):
+        def evaluate(self, state):
             assert len(self.children) in (2, 3)             # the expression is compactified, that's why a single child is not possible here
-            if self.children[1].evaluate(stack):
-                return self.children[0].evaluate(stack)
+            if self.children[1].evaluate(state):
+                return self.children[0].evaluate(state)
             if len(self.children) == 3:
-                return self.children[2].evaluate(stack)
+                return self.children[2].evaluate(state)
             return None                                     # default None when "else..." branch is missing
     
     # class xempty_test(expression):
@@ -1252,7 +1291,7 @@ class NODES(object):
         value    = None
         def setup(self):            self.value = self.text()
         def analyse(self, ctx):     pass
-        def evaluate(self, stack):  return self.value
+        def evaluate(self, state):  return self.value
     
     class xnumber(literal):
         def setup(self):
@@ -1306,27 +1345,27 @@ class NODES(object):
     
     class xup_indent(static):
         """Marks occurrence of an extra 1-space indentation in a title line. Renders to empty string."""
-        def render(self, stack):
+        def render(self, state):
             return ''
     
     class xindent(node):
         whitechar = None
-        def translate(self, stack):
+        def translate(self, state):
             """Called when INDENT/DEDENT surround a block."""
-            stack.indent(self.whitechar)
+            state.indent(self.whitechar)
             return None
-        def render(self, stack):
+        def render(self, state):
             """Called when INDENT/DEDENT surround a line within a text block."""
-            stack.indent(self.whitechar)
+            state.indent(self.whitechar)
             return ''
 
     class xdedent(node):
         whitechar = None
-        def translate(self, stack):
-            stack.dedent(self.whitechar)
+        def translate(self, state):
+            state.dedent(self.whitechar)
             return None
-        def render(self, stack):
-            stack.dedent(self.whitechar)
+        def render(self, state):
+            state.dedent(self.whitechar)
             return ''
 
     class xindent_s(xindent):
@@ -1349,25 +1388,25 @@ class NODES(object):
         value = None        # pre-rendered output of the compactified nodes
         ex = None           # if MissingValueEx exception was caught during rendering, it's stored here as an (exception, traceback) pair
         
-        def __init__(self, node, stack):
+        def __init__(self, node, state):
             self.tree = node.tree
             self.fulltext = node.fulltext
             self.pos = node.pos
             try:
-                self.value = node.render(stack)
+                self.value = node.render(state)
             except MissingValueEx as ex:
                 self.ex = (ex, sys.exc_info()[2])
                 
-        def merge(self, node, stack, sep):
+        def merge(self, node, state, sep):
             self.pos = (self.pos[0], node.pos[1])
             if self.ex: return                          # we already know that an exception will be raised upon self.render(), no need to append new nodes
             try:
-                nodeValue = node.render(stack)
+                nodeValue = node.render(state)
                 self.value += sep + nodeValue
             except MissingValueEx as ex:
                 self.ex = (ex, sys.exc_info()[2])
     
-        def render(self, stack):
+        def render(self, state):
             if self.ex: reraise(None, self.ex[0], self.ex[1])
             return self.value
         
@@ -1378,7 +1417,7 @@ class NODES(object):
     ###  UTILITY METHODS  ###
 
     @staticmethod
-    def _compactify_siblings_(nodes, stack, sep = u''):
+    def _compactify_siblings_(nodes, state, sep = u''):
         "Compactify a list of sibling nodes, by compactifying each one separately when possible and then merging neighboring static nodes."
         out = []
         last = None         # the current last <merged> node; can be expanded if the subsequent node is also pure
@@ -1386,12 +1425,12 @@ class NODES(object):
         for node in nodes:
             #print(' ', node, node.check_pure())
             if node.check_pure():                               # a pure node that can be reduced into a <merged> node?
-                if last: last.merge(node, stack, sep)
+                if last: last.merge(node, state, sep)
                 else:
-                    last = NODES.merged(node, stack)
+                    last = NODES.merged(node, state)
                     out.append(last)
             else:                                               # non-pure node? let's compactify recursively its subtree and append
-                node.compactify(stack)
+                node.compactify(state)
                 out.append(node)
                 last = None
         
@@ -1417,7 +1456,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
-                "head_verbat head_normal head_markup " \
+                "try_long try_short head_verbat head_normal head_markup " \
                 "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "embedding embedding_braces embedding_eval embedding_or_factor target " \
@@ -1689,9 +1728,8 @@ if __name__ == '__main__':
             | $i
         ! post
     """
-    text = """
-        | {'a' None? 'b' None? 'c'}
-    """
+    text = """ ? | {'a' None 'b' None? 'c'}"""
+    text = """ ? | {None} """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     
