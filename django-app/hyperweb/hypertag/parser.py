@@ -13,7 +13,7 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, SyntaxErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
+from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, grammar
 from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
@@ -134,8 +134,7 @@ class Grammar(Parsimonious):
         current = ''            # current indentation, as a string
         margin  = 0             # current no. of empty lines that preceed the next block
         
-        # text = text.rstrip('\n')
-        script = text.splitlines() + ['']           # empty line appended to ensure equal no. of DEDENT as INDENT
+        script = text.split('\n') + ['']            # empty line appended to ensure equal no. of DEDENT as INDENT
         total  = len(script) - 1
         
         for line in script:
@@ -259,22 +258,6 @@ class NODES(object):
             """
             for c in self.children: c.analyse(ctx)
 
-        def _analyse_branches(self, ctx, branches = None):
-            """
-            Utility method that performs analysis of a multi-branch block: xblock_if or xblock_try.
-            Unlike a regular tagged block, if/try block does NOT introduce a new namespace,
-            so all symbols defined in branches must be made visible to sibling nodes that go after the block.
-            Moreover, if a variable is (re)declared multiple times in separate branches, the first declaration
-            must be stored as a reference in all nodes to uniquely represent identity of this variable.
-            """
-            if branches is None: branches = self.children
-            for branch in branches:
-                position = ctx.position()
-                branch.analyse(ctx)
-                symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
-                ctx.reset(position)
-                ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
-
         @staticmethod
         def _render_all(nodes, state):
             return u''.join(n.render(state) for n in nodes)
@@ -352,8 +335,10 @@ class NODES(object):
             
             # in the headline, spaces are prepended to replace leading tag(s) and a marker character /|!
             lead = self.column
-            output = ' ' * lead + self._render_all(self.children, state)
-            state.indentation = indent
+            try:
+                output = ' ' * lead + self._render_all(self.children, state)
+            finally:
+                state.indentation = indent
 
             sub_indent = get_indent(output)
             sub_indent = sub_indent[:lead+1]        # max 1 initial space/tab after the lead is dropped; remaining sub-indentation is preserved in `output`
@@ -385,14 +370,13 @@ class NODES(object):
             body.set_indent(state.indentation)                  # set indentation of the fragment to be inserted
             return body
         
-        @staticmethod
-        def _as_sequence(body):
+        def _as_sequence(self, body):
             if isinstance(body, Sequence): return body
             if isinstance(body, HNode):    return Sequence(body)
             try:
                 body = list(body)
             except Exception as ex:
-                raise TypeErrorEx(f"embedded @-expression evaluates to {type(body)} instead of a DOM element (HNode, Sequence, an iterable of HNodes)")
+                raise TypeErrorEx(f"embedded @-expression evaluates to {type(body)} instead of a DOM element (HNode, Sequence, an iterable of HNodes)", self)
             return Sequence(*body)
 
     class xblock_struct(node):
@@ -448,7 +432,7 @@ class NODES(object):
                 self.attr_regul = self.attrs
             
         def analyse(self, ctx):
-            if ctx.control_depth >= 1: raise SyntaxErrorEx(f'hypertag definition inside a control block is not allowed')
+            if ctx.control_depth >= 1: raise SyntaxErrorEx(f'hypertag definition inside a control block is not allowed', self)
             
             ctx.regular_depth  += 1
             ctx.hypertag_depth += 1
@@ -471,40 +455,40 @@ class NODES(object):
         def translate(self, state):
             return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
 
-        def expand(self, state, body, attrs, kwattrs):
-            self._append_attrs(state, body, attrs, kwattrs)     # extend `state` with actual values of tag attributes
+        def expand(self, state, body, attrs, kwattrs, caller):
+            self._append_attrs(state, body, attrs, kwattrs, caller)         # extend `state` with actual values of tag attributes
             output = self.body.translate(state)
             output.set_indent(state.indentation)
             return output
 
         translate_tag = expand          # unlike external tags, a native tag gets expanded already during translate_tag()
         
-        def _append_attrs(self, state, body, attrs, kwattrs):
+        def _append_attrs(self, state, body, attrs, kwattrs, caller):
             """Extend `state` with actual values of tag attributes."""
 
             # verify no. of positional attributes & names of keyword attributes
             if len(attrs) > len(self.attr_regul):
-                raise TypeErrorEx(f"hypertag '{self.name}' takes {len(self.attr_regul)} positional attributes but {len(attrs)} was given")
+                raise TypeErrorEx(f"hypertag '{self.name}' takes {len(self.attr_regul)} positional attributes but {len(attrs)} were given", caller)
             if self.attr_body and self.attr_body.name in kwattrs:
-                raise TypeErrorEx(f"direct assignment to body attribute '{self.attr_body.name}' is not allowed, in hypertag '{self.name}'")
+                raise TypeErrorEx(f"direct assignment to body attribute '{self.attr_body.name}' of hypertag '{self.name}' is not allowed", caller)
             
             # translate attribute names in `kwattrs` to nodes as keys
             try:
                 kwattrs = {self.attr_names[name]: value for name, value in kwattrs.items()}
             except KeyError as ex:
                 name = ex.args[0]
-                raise TypeErrorEx(f"hypertag '{self.name}' got an unexpected keyword attribute '{name}'", self)
+                raise TypeErrorEx(f"hypertag '{self.name}' got an unexpected keyword attribute '{name}'", caller)
             
             # move positional attributes to `kwattrs`
             for pos, value in enumerate(attrs):
                 attr = self.attr_regul[pos]
-                if attr in kwattrs: raise TypeErrorEx(f"hypertag '{self.name}' got multiple values for attribute '{attr.name}'")
+                if attr in kwattrs: raise TypeErrorEx(f"hypertag '{self.name}' got multiple values for attribute '{attr.name}'", caller)
                 kwattrs[attr] = value
                 
             # impute missing values with defaults
             for attr in self.attr_regul:
                 if attr not in kwattrs:
-                    if attr.expr is None: raise TypeErrorEx(f"hypertag '{self.name}' missing a required positional attribute '{attr.name}'")
+                    if attr.expr is None: raise TypeErrorEx(f"hypertag '{self.name}' missing a required positional attribute '{attr.name}'", caller)
                     kwattrs[attr] = attr.expr.evaluate(state)
                     
             # transfer attribute values from `kwattrs` to `state`
@@ -514,21 +498,42 @@ class NODES(object):
             if self.attr_body:
                 state[self.attr_body] = body
             elif body:
-                raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'")
+                raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'", caller)
             
-    class xblock_try(node):
+    class variant_block(node):
+        """Base class for try/if blocks."""
+        
+        def analyse(self, ctx):
+            ctx.control_depth += 1
+            self._analyse_branches(ctx)
+            ctx.control_depth -= 1
+
+        def _analyse_branches(self, ctx):
+            """
+            Unlike a regular tagged block, if/try block does NOT introduce a new namespace,
+            so all symbols defined in branches must be made visible to sibling nodes that go after the block.
+            Moreover, if a variable is (re)declared multiple times in separate branches, the first declaration
+            must be stored as a reference in all nodes to uniquely represent identity of this variable.
+            """
+            for branch in self.children:
+                position = ctx.position()
+                branch.analyse(ctx)
+                symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
+                ctx.reset(position)
+                ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
+
+    class xblock_try(variant_block):
         """
         A "try" block. Two syntax forms available:
         - short form:   ?tag... ?|...
         - long form:    try ... else ... else ...
         Every "try" block catches ALL exceptions that inherit from Exception class, including all Hypertag exceptions.
-        There is no way to explicitly restrict the scope of exceptions caught, unlike in Python.
+        There is no way to explicitly restrict the scope of exceptions caught (no "except" clause), unlike in Python.
         The block does NOT catch special exceptions that inherit directly from BaseException:
         SystemExit, KeyboardInterrupt, GeneratorExit.
+        Note that the meaning of the "else" clause is OPPOSITE to what it is in Python: here, "else" branch
+        is executed if all preceeding try/else branches failed with exceptions.
         """
-        def analyse(self, ctx):
-            self._analyse_branches(ctx)
-            
         def translate(self, state):
             body = self._select_branch(state)
             body.set_indent(state.indentation)
@@ -542,6 +547,71 @@ class NODES(object):
                     pass
             return Sequence()
     
+    class xblock_if(variant_block):
+        clauses  = None         # list of 1+ <clause_if> nodes
+        elsebody = None         # optional <body_*> node for the "else" branch
+        
+        def setup(self):
+            if self.children[-1].type == 'clause_if':
+                self.clauses = self.children
+            else:
+                self.clauses = self.children[:-1]
+                self.elsebody = self.children[-1]
+
+        def translate(self, state):
+            body = self._select_clause(state)
+            body.set_indent(state.indentation)
+            return body
+        
+        def _select_clause(self, state):
+            for clause in self.clauses:
+                if clause.test.evaluate(state):
+                    return clause.translate(state)
+            if self.elsebody:
+                return self.elsebody.translate(state)
+            return Sequence()
+        
+    class xclause_if(node):
+        test = None             # <expression> node containing a test to be performed
+        body = None             # <body> to be rendered if the clause is positive
+        def setup(self):
+            assert len(self.children) == 2
+            self.test, self.body = self.children
+        def translate(self, state):
+            return self.body.translate(state)
+        def render(self, state):
+            return self.body.render(state)
+            
+    class xblock_for(node):
+        targets = None              # 1+ loop variables to assign to
+        expr    = None              # loop expression that returns a sequence (iterable) to be looped over
+        body    = None
+        
+        def setup(self):
+            self.targets, self.expr, self.body = self.children
+            assert isinstance(self.expr, NODES.expression)
+            assert self.targets.type == 'targets'
+            # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
+            
+        def analyse(self, ctx):
+            ctx.control_depth += 1
+            self.expr.analyse(ctx)
+            self.targets.analyse(ctx)
+            self.body.analyse(ctx)
+            ctx.control_depth -= 1
+
+        def translate(self, state):
+            out = []
+            sequence = self.expr.evaluate(state)
+            for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
+                self.targets.assign(state, value)
+                body = self.body.translate(state)
+                out += body.nodes
+                
+            out = Sequence(*out)
+            out.set_indent(state.indentation)
+            return out
+
     class xblock_assign(node):
         targets = None
         expr    = None
@@ -558,34 +628,6 @@ class NODES(object):
             self.targets.assign(state, value)
             return None
     
-    class xblock_for(node):
-        targets = None              # 1+ loop variables to assign to
-        expr    = None              # loop expression that returns a sequence (iterable) to be looped over
-        body    = None
-        
-        def setup(self):
-            self.targets, self.expr, self.body = self.children
-            assert isinstance(self.expr, NODES.expression)
-            assert self.targets.type == 'targets'
-            # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
-            
-        def analyse(self, ctx):
-            self.expr.analyse(ctx)
-            self.targets.analyse(ctx)
-            self.body.analyse(ctx)
-
-        def translate(self, state):
-            out = []
-            sequence = self.expr.evaluate(state)
-            for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
-                self.targets.assign(state, value)
-                body = self.body.translate(state)
-                out += body.nodes
-                
-            out = Sequence(*out)
-            out.set_indent(state.indentation)
-            return out
-
     class xtargets(node):
         def analyse(self, ctx):
             """Recursively insert all variables that comprise this target into context."""
@@ -601,10 +643,10 @@ class NODES(object):
             # unpack and assign to multiple child targets
             i = 0
             for i, v in enumerate(value):               # raises TypeError if `value` is not iterable
-                if i >= N: raise ValueError(f"too many values to unpack (expected {N})")
+                if i >= N: raise ValueErrorEx(f"too many values to unpack (expected {N})", self)
                 self.children[i].assign(state, v)
             if i+1 < N:
-                raise ValueError(f"not enough values to unpack (expected {N}, got {i+1})")
+                raise ValueErrorEx(f"not enough values to unpack (expected {N}, got {i+1})", self)
 
     class variable(node):
         var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
@@ -632,54 +674,6 @@ class NODES(object):
             state[self.primary or self] = value
     
 
-    class xblock_if (node):
-        clauses  = None         # list of 1+ <clause_if> nodes
-        elsebody = None         # optional <body_*> node for the "else" branch
-        
-        def setup(self):
-            if self.children[-1].type == 'clause_if':
-                self.clauses = self.children
-            else:
-                self.clauses = self.children[:-1]
-                self.elsebody = self.children[-1]
-
-        def analyse(self, ctx):
-            self._analyse_branches(ctx)
-            
-            # # if a variable is (re)declared multiple times in separate branches, the first declaration node
-            # # is used to represent identity of this variable
-            # for clause in self.children:
-            #     position = ctx.position()
-            #     clause.analyse(ctx)
-            #     symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
-            #     ctx.reset(position)
-            #     ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
-
-        def translate(self, state):
-            body = self._select_clause(state)
-            body.set_indent(state.indentation)
-            return body
-        
-        def _select_clause(self, state):
-            for clause in self.clauses:
-                if clause.test.evaluate(state):
-                    return clause.translate(state)
-            if self.elsebody:
-                return self.elsebody.translate(state)
-            return Sequence()
-        
-    class xclause_if(node):
-        test = None             # <expression> node containing a test to be performed
-        body = None             # <body> to be rendered if the clause is positive
-        def setup(self):
-            assert len(self.children) == 2
-            self.test, self.body = self.children
-        def translate(self, state):
-            return self.body.translate(state)
-        def render(self, state):
-            return self.body.render(state)
-        
-        
     ###  BODY & LINES  ###
 
     class body(node):
@@ -784,7 +778,7 @@ class NODES(object):
 
             if isinstance(self.tag, Tag):
                 attrs, kwattrs = self._eval_attrs(state)                        # calculate actual values of attributes
-                return self.tag.translate_tag(state, body, attrs, kwattrs)
+                return self.tag.translate_tag(state, body, attrs, kwattrs, self)
             else:
                 raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
             
@@ -1611,6 +1605,7 @@ class HypertagAST(BaseTree):
     def render(self):
         dom = self.translate()
         output = dom.render()
+        if not output: return output
         assert output[0] == '\n'        # extra empty line was prepended by Grammar.preprocess() and must be removed now
         return output[1:]
 
@@ -1720,16 +1715,8 @@ if __name__ == '__main__':
         H [0,6]?
             | pies
     """
-    text = """
-        / pre
-          line2
-        
-        for i in [2,3]:
-            | $i
-        ! post
-    """
-    text = """ ? | {'a' None 'b' None? 'c'}"""
-    text = """ ? | {None} """
+    # text = """ ? | {'a' None 'b' None? 'c'}"""
+    # text = """ ? | {None} """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     
@@ -1750,7 +1737,6 @@ if __name__ == '__main__':
     print()
     
     print("===== After rendering =====")
-    print(tree.render())
+    print(tree.render(), end = "=====\n")
     # print(tree.A())
-    print()
     

@@ -465,7 +465,7 @@ grammar = r"""
 
 ###  DOCUMENT
 
-document         =  core_blocks margin?
+document         =  core_blocks? margin?
 
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+

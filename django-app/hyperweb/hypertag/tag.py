@@ -33,7 +33,7 @@ class Tag:
     # def expand(self, __body__, *attrs, **kwattrs): pass
     # def expand(self, __body__, kwattrs, *attrs): pass
     
-    def translate_tag(self, state, body, attrs, kwattrs):
+    def translate_tag(self, state, body, attrs, kwattrs, caller):
         raise NotImplementedError
 
 
@@ -47,7 +47,7 @@ class ExternalTag(Tag):
     - it should return either a Sequence of nodes, or plain text, or None
     """
 
-    def translate_tag(self, state, body, attrs, kwattrs):
+    def translate_tag(self, state, body, attrs, kwattrs, caller):
         """External tag doesn't depend on a state of script execution, hence `state` is ignored."""
         return Sequence(HNode(body, tag = self, attrs = attrs, kwattrs = kwattrs))
 

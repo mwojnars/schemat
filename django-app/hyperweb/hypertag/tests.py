@@ -26,33 +26,19 @@ def merge_spaces(s, pat = re.compile(r'\s+')):
 #####  TESTS
 #####
 
-def test_001():
-    src = """
-        h1 : a href="http://xxx.com": |This is <h1> title
-            p  / And <a> paragraph.
-        div
-            | Ala { 'ęłąśźćóÓŁĄĘŚŻŹĆ' } ęłąśźćóÓŁĄĘŚŻŹĆ
-              kot.
-            / i pies
-        
-        div #box .top .grey
-        div #box .top .grey-01
-        input enabled=True
-        """
-    out = """
-        <h1><a href="http://xxx.com">This is &lt;h1&gt; title
-            <p>And <a> paragraph.</p></a></h1>
-        <div>
-            Ala ęłąśźćóÓŁĄĘŚŻŹĆ ęłąśźćóÓŁĄĘŚŻŹĆ
-            kot.
-            i pies
-        </div>
-
-        <div id="box" class="top grey"></div>
-        <div id="box" class="top grey-01"></div>
-        <input enabled />
-    """
-    assert ht.parse(src).strip() == out.strip()
+def test_001_basic():
+    src = """"""
+    assert ht.parse(src) == ""
+    src = """      """
+    assert ht.parse(src) == ""
+    src = """ |Ala    """
+    assert ht.parse(src) == " Ala"              # trailing spaces in lines are removed
+    src = """\n|Ala\n"""
+    assert ht.parse(src) == "\nAla\n"           # leading/trailing newlines of a document are preserved
+    src = """\n\n\t|Ala\n\n"""
+    assert ht.parse(src) == "\n\n\tAla\n\n"
+    src = """\n\n \t | Ala\n\n"""
+    assert ht.parse(src) == "\n\n \t Ala\n\n"
 
 
 def test_002_qualifiers():
@@ -133,7 +119,7 @@ def test_004_layout():
     """
     assert ht.parse(src).strip() == out.strip()
 
-def test_005_document_margins():
+def test_005_doc_margins():
     src = """\n\n p | text  \n  \n  """
     out = """\n\n <p>text</p>\n\n"""
     assert out == ht.parse(src)         # no .strip()
@@ -517,7 +503,40 @@ def test_014_none_embedded():
     
     src = """ | {'a' None? 'b' None? 'c'} """
     assert ht.parse(src).strip() == "abc"
+
+def test_015_try():
+    src = """ ? | {None} """
+    assert ht.parse(src) == ""
+
     
+def test_100_varia():
+    src = """
+        h1 : a href="http://xxx.com": |This is <h1> title
+            p  / And <a> paragraph.
+        div
+            | Ala { 'ęłąśźćóÓŁĄĘŚŻŹĆ' } ęłąśźćóÓŁĄĘŚŻŹĆ
+              kot.
+            / i pies
+        
+        div #box .top .grey
+        div #box .top .grey-01
+        input enabled=True
+        """
+    out = """
+        <h1><a href="http://xxx.com">This is &lt;h1&gt; title
+            <p>And <a> paragraph.</p></a></h1>
+        <div>
+            Ala ęłąśźćóÓŁĄĘŚŻŹĆ ęłąśźćóÓŁĄĘŚŻŹĆ
+            kot.
+            i pies
+        </div>
+
+        <div id="box" class="top grey"></div>
+        <div id="box" class="top grey-01"></div>
+        <input enabled />
+    """
+    assert ht.parse(src).strip() == out.strip()
+
 
 #####################################################################################################################################################
 #####

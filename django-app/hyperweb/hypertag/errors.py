@@ -30,6 +30,7 @@ class HError(ParserError):
 ########################################################################################################################################################
 
 class SyntaxErrorEx(HError, SyntaxError):           pass
+class ValueErrorEx(HError, ValueError):             pass
 class TypeErrorEx(HError, TypeError):               pass
 class NameErrorEx(HError, NameError):               pass
 class UnboundLocalEx(HError, UnboundLocalError):    pass
@@ -45,6 +46,4 @@ class MissingValueEx(HError):
     
 class VoidTagEx(HError):
     """Raised when non-empty body is passed to a void tag (i.e., a tag that doesn't accept body)."""
-    def __init__(self, msg = "body must be empty for a void tag"):
-        Exception.__init__(self, msg)
     
