@@ -507,6 +507,49 @@ def test_014_none_embedded():
 def test_015_try():
     src = """ ? | {None} """
     assert ht.parse(src) == ""
+    src = """
+        $ x = ''
+        | x $x
+        ? | x $x!
+    """
+    assert ht.parse(src).strip() == "x"
+    src = """
+        $ x = False
+        try | x $x!
+    """
+    assert ht.parse(src).strip() == ""
+    src = """
+        $ x = 0
+        try | x $x!
+        else| x*2 = {x*2}!
+        else| x+1 = {x+1}!
+        else! error
+    """
+    assert ht.parse(src).strip() == "x+1 = 1"
+    src = """
+        $ x = 0
+        try
+            p | x $x!
+        else
+            p | x+1 = {x+1}!
+    """
+    assert ht.parse(src).strip() == "<p>x+1 = 1</p>"
+    src = """
+        $ x = 0
+        try :
+            p | x $x!
+        else
+            p | x+1 = {x+1}!
+    """
+    assert ht.parse(src).strip() == "<p>x+1 = 1</p>"
+    src = """
+        $ x = 0
+        try | x $x!
+        else:
+            try  / x*2 = {x*2}!
+            else / x+1 = {x+1}!
+    """
+    assert ht.parse(src).strip() == "x+1 = 1"
 
     
 def test_100_varia():

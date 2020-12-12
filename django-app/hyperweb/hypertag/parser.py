@@ -1717,6 +1717,14 @@ if __name__ == '__main__':
     """
     # text = """ ? | {'a' None 'b' None? 'c'}"""
     # text = """ ? | {None} """
+    text = """
+        $ x = 0
+        try | x $x!
+        else:
+            try  / x*2 = {x*2}!
+            else / x+1 = {x+1}!
+            
+    """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     
