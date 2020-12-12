@@ -1690,7 +1690,7 @@ if __name__ == '__main__':
         ! post
     """
     text = """
-        | {None}
+        | {'a' None? 'b' None? 'c'}
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

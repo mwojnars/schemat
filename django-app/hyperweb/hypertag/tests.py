@@ -509,11 +509,14 @@ def test_013_hypertags_err():
             H 1
         """)
     
-def test_014_none_err():
+def test_014_none_embedded():
     with pytest.raises(Exception, match = 'embedded in markup text evaluates to None') as ex_info:
         ht.parse(""" | {None} """)
     with pytest.raises(Exception, match = 'string-concatenated evaluates to None') as ex_info:
         ht.parse(""" | {None None} """)
+    
+    src = """ | {'a' None? 'b' None? 'c'} """
+    assert ht.parse(src).strip() == "abc"
     
 
 #####################################################################################################################################################
