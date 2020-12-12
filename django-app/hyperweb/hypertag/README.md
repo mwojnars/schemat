@@ -29,6 +29,14 @@ Multiline block:
 
 ##### Tagged blocks
 
+- tags chain (:)
+- body: inline / outline / headline
+- null tag (.) as a way to align contents of non-tagged vs. tagged blocks
+
+      h1 | title
+      .  | contents
+  
+- null tag (.) as a way to group nodes
 
 
 ##### Block "try"
@@ -53,6 +61,7 @@ This works with a default tag specification, as well:
 
 ##### Block "for"
     
+- break & continue
 
 #### Expressions
 
@@ -170,3 +179,12 @@ As a consequence of name spaces separation, it is not possible to directly refer
 to tag names inside expressions.
 
 
+### DOM
+
+DOM = Document Object Model
+
+#### DOM classes
+
+#### DOM manipulation
+
+Selectors as methods of Sequence ...

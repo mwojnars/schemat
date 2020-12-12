@@ -224,8 +224,7 @@ special tags:
     return
     break
     continue
-    pass
-    void / noop / -           a tag that performs no processing, only used for grouping elements
+    null/pass (.)           a tag that performs no processing, only used for grouping elements
 
 CLASSES
 
@@ -470,7 +469,7 @@ document         =  core_blocks? margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin_out (block_control / block_def / block_struct)
+block            =  margin_out (special_tag / block_control / block_def / block_struct)
 
 ###  CONTROL BLOCKS
 
@@ -507,9 +506,15 @@ attr_def         =  name_xml (ws '=' ws value_of_attr)?
 
 block_struct     =  (tags_expand generic_struct) / body_text    # text block is a special case of a structural block (!), in this case block_struct gets
                                                                 # reduced after parsing to the underlying block_verbat/_normal/_markup
-tags_expand      =  tag_expand (ws mark_struct ws tag_expand)*
+tags_expand      =  null_tag / (tag_expand (ws mark_struct ws tag_expand)*)
 tag_expand       =  name_id attrs_val?
-#tag_expand      =  (name_id / attr_short) attrs_val?           # if name is missing (only `attr_short` present), "div" is assumed
+
+special_tag      =  break_tag / continue_tag
+
+null_tag         =  '.'
+break_tag        =  'break'
+continue_tag     =  'continue'
+
 
 ###  HEAD, BODY
 
@@ -528,7 +533,7 @@ head_markup      =  mark_markup gap? line_markup?
 
 ###  TEXT BLOCKS, TAIL, LINE
 
-block_embed      =  mark_embed ws expr                          # this is not strictly a text block, but is treated as such to allow inline placement after a tag:  TAG @body ... @ body.child[0]
+block_embed      =  mark_embed ws expr                          # @... embedding of a DOM fragment; not strictly a text block, but is treated as such to allow inline placement after a tag:  TAG @body ... @ body.child[0]
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
@@ -674,7 +679,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 #name_attr       =  !name_reserved ~"[a-z_][a-z0-9_-]*"i
 name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
-name_reserved    =  ~"(if|else|elif|for|while|is|in|not|and|or)\\b"  # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+name_reserved    =  ~"(if|else|elif|try|for|while|break|continue|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 
 # names allowed in XML, defined liberally, with nearly all characters allowed to match all valid HTML/XML identifiers (esp. attributes);
 # EXCEPTION: colon ':' is NOT allowed as the 1st or the last character, to avoid collision with a trailing ":" used in blocks

@@ -12,18 +12,20 @@ class Tag:
     - ExternalTag - a tag implemented as a python function
     - NativeTag - a tag implemented inside Hypertag code
     """
+    name = None         # tag name that can be searched for (selected) when post-processing a DOM through Sequence class
+    
     void = False        # if True, __body__ is expected to be empty, otherwise an exception shall be raised by the caller
     text = False        # if True, __body__ will be provided as plain text (rendered DOM), not a DOM; allows better compactification
     pure = True         # if True, the tag is assumed to always return the same result for the same arguments (no side effects),
                         # which potentially enables full compactification of a node tagged with this tag
     
-    xml_attrs = False   # if True, all valid XML names are accepted for attributes, and named attributes are passed
+    xml_names = False   # if True, all valid XML names are accepted for attributes, and named attributes are passed
                         # to expand() as a dict, rather than keywords; in such case, expand() must implement
                         # the following signature:
                         #
                         #   def expand(self, body, kwattrs, *attrs)
                         #
-                        # It is recommended that xml_attrs are set to False whenever possible.
+                        # It is recommended that xml_names are set to False whenever possible.
     
     # text_body = False       # if True, the `body` argument to expand() will be a string (rendered DOM), not DOM;
     #                         # setting this to True whenever possible allows speed optimization through better
@@ -66,3 +68,18 @@ class ExternalTag(Tag):
         """
         raise NotImplementedError
 
+class SpecialTag(Tag): pass
+
+class NullTag(SpecialTag):
+    """Null tag '.' is represented in the DOM tree. Its expand() passes the body unchanged."""
+    
+    name = '.'
+    
+    def translate_tag(self, state, body, attrs, kwattrs, caller):
+        assert not attrs and not kwattrs
+        return Sequence(HNode(body, tag = self))
+
+    def expand(self, __body__):
+        return __body__.render()
+    
+null_tag = NullTag()

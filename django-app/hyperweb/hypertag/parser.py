@@ -18,7 +18,7 @@ from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, gram
 from hyperweb.hypertag.structs import Context, Stack, State
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
 from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
-from hyperweb.hypertag.tag import Tag
+from hyperweb.hypertag.tag import Tag, null_tag
 
 DEBUG = False
 
@@ -397,7 +397,7 @@ class NODES(object):
             
         def translate(self, state):
             body = self.body.translate(state)
-            body = self.tags.apply_tags(body, state)
+            body = self.tags.apply_tags(state, body)
             body.set_indent(state.indentation)
             return body
 
@@ -717,12 +717,15 @@ class NODES(object):
 
     class xtags_expand(node):
         """List of tag_expand nodes."""
-        def apply_tags(self, body, state):
+        def apply_tags(self, state, body):
             """Wrap up `body` in subsequent tags processed in reverse order."""
             for tag in reversed(self.children):
-                assert tag.type == 'tag_expand'
                 body = tag.translate_tag(state, body)
             return body
+        
+    class xnull_tag(node):
+        def translate_tag(self, state, body):
+            return null_tag.translate_tag(state, body, None, None, self)
         
     class xtag_expand(node):
         """
@@ -1704,26 +1707,32 @@ if __name__ == '__main__':
     #     $ x = 5
     #     p | kot
     # """
+    # text = """
+    #     $g = 100
+    #     %g x | xxx {x+g}
+    #     %H @body a=0
+    #         @ body
+    #         $g = 200
+    #         g (g+5)
+    #         g a[0] !
+    #     H [0,6]?
+    #         | pies
+    # """
+    # text = """
+    #     $ x = 0
+    #     try | x $x!
+    #     else:
+    #         try  / x*2 = {x*2}!
+    #         else / x+1 = {x+1}!
+    # """
     text = """
-        $g = 100
-        %g x | xxx {x+g}
-        %H @body a=0
-            @ body
-            $g = 200
-            g (g+5)
-            g a[0] !
-        H [0,6]?
-            | pies
-    """
-    # text = """ ? | {'a' None 'b' None? 'c'}"""
-    # text = """ ? | {None} """
-    text = """
-        $ x = 0
-        try | x $x!
-        else:
-            try  / x*2 = {x*2}!
-            else / x+1 = {x+1}!
-            
+        div
+            p   | title
+            .   | contents
+                  more lines...
+            .
+                a | link
+                . | xxxxx
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

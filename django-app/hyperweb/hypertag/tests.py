@@ -551,7 +551,29 @@ def test_015_try():
     """
     assert ht.parse(src).strip() == "x+1 = 1"
 
+def test_016_special_tags():
+    src = """
+        div
+            p   | title
+            .   | contents
+                  more lines...
+            .
+                a | link
+                . | xxxxx
+    """
+    out = """
+        <div>
+            <p>title</p>
+            contents
+            more lines...
+
+                <a>link</a>
+                xxxxx
+        </div>
+    """
+    assert ht.parse(src).strip() == out.strip()
     
+
 def test_100_varia():
     src = """
         h1 : a href="http://xxx.com": |This is <h1> title
