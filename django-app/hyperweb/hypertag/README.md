@@ -5,7 +5,11 @@ Why to use Hypertag:
 - no errors related to incorrect closing tags or open-close tag mismatches
 - unprecedented support for **modularity** and **code re-use**
 - Object-Oriented Programming (**OOP**) inside markup,
-  through native language structures
+  through native language structures (???)
+- high performace in web applications achieved through caching of parsed AST,
+  combined with their **compactification**: constant parts of the AST are
+  pre-rendered and merged into single nodes, to avoid repeated rendering
+  with every web page request.
 
 ### Syntax
 
@@ -62,6 +66,13 @@ This works with a default tag specification, as well:
 ##### Block "for"
     
 - break & continue
+
+##### Block "import"
+
+- import NAME -- import from a global context
+- from PATH import NAME -- import from a module denoted by PATH, which can be any string
+  consisting of [...] characters that can be correctly interpreted by the currently used
+  Environment subclass
 
 #### Expressions
 
@@ -188,3 +199,29 @@ DOM = Document Object Model
 #### DOM manipulation
 
 Selectors as methods of Sequence ...
+
+
+### Script execution
+
+Execution of a Hypertag script constists of 3 phases:
+1. parsing (script > AST)
+2. translation (AST > DOM)
+3. rendering (DOM > markup)
+
+Typically, the client code will call `Hypertag.render()` to perform all the above 
+steps at once. In rare cases, the client may wish to obtain the structured representation
+of the resulting document - the DOM (Document Object Model) - for example, to manipulate
+the DOM tree before it gets rendered. In such case, the client should call 
+`Hypertag.translate()` and then `render()` on the resulting DOM tree.
+
+
+**Environment** ... **context** consisting of any python objects can be provided ...
+
+### SDK ??
+
+- class Tag, ExternalTag, MarkupTag -- for implementing custom tags
+- class HNode
+- class Sequence
+- class Environment
+
+

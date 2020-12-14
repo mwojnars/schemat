@@ -27,6 +27,17 @@ class HError(ParserError):
 # class HSyntaxError(ParserError): pass
 # class HRuntimeError(ParserError): pass
 
+# class HBaseException(BaseException):
+#     """
+#     Base class for exceptions that play internal role during execution of a Hypertag AST.
+#     Their occurrence does NOT signal an error, rather they are intended to be caught by Hypertag internal code
+#     at a higher level in the tree.
+#     """
+#
+# class HBreak(HBaseException):
+#     pass
+
+
 ########################################################################################################################################################
 
 class SyntaxErrorEx(HError, SyntaxError):           pass

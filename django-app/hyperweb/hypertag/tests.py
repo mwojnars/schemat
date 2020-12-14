@@ -572,7 +572,37 @@ def test_016_special_tags():
         </div>
     """
     assert ht.parse(src).strip() == out.strip()
+    src = """
+        | pre
+        for i in range(3)
+            .
+        | post
+    """                         # dot tag (.) always creates a node and renders something; it does NOT mean "pass" (do nothing)
+    out = """
+        pre
+
+
+
+        post
+    """
+    assert ht.parse(src).strip() == out.strip()
     
+def test_017_comments():
+    src = """
+        # comment
+        -- comment
+        ---- comment
+        div
+            p   | title
+            # comment
+             more lines
+    """
+    out = """
+        <div>
+            <p>title</p>
+        </div>
+    """
+    assert ht.parse(src).strip() == out.strip()
 
 def test_100_varia():
     src = """

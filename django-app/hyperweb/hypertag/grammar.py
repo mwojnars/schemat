@@ -433,6 +433,7 @@ div class={"panel-sidebar-container col col-sm-3" + (" col-xs-3" if not compactO
             <div class=$("panel-sidebar-container col col-sm-3" (" col-xs-3" if not compactOnSmall))>
 """
 
+
 grammar = r"""
 
 ###  Before the grammar is applied, indentation in the input text must be translated into
@@ -469,7 +470,7 @@ document         =  core_blocks? margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin_out (special_tag / block_control / block_def / block_struct)
+block            =  margin_out (block_control / block_def / block_import / block_struct / block_comment)       # special_tag/
 
 ###  CONTROL BLOCKS
 
@@ -494,13 +495,21 @@ tail_if          =  (embedding_or_factor generic_control) / (expr         body_c
 # tail_for         =  (embedding / expr_augment) body_control
 # tail_if          =  (embedding / expr) body_control             # (embedding generic_control) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
 
-###  DEFINITION BLOCK
+###  DEFINITION BLOCKS
 
 block_def        =  mark_def ws name_id attrs_def generic_struct
 attrs_def        =  (space attr_body)? (space attr_def)*
 
 attr_body        =  mark_embed ws name_id
 attr_def         =  name_xml (ws '=' ws value_of_attr)?
+
+block_import     =  ('from' path_import space)? 'import' space item_import (comma item_import)*
+item_import      =  wild_import / (name_import rename?)
+wild_import      =  '*'
+name_import      =  (mark_def / mark_expr) name_id              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
+path_import      =  ~"[^ \t\n\\x22\\x27]+"                        # import path can be ANY string of 1+ characters unless it contains a whitespace, ' or "
+rename           =  space 'as' space name_id
+
 
 ###  STRUCTURED BLOCK
 
@@ -509,11 +518,11 @@ block_struct     =  (tags_expand generic_struct) / body_text    # text block is 
 tags_expand      =  null_tag / (tag_expand (ws mark_struct ws tag_expand)*)
 tag_expand       =  name_id attrs_val?
 
-special_tag      =  break_tag / continue_tag
+#special_tag      =  break_tag / continue_tag
 
 null_tag         =  '.'
-break_tag        =  'break'
-continue_tag     =  'continue'
+#break_tag       =  'break'
+#continue_tag    =  'continue'
 
 
 ###  HEAD, BODY
@@ -521,7 +530,7 @@ continue_tag     =  'continue'
 generic_control  =  (ws body_text) / body_control               # like body_control, but additionally allows full-text body
 generic_struct   =  (ws body_text) / body_struct                # like body_struct, but additionally allows full-text body
 
-body_control     =  (ws mark_struct comment?)? tail_blocks
+body_control     =  (ws mark_struct inline_comment?)? tail_blocks
 body_struct      =  (ws mark_struct)? (ws headline)? tail_blocks?       # this rule matches empty string '' (!)
 
 body_text        =  block_verbat / block_normal / block_markup / block_embed
@@ -534,6 +543,8 @@ head_markup      =  mark_markup gap? line_markup?
 ###  TEXT BLOCKS, TAIL, LINE
 
 block_embed      =  mark_embed ws expr                          # @... embedding of a DOM fragment; not strictly a text block, but is treated as such to allow inline placement after a tag:  TAG @body ... @ body.child[0]
+block_comment    =  mark_comment line_verbat? tail_verbat?
+inline_comment   =  mark_comment verbatim?                      # inline (end-line) comment; full-line comments are parsed as block_comment
 
 block_verbat     =  mark_verbat line_verbat? tail_verbat?
 block_normal     =  mark_normal line_normal? tail_normal?
@@ -556,12 +567,12 @@ mark_verbat      =  '!'
 mark_normal      =  '|'
 mark_markup      =  '/'
 
-mark_embed       =  '@'
-mark_expr        =  '$'
 mark_def         =  '%%'                                        # double percent means single percent, only we need to escape for grammar string formatting
+mark_expr        =  '$'
+mark_embed       =  '@'
+mark_comment     =  ~"--|#"
 
 gap              =  ~"[ \t]"                                    # 1-space leading gap before a headline, ignored during rendering
-comment          =  ~"--|#" verbatim?                           # inline (end-line) comment; full-line comments are parsed at preprocessing stage
 
 
 ###  EMBEDDINGS
@@ -679,7 +690,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 #name_attr       =  !name_reserved ~"[a-z_][a-z0-9_-]*"i
 name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
-name_reserved    =  ~"(if|else|elif|try|for|while|break|continue|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+name_reserved    =  ~"(from|import|if|else|elif|try|for|while|break|continue|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 
 # names allowed in XML, defined liberally, with nearly all characters allowed to match all valid HTML/XML identifiers (esp. attributes);
 # EXCEPTION: colon ':' is NOT allowed as the 1st or the last character, to avoid collision with a trailing ":" used in blocks
@@ -721,7 +732,6 @@ ws          =  ~"[ \t]*"                     # optional whitespace, no newlines
 ###  SYMBOLS that mark TYPES of blocks or text spans
 
 """
-
 ########################################################################################################################################################
 ###
 ###  Regex patterns for character sets allowed in XML identifiers, to be put inside [...] in a regex.

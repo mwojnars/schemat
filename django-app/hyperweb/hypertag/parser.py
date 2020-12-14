@@ -118,8 +118,7 @@ class Grammar(Parsimonious):
         Preprocessing:
         - INDENT_* / DEDENT_* inserted in place of leading spaces/tabs
         - trailing whitespace removed in each line
-        - comment lines (-- or #) removed
-        - whitespace-only lines replaced with empty lines (\n) and insert *after* any neighboring DEDENT_*,
+        - whitespace-only lines replaced with empty lines (\n) and inserted *after* any neighboring DEDENT_*,
           so that DEDENT's always preceed empty lines and the latter can be interpreted as a top margin
           of the following block (rather than a bottom margin of the preceeding block, which would cause
           issues with proper indentation etc.)
@@ -147,8 +146,8 @@ class Grammar(Parsimonious):
                 margin += 1
                 # lines.append('')
                 
-            elif tail.startswith('--') or tail.startswith('#'):             # comment line, ignore
-                pass
+            # elif tail.startswith('--') or tail.startswith('#'):             # comment line, ignore
+            #     pass
             
             else:                                   # code line, convert `indent` to INDENT_*/DEDENT_* characters and insert `tail`
                 if indent == current:
@@ -353,9 +352,12 @@ class NODES(object):
 
             return output
 
-    class xblock_verbat(block_text): pass
-    class xblock_normal(block_text): pass
     class xblock_markup(block_text): pass
+    class xblock_normal(block_text): pass
+    class xblock_verbat(block_text): pass
+    class xblock_comment(block_text):
+        def translate(self, state): return Sequence()
+        def render(self, state):    return ""
     
     class xblock_embed(node):
         """Embedding of DOM nodes through @... type of expression."""
@@ -1448,8 +1450,8 @@ class HypertagAST(BaseTree):
     ###  Configuration of rewriting process  ###
     
     # nodes that will be ignored during rewriting (pruned from the tree)
-    _ignore_  = "nl ws space gap comma verbatim comment " \
-                "mark_struct mark_verbat mark_normal mark_markup mark_embed mark_expr mark_def"
+    _ignore_  = "nl ws space gap comma verbatim inline_comment " \
+                "mark_struct mark_verbat mark_normal mark_markup mark_embed mark_expr mark_def mark_comment"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
@@ -1624,7 +1626,7 @@ class HypertagAST(BaseTree):
 
 class HypertagParser:
     """
-    Hypertag parser.
+    Parser of Hypertag scripts.
     """
     def __init__(self, **config):
         self.config = config
@@ -1726,13 +1728,10 @@ if __name__ == '__main__':
     #         else / x+1 = {x+1}!
     # """
     text = """
-        div
-            p   | title
-            .   | contents
-                  more lines...
+        | pre
+        for i in range(3)
             .
-                a | link
-                . | xxxxx
+        | post
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
