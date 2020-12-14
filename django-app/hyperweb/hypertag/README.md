@@ -74,6 +74,44 @@ This works with a default tag specification, as well:
   consisting of [...] characters that can be correctly interpreted by the currently used
   Environment subclass
 
+#### Comments
+
+Comments start with either "#" or "--". There are two types of comments:
+_block comments_ and _inline comments_.
+
+##### Block comments
+
+A block comment occurs between blocks. It is treated as another type of a block
+and must follow general rules of block alignment: have the same indentation 
+as neighboring blocks and deeper indentation than a parent block. For example:
+
+    div
+      p | First paragraph
+      #   Comment...
+      p | Second paragraph
+
+A block comment behaves similar to text blocks and, like them, can span multiple lines:
+
+    # this is a long ... 
+      multiline ...
+      block comment
+
+##### Inline comments
+
+An inline comment occurs at the end of a line containing a header of any structural block
+(a block that may contain nested blocks, i.e., any block except text blocks). Examples:
+
+    p      -- comment
+    p:     -- comment
+    p:     #  comment
+    for i in [1,2,3]:     -- comment
+        pass
+    if $test              # comment
+        | test is true
+
+Comments can NOT be mixed with textual contents of text blocks.
+
+
 #### Expressions
 
 ##### Literals

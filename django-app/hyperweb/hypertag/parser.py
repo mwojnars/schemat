@@ -1733,6 +1733,10 @@ if __name__ == '__main__':
         .        -- comment
         for i in {range(2)}:    -- comment
             .
+        if True             -- why not?
+            | yes
+        else:               # no no no
+            | no
         | post
     """
     

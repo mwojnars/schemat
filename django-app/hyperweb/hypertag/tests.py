@@ -596,7 +596,7 @@ def test_017_comments():
             p   | title
             # comment
              more lines
-    """
+    """                                 # block comments
     out = """
         <div>
             <p>title</p>
@@ -611,15 +611,18 @@ def test_017_comments():
             .                -- comment
         for i in range(1):   --  comment
             .
-        | post
-    """
+        if True             -- why not?
+            | yes
+        else:               # no no no
+            | no
+    """                                 # inline comments
     out = """
         <p></p>
         <p></p>
 
 
 
-        post
+        yes
     """
     assert ht.parse(src).strip() == out.strip()
 
