@@ -603,6 +603,25 @@ def test_017_comments():
         </div>
     """
     assert ht.parse(src).strip() == out.strip()
+    src = """
+        p        -- comment
+        p:       #  comment
+        .        -- comment
+        for i in range(1)    #  comment
+            .                -- comment
+        for i in range(1):   --  comment
+            .
+        | post
+    """
+    out = """
+        <p></p>
+        <p></p>
+
+
+
+        post
+    """
+    assert ht.parse(src).strip() == out.strip()
 
 def test_100_varia():
     src = """
