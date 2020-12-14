@@ -90,10 +90,11 @@ as neighboring blocks and deeper indentation than a parent block. For example:
       #   Comment...
       p | Second paragraph
 
-A block comment behaves similar to text blocks and, like them, can span multiple lines:
+A block comment behaves similar to text blocks and, like them, can span multiple lines,
+if only a proper indentation of subsequent lines is kept:
 
     # this is a long ... 
-      multiline ...
+        ... multiline
       block comment
 
 ##### Inline comments

@@ -577,12 +577,25 @@ def test_016_special_tags():
         for i in range(3)
             .
         | post
-    """                         # dot tag (.) always creates a node and renders something; it does NOT mean "pass" (do nothing)
+    """                         # dot tag (.) always creates a node and renders something; it does NOT mean "pass" (no operation)
     out = """
         pre
 
 
 
+        post
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        | pre
+        pass
+        pass
+        for i in [1,2]
+            pass
+        | post
+    """                         # "pass" means "no operation", that is, it renders nothing, not even a newline
+    out = """
+        pre
         post
     """
     assert ht.parse(src).strip() == out.strip()

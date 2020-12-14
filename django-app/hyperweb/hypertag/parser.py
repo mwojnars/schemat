@@ -725,10 +725,6 @@ class NODES(object):
                 body = tag.translate_tag(state, body)
             return body
         
-    class xnull_tag(node):
-        def translate_tag(self, state, body):
-            return null_tag.translate_tag(state, body, None, None, self)
-        
     class xtag_expand(node):
         """
         Occurrence of a tag.
@@ -800,6 +796,14 @@ class NODES(object):
                     
             return unnamed, named
             
+    class xnull_tag(node):
+        def translate_tag(self, state, body):
+            return null_tag.translate_tag(state, body, None, None, self)
+        
+    class xpass_tag(node):
+        def translate(self, state):
+            return Sequence()
+        
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
@@ -1455,7 +1459,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
-                "try_long try_short head_verbat head_normal head_markup " \
+                "try_long try_short special_tag head_verbat head_normal head_markup " \
                 "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "embedding embedding_braces embedding_eval embedding_or_factor target " \
@@ -1728,11 +1732,13 @@ if __name__ == '__main__':
     #         else / x+1 = {x+1}!
     # """
     text = """
+        pass
+        pass
         p        -- comment
         p:       #  comment
         .        -- comment
         for i in {range(2)}:    -- comment
-            .
+            pass
         if True             -- why not?
             | yes
         else:               # no no no

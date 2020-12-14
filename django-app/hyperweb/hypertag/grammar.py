@@ -470,7 +470,7 @@ document         =  core_blocks? margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin_out (block_control / block_def / block_import / block_struct / block_comment)       # special_tag/
+block            =  margin_out (block_control / block_def / block_import / block_struct / block_comment / special_tag)
 
 ###  CONTROL BLOCKS
 
@@ -518,9 +518,11 @@ block_struct     =  (tags_expand generic_struct) / body_text    # text block is 
 tags_expand      =  null_tag / (tag_expand (ws mark_struct ws tag_expand)*)
 tag_expand       =  name_id attrs_val?
 
-#special_tag      =  break_tag / continue_tag
+special_tag      =  pass_tag ''   #/ break_tag / continue_tag
 
 null_tag         =  '.'
+pass_tag         =  'pass'
+
 #break_tag       =  'break'
 #continue_tag    =  'continue'
 
@@ -690,7 +692,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 #name_attr       =  !name_reserved ~"[a-z_][a-z0-9_-]*"i
 name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
-name_reserved    =  ~"(from|import|if|else|elif|try|for|while|break|continue|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
+name_reserved    =  ~"(from|import|if|else|elif|try|for|while|break|continue|pass|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 
 # names allowed in XML, defined liberally, with nearly all characters allowed to match all valid HTML/XML identifiers (esp. attributes);
 # EXCEPTION: colon ':' is NOT allowed as the 1st or the last character, to avoid collision with a trailing ":" used in blocks
