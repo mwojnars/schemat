@@ -530,8 +530,8 @@ null_tag         =  '.'
 generic_control  =  (ws body_text) / body_control               # like body_control, but additionally allows full-text body
 generic_struct   =  (ws body_text) / body_struct                # like body_struct, but additionally allows full-text body
 
-body_control     =  (ws mark_struct inline_comment?)? tail_blocks
-body_struct      =  (ws mark_struct)? (ws headline)? tail_blocks?       # this rule matches empty string '' (!)
+body_control     =  ws mark_struct? inline_comment? tail_blocks
+body_struct      =  (ws mark_struct)? (ws (headline / inline_comment))? tail_blocks?       # this rule matches empty string '' (!)
 
 body_text        =  block_verbat / block_normal / block_markup / block_embed
 headline         =  head_verbat / head_normal / head_markup

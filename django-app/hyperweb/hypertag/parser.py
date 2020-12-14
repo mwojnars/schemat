@@ -1730,9 +1730,14 @@ if __name__ == '__main__':
     text = """
         | pre
         for i in range(3)
+            .       -- comment
             .
         | post
     """
+    # text = """
+    #     p:       -- comment
+    #         .
+    # """
 
     tree = HypertagAST(text, stopAfter = "rewrite")
     
