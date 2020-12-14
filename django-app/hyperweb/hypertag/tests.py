@@ -148,6 +148,10 @@ def test_006_if():
         elif (not test) / Ola
     """
     assert ht.parse(src).strip() == "Ola"
+    src = """
+        if True | true
+    """
+    assert ht.parse(src).strip() == "true"
 
 def test_007_variables():
     src = """

@@ -107,7 +107,7 @@ An inline comment occurs at the end of a line containing a header of any structu
     p:     #  comment
     for i in [1,2,3]:     -- comment
         pass
-    if $test              # comment
+    if test               # comment
         | test is true
 
 Comments can NOT be mixed with textual contents of text blocks.
@@ -211,7 +211,6 @@ Examples:
 
     {(post.authors ', ')? post.title}  -- prints title only if "authors" field is missing in "post"
     
-
 #### Name spaces
 
 There are two separate name spaces:
@@ -227,6 +226,30 @@ and would often lead to confusion.
 
 As a consequence of name spaces separation, it is not possible to directly refer
 to tag names inside expressions.
+
+#### Special tags
+
+##### Null tag (.)
+
+##### Pass tag
+
+A block consisting of a single keyword `pass` (the _"pass" tag_), no attributes, no body - 
+constitutes a "pass block" that serves as a placeholder that does simply nothing, 
+not even rendering a newline (unlike the null tag).
+The pass tag corresponds to Python's "pass" keyword.
+Typically, a pass block is used inside control blocks (for/if/else)
+to mark an empty branch, which may appeal to esthetics in some cases
+or be a way to mark unfinished implementation. Example:
+
+    if condition
+        p | render something
+    else
+        pass
+
+The above code is equivalent to:
+
+    if condition
+        p | render something
 
 
 ### DOM

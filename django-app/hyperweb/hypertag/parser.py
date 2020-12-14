@@ -1732,18 +1732,8 @@ if __name__ == '__main__':
     #         else / x+1 = {x+1}!
     # """
     text = """
-        pass
-        pass
-        p        -- comment
-        p:       #  comment
-        .        -- comment
-        for i in {range(2)}:    -- comment
-            pass
-        if True             -- why not?
-            | yes
-        else:               # no no no
-            | no
-        | post
+        for i in [1,2]:
+        p | next line
     """
     
     tree = HypertagAST(text, stopAfter = "rewrite")
