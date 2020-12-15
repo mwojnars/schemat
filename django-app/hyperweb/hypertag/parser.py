@@ -502,8 +502,8 @@ class NODES(object):
             elif body:
                 raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'", caller)
             
-    class variant_block(node):
-        """Base class for try/if blocks."""
+    class control_block(node):
+        """Base class for if/try blocks."""
         
         def analyse(self, ctx):
             ctx.control_depth += 1
@@ -524,7 +524,7 @@ class NODES(object):
                 ctx.reset(position)
                 ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
 
-    class xblock_try(variant_block):
+    class xblock_try(control_block):
         """
         A "try" block. Two syntax forms available:
         - short form:   ?tag... ?|...
@@ -549,7 +549,7 @@ class NODES(object):
                     pass
             return Sequence()
     
-    class xblock_if(variant_block):
+    class xblock_if(control_block):
         clauses  = None         # list of 1+ <clause_if> nodes
         elsebody = None         # optional <body_*> node for the "else" branch
         
@@ -584,7 +584,20 @@ class NODES(object):
         def render(self, state):
             return self.body.render(state)
             
-    class xblock_for(node):
+    class xblock_while(control_block):
+        def _analyse_branches(self, ctx):
+            self.children[0].analyse(ctx)
+        def translate(self, state):
+            out = []
+            clause = self.children[0]
+            while clause.test.evaluate(state):
+                body = clause.translate(state)
+                out += body.nodes
+            out = Sequence(*out)
+            out.set_indent(state.indentation)
+            return out
+        
+    class xblock_for(control_block):
         targets = None              # 1+ loop variables to assign to
         expr    = None              # loop expression that returns a sequence (iterable) to be looped over
         body    = None
@@ -595,12 +608,10 @@ class NODES(object):
             assert self.targets.type == 'targets'
             # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
             
-        def analyse(self, ctx):
-            ctx.control_depth += 1
+        def _analyse_branches(self, ctx):
             self.expr.analyse(ctx)
             self.targets.analyse(ctx)
             self.body.analyse(ctx)
-            ctx.control_depth -= 1
 
         def translate(self, state):
             out = []
@@ -1732,8 +1743,10 @@ if __name__ == '__main__':
     #         else / x+1 = {x+1}!
     # """
     text = """
-        for i in [1,2]:
-        p | next line
+        $i = 0
+        while i < 3
+            | $i
+            $i = i + 1
     """
     
     tree = HypertagAST(text, stopAfter = "rewrite")

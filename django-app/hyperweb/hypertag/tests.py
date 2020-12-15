@@ -643,6 +643,37 @@ def test_017_comments():
     """
     assert ht.parse(src).strip() == out.strip()
 
+def test_018_while():
+    src = """
+        $i = 3
+        while i:
+            | $i
+            $i = i - 1
+    """
+    out = """
+        3
+        2
+        1
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        $i = 0
+        while i < 3
+            | $i
+            $i = i + 1
+    """
+    out = """
+        0
+        1
+        2
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        $i = 0
+        while False / $i
+    """
+    assert ht.parse(src).strip() == ""
+    
 def test_100_varia():
     src = """
         h1 : a href="http://xxx.com": |This is <h1> title
