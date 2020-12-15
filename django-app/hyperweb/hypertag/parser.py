@@ -953,6 +953,8 @@ class NODES(object):
 
         def setup(self):
             self.name = self.text()
+            if self.name[0] == '$':                     # preceeding $ is allowed inside {...} and should be truncated here
+                self.name = self.name[1:]
         
         def analyse(self, ctx):
             # self.depth = ctx.depth
@@ -1466,7 +1468,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be ignored during rewriting (pruned from the tree)
     _ignore_  = "nl ws space gap comma verbatim inline_comment " \
-                "mark_struct mark_verbat mark_normal mark_markup mark_embed mark_expr mark_def mark_comment"
+                "mark_struct mark_verbat mark_normal mark_markup mark_embed mark_eval mark_def mark_comment"
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
@@ -1693,20 +1695,6 @@ if __name__ == '__main__':
     #
     #          xxx
     # """
-    
-    # text = """
-    #     if True:
-    #         $ x = 5
-    #     else:
-    #         $ x = 10
-    #     | Ala
-    #     | {x}
-    #     $ y = 0
-    #     p
-    #         $ y = 5
-    #         | {y}
-    # """
-    
     # text = """
     #     $k = 5
     #     for i, val in enumerate(range(k-2), start = k*2):
@@ -1719,10 +1707,6 @@ if __name__ == '__main__':
     #     dedent nested=False
     #         div: | kot
     #             i | pies
-    # """
-    # text = """
-    #     $ x = 5
-    #     p | kot
     # """
     # text = """
     #     $g = 100
@@ -1747,6 +1731,20 @@ if __name__ == '__main__':
         while i < 3
             | $i
             $i = i + 1
+    """
+    text = """
+        % fancy_text @body size='10px':
+            | *****
+            p style={"color: blue; font-size:" + $size}
+                @body
+            | *****
+
+        fancy_text '20px'
+            | This text is rendered through a FANCY hypertag!
+    """
+    text = """
+        $size = 10
+        p style={"color: blue; font-size:" size} | OK
     """
     
     tree = HypertagAST(text, stopAfter = "rewrite")

@@ -228,7 +228,7 @@ special tags:
 
 CLASSES
 
-%% sidemenu @body width=100
+% sidemenu @body width=100
     $height = width * 2                     -- public "property"
     %cell @text :  ... {width-20} ...       -- public "method"
 
@@ -238,12 +238,15 @@ CLASSES
         script async=True ! ...
     div ... {width+10} ...                  -- result produced (box+meta)
         @body
+
+% submenu (sidemenu)                        -- inheritance ??
+    $ height = .height
     
-(sidemenu) 150
+sidemenu 150
     .cell | item 1
     .cell | item 2
     | outer box height is {.height}
-    (sidemenu) 50
+    sidemenu 50
         .cell  | subitem 1
         ..cell | upper-level cell ??
         if {.height < 100}:
@@ -480,7 +483,7 @@ block_try        =  try_long / try_short
 try_long         =  'try' generic_control (nl 'else' generic_control)*
 try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
 
-block_assign     =  mark_expr ws targets ws '=' ws (embedding / expr_augment)
+block_assign     =  mark_eval ws targets ws '=' ws (embedding / expr_augment)
 block_while      =  'while' clause_if
 block_for        =  'for' space targets space 'in' space tail_for
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' generic_control)?
@@ -507,7 +510,7 @@ attr_def         =  name_xml (ws '=' ws value_of_attr)?
 block_import     =  ('from' path_import space)? 'import' space item_import (comma item_import)*
 item_import      =  wild_import / (name_import rename?)
 wild_import      =  '*'
-name_import      =  (mark_def / mark_expr) name_id              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
+name_import      =  (mark_def / mark_eval) name_id              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
 path_import      =  ~"[^ \t\n\\x22\\x27]+"                        # import path can be ANY string of 1+ characters unless it contains a whitespace, ' or "
 rename           =  space 'as' space name_id
 
@@ -571,7 +574,7 @@ mark_normal      =  '|'
 mark_markup      =  '/'
 
 mark_def         =  '%%'                                        # double percent means single percent, only we need to escape for grammar string formatting
-mark_expr        =  '$'
+mark_eval        =  '$'
 mark_embed       =  '@'
 mark_comment     =  ~"--|#"
 
@@ -585,16 +588,12 @@ gap              =  ~"[ \t]"                                    # 1-space leadin
 
 embedding        =  embedding_braces / embedding_eval
 embedding_braces =  '{' ws expr_augment ws '}' qualifier?
-embedding_eval   =  '$' expr_var
+embedding_eval   =  mark_eval !mark_eval expr_var
 
 embedding_or_factor = embedding / expr_factor
 
 
 ###  ATTRIBUTES of tags
-
-# # formal attributes as declared in hypertag definition; body attribute @... must go first if present
-# attrs_def        =  (space attr_body)? (space attr_oblig)* (space attr_named)*
-# attr_oblig       =  name_xml ''                                     # only in hypertag definition
 
 # actual attributes as passed to a tag
 attrs_val        =  (space (attr_val / attr_short))+       #/ ws '(' attr_val (',' ws attr_val)* ')'
@@ -630,7 +629,7 @@ expr_augment =  expr_root / expr_tuple      # augmented form of an expression: i
 expr_tuple   =  expr ws ',' (ws expr ws ',')* (ws expr)?      # unbounded tuple, without parentheses ( ); used in selected grammar structures only
 subexpr      =  '(' ws expr ws ')'
 
-var_use      =  name_id ''                                    # occurrence (use) of a variable
+var_use      =  mark_eval? name_id ''                         # occurrence (use) of a variable; $ is allowed inside {...} for convenience
 tuple        =  '(' ws ((expr comma)+ (expr ws)?)? ')'
 list         =  '[' ws (expr comma)* (expr ws)? ']'
 set          =  '{' ws expr (comma expr)* ws (',' ws)? '}'    # obligatory min. 1 element in a set

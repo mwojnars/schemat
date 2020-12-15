@@ -25,9 +25,20 @@ Why to use Hypertag:
 
 ## Quick Start
 
+## Terminology
+
+- block
+- body
+- tag, attributes
+- script >  AST > DOM ... tree, node, body
+- rendering
+
+((?? move Script Execution here))
+
+
 ## Syntax
 
-### Blocks
+### Basic blocks
 
 #### Text blocks
 
@@ -44,6 +55,18 @@ Multiline block:
         multiple
       lines...
 
+#### Assignments
+
+A block that starts with $ marks an assignment to a local variable:
+
+    $ x = 5
+    $ dash = x * '-'
+    $ title = dash + ' TITLE ' + dash
+
+Hypertag supports also _augmented assignments_ as known in Python:
+
+    $ a, (b, c) = [1, (2, 3)]
+
 
 #### Tagged blocks
 
@@ -52,6 +75,56 @@ Multiline block:
 - there is still a way to explicitly write raw (X)HTML tags
   through the use of /-blocks which allow writing unescaped markup
 
+
+#### Hypertag definition
+
+A Hypertag script may contain definitions of custom tags, called **hypertags**,
+which can be viewed as equivalents of Python functions
+and be used in all the same places as built-in tags.
+Like functions in traditional programming languages, hypertags enable _modularization_
+and _code de-duplication_: repeated parts of a script can be moved out
+to a hypertag and re-used instead of copy-pasting multiple times; also, hypertags 
+can be placed in separate files, then imported and re-used across different scripts.
+This realization of the DRY principle is an important aspect of the Hypertag language,
+one that has been missing in standard front-end languages (HTML, XML).
+
+A hypertag definition block starts with "%" followed by a name of a new tag,
+its attributes (optional) and formal body (optional). 
+Default values in a form of literals or expressions can be provided for (selected) attributes.
+If the first attribute on the list is prefixed with a special symbol "@",
+this attribute will be assigned the actual body of the block of occurrence
+(where the new tag is used); the "body" attribute can have any valid name, 
+but it cannot have a default value. If a body attribute is missing, the hypertag
+is "void", which means its occurrences must always have empty body.
+
+An example hypertag definition may look like this:
+
+    % fancy_text @body size='10px':
+        | *****
+        p style=("color: blue; font-size: " size)
+            @body
+        | *****
+
+The above block defines a new tag "fancy_text", which can be used like this:
+
+    fancy_text '20px'
+        | This text is rendered through a FANCY hypertag!
+
+During rendering of this block the definition body of `fancy_tag` gets expanded
+and the actual `@body` is inserted, resulting in the following output:
+
+    *****
+    <p style="color: blue; font-size: 20px">
+        This text is rendered through a FANCY hypertag!
+    </p>
+    *****
+
+
+Hypertag definition blocks can be nested in tagged blocks and in other
+definition blocks (_nested definitions_), but not in control blocks.
+
+
+### Control blocks
 
 #### Block "try"
 
@@ -87,12 +160,13 @@ This works with a default tag specification, as well:
 ### Comments
 
 Comments start with either "#" or "--". There are two types of comments:
-_block comments_ and _inline comments_.
+_block comments_ (outline comments) and _inline comments_.
 
 #### Block comments
 
-A block comment occurs between blocks. It is treated as another type of a block
-and must follow general rules of block alignment: have the same indentation 
+A block comment starts with # (hash) or -- (double dash),
+followed by any verbatim text that gets ignored during parsing.
+It must follow general rules of block alignment: have the same indentation 
 as neighboring blocks and deeper indentation than a parent block. For example:
 
     div
@@ -101,11 +175,12 @@ as neighboring blocks and deeper indentation than a parent block. For example:
       p | Second paragraph
 
 A block comment behaves similar to text blocks and, like them, can span multiple lines,
-if only a proper indentation of subsequent lines is kept:
+if a proper indentation of subsequent lines is kept:
 
     # this is a long ... 
         ... multiline
       block comment
+
 
 #### Inline comments
 
@@ -124,6 +199,16 @@ Comments can NOT be mixed with textual contents of text blocks.
 
 
 ### Expressions
+
+#### Embeddings
+
+
+
+    | value of x = {x}
+    | value of x = $x
+
+The latter form can only be used for variables, possibly extended with tail operators:
+`x.member`, `x[index]`, `x()` and an optional qualifier.
 
 #### Literals
 
@@ -223,19 +308,37 @@ Examples:
     
 ### Name spaces
 
-There are two separate name spaces:
-1. Tags namespace
-2. Variables namespace
+Every tagged block, as well as a hypertag definition, creates a new (nested) name space,
+so any assignments performed in this block do NOT influence any other part 
+of the script outside the block. For example:
+
+    $ x = 1
+    p:
+        $ x = 2
+        | {x}
+        # the line above outputs "2"
+    | {x}
+    # the line above outputs "1"
+
+This does NOT apply to control blocks, which modify the top-level namespace, 
+so it is fine to assign a variable inside an if/try/for/while block 
+and the value will be visible in subsequent blocks:
+
+    
+
+Note that in Hypertag, there are _two separate name spaces_:
+1. **Tags namespace**
+2. **Variables namespace**
 
 The separation of these name spaces is justified by the fact that in the most
 typical use case - HTML generation - there are several dozens of predefined tags,
-all of which must be directly accessible. Some of these tags have short or common
+all of which must be directly accessible. Many of these tags have very common
 names (i, b, p, code, form, head, body, ...), and without separation of name spaces,
 name collissions between tags and local variables would be very frequent 
-and would often lead to confusion.
+and lead to confusion.
 
-As a consequence of name spaces separation, it is not possible to directly refer
-to tag names inside expressions.
+((As a consequence of name spaces separation, it is not possible to directly refer
+to tag names inside expressions. THERE WILL BE A WAY through %TAG operator))
 
 ### Special tags
 

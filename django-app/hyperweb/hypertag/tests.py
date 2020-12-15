@@ -162,7 +162,16 @@ def test_007_variables():
         | {x}
     """
     assert ht.parse(src).strip() == "5"
-
+    src = """
+        $ x = 1
+        p:
+            $ x = 2
+            | {x}
+            # the line above outputs "2"
+        | {x}
+        # the line above outputs "1"
+    """
+    assert merge_spaces(ht.parse(src)) == "<p> 2 </p> 1"
     src = """
         if False:
             $ x = 5
@@ -488,6 +497,29 @@ def test_012_hypertags():
         xxx 305
     """
     assert ht.parse(src).strip() == out.strip()
+    src = """
+        %H @body
+            @body[0]
+        H
+            | first
+            | second
+    """
+    assert ht.parse(src).strip() == "first"
+    src = """
+        %G @body
+            @body[0]
+            | in G
+        %H @body
+            G @ body[-1]
+        H
+            | first
+            | last
+    """
+    out = """
+        last
+        in G
+    """
+    assert ht.parse(src).strip() == out.strip()
 
 def test_013_hypertags_err():
     with pytest.raises(Exception, match = 'undefined tag') as ex_info:
@@ -674,6 +706,20 @@ def test_018_while():
     """
     assert ht.parse(src).strip() == ""
     
+def test_019_expressions():
+    src = """
+        $size = '10'
+        p style={"font-size:" size}
+        p style={"font-size:" $size}
+        p style=("font-size:" + size)
+    """
+    out = """
+        <p style="font-size:10"></p>
+        <p style="font-size:10"></p>
+        <p style="font-size:10"></p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    
 def test_100_varia():
     src = """
         h1 : a href="http://xxx.com": |This is <h1> title
@@ -686,7 +732,7 @@ def test_100_varia():
         div #box .top .grey
         div #box .top .grey-01
         input enabled=True
-        """
+    """
     out = """
         <h1><a href="http://xxx.com">This is &lt;h1&gt; title
             <p>And <a> paragraph.</p></a></h1>
@@ -699,6 +745,26 @@ def test_100_varia():
         <div id="box" class="top grey"></div>
         <div id="box" class="top grey-01"></div>
         <input enabled />
+    """
+    assert ht.parse(src).strip() == out.strip()
+
+def test_101_varia():
+    src = """
+        % fancy_text @body size='10px':
+            | *****
+            p style=("color: blue; font-size: " size)
+                @body
+            | *****
+
+        fancy_text '20px'
+            | This text is rendered through a FANCY hypertag!
+    """
+    out = """
+        *****
+        <p style="color: blue; font-size: 20px">
+            This text is rendered through a FANCY hypertag!
+        </p>
+        *****
     """
     assert ht.parse(src).strip() == out.strip()
 
