@@ -1380,6 +1380,10 @@ class NODES(object):
                 items.append((key_child.evaluate(state), val_child.evaluate(state)))
             return dict(items)
 
+    class xstring_format(expression):
+        def evaluate(self, state):
+            return self._render_all(self.children, state)       # renders embedded expressions, in addition to static text
+            
 
     ###  EXPRESSIONS - LITERALS  ###
 
@@ -1391,6 +1395,10 @@ class NODES(object):
         def analyse(self, ctx):     pass
         def evaluate(self, state):  return self.value
     
+    class xstring_raw(literal):
+        def setup(self):
+            self.value = self.text()[2:-1]          # remove surrounding quotes: '' or "", and the leading "r" indicating a raw string
+
     class xnumber(literal):
         def setup(self):
             s = self.text()
@@ -1400,13 +1408,6 @@ class NODES(object):
             except: pass
             self.value = float(s)
     
-    class xstring(literal):
-        def setup(self):
-            self.value = self.text()[1:-1]              # remove surrounding quotes: '' or ""
-    
-    #class xstr_unquoted(literal): pass
-    class xattr_short_lit(literal): pass
-
     class xboolean(literal):
         def setup(self):
             self.value = (self.text() == 'True')
@@ -1415,14 +1416,18 @@ class NODES(object):
         def setup(self):
             self.value = None
 
+    class xattr_short_lit(literal): pass
+
 
     ###  STATIC nodes  ###
     
-    class xname_id(static): pass
-    class xname_xml(static): pass
-    class xtext(static): pass
-    class xnl(static): pass
-    class xmargin(static): pass
+    class xnl(static):          pass
+    class xname_id(static):     pass
+    class xname_xml(static):    pass
+    class xtext(static):        pass
+    class xtext_quot1(static):  pass
+    class xtext_quot2(static):  pass
+    class xmargin(static):      pass
     
     class xmargin_out(static):
         """
@@ -1558,7 +1563,8 @@ class HypertagAST(BaseTree):
                 "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "embedding embedding_braces embedding_eval embedding_or_factor target " \
-                "expr_root subexpr slice subscript trailer atom literal dict_pair"
+                "expr_root subexpr slice subscript trailer atom literal dict_pair " \
+                "string string_quot1 string_quot2"
     
     # nodes that will be replaced with their child if there is exactly 1 child AFTER rewriting of all children;
     # they must have a corresponding x... node class, because pruning is done after rewriting, not before
@@ -1820,20 +1826,7 @@ if __name__ == '__main__':
     """
     text = """
         $size = 10
-        p style={"color: blue; font-size:" size} | OK
-    """
-    text = """
-        $i = 7
-        $i += 2
-        $i -= 2
-        $i *= 2
-        $i /= 2
-        $i //= 2
-        $i %= 2
-        $i = int(i)
-        while i < 4
-            | $i
-            $i += 1
+        p style = r'color: blue; font-size: $size'
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

@@ -55,6 +55,31 @@ Multiline block:
         multiple
       lines...
 
+##### Embedded expressions
+
+Text blocks (normal and markup) may contain embedded expressions.
+An embedding may come in two forms, either using the {...} syntax:
+
+    | value of x = {x}
+
+or using the $... syntax:
+
+    | value of x = $x
+
+The former syntax can handle all types of expressions, while the latter 
+can only be used for variables, possibly extended with tail operators:
+
+    | $x.value
+    | $x[index]
+    | $x(arg1, arg2)
+
+Both forms, {...} and $..., allow the use of a trailing qualifier (? or !)
+to test for errors or false results:
+
+    | {x+y}?  -- is converted to empty string if false, or if exception was raised
+    | $x.call()!  -- raises an exception if x.call() is false
+
+
 #### Assignments
 
 A block that starts with $ marks an assignment to a local variable:
@@ -208,21 +233,18 @@ Comments can NOT be mixed with textual contents of text blocks.
 
 ### Expressions
 
-#### Embeddings
-
-
-
-    | value of x = {x}
-    | value of x = $x
-
-The latter form can only be used for variables, possibly extended with tail operators:
-`x.member`, `x[index]`, `x()` and an optional qualifier.
-
 #### Literals
 
 Integers, real numbers, strings, boolean literals (True, False), None.
 
     True, False, None
+
+#### Strings
+
+- raw strings (_r-strings_)
+- formatted strings (_f-strings_)
+
+
 
 #### Collections
 

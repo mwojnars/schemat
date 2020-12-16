@@ -40,6 +40,8 @@ def test_001_basic():
     src = """\n\n \t | Ala\n\n"""
     assert ht.parse(src) == "\n\n \t Ala\n\n"
 
+    src = """| $$ {{ }} {'.'}"""                # escape sequences
+    assert ht.parse(src) == "$ { } ."
 
 def test_002_qualifiers():
     # the code below contains NESTED qualifiers: unsatisfied ! within ?
@@ -733,7 +735,7 @@ def test_019_inplace_assign():
     """
     assert ht.parse(src).strip() == out.strip()
     
-def test_020_expressions():
+def test_020_expression_in_string():
     src = """
         $size = '10'
         p style={"font-size:" size}
@@ -744,6 +746,30 @@ def test_020_expressions():
         <p style="font-size:10"></p>
         <p style="font-size:10"></p>
         <p style="font-size:10"></p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        $size = '10'
+        p style =  'font-size: $size'
+        p style =  "font-size: $size px"
+        p style =  "font-size:{size}px"
+        p style = r'font-size: $size px'
+        p style = r"font-size: {size}"
+    """
+    out = """
+        <p style="font-size: 10"></p>
+        <p style="font-size: 10 px"></p>
+        <p style="font-size:10px"></p>
+        <p style="font-size: $size px"></p>
+        <p style="font-size: {size}"></p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    src = """
+        $size = '10'
+        | size {"= $size"}px
+    """
+    out = """
+        size = 10px
     """
     assert ht.parse(src).strip() == out.strip()
     

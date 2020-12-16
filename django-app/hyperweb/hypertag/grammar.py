@@ -707,18 +707,26 @@ literal          =  number / string / boolean / none
 
 number_signed    =  ~"[+-]?" number
 number           =  ~"((\.\d+)|(\d+(\.\d*)?))([eE][+-]?\d+)?"      # the leading +- is added during expression construction (<neg>)
-string           =  ~"'[^']*'" / ~'"[^"]*"'         # '...' or "..." string; no escaping of ' and " inside!
-#str_unquoted    =  !'$' ~"[^\s\"'`=<>]+"           # in attributes only, for HTML compatibility; see https://html.spec.whatwg.org/multipage/syntax.html#syntax-attributes
+#string           =  ~"'[^']*'" / ~'"[^"]*"'         # '...' or "..." string; no escaping of ' and " inside!
 boolean          =  'True' / 'False'
 none             =  'None'
+
+string           =  string_format / string_raw
+string_raw       =  ~"r'[^']*'" / ~'r"[^"]*"'         # '...' or "..." string; must not contain ' or " inside (no escaping available)
+
+string_format    =  string_quot1 / string_quot2
+string_quot1     =  "'" (escape / embedding / text_quot1)* "'"
+string_quot2     =  '"' (escape / embedding / text_quot2)* '"'
 
 
 ###  BASIC TOKENS
 
-escape      =  '$$' / '{{' / '}}'
+escape      =  ~'\$\$|{{|}}'                 # escape sequences: $$ {{ }}
 
-verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]+"su      # 1 line of plain text, may include special symbols (left unparsed)
-text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}]+"su   # 1 line of plain text, special symbols excluded: $ { }
+verbatim    =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n]+"su       # 1 line of plain text, may include special symbols (left unparsed)
+text        =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}]+"su    # 1 line of plain text, excluded $ { }
+text_quot1  =  ~"[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}']+"su   # 1 line of plain text, excluded $ { } '
+text_quot2  =  ~'[^%(INDENT_S)s%(DEDENT_S)s%(INDENT_T)s%(DEDENT_T)s\n${}"]+'su   # 1 line of plain text, excluded $ { } "
 
 indent_s    = "%(INDENT_S)s"
 dedent_s    = "%(DEDENT_S)s"
