@@ -483,7 +483,9 @@ block_try        =  try_long / try_short
 try_long         =  'try' generic_control (nl 'else' generic_control)*
 try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
 
-block_assign     =  mark_eval ws targets ws '=' ws (embedding / expr_augment)
+block_assign     =  mark_eval ws targets ws op_inplace? '=' ws (embedding / expr_augment)
+op_inplace       =  ~"//|\%%|[-+*/]"
+
 block_while      =  'while' clause_if
 block_for        =  'for' space targets space 'in' space tail_for
 block_if         =  'if' clause_if (nl 'elif' clause_if)* (nl 'else' generic_control)?

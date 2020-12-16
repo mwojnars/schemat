@@ -706,7 +706,28 @@ def test_018_while():
     """
     assert ht.parse(src).strip() == ""
     
-def test_019_expressions():
+def test_019_inplace_assign():
+    src = """
+        $i = 7
+        $i += 2
+        $i -= 2
+        $i *= 2
+        $i /= 2
+        $i //= 2
+        $i %= 2
+        $i = int(i)
+        while i < 4
+            | $i
+            $i += 1
+    """
+    out = """
+        1
+        2
+        3
+    """
+    assert ht.parse(src).strip() == out.strip()
+    
+def test_020_expressions():
     src = """
         $size = '10'
         p style={"font-size:" size}

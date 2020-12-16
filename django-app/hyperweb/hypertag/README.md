@@ -68,6 +68,13 @@ Hypertag supports also _augmented assignments_ as known in Python:
     $ a, (b, c) = [1, (2, 3)]
 
 
+#### DOM embedding
+
+    @ body
+    @ body[0]
+    @ body.METHOD()
+
+
 #### Tagged blocks
 
 - tags chain (:)
@@ -83,8 +90,9 @@ which can be viewed as equivalents of Python functions
 and be used in all the same places as built-in tags.
 Like functions in traditional programming languages, hypertags enable _modularization_
 and _code de-duplication_: repeated parts of a script can be moved out
-to a hypertag and re-used instead of copy-pasting multiple times; also, hypertags 
-can be placed in separate files, then imported and re-used across different scripts.
+to a hypertag and re-used instead of being copy-pasted multiple times; also, hypertags 
+can be placed in separate files, then imported and re-used across different scripts
+and applications, as a library of predefined **widgets**.
 This realization of the DRY principle is an important aspect of the Hypertag language,
 one that has been missing in standard front-end languages (HTML, XML).
 

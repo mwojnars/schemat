@@ -627,21 +627,51 @@ class NODES(object):
 
     class xblock_assign(node):
         targets = None
+        inplace = None          # symbol of in-place arithmetic operator to apply (+-*/), optional
         expr    = None
+        oper    = None          # 2-arg function that implements `inplace` operator
+        
+        opers   = {'+':  operator.add,
+                   '-':  operator.sub,
+                   '*':  operator.mul,
+                   '%':  operator.mod,
+                   '/':  getattr(operator, 'div', None) or operator.truediv,
+                   '//': operator.floordiv,
+        }
         
         def setup(self):
-            self.targets, self.expr = self.children
+            assert 2 <= len(self.children) <= 3
+            self.targets  = self.children[0]
+            self.expr     = self.children[-1]
 
+            # in-place operator-assignment ?
+            if len(self.children) == 3:
+                inplace   = self.children[1].value
+                self.oper = self.opers[inplace]
+                if self.targets.is_augmented():
+                    raise SyntaxErrorEx(f"illegal expression {inplace}= for augmented assignment", self)
+                self.targets.set_inplace()
+            
         def analyse(self, ctx):
             self.expr.analyse(ctx)
             self.targets.analyse(ctx)
 
         def translate(self, state):
             value = self.expr.evaluate(state)
+            if self.oper:
+                current = self.targets.evaluate(state)
+                value   = self.oper(current, value)
             self.targets.assign(state, value)
             return None
     
     class xtargets(node):
+        def is_augmented(self):
+            """True if self represents multiple targets (not a plain variable) to assign to."""
+            return len(self.children) >= 2 or self.children[0].type != 'var_def'
+        
+        def set_inplace(self):
+            self.children[0].set_inplace()
+            
         def analyse(self, ctx):
             """Recursively insert all variables that comprise this target into context."""
             for c in self.children: c.analyse(ctx)
@@ -660,33 +690,12 @@ class NODES(object):
                 self.children[i].assign(state, v)
             if i+1 < N:
                 raise ValueErrorEx(f"not enough values to unpack (expected {N}, got {i+1})", self)
-
-    class variable(node):
-        var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
-                                # that occur at the same depth (in the same namespace)
-        
-    class xvar_def(variable):
-        """Definition of a variable, or assignment to a previously defined variable."""
-        name    = None
-        primary = None          # 1st definition node of this variable, if self represents a re-assignment
-        
-        def setup(self):
-            self.name = self.text()
-
-        def analyse(self, ctx):
-            self.var_depth = ctx.regular_depth
-            symbol  = VAR(self.name)
-            primary = ctx.get(symbol)
             
-            if primary and primary.var_depth == self.var_depth:
-                self.primary = primary
-            else:
-                ctx.push(symbol, self)
-
-        def assign(self, state, value):
-            state[self.primary or self] = value
-    
-
+        def evaluate(self, state):
+            assert len(self.children) == 1
+            return self.children[0].evaluate(state)
+            
+            
     ###  BODY & LINES  ###
 
     class body(node):
@@ -818,13 +827,16 @@ class NODES(object):
 
     ###  ATTRIBUTES & ARGUMENTS  ###
     
-    class attribute(variable):
+    class attribute(node):
         """Attribute inside a hypertag occurrence OR tag definition:
             unnamed / named / short (only in tag occurence) / obligatory / body (only in tag definition).
         """
         name   = None       # [str] name of this attribute; None if unnamed
         expr   = None       # <expression> node of this attribute; None if no expression present (attr definition with no default)
         body   = False      # True in xattr_body
+        
+        var_depth = None    # ctx.regular_depth of the node, for correct identification of re-assignments
+                            # that occur at the same depth (in the same namespace)
         
         def declare_var(self, ctx):
             self.var_depth = ctx.regular_depth
@@ -938,75 +950,50 @@ class NODES(object):
     class xexpr_factor(expression_root): pass
     class xexpr_augment(expression_root): pass
     
-    class xvar_use(expression):
-        """Occurence (use) of a variable."""
-        name     = None
+    class variable(expression):
+        name      = None
+        read      = False       # True in <xvar_use> and this <xvar_def> which performs in-place operation
+        write     = False       # True in <xvar_def> and <attribute>
         
         # external variable...
-        external = False        # if True, the variable is linked directly to its value, which is stored here in 'value'
-        value    = None         # if external=True, the value of the variable, as found already during analyse()
+        external  = False       # if True, the variable is linked directly to its value, which is stored here in 'value'
+        value     = None        # if external=True, the value of the variable, as found already during analyse()
         
         # native variable...
-        # depth    = None         # no. of nested hypertag definitions that surround this variable;
-        #                         # for proper linking to non-local variables in nested hypertag definitions
-        defnode  = None         # <xvar_def> or <xattr_def> node that defines this variable
-
+        defnode   = None        # <xvar_def> or <xattr_def> node that defines this variable
+        
+        # assignment
+        primary   = None        # 1st definition node of this variable, if self represents a re-assignment
+        var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
+                                # that occur at the same depth (in the same namespace)
+        
         def setup(self):
             self.name = self.text()
             if self.name[0] == '$':                     # preceeding $ is allowed inside {...} and should be truncated here
                 self.name = self.name[1:]
         
         def analyse(self, ctx):
-            # self.depth = ctx.depth
             symbol = VAR(self.name)
-            if symbol not in ctx: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
+            link   = ctx.get(symbol)
             
-            link = ctx[symbol]
-            if isinstance(link, NODES.node):            # native variable?
-                self.defnode = link
-            else:                                       # external variable...
-                self.external = True
-                self.value = link                       # value of an external variable is known already during analysis
+            if self.read:
+                if link is None: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
+                if isinstance(link, NODES.node):            # native variable?
+                    self.defnode = link
+                else:                                       # external variable...
+                    self.external = True
+                    self.value = link                       # value of an external variable is known already during analysis
             
-            # if isinstance(link, NODES.xvar_def):            # native variable is always linked to a definition node
-            #     self.defnode = link
-            #     assert self.defnode.offset is not None
-            #
-            # elif isinstance(link, NODES.xattr_def):
-            #     assert isinstance(self.defnode.hypertag, NODES.xhypertag)
-            #     hypertag = self.defnode.hypertag                        # hypertag where the variable is defined
-            #     self.nested = self.depth - hypertag.depth - 1           # -1 because the current hypertag is not counted in access link backtracking
-            #     self.offset = self.defnode.offset - 1                   # -1 accounts for the access link that's pushed on the stack at the top of the frame
-            #     self.ispure = False
-            #
-            #     defdepth = hypertag.depth                               # depth of the definition node (at what depth the variable is defined)
-            #     ctx.add_refdepth(defdepth, '$' + self.name)
-            # else:
-            #     assert False
-                
-            # if not isinstance(value, NODES.xattr):            # xhypertag node, or external variable defined in Python, not natively in the document?
-            #     # if isinstance(value, NODES.xhypertag):        # "$H" xhypertag node?
-            #     #     self.hypertag = value
-            #     #     self.ispure = value.ispure_expand
-            #     #     ctx.add_refdepth(value.depth, '$' + self.name)
-            #     #     return
-            #
-            #     # is this variable pure, i.e., guaranteed to return exactly the same value on every render() call, without side effects?
-            #     # This can happen only for external variables or hypertags, bcs they're bound to constant objects;
-            #     # additionally, we never mark user-defined objects as pure, bcs their behavior (and a returned value) may vary between calls
-            #     # through side effects or internal state, even if the function being called is the same all the time.
-            #
-            #     if value in self.tree.pure_externals:
-            #         self.ispure = True
-            #     else:
-            #         self.ispure = False
-            #         ctx.add_refdepth(-1, '$' + self.name)           # mark that this subtree contains an external variable (i.e., defined at depth=-1)
-            #
-            #     return
-            #     #raise HypertagsError("Symbol is not an attribute (%s)" % self.defnode, self)
+            if self.write:
+                self.var_depth = ctx.regular_depth
+                if link and link.var_depth == self.var_depth:
+                    self.primary = link
+                else:
+                    ctx.push(symbol, self)
             
         def evaluate(self, state):
             
+            assert self.read
             if self.external:                                       # external variable? return its value without evaluation
                 return self.value
                 
@@ -1014,6 +1001,95 @@ class NODES(object):
             if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
             return state[node]
 
+        def assign(self, state, value):
+            assert self.write
+            state[self.primary or self] = value
+
+
+    class xvar_use(variable):
+        """Occurence (use) of a variable."""
+        read = True
+
+    class xvar_def(variable):
+        """Definition of a variable, or assignment to a previously defined variable."""
+        write = True
+        
+        def set_inplace(self):
+            """Mark this definition as occuring in an in-place assignment (+= -= etc.) so the variable will be
+               used in read access, not only for writing.
+            """
+            self.read = True
+        
+
+    # class variable(node):
+    #     var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
+    #                             # that occur at the same depth (in the same namespace)
+    
+    # class xvar_use(variable):
+    #     """Occurence (use) of a variable."""
+    #     name     = None
+    #     read     = True
+    #
+    #     # external variable...
+    #     external = False        # if True, the variable is linked directly to its value, which is stored here in 'value'
+    #     value    = None         # if external=True, the value of the variable, as found already during analyse()
+    #
+    #     # native variable...
+    #     # depth    = None         # no. of nested hypertag definitions that surround this variable;
+    #     #                         # for proper linking to non-local variables in nested hypertag definitions
+    #     defnode  = None         # <xvar_def> or <xattr_def> node that defines this variable
+    #
+    #     def setup(self):
+    #         self.name = self.text()
+    #         if self.name[0] == '$':                     # preceeding $ is allowed inside {...} and should be truncated here
+    #             self.name = self.name[1:]
+    #
+    #     def analyse(self, ctx):
+    #         # self.depth = ctx.depth
+    #         symbol = VAR(self.name)
+    #         if symbol not in ctx: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
+    #
+    #         link = ctx[symbol]
+    #         if isinstance(link, NODES.node):            # native variable?
+    #             self.defnode = link
+    #         else:                                       # external variable...
+    #             self.external = True
+    #             self.value = link                       # value of an external variable is known already during analysis
+    #
+    #     def evaluate(self, state):
+    #
+    #         if self.external:                                       # external variable? return its value without evaluation
+    #             return self.value
+    #
+    #         node = self.defnode
+    #         if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
+    #         return state[node]
+
+    # class xvar_def(variable):
+    #     """Definition of a variable, or assignment to a previously defined variable."""
+    #     name    = None
+    #     write   = True
+    #
+    #     primary = None          # 1st definition node of this variable, if self represents a re-assignment
+    #     var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
+    #                             # that occur at the same depth (in the same namespace)
+    #
+    #     def setup(self):
+    #         self.name = self.text()
+    #
+    #     def analyse(self, ctx):
+    #         self.var_depth = ctx.regular_depth
+    #         symbol  = VAR(self.name)
+    #         primary = ctx.get(symbol)
+    #
+    #         if primary and primary.var_depth == self.var_depth:
+    #             self.primary = primary
+    #         else:
+    #             ctx.push(symbol, self)
+    #
+    #     def assign(self, state, value):
+    #         state[self.primary or self] = value
+    
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
     
@@ -1136,6 +1212,7 @@ class NODES(object):
     class xop_comp(static_operator): pass
     class xneg(static): pass                            # negation is implemented inside <xarith_expr>
     class xnot(static): pass                            # static keyword "not" must have a node, for counting of repeated "not not not ..." expression
+    class xop_inplace(static): pass
     
     class chain_expression(expression):
         """A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."""
@@ -1727,12 +1804,6 @@ if __name__ == '__main__':
     #         else / x+1 = {x+1}!
     # """
     text = """
-        $i = 0
-        while i < 3
-            | $i
-            $i = i + 1
-    """
-    text = """
         % fancy_text @body size='10px':
             | *****
             p style={"color: blue; font-size:" + $size}
@@ -1746,7 +1817,20 @@ if __name__ == '__main__':
         $size = 10
         p style={"color: blue; font-size:" size} | OK
     """
-    
+    text = """
+        $i = 7
+        $i += 2
+        $i -= 2
+        $i *= 2
+        $i /= 2
+        $i //= 2
+        $i %= 2
+        $i = int(i)
+        while i < 4
+            | $i
+            $i += 1
+    """
+
     tree = HypertagAST(text, stopAfter = "rewrite")
     
     # print()

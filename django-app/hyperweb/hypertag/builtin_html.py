@@ -157,6 +157,7 @@ BUILTIN_VARS = {
     'dict':         dict,
     'list':         list,
     
+    'int':          int,
     'range':        range,
     'enumerate':    enumerate,
 }
