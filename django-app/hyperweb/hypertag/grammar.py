@@ -4,7 +4,7 @@ An indentation-based document description & templating language with modularity 
 
 ***Names (?):
 - HyML, PyML, Sleek, HypeML, OneML, HDML, Coco, BlueText, DeepText, HyperMark, WideMark, RichMark, Hypertags
-  Limerick, Limeric, verse, well-versed, verses, Versus, strophe, sonnet, Lyric
+  Limerick, Limeric, verse, well-versed, verses, Versus, strophe, sonnet, Lyric, Petarda
   Elm Tree (wiąz) linden (lipa) oak (dąb) fig (figa) lemon plum cone (szyszka) tulip, OakDoc FigTree
   lapis lazuli, wenge, violet purple lime lilac, iris amber jet lava sea steel, aqua, string stringer stringl
   DotTag BigTag SoTag GoTag PurpleTag LimeTag BlueTag GreenTag DynaTag SuperTag HighTag HiTag FlexTag SharpTag
@@ -484,7 +484,7 @@ try_long         =  'try' generic_control (nl 'else' generic_control)*
 try_short        =  '?' ws block_struct                         # short version of "try" block:  ?tag ... or ?|...
 
 block_assign     =  mark_eval ws targets ws op_inplace? '=' ws (embedding / expr_augment)
-op_inplace       =  ~"//|\%%|[-+*/]"
+op_inplace       =  ~"//|\%%|<<|>>|[-+*/&|^]"
 
 block_while      =  'while' clause_if
 block_for        =  'for' space targets space 'in' space tail_for

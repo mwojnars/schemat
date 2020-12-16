@@ -637,6 +637,11 @@ class NODES(object):
                    '%':  operator.mod,
                    '/':  getattr(operator, 'div', None) or operator.truediv,
                    '//': operator.floordiv,
+                   '<<': operator.lshift,
+                   '>>': operator.rshift,
+                   '&':  operator.and_,
+                   '|':  operator.or_,
+                   '^':  operator.xor,
         }
         
         def setup(self):
@@ -1210,9 +1215,9 @@ class NODES(object):
     class xop_power(static_operator): pass
     class xop_shift(static_operator): pass
     class xop_comp(static_operator): pass
+    class xop_inplace(static): pass
     class xneg(static): pass                            # negation is implemented inside <xarith_expr>
     class xnot(static): pass                            # static keyword "not" must have a node, for counting of repeated "not not not ..." expression
-    class xop_inplace(static): pass
     
     class chain_expression(expression):
         """A chain of different binary operators, all having the same priority: x1 OP1 x2 OP2 x3 ..."""

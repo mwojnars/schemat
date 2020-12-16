@@ -708,14 +708,20 @@ def test_018_while():
     
 def test_019_inplace_assign():
     src = """
-        $i = 7
-        $i += 2
-        $i -= 2
-        $i *= 2
-        $i /= 2
+        $i   = 7
+        $i  += 2
+        $i  -= 2
+        $i  *= 2
+        $i  /= 2
         $i //= 2
-        $i %= 2
-        $i = int(i)
+        $i  %= 2
+        $i   = int(i)
+        $i <<= 2
+        $i >>= 2
+        $i  &= 2
+        $i  |= 1
+        $i  ^= 123
+        $i  ^= 123
         while i < 4
             | $i
             $i += 1
