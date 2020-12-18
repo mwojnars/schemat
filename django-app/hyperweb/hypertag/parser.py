@@ -128,7 +128,7 @@ class Grammar(Parsimonious):
         INDENT_T = self.symbols['INDENT_T']
         DEDENT_T = self.symbols['DEDENT_T']
 
-        lines = ['']            # output lines after preprocessing; empty line prepended for correct parsing of the 1st block;
+        lines = ['']            # output lines after preprocessing; empty line prepended for correct parsing of the 1st block's margin;
         linenum = 0             # current line number in input script
         current = ''            # current indentation, as a string
         margin  = 0             # current no. of empty lines that preceed the next block
@@ -956,6 +956,7 @@ class NODES(object):
     class xexpr_augment(expression_root): pass
     
     class variable(expression):
+        """Common code for both a variable's definition (xvar_def) and a variable's occurrence (xvar_use)."""
         name      = None
         read      = False       # True in <xvar_use> and this <xvar_def> which performs in-place operation
         write     = False       # True in <xvar_def> and <attribute>
@@ -1010,7 +1011,6 @@ class NODES(object):
             assert self.write
             state[self.primary or self] = value
 
-
     class xvar_use(variable):
         """Occurence (use) of a variable."""
         read = True
@@ -1025,76 +1025,6 @@ class NODES(object):
             """
             self.read = True
         
-
-    # class variable(node):
-    #     var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
-    #                             # that occur at the same depth (in the same namespace)
-    
-    # class xvar_use(variable):
-    #     """Occurence (use) of a variable."""
-    #     name     = None
-    #     read     = True
-    #
-    #     # external variable...
-    #     external = False        # if True, the variable is linked directly to its value, which is stored here in 'value'
-    #     value    = None         # if external=True, the value of the variable, as found already during analyse()
-    #
-    #     # native variable...
-    #     # depth    = None         # no. of nested hypertag definitions that surround this variable;
-    #     #                         # for proper linking to non-local variables in nested hypertag definitions
-    #     defnode  = None         # <xvar_def> or <xattr_def> node that defines this variable
-    #
-    #     def setup(self):
-    #         self.name = self.text()
-    #         if self.name[0] == '$':                     # preceeding $ is allowed inside {...} and should be truncated here
-    #             self.name = self.name[1:]
-    #
-    #     def analyse(self, ctx):
-    #         # self.depth = ctx.depth
-    #         symbol = VAR(self.name)
-    #         if symbol not in ctx: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
-    #
-    #         link = ctx[symbol]
-    #         if isinstance(link, NODES.node):            # native variable?
-    #             self.defnode = link
-    #         else:                                       # external variable...
-    #             self.external = True
-    #             self.value = link                       # value of an external variable is known already during analysis
-    #
-    #     def evaluate(self, state):
-    #
-    #         if self.external:                                       # external variable? return its value without evaluation
-    #             return self.value
-    #
-    #         node = self.defnode
-    #         if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
-    #         return state[node]
-
-    # class xvar_def(variable):
-    #     """Definition of a variable, or assignment to a previously defined variable."""
-    #     name    = None
-    #     write   = True
-    #
-    #     primary = None          # 1st definition node of this variable, if self represents a re-assignment
-    #     var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
-    #                             # that occur at the same depth (in the same namespace)
-    #
-    #     def setup(self):
-    #         self.name = self.text()
-    #
-    #     def analyse(self, ctx):
-    #         self.var_depth = ctx.regular_depth
-    #         symbol  = VAR(self.name)
-    #         primary = ctx.get(symbol)
-    #
-    #         if primary and primary.var_depth == self.var_depth:
-    #             self.primary = primary
-    #         else:
-    #             ctx.push(symbol, self)
-    #
-    #     def assign(self, state, value):
-    #         state[self.primary or self] = value
-    
 
     ###  EXPRESSIONS - TAIL OPERATORS  ###
     
@@ -1714,10 +1644,11 @@ class HypertagAST(BaseTree):
 
     def render(self):
         dom = self.translate()
-        output = dom.render()
-        if not output: return output
-        assert output[0] == '\n'        # extra empty line was prepended by Grammar.preprocess() and must be removed now
-        return output[1:]
+        return dom.render()
+        # output = dom.render()
+        # if not output: return output
+        # assert output[0] == '\n'        # extra empty line was prepended by Grammar.preprocess() and must be removed now
+        # return output[1:]
 
     def __getitem__(self, tag_name):
         """Returns a top-level hypertag node wrapped up in Hypertag, for isolated rendering. Analysis must have been performed first."""
@@ -1772,17 +1703,6 @@ if __name__ == '__main__':
             input enabled=True
         """
 
-    # text = """
-    #     | Ala ma
-    #       kota
-    #     p  | Ala ma
-    #        kota
-    #     p
-    #       | tail text
-    #           tail text
-    #
-    #          xxx
-    # """
     # text = """
     #     $k = 5
     #     for i, val in enumerate(range(k-2), start = k*2):

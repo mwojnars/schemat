@@ -772,7 +772,17 @@ def test_020_expression_in_string():
         size = 10px
     """
     assert ht.parse(src).strip() == out.strip()
-    
+    src = """
+        $size = 10
+        | a { "b $size b" } a
+        | a { "b { "c {size} c" } b" } a
+    """
+    out = """
+        a b 10 b a
+        a b c 10 c b a
+    """
+    assert ht.parse(src).strip() == out.strip()
+
 def test_100_varia():
     src = """
         h1 : a href="http://xxx.com": |This is <h1> title

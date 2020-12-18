@@ -25,6 +25,37 @@ Why to use Hypertag:
 
 ## Quick Start
 
+## Cheat Sheet
+
+| Symbol | Description |
+| ------ | --------------- | 
+| %tag ...  | hypertag definition block |
+| %tag      | reference to a tag in an expression |
+| @body     | body attribute in attributes list of a hypertag definition |
+| @body[1:] | DOM embedding block  |
+| $x=       | assignment block |
+| $x        | expression embedding in a text block or string |
+| {x}       | expression embedding in a text block or string |
+| x!        | obligatory qualifier for an expression |
+| x?        | optional qualifier for an expression |
+| ? ...     | "try" block |
+| < ...     | "dedent" marker for a block |
+| &#124; text   | normal text block (may contain expressions, will be HTML-escaped) |
+| / text        | markup text block (may contain expressions, will NOT be HTML-escaped) |
+| ! text        | verbatim text block (expressions will NOT be parsed, text will NOT be HTML-escaped) |
+| -- comment    | block or inline comment |
+| # comment     | block or inline comment |
+| .CLASS    | shortcut attribute in a tagged block, same as: class="CLASS" |
+| #ID       | shortcut attribute in a tagged block, same as: id="ID" |
+| r'text'   | r-string (raw string), no embedded expressions |
+| r"text"   | r-string (raw string), no embedded expressions |
+| 'text'    | f-string (formatted string), may contain embedded expressions: $... and {...} |
+| "text"    | f-string (formatted string), may contain embedded expressions: $... and {...} |
+| $$        | escape string to render $ in a normal/markup text block and inside formatted strings |
+| {{        | escape string to render { in a normal/markup text block and inside formatted strings |
+| }}        | escape string to render } in a normal/markup text block and inside formatted strings |
+
+
 ## Terminology
 
 - block
@@ -44,9 +75,9 @@ Why to use Hypertag:
 
 Normal, markup, verbatim:
 
-    | normal block with {'embedded'} $expressions
-    / markup <b>block</b>
-    ! verbatim $block$ (expressions left unparsed)
+    | normal block with {'em'+'bedded'} $expressions
+    / markup <b>block</b> with no HTML escaping
+    ! verbatim $block$, expressions left unparsed
 
 Multiline block:
 
@@ -415,6 +446,29 @@ The above code is equivalent to:
     if condition
         p | render something
 
+### Indentation
+
+Normally, _script indentation_ is stored in the DOM nodes and translates to 
+_output indentation_ of the text produced during rendering.
+You can modify this behaviour and remove output indentation in two ways, by using:
+
+- Dedent marker (<): removes output indentation of a single block
+  the marker is used with
+- Dedent tag (builtin): removes output indentation of all nested blocks
+  (but the indentation of the dedent block itself stays untouched)
+
+Often, _dedent marker_ and _dedent tag_ are used together.
+
+Example:
+
+    div
+        < dedent : a
+            p:    / These <p> blocks will be aligned with their parent (<a>) after rendering.
+                b | Deeper-level nested block are dedented, too!
+            p     / And the parent's indentation is removed, as well
+                    (<a> is aligned with top-level <div>), thanks to 
+                    the use of the <i>dedent marker</i>.
+    
 
 ## DOM
 
@@ -425,6 +479,20 @@ DOM = Document Object Model
 ### DOM manipulation
 
 Selectors as methods of Sequence ...
+
+
+## Selectors (??)
+
+**Terminal tag** is a tag that does not use any tags inside its (formal) body and thus 
+its expansion does NOT create any new tagged nodes, except possibly those that have been
+passed to it in the @body attribute.
+Terminal tags are important, because they are the only tags that may occur in a DOM tree
+after translation of the AST; and consequently, they are the only tags that are visible 
+to **selectors** and can be operated on during expansion of other (non-terminal) tags.
+
+Note that:
+- All external tags that return plain text (their property `terminal = True`) are terminal.
+- All native hypertags that 
 
 
 ## Script execution
@@ -450,4 +518,9 @@ the DOM tree before it gets rendered. In such case, the client should call
 - class Sequence
 - class Environment
 
+## Questions & Answers
+
+If you have specific questions related to Hypertag syntax, please post them
+on [StackOverflow](https://stackoverflow.com/questions/ask) 
+and tag them with, guess... the "**hypertag**" tag ;)
 

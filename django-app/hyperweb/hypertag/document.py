@@ -323,7 +323,20 @@ class HNode:
         
 class HRoot(HNode):
     """Root node of a Hypertag DOM tree."""
-    
+
+    def render(self, drop_line = True):
+        """
+        If this HRoot represents an entire translated document that was originally fed to a Hypertag parser,
+        an extra empty line have been prepended by the parser in Grammar.preprocess() and should be removed now
+        - set drop_line=True (default) to perform this correction or drop_line=False to skip it.
+        """
+        output = super(HRoot, self).render()
+        return output[1:] if drop_line and output.startswith('\n') else output
+        # if not output or not drop_line: return output
+        # assert output[0] == '\n'
+        # return output[1:]
+        
+
 class HText(HNode):
     """A leaf node containing plain text."""
     
