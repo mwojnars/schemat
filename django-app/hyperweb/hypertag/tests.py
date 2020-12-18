@@ -85,20 +85,20 @@ def test_003_empty_blocks():
 
 def test_004_layout():
     src = """
-    h1
-        p : b | Ala
-        p
-            |     Ola
-                i kot
+        h1
+            p : b | Ala
+            p
+                |     Ola
+                    i kot
     """
     out = """
-    <h1>
-        <p><b>Ala</b></p>
-        <p>
-                Ola
-              i kot
-        </p>
-    </h1>
+        <h1>
+            <p><b>Ala</b></p>
+            <p>
+                    Ola
+                  i kot
+            </p>
+        </h1>
     """
     assert ht.parse(src).strip() == out.strip()
     src = """
@@ -117,6 +117,26 @@ def test_004_layout():
         <p>
 
             <i></i>
+        </p>
+    """
+    assert ht.parse(src).strip() == out.strip()
+    
+    src = """
+        p
+            < p: | Ala
+                 | kot
+            b | i pies
+            < if True:
+                / dedented
+                | clause
+    """                             # clear indentation (dedent) marker, dedented blocks
+    out = """
+        <p>
+        <p>Ala
+             kot</p>
+            <b>i pies</b>
+        dedented
+        clause
         </p>
     """
     assert ht.parse(src).strip() == out.strip()

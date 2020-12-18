@@ -314,10 +314,18 @@ class NODES(object):
 
     class xblock(node):
         """Wrapper around all specific types of blocks that adds top margin and marks "outline" mode for the first returned HNode."""
+        dedent = None           # True if indentation should be cleared through the use of a "dedent" marker (<)
+        
+        def setup(self):
+            assert 2 <= len(self.children) <= 3 and self.children[0].type == 'margin_out'
+            if len(self.children) == 3:
+                self.dedent = True
+                del self.children[1]                    # for translate() there must remain 2 children: [margin, block]
+            
         def translate(self, state):
-            assert len(self.children) == 2 and self.children[0].type == 'margin_out'
             margin, block = (c.translate(state) for c in self.children)
             if block: block[0].set_outline()            # mark the 1st node of the block as being "outline" not "inline"
+            if self.dedent: block.set_indent('')
             return Sequence(margin, block)
             
     class block_text(node):
@@ -1357,6 +1365,7 @@ class NODES(object):
     class xtext(static):        pass
     class xtext_quot1(static):  pass
     class xtext_quot2(static):  pass
+    class xdedent(static):      pass
     class xmargin(static):      pass
     
     class xmargin_out(static):
@@ -1381,7 +1390,7 @@ class NODES(object):
         def render(self, state):
             return ''
     
-    class xindent(node):
+    class indent(node):
         whitechar = None
         def translate(self, state):
             """Called when INDENT/DEDENT surround a block."""
@@ -1392,7 +1401,7 @@ class NODES(object):
             state.indent(self.whitechar)
             return ''
 
-    class xdedent(node):
+    class dedent(node):
         whitechar = None
         def translate(self, state):
             state.dedent(self.whitechar)
@@ -1401,13 +1410,13 @@ class NODES(object):
             state.dedent(self.whitechar)
             return ''
 
-    class xindent_s(xindent):
+    class xindent_s(indent):
         whitechar = ' '
-    class xindent_t(xindent):
+    class xindent_t(indent):
         whitechar = '\t'
-    class xdedent_s(xdedent):
+    class xdedent_s(dedent):
         whitechar = ' '
-    class xdedent_t(xdedent):
+    class xdedent_t(dedent):
         whitechar = '\t'
 
 
@@ -1747,6 +1756,12 @@ if __name__ == '__main__':
     text = """
         $size = 10
         p style = r'color: blue; font-size: $size'
+            < p: | Ala
+                 | kot
+            b | i pies
+            < if True:
+                / dedented
+                | clause
     """
 
     tree = HypertagAST(text, stopAfter = "rewrite")

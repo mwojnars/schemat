@@ -473,7 +473,8 @@ document         =  core_blocks? margin?
 tail_blocks      =  (indent_s core_blocks dedent_s) / (indent_t core_blocks dedent_t)
 core_blocks      =  tail_blocks / block+
 
-block            =  margin_out (block_control / block_def / block_import / block_struct / block_comment / special_tag)
+block            =  margin_out dedent? (block_control / block_def / block_import / block_struct / block_comment / special_tag)
+dedent           =  '<' ws
 
 ###  CONTROL BLOCKS
 
