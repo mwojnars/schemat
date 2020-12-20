@@ -520,7 +520,8 @@ the DOM tree before it gets rendered. In such case, the client should call
 
 ## Questions & Answers
 
-If you have specific questions related to Hypertag syntax, please post them
+If you have technical questions related to Hypertag, please post them
 on [StackOverflow](https://stackoverflow.com/questions/ask) 
 and tag them with, guess... the "**hypertag**" tag ;)
 
+Other questions can be posted in the _Discussions_ section on Hypertag's page in GitHub.

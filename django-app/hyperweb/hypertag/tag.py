@@ -1,4 +1,4 @@
-from hyperweb.hypertag.document import Sequence, HNode
+from hyperweb.hypertag.dom import Sequence, HNode
 
 
 ########################################################################################################################################################

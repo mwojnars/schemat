@@ -511,10 +511,10 @@ attr_body        =  mark_embed ws name_id
 attr_def         =  name_xml (ws '=' ws value_of_attr)?
 
 block_import     =  ('from' path_import space)? 'import' space item_import (comma item_import)*
-item_import      =  wild_import / (name_import rename?)
-wild_import      =  '*'
-name_import      =  (mark_def / mark_eval) name_id              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
 path_import      =  ~"[^ \t\n\\x22\\x27]+"                        # import path can be ANY string of 1+ characters unless it contains a whitespace, ' or "
+item_import      =  wild_import / name_import
+wild_import      =  '*'
+name_import      =  symbol rename?                              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
 rename           =  space 'as' space name_id
 
 
@@ -693,7 +693,7 @@ op_comp      =  ~"==|!=|>=|<=|<|>|not\s+in|is\s+not|in|is"
 
 ###  IDENTIFIERS
 
-#name_attr       =  !name_reserved ~"[a-z_][a-z0-9_-]*"i
+symbol           =  (mark_def / mark_eval) name_id
 name_id          =  !name_reserved ~"[a-z_][a-z0-9_]*"i
 name_reserved    =  ~"(from|import|if|else|elif|try|for|while|break|continue|pass|is|in|not|and|or)\\b"     # names with special meaning inside expressions, disallowed for hypertags & variables; \\b is a regex word boundary and is written with double backslash bcs single backslash-b is converted to a backspace by Python
 

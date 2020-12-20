@@ -15,9 +15,9 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
 from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, grammar
-from hyperweb.hypertag.structs import Context, Stack, State
+from hyperweb.hypertag.structs import Context, State, Slot
 from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
-from hyperweb.hypertag.document import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
+from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hyperweb.hypertag.tag import Tag, null_tag
 
 DEBUG = False
@@ -277,23 +277,6 @@ class NODES(object):
 
         def __str__(self): return "<%s>" % self.__class__.__name__  #object.__str__(self)
 
-    class bnode(node):
-        """A "block" type of node. Returns a Block during rendering."""
-    class inode(node):
-        """An "inline" type of node. Returns a plain (inline) string during rendering."""
-
-    class xdocument(node):
-        
-        def translate(self, state):
-            nodes = [c.translate(state) for c in self.children]
-            hroot = HRoot(body = nodes, indent = '\n')
-            hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
-            return hroot
-
-        # def compactify(self, state):
-        #     # if DEBUG: print("compact", "DOC", state)
-        #     self.children = NODES._compactify_siblings_(self.children, state)
-
     class static(node):
         """
         A node that represents static text outside expressions; its self.value is already known
@@ -309,6 +292,28 @@ class NODES(object):
         def render(self, state):    return self.value
         def __str__(self):          return self.value
         
+    class artificial(node):
+        """Base class for artificial nodes added to the AST after parsing: during analysis or compactification."""
+        type = '_artificial_'
+        
+        def __init__(self, origin):
+            self.pos = origin.pos
+            self.tree = origin.tree
+            self.fulltext = origin.fulltext
+
+
+    class xdocument(node):
+        
+        def translate(self, state):
+            nodes = [c.translate(state) for c in self.children]
+            hroot = HRoot(body = nodes, indent = '\n')
+            hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
+            return hroot
+
+        # def compactify(self, state):
+        #     # if DEBUG: print("compact", "DOC", state)
+        #     self.children = NODES._compactify_siblings_(self.children, state)
+
 
     ###  BLOCKS  ###
 
@@ -510,8 +515,64 @@ class NODES(object):
             elif body:
                 raise VoidTagEx(f"non-empty body passed to a void tag '{self.name}'", caller)
             
+    class xblock_import(node):
+        """"""
+        path  = None            # import path string; optional
+        items = None            # list of 1+ nodes of type <xwild_import> or <xname_import>
+        
+        def setup(self):
+            if self.children[0].type == 'path_import':
+                self.path  = self.children[0].value
+                self.items = self.children[1:]
+            else:
+                self.items = self.children
+            for item in self.items:
+                item.path = self.path
+                
+        def analyse(self, ctx):
+            if ctx.control_depth >= 1: raise SyntaxErrorEx(f'import inside a control block is not allowed', self)
+            super(NODES.xblock_import, self).analyse(ctx)
+
+        def translate(self, state):
+            for item in self.items: item.translate(state)
+            return Sequence()
+
+    class xwild_import(node):
+        path    = None      # path string as specified in the "from" clause
+        symbols = None      # dict of symbols and their values as retrieved from environment
+        slots   = None      # dict of symbols and their slots created during analysis
+        
+        def analyse(self, ctx):
+            env = self.tree.environment
+            self.symbols = env.import_all(self.path)
+            self.slots   = {}
+            for symbol in self.symbols:
+                self.slots[symbol] = slot = Slot(symbol, ctx)
+                ctx.push(symbol, slot)
+
+        def translate(self, state):
+            for symbol, value in self.symbols.items():
+                self.slots[symbol].set(state, value)
+            
+    class xname_import(node):
+        path  = None        # path string as specified in the "from" clause
+        slot  = None        # <slot> that will keep value of this imported symbol
+        value = None        # value of this symbol as retrieved from environment
+        
+        def analyse(self, ctx):
+            env    = self.tree.environment
+            symbol = self.children[0].value                         # original symbol name with leading % or $
+            rename = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
+            self.value = env.import_one(symbol, self.path)
+            self.slot  = Slot(rename, ctx)
+            ctx.push(rename, self.slot)
+
+        def translate(self, state):
+            self.slot.set(state, self.value)
+
+        
     class control_block(node):
-        """Base class for if/try blocks."""
+        """Base class for if/try/for/while blocks."""
         
         def analyse(self, ctx):
             ctx.control_depth += 1
@@ -768,7 +829,7 @@ class NODES(object):
         """
         DEFAULT = "div"     # default `name` when no tag name was provided (a shortcut was used: .xyz or #xyz); UNUSED!
         name  = None        # tag name: a, A, h1, div ...
-        tag   = None        # resolved definition of this tag, as a Tag instance (either <xblock_def> or ExternalTag)
+        tag   = None        # resolved definition of this tag, as a Tag instance (either <xblock_def> or ExternalTag); or a Slot
         attrs = None        # 0+ list of <attr_short> and <attr_val> nodes
         unnamed = None      # list of <expression> nodes of unnamed attributes from `attrs`
         named   = None      # list of (name, expression) pairs of named attributes from `attrs`; duplicate names allowed
@@ -809,12 +870,17 @@ class NODES(object):
             #     return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
             # elif isinstance(self.tag, NODES.xblock_def):
             #     return self.tag.translate_tag(state, body, attrs, kwattrs)
-
-            if isinstance(self.tag, Tag):
+            
+            tag = self.tag
+            
+            if isinstance(tag, Slot):
+                tag = tag.get(state)
+                
+            if isinstance(tag, Tag):
                 attrs, kwattrs = self._eval_attrs(state)                        # calculate actual values of attributes
-                return self.tag.translate_tag(state, body, attrs, kwattrs, self)
+                return tag.translate_tag(state, body, attrs, kwattrs, self)
             else:
-                raise NotATagEx(f"Not a tag: '{self.name}' ({self.tag.__class__})", self)
+                raise NotATagEx(f"Not a tag: '{self.name}' ({tag.__class__})", self)
             
         def _eval_attrs(self, state):
             unnamed = [attr.evaluate(state) for attr in self.unnamed]
@@ -848,11 +914,11 @@ class NODES(object):
         expr   = None       # <expression> node of this attribute; None if no expression present (attr definition with no default)
         body   = False      # True in xattr_body
         
-        var_depth = None    # ctx.regular_depth of the node, for correct identification of re-assignments
+        depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
                             # that occur at the same depth (in the same namespace)
         
         def declare_var(self, ctx):
-            self.var_depth = ctx.regular_depth
+            self.depth = ctx.regular_depth
             ctx.push(VAR(self.name), self)
         
     # in-definition attributes:  xattr_body, xattr_def
@@ -974,11 +1040,13 @@ class NODES(object):
         value     = None        # if external=True, the value of the variable, as found already during analyse()
         
         # native variable...
-        defnode   = None        # <xvar_def> or <xattr_def> node that defines this variable
+        defnode   = None        # definition node (xvar_def, xattr_def) or a Slot that identifies this variable
+        #slot     = None        # <slot> node that identifies values of this variable in `state`
+        # TODO: only use slots, no defnode
         
         # assignment
         primary   = None        # 1st definition node of this variable, if self represents a re-assignment
-        var_depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
+        depth     = None        # ctx.regular_depth of the node, for correct identification of re-assignments
                                 # that occur at the same depth (in the same namespace)
         
         def setup(self):
@@ -992,15 +1060,16 @@ class NODES(object):
             
             if self.read:
                 if link is None: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
-                if isinstance(link, NODES.node):            # native variable?
+                if isinstance(link, (NODES.node, Slot)):    # native or imported variable?
                     self.defnode = link
                 else:                                       # external variable...
+                    # TODO: no need to handle externals here
                     self.external = True
                     self.value = link                       # value of an external variable is known already during analysis
             
             if self.write:
-                self.var_depth = ctx.regular_depth
-                if link and link.var_depth == self.var_depth:
+                self.depth = ctx.regular_depth
+                if link and link.depth == self.depth:
                     self.primary = link
                 else:
                     ctx.push(symbol, self)
@@ -1359,7 +1428,10 @@ class NODES(object):
 
     ###  STATIC nodes  ###
     
+    class xpath_import(static): pass
+    
     class xnl(static):          pass
+    class xsymbol(static):      pass
     class xname_id(static):     pass
     class xname_xml(static):    pass
     class xtext(static):        pass
@@ -1498,7 +1570,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
-                "try_long try_short special_tag head_verbat head_normal head_markup " \
+                "item_import try_long try_short special_tag head_verbat head_normal head_markup " \
                 "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "embedding embedding_braces embedding_eval embedding_or_factor target " \
@@ -1537,11 +1609,13 @@ class HypertagAST(BaseTree):
     }
     config = None
 
-    # dicts of external custom tags & vars to be declared as global at the beginning of parsing, after built-in symbols;
-    # configured in __init__() by providing `context` dictionary
-    custom_tags = None
-    custom_vars = None
-
+    # # dicts of external custom tags & vars to be declared as global at the beginning of parsing, after built-in symbols;
+    # # configured in __init__() by providing `context` dictionary
+    # custom_tags = None
+    # custom_vars = None
+    
+    environment = None          # instance of Environment that controls how external symbols are imported
+    
     
     ###  Output of parsing and analysis  ###
 
@@ -1554,14 +1628,15 @@ class HypertagAST(BaseTree):
                                 # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
 
     
-    def __init__(self, text, context = {}, stopAfter = None, verbose = True, **config):
+    def __init__(self, text, env, stopAfter = None, verbose = True, **config):
         """
         :param text: input document to be parsed
         :param context: custom global symbols (variables and/or tags) that will be available to Hypertag script;
                         tag names must be prepended with '%'; names without leading '%' are interpreted as variables
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
         """
-        self._init_global(context)
+        self.environment = env
+        # self._init_global(context)
         
         self.config = self.config_default.copy()
         self.config.update(**config)
@@ -1581,15 +1656,15 @@ class HypertagAST(BaseTree):
         self.analyse()
         if stopAfter == "analyse": return
 
-    def _init_global(self, context):
-        """Set custom_tags and custom_vars based on `context` dictionary."""
-        for name in context:
-            if not isinstance(name, str): raise Exception(f"Incorrect type of a symbol name in context, must be <str>: {name}")
-            if not name or (name[0] in '%$' and len(name) <= 1): raise Exception(f"Empty name of a symbol in context: {name}")
-        
-        self.custom_tags = {name[1:]: link for name, link in context.items() if name.startswith('%')}
-        self.custom_vars = {name[1:]: link for name, link in context.items() if name.startswith('$')}
-        self.custom_vars.update({name: link for name, link in context.items() if name[0] not in '%$'})
+    # def _init_global(self, context):
+    #     """Set custom_tags and custom_vars based on `context` dictionary."""
+    #     for name in context:
+    #         if not isinstance(name, str): raise Exception(f"Incorrect type of a symbol name in context, must be <str>: {name}")
+    #         if not name or (name[0] in '%$' and len(name) <= 1): raise Exception(f"Empty name of a symbol in context: {name}")
+    #
+    #     self.custom_tags = {name[1:]: link for name, link in context.items() if name.startswith('%')}
+    #     self.custom_vars = {name[1:]: link for name, link in context.items() if name.startswith('$')}
+    #     self.custom_vars.update({name: link for name, link in context.items() if name[0] not in '%$'})
 
     def analyse(self):
         "Link occurences of variables and hypertags with their definition nodes, collect all symbols defined in the document."
@@ -1607,14 +1682,14 @@ class HypertagAST(BaseTree):
         builtin_vars = VARS(BUILTIN_VARS)
         builtin_tags = TAGS(BUILTIN_TAGS)
         builtin_tags.update(TAGS(BUILTIN_HTML))
-        custom_vars  = VARS(self.custom_vars)
-        custom_tags  = TAGS(self.custom_tags)
+        # custom_vars  = VARS(self.custom_vars)
+        # custom_tags  = TAGS(self.custom_tags)
 
         # seed the context
         ctx.pushall(builtin_tags)
         ctx.pushall(builtin_vars)
-        ctx.pushall(custom_tags)
-        ctx.pushall(custom_vars)
+        # ctx.pushall(custom_tags)
+        # ctx.pushall(custom_vars)
         # ctx.pushall(FILTERS)
         
         position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
@@ -1669,16 +1744,25 @@ class HypertagAST(BaseTree):
 #####  HYPERTAG PARSER
 #####
 
-class HypertagParser:
+class Hypertag:
     """
-    Parser of Hypertag scripts.
+    Parsing functions for Hypertag scripts: translate(), render().
     """
-    def __init__(self, **config):
-        self.config = config
+    
+    # def __init__(self, env, **config):
+    #     if isinstance(env, type): env = env()
+    #     self.environment = env
+    #     self.config = config
+    
+    # def parse(self, script, **context):
+    #     self.environment.set_context(context)
+    #     ast = HypertagAST(script, self.environment, **self.config)
+    #     return ast.render()
+
+    @staticmethod
+    def render(script, env, **config):
         
-    def parse(self, source):
-        
-        ast = HypertagAST(source, **self.config)
+        ast = HypertagAST(script, env, **config)
         return ast.render()
     
 
@@ -1754,17 +1838,14 @@ if __name__ == '__main__':
             | This text is rendered through a FANCY hypertag!
     """
     text = """
-        $size = 10
-        p style = r'color: blue; font-size: $size'
-            < p: | Ala
-                 | kot
-            b | i pies
-            < if True:
-                / dedented
-                | clause
+        DIV
+            < try | {True}!
+            < try | {False}!
+            <? | {True}!
+            <? | {False}!
     """
 
-    tree = HypertagAST(text, stopAfter = "rewrite")
+    tree = HypertagAST(text, stopAfter = "rewrite", env = None) #HTMLEnvironment())
     
     # print()
     # print("===== AST =====")

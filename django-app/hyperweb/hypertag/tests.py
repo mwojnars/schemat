@@ -9,13 +9,16 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 # import unittest
 import os, re, pytest
 
-from hyperweb.hypertag.parser import HypertagParser
-ht = HypertagParser(verbose = False)
+from hyperweb.hypertag.parser import Hypertag
+#ht = Hypertag(verbose = False)
 
 #####################################################################################################################################################
 #####
 #####  UTILITIES
 #####
+
+def render(script):
+    return Hypertag.render(script, None, verbose = False)
 
 def merge_spaces(s, pat = re.compile(r'\s+')):
     """Merge multiple spaces, replace newlines and tabs with spaces, strip leading/trailing space."""
@@ -28,33 +31,33 @@ def merge_spaces(s, pat = re.compile(r'\s+')):
 
 def test_001_basic():
     src = """"""
-    assert ht.parse(src) == ""
+    assert render(src) == ""
     src = """      """
-    assert ht.parse(src) == ""
+    assert render(src) == ""
     src = """ |Ala    """
-    assert ht.parse(src) == " Ala"              # trailing spaces in lines are removed
+    assert render(src) == " Ala"                # trailing spaces in lines are removed
     src = """\n|Ala\n"""
-    assert ht.parse(src) == "\nAla\n"           # leading/trailing newlines of a document are preserved
+    assert render(src) == "\nAla\n"             # leading/trailing newlines of a document are preserved
     src = """\n\n\t|Ala\n\n"""
-    assert ht.parse(src) == "\n\n\tAla\n\n"
+    assert render(src) == "\n\n\tAla\n\n"
     src = """\n\n \t | Ala\n\n"""
-    assert ht.parse(src) == "\n\n \t Ala\n\n"
+    assert render(src) == "\n\n \t Ala\n\n"
 
     src = """| $$ {{ }} {'.'}"""                # escape sequences
-    assert ht.parse(src) == "$ { } ."
+    assert render(src) == "$ { } ."
 
 def test_002_qualifiers():
     # the code below contains NESTED qualifiers: unsatisfied ! within ?
     src = """ | kot { 'Mru' "czek" 123 0! }? {456}! {0}? """
     out = """   kot  456   """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
     src = """ | kot { 'Mru' "czek" 123 0? }! {456}? {0}? """
     out = """   kot Mruczek123 456   """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
     with pytest.raises(Exception, match = 'Obligatory expression') as ex_info:
-        ht.parse("| {0}!")
+        render("| {0}!")
     
     # assert str(ex_info.value) == 'some info'
     
@@ -81,7 +84,7 @@ def test_003_empty_blocks():
 
         <B></B>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 def test_004_layout():
     src = """
@@ -100,7 +103,7 @@ def test_004_layout():
             </p>
         </h1>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         div
         
@@ -119,32 +122,49 @@ def test_004_layout():
             <i></i>
         </p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     
     src = """
         p
-            < p: | Ala
-                 | kot
+            <p: | Ala
+                | kot
             b | i pies
             < if True:
-                / dedented
-                | clause
+                / clause of
+                | dedented "if"
+            if True:
+                < p | dedented clause in indented "if"
     """                             # clear indentation (dedent) marker, dedented blocks
     out = """
         <p>
         <p>Ala
-             kot</p>
+            kot</p>
             <b>i pies</b>
-        dedented
-        clause
+        clause of
+        dedented "if"
+            <p>dedented clause in indented "if"</p>
         </p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
+    src = """
+        DIV
+            < try | {True}!
+            < try | {False}!
+            <? | {True}!
+            <? | {False}!
+    """
+    out = """
+        <DIV>
+        True
+        True
+        </DIV>
+    """
+    assert render(src).strip() == out.strip()
 
 def test_005_doc_margins():
     src = """\n\n p | text  \n  \n  """
     out = """\n\n <p>text</p>\n\n"""
-    assert out == ht.parse(src)         # no .strip()
+    assert out == render(src)           # no .strip()
 
 def test_006_if():
     src = """
@@ -153,27 +173,27 @@ def test_006_if():
         elif True * 5:
             div | Ola
     """                     # ^ here, {False} is interpreted as an embedded expression {...} that evaluates to False
-    assert ht.parse(src).strip() == "<div>Ola</div>"
+    assert render(src).strip() == "<div>Ola</div>"
     src = """
         if {} | Ala
         elif 5 | Ola
     """                     # ^ here, {} is interpreted as an empty set() not an embedded expression {...} - the latter can't be empty
-    assert ht.parse(src).strip() == "Ola"
+    assert render(src).strip() == "Ola"
     src = """
         if {} | Ala
         else / Ola
     """
-    assert ht.parse(src).strip() == "Ola"
+    assert render(src).strip() == "Ola"
     src = """
         $test = False
         if test ! Ala
         elif (not test) / Ola
     """
-    assert ht.parse(src).strip() == "Ola"
+    assert render(src).strip() == "Ola"
     src = """
         if True | true
     """
-    assert ht.parse(src).strip() == "true"
+    assert render(src).strip() == "true"
 
 def test_007_variables():
     src = """
@@ -183,7 +203,7 @@ def test_007_variables():
             $ x = 10
         | {x}
     """
-    assert ht.parse(src).strip() == "5"
+    assert render(src).strip() == "5"
     src = """
         $ x = 1
         p:
@@ -193,7 +213,7 @@ def test_007_variables():
         | {x}
         # the line above outputs "1"
     """
-    assert merge_spaces(ht.parse(src)) == "<p> 2 </p> 1"
+    assert merge_spaces(render(src)) == "<p> 2 </p> 1"
     src = """
         if False:
             $ x = 5
@@ -201,7 +221,7 @@ def test_007_variables():
             $ x = 10
         | {x}
     """
-    assert ht.parse(src).strip() == "10"
+    assert render(src).strip() == "10"
 
     src = """
         $ y = 0
@@ -209,7 +229,7 @@ def test_007_variables():
             $ y = 5
             | {y}
     """
-    assert merge_spaces(ht.parse(src)) == "<div><p> 5 </p></div>"
+    assert merge_spaces(render(src)) == "<div><p> 5 </p></div>"
 
     src = """
         $x = 0
@@ -219,11 +239,11 @@ def test_007_variables():
             $x = 2
         | $x
     """
-    assert ht.parse(src).strip() == "0"
+    assert render(src).strip() == "0"
 
 def test_008_variables_err():
     with pytest.raises(Exception, match = 'referenced before assignment') as ex_info:
-        ht.parse("""
+        render("""
             if False:
                 $ x = 5
             else:
@@ -231,7 +251,7 @@ def test_008_variables_err():
             | {x}
         """)
     with pytest.raises(Exception, match = 'not defined') as ex_info:
-        ht.parse("""
+        render("""
             p
                 $ y = 5
             | {y}
@@ -239,36 +259,36 @@ def test_008_variables_err():
     
 def test_009_collections():
     src = "| { () }"            # empty tuple
-    assert merge_spaces(ht.parse(src)) == "()"
+    assert merge_spaces(render(src)) == "()"
     src = "| { (1 , ) }"
-    assert merge_spaces(ht.parse(src)) == "(1,)"
+    assert merge_spaces(render(src)) == "(1,)"
     src = "| { (1,2, 3) }"
-    assert merge_spaces(ht.parse(src)) == "(1, 2, 3)"
+    assert merge_spaces(render(src)) == "(1, 2, 3)"
 
     src = "| { [] }"
-    assert merge_spaces(ht.parse(src)) == "[]"
+    assert merge_spaces(render(src)) == "[]"
     src = "| { [1 , ] }"
-    assert merge_spaces(ht.parse(src)) == "[1]"
+    assert merge_spaces(render(src)) == "[1]"
     src = "| { [1,2, 3] }"
-    assert merge_spaces(ht.parse(src)) == "[1, 2, 3]"
+    assert merge_spaces(render(src)) == "[1, 2, 3]"
     src = "| { [ 1 ,[2], (), (3,)] }"
-    assert merge_spaces(ht.parse(src)) == "[1, [2], (), (3,)]"
+    assert merge_spaces(render(src)) == "[1, [2], (), (3,)]"
 
     src = "| {{'set'}}"
-    assert merge_spaces(ht.parse(src)) == "{'set'}"
+    assert merge_spaces(render(src)) == "{'set'}"
     src = "| { { 'set' , } }"
-    assert merge_spaces(ht.parse(src)) == "{'set'}"
+    assert merge_spaces(render(src)) == "{'set'}"
     src = "| { {1, 1 ,1} }"
-    assert merge_spaces(ht.parse(src)) == "{1}"
+    assert merge_spaces(render(src)) == "{1}"
 
     src = "| { {} }"
-    assert merge_spaces(ht.parse(src)) == "{}"
+    assert merge_spaces(render(src)) == "{}"
     src = "| { { } }"
-    assert merge_spaces(ht.parse(src)) == "{}"
+    assert merge_spaces(render(src)) == "{}"
     src = "| { {1:1, 2 : 2 , 3 :3,3:4,} }"
-    assert merge_spaces(ht.parse(src)) == "{1: 1, 2: 2, 3: 4}"
+    assert merge_spaces(render(src)) == "{1: 1, 2: 2, 3: 4}"
     src = "| {{ }}"
-    assert merge_spaces(ht.parse(src)) == "{ }"         # this is NOT a dict! sequences {{ and }} represent { and } characters escaped
+    assert merge_spaces(render(src)) == "{ }"           # this is NOT a dict! sequences {{ and }} represent { and } characters escaped
 
 def test_010_for():
     src = """
@@ -284,7 +304,7 @@ def test_010_for():
         <p>3</p>
         13
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         / pre
 
@@ -299,7 +319,7 @@ def test_010_for():
 
         post
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         for i in [1,2]:
             p:
@@ -317,15 +337,15 @@ def test_010_for():
         </p>
         2 out
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         for i in [1,2,3] | $i
     """
-    assert ht.parse(src).strip() == "123"
+    assert render(src).strip() == "123"
     src = """
         for i in [1,2,3] |   $i
     """
-    assert ht.parse(src).strip() == "1  2  3"
+    assert render(src).strip() == "1  2  3"
 
 def test_011_calls():
     src = """
@@ -337,7 +357,7 @@ def test_011_calls():
         1
         2
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         for i in range( 1 , 7 , 2 ,):
             | $i
@@ -347,7 +367,7 @@ def test_011_calls():
         3
         5
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         for pair in enumerate(range(3), start = 10):
             | $pair
@@ -357,7 +377,7 @@ def test_011_calls():
         (11, 1)
         (12, 2)
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         for i, val in enumerate(range(3), start = 10):
             | $val at $i
@@ -367,7 +387,7 @@ def test_011_calls():
         1 at 11
         2 at 12
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $k = 5
         for i, val in enumerate(range(k-2), start = k*2):
@@ -381,12 +401,12 @@ def test_011_calls():
         2 at 13
         13
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
     src = "| { {'a':'b'}.get('c', 123) }"
-    assert merge_spaces(ht.parse(src)) == "123"
+    assert merge_spaces(render(src)) == "123"
     src = "| { { 'a' : 'b' } . get ('c', 123) ' ' 'aaa' }"
-    assert merge_spaces(ht.parse(src)) == "123 aaa"
+    assert merge_spaces(render(src)) == "123 aaa"
 
 def test_012_hypertags():
     src = """
@@ -394,35 +414,35 @@ def test_012_hypertags():
             p | $a $b $c
         H 1 c=3 b=2
     """
-    assert ht.parse(src).strip() == "<p>1 2 3</p>"
+    assert render(src).strip() == "<p>1 2 3</p>"
     src = """
         %H a b c
             p | $a $b $c
         H 1 c=3 b=2
     """
-    assert ht.parse(src).strip() == "<p>1 2 3</p>"
+    assert render(src).strip() == "<p>1 2 3</p>"
     src = """
         %H a b=4 c='5':
             p | $a $b $c
         H 1 b=2
     """
-    assert ht.parse(src).strip() == "<p>1 2 5</p>"
+    assert render(src).strip() == "<p>1 2 5</p>"
     src = """
         %H a b=4 c='5' | $a $b  $c
         H 1 b=2
     """
-    assert ht.parse(src).strip() == "1 2  5"
+    assert render(src).strip() == "1 2  5"
     src = """
         %H  a  b = 4 c  ='5'|$a$b$c
         H 1 b=2
     """
-    assert ht.parse(src).strip() == "125"
+    assert render(src).strip() == "125"
     src = """
         $b = 10
         %H a b=4 c={b+5} | $a $b $c
         H 1 b={b*2}
     """
-    assert ht.parse(src).strip() == "1 20 15"
+    assert render(src).strip() == "1 20 15"
 
     src = """
         %H x | headline
@@ -439,7 +459,7 @@ def test_012_hypertags():
 
          last line
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         %H @body a=0
             | $a
@@ -454,7 +474,7 @@ def test_012_hypertags():
             <i>kot</i>
         </p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         %H | xxx
         p
@@ -467,24 +487,24 @@ def test_012_hypertags():
             5
         </p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         %H | xxx
         %H @body a=0
             | $a
         H 5
     """
-    assert ht.parse(src).strip() == "5"
+    assert render(src).strip() == "5"
     src = """
         %H @body a=0 | $a
         p : H 5
     """
-    assert ht.parse(src).strip() == "<p>5</p>"
+    assert render(src).strip() == "<p>5</p>"
     src = """
         %H @body a=0 @ body
         p : H 5 | kot
     """
-    assert ht.parse(src).strip() == "<p>kot</p>"
+    assert render(src).strip() == "<p>kot</p>"
 
     src = """
         $g = 100
@@ -506,7 +526,7 @@ def test_012_hypertags():
         xxx 325
         inside F
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $g = 100
         %g x | xxx {x+g}
@@ -518,7 +538,7 @@ def test_012_hypertags():
     out = """
         xxx 305
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         %H @body
             @body[0]
@@ -526,7 +546,7 @@ def test_012_hypertags():
             | first
             | second
     """
-    assert ht.parse(src).strip() == "first"
+    assert render(src).strip() == "first"
     src = """
         %G @body
             @body[0]
@@ -541,11 +561,11 @@ def test_012_hypertags():
         last
         in G
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 def test_013_hypertags_err():
     with pytest.raises(Exception, match = 'undefined tag') as ex_info:
-        ht.parse("""
+        render("""
             p
                 %H @body a=0
                     | $a
@@ -555,27 +575,27 @@ def test_013_hypertags_err():
     
 def test_014_none_embedded():
     with pytest.raises(Exception, match = 'embedded in markup text evaluates to None') as ex_info:
-        ht.parse(""" | {None} """)
+        render(""" | {None} """)
     with pytest.raises(Exception, match = 'string-concatenated evaluates to None') as ex_info:
-        ht.parse(""" | {None None} """)
+        render(""" | {None None} """)
     
     src = """ | {'a' None? 'b' None? 'c'} """
-    assert ht.parse(src).strip() == "abc"
+    assert render(src).strip() == "abc"
 
 def test_015_try():
     src = """ ? | {None} """
-    assert ht.parse(src) == ""
+    assert render(src) == ""
     src = """
         $ x = ''
         | x $x
         ? | x $x!
     """
-    assert ht.parse(src).strip() == "x"
+    assert render(src).strip() == "x"
     src = """
         $ x = False
         try | x $x!
     """
-    assert ht.parse(src).strip() == ""
+    assert render(src).strip() == ""
     src = """
         $ x = 0
         try | x $x!
@@ -583,7 +603,7 @@ def test_015_try():
         else| x+1 = {x+1}!
         else! error
     """
-    assert ht.parse(src).strip() == "x+1 = 1"
+    assert render(src).strip() == "x+1 = 1"
     src = """
         $ x = 0
         try
@@ -591,7 +611,7 @@ def test_015_try():
         else
             p | x+1 = {x+1}!
     """
-    assert ht.parse(src).strip() == "<p>x+1 = 1</p>"
+    assert render(src).strip() == "<p>x+1 = 1</p>"
     src = """
         $ x = 0
         try :
@@ -599,7 +619,7 @@ def test_015_try():
         else
             p | x+1 = {x+1}!
     """
-    assert ht.parse(src).strip() == "<p>x+1 = 1</p>"
+    assert render(src).strip() == "<p>x+1 = 1</p>"
     src = """
         $ x = 0
         try | x $x!
@@ -607,7 +627,7 @@ def test_015_try():
             try  / x*2 = {x*2}!
             else / x+1 = {x+1}!
     """
-    assert ht.parse(src).strip() == "x+1 = 1"
+    assert render(src).strip() == "x+1 = 1"
 
 def test_016_special_tags():
     src = """
@@ -629,7 +649,7 @@ def test_016_special_tags():
                 xxxxx
         </div>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         | pre
         for i in range(3)
@@ -643,7 +663,7 @@ def test_016_special_tags():
 
         post
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         | pre
         pass
@@ -656,7 +676,7 @@ def test_016_special_tags():
         pre
         post
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     
 def test_017_comments():
     src = """
@@ -673,7 +693,7 @@ def test_017_comments():
             <p>title</p>
         </div>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         p        -- comment
         p:       #  comment
@@ -695,7 +715,7 @@ def test_017_comments():
 
         yes
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 def test_018_while():
     src = """
@@ -709,7 +729,7 @@ def test_018_while():
         2
         1
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $i = 0
         while i < 3
@@ -721,12 +741,12 @@ def test_018_while():
         1
         2
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $i = 0
         while False / $i
     """
-    assert ht.parse(src).strip() == ""
+    assert render(src).strip() == ""
     
 def test_019_inplace_assign():
     src = """
@@ -753,7 +773,7 @@ def test_019_inplace_assign():
         2
         3
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     
 def test_020_expression_in_string():
     src = """
@@ -767,7 +787,7 @@ def test_020_expression_in_string():
         <p style="font-size:10"></p>
         <p style="font-size:10"></p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $size = '10'
         p style =  'font-size: $size'
@@ -783,7 +803,7 @@ def test_020_expression_in_string():
         <p style="font-size: $size px"></p>
         <p style="font-size: {size}"></p>
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $size = '10'
         | size {"= $size"}px
@@ -791,7 +811,7 @@ def test_020_expression_in_string():
     out = """
         size = 10px
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
     src = """
         $size = 10
         | a { "b $size b" } a
@@ -801,7 +821,7 @@ def test_020_expression_in_string():
         a b 10 b a
         a b c 10 c b a
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 def test_100_varia():
     src = """
@@ -829,7 +849,7 @@ def test_100_varia():
         <div id="box" class="top grey-01"></div>
         <input enabled />
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 def test_101_varia():
     src = """
@@ -849,7 +869,7 @@ def test_101_varia():
         </p>
         *****
     """
-    assert ht.parse(src).strip() == out.strip()
+    assert render(src).strip() == out.strip()
 
 
 #####################################################################################################################################################

@@ -3,7 +3,7 @@ from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
-from hyperweb.hypertag.document import Sequence, get_indent, del_indent
+from hyperweb.hypertag.dom import Sequence, get_indent, del_indent
 from hyperweb.hypertag.errors import VoidTagEx
 from hyperweb.hypertag.tag import ExternalTag
 

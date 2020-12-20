@@ -393,4 +393,52 @@ class State:
     #     if size < savepoint: raise Exception("State.rollback(), can't rollback to a point (%s) that is higher than the current size (%s)" % (savepoint, size))
     #     for _ in range(size - savepoint):
     #         self.values.popitem()
+    
+    
+class Slot:
+    """
+    Container that holds current value of a variable, or a reference to a Tag or hypertag definition node.
+    Created during analysis of definition / assignment / import blocks; provides global identification
+    of a symbol inside `state` during translation; enables correct name scoping and dynamic re-assignment of the actual
+    value or reference during translate(), so that imports and hypertag definitions can be placed inside
+    control blocks (i.e., dynamic name resolution of hypertags and imported symbols is possible).
+    """
+    name    = None
+    symbol  = None
+    
+    primary = None      # 1st definition of this symbol, if self represents a re-assignment (override)
+    depth   = None      # ctx.regular_depth of this node, for correct identification of re-assignments that occur
+                        # at the same depth (in the same namespace)
+    
+    # @staticmethod
+    # def create(symbol, ctx):
+    #     """Only create a new slot if needed; otherwise return an existing slot that shall be re-used (overriden)."""
+    #     slot = ctx.get(symbol)
+    #     if slot and slot.depth == ctx.regular_depth:            # slot already exists at the current namespaces depth?
+    #         return slot                                         # ...use this one
+    #     else:
+    #         slot = NODES.slot(symbol, ctx.regular_depth)        # otherwise create a new one and add to context
+    #         ctx.push(symbol, slot)
+    #         return slot
+    
+    def __init__(self, symbol, ctx):
+        assert len(symbol) >= 2 and symbol[0] in '$%'
+        self.name   = symbol[1:]
+        self.symbol = symbol
+        self.depth  = ctx.regular_depth
+
+        link = ctx.get(symbol)
+        if link and link.depth == self.depth:
+            self.primary = link
+        else:
+            ctx.push(symbol, self)
         
+    def set(self, state, value):
+        state[self.primary or self] = value
+        # state[self] = value
+        
+    def get(self, state):
+        return state[self.primary or self]
+        # return state[self]
+    
+
