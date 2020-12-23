@@ -4,6 +4,7 @@ from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 
 from hyperweb.hypertag.dom import Sequence, get_indent, del_indent
+from hyperweb.hypertag.environment import StandardEnvironment
 from hyperweb.hypertag.errors import VoidTagEx
 from hyperweb.hypertag.tag import ExternalTag
 
@@ -162,3 +163,7 @@ BUILTIN_VARS = {
     'enumerate':    enumerate,
 }
 
+
+
+class HTMLEnv(StandardEnvironment):
+    pass

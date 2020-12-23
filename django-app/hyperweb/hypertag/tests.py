@@ -9,6 +9,7 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 # import unittest
 import os, re, pytest
 
+from hyperweb.hypertag.builtin_html import HTMLEnv
 from hyperweb.hypertag.parser import Hypertag
 #ht = Hypertag(verbose = False)
 
@@ -17,12 +18,13 @@ from hyperweb.hypertag.parser import Hypertag
 #####  UTILITIES
 #####
 
-def render(script):
-    return Hypertag.render(script, None, verbose = False)
+def render(script, **ctx):
+    return Hypertag.render(script, HTMLEnv(**ctx), verbose = False)
 
 def merge_spaces(s, pat = re.compile(r'\s+')):
     """Merge multiple spaces, replace newlines and tabs with spaces, strip leading/trailing space."""
     return pat.sub(' ', s).strip()
+
 
 #####################################################################################################################################################
 #####
@@ -822,6 +824,18 @@ def test_020_expression_in_string():
         a b c 10 c b a
     """
     assert render(src).strip() == out.strip()
+
+def test_021_import():
+    src = """
+        import $x, $y
+        | $x, $y
+    """
+    assert render(src, x = 10, y = 'abc').strip() == "10, abc"
+    src = """
+        from CONTEXT import $x, $y
+        | $x, $y
+    """
+    assert render(src, x = 10, y = 'abc').strip() == "10, abc"
 
 def test_100_varia():
     src = """

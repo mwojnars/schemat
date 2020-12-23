@@ -16,7 +16,8 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, grammar
 from hyperweb.hypertag.structs import Context, State, Slot
-from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
+from hyperweb.hypertag.environment import TAG, VAR, TAGS, VARS
+from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS, HTMLEnv
 from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hyperweb.hypertag.tag import Tag, null_tag
 
@@ -38,22 +39,6 @@ def STR(value, node = None, msg = "expression to be embedded in markup text eval
     """Convert `value` to a string for embedding in text markup. Raise NoneStringEx if value=None."""
     if value is None: raise NoneStringEx(msg, node)
     return text_type(value)
-
-def TAG(name):
-    """Convert a tag name to a symbol, for insertion to (and retrieval from) a Context."""
-    return '%' + name
-
-def VAR(name):
-    """Convert a variable name to a symbol, for insertion to (and retrieval from) a Context."""
-    return '$' + name
-
-def TAGS(names):
-    """Mapping of a dict of tag names (and their linked objects) to a dict of symbols."""
-    return {TAG(name): link for name, link in names.items()}
-
-def VARS(names):
-    """Mapping of a dict of variable names (and their linked objects) to a dict of symbols."""
-    return {VAR(name): link for name, link in names.items()}
 
 
 #####################################################################################################################################################
@@ -1636,7 +1621,6 @@ class HypertagAST(BaseTree):
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
         """
         self.environment = env
-        # self._init_global(context)
         
         self.config = self.config_default.copy()
         self.config.update(**config)
@@ -1682,15 +1666,10 @@ class HypertagAST(BaseTree):
         builtin_vars = VARS(BUILTIN_VARS)
         builtin_tags = TAGS(BUILTIN_TAGS)
         builtin_tags.update(TAGS(BUILTIN_HTML))
-        # custom_vars  = VARS(self.custom_vars)
-        # custom_tags  = TAGS(self.custom_tags)
 
         # seed the context
         ctx.pushall(builtin_tags)
         ctx.pushall(builtin_vars)
-        # ctx.pushall(custom_tags)
-        # ctx.pushall(custom_vars)
-        # ctx.pushall(FILTERS)
         
         position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
         
@@ -1844,8 +1823,13 @@ if __name__ == '__main__':
             <? | {True}!
             <? | {False}!
     """
-
-    tree = HypertagAST(text, stopAfter = "rewrite", env = None) #HTMLEnvironment())
+    ctx  = {'x': 10, 'y': 11}
+    text = """
+        from CONTEXT import $x, $y
+        | $x, $y
+    """
+    
+    tree = HypertagAST(text, HTMLEnv(**ctx), stopAfter = "rewrite")
     
     # print()
     # print("===== AST =====")

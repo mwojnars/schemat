@@ -510,8 +510,8 @@ attrs_def        =  (space attr_body)? (space attr_def)*
 attr_body        =  mark_embed ws name_id
 attr_def         =  name_xml (ws '=' ws value_of_attr)?
 
-block_import     =  ('from' path_import space)? 'import' space item_import (comma item_import)*
-path_import      =  ~"[^ \t\n\\x22\\x27]+"                        # import path can be ANY string of 1+ characters unless it contains a whitespace, ' or "
+block_import     =  ('from' space path_import space)? 'import' space item_import (comma item_import)*
+path_import      =  ~"[^\s\x22\x27]+"                           # import path can be ANY string of 1+ characters unless it contains a whitespace, ' or "
 item_import      =  wild_import / name_import
 wild_import      =  '*'
 name_import      =  symbol rename?                              # imported name must always be prepended with percent or $ to denote whether we load it from (and save into) a tag namespace or a variable namespace
