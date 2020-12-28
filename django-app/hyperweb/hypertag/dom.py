@@ -154,15 +154,19 @@ def add_indent(text, indent, re_start = re.compile(r'(?m)^(?=.)')):
     # if not text: return text
     # return indent + text.replace('\n', '\n' + indent)
     
-def del_indent(text, indent):
-    """Remove `indent` string from the beginning of each line of `text`, wherever it is present as a line prefix."""
+def del_indent(text, indent = None):
+    """
+    Remove `indent` string from the beginning of each line of `text`, wherever it is present as a line prefix.
+    If indent=None, maximum common indentation (get_indent()) is truncated.
+    """
+    if indent is None: indent = get_indent(text)
     if text.startswith(indent): text = text[len(indent):]
     return text.replace('\n' + indent, '\n')
 
 def get_indent(text):
     """
     Retrieve the longest indentation string fully composed of whitespace
-    that is shared by ALL non-empty lines in `text`, including the 1st line (if contains a non-whitespace).
+    that is shared by ALL non-empty lines in `text`, including the 1st line (if it contains a non-whitespace).
     """
     lines = text.split('\n')
     lines = list(filter(None, [l if l.strip() else '' for l in lines]))          # filter out empty lines

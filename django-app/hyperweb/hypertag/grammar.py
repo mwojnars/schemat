@@ -764,3 +764,30 @@ XML_Char       =  XML_StartChar + r"0-9\.\-" + u"\u00B7\u0300-\u036F\u203F-\u204
 
 # XML_EndChar is like XML_Char, but ":" is NOT allowed, to avoid collision with a trailing ":" used in Hypertag blocks
 XML_EndChar    =  XML_Char[:-1]
+
+
+#####################################################################################################################################################
+#####
+#####  DEFINITIONS for use together with the grammar
+#####
+
+MARK_TAG = '%'
+MARK_VAR = '$'
+
+def TAG(name):
+    """Convert a tag name to a symbol, for insertion to (and retrieval from) a Context."""
+    return MARK_TAG + name
+
+def VAR(name):
+    """Convert a variable name to a symbol, for insertion to (and retrieval from) a Context."""
+    return MARK_VAR + name
+
+def TAGS(names):
+    """Mapping of a dict of tag names (and their linked objects) to a dict of symbols."""
+    return {TAG(name): link for name, link in names.items()}
+
+def VARS(names):
+    """Mapping of a dict of variable names (and their linked objects) to a dict of symbols."""
+    return {VAR(name): link for name, link in names.items()}
+
+

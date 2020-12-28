@@ -14,10 +14,8 @@ from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
 from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
-from hyperweb.hypertag.grammar import XML_StartChar, XML_Char, XML_EndChar, grammar
+from hyperweb.hypertag.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
 from hyperweb.hypertag.structs import Context, State, Slot
-from hyperweb.hypertag.environment import TAG, VAR, TAGS, VARS
-from hyperweb.hypertag.builtin_html import ExternalTag, BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS, HTMLEnv
 from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hyperweb.hypertag.tag import Tag, null_tag
 
@@ -524,12 +522,12 @@ class NODES(object):
 
     class xwild_import(node):
         path    = None      # path string as specified in the "from" clause
-        symbols = None      # dict of symbols and their values as retrieved from environment
+        symbols = None      # dict of symbols and their values as retrieved from runtime
         slots   = None      # dict of symbols and their slots created during analysis
         
         def analyse(self, ctx):
-            env = self.tree.environment
-            self.symbols = env.import_all(self.path)
+            runtime = self.tree.runtime
+            self.symbols = runtime.import_all(self.path)
             self.slots   = {}
             for symbol in self.symbols:
                 self.slots[symbol] = slot = Slot(symbol, ctx)
@@ -542,13 +540,13 @@ class NODES(object):
     class xname_import(node):
         path  = None        # path string as specified in the "from" clause
         slot  = None        # <slot> that will keep value of this imported symbol
-        value = None        # value of this symbol as retrieved from environment
+        value = None        # value of this symbol as retrieved from runtime
         
         def analyse(self, ctx):
-            env    = self.tree.environment
-            symbol = self.children[0].value                         # original symbol name with leading % or $
-            rename = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
-            self.value = env.import_one(symbol, self.path)
+            runtime = self.tree.runtime
+            symbol  = self.children[0].value                         # original symbol name with leading % or $
+            rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
+            self.value = runtime.import_one(symbol, self.path)
             self.slot  = Slot(rename, ctx)
             ctx.push(rename, self.slot)
 
@@ -1586,7 +1584,6 @@ class HypertagAST(BaseTree):
     ###  Run-time parameters of parsing process  ###
     
     config_default = {
-        'target_language':      "HTML",             # target language; currently only "HTML" is supported
         'escape_function':      html_escape,        # plaintext-to-markup conversion (escaping) function
         'compact':              True,               # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
                                                     # which are returned on all subsequent render() requests; this improves performance when
@@ -1599,7 +1596,7 @@ class HypertagAST(BaseTree):
     # custom_tags = None
     # custom_vars = None
     
-    environment = None          # instance of Environment that controls how external symbols are imported
+    runtime = None              # instance of Runtime that loaded this document and controls how external modules and symbols are imported
     
     
     ###  Output of parsing and analysis  ###
@@ -1613,14 +1610,14 @@ class HypertagAST(BaseTree):
                                 # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
 
     
-    def __init__(self, text, env, stopAfter = None, verbose = True, **config):
+    def __init__(self, text, runtime, stopAfter = None, verbose = True, **config):
         """
         :param text: input document to be parsed
         :param context: custom global symbols (variables and/or tags) that will be available to Hypertag script;
                         tag names must be prepended with '%'; names without leading '%' are interpreted as variables
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
         """
-        self.environment = env
+        self.runtime = runtime
         
         self.config = self.config_default.copy()
         self.config.update(**config)
@@ -1661,8 +1658,9 @@ class HypertagAST(BaseTree):
         
         # ctx = ctx.copy() if ctx else Context()
         ctx = Context()
+
+        from hyperweb.hypertag.run_html import BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
         
-        assert self.config['target_language'] == 'HTML'
         builtin_vars = VARS(BUILTIN_VARS)
         builtin_tags = TAGS(BUILTIN_TAGS)
         builtin_tags.update(TAGS(BUILTIN_HTML))
@@ -1670,6 +1668,8 @@ class HypertagAST(BaseTree):
         # seed the context
         ctx.pushall(builtin_tags)
         ctx.pushall(builtin_vars)
+        
+        # ctx.pushall(self.runtime.import_default())
         
         position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
         
@@ -1727,16 +1727,6 @@ class Hypertag:
     """
     Parsing functions for Hypertag scripts: translate(), render().
     """
-    
-    # def __init__(self, env, **config):
-    #     if isinstance(env, type): env = env()
-    #     self.environment = env
-    #     self.config = config
-    
-    # def parse(self, script, **context):
-    #     self.environment.set_context(context)
-    #     ast = HypertagAST(script, self.environment, **self.config)
-    #     return ast.render()
 
     @staticmethod
     def render(script, env, **config):
@@ -1752,8 +1742,9 @@ class Hypertag:
 
 if __name__ == '__main__':
     
+    from hyperweb.hypertag.run_html import HypertagHTML
     DEBUG = True
-    
+
     text = """
         h1 : a href="http://xxx.com" : b : | This is <h1> title
             p / And <a> paragraph.
@@ -1825,11 +1816,11 @@ if __name__ == '__main__':
     """
     ctx  = {'x': 10, 'y': 11}
     text = """
-        from CONTEXT import $x, $y
-        | $x, $y
+        from BUILTINS import $abs
+        | $abs(-5)
     """
-    
-    tree = HypertagAST(text, HTMLEnv(**ctx), stopAfter = "rewrite")
+
+    tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter ="rewrite")
     
     # print()
     # print("===== AST =====")
@@ -1851,3 +1842,5 @@ if __name__ == '__main__':
     print(tree.render(), end = "=====\n")
     # print(tree.A())
     
+    # import inspect
+    # print(inspect.getfile(text))
