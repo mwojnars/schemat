@@ -783,8 +783,9 @@ class NODES(object):
             child = self.children[0]
             assert child.type == 'line_markup'
             text = child.render_inline(state)                   # this calls xline_markup.render_inline()
-            escape = self.tree.config['escape_function']
-            return escape(text)
+            # escape = self.tree.config['escape_function']
+            escape = self.tree.runtime.escape
+            return escape(text) if escape else text
 
     class xline_markup(line):
         def render_inline(self, state):
@@ -1583,13 +1584,13 @@ class HypertagAST(BaseTree):
     
     ###  Run-time parameters of parsing process  ###
     
-    config_default = {
-        'escape_function':      html_escape,        # plaintext-to-markup conversion (escaping) function
-        'compact':              True,               # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
-                                                    # which are returned on all subsequent render() requests; this improves performance when
-                                                    # a document contains many static parts and variables occur rarely
-    }
-    config = None
+    # config_default = {
+    #     'escape_function':      html_escape,        # plaintext-to-markup conversion (escaping) function
+    #     'compact':              True,               # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
+    #                                                 # which are returned on all subsequent render() requests; this improves performance when
+    #                                                 # a document contains many static parts and variables occur rarely
+    # }
+    # config = None
 
     # # dicts of external custom tags & vars to be declared as global at the beginning of parsing, after built-in symbols;
     # # configured in __init__() by providing `context` dictionary
@@ -1619,8 +1620,8 @@ class HypertagAST(BaseTree):
         """
         self.runtime = runtime
         
-        self.config = self.config_default.copy()
-        self.config.update(**config)
+        # self.config = self.config_default.copy()
+        # self.config.update(**config)
         
         self.parser = Grammar.get_parser(text)
         text = self.parser.preprocess(text, verbose = verbose)

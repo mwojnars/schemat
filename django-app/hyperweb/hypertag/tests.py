@@ -10,8 +10,7 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 import os, re, pytest
 
 from hyperweb.hypertag.run_html import HypertagHTML
-# from hyperweb.hypertag.parser import Hypertag
-# ht = Hypertag(verbose = False)
+
 
 #####################################################################################################################################################
 #####
@@ -20,7 +19,6 @@ from hyperweb.hypertag.run_html import HypertagHTML
 
 def render(script, **ctx):
     return HypertagHTML(**ctx).render(script, verbose = False)
-    # return Hypertag.render(script, HypertagHTML(**ctx), verbose = False)
 
 def merge_spaces(s, pat = re.compile(r'\s+')):
     """Merge multiple spaces, replace newlines and tabs with spaces, strip leading/trailing space."""

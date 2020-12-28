@@ -70,7 +70,14 @@ class Runtime:
     # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
     BUILTINS = {MARK_VAR + name : getattr(builtins, name) for name in dir(builtins)}
     STANDARD = {}       # symbols loaded upon startup, like BUILTINS, but specific to a given target language; overriden in subclasses
-    language = None     # target language the documents will be compiled into; currently only "HTML"; defined in subclasses
+    
+    language = None     # target language the documents will be compiled into, defined in subclasses
+    compact  = True     # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
+                        # which are returned on all subsequent render() requests; this improves performance when
+                        # a document contains many static parts and variables occur rarely
+    escape   = None     # escaping function or static method that converts plaintext to target language; typically, when assigned
+                        # in a subclass, staticmethod() must be used as a wrapper to prevent this attr be treated as a regular method:
+                        #   escape = staticmethod(custom_function)
 
     modules  = None     # cached modules and their symbols: {canonical_path: module}, where "module" is a dict of symbols and their values
     
@@ -166,17 +173,12 @@ class Runtime:
         return ast.render()
         
 
-class HypertagRuntime(Runtime):
-    """Builting tags and functions defined by Hypertag; plus context symbols passed ."""
-    
-class PythonRuntime(Runtime):
-    """Imports from python modules using standard Python path syntax (package.module), with absolute or relative paths."""
-    
-class CompoundRuntime(Runtime):
-    """Runtime that combines multiple sub-runtimes, each one having its own XX/ prefix to be added to import paths."""
-    
-    loaders = {
-        'HY': HypertagRuntime,
-        'PY': PythonRuntime,
-    }
+# class CompoundRuntime(Runtime):
+#     """Runtime that combines multiple sub-runtimes, each one having its own XX/ prefix to be added to import paths."""
+#
+#     loaders = {
+#         'HY':   HypertagLoader,
+#         'PY':   PythonLoader,
+#         'file': FileLoader,
+#     }
     

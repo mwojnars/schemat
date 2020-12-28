@@ -2,6 +2,7 @@ import re
 from six import reraise, string_types, text_type
 from six.moves import builtins
 from xml.sax.saxutils import quoteattr
+from nifty.text import html_escape
 
 from hyperweb.hypertag.dom import Sequence, get_indent, del_indent
 from hyperweb.hypertag.runtime import Runtime
@@ -182,4 +183,7 @@ BUILTIN_VARS = {
 
 
 class HypertagHTML(Runtime):
-    pass
+    
+    language = 'HTML'
+    escape   = staticmethod(html_escape)
+
