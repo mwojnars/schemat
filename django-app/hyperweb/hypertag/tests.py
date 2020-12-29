@@ -840,11 +840,11 @@ def test_021_import():
     """                                         # import of defaults (built-ins)
     assert render(src).strip() == "5"
     src = """
-        from BUILTINS import $abs
-        import $x
-        | $abs(-x)
+        from BUILTINS import *
+        import *
+        | $ord(x)
     """
-    assert render(src, x = 10).strip() == "10"
+    assert render(src, x = 'A').strip() == "65"
 
 
 def test_100_varia():

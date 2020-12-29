@@ -538,19 +538,16 @@ class NODES(object):
 
     class xwild_import(node):
         path    = None      # path string as specified in the "from" clause
-        symbols = None      # dict of symbols and their values as retrieved from runtime
-        slots   = None      # dict of symbols and their slots created during analysis
+        slots   = None      # dict of symbols and their StaticSlots created during analysis
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
-            self.symbols = runtime.import_all(self.path)
-            self.slots   = {}
-            for symbol, value in self.symbols.items():
-                self.slots[symbol] = slot = StaticSlot(symbol, value, ctx)
-                ctx.push(symbol, slot)
+            symbols = runtime.import_all(self.path)
+            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
+            ctx.pushall(self.slots)
 
         def translate(self, state):
-            for slot in self.symbols.values(): slot.set_value(state)
+            for slot in self.slots.values(): slot.set_value(state)
             
     class xname_import(node):
         path  = None        # path string as specified in the "from" clause
@@ -1786,8 +1783,8 @@ if __name__ == '__main__':
     """
     ctx  = {'x': 10, 'y': 11}
     text = """
-        from BUILTINS import $abs
-        import $x
+        from BUILTINS import *
+        import *
         | $abs(-x)
     """
     # text = """

@@ -78,7 +78,7 @@ class Runtime:
                         # which are returned on all subsequent render() requests; this improves performance when
                         # a document contains many static parts and variables occur rarely
     escape   = None     # escaping function or static method that converts plaintext to target language; typically, when assigned
-                        # in a subclass, staticmethod() must be used as a wrapper to prevent this attr be treated as a regular method:
+                        # in a subclass, staticmethod() must be applied as a wrapper to prevent this attr be treated as a regular method:
                         #   escape = staticmethod(custom_function)
 
     modules  = None     # cached modules and their symbols: {canonical_path: module}, where "module" is a dict of symbols and their values
