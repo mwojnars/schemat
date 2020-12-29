@@ -397,7 +397,10 @@ class State:
     
 class Slot:
     """
-    Container that holds current value of a variable, or a reference to a Tag or hypertag definition node.
+    Representation of a variable or a tag for assignments.
+    Slot instances are used as keys inside `state` during translation to uniquely identify variables and tags.
+    Slots do NOT hold values by themselves (!), they only indicate where to save a current value inside `state`.
+    
     Created during analysis of definition / assignment / import blocks; provides global identification
     of a symbol inside `state` during translation; enables correct name scoping and dynamic re-assignment of the actual
     value or reference during translate(), so that imports and hypertag definitions can be placed inside
@@ -428,6 +431,10 @@ class Slot:
         self.depth  = ctx.regular_depth
 
         link = ctx.get(symbol)
+        
+        from .AST import NODES
+        assert link is None or isinstance(link, (Slot, NODES.attribute, NODES.variable)), f'unrecognized type of slot: {type(link)}'
+        
         if link and link.depth == self.depth:
             self.primary = link
         else:
@@ -442,3 +449,17 @@ class Slot:
         # return state[self]
     
 
+class StaticSlot(Slot):
+    """A slot whose value is known in advance and copied to `state` from `self` on every call to set()."""
+    
+    value = None
+    
+    def __init__(self, symbol, value, ctx):
+        super(StaticSlot, self).__init__(symbol, ctx)
+        self.value = value
+
+    def set_value(self, state):
+        self.set(state, self.value)
+    
+
+    

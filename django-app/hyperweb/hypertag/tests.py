@@ -835,6 +835,16 @@ def test_021_import():
         | $x, $y
     """
     assert render(src, x = 10, y = 'abc').strip() == "10, abc"
+    src = """
+        | $abs(-5)
+    """                                         # import of defaults (built-ins)
+    assert render(src).strip() == "5"
+    src = """
+        from BUILTINS import $abs
+        import $x
+        | $abs(-x)
+    """
+    assert render(src, x = 10).strip() == "10"
 
 
 def test_100_varia():

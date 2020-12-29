@@ -69,7 +69,9 @@ class Runtime:
     
     # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
     BUILTINS = {MARK_VAR + name : getattr(builtins, name) for name in dir(builtins)}
-    STANDARD = {}       # symbols loaded upon startup, like BUILTINS, but specific to a given target language; overriden in subclasses
+    
+    # symbols to be imported automatically upon startup; subclasses may define a broader collection
+    DEFAULT  = BUILTINS
     
     language = None     # target language the documents will be compiled into, defined in subclasses
     compact  = True     # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
@@ -126,9 +128,9 @@ class Runtime:
     def import_default(self):
         """
         Import default symbols that shall be available to every script upon startup.
-        This typically means all built-in symbols.
+        This typically means all built-in symbols + standard tags/variables specific for a target language.
         """
-        raise NotImplementedError
+        return self.DEFAULT
     
         
     def _get_module(self, path_original):

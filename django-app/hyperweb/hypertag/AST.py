@@ -15,7 +15,7 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
 from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
-from hyperweb.hypertag.structs import Context, State, Slot
+from hyperweb.hypertag.structs import Context, State, Slot, StaticSlot
 from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hyperweb.hypertag.tag import Tag, null_tag
 
@@ -287,7 +287,23 @@ class NODES(object):
 
     class xdocument(node):
         
+        slots   = None      # dict of StaticSlots created for each default value to be imported into `ctx`
+        default = None      # dict of symbols that will be automatically imported (inserted into `ctx`)
+                            # when analysis of the document begins
+        
+        startup_position = None     # context size after importing defaults; allows retrieval of newly defined symbols alone after analysis
+        
+        def set_default(self, default):
+            self.default = default
+        
+        def analyse(self, ctx):
+            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
+            ctx.pushall(self.slots)
+            self.startup_position = ctx.position()          # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
+            for c in self.children: c.analyse(ctx)
+
         def translate(self, state):
+            for slot in self.slots.values(): slot.set_value(state)
             nodes = [c.translate(state) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
@@ -529,29 +545,27 @@ class NODES(object):
             runtime = self.tree.runtime
             self.symbols = runtime.import_all(self.path)
             self.slots   = {}
-            for symbol in self.symbols:
-                self.slots[symbol] = slot = Slot(symbol, ctx)
+            for symbol, value in self.symbols.items():
+                self.slots[symbol] = slot = StaticSlot(symbol, value, ctx)
                 ctx.push(symbol, slot)
 
         def translate(self, state):
-            for symbol, value in self.symbols.items():
-                self.slots[symbol].set(state, value)
+            for slot in self.symbols.values(): slot.set_value(state)
             
     class xname_import(node):
         path  = None        # path string as specified in the "from" clause
         slot  = None        # <slot> that will keep value of this imported symbol
-        value = None        # value of this symbol as retrieved from runtime
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbol  = self.children[0].value                         # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
-            self.value = runtime.import_one(symbol, self.path)
-            self.slot  = Slot(rename, ctx)
+            value   = runtime.import_one(symbol, self.path)
+            self.slot = StaticSlot(rename, value, ctx)
             ctx.push(rename, self.slot)
 
         def translate(self, state):
-            self.slot.set(state, self.value)
+            self.slot.set_value(state)
 
         
     class control_block(node):
@@ -898,7 +912,7 @@ class NODES(object):
         expr   = None       # <expression> node of this attribute; None if no expression present (attr definition with no default)
         body   = False      # True in xattr_body
         
-        depth = None        # ctx.regular_depth of the node, for correct identification of re-assignments
+        depth  = None       # ctx.regular_depth of the node, for correct identification of re-assignments
                             # that occur at the same depth (in the same namespace)
         
         def declare_var(self, ctx):
@@ -1065,6 +1079,9 @@ class NODES(object):
                 return self.value
                 
             node = self.defnode
+            if isinstance(node, Slot):
+                return node.get(state)
+            
             if node not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
             return state[node]
 
@@ -1628,7 +1645,6 @@ class HypertagAST(BaseTree):
         #     self._check_name(name, None, "Error in global symbols. ")
         
         ctx = Context()
-        ctx.pushall(self.runtime.import_default())
 
         # from hyperweb.hypertag.run_html import BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
         # builtin_vars = VARS(BUILTIN_VARS)
@@ -1639,15 +1655,18 @@ class HypertagAST(BaseTree):
         # ctx.pushall(builtin_tags)
         # ctx.pushall(builtin_vars)
         
-        position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
+        # position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
+        #
+        # if DEBUG:
+        #     global _debug_ctx_start
+        #     _debug_ctx_start = position
         
-        if DEBUG:
-            global _debug_ctx_start
-            _debug_ctx_start = position
-        
+        default_symbols = self.runtime.import_default()
+        self.root.set_default(default_symbols)
         self.root.analyse(ctx)          # now we have all top-level symbols in 'ctx'
-        
+
         # pull top-level symbols & hypertags from the tree
+        position = self.root.startup_position
         self.symbols = ctx.asdict(position)
         self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xblock_def)}
         
@@ -1767,9 +1786,14 @@ if __name__ == '__main__':
     """
     ctx  = {'x': 10, 'y': 11}
     text = """
+        from BUILTINS import $abs
         import $x
         | $abs(-x)
     """
+    # text = """
+    #     from BUILTINS import $abs
+    #     | $abs(-5)
+    # """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter ="rewrite")
     

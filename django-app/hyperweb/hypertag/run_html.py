@@ -163,24 +163,8 @@ for name, tag in BUILTIN_TAGS.items():
 
 ########################################################################################################################################################
 #####
-#####  BUILTIN variables
+#####  HTML runtime
 #####
-
-# BUILTIN_VARS = {
-#
-#     # 'python':       builtins,       # Python built-ins accessible through python.* even if a given symbol has different meaning in HyML
-#
-#     'str':          text_type,      # $str(var) -- string representation of an object, always in Unicode
-#     'len':          len,            # $len(s)
-#     'set':          set,
-#     'dict':         dict,
-#     'list':         list,
-#
-#     'int':          int,
-#     'range':        range,
-#     'enumerate':    enumerate,
-# }
-
 
 
 class HypertagHTML(Runtime):
@@ -188,10 +172,8 @@ class HypertagHTML(Runtime):
     language = 'HTML'
     escape   = staticmethod(html_escape)
 
-    DEFAULT = dict(Runtime.BUILTINS)
+    DEFAULT = {}
+    DEFAULT.update(Runtime.DEFAULT)
     DEFAULT.update(TAGS(BUILTIN_TAGS))
     DEFAULT.update(TAGS(BUILTIN_HTML))
-        
-    def import_default(self):
-        return self.DEFAULT
-        
+    
