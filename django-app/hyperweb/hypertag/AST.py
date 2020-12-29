@@ -1427,11 +1427,11 @@ class NODES(object):
     ###  STATIC nodes  ###
     
     class xpath_import(static): pass
-    
-    class xnl(static):          pass
     class xsymbol(static):      pass
     class xname_id(static):     pass
     class xname_xml(static):    pass
+
+    class xnl(static):          pass
     class xtext(static):        pass
     class xtext_quot1(static):  pass
     class xtext_quot2(static):  pass
@@ -1568,7 +1568,7 @@ class HypertagAST(BaseTree):
     
     # nodes that will be replaced with a list of their children
     _reduce_  = "block_control target core_blocks tail_blocks headline body_text generic_control generic_struct " \
-                "item_import try_long try_short special_tag head_verbat head_normal head_markup " \
+                "item_import rename try_long try_short special_tag head_verbat head_normal head_markup " \
                 "tail_for tail_if tail_verbat tail_normal tail_markup core_verbat core_normal core_markup " \
                 "attrs_def attrs_val attr_val value_of_attr args arg " \
                 "embedding embedding_braces embedding_eval embedding_or_factor target " \
@@ -1610,7 +1610,7 @@ class HypertagAST(BaseTree):
                                 # includes imported hypertags (!), but not external ones, only the native ones defined in HyML
 
     
-    def __init__(self, script, runtime, stopAfter = None, verbose = True):
+    def __init__(self, script, runtime, stopAfter = None, verbose = False):
         """
         :param script: input script to be parsed
         :param stopAfter: either None (full parsing), or "parse", "rewrite"
@@ -1783,16 +1783,12 @@ if __name__ == '__main__':
     """
     ctx  = {'x': 10, 'y': 11}
     text = """
-        from BUILTINS import *
-        import *
-        | $abs(-x)
+        from HTML import *
+        from HTML import %p as PARAGRAPH
+        PARAGRAPH | kot
     """
-    # text = """
-    #     from BUILTINS import $abs
-    #     | $abs(-5)
-    # """
 
-    tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter ="rewrite")
+    tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter ="rewrite", verbose = True)
     
     # print()
     # print("===== AST =====")

@@ -18,7 +18,7 @@ from hyperweb.hypertag.run_html import HypertagHTML
 #####
 
 def render(script, **ctx):
-    return HypertagHTML(**ctx).render(script, verbose = False)
+    return HypertagHTML(**ctx).render(script)
 
 def merge_spaces(s, pat = re.compile(r'\s+')):
     """Merge multiple spaces, replace newlines and tabs with spaces, strip leading/trailing space."""
@@ -841,10 +841,17 @@ def test_021_import():
     assert render(src).strip() == "5"
     src = """
         from BUILTINS import *
+        from CONTEXT import *
         import *
         | $ord(x)
     """
     assert render(src, x = 'A').strip() == "65"
+    src = """
+        from HTML import *
+        from HTML import %p as PARAGRAPH
+        PARAGRAPH | kot
+    """
+    assert render(src).strip() == "<p>kot</p>"
 
 
 def test_100_varia():

@@ -63,16 +63,21 @@ class Runtime:
     URI schemes:  PY: HY: FILE: file:
     """
 
-    # canonical paths of predefined modules
-    PATH_CONTEXT  = 'CONTEXT'
-    PATH_BUILTINS = 'BUILTINS'
-    
     # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
     BUILTINS = {MARK_VAR + name : getattr(builtins, name) for name in dir(builtins)}
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
     DEFAULT  = BUILTINS
     
+    # canonical paths of predefined modules
+    PATH_CONTEXT  = 'CONTEXT'
+    PATH_BUILTINS = 'BUILTINS'
+    
+    standard_modules = {
+        PATH_BUILTINS:  BUILTINS,
+        PATH_CONTEXT:   {},
+    }
+
     language = None     # target language the documents will be compiled into, defined in subclasses
     compact  = True     # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
                         # which are returned on all subsequent render() requests; this improves performance when
@@ -94,21 +99,26 @@ class Runtime:
         :param variables: names of external variables that shall be made available to the script
                      as a dynamic "context" of execution
         """
-        self.modules = {}
-        self.modules[self.PATH_BUILTINS] = self.BUILTINS
-        self.modules[self.PATH_CONTEXT]  = self._create_context(__tags__, variables)
+        self.modules = self.standard_modules.copy()
+        self.update_context(__tags__, variables)
+        
+    def update_context(self, tags, variables):
+        
+        if not (tags or variables): return
+        self.modules[self.PATH_CONTEXT] = context = self.modules[self.PATH_CONTEXT].copy()
+        context.update(self._create_context(tags, variables))
         
     @staticmethod
     def _create_context(tags, variables):
 
         context = {}
         if tags:
-            # TODO: check if names are non-empty and syntactically correct
+            # TODO: check if names of tags are non-empty and syntactically correct
             context.update({name if name[0] == MARK_TAG else MARK_TAG + name : link for name, link in tags.items()})
-            
-        context.update({MARK_VAR + name : value for name, value in variables.items()})
+        if variables:
+            context.update({MARK_VAR + name : value for name, value in variables.items()})
         return context
-        
+
     def import_one(self, symbol, path = None):
         """`symbol` must start with either % or $ to denote whether a tag or a variable should be imported."""
 
@@ -169,9 +179,10 @@ class Runtime:
         package = self.context.get('$__package__')
         return importlib.import_module(path, package)
 
-    def render(self, script, **config):
+    def render(self, script, __tags__ = None, **variables):
     
-        ast = HypertagAST(script, self, **config)
+        self.update_context(__tags__, variables)
+        ast = HypertagAST(script, self)
         return ast.render()
         
 
