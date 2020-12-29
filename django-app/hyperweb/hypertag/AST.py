@@ -913,11 +913,7 @@ class NODES(object):
         body = False        # True in xattr_body
         slot = None         # Slot that identifies this variable inside `state`
         
-        # depth  = None       # ctx.regular_depth of the node, for correct identification of re-assignments
-        #                     # that occur at the same depth (in the same namespace)
-        
         def declare_var(self, ctx):
-            # self.depth = ctx.regular_depth
             symbol = VAR(self.name)
             self.slot = Slot(symbol, ctx)
             ctx.push(symbol, self.slot)
@@ -1042,22 +1038,10 @@ class NODES(object):
         slot_read  = None       # Slot that identifies this variable inside `state` for read access
         slot_write = None       # Slot that identifies this variable inside `state` for write access
         
-        # slot_read and slot_write differ in a re-assignment block that overrides a name defined upper in the document, like in:
+        # slot_read & slot_write may reference different Slots, e.g., in a reassignment block that overrides a name defined upper in the doc:
         #   $x = 1
         #   div:
-        #      $x += 1        -- this <variable> reads "x" from the upper level and assigns a new "x" inside a narrower scope, hence a separate Slot is needed
-        
-        # # external variable...
-        # external  = False       # if True, the variable is linked directly to its value, which is stored here in 'value'
-        # value     = None        # if external=True, the value of the variable, as found already during analyse()
-        #
-        # # native variable...
-        # defnode   = None        # definition node (xvar_def, xattr_def) or a Slot that identifies this variable
-        #
-        # # assignment
-        # primary   = None        # 1st definition node of this variable, if self represents a re-assignment
-        # depth     = None        # ctx.regular_depth of the node, for correct identification of re-assignments
-        #                         # that occur at the same depth (in the same namespace)
+        #      $x += 1        -- this <variable> reads "x" from the upper level and assigns a new "x" in a narrower name scope, hence a new Slot is needed
         
         def setup(self):
             self.name = self.text()
@@ -1072,13 +1056,6 @@ class NODES(object):
             if self.read:
                 if slot is None: raise NameErrorEx(f"variable '{self.name}' is not defined", self)
                 self.slot_read = slot
-                
-                # if isinstance(slot, (NODES.node, Slot)):    # native or imported variable?
-                #     self.defnode = slot
-                # else:                                       # external variable...
-                #     # TODO: no need to handle externals here
-                #     self.external = True
-                #     self.value = slot                       # value of an external variable is known already during analysis
             
             if self.write:
                 if slot and slot.depth == ctx.regular_depth:
@@ -1086,36 +1063,19 @@ class NODES(object):
                 else:
                     self.slot_write = Slot(symbol, ctx)
                     ctx.push(symbol, self.slot_write)
-
-                # self.depth = ctx.regular_depth
-                # if slot and slot.depth == self.depth:
-                #     self.primary = slot
-                # else:
-                #     ctx.push(symbol, self)
             
         def evaluate(self, state):
             
             assert self.read
-            # if self.external:                                       # external variable? return its value without evaluation
-            #     return self.value
-                
-            slot = self.slot_read
             try:
-                return slot.get(state)
+                return self.slot_read.get(state)
             
             except KeyError:
                 raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
-            
-            # if isinstance(slot, Slot):
-            #     return slot.get(state)
-            #
-            # if slot not in state: raise UnboundLocalEx(f"variable '{self.name}' referenced before assignment", self)
-            # return state[slot]
 
         def assign(self, state, value):
             assert self.write
             self.slot_write.set(state, value)
-            # state[self.primary or self] = value
 
     class xvar_use(variable):
         """Occurence (use) of a variable."""
@@ -1821,11 +1781,7 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        $x = 1
-        div
-            $x += 1
-            | $x
-        | $x
+        $x = 1     -- this <variable> reads "x" from the upper level and assigns a new "x" in a narrower name scope
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

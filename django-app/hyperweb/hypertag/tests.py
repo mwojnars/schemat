@@ -779,7 +779,7 @@ def test_019_inplace_assign():
     src = """
         $x = 1
         div
-            $x += 1
+            $x += 1     -- this <variable> reads "x" from the upper level and assigns a new "x" in a narrower name scope
             | $x
         | $x
     """

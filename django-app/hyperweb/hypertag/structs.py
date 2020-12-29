@@ -416,17 +416,6 @@ class Slot:
     depth   = None      # ctx.regular_depth of this slot, for correct identification of re-assignments that occur
                         # at the same depth (in the same namespace)
     
-    # @staticmethod
-    # def create(symbol, ctx):
-    #     """Only create a new slot if needed; otherwise return an existing slot that shall be re-used (overriden)."""
-    #     slot = ctx.get(symbol)
-    #     if slot and slot.depth == ctx.regular_depth:            # slot already exists at the current namespaces depth?
-    #         return slot                                         # ...use this one
-    #     else:
-    #         slot = NODES.slot(symbol, ctx.regular_depth)        # otherwise create a new one and add to context
-    #         ctx.push(symbol, slot)
-    #         return slot
-    
     def __init__(self, symbol, ctx):
         assert len(symbol) >= 2 and symbol[0] in '$%'
         self.name   = symbol[1:]
@@ -452,7 +441,7 @@ class Slot:
     
 
 class StaticSlot(Slot):
-    """A slot whose value is known in advance and copied to `state` from `self` on every call to set()."""
+    """A slot whose value is known in advance and copied to `state` from `self` on every call to set_value()."""
     
     value = None
     
