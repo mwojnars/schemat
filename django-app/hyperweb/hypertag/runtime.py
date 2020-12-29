@@ -79,7 +79,7 @@ class Runtime:
     }
 
     language = None     # target language the documents will be compiled into, defined in subclasses
-    compact  = True     # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
+    #compact  = True    # if True, compactification is performed after analysis: pure (static, constant) nodes are replaced with their pre-computed render() values,
                         # which are returned on all subsequent render() requests; this improves performance when
                         # a document contains many static parts and variables occur rarely
     escape   = None     # escaping function or static method that converts plaintext to target language; typically, when assigned

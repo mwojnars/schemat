@@ -1783,12 +1783,14 @@ if __name__ == '__main__':
     """
     ctx  = {'x': 10, 'y': 11}
     text = """
-        from HTML import *
-        from HTML import %p as PARAGRAPH
-        PARAGRAPH | kot
+        if True:
+            import $x
+        else:
+            $x = 5
+        | $x
     """
 
-    tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter ="rewrite", verbose = True)
+    tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)
     
     # print()
     # print("===== AST =====")
