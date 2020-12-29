@@ -2,7 +2,7 @@ import importlib
 from six.moves import builtins
 
 from hyperweb.hypertag.grammar import MARK_TAG, MARK_VAR
-from hyperweb.hypertag.parser import HypertagAST
+from hyperweb.hypertag.AST import HypertagAST
 
 
 #####################################################################################################################################################
