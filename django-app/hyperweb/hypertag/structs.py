@@ -11,6 +11,9 @@ if six.PY2:
 else:
     odict = dict
     
+from hyperweb.hypertag.errors import UnboundLocalEx, UndefinedTagEx
+from hyperweb.hypertag.grammar import MARK_VAR
+
 
 ########################################################################################################################################################
 
@@ -352,7 +355,7 @@ class State:
     Substitute for a Stack when keeping a history of frames is not necessary and values can be indexed
     by nodes of an AST instead of integer positions in a stack. State class resembles Context more than Stack.
     """
-    values = None       # dict of (node, value) pairs
+    values = None       # dict of (slot, value) pairs
     
     # current indentation string, as a combination of ' ' and '\t' characters;
     # initial \n is used to mark that an indentation is absolute rather than relative to a parent node
@@ -361,15 +364,15 @@ class State:
     def __init__(self):
         self.values = {}   #odict()
 
-    def __contains__(self, node):
-        return node in self.values
+    def __contains__(self, slot):
+        return slot in self.values
 
-    def __getitem__(self, node):
-        return self.values[node]
+    def __getitem__(self, slot):
+        return self.values[slot]
 
-    def __setitem__(self, node, value):
-        #assert node not in self.values     # this assert is not true inside "for" loops
-        self.values[node] = value
+    def __setitem__(self, slot, value):
+        #assert slot not in self.values     # this assert is not true inside "for" loops
+        self.values[slot] = value
         
     def update(self, values):
         self.values.update(values)
@@ -410,7 +413,7 @@ class Slot:
     symbol  = None
     
     primary = None      # 1st definition of this symbol, if self represents a re-assignment (override)
-    depth   = None      # ctx.regular_depth of this node, for correct identification of re-assignments that occur
+    depth   = None      # ctx.regular_depth of this slot, for correct identification of re-assignments that occur
                         # at the same depth (in the same namespace)
     
     # @staticmethod
@@ -446,7 +449,6 @@ class Slot:
         
     def get(self, state):
         return state[self.primary or self]
-        # return state[self]
     
 
 class StaticSlot(Slot):

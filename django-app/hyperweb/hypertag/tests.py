@@ -775,6 +775,22 @@ def test_019_inplace_assign():
         3
     """
     assert render(src).strip() == out.strip()
+
+    src = """
+        $x = 1
+        div
+            $x += 1
+            | $x
+        | $x
+    """
+    out = """
+        <div>
+            2
+        </div>
+        1
+    """
+    assert render(src).strip() == out.strip()
+
     
 def test_020_expression_in_string():
     src = """
