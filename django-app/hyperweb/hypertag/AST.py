@@ -15,7 +15,7 @@ from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
 from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
 from hyperweb.hypertag.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
-from hyperweb.hypertag.structs import Context, State, Slot, StaticSlot
+from hyperweb.hypertag.structs import Context, State, Slot, ValueSlot
 from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hyperweb.hypertag.tag import Tag, null_tag
 
@@ -287,7 +287,7 @@ class NODES(object):
 
     class xdocument(node):
         
-        slots_in  = None    # dict of StaticSlots created for each default value to be imported into `ctx` upon startup
+        slots_in  = None    # dict of slots created for each default value to be imported into `ctx` upon startup
         slots_out = None    # dict of top-level symbols defined by this document, and their Slots
         
         default   = None    # dict of default symbols to be automatically imported into `ctx` when analysis begins
@@ -297,7 +297,7 @@ class NODES(object):
             self.default = default
         
         def analyse(self, ctx):
-            self.slots_in = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
+            self.slots_in = {symbol: ValueSlot(symbol, value, ctx) for symbol, value in self.default.items()}
             ctx.pushall(self.slots_in)
             position = ctx.position()
             for c in self.children: c.analyse(ctx)
@@ -471,7 +471,7 @@ class NODES(object):
             ctx.regular_depth  -= 1
 
             symbol = TAG(self.name)
-            self.slot = StaticSlot(symbol, self, ctx)
+            self.slot = ValueSlot(symbol, self, ctx)
             ctx.push(symbol, self.slot)
             
         def translate(self, state):
@@ -550,12 +550,12 @@ class NODES(object):
 
     class xwild_import(node):
         path    = None      # path string as specified in the "from" clause
-        slots   = None      # dict of symbols and their StaticSlots created during analysis
+        slots   = None      # dict of symbols and their slots created during analysis
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbols = runtime.import_all(self.path)
-            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
+            self.slots = {symbol: ValueSlot(symbol, value, ctx) for symbol, value in symbols.items()}
             ctx.pushall(self.slots)
 
         def translate(self, state):
@@ -570,7 +570,7 @@ class NODES(object):
             symbol  = self.children[0].value                         # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
             value   = runtime.import_one(symbol, self.path)
-            self.slot = StaticSlot(rename, value, ctx)
+            self.slot = ValueSlot(rename, value, ctx)
             ctx.push(rename, self.slot)
 
         def translate(self, state):
@@ -875,9 +875,6 @@ class NODES(object):
     
             assert isinstance(self.tag, Slot)
             tag = self.tag.get(state)
-            
-            # if isinstance(tag, Slot):
-            #     tag = tag.get(state)
             
             # if isinstance(self.tag, ExternalTag):
             #     return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))

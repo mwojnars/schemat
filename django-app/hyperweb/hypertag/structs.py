@@ -440,26 +440,21 @@ class Slot:
         return state[self.primary or self]
     
 
-class StaticSlot(Slot):
+class ValueSlot(Slot):
     """
-    A slot whose initial value is known in advance and copied to `state` from `self` on every call to set_value().
-    NOTE: the initial value can be overwritten later on, just like for any Slot.
+    A slot that remembers its (constant) initial value, as assigned by the creator node, and writes it into `state`
+    on every call to set_value(). NOTE: the value of this slot in `state` can be overwritten by other nodes later on,
+    just like for any Slot!
     """
-    
+
     value = None
     
     def __init__(self, symbol, value, ctx):
-        super(StaticSlot, self).__init__(symbol, ctx)
+        super(ValueSlot, self).__init__(symbol, ctx)
         self.value = value
 
     def set_value(self, state):
-        """This method does NOT need to be used if only the value is retrieved with the overriden get() below."""
         self.set(state, self.value)
     
-    # def set(self, state, value):
-    #     assert False, "not allowed to (re)set a value of a StaticSlot"
-    #
-    # def get(self, state):
-    #     return self.value       # `state` is NOT used
 
     
