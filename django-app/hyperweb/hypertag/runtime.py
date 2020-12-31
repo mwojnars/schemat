@@ -169,10 +169,15 @@ class Runtime:
         
     def _load_module_hypertag(self, path):
         """"""
+        return None
+        
         filename = None
-        doc = open(filename).read()
-        ast = HypertagAST(doc, self)
-        return ast.symbols
+        script = open(filename).read()
+        
+        # CONTEXT has already been extended by a calling method and will be available to the script below (!)
+        dom, symbols = self.translate(script)
+        
+        return symbols
         
     def _load_module_python(self, path):
         """
@@ -190,7 +195,7 @@ class Runtime:
         
     def render(self, script, __tags__ = None, **variables):
         
-        dom = self.translate(script, __tags__, **variables)
+        dom, symbols = self.translate(script, __tags__, **variables)
         return dom.render()
         
 

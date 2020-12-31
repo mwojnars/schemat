@@ -289,9 +289,7 @@ class NODES(object):
         
         slots_in  = None    # dict of slots created for each default value to be imported into `ctx` upon startup
         slots_out = None    # dict of top-level symbols defined by this document, and their Slots
-        
         default   = None    # dict of default symbols to be automatically imported into `ctx` when analysis begins
-        symbols   = None    # dict of top-level symbols (tags & variables) defined by this document, and their actual values from `state`
         
         def set_default(self, default):
             self.default = default
@@ -309,10 +307,16 @@ class NODES(object):
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
             
-            # # pull actual values of top-level output symbols
-            # self.symbols = {symbol: slot.get(state) for symbol, slot in self.slots_out.items()}
-            
-            return hroot
+            # pull actual values of top-level output symbols
+            symbols = {}
+            for symbol, slot in self.slots_out.items():
+                try:
+                    symbols[symbol] = slot.get(state)
+                    
+                except KeyError:            # some top-level slots may remain uninitialized if defined inside a control block (if/for/...)
+                    continue
+
+            return hroot, symbols
 
         # def compactify(self, state):
         #     # if DEBUG: print("compact", "DOC", state)
@@ -1650,8 +1654,6 @@ class HypertagAST(BaseTree):
         default_symbols = self.runtime.import_default()
         self.root.set_default(default_symbols)
         self.root.analyse(ctx)
-        # self.symbols = self.root.symbols
-        # print(f'top-level symbols: {self.symbols}')
 
         # # pull top-level symbols & hypertags from the tree
         # position = self.root.startup_position
@@ -1676,12 +1678,13 @@ class HypertagAST(BaseTree):
     #     self.root.compactify(State())
     
     def translate(self):
-        dom = self.root.translate(State())
+        dom, symbols = self.root.translate(State())
         assert isinstance(dom, HRoot)
-        return dom
+        # print(f'top-level symbols: {symbols}')
+        return dom, symbols
 
     def render(self):
-        dom = self.translate()
+        dom, symbols = self.translate()
         return dom.render()
         # output = dom.render()
         # if not output: return output
@@ -1781,8 +1784,12 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        % H | Ala
-        $x = 'kot'
+        / pre
+
+        for i in []:
+            | $i
+
+        ! post
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

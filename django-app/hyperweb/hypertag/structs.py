@@ -437,6 +437,7 @@ class Slot:
         # state[self] = value
         
     def get(self, state):
+        """Raises KeyError if this slot is uninitialized in `state`."""
         return state[self.primary or self]
     
 
