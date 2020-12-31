@@ -441,7 +441,10 @@ class Slot:
     
 
 class StaticSlot(Slot):
-    """A slot whose value is known in advance and copied to `state` from `self` on every call to set_value()."""
+    """
+    A slot whose initial value is known in advance and copied to `state` from `self` on every call to set_value().
+    NOTE: the initial value can be overwritten later on, just like for any Slot.
+    """
     
     value = None
     
@@ -453,7 +456,10 @@ class StaticSlot(Slot):
         """This method does NOT need to be used if only the value is retrieved with the overriden get() below."""
         self.set(state, self.value)
     
-    def get(self, state):
-        return self.value       # `state` is NOT used!
+    # def set(self, state, value):
+    #     assert False, "not allowed to (re)set a value of a StaticSlot"
+    #
+    # def get(self, state):
+    #     return self.value       # `state` is NOT used
 
     

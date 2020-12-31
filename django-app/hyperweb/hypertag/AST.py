@@ -287,7 +287,7 @@ class NODES(object):
 
     class xdocument(node):
         
-        # slots_in  = None    # dict of StaticSlots created for each default value to be imported into `ctx` upon startup
+        slots_in  = None    # dict of StaticSlots created for each default value to be imported into `ctx` upon startup
         slots_out = None    # dict of top-level symbols defined by this document, and their Slots
         
         default   = None    # dict of default symbols to be automatically imported into `ctx` when analysis begins
@@ -297,14 +297,14 @@ class NODES(object):
             self.default = default
         
         def analyse(self, ctx):
-            slots_in = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
-            ctx.pushall(slots_in)
+            self.slots_in = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
+            ctx.pushall(self.slots_in)
             position = ctx.position()
             for c in self.children: c.analyse(ctx)
             self.slots_out = ctx.asdict(position)           # pull newly defined top-level symbols from the tree
 
         def translate(self, state):
-            # for slot in self.slots_in.values(): slot.set_value(state)
+            for slot in self.slots_in.values(): slot.set_value(state)
             nodes = [c.translate(state) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
@@ -428,6 +428,7 @@ class NODES(object):
         attr_names = None           # names of all attributes, including @body, as a dict {name: node}
         attr_regul = None           # all regular (non-body) attributes, as a list of children
         body       = None
+        slot       = None
         
         def setup(self):
             self.name  = self.children[0].value
@@ -472,9 +473,9 @@ class NODES(object):
             symbol = TAG(self.name)
             self.slot = StaticSlot(symbol, self, ctx)
             ctx.push(symbol, self.slot)
-            # ctx.push(symbol, self)
             
         def translate(self, state):
+            self.slot.set_value(state)
             return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
 
         def expand(self, state, body, attrs, kwattrs, caller):
@@ -544,36 +545,36 @@ class NODES(object):
             super(NODES.xblock_import, self).analyse(ctx)
 
         def translate(self, state):
-            # for item in self.items: item.translate(state)
+            for item in self.items: item.translate(state)
             return Sequence()
 
     class xwild_import(node):
         path    = None      # path string as specified in the "from" clause
-        # slots   = None      # dict of symbols and their StaticSlots created during analysis
+        slots   = None      # dict of symbols and their StaticSlots created during analysis
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbols = runtime.import_all(self.path)
-            slots   = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
-            ctx.pushall(slots)
+            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
+            ctx.pushall(self.slots)
 
-        # def translate(self, state):
-        #     for slot in self.slots.values(): slot.set_value(state)
+        def translate(self, state):
+            for slot in self.slots.values(): slot.set_value(state)
             
     class xname_import(node):
         path  = None        # path string as specified in the "from" clause
-        # slot  = None        # <slot> that will keep value of this imported symbol
+        slot  = None        # <slot> that will keep value of this imported symbol
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbol  = self.children[0].value                         # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
             value   = runtime.import_one(symbol, self.path)
-            slot = StaticSlot(rename, value, ctx)
-            ctx.push(rename, slot)
+            self.slot = StaticSlot(rename, value, ctx)
+            ctx.push(rename, self.slot)
 
-        # def translate(self, state):
-        #     self.slot.set_value(state)
+        def translate(self, state):
+            self.slot.set_value(state)
 
         
     class control_block(node):
@@ -872,16 +873,17 @@ class NODES(object):
             
         def translate_tag(self, state, body):
     
+            assert isinstance(self.tag, Slot)
+            tag = self.tag.get(state)
+            
+            # if isinstance(tag, Slot):
+            #     tag = tag.get(state)
+            
             # if isinstance(self.tag, ExternalTag):
             #     return Sequence(HNode(body, tag = self.tag, attrs = attrs, kwattrs = kwattrs))
             # elif isinstance(self.tag, NODES.xblock_def):
             #     return self.tag.translate_tag(state, body, attrs, kwattrs)
             
-            tag = self.tag
-            
-            if isinstance(tag, Slot):
-                tag = tag.get(state)
-                
             if isinstance(tag, Tag):
                 attrs, kwattrs = self._eval_attrs(state)                        # calculate actual values of attributes
                 return tag.translate_tag(state, body, attrs, kwattrs, self)
