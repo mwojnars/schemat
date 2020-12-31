@@ -176,7 +176,7 @@ class Grammar(Parsimonious):
         
 Grammar.default = Grammar(special_chars = Grammar.CHARS_DEFAULT)
 
-        
+
 ########################################################################################################################################################
 #####
 #####  NODES
@@ -287,26 +287,31 @@ class NODES(object):
 
     class xdocument(node):
         
-        slots   = None      # dict of StaticSlots created for each default value to be imported into `ctx`
-        default = None      # dict of symbols that will be automatically imported (inserted into `ctx`)
-                            # when analysis of the document begins
+        # slots_in  = None    # dict of StaticSlots created for each default value to be imported into `ctx` upon startup
+        slots_out = None    # dict of top-level symbols defined by this document, and their Slots
         
-        startup_position = None     # context size after importing defaults; allows retrieval of newly defined symbols alone after analysis
+        default   = None    # dict of default symbols to be automatically imported into `ctx` when analysis begins
+        symbols   = None    # dict of top-level symbols (tags & variables) defined by this document, and their actual values from `state`
         
         def set_default(self, default):
             self.default = default
         
         def analyse(self, ctx):
-            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
-            ctx.pushall(self.slots)
-            self.startup_position = ctx.position()          # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
+            slots_in = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in self.default.items()}
+            ctx.pushall(slots_in)
+            position = ctx.position()
             for c in self.children: c.analyse(ctx)
+            self.slots_out = ctx.asdict(position)           # pull newly defined top-level symbols from the tree
 
         def translate(self, state):
-            for slot in self.slots.values(): slot.set_value(state)
+            # for slot in self.slots_in.values(): slot.set_value(state)
             nodes = [c.translate(state) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
+            
+            # # pull actual values of top-level output symbols
+            # self.symbols = {symbol: slot.get(state) for symbol, slot in self.slots_out.items()}
+            
             return hroot
 
         # def compactify(self, state):
@@ -464,7 +469,10 @@ class NODES(object):
             ctx.hypertag_depth -= 1
             ctx.regular_depth  -= 1
 
-            ctx.push(TAG(self.name), self)
+            symbol = TAG(self.name)
+            self.slot = StaticSlot(symbol, self, ctx)
+            ctx.push(symbol, self.slot)
+            # ctx.push(symbol, self)
             
         def translate(self, state):
             return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
@@ -536,36 +544,36 @@ class NODES(object):
             super(NODES.xblock_import, self).analyse(ctx)
 
         def translate(self, state):
-            for item in self.items: item.translate(state)
+            # for item in self.items: item.translate(state)
             return Sequence()
 
     class xwild_import(node):
         path    = None      # path string as specified in the "from" clause
-        slots   = None      # dict of symbols and their StaticSlots created during analysis
+        # slots   = None      # dict of symbols and their StaticSlots created during analysis
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbols = runtime.import_all(self.path)
-            self.slots = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
-            ctx.pushall(self.slots)
+            slots   = {symbol: StaticSlot(symbol, value, ctx) for symbol, value in symbols.items()}
+            ctx.pushall(slots)
 
-        def translate(self, state):
-            for slot in self.slots.values(): slot.set_value(state)
+        # def translate(self, state):
+        #     for slot in self.slots.values(): slot.set_value(state)
             
     class xname_import(node):
         path  = None        # path string as specified in the "from" clause
-        slot  = None        # <slot> that will keep value of this imported symbol
+        # slot  = None        # <slot> that will keep value of this imported symbol
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
             symbol  = self.children[0].value                         # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
             value   = runtime.import_one(symbol, self.path)
-            self.slot = StaticSlot(rename, value, ctx)
-            ctx.push(rename, self.slot)
+            slot = StaticSlot(rename, value, ctx)
+            ctx.push(rename, slot)
 
-        def translate(self, state):
-            self.slot.set_value(state)
+        # def translate(self, state):
+        #     self.slot.set_value(state)
 
         
     class control_block(node):
@@ -1593,7 +1601,7 @@ class HypertagAST(BaseTree):
     ###  Output of parsing and analysis  ###
 
     text    = None              # full text of the input string fed to the parser
-    ast     = None              # raw AST generated by the parser; for read access
+    ast     = None              # raw AST as generated by Pasimonious; for read access
     root    = None              # root node of the final tree after rewriting
 
     symbols   = None            # after _pull(), dict of all top-level symbols as name->node pairs
@@ -1634,15 +1642,6 @@ class HypertagAST(BaseTree):
         
         ctx = Context()
 
-        # from hyperweb.hypertag.run_html import BUILTIN_HTML, BUILTIN_VARS, BUILTIN_TAGS
-        # builtin_vars = VARS(BUILTIN_VARS)
-        # builtin_tags = TAGS(BUILTIN_TAGS)
-        # builtin_tags.update(TAGS(BUILTIN_HTML))
-        #
-        # # seed the context
-        # ctx.pushall(builtin_tags)
-        # ctx.pushall(builtin_vars)
-        
         # position = ctx.position()       # keep the current context size, so that after analysis we can retrieve newly defined symbols alone
         #
         # if DEBUG:
@@ -1651,29 +1650,31 @@ class HypertagAST(BaseTree):
         
         default_symbols = self.runtime.import_default()
         self.root.set_default(default_symbols)
-        self.root.analyse(ctx)          # now we have all top-level symbols in 'ctx'
+        self.root.analyse(ctx)
+        # self.symbols = self.root.symbols
+        # print(f'top-level symbols: {self.symbols}')
 
-        # pull top-level symbols & hypertags from the tree
-        position = self.root.startup_position
-        self.symbols = ctx.asdict(position)
-        self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xblock_def)}
+        # # pull top-level symbols & hypertags from the tree
+        # position = self.root.startup_position
+        # self.symbols = ctx.asdict(position)
+        # self.hypertags = {name: obj for name, obj in self.symbols.items() if isinstance(obj, NODES.xblock_def)}
         
         # # perform compactification; a part of it was already done during analysis, because every hypertag launches
         # # compactification in its subtree on its own, during analysis; what's left is compactification
         # # of the top-level document only
         # if self.config['compact']: self.compactify()
         
-    def compactify(self):
-        """
-        Replace pure nodes in the document tree with static string/value nodes containg pre-computed render() result
-        of a given node, so that this pre-computed string/value is returned on all future render() calls on the new node.
-        
-        The document node doesn't take any arguments, so its render() is often a pure function, if only there are no non-pure
-        external references to variables/functions inside. So yes, the document can in many cases be replaced with a static string.
-        Although we lose access to the original tree (except the access via self.symbols and self.hypertags),
-        this access is normally not needed anymore. If it is, you should disable compactification in parser settings.
-        """
-        self.root.compactify(State())
+    # def compactify(self):
+    #     """
+    #     Replace pure nodes in the document tree with static string/value nodes containg pre-computed render() result
+    #     of a given node, so that this pre-computed string/value is returned on all future render() calls on the new node.
+    #
+    #     The document node doesn't take any arguments, so its render() is often a pure function, if only there are no non-pure
+    #     external references to variables/functions inside. So yes, the document can in many cases be replaced with a static string.
+    #     Although we lose access to the original tree (except the access via self.symbols and self.hypertags),
+    #     this access is normally not needed anymore. If it is, you should disable compactification in parser settings.
+    #     """
+    #     self.root.compactify(State())
     
     def translate(self):
         dom = self.root.translate(State())
@@ -1781,7 +1782,8 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        $x = 1     -- this <variable> reads "x" from the upper level and assigns a new "x" in a narrower name scope
+        % H | Ala
+        $x = 'kot'
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

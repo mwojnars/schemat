@@ -450,7 +450,10 @@ class StaticSlot(Slot):
         self.value = value
 
     def set_value(self, state):
+        """This method does NOT need to be used if only the value is retrieved with the overriden get() below."""
         self.set(state, self.value)
     
+    def get(self, state):
+        return self.value       # `state` is NOT used!
 
     

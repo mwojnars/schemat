@@ -169,7 +169,10 @@ class Runtime:
         
     def _load_module_hypertag(self, path):
         """"""
-        pass
+        filename = None
+        doc = open(filename).read()
+        ast = HypertagAST(doc, self)
+        return ast.symbols
         
     def _load_module_python(self, path):
         """
@@ -179,11 +182,16 @@ class Runtime:
         package = self.context.get('$__package__')
         return importlib.import_module(path, package)
 
-    def render(self, script, __tags__ = None, **variables):
-    
+    def translate(self, script, __tags__ = None, **variables):
+        
         self.update_context(__tags__, variables)
         ast = HypertagAST(script, self)
-        return ast.render()
+        return ast.translate()
+        
+    def render(self, script, __tags__ = None, **variables):
+        
+        dom = self.translate(script, __tags__, **variables)
+        return dom.render()
         
 
 # class CompoundRuntime(Runtime):
