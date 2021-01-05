@@ -1,6 +1,7 @@
 import importlib
 from six.moves import builtins
 
+from hypertag.core.errors import ImportErrorEx, ModuleNotFoundEx
 from hypertag.core.grammar import MARK_TAG, MARK_VAR, TAGS
 from hypertag.core.AST import HypertagAST
 import hypertag.builtins
@@ -94,13 +95,13 @@ class Runtime:
     BUILTINS.update(_read_module(hypertag.builtins))
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
-    DEFAULT  = BUILTINS
+    DEFAULT = BUILTINS
     
     # canonical paths of predefined modules
-    PATH_CONTEXT  = 'CONTEXT'
+    PATH_CONTEXT = '~'
     
     standard_modules = {
-        PATH_CONTEXT:   {},
+        PATH_CONTEXT: {},
     }
 
     language = None     # target language the documents will be compiled into, defined in subclasses
@@ -144,20 +145,20 @@ class Runtime:
             context.update({MARK_VAR + name : value for name, value in variables.items()})
         return context
 
-    def import_one(self, symbol, path = None):
+    def import_one(self, symbol, path = None, ast_node = None):
         """`symbol` must start with either % or $ to denote whether a tag or a variable should be imported."""
 
-        module = self._get_module(path)
-        if symbol not in module: raise ImportError(f"cannot import '{symbol}' from a given path ({path})")
+        module = self._get_module(path, ast_node)
+        if symbol not in module: raise ImportErrorEx(f"cannot import '{symbol}' from a given path ({path})", ast_node)
         return module[symbol]
     
-    def import_all(self, path = None):
+    def import_all(self, path = None, ast_node = None):
         """
         Import all available symbols (tags and variables) from a given `path`, private symbols excluded.
         A private symbol is the one whose name (after %$) starts with "_".
         Return a dict of {symbol: object} pairs. Every symbol starts with either % (a tag) or $ (a variable).
         """
-        module = self._get_module(path)
+        module = self._get_module(path, ast_node)
         return {name: value for name, value in module.items() if name[1] != '_'}
 
     def import_default(self):
@@ -168,14 +169,14 @@ class Runtime:
         return self.DEFAULT
     
         
-    def _get_module(self, path_original):
+    def _get_module(self, path_original, ast_node):
 
         path   = self._canonical(path_original)
         module = self.modules.get(path)
 
         if module is None:
             module = self._load_module(path)
-            if module is None: raise ModuleNotFoundError(f"import path not found '{path_original}'")
+            if module is None: raise ModuleNotFoundEx(f"import path not found '{path_original}'", ast_node)
             self.modules[path] = module
         
         return module
@@ -210,9 +211,11 @@ class Runtime:
         is properly set in the context.
         """
         package = self.context.get('$__package__')
-        module  = importlib.import_module(path, package)
-        return _read_module(module)
-
+        try:
+            module  = importlib.import_module(path, package)
+            return _read_module(module)
+        except:
+            return None
 
     def translate(self, script, __tags__ = None, **variables):
         

@@ -558,7 +558,7 @@ class NODES(object):
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
-            symbols = runtime.import_all(self.path)
+            symbols = runtime.import_all(self.path, self)
             self.slots = {symbol: ValueSlot(symbol, value, ctx) for symbol, value in symbols.items()}
             ctx.pushall(self.slots)
 
@@ -573,7 +573,7 @@ class NODES(object):
             runtime = self.tree.runtime
             symbol  = self.children[0].value                         # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
-            value   = runtime.import_one(symbol, self.path)
+            value   = runtime.import_one(symbol, self.path, self)
             self.slot = ValueSlot(rename, value, ctx)
             ctx.push(rename, self.slot)
 
@@ -1784,12 +1784,8 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        from builtins import $ord
-        dedent
-            div
-                p
-                    i
-                        | kot
+        from ~ import $x
+        | $x
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

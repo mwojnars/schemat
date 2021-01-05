@@ -40,14 +40,16 @@ class HError(ParserError):
 
 ########################################################################################################################################################
 
-class SyntaxErrorEx(HError, SyntaxError):           pass
-class ValueErrorEx(HError, ValueError):             pass
-class TypeErrorEx(HError, TypeError):               pass
-class NameErrorEx(HError, NameError):               pass
-class UnboundLocalEx(HError, UnboundLocalError):    pass
-class UndefinedTagEx(HError):                       pass
-class NotATagEx(HError):                            pass
-class NoneStringEx(HError):                         pass
+class SyntaxErrorEx(HError, SyntaxError):               pass
+class ValueErrorEx(HError, ValueError):                 pass
+class TypeErrorEx(HError, TypeError):                   pass
+class NameErrorEx(HError, NameError):                   pass
+class UnboundLocalEx(HError, UnboundLocalError):        pass
+class UndefinedTagEx(HError):                           pass
+class NotATagEx(HError):                                pass
+class NoneStringEx(HError):                             pass
+class ModuleNotFoundEx(HError, ModuleNotFoundError):    pass
+class ImportErrorEx(HError, ImportError):               pass
 
 class MissingValueEx(HError):
     """

@@ -847,7 +847,7 @@ def test_021_import():
     """
     assert render(src, x = 10, y = 'abc').strip() == "10, abc"
     src = """
-        from CONTEXT import $x, $y
+        from ~ import $x, $y
         | $x, $y
     """
     assert render(src, x = 10, y = 'abc').strip() == "10, abc"
@@ -858,7 +858,7 @@ def test_021_import():
     src = """
         from builtins import *
         from builtins import $ord
-        from CONTEXT import *
+        from ~ import *
         import *
         | $ord(x)
     """
