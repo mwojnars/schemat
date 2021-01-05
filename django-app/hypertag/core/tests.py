@@ -856,7 +856,8 @@ def test_021_import():
     """                                         # import of defaults (built-ins)
     assert render(src).strip() == "5"
     src = """
-        from BUILTINS import *
+        from builtins import *
+        from builtins import $ord
         from CONTEXT import *
         import *
         | $ord(x)

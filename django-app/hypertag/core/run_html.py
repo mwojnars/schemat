@@ -108,10 +108,10 @@ class HypertagHTML(Runtime):
     language = 'HTML'
     escape   = staticmethod(html_escape)
     
-    PATH_HTML = 'HTML'
-    standard_modules = Runtime.standard_modules.copy()
-    standard_modules[PATH_HTML] = TAGS(BUILTIN_HTML)
-
+    # PATH_HTML = 'HTML'
+    # standard_modules = Runtime.standard_modules.copy()
+    # standard_modules[PATH_HTML] = TAGS(BUILTIN_HTML)
+    
     DEFAULT = {}
     DEFAULT.update(Runtime.DEFAULT)
     DEFAULT.update(TAGS(BUILTIN_TAGS))

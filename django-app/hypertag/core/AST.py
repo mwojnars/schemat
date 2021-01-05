@@ -1784,8 +1784,8 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        from hypertag.html import %p as PARAGRAPH
-        PARAGRAPH | kot
+        from builtins import $ord
+        | ord('A')
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

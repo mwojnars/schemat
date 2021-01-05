@@ -87,18 +87,19 @@ class Runtime:
     URI schemes:  PY: HY: FILE: file:
     """
 
-    # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
-    BUILTINS = _read_module(builtins)
+    # # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
+    # BUILTINS = _read_module(builtins)
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
-    DEFAULT  = BUILTINS
+    DEFAULT = _read_module(builtins)
+    # DEFAULT  = BUILTINS
     
     # canonical paths of predefined modules
     PATH_CONTEXT  = 'CONTEXT'
-    PATH_BUILTINS = 'BUILTINS'
+    # PATH_BUILTINS = 'BUILTINS'
     
     standard_modules = {
-        PATH_BUILTINS:  BUILTINS,
+        # PATH_BUILTINS:  BUILTINS,
         PATH_CONTEXT:   {},
     }
 
