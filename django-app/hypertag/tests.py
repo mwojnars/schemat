@@ -9,7 +9,7 @@ $  pytest -vW ignore::DeprecationWarning tests.py
 # import unittest
 import os, re, pytest
 
-from hyperweb.hypertag.run_html import HypertagHTML
+from hypertag.run_html import HypertagHTML
 
 
 #####################################################################################################################################################

@@ -136,7 +136,7 @@ document
 import re
 from types import GeneratorType
 
-from hyperweb.hypertag.errors import VoidTagEx, TypeErrorEx
+from hypertag.errors import VoidTagEx, TypeErrorEx
 
 
 ########################################################################################################################################################

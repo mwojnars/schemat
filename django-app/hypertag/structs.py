@@ -11,8 +11,8 @@ if six.PY2:
 else:
     odict = dict
     
-from hyperweb.hypertag.errors import UnboundLocalEx, UndefinedTagEx
-from hyperweb.hypertag.grammar import MARK_VAR
+from hypertag.errors import UnboundLocalEx, UndefinedTagEx
+from hypertag.grammar import MARK_VAR
 
 
 ########################################################################################################################################################

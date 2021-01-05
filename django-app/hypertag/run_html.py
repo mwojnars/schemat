@@ -4,11 +4,11 @@ from six.moves import builtins
 from xml.sax.saxutils import quoteattr
 from nifty.text import html_escape
 
-from hyperweb.hypertag.dom import Sequence, get_indent, del_indent
-from hyperweb.hypertag.runtime import Runtime
-from hyperweb.hypertag.errors import VoidTagEx
-from hyperweb.hypertag.tag import ExternalTag
-from hyperweb.hypertag.grammar import TAGS, VARS
+from hypertag.dom import Sequence, get_indent, del_indent
+from hypertag.runtime import Runtime
+from hypertag.errors import VoidTagEx
+from hypertag.tag import ExternalTag
+from hypertag.grammar import TAGS, VARS
 
 
 ########################################################################################################################################################

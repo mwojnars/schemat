@@ -13,11 +13,11 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hyperweb.hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
-from hyperweb.hypertag.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
-from hyperweb.hypertag.structs import Context, State, Slot, ValueSlot
-from hyperweb.hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
-from hyperweb.hypertag.tag import Tag, null_tag
+from hypertag.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
+from hypertag.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
+from hypertag.structs import Context, State, Slot, ValueSlot
+from hypertag.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
+from hypertag.tag import Tag, null_tag
 
 DEBUG = False
 
@@ -1703,7 +1703,7 @@ class HypertagAST(BaseTree):
 
 if __name__ == '__main__':
     
-    from hyperweb.hypertag.run_html import HypertagHTML
+    from hypertag.run_html import HypertagHTML
     DEBUG = True
 
     text = """
