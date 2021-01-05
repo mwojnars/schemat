@@ -1,15 +1,15 @@
 """
 Run on server:
 $
-$  cd django-app/hyperweb/hypertag/
-$  pytest -vW ignore::DeprecationWarning tests.py
+$  cd django-app/hypertag/
+$  pytest -vW ignore::DeprecationWarning core/tests.py
 
 """
 
 # import unittest
 import os, re, pytest
 
-from hypertag.run_html import HypertagHTML
+from hypertag.core.run_html import HypertagHTML
 
 
 #####################################################################################################################################################
@@ -863,12 +863,14 @@ def test_021_import():
     """
     assert render(src, x = 'A').strip() == "65"
     src = """
-        from HTML import *
-        from HTML import %p as PARAGRAPH
+        from hypertag.html import *
+        from hypertag.html import %p as PARAGRAPH
         PARAGRAPH | kot
     """
     assert render(src).strip() == "<p>kot</p>"
 
+
+#####################################################################################################################################################
 
 def test_100_varia():
     src = """

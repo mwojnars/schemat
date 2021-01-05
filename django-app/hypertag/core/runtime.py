@@ -1,8 +1,26 @@
 import importlib
 from six.moves import builtins
 
-from hypertag.grammar import MARK_TAG, MARK_VAR
-from hypertag.AST import HypertagAST
+from hypertag.core.grammar import MARK_TAG, MARK_VAR
+from hypertag.core.AST import HypertagAST
+
+
+#####################################################################################################################################################
+#####
+#####  UTILITIES
+#####
+
+def _read_module(module):
+    """
+    Pull symbols: tags & variables from a module and return as a dict.
+    All top-level symbols are treated as variables; tags are pulled from a special dictionary named `__tags__`.
+    """
+    symbols = {MARK_VAR + name : getattr(module, name) for name in dir(module)}
+    tags = symbols.pop('$__tags__', None)
+    if tags:
+        symbols.update({name if name[0] == MARK_TAG else MARK_TAG + name : link for name, link in tags.items()})
+        
+    return symbols
 
 
 #####################################################################################################################################################
@@ -33,9 +51,9 @@ class Runtime:
         from [context] import ...
         from [builtins] import ...
         from [python.builtins] import ...
-        from hypertag.builtins import ...
-        from hypertag.html import ...
-        from hypertag.context import ...
+        from hypertag.core.builtins import ...
+        from hypertag.core.html import ...
+        from hypertag.core.context import ...
         from ~ import ...
         from ^ import ...
         from / import ...
@@ -70,7 +88,7 @@ class Runtime:
     """
 
     # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
-    BUILTINS = {MARK_VAR + name : getattr(builtins, name) for name in dir(builtins)}
+    BUILTINS = _read_module(builtins)
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
     DEFAULT  = BUILTINS
@@ -177,13 +195,13 @@ class Runtime:
         """"""
         return None
         
-        filename = None
-        script = open(filename).read()
-        
-        # CONTEXT has already been extended by a calling method and will be available to the script below (!)
-        dom, symbols = self.translate(script)
-        
-        return symbols
+        # filename = None
+        # script = open(filename).read()
+        #
+        # # CONTEXT has already been extended by a calling method and will be available to the script below (!)
+        # dom, symbols = self.translate(script)
+        #
+        # return symbols
         
     def _load_module_python(self, path):
         """
@@ -191,7 +209,9 @@ class Runtime:
         is properly set in the context.
         """
         package = self.context.get('$__package__')
-        return importlib.import_module(path, package)
+        module  = importlib.import_module(path, package)
+        return _read_module(module)
+
 
     def translate(self, script, __tags__ = None, **variables):
         

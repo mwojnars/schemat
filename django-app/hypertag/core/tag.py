@@ -1,4 +1,6 @@
-from hypertag.dom import Sequence, HNode
+from xml.sax.saxutils import quoteattr
+from hypertag.core.errors import VoidTagEx
+from hypertag.core.dom import Sequence, HNode
 
 
 ########################################################################################################################################################
@@ -83,3 +85,69 @@ class NullTag(SpecialTag):
         return __body__.render()
     
 null_tag = NullTag()
+
+
+
+########################################################################################################################################################
+#####
+#####  STANDARD MARKUP TAG
+#####
+
+class MarkupTag(ExternalTag):
+    """
+    A hypertag whose expand() outputs the body unchanged, surrounded by <name>...</name> strings, with proper handling
+    of void tags <name /> and HTML/XHTML format differences for boolean attributes.
+    This class is used for all built-in (X)HTML tags. It can also be used to define custom markup tags in an application.
+    """
+    
+    name = None         # tag <name> to be printed into markup; may differ from the Hypertag name used inside a script (!)
+    void = False        # if True, __body__ is expected to be empty and the returned element is self-closing
+    mode = 'HTML'       # (X)HMTL compatibility mode: either 'HTML' or 'XHTML'
+    
+    def __init__(self, name, void = False, mode = 'HTML'):
+        self.name = name
+        self.void = void
+        self.mode = mode
+    
+    def expand(self, __body__, **attrs):
+        
+        name = self.name
+        
+        # render attributes
+        attrs = filter(None, map(self._render_attr, attrs.items()))
+        tag = ' '.join([name] + list(attrs))
+        
+        # render output
+        if self.void:
+            if __body__: raise VoidTagEx(f"non-empty body passed to a void markup tag <{name}>")
+            return f"<{tag} />"
+        else:
+            assert isinstance(__body__, Sequence)
+            body = __body__.render()
+
+            # if the block contains a headline, the closing tag is placed on the same line as __body__
+            nl = '\n' if body[:1] == '\n' else ''
+            return f"<{tag}>" + body + nl + f"</{name}>"
+
+    def _render_attr(self, name_value):
+        
+        name, value = name_value
+        if value is True:               # name=True   -- converted to:  name (HTML)  or  name="name" (XHTML)
+            if self.mode == 'HTML':
+                return name
+            else:
+                return f'{name}="{name}"'
+        if value is False:              # name=False  -- removed from attr list
+            return None
+        
+        value = str(value)
+        if '"' not in value:
+            value = f'"{value}"'
+        elif "'" not in value:
+            value = f"'{value}'"
+        else:
+            value = quoteattr(value)    # escaping of <,>,&," chars is performed ONLY when the value contains a quote "
+        
+        return f'{name}={value}'
+        
+
