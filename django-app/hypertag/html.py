@@ -5,5 +5,5 @@
 #
 
 
-from hypertag.core.run_html import BUILTIN_HTML as __tags__
+from hypertag.core._html import BUILTIN_HTML as __tags__
 

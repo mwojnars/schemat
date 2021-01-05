@@ -1785,7 +1785,11 @@ if __name__ == '__main__':
     """
     text = """
         from builtins import $ord
-        | ord('A')
+        dedent
+            div
+                p
+                    i
+                        | kot
     """
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

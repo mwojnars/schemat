@@ -870,6 +870,25 @@ def test_021_import():
     """
     assert render(src).strip() == "<p>kot</p>"
 
+def test_022_builtins():
+    src = """
+        dedent
+            div
+                p
+                    i
+                        | kot
+    """
+    out = """
+        <div>
+        <p>
+        <i>
+        kot
+        </i>
+        </p>
+        </div>
+    """
+    assert render(src).strip() == out.strip()
+
 
 #####################################################################################################################################################
 

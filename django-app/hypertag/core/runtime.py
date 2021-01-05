@@ -1,8 +1,9 @@
 import importlib
 from six.moves import builtins
 
-from hypertag.core.grammar import MARK_TAG, MARK_VAR
+from hypertag.core.grammar import MARK_TAG, MARK_VAR, TAGS
 from hypertag.core.AST import HypertagAST
+import hypertag.builtins
 
 
 #####################################################################################################################################################
@@ -18,6 +19,7 @@ def _read_module(module):
     symbols = {MARK_VAR + name : getattr(module, name) for name in dir(module)}
     tags = symbols.pop('$__tags__', None)
     if tags:
+        assert isinstance(tags, dict), "module's __tags__ if present must be a dict"
         symbols.update({name if name[0] == MARK_TAG else MARK_TAG + name : link for name, link in tags.items()})
         
     return symbols
@@ -87,19 +89,17 @@ class Runtime:
     URI schemes:  PY: HY: FILE: file:
     """
 
-    # # precomputed dict of built-in symbols, to avoid recomputing it on every __init__()
-    # BUILTINS = _read_module(builtins)
+    # precomputed dict of built-in symbols to avoid recomputation on every __init__()
+    BUILTINS = _read_module(builtins)
+    BUILTINS.update(_read_module(hypertag.builtins))
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
-    DEFAULT = _read_module(builtins)
-    # DEFAULT  = BUILTINS
+    DEFAULT  = BUILTINS
     
     # canonical paths of predefined modules
     PATH_CONTEXT  = 'CONTEXT'
-    # PATH_BUILTINS = 'BUILTINS'
     
     standard_modules = {
-        # PATH_BUILTINS:  BUILTINS,
         PATH_CONTEXT:   {},
     }
 
