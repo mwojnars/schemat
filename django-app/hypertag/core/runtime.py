@@ -1,4 +1,4 @@
-import importlib
+import os, importlib
 from six.moves import builtins
 
 from hypertag.core.errors import ImportErrorEx, ModuleNotFoundEx
@@ -18,7 +18,7 @@ def _read_module(module):
     All top-level symbols are treated as variables; tags are pulled from a special dictionary named `__tags__`.
     """
     symbols = {MARK_VAR + name : getattr(module, name) for name in dir(module)}
-    tags = symbols.pop('$__tags__', None)
+    tags = symbols.pop(f'{MARK_VAR}__tags__', None)
     if tags:
         assert isinstance(tags, dict), "module's __tags__ if present must be a dict"
         symbols.update({name if name[0] == MARK_TAG else MARK_TAG + name : link for name, link in tags.items()})
@@ -53,10 +53,8 @@ class Runtime:
         from ~context import ...
         from [context] import ...
         from [builtins] import ...
-        from [python.builtins] import ...
-        from hypertag.core.builtins import ...
-        from hypertag.core.html import ...
-        from hypertag.core.context import ...
+        from hypertag.builtins import ...
+        from hypertag.html import ...
         from ~ import ...
         from ^ import ...
         from / import ...
@@ -84,11 +82,19 @@ class Runtime:
         from CT:meta.cat:XXXX/view import ...
         from CT:meta.cat[NAME]/view
         from CT:space.categ:XXXX
-    Abstract paths:
-        from
+    Importing a .hy script:
+        from package.script ...     -- "package." prefix must be present to allow file identification
+        from .package.script ...    --
+        from script ...             -- only possible when __file__ of the calling script is defined; "script.hy" is always looked for in the same folder as the calling script
+        from .script
         
     URI schemes:  PY: HY: FILE: file:
     """
+    
+    # predefined constants
+    PATH_CONTEXT     = '~'          # import path of the global context
+    SCRIPT_EXTENSION = 'hy'         # file extension of Hypertag scripts; used during import
+    
 
     # precomputed dict of built-in symbols to avoid recomputation on every __init__()
     BUILTINS = _read_module(builtins)
@@ -96,9 +102,6 @@ class Runtime:
     
     # symbols to be imported automatically upon startup; subclasses may define a broader collection
     DEFAULT = BUILTINS
-    
-    # canonical paths of predefined modules
-    PATH_CONTEXT = '~'
     
     standard_modules = {
         PATH_CONTEXT: {},
@@ -175,7 +178,7 @@ class Runtime:
         module = self.modules.get(path)
 
         if module is None:
-            module = self._load_module(path)
+            module = self._load_module(path, ast_node)
             if module is None: raise ModuleNotFoundEx(f"import path not found '{path_original}'", ast_node)
             self.modules[path] = module
         
@@ -186,46 +189,83 @@ class Runtime:
         if path is None: return self.PATH_CONTEXT
         return path
         
-    def _load_module(self, path):
+    def _load_module(self, path, ast_node):
         """Path must be already converted to a canonical form."""
-        mod = self._load_module_hypertag(path)
-        if mod is None:
-            mod = self._load_module_python(path)
-        return mod
+        try:
+            return self._load_module_hypertag(path)
+        except:
+            pass
+        
+        try:
+            return self._load_module_python(path)
+        except:
+            pass
+        
+        raise ModuleNotFoundEx(f"import path not found '{path}', try setting __package__ or __file__ for parsing", ast_node)
         
     def _load_module_hypertag(self, path):
         """"""
-        return None
+        raise Exception()
+
+        # from package.script ...     -- "package." prefix must be present to allow file identification
+        # from .package.script ...    --
+        # from script ...             -- only possible when __file__ of the calling script is defined; "script.hy" is always looked for in the same folder as the calling script
+        # from .script
         
-        # filename = None
-        # script = open(filename).read()
-        #
-        # # CONTEXT has already been extended by a calling method and will be available to the script below (!)
-        # dom, symbols = self.translate(script)
-        #
-        # return symbols
+        referrer_file    = self.context.get(f'{MARK_VAR}__file__')
+        referrer_package = self.context.get(f'{MARK_VAR}__package__')
+        
+        # package path is present? the package & file can be localized through `importlib`
+        if '.' in path:
+            package_name, filename = path.rsplit('.', 1)
+            package = importlib.import_module(package_name, referrer_package)
+            package_name = package.__name__                                 # package_name could have been relative, must be changed to absolute
+            package_path = package.__file__
+            if package_path.endswith('.py'):
+                package_path = os.path.dirname(package_path)                # truncate /__init__.py part of a package file path
+            filepath = f'{package_path}/{filename}.{self.SCRIPT_EXTENSION}'
+            
+        else:
+            # no package path? the script must be in the same folder as __file__
+            folder   = os.path.dirname(referrer_file)
+            filepath = f"{folder}/{path}"
+            package_name = referrer_package
+            
+        if not os.path.exists(filepath):
+            return None
+        
+        script = open(filepath).read()
+
+        # context (~) has already been initialized by a calling method and will be available to the script below (!)
+        dom, symbols = self.translate(script, __file__ = filepath, __package__ = package_name)
+        return symbols
+    
         
     def _load_module_python(self, path):
         """
         Both absolute and relative Python paths are supported. The latter require that "$__package__" variable
         is properly set in the context.
         """
-        package = self.context.get('$__package__')
+        package = self.context.get(f'{MARK_VAR}__package__')
         try:
-            module  = importlib.import_module(path, package)
+            module = importlib.import_module(path, package)
             return _read_module(module)
         except:
             return None
 
-    def translate(self, script, __tags__ = None, **variables):
+    def translate(self, script, __file__ = None, __package__ = None,  __tags__ = None, **variables):
         
+        globals_ = self.import_default()
+        globals_[f'{MARK_VAR}__file__']    = __file__
+        globals_[f'{MARK_VAR}__package__'] = __package__
         self.update_context(__tags__, variables)
-        ast = HypertagAST(script, self)
+        
+        ast = HypertagAST(script, self, globals_)
         return ast.translate()
         
-    def render(self, script, __tags__ = None, **variables):
+    def render(self, script, __file__ = None, __package__ = None, __tags__ = None, **variables):
         
-        dom, symbols = self.translate(script, __tags__, **variables)
+        dom, symbols = self.translate(script, __file__, __package__, __tags__, **variables)
         return dom.render()
         
 

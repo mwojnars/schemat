@@ -456,6 +456,9 @@ class ValueSlot(Slot):
 
     def set_value(self, state):
         self.set(state, self.value)
-    
 
-    
+# class VariantSlot(Slot):
+#     """
+#     A slot that
+#     """
+

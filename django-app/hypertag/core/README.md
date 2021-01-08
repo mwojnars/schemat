@@ -216,10 +216,33 @@ This works with a default tag specification, as well:
 
 #### Block "import"
 
-- import NAME -- import from a global context
-- from PATH import NAME -- import from a module denoted by PATH, which can be any string
+1. Import from the global context:
+  
+        import $OBJECT
+        import %TAG
+or
+        from ~ import $OBJECT
+        from ~ import %TAG
+
+The special import path "~" denotes the current global context of script execution.
+When the `from PATH` clause is omitted the `from ~` path is assumed.
+When a script is imported to another script, the context stays the same for both.
+
+2. Import from a Python module:
+
+from PATH import NAME -- import from a module denoted by PATH, which can be any string
   consisting of [...] characters that can be correctly interpreted by the currently used
   Environment subclass
+
+3. Import from a Hypertag script:
+
+...
+
+4. Import from a combined Python-Hypertag module:
+
+...
+
+
 
 ### Comments
 
@@ -480,8 +503,7 @@ DOM = Document Object Model
 
 Selectors as methods of Sequence ...
 
-
-## Selectors (??)
+### Selectors (??)
 
 **Terminal tag** is a tag that does not use any tags inside its (formal) body and thus 
 its expansion does NOT create any new tagged nodes, except possibly those that have been
@@ -493,6 +515,27 @@ to **selectors** and can be operated on during expansion of other (non-terminal)
 Note that:
 - All external tags that return plain text (their property `terminal = True`) are terminal.
 - All native hypertags that 
+
+
+## Modules
+
+### Import
+
+Special symbols available inside a Hypertag script: `__file__`, `__package__` - 
+for proper interpretation of import paths. They can be initialized
+through same-named arguments of Runtime.render() and Runtime.translate().
+
+- absolute vs. relative import paths
+
+### Export
+
+Regular Python modules (.py files) can export symbols for use in Hypertag scripts.
+Any global variable defined by a module that can be imported into another Python module
+can also be imported to a Hypertag script as an object ($NAME).
+
+Additionally, if a module defines a `__tags__` global - which should be a dict
+with strings (tag names) as keys and Tag objects as values - the content of this 
+dictionary can be imported as tags (%NAME) into a Hypertag script.
 
 
 ## Script execution
