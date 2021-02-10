@@ -152,18 +152,17 @@ class Item(object, metaclass = MetaItem):
         return default
 
     def getlist(self, name, default = None, copy_list = False):
-        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.getlist()"""
+        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.get_multi()"""
         if not (self.__loaded__ or name in self.__data__):
             self.__load__()
-        return self.__data__.getlist(name, default, copy_list)
+        return self.__data__.get_multi(name, default, copy_list)
 
-    def set(self, name, value):
-        """Assigns a singleton `value` to a given name in __data__, also when `name` looks like a private attr."""
-        self.__data__[name] = value
-
-    def setlist(self, name, values):
-        """Assigns a list of 0+ `values` to a given name in __data__."""
-        self.__data__.setlist(name, values)
+    def set(self, key, *values):
+        """
+        Assign `values` to a given key in __data__. This can be used instead of __setattr__ when the key looks
+        like a private attr and would be assigned to __dict__ otherwise; or when mutliple values have to be assigned.
+        """
+        self.__data__.set(key, *values)
 
     def __setattr__(self, name, value):
         """Assigns a singleton `value` to a given name in __data__; or to __dict__ if `name` is a private attr."""
@@ -245,7 +244,7 @@ class Item(object, metaclass = MetaItem):
         if data:
             schema = item.__category__.schema
             data = schema.decode_json(data)
-            # print(f"__decode__ in {item}, data:", data.dict_first())
+            # print(f"__decode__ in {item}, data:", data.asdict_first())
             item.__data__.update(data)
         
         item._post_decode()
@@ -298,19 +297,6 @@ class Item(object, metaclass = MetaItem):
         Default handler invoked to render a response to item request when no handler name was given.
         Inside category's handlers dict, this method is saved under the None key.
         """
-        h = html_escape
-        
-        # attrs = [f"<li><b>{attr}</b>: {values}</li>" for attr, values in self.__data__.items_all()]
-        # attrs = '\n'.join(attrs)
-        
-        # doc = Document()
-        # doc << f"<h1>{h(str(self))} -- ID {self.__id__}</h1>"
-        # doc << f"<ul>"
-        # for attr, value in self.__data__.items():
-        #     doc << f"<li><b>{attr}</b>: {value}</li>"
-        # doc << f"</ul>"
-        # return doc
-        
         return HypertagHTML(item = self).render(self._view_item_)
     
     _view_item_ = \
@@ -420,9 +406,9 @@ class Category(Item):
         # retrieve attribute values from GET/POST
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
         for attr, values in request.POST.lists():
-            data.setlist(attr, values)
+            data.set(attr, *values)
         for attr, values in request.GET.lists():
-            data.setlist(attr, values)
+            data.set(attr, *values)
 
         item = self.new_item(data)
         item.save()
