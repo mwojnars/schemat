@@ -155,7 +155,7 @@ class MultiDict:
         
     def values(self, *keys):
         """
-        If no `keys` are given, generate all values stored in this multidict, including all those of multi-valued keys.
+        If `keys` are empty, generate all values stored in this multidict, including all those of multi-valued keys.
         If `keys` are given, only generate values for the provided keys; if a key is not present it gets ignored silently.
         """
         if not keys:

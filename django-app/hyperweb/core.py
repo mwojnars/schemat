@@ -84,7 +84,11 @@ class Item(object, metaclass = MetaItem):
     __category__ = None         # instance of Category this item belongs to
     __loaded__   = False        # True if this item's data has been fully loaded from DB; for implementation of lazy loading of linked items
     
-    __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods) exposed by items of the current Item subclass
+    __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods)
+                                # exposed by items of the current Item subclass
+    __views__    = None         # similar to __handlers__, but stores Hypertag scripts (<str>) instead of methods;
+                                # if a handler is not found in __handlers__, a script is looked up in __views__
+                                # and compiled to HTML through Hypertag
     
     @property
     def __id__(self): return self.__cid__, self.__iid__
@@ -283,44 +287,61 @@ class Item(object, metaclass = MetaItem):
         
     def __handle__(self, request, handler):
         """
-        Route a web request to a handler function/method of a given name. Handler functions are stored in a parent category object.
+        Route a web request to a handler function/method of a given name.
+        Handler functions are stored in a parent category object.
         """
         # TODO: route through a predefined pipeline of handlers
         
-        hdl = self.__handlers__.get(handler, None)
-        if hdl is None: raise InvalidHandler(f'Handler "{handler}" not found in {self} ({self.__class__}), handlers: {self.__handlers__}')
-        return hdl(self, request)
-        
-    @handler()
-    def __view__(self, request):
-        """
-        Default handler invoked to render a response to item request when no handler name was given.
-        Inside category's handlers dict, this method is saved under the None key.
-        """
-        return HypertagHTML(item = self).render(self._view_item_)
-    
-    _view_item_ = \
-    """
-        from ~ import $item
-        h1 | {item} -- ID {item.__id__} -- through Hypertag
-        ul
-            for attr, value in item.__data__.items()
-                li / <b>{attr}</b>: {value}
-    """
+        # search for a Hypertag script in __views__
+        view = self.__views__.get(handler, None)
+        if view is not None:
+            return HypertagHTML(item = self).render(view)
 
+        # no view found; search for a handler method in __handlers__
+        hdl = self.__handlers__.get(handler, None)
+        if hdl is not None:
+            return hdl(self, request)
+        
+        raise InvalidHandler(f'Handler or view "{handler}" not found in {self} ({self.__class__})')  #handlers: {self.__handlers__}
+        
+    # @handler()
+    # def __view__(self, request):
+    #     """
+    #     Default handler invoked to render a response to item request when no handler name was given.
+    #     Inside category's handlers dict, this method is saved under the None key.
+    #     """
+    #     return HypertagHTML(item = self).render(self._view_item_)
+    
+    _default_view = \
     """
-    from catalog.web import header, footer
-    % __view__ item:
-        header
-        / $item.header()
-        for (name, value), class in alternate(item.data.items(), 'odd', 'even'):
-            field, something = item.get_field(name), something_else
-            tr .$class
-                td | $name
-                td | $field.render(value)
-                td / ala ma kota
-        footer
+        import $item
+        html
+            head
+                title | Item ID {item.__id__}
+            body
+                h1 | {item.name? or item} -- ID {item.__id__}
+                ul
+                    for attr, value in item.__data__.items()
+                        li / <b>{attr}</b>: {value}
     """
+    
+    __views__ = {
+        None: _default_view,
+    }
+
+    # """
+    # from catalog.web import header, footer
+    # % __view__ item:
+    #     header
+    #     / $item.header()
+    #     for (name, value), class in alternate(item.data.items(), 'odd', 'even'):
+    #         field, something = item.get_field(name), something_else
+    #         tr .$class
+    #             td | $name
+    #             td | $field.render(value)
+    #             td / ala ma kota
+    #     footer
+    # """
 
 ItemDoesNotExist.item_class = Item
 
@@ -362,7 +383,7 @@ class Category(Item):
         
         return self
 
-    #####  Items in category  #####
+    #####  Items in category (low-level interface that does NOT scale)  #####
     
     def new_item(self, *args, **kwargs):
         """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
@@ -386,7 +407,7 @@ class Category(Item):
     def all_items(self, limit = None):
         """
         Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
-        Return an iterable, but not a list.
+        Return an iterable, not a list.
         """
         records = self._store.load_all(self.__iid__, limit)
         return map(self.itemclass.__decode__, records)
@@ -396,6 +417,8 @@ class Category(Item):
         items = list(self.all_items(limit = 1))
         if not items: raise self.itemclass.DoesNotExist()
         return items[0]
+
+    #####  Handlers & views  #####
 
     @handler('new')
     def _handle_new(self, request):
@@ -414,6 +437,29 @@ class Category(Item):
         item.save()
         return HttpResponse(html_escape(f"Item created: {item}"))
         
+    _default_view = \
+    """
+        import $item as cat
+        html
+            head
+                title | {cat.name ' -' }? category #{cat.__iid__}
+            body
+                h1
+                    try
+                        i | {cat.name}
+                        . | -
+                    | category #{cat.__iid__}
+                table
+                    for item in cat.all_items()
+                        tr
+                            td / #{item.__iid__} &nbsp;
+                            td | {item.name? or item}
+    """
+    
+    __views__ = {
+        None: _default_view,
+    }
+
 
 #####################################################################################################################################################
 #####
