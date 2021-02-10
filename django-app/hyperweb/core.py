@@ -9,6 +9,7 @@ from .store import SimpleStore
 from .schema import Schema
 from .document import Document
 
+from hypertag.core.run_html import HypertagHTML
 
 #####################################################################################################################################################
 
@@ -302,37 +303,27 @@ class Item(object, metaclass = MetaItem):
         # attrs = [f"<li><b>{attr}</b>: {values}</li>" for attr, values in self.__data__.items_all()]
         # attrs = '\n'.join(attrs)
         
-        doc = Document()
-        doc << f"<h1>{h(str(self))} -- ID {self.__id__}</h1>"
-        doc << f"<ul>"
-        for attr, values in self.__data__.items_all():
-            doc << f"<li><b>{attr}</b>: {values}</li>"
-        doc << f"</ul>"
+        # doc = Document()
+        # doc << f"<h1>{h(str(self))} -- ID {self.__id__}</h1>"
+        # doc << f"<ul>"
+        # for attr, value in self.__data__.items():
+        #     doc << f"<li><b>{attr}</b>: {value}</li>"
+        # doc << f"</ul>"
+        # return doc
         
-        doc << hyml(
-            """
-            h1 | {item} -- ID {item.__id__}
-            ul
-                for attr, values in item.__data__.items_all()
-                    li / <b>{attr}</b>: {values}
-                    
-            -- embedding of a widget: method __embed__(doc) is called instead of __str__
-            -- __embed__() returns contents to insert here, but also may modify `doc`: add contents to other zones, create zones
-            widget
-            """,
-            context = {'item': self}
-        )
-        
-        return doc
-        
-        # return f"""
-        #     <h1>{h(str(self))} -- ID {self.__id__}</h1>
-        #     <ul>{attrs}</ul>
-        # """
+        return HypertagHTML(item = self).render(self._view_item_)
     
+    _view_item_ = \
+    """
+        from ~ import $item
+        h1 | {item} -- ID {item.__id__} -- through Hypertag
+        ul
+            for attr, value in item.__data__.items()
+                li / <b>{attr}</b>: {value}
+    """
+
     """
     from catalog.web import header, footer
-    
     % __view__ item:
         header
         / $item.header()
@@ -343,7 +334,6 @@ class Item(object, metaclass = MetaItem):
                 td | $field.render(value)
                 td / ala ma kota
         footer
-    
     """
 
 ItemDoesNotExist.item_class = Item

@@ -24,7 +24,7 @@ class MultiDict:
     
     Methods __getitem__() and get() return the FIRST value for a key.
     
-    Side note: as of Python 3.7, dict keeps insertion order, as a language feature not an implementation detail.
+    Side note: as of Python 3.7, <dict> preserves insertion order, as a language feature not an implementation detail.
     """
     
     _values = None          # dict {key: list_of_values}
@@ -141,6 +141,16 @@ class MultiDict:
         """Return a dict of lists of values per key; same as self._values.copy()."""
         return self._values.copy()
 
+    def items(self):
+        """
+        Generator of (key, value) pairs for ALL available values per key.
+        A given key may be produced more than once (!).
+        Items that share the same key are yielded together, one after another.
+        """
+        for key, values in self._values.items():
+            for value in values:
+                yield key, value
+    
     def items_first(self):
         """Generator of (key, first value) pairs."""
         for key, values in self._values.items():
