@@ -81,7 +81,9 @@ class Item(object, metaclass = MetaItem):
     __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
-    __category__ = None         # instance of Category this item belongs to
+    
+    __site__     = None         # Site instance that loaded this item
+    __category__ = None         # parent category of this item, as an instance of Category
     __loaded__   = False        # True if this item's data has been fully loaded from DB; for implementation of lazy loading of linked items
     
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods)
@@ -100,6 +102,9 @@ class Item(object, metaclass = MetaItem):
     # def data(self):
     #     return Data(self.__data__)
     
+    # names that must not be used for attributes inside __data__
+    __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'url']
+    
     def __init__(self, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
@@ -117,11 +122,15 @@ class Item(object, metaclass = MetaItem):
         elif self.__category__:
             self.__cid__ = self.__category__.__iid__
         elif self.__cid__:
-            self.__category__ = site.get_category(self.__cid__)
+            self.__category__ = self.__site__.get_category(self.__cid__)
 
 
     def __getattr__(self, name):
-        """Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`."""
+        """
+            Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
+            __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
+            has NOT been found in the object's __dict__ or in a parent class (!)
+        """
         if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
             basename = name[:-len(MULTI_SUFFIX)]
             return self.getlist(basename)
@@ -242,7 +251,7 @@ class Item(object, metaclass = MetaItem):
         
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
-        item.__category__ = item if (cid == iid == ROOT_CID) else Site._categories[cid]
+        item.__category__ = item if (cid == iid == ROOT_CID) else Site.get_category(cid)
 
         # convert __data__ from JSON string to a struct
         if data:
@@ -256,53 +265,25 @@ class Item(object, metaclass = MetaItem):
         
         return item
 
-    def _post_decode(self):
-        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
-        
-    def _to_json(self):
-        schema = self.__category__.get('schema')
-        return schema.encode_json(self.__data__)
-        
-    def insert(self):
+    def __handle__(self, request, endpoint = None):
         """
-        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
-        The item might have already been present in DB, but still a new copy is created.
-        """
-        self.__category__._store.insert(self)
-        
-    def update(self):
-        """Update the contents of this item's row in DB."""
-        self.__category__._store.update(self)
-
-    def save(self):
-        """
-        Save this item to DB. This means either an update of an existing DB row (if __iid__ is already present), 
-        or an insert of a new row (iid is assigned then and returned).
-        """
-        if self.__iid__ is None:
-            return self.insert()
-        else:
-            self.update()
-            return None
-        
-    def __handle__(self, request, handler):
-        """
-        Route a web request to a handler function/method of a given name.
+        Route a web request to a given endpoint.
+        Endpoint can be implemented as a handler function/method, or a view template.
         Handler functions are stored in a parent category object.
         """
         # TODO: route through a predefined pipeline of handlers
         
         # search for a Hypertag script in __views__
-        view = self.__views__.get(handler, None)
+        view = self.__views__.get(endpoint, None)
         if view is not None:
             return HypertagHTML(item = self).render(view)
 
         # no view found; search for a handler method in __handlers__
-        hdl = self.__handlers__.get(handler, None)
+        hdl = self.__handlers__.get(endpoint, None)
         if hdl is not None:
             return hdl(self, request)
         
-        raise InvalidHandler(f'Handler or view "{handler}" not found in {self} ({self.__class__})')  #handlers: {self.__handlers__}
+        raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')  #handlers: {self.__handlers__}
         
     # @handler()
     # def __view__(self, request):
@@ -343,6 +324,42 @@ class Item(object, metaclass = MetaItem):
     #     footer
     # """
 
+    def _post_decode(self):
+        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
+        
+    def _to_json(self):
+        schema = self.__category__.get('schema')
+        return schema.encode_json(self.__data__)
+        
+    def insert(self):
+        """
+        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
+        The item might have already been present in DB, but still a new copy is created.
+        """
+        self.__category__._store.insert(self)
+        
+    def update(self):
+        """Update the contents of this item's row in DB."""
+        self.__category__._store.update(self)
+
+    def save(self):
+        """
+        Save this item to DB. This means either an update of an existing DB row (if __iid__ is already present),
+        or an insert of a new row (iid is assigned then and returned).
+        """
+        if self.__iid__ is None:
+            return self.insert()
+        else:
+            self.update()
+            return None
+
+    def url(self, __endpoint = None, *args, **kwargs):
+        """Return canonical URL of this item, possibly extended with a non-default
+           endpoint designation and/or arguments to be passed to a handler function or a view template.
+        """
+        return self.__category__.url_of(self, __endpoint, *args, **kwargs)
+    
+
 ItemDoesNotExist.item_class = Item
 
         
@@ -358,8 +375,9 @@ class Category(Item):
     """
     
     # internal attributes
-    _boot_store   = SimpleStore()       # data store used during startup for accessing category-items
-    _store        = None                # data store used for regular access to items of this category
+    _boot_store = SimpleStore()     # data store used during startup for accessing category-items
+    _store      = None              # data store used for regular access to items of this category
+    _qualifier  = None              # qualifier of this category for use inside URLs; assigned by Site upon loading
     
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
@@ -368,12 +386,15 @@ class Category(Item):
 
         # public attributes of a category
         self.schema = Schema()          # a Schema that puts constraints on attribute names and values allowed in this category
-
+        
+    def _is_root(self):
+        return self.__iid__ == ROOT_CID
+        
     def __load__(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
 
         # root Category doesn't have a schema, yet; attributes must be set or decoded manually
-        if self.__iid__ == ROOT_CID:
+        if self._is_root():
             self.itemclass = Category
         else:
             self.itemclass = Item       # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
@@ -399,9 +420,10 @@ class Category(Item):
         """
         return self.itemclass(__category__ = self, __iid__ = iid)
 
-    def load(self, iid):
+    def load(self, iid_str):
         """Load from DB an item that belongs to the category represented by self."""
 
+        iid = self._iid_decode(iid_str)
         return self.get_item(iid).__load__()
         
     def all_items(self, limit = None):
@@ -449,17 +471,46 @@ class Category(Item):
                         i | {cat.name}
                         . | -
                     | category #{cat.__iid__}
+                p
+                    . | Items in category
+                    i | {cat.name}:
                 table
                     for item in cat.all_items()
                         tr
                             td / #{item.__iid__} &nbsp;
-                            td | {item.name? or item}
+                            td : a href=$item.url()
+                                | {item.name? or item}
     """
     
     __views__ = {
         None: _default_view,
     }
 
+    def url_of(self, item, __endpoint = None, *args, **kwargs):
+        
+        assert item.__cid__ == self.__iid__
+        
+        base_url  = self.__site__.base_url
+        qualifier = self._qualifier
+        iid       = self._iid_encode(item.__iid__)
+        print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
+        
+        url = f'{base_url}/{qualifier}:{iid}'
+        if __endpoint: url += f'/{__endpoint}'
+            
+        return url
+    
+    def _iid_encode(self, iid):
+        """This method, together with _iid_decode(), can be customized in subclasses to provide
+           a different way of representing IIDs inside URLs.
+        """
+        return str(iid)
+    
+    def _iid_decode(self, iid_str):
+        """Convert an encoded IID representation found in a URL back to an <int>. Reverse operation to _iid_encode()."""
+        return int(iid_str)
+        
+        
 
 #####################################################################################################################################################
 #####
@@ -470,37 +521,27 @@ class Categories:
     """
     Flat collection of all categories found in DB, accessible by their names and CIDs (category's IID). Provides caching.
     """    
-    cache = None
+    cache = None        # dict of Category instances; each category is present under both its name AND its IID
     
     def __init__(self):
         
-        root_category = Category(__iid__ = ROOT_CID).__load__()     # root Category is a category for itself, hence its IID == CID
-        self.cache = {"Category": root_category}
+        self.cache = {}
+        # root = Category(__iid__ = ROOT_CID).__load__()        # root Category is a category for itself, hence its IID == CID
+        # self.cache = {"Category": root}
         
-    def __getitem__(self, key):
+    def __getitem__(self, iid):
         
         # try to get the item from cache
-        category = self.cache.get(key)
+        category = self.cache.get(iid)
         if category: return category
         
-        iid = name = None
+        category = Category(__iid__ = iid).__load__()
 
-        # not in cache? load from DB
-        if isinstance(key, str):
-            name = key
-        else:
-            assert isinstance(key, int), key
-            iid = key
+        # save in cache for later use and return
+        return self.setdefault(category)
 
-        category = Category(__iid__ = iid, name = name).__load__()
-        
-        # save in cache for later use
-        self.cache[category.__iid__] = category
-
-        assert category.name, key
-        self.cache[category.name] = category
-
-        return category 
+    def setdefault(self, category):
+        return self.cache.setdefault(category.__iid__, category)
     
     get = __getitem__
 
@@ -522,36 +563,47 @@ class Site(Item):
     root = None             # the global Site object created during boot()
     
     # internal variables
-    _categories = None       # flat collection of all categories found in DB, as a class-global singleton instance of Categories; after boot(), it can be accessed as Site.categories
-    _descriptors = None      # {app-space-category descriptor: Category}
+    _categories = None      # flat collection of all categories found in DB, as a class-global singleton instance of Categories;
+                            # after boot(), it can be accessed through Site.get_category()
+    _qualifiers = None      # mapping (dict) of app-space-category qualifiers to Category objects
 
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
-        categories = cls._categories = Categories()
-        Site = categories['Site']
+        cls._categories = categories = Categories()
+        # Site = categories['Site']
+        Site = Category(name = 'Site').__load__()
+        Site = categories.setdefault(Site)
         root = cls.root = Site.first_item()
         return root
 
     def _post_decode(self):
 
-        self._descriptors = {}
+        self._qualifiers = {}
         
         for app in self.app_list:
             for space_name, space in app.spaces.items():
                 for category_name, category in space.categories.items():
-                    descriptor = f"{space_name}.{category_name}"
-                    self._descriptors[descriptor] = category
+                    category = self._categories.setdefault(category)     # store category in self._categories if not yet there
+                    # if category._is_root():
+                    #     category = self._categories.root                # don't duplicate root Category but use the global one instead
+                    qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+                    category._qualifier = qualifier
+                    self._qualifiers[qualifier] = category
+                    print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
 
-    def get_category(self, cid):
-        return self._categories.get(cid)
+    @classmethod
+    def get_category(cls, cid):
+        return cls._categories.get(cid)
 
     def load(self, descriptor, app = None):
-        
-        qualifier, iid = descriptor.split(':')
-        category = self._descriptors[qualifier]
-        return category.load(int(iid))
+    
+        # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
+        # is category-dependent and can be customized by Category subclasses
+        qualifier, iid = descriptor.split(':', 1)
+        category = self._qualifiers[qualifier]
+        return category.load(iid)
         
         
         
@@ -586,7 +638,7 @@ Space:
 #####  GLOBALS
 #####
 
-site = Site.boot()
+site = Item.__site__ = Site.boot()          # for now, we assume the global Site object is the site of all items
 
 # print("categories:", Site.categories.cache)
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
