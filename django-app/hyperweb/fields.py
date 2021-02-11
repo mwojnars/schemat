@@ -276,7 +276,8 @@ class Link(Field):
         if cid is None:
             cid = self.cid
 
-        from .core import Site
-        category = Site._categories[cid]
+        from .core import Site          # importing the global Site class/object !!!
+        
+        category = Site.get_category(cid)
         return category.get_item(iid)
         

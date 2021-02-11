@@ -415,10 +415,12 @@ class Category(Item):
 
     def get_item(self, iid):
         """
-        Instantiate an Item and seed it with IID (the IID being present in DB, presumably),
+        Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
-        return self.itemclass(__category__ = self, __iid__ = iid)
+        item = self.itemclass(__category__ = self, __iid__ = iid)
+        if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
+        return item
 
     def load(self, iid_str):
         """Load from DB an item that belongs to the category represented by self."""
@@ -517,33 +519,33 @@ class Category(Item):
 #####  SITE
 #####
 
-class Categories:
-    """
-    Flat collection of all categories found in DB, accessible by their names and CIDs (category's IID). Provides caching.
-    """    
-    cache = None        # dict of Category instances; each category is present under both its name AND its IID
-    
-    def __init__(self):
-        
-        self.cache = {}
-        # root = Category(__iid__ = ROOT_CID).__load__()        # root Category is a category for itself, hence its IID == CID
-        # self.cache = {"Category": root}
-        
-    def __getitem__(self, iid):
-        
-        # try to get the item from cache
-        category = self.cache.get(iid)
-        if category: return category
-        
-        category = Category(__iid__ = iid).__load__()
-
-        # save in cache for later use and return
-        return self.setdefault(category)
-
-    def setdefault(self, category):
-        return self.cache.setdefault(category.__iid__, category)
-    
-    get = __getitem__
+# class Categories:
+#     """
+#     Flat collection of all categories found in DB, accessible by their names and CIDs (category's IID). Provides caching.
+#     """
+#     cache = None        # dict of Category instances; each category is present under both its name AND its IID
+#
+#     def __init__(self):
+#
+#         self.cache = {}
+#         # root = Category(__iid__ = ROOT_CID).__load__()        # root Category is a category for itself, hence its IID == CID
+#         # self.cache = {"Category": root}
+#
+#     def __getitem__(self, iid):
+#
+#         # try to get the item from cache
+#         category = self.cache.get(iid)
+#         if category: return category
+#
+#         category = Category(__iid__ = iid).__load__()
+#
+#         # save in cache for later use and return
+#         return self.setdefault(category)
+#
+#     def setdefault(self, category):
+#         return self.cache.setdefault(category.__iid__, category)
+#
+#     get = __getitem__
 
 
 class Application(Item):
@@ -560,23 +562,20 @@ class Site(Item):
     
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
     
-    root = None             # the global Site object created during boot()
-    
     # internal variables
-    _categories = None      # flat collection of all categories found in DB, as a class-global singleton instance of Categories;
+    _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
                             # after boot(), it can be accessed through Site.get_category()
     _qualifiers = None      # mapping (dict) of app-space-category qualifiers to Category objects
+
 
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
-        cls._categories = categories = Categories()
-        # Site = categories['Site']
+        cls._categories = categories = {}
         Site = Category(name = 'Site').__load__()
-        Site = categories.setdefault(Site)
-        root = cls.root = Site.first_item()
-        return root
+        categories[Site.__iid__] = Site
+        return Site.first_item()
 
     def _post_decode(self):
 
@@ -585,9 +584,8 @@ class Site(Item):
         for app in self.app_list:
             for space_name, space in app.spaces.items():
                 for category_name, category in space.categories.items():
-                    category = self._categories.setdefault(category)     # store category in self._categories if not yet there
-                    # if category._is_root():
-                    #     category = self._categories.root                # don't duplicate root Category but use the global one instead
+                    
+                    category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
                     category._qualifier = qualifier
                     self._qualifiers[qualifier] = category
@@ -595,7 +593,15 @@ class Site(Item):
 
     @classmethod
     def get_category(cls, cid):
-        return cls._categories.get(cid)
+        """Get a cached category instance from _categories, or load if not present and store in _categories."""
+        
+        category = cls._categories.get(cid)
+        if category: return category
+
+        cls._categories[cid] = category = Category(__iid__ = cid).__load__()
+        print(f'created a category in get_category(): {category} - {id(category)}')
+        
+        return category
 
     def load(self, descriptor, app = None):
     
