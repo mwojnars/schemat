@@ -122,8 +122,10 @@ class Item(object, metaclass = MetaItem):
             assert self.__cid__ == self.__category__.__iid__
         elif self.__category__:
             self.__cid__ = self.__category__.__iid__
-        elif self.__cid__:
-            self.__category__ = self.__site__.get_category(self.__cid__)
+        elif self.__cid__ is not None:
+        # else:
+            self.__category__ = (self.__site__ or Site).get_category(self.__cid__)
+        # assert self.__category__ is not None
 
 
     def __getattr__(self, name):
@@ -258,7 +260,6 @@ class Item(object, metaclass = MetaItem):
         if data:
             schema = item.__category__.schema
             data = schema.decode_json(data)
-            # print(f"__decode__ in {item}, data:", data.asdict_first())
             item.__data__.update(data)
         
         item._post_decode()
@@ -284,24 +285,27 @@ class Item(object, metaclass = MetaItem):
         if hdl is not None:
             return hdl(self, request)
         
-        raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')  #handlers: {self.__handlers__}
+        raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    # @handler()
-    # def __view__(self, request):
-    #     """
-    #     Default handler invoked to render a response to item request when no handler name was given.
-    #     Inside category's handlers dict, this method is saved under the None key.
-    #     """
-    #     return HypertagHTML(item = self).render(self._view_item_)
-    
     _default_view = \
     """
         import $item
+        % aCategory
+            a href=$item.__category__.url() | {item.__category__.name? or item.__category__}
+            -- TODO: aCategory should be inserted in inline mode to avoid spaces around parentheses (...)
+            
         html
             head
-                title | Item ID {item.__id__}
+                title | {item.name? or item}
             body
-                h1 | {item.name? or item} -- ID {item.__id__}
+                h1
+                    | {item.name? or item} (
+                    aCategory
+                    | ) -- ID {item.__id__}
+                p
+                    | Category:
+                    aCategory
+                h2  | Attributes
                 ul
                     for attr, value in item.__data__.items()
                         li
@@ -381,8 +385,16 @@ class Category(Item):
     _boot_store = SimpleStore()     # data store used during startup for accessing category-items
     _store      = None              # data store used for regular access to items of this category
 
-    def __init__(self, **attrs):
-        attrs['__cid__'] = ROOT_CID
+    def __init__(self, __iid__ = None, **attrs):
+        # attrs['__cid__'] = ROOT_CID
+        self.__cid__ = ROOT_CID
+        self.__iid__ = __iid__
+        
+        if self._is_root():
+            self.__category__ = self
+        else:
+            self.__category__ = Site.get_root_category()
+            
         super().__init__(**attrs)
         self._store = SimpleStore()
 
@@ -391,25 +403,26 @@ class Category(Item):
         self.itemclass = Item           # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
         
         if self._is_root():
-            self.itemclass = Category
+            self.__category__ = self
+            self.itemclass = Category   # root Category doesn't have a schema, yet; attributes must be set/decoded manually
             
         print(f'Category.__init__(), created new category {self} - {id(self)}')
 
     def _is_root(self):
         return self.__iid__ == ROOT_CID
         
-    def __load__(self):
-        self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+    # def __load__(self):
+    #     self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+    #
+    #     record = self._boot_store.bootload_category(self.__iid__, self.name)
+    #     self.__decode__(record, item = self)
+    #
+    #     return self
 
-        # # root Category doesn't have a schema, yet; attributes must be set or decoded manually
-        # if self._is_root():
-        #     self.itemclass = Category
-        # else:
-        #     self.itemclass = Item       # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-        
-        record = self._boot_store.load_category(self.__iid__, self.name)
+    def _bootload(self):
+        self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+        record = self._boot_store.bootload_category(name = self.name)
         self.__decode__(record, item = self)
-        
         return self
 
     #####  Items in category (low-level interface that does NOT scale)  #####
@@ -552,7 +565,10 @@ class Category(Item):
 class Application(Item): pass
 class Space(Item): pass
 
-        
+class Cache:
+    """Cache of items of all categories, including Category items."""
+
+    
 class Site(Item):
     """
     The global `site` object is created in hyperweb/__init__.py and can be imported with:
@@ -564,18 +580,20 @@ class Site(Item):
     # internal variables
     _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
                             # after boot(), it can be accessed through Site.get_category()
-    _qualifiers = None      # bi-directional mapping (bidict) of app-space-category qualifiers to CID values,
-                            # for URL routing and URL generation
+    _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
+                            # for URL routing and URL generation; some categories may be excluded from routing
+                            # (no public visibility), yet they're still accessible through get_category()
 
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
-        # root_category   = Category(name = 'Category', __iid__ = ROOT_CID).__load__()
-        cls._categories = categories = {} #{ROOT_CID: root_category}
+        cls._categories = categories = {}
+        categories['ROOT_CID'] = Category(name = 'Category', __iid__ = ROOT_CID)._bootload()
         
-        Site = Category(name = 'Site').__load__()
+        Site = Category(name = 'Site')._bootload()
         categories[Site.__iid__] = Site
+        
         return Site.first_item()
 
     def _post_decode(self):
@@ -589,13 +607,13 @@ class Site(Item):
                     category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
                     self._qualifiers[qualifier] = category.__iid__
-                    # self._qualifiers[category.__iid__] = qualifier
                     # print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
 
     @classmethod
     def get_category(cls, cid):
         """Get a cached category instance from _categories, or load if not present and store in _categories."""
         
+        assert cid is not None
         category = cls._categories.get(cid)
         if category: return category
 
@@ -603,7 +621,11 @@ class Site(Item):
         print(f'created a category in get_category(): {category} - {id(category)}')
         
         return category
-
+    
+    @classmethod
+    def get_root_category(cls):
+        return cls.get_category(ROOT_CID)
+        
     def get_qualifier(self, category = None, cid = None):
         if cid is None: cid = category.__iid__
         return self._qualifiers.inverse[cid]

@@ -179,6 +179,15 @@ class MultiDict:
             yield values[-1]
 
     #############################################
+    
+    def asdict(self, mode = 'multi'):
+        """`mode` is either 'multi' (return lists of all values) or 'first' (only first values)
+            or 'last' (only last values).
+        """
+        if mode == 'multi': return self.asdict_multi()
+        if mode == 'first': return self.asdict_first()
+        if mode == 'last':  return self.asdict_last()
+        raise Exception(f'unknown mode ({mode})')
         
     def asdict_first(self):
         """Return all first values per key as a standard dict."""

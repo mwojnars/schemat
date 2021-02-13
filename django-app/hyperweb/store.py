@@ -71,9 +71,11 @@ class SimpleStore(DataStore):
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
-    def load_category(self, iid = None, name = None):
-        """Special method for loading category items during startup based on their IID or name."""
-
+    def bootload_category(self, iid = None, name = None):
+        """
+        Special method for loading category items during startup: finds all records having cid=ROOT_CID
+        and selects the one with a proper `iid` or $data.name.
+        """
         def JSON(path):
             return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
         
