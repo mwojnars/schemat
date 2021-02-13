@@ -380,22 +380,23 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
+    __cid__ = ROOT_CID
     
     # internal attributes
     _boot_store = SimpleStore()     # data store used during startup for accessing category-items
     _store      = None              # data store used for regular access to items of this category
 
     def __init__(self, __iid__ = None, **attrs):
-        # attrs['__cid__'] = ROOT_CID
-        self.__cid__ = ROOT_CID
-        self.__iid__ = __iid__
+        if __iid__ is not None: self.__iid__ = __iid__
         
         if self._is_root():
             self.__category__ = self
         else:
+        # if self.__category__ is None:
             self.__category__ = Site.get_root_category()
             
-        super().__init__(**attrs)
+        super(Category, self).__init__(**attrs)
+        
         self._store = SimpleStore()
 
         # public attributes of a category
@@ -403,22 +404,14 @@ class Category(Item):
         self.itemclass = Item           # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
         
         if self._is_root():
-            self.__category__ = self
             self.itemclass = Category   # root Category doesn't have a schema, yet; attributes must be set/decoded manually
+            print('in Category.__init__ of root')
             
-        print(f'Category.__init__(), created new category {self} - {id(self)}')
+        # print(f'Category.__init__(), created new category {self} - {id(self)}')
 
     def _is_root(self):
         return self.__iid__ == ROOT_CID
         
-    # def __load__(self):
-    #     self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
-    #
-    #     record = self._boot_store.bootload_category(self.__iid__, self.name)
-    #     self.__decode__(record, item = self)
-    #
-    #     return self
-
     def _bootload(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         record = self._boot_store.bootload_category(name = self.name)
@@ -537,25 +530,36 @@ class Category(Item):
         return int(iid_str)
         
         
-# class RootCategory(Category):
-#     """Root category: a category for all other categories."""
-#
-#     doc  = "Category of items that represent other categories"
-#     name = "Category"
-#     schema = Schema()
-#
-#     def __init__(self, **attrs):
-#         super(RootCategory, self).__init__(**attrs)
-#         self.itemclass = Category
-#         self.schema = Schema()
-#         # self.schema.fields = {"schema": None, "itemclass": None}
-#         # "schema": {"@": "$Object", "class_": {"=": "$Schema", "@": "!type"}, "strict": true}
-#         # "itemclass": {"@": "$Class"}
-#
-#     # def __load__(self):
-#     #     self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
-#     #     return self
-    
+class RootCategory(Category):
+    """Root category: a category for all other categories."""
+
+    __iid__ = ROOT_CID
+
+    def __init__(self):
+
+        print('RootCategory.__init__ start')
+        self.__category__ = self
+        
+        super(RootCategory, self).__init__()
+        
+        self.name      = 'Category'
+        self.itemclass = Category       # root Category doesn't have a schema, yet; attributes must be set/decoded manually
+        
+        # print(f'RootCategory.__init__(), created new category {self} - {id(self)}')
+        print('RootCategory.__init__ stop')
+
+    # doc  = "Category of items that represent other categories"
+    # name = "Category"
+    # schema = Schema()
+    #
+    # def __init__(self, **attrs):
+    #     super(RootCategory, self).__init__(**attrs)
+    #     self.itemclass = Category
+    #     self.schema = Schema()
+    #     # self.schema.fields = {"schema": None, "itemclass": None}
+    #     # "schema": {"@": "$Object", "class_": {"=": "$Schema", "@": "!type"}, "strict": true}
+    #     # "itemclass": {"@": "$Class"}
+
 
 #####################################################################################################################################################
 #####
@@ -589,7 +593,7 @@ class Site(Item):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
         cls._categories = categories = {}
-        categories['ROOT_CID'] = Category(name = 'Category', __iid__ = ROOT_CID)._bootload()
+        categories['ROOT_CID'] = RootCategory()._bootload()
         
         Site = Category(name = 'Site')._bootload()
         categories[Site.__iid__] = Site
