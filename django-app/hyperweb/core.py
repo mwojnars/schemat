@@ -1,5 +1,6 @@
 import re
 from django.http import HttpRequest, HttpResponse
+from bidict import bidict
 from nifty.text import html_escape
 
 from .config import ROOT_CID, MULTI_SUFFIX
@@ -116,7 +117,7 @@ class Item(object, metaclass = MetaItem):
         for attr, value in attrs.items():
             if value is not None: setattr(self, attr, value)
         
-        # impute __cid__ to/from __category__
+        # impute __cid__ and __category__
         if self.__category__ and self.__cid__ is not None:
             assert self.__cid__ == self.__category__.__iid__
         elif self.__category__:
@@ -244,7 +245,7 @@ class Item(object, metaclass = MetaItem):
         item.__loaded__ = loaded
         
         data = record.pop('__data__')
-
+        
         for field, value in record.items():
             if value in (None, ''): continue
             setattr(item, field, value)
@@ -303,7 +304,9 @@ class Item(object, metaclass = MetaItem):
                 h1 | {item.name? or item} -- ID {item.__id__}
                 ul
                     for attr, value in item.__data__.items()
-                        li / <b>{attr}</b>: {value}
+                        li
+                            b | {attr}:
+                            . | {value}
     """
     
     __views__ = {
@@ -377,27 +380,32 @@ class Category(Item):
     # internal attributes
     _boot_store = SimpleStore()     # data store used during startup for accessing category-items
     _store      = None              # data store used for regular access to items of this category
-    _qualifier  = None              # qualifier of this category for use inside URLs; assigned by Site upon loading
-    
+
     def __init__(self, **attrs):
         attrs['__cid__'] = ROOT_CID
         super().__init__(**attrs)
         self._store = SimpleStore()
 
         # public attributes of a category
-        self.schema = Schema()          # a Schema that puts constraints on attribute names and values allowed in this category
+        self.schema    = Schema()       # a Schema that puts constraints on attribute names and values allowed in this category
+        self.itemclass = Item           # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
         
+        if self._is_root():
+            self.itemclass = Category
+            
+        print(f'Category.__init__(), created new category {self} - {id(self)}')
+
     def _is_root(self):
         return self.__iid__ == ROOT_CID
         
     def __load__(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
 
-        # root Category doesn't have a schema, yet; attributes must be set or decoded manually
-        if self._is_root():
-            self.itemclass = Category
-        else:
-            self.itemclass = Item       # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
+        # # root Category doesn't have a schema, yet; attributes must be set or decoded manually
+        # if self._is_root():
+        #     self.itemclass = Category
+        # else:
+        #     self.itemclass = Item       # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
         
         record = self._boot_store.load_category(self.__iid__, self.name)
         self.__decode__(record, item = self)
@@ -435,6 +443,9 @@ class Category(Item):
         """
         records = self._store.load_all(self.__iid__, limit)
         return map(self.itemclass.__decode__, records)
+        # items = list(map(self.itemclass.__decode__, records))
+        # print(f'Category.all_items() loaded: {items} - {list(map(id,items))}')
+        # return items
         
     def first_item(self):
         
@@ -493,9 +504,9 @@ class Category(Item):
         assert item.__cid__ == self.__iid__
         
         base_url  = self.__site__.base_url
-        qualifier = self._qualifier
+        qualifier = self.__site__.get_qualifier(self)       #self._qualifier
         iid       = self._iid_encode(item.__iid__)
-        print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
+        # print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
         
         url = f'{base_url}/{qualifier}:{iid}'
         if __endpoint: url += f'/{__endpoint}'
@@ -513,46 +524,34 @@ class Category(Item):
         return int(iid_str)
         
         
+# class RootCategory(Category):
+#     """Root category: a category for all other categories."""
+#
+#     doc  = "Category of items that represent other categories"
+#     name = "Category"
+#     schema = Schema()
+#
+#     def __init__(self, **attrs):
+#         super(RootCategory, self).__init__(**attrs)
+#         self.itemclass = Category
+#         self.schema = Schema()
+#         # self.schema.fields = {"schema": None, "itemclass": None}
+#         # "schema": {"@": "$Object", "class_": {"=": "$Schema", "@": "!type"}, "strict": true}
+#         # "itemclass": {"@": "$Class"}
+#
+#     # def __load__(self):
+#     #     self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+#     #     return self
+    
 
 #####################################################################################################################################################
 #####
 #####  SITE
 #####
 
-# class Categories:
-#     """
-#     Flat collection of all categories found in DB, accessible by their names and CIDs (category's IID). Provides caching.
-#     """
-#     cache = None        # dict of Category instances; each category is present under both its name AND its IID
-#
-#     def __init__(self):
-#
-#         self.cache = {}
-#         # root = Category(__iid__ = ROOT_CID).__load__()        # root Category is a category for itself, hence its IID == CID
-#         # self.cache = {"Category": root}
-#
-#     def __getitem__(self, iid):
-#
-#         # try to get the item from cache
-#         category = self.cache.get(iid)
-#         if category: return category
-#
-#         category = Category(__iid__ = iid).__load__()
-#
-#         # save in cache for later use and return
-#         return self.setdefault(category)
-#
-#     def setdefault(self, category):
-#         return self.cache.setdefault(category.__iid__, category)
-#
-#     get = __getitem__
+class Application(Item): pass
+class Space(Item): pass
 
-
-class Application(Item):
-    pass
-
-class Space(Item):
-    pass
         
 class Site(Item):
     """
@@ -565,21 +564,23 @@ class Site(Item):
     # internal variables
     _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
                             # after boot(), it can be accessed through Site.get_category()
-    _qualifiers = None      # mapping (dict) of app-space-category qualifiers to Category objects
-
+    _qualifiers = None      # bi-directional mapping (bidict) of app-space-category qualifiers to CID values,
+                            # for URL routing and URL generation
 
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
         
-        cls._categories = categories = {}
+        # root_category   = Category(name = 'Category', __iid__ = ROOT_CID).__load__()
+        cls._categories = categories = {} #{ROOT_CID: root_category}
+        
         Site = Category(name = 'Site').__load__()
         categories[Site.__iid__] = Site
         return Site.first_item()
 
     def _post_decode(self):
 
-        self._qualifiers = {}
+        self._qualifiers = bidict()
         
         for app in self.app_list:
             for space_name, space in app.spaces.items():
@@ -587,9 +588,9 @@ class Site(Item):
                     
                     category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-                    category._qualifier = qualifier
-                    self._qualifiers[qualifier] = category
-                    print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
+                    self._qualifiers[qualifier] = category.__iid__
+                    # self._qualifiers[category.__iid__] = qualifier
+                    # print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
 
     @classmethod
     def get_category(cls, cid):
@@ -603,12 +604,17 @@ class Site(Item):
         
         return category
 
+    def get_qualifier(self, category = None, cid = None):
+        if cid is None: cid = category.__iid__
+        return self._qualifiers.inverse[cid]
+
     def load(self, descriptor, app = None):
-    
+        
         # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
         # is category-dependent and can be customized by Category subclasses
         qualifier, iid = descriptor.split(':', 1)
-        category = self._qualifiers[qualifier]
+        cid = self._qualifiers[qualifier]
+        category = self.get_category(cid)
         return category.load(iid)
         
         
