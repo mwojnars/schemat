@@ -1,4 +1,4 @@
-import os, importlib
+import os, sys, importlib
 from six.moves import builtins
 
 from hypertag.core.errors import ImportErrorEx, ModuleNotFoundEx
@@ -11,6 +11,12 @@ import hypertag.builtins
 #####
 #####  UTILITIES
 #####
+
+# set Python's global recursion limit to at least MIN_RECURSION_LIMIT to avoid RecursionError
+# when parsing deeply nested scripts
+MIN_RECURSION_LIMIT = 20000
+sys.setrecursionlimit(max(sys.getrecursionlimit(), MIN_RECURSION_LIMIT))
+
 
 def _read_module(module):
     """

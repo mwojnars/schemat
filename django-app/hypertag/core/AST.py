@@ -589,7 +589,13 @@ class NODES(object):
 
         
     class control_block(node):
-        """Base class for if/try/for/while blocks."""
+        """
+        Base class for if/try/for/while blocks. Inside these blocks, the execution may proceed through 2 or more different
+        paths (one of them being the "null" branch) and for this reason they require special handling during analysis.
+        """
+        # slot_maps = None        # list of slot mappings for every branch including the null branch (-1); each mapping
+        #                         # is a dict of {input_or_local_slot: output_slot} pairs; values are copied
+        #                         # from input/local to output slots after translation of the block
         
         def analyse(self, ctx):
             ctx.control_depth += 1
@@ -600,15 +606,68 @@ class NODES(object):
             """
             Unlike a regular tagged block, if/try block does NOT introduce a new namespace,
             so all symbols defined in branches must be made visible to sibling nodes that go after the block.
-            Moreover, if a variable is (re)declared multiple times in separate branches, the first declaration
-            must be stored as a reference in all nodes to uniquely represent identity of this variable.
+            Moreover, if a variable is (re)declared multiple times in separate branches, all these declaraions
+            (i.e., their corresponding slots) must be mapped onto a single shared outgoing slot.
+            Also, if any of the locally-defined variables overrides an existing variable defined before the block,
+            the incoming variable must be mapped onto an outgoing slot, as well, for proper handling of a "null branch" execution
+            (i.e., the situation when no code of this block gets executed, like in an empty loop or a failed "try" block).
             """
-            for branch in self.children:
+            # # list of dicts of symbols and local slots defined in each subsequent branch, including the "null" branch at [-1]
+            # local_slots = []
+            # new_symbols = []
+            
+            for i, branch in enumerate(self.children):
                 position = ctx.position()
                 branch.analyse(ctx)
                 symbols = ctx.asdict(position)          # top-level symbols declared in this branch...
                 ctx.reset(position)
                 ctx.pushnew(symbols)                    # ...only new symbols (not declared in a previous branch) are added
+                
+                # local_slots.append(symbols)
+                # new_symbols += symbols.keys()
+                
+            # if not new_symbols: return
+            # new_symbols = set(new_symbols)
+            #
+            # # [-1] contains symbols of the "null" branch, they will be copied from incoming slots when no clause is executed
+            # null_slots = {symbol: ctx[symbol] for symbol in new_symbols if symbol in ctx}
+            # local_slots.append(null_slots)
+            #
+            # # create outgoing slots for all newly defined variables
+            # output_slots = {symbol: Slot(symbol, ctx) for symbol in new_symbols}
+            #
+            # mapping_default = {input_slot: output_slots[symbol] for symbol, input_slot in null_slots.items()}
+            #
+            # def match(slots):
+            #     mapping_branch = {local_slot: output_slots[symbol] for symbol, local_slot in slots.items()}
+            #     mapping = mapping_default.copy()
+            #     mapping.update(mapping_branch)
+            #     return mapping
+            #
+            # # set up mappings from local/incoming slots to outgoing slots for each branch separately including the "null" branch
+            # self.slot_maps = list(map(match, local_slots))
+            #
+            # ctx.pushall(output_slots)
+            
+        # def _fill_slots(self, branch, state):
+        #     """Fill out outgoing slots according to what execution branch (0..N-1) has been selected; -1 is the "null" branch.
+        #     """
+        #     # for slot in self.output_slots:
+        #     #     slot.set_value(branch, state)
+        #     mapping = self.slot_maps[branch]
+        #     for in_slot, out_slot in mapping.items():
+        #         value = in_slot.get(state)
+        #         out_slot.set(state, value)
+            
+        def _select_branch(self, state):
+            raise NotImplementedError
+        
+        def translate(self, state):
+            body, branch = self._select_branch(state)
+            # self._fill_slots(branch, state)
+            body.set_indent(state.indentation)
+            return body
+        
 
     class xblock_try(control_block):
         """
@@ -622,18 +681,13 @@ class NODES(object):
         Note that the meaning of the "else" clause is OPPOSITE to what it is in Python: here, "else" branch
         is executed if all preceeding try/else branches failed with exceptions.
         """
-        def translate(self, state):
-            body = self._select_branch(state)
-            body.set_indent(state.indentation)
-            return body
-        
         def _select_branch(self, state):
-            for branch in self.children:
+            for i, branch in enumerate(self.children):
                 try:
-                    return branch.translate(state)
+                    return branch.translate(state), i
                 except Exception as ex:
                     pass
-            return Sequence()
+            return Sequence(), -1
     
     class xblock_if(control_block):
         clauses  = None         # list of 1+ <clause_if> nodes
@@ -646,18 +700,13 @@ class NODES(object):
                 self.clauses = self.children[:-1]
                 self.elsebody = self.children[-1]
 
-        def translate(self, state):
-            body = self._select_clause(state)
-            body.set_indent(state.indentation)
-            return body
-        
-        def _select_clause(self, state):
-            for clause in self.clauses:
+        def _select_branch(self, state):
+            for i, clause in enumerate(self.clauses):
                 if clause.test.evaluate(state):
-                    return clause.translate(state)
+                    return clause.translate(state), i
             if self.elsebody:
-                return self.elsebody.translate(state)
-            return Sequence()
+                return self.elsebody.translate(state), -2
+            return Sequence(), -1
         
     class xclause_if(node):
         test = None             # <expression> node containing a test to be performed
@@ -679,6 +728,7 @@ class NODES(object):
             while clause.test.evaluate(state):
                 body = clause.translate(state)
                 out += body.nodes
+            # return Sequence(*out), 0
             out = Sequence(*out)
             out.set_indent(state.indentation)
             return out
@@ -1791,29 +1841,57 @@ if __name__ == '__main__':
     # H 3
     #     | Ala ma kota
     text = """
-        $x = 1
-        %H | $x
-        $x = 2
-        H
+        if False:
+            $ x = 5
+        else:
+            $ x = 10
+        | {x}
     """
+    # text = """
+    #     $x = 1
+    #     %H | $x
+    #     $x = 2
+    #     H
+    # """
+    # text = """
+    #     if False
+    #         $x = 1
+    #         %H | $x
+    #     else
+    #         $x = 2
+    #         %H | {x*2}
+    #         $x = 3
+    #     $x = 4
+    #     H
+    # """
+    # text = """
+    #     for i in [1,2,3]:
+    #         $x = i
+    #         %H | $x
+    #     $x = 4
+    #     H
+    # """
+
     text = """
-        if False
-            $x = 1
-            %H | $x
-        else
-            $x = 2
-            %H | {x*2}
-            $x = 3
-        $x = 4
-        H
+        %H x
+            if $x
+                $a = 1
+            else
+                $b = 2
+            | $a
+        H 1
+        H 0
     """
-    text = """
-        for i in [1,2,3]:
-            $x = i
-            %H | $x
-        $x = 4
-        H
-    """
+    # text = """
+    #     for i in [2,1,0]:
+    #         if $i
+    #             $a = 1
+    #         else
+    #             $b = 2
+    #         | $a
+    # """
+    # TODO: dodać czyszczenie slotów w `state` po wykonaniu bloku, przynajmniej dla xblock_def.expand() ??
+    
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)
     
@@ -1846,3 +1924,8 @@ if __name__ == '__main__':
     # print(inspect.getfile(module))
     # print(inspect.getfile(text))
     
+    
+# TODO:
+# - inline hypertag definition with multiple tags:
+#     % aCategory : a href=$item.__category__.url() | {item.__category__.name? or item.__category__}
+# - short try block '?' allowed in outline mode, without "else" branches

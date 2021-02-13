@@ -23,6 +23,8 @@ Why to use Hypertag:
   pre-rendered and merged into single nodes, to avoid repeated rendering
   with every web page request.
 
+If you try Hypertag, you will never go back to pure HTML or a templating language.
+
 ## Quick Start
 
 ## Cheat Sheet

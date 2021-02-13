@@ -427,10 +427,10 @@ class Slot:
         from .AST import NODES
         assert link is None or isinstance(link, (Slot, NODES.attribute, NODES.variable)), f'unrecognized type of slot: {type(link)}'
         
-        if link and link.depth == self.depth:
-            self.primary = link
-        else:
-            ctx.push(symbol, self)
+        # if link and link.depth == self.depth:
+        #     self.primary = link
+        # else:
+        ctx.push(symbol, self)
         
     def set(self, state, value):
         state[self.primary or self] = value
