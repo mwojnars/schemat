@@ -32,6 +32,6 @@ urlpatterns = [
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
     path('<descriptor>', item_view),
-    path('<descriptor>/<handler>', item_view),
+    path('<descriptor>/<endpoint>', item_view),
     #path('',       include('hyperweb.urls')),
 ]

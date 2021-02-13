@@ -6,10 +6,10 @@ from django.shortcuts import render
 from hyperweb.core import site
 
 
-def item_view(request, descriptor, handler = None):
+def item_view(request, descriptor, endpoint = None):
     
     item = site.load(descriptor)
-    doc = item.__handle__(request, handler)
+    doc  = item.__handle__(request, endpoint)
 
     if isinstance(doc, str):
         return HttpResponse(doc)
