@@ -636,6 +636,12 @@ def test_015_try():
             else / x+1 = {x+1}!
     """
     assert render(src).strip() == "x+1 = 1"
+    src = """
+        $ x = False
+        ?
+            | x $x!
+    """
+    assert render(src).strip() == ""
 
 def test_016_special_tags():
     src = """
