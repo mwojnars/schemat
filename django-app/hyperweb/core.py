@@ -109,9 +109,10 @@ class Item(object, metaclass = MetaItem):
     # names that must not be used for attributes inside __data__
     __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'url']
     
-    def __init__(self, **attrs):
+    def __init__(self, __registry__, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
+        self.__registry__ = __registry__
         self.__data__ = Data()          # REFACTOR
         
         # user-editable attributes & properties; can be missing in a particular item
@@ -130,15 +131,7 @@ class Item(object, metaclass = MetaItem):
             self.__category__ = (self.__site__ or Site).get_category(self.__cid__)
         # assert self.__category__ is not None
 
-    @classmethod
-    def _create(cls, category):
-        """Called by Registry to create a new instance."""
-        item = cls()
-        item.__category__ = category
-        item.__cid__ = item.__category__.__iid__
-        return item
-        
-    def _get_recent(self):
+    def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
         return self.__registry__.get_item(self.__id__)
 
@@ -221,12 +214,20 @@ class Item(object, metaclass = MetaItem):
         return f'<{category}:{self.__iid__}{name}>'
     
     @classmethod
-    def __create__(cls, _data = None, **attrs):
+    def _create(cls, __registry__, category):
+        """Called by Registry to create a new instance."""
+        item = cls(__registry__)
+        item.__category__ = category
+        item.__cid__ = item.__category__.__iid__
+        return item
+        
+    @classmethod
+    def __create__(cls, __registry__, _data = None, **attrs):
         """
         Create a new item initialized with `attrs` attribute values, typically passed from a web form;
         or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
         """
-        item = cls()
+        item = cls(__registry__)
         if _data is not None:
             item.__data__ = _data
             
@@ -246,18 +247,18 @@ class Item(object, metaclass = MetaItem):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         store = self.__category__._store
         record = store.load(self.__id__)
-        self.__decode__(record, item = self)
+        self.__decode__(self.__registry__, record, item = self)
         return self
     
 
     @classmethod
-    def __decode__(cls, record, item = None, loaded = True):
+    def __decode__(cls, __registry__, record, item = None, loaded = True):
         """
         Decode fields from a DB `record` into item's attributes; or into a new instance
         of <cls> if `item` is None. Return the resulting item.
         If loaded=True, the resulting item is marked as fully loaded (__loaded__).
         """
-        item = item or cls()
+        item = item or cls(__registry__)
         item.__loaded__ = loaded
         
         data = record.pop('__data__')
@@ -400,7 +401,7 @@ class Category(Item):
     _boot_store = SimpleStore()     # data store used during startup for accessing category-items
     _store      = None              # data store used for regular access to items of this category
 
-    def __init__(self, __iid__ = None, **attrs):
+    def __init__(self, __registry__, __iid__ = None, **attrs):
         if __iid__ is not None: self.__iid__ = __iid__
         
         if self._is_root():
@@ -409,7 +410,7 @@ class Category(Item):
         # if self.__category__ is None:
             self.__category__ = Site.get_root_category()
             
-        super(Category, self).__init__(**attrs)
+        super(Category, self).__init__(__registry__, **attrs)
         
         self._store = SimpleStore()
 
@@ -429,14 +430,14 @@ class Category(Item):
     def _bootload(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         record = self._boot_store.bootload_category(name = self.name)
-        self.__decode__(record, item = self)
+        self.__decode__(self.__registry__, record, item = self)
         return self
 
     #####  Items in category (low-level interface that does NOT scale)  #####
     
     def new_item(self, *args, **kwargs):
         """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
-        item = self.itemclass.__create__(*args, **kwargs)
+        item = self.itemclass.__create__(self.__registry__, *args, **kwargs)
         item.__id__ = (self.__iid__, None)
         item.__category__ = self
         return item
@@ -446,7 +447,7 @@ class Category(Item):
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
-        item = self.itemclass(__category__ = self, __iid__ = iid)
+        item = self.itemclass(self.__registry__, __category__ = self, __iid__ = iid)
         if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
         return item
     
@@ -462,7 +463,9 @@ class Category(Item):
         Return an iterable, not a list.
         """
         records = self._store.load_all(self.__iid__, limit)
-        return map(self.itemclass.__decode__, records)
+        for record in records:
+            yield self.itemclass.__decode__(self.__registry__, record)
+        # return list(map(self.itemclass.__decode__, records))
         # items = list(map(self.itemclass.__decode__, records))
         # print(f'Category.all_items() loaded: {items} - {list(map(id,items))}')
         # return items
@@ -549,12 +552,12 @@ class RootCategory(Category):
 
     __iid__ = ROOT_CID
 
-    def __init__(self):
+    def __init__(self, __registry__):
 
         print('RootCategory.__init__ start')
         self.__category__ = self
         
-        super(RootCategory, self).__init__()
+        super(RootCategory, self).__init__(__registry__)
         
         self.name      = 'Category'
         self.itemclass = Category       # root Category doesn't have a schema, yet; attributes must be set/decoded manually
@@ -644,7 +647,7 @@ class Registry:
         
         # special handling for the root Category
         if cid == iid == ROOT_CID:
-            item = RootCategory()._bootload()           # TODO: move to __init__ and mark this entry as protected to avoid removal
+            item = RootCategory(self)._bootload()           # TODO: move to __init__ and mark this entry as protected to avoid removal
             self._set(id_, item)
             print(f'Registry.get_item(): created root category - {id(item)}')
             return item
@@ -655,7 +658,7 @@ class Registry:
         itemclass = category.itemclass                  # REFACTOR
 
         # create a new instance and insert to cache
-        item = itemclass(__cid__ = cid, __iid__ = iid)
+        item = itemclass(self, __cid__ = cid, __iid__ = iid)
         # item = itemclass._create(__cid__ = cid, __iid__ = iid)
         if load: item.__load__()
         self._set(id_, item)
@@ -700,17 +703,9 @@ class Site(Item):
     # def boot(cls):
     #     """Create initial global Site object with attributes loaded from DB. Called once during startup."""
     #
-    #     # cls._categories = categories = {}
-    #     # categories[ROOT_CID] = RootCategory()._bootload()
-    #     #
-    #     # Site = Category(name = 'Site')._bootload()
-    #     # categories[Site.__iid__] = Site
-    #     #
-    #     # return Site.first_item()
-    #
     #     cls.__registry__ = Registry()
     #     return cls.__registry__.get_item(cid = SITE_CID, iid = SITE_IID)
-        
+    
     def _post_decode(self):
 
         self._qualifiers = bidict()
@@ -730,15 +725,6 @@ class Site(Item):
         
         return registry.get_category(cid)
         # return cls.__registry__.get_category(cid)
-        
-        # assert cid is not None
-        # category = cls._categories.get(cid)
-        # if category: return category
-        #
-        # cls._categories[cid] = category = Category(__iid__ = cid).__load__()
-        # print(f'created a category in get_category(): {category} - {id(category)}')
-        #
-        # return category
     
     @classmethod
     def get_root_category(cls):

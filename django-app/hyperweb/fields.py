@@ -289,7 +289,3 @@ class Link(Field):
         
         return registry.get_item((cid, iid))
         
-        # from .core import Site          # importing the global Site class/object !!!
-        # category = Site.get_category(cid)
-        # return category.get_item(iid)
-        
