@@ -1,9 +1,11 @@
 import re
 from django.http import HttpRequest, HttpResponse
+from cachetools import TTLCache
 from bidict import bidict
+
 from nifty.text import html_escape
 
-from .config import ROOT_CID, MULTI_SUFFIX
+from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore
@@ -85,7 +87,7 @@ class Item(object, metaclass = MetaItem):
     
     __site__     = None         # Site instance that loaded this item
     __category__ = None         # parent category of this item, as an instance of Category
-    __loaded__   = False        # True if this item's data has been fully loaded from DB; for implementation of lazy loading of linked items
+    __loaded__   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods)
                                 # exposed by items of the current Item subclass
@@ -109,7 +111,7 @@ class Item(object, metaclass = MetaItem):
     def __init__(self, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
-        self.__data__ = Data()
+        self.__data__ = Data()          # REFACTOR
         
         # user-editable attributes & properties; can be missing in a particular item
         self.name = None        # name of item; constraints on length and character set depend on category
@@ -127,6 +129,17 @@ class Item(object, metaclass = MetaItem):
             self.__category__ = (self.__site__ or Site).get_category(self.__cid__)
         # assert self.__category__ is not None
 
+    @classmethod
+    def _create(cls, category):
+        """Called by Registry to create a new instance."""
+        item = cls()
+        item.__category__ = category
+        item.__cid__ = item.__category__.__iid__
+        return item
+        
+    def _get_recent(self):
+        """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
+        return self.__registry__.get_item(self.__id__)
 
     def __getattr__(self, name):
         """
@@ -365,7 +378,7 @@ class Item(object, metaclass = MetaItem):
            endpoint designation and/or arguments to be passed to a handler function or a view template.
         """
         return self.__category__.url_of(self, __endpoint, *args, **kwargs)
-    
+        
 
 ItemDoesNotExist.item_class = Item
 
@@ -435,7 +448,7 @@ class Category(Item):
         item = self.itemclass(__category__ = self, __iid__ = iid)
         if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
         return item
-
+    
     def load(self, iid_str):
         """Load from DB an item that belongs to the category represented by self."""
 
@@ -569,17 +582,106 @@ class RootCategory(Category):
 class Application(Item): pass
 class Space(Item): pass
 
-class Cache:
-    """Cache of items of all categories, including Category items."""
+class TTLCacheX(TTLCache):
+    """
+    Extended version of cachetools.TTLCache:
+    - __init__ accepts maxsize=None
+    - explicit set(key, val, ttl, protect=False) accepts explicit per-item TTL value that can differ from the global one supplied to __init__
+      - if ttl=None the item never expires
+      - if protect=True the item never gets evicted from cache, neither due to expiration nor LRU
+    - explicit flush(maxsize=...) to truncate the cache and discard expired/excessive items to match the desired maxsize
+    """
 
+class Registry:
+    """
+    A registry of Item instances recently created or loaded from DB during current web request or previous ones.
+    Registry makes sure there are no two different Item instances for the same item ID (no duplicates).
+    When request processing wants to access or create an item, this must always be done through Site.get_item(),
+    so that the item is checked in the Registry and taken from there if it already exists.
+    De-duplication improves performance thanks to avoiding repeated json-decoding of the same item records.
+    This is particularly important for Category items which are typically accessed multiple times during a single web request.
+    WARNING: some duplicate items can still exist and be hanging around as references from other items - due to cache flushing,
+    which removes items from the Registry but does NOT remove/update references from other items that are still kept in cache.
+    Hence, you shall NEVER assume that two items of the same IID - even if both retrieved through the Registry -
+    are the same objects or are identical. This also applies to Category objects referrenced by items through __category__.
+    (TODO...)
+    - Discarding of expired/excessive items is ONLY performed after request handling is finished
+    (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates.
+    - In a multi-threaded web app, or when sub-threads are spawned during request handling, each thread must have its own Registry (!)
+    """
+    
+    items = None        # cache (TTLCache) containing {ID: item_instance} pairs
+    
+    def __init__(self):
+        self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only drop entries between web requests; protect RootCategory
+    
+    def new_item(self, category = None, cid = None):
+        if not category: category = self.get_category(cid)
+        itemclass = category.itemclass
+        return itemclass._create(__cid__ = cid)
+        
+    
+    def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
+        """
+        If `load` is False, the returned item usually contains only __cid__ and __iid__ (no data).
+        This is not a strict rule, however, and if the item has been loaded or created before,
+        by this or a previous request handler, the item can already be fully initialized.
+        Hence, the caller should never assume that the returned item's __data__ is missing.
+        """
+        if not id_:
+            if category: cid = category.__iid__
+            id_ = (cid, iid)
+        else:
+            (cid, iid) = id_
+            
+        if cid is None: raise Exception('missing CID')
+        if iid is None: raise Exception('missing IID')
+        
+        # ID requested is already present in the registry? return the existing instance
+        item = self.items.get(id_)
+        if item: return item
+        
+        # special handling for the root Category
+        if cid == iid == ROOT_CID:
+            self.items[id_] = item = RootCategory()._bootload()         # TODO: move to __init__ and mark this entry as protected to avoid removal
+            print(f'Registry.get_item(): created root category - {id(item)}')
+            return item
+        
+        # determine what itemclass to use for instantiation
+        if not category:
+            category = self.get_category(cid)
+        itemclass = category.itemclass                  # REFACTOR
+
+        # create a new instance and insert to cache
+        item = itemclass(__cid__ = cid, __iid__ = iid)
+        # item = itemclass._create(__cid__ = cid, __iid__ = iid)
+        if load: item.__load__()
+        self.items[id_] = item
+
+        print(f'Registry.get_item(): created item {id_} - {id(item)}')
+        return item
+    
+    def get_category(self, cid):
+        # assert cid is not None
+        return self.get_item((ROOT_CID, cid))
+        
     
 class Site(Item):
     """
+    A Site is responsible for two things:
+    - bootstrapping the application(s)
+    - managing the pool of items through the entire execution of an application:
+      - transfering items to/from DB storage(s) and through the cache
+      - tracking changes
+      - creating new items
+    
     The global `site` object is created in hyperweb/__init__.py and can be imported with:
       from hyperweb import site
     """
     
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
+
+    __registry__ = None
     
     # internal variables
     _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
@@ -591,15 +693,20 @@ class Site(Item):
     @classmethod
     def boot(cls):
         """Create initial global Site object with attributes loaded from DB. Called once during startup."""
-        
-        cls._categories = categories = {}
-        categories['ROOT_CID'] = RootCategory()._bootload()
-        
-        Site = Category(name = 'Site')._bootload()
-        categories[Site.__iid__] = Site
-        
-        return Site.first_item()
 
+        cls._categories = categories = {}
+        # categories[ROOT_CID] = RootCategory()._bootload()
+        #
+        # Site = Category(name = 'Site')._bootload()
+        # categories[Site.__iid__] = Site
+        #
+        # return Site.first_item()
+        
+        cls.__registry__ = reg = Registry()
+        # reg.boot_category(ROOT_CID)
+        # reg.boot_category('Site')
+        return reg.get_item(cid = SITE_CID, iid = SITE_IID)
+        
     def _post_decode(self):
 
         self._qualifiers = bidict()
@@ -617,14 +724,16 @@ class Site(Item):
     def get_category(cls, cid):
         """Get a cached category instance from _categories, or load if not present and store in _categories."""
         
-        assert cid is not None
-        category = cls._categories.get(cid)
-        if category: return category
-
-        cls._categories[cid] = category = Category(__iid__ = cid).__load__()
-        print(f'created a category in get_category(): {category} - {id(category)}')
+        return cls.__registry__.get_category(cid)
         
-        return category
+        # assert cid is not None
+        # category = cls._categories.get(cid)
+        # if category: return category
+        #
+        # cls._categories[cid] = category = Category(__iid__ = cid).__load__()
+        # print(f'created a category in get_category(): {category} - {id(category)}')
+        #
+        # return category
     
     @classmethod
     def get_root_category(cls):
@@ -643,7 +752,37 @@ class Site(Item):
         category = self.get_category(cid)
         return category.load(iid)
         
-        
+    # def new_item(self):
+    #     """
+    #     Create a new item that could be inserted to DB at some point in the future. From the very beginning,
+    #     the item is linked to the creating site object through Item.__site__.
+    #     """
+    #
+    # def get_item(self,
+    #              id_ = None, iid = None, cid = None, category = None,
+    #              data = True, mutable = False, itemclass = None):
+    #     """
+    #     Load an item from DB or retrieve a local (possibly yet unsaved) copy from cache.
+    #     CID and IID are always loaded. Other elements of data are loaded when `data` is true.
+    #     If `data` is a list of attribute names, only these attributes are loaded (= partial load).
+    #     If `data` is false, the item gets initialized with (CID,IID) only (a "stub"), which may not require DB access
+    #     - in such case, a valid item is returned even if there is no matching record in DB.
+    #     """
+    #     if id_:
+    #         cid, iid = id_
+    #     if category:
+    #         cid = category.__iid__
+    #     id_ = (cid, iid)
+    #
+    #     if not data:
+    #         item = (itemclass or Item)(__cid__ = cid, __iid__ = iid)
+    #     else:
+    #         item = self._registry.get_item(id_)
+    #
+    #     if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
+    #
+    #     return item
+    
         
 #####################################################################################################################################################
 

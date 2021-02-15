@@ -6,3 +6,4 @@ Jinja2>=2.11.1
 parsimonious>=0.8.1
 bidict
 pytest
+cachetools

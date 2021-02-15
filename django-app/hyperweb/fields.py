@@ -8,8 +8,17 @@ from .jsonpickle import JsonPickle
 #####  FIELD
 #####
 
-class Field:
+class Field:   # Type
     """
+    A Type object defines:
+    - constraints on the set of values that can be assigned to a given field/attribute/variable
+    A Type class provides:
+    - validation: determining if a value satisfies the constraints (= valid value) or not
+    - sanitization: removing or cleansing any parts of value that could have harmful side-effects in further processing
+    - normalization: tranforming related variants of a value to their unique canonical (normal) form
+    - encoding & decoding: serialization of valid values to a raw format (a string) for transmission and storage
+    - rendering & formatting: for human-readable display of valid values
+    
     Base class for definition of data fields: their values and sub-values.
     Provides schema-based validation of form values and schema-aware serialization.
     Fields can be nested.
@@ -190,7 +199,7 @@ class Dict(Field):
     Field that accepts <dict> objects as data values and ensures that keys and values of the dict
     are interpreted as fields of particular Field types.
     """
-
+    
     # optional specification of Fields to be used for interpreting keys/values of incoming dicts
     keys   = None
     values = None

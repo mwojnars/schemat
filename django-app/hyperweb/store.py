@@ -21,8 +21,12 @@ from .errors import ItemDoesNotExist
 _settings = DATABASES['default']
 
 # local database for startup
-default_db = MySQL(host = _settings['HOST'], user = _settings['USER'], password = _settings['PASSWORD'], db = _settings['NAME'])
-
+default_db = MySQL(host         = _settings.get('HOST'),
+                   port         = _settings.get('PORT'),
+                   user         = _settings.get('USER'),
+                   password     = _settings.get('PASSWORD'),
+                   db           = _settings.get('NAME'),
+                   )
 
 #####################################################################################################################################################
 #####
