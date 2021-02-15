@@ -85,8 +85,9 @@ class Item(object, metaclass = MetaItem):
     __created__  = None         # datetime when this item was created in DB; no timezone
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     
-    __site__     = None         # Site instance that loaded this item
     __category__ = None         # parent category of this item, as an instance of Category
+    __site__     = None         # Site instance that loaded this item
+    __registry__ = None         # Registry that manages access to this item
     __loaded__   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
     __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods)
@@ -613,7 +614,7 @@ class Registry:
     items = None        # cache (TTLCache) containing {ID: item_instance} pairs
     
     def __init__(self):
-        self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only drop entries between web requests; protect RootCategory
+        self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only prune entries after web requests; protect RootCategory
     
     def new_item(self, category = None, cid = None):
         if not category: category = self.get_category(cid)
@@ -643,7 +644,8 @@ class Registry:
         
         # special handling for the root Category
         if cid == iid == ROOT_CID:
-            self.items[id_] = item = RootCategory()._bootload()         # TODO: move to __init__ and mark this entry as protected to avoid removal
+            item = RootCategory()._bootload()           # TODO: move to __init__ and mark this entry as protected to avoid removal
+            self._set(id_, item)
             print(f'Registry.get_item(): created root category - {id(item)}')
             return item
         
@@ -656,7 +658,7 @@ class Registry:
         item = itemclass(__cid__ = cid, __iid__ = iid)
         # item = itemclass._create(__cid__ = cid, __iid__ = iid)
         if load: item.__load__()
-        self.items[id_] = item
+        self._set(id_, item)
 
         print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
@@ -665,7 +667,12 @@ class Registry:
         # assert cid is not None
         return self.get_item((ROOT_CID, cid))
         
+    def _set(self, id_, item):
     
+        item.__registry__ = self
+        self.items[id_] = item
+
+
 class Site(Item):
     """
     A Site is responsible for two things:
@@ -681,31 +688,28 @@ class Site(Item):
     
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
-    __registry__ = None
-    
     # internal variables
-    _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
-                            # after boot(), it can be accessed through Site.get_category()
+    
+    # _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
+    #                         # after boot(), it can be accessed through Site.get_category()
     _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
                             # for URL routing and URL generation; some categories may be excluded from routing
                             # (no public visibility), yet they're still accessible through get_category()
 
-    @classmethod
-    def boot(cls):
-        """Create initial global Site object with attributes loaded from DB. Called once during startup."""
-
-        cls._categories = categories = {}
-        # categories[ROOT_CID] = RootCategory()._bootload()
-        #
-        # Site = Category(name = 'Site')._bootload()
-        # categories[Site.__iid__] = Site
-        #
-        # return Site.first_item()
-        
-        cls.__registry__ = reg = Registry()
-        # reg.boot_category(ROOT_CID)
-        # reg.boot_category('Site')
-        return reg.get_item(cid = SITE_CID, iid = SITE_IID)
+    # @classmethod
+    # def boot(cls):
+    #     """Create initial global Site object with attributes loaded from DB. Called once during startup."""
+    #
+    #     # cls._categories = categories = {}
+    #     # categories[ROOT_CID] = RootCategory()._bootload()
+    #     #
+    #     # Site = Category(name = 'Site')._bootload()
+    #     # categories[Site.__iid__] = Site
+    #     #
+    #     # return Site.first_item()
+    #
+    #     cls.__registry__ = Registry()
+    #     return cls.__registry__.get_item(cid = SITE_CID, iid = SITE_IID)
         
     def _post_decode(self):
 
@@ -715,7 +719,7 @@ class Site(Item):
             for space_name, space in app.spaces.items():
                 for category_name, category in space.categories.items():
                     
-                    category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
+                    # category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
                     self._qualifiers[qualifier] = category.__iid__
                     # print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
@@ -724,7 +728,8 @@ class Site(Item):
     def get_category(cls, cid):
         """Get a cached category instance from _categories, or load if not present and store in _categories."""
         
-        return cls.__registry__.get_category(cid)
+        return registry.get_category(cid)
+        # return cls.__registry__.get_category(cid)
         
         # assert cid is not None
         # category = cls._categories.get(cid)
@@ -752,37 +757,6 @@ class Site(Item):
         category = self.get_category(cid)
         return category.load(iid)
         
-    # def new_item(self):
-    #     """
-    #     Create a new item that could be inserted to DB at some point in the future. From the very beginning,
-    #     the item is linked to the creating site object through Item.__site__.
-    #     """
-    #
-    # def get_item(self,
-    #              id_ = None, iid = None, cid = None, category = None,
-    #              data = True, mutable = False, itemclass = None):
-    #     """
-    #     Load an item from DB or retrieve a local (possibly yet unsaved) copy from cache.
-    #     CID and IID are always loaded. Other elements of data are loaded when `data` is true.
-    #     If `data` is a list of attribute names, only these attributes are loaded (= partial load).
-    #     If `data` is false, the item gets initialized with (CID,IID) only (a "stub"), which may not require DB access
-    #     - in such case, a valid item is returned even if there is no matching record in DB.
-    #     """
-    #     if id_:
-    #         cid, iid = id_
-    #     if category:
-    #         cid = category.__iid__
-    #     id_ = (cid, iid)
-    #
-    #     if not data:
-    #         item = (itemclass or Item)(__cid__ = cid, __iid__ = iid)
-    #     else:
-    #         item = self._registry.get_item(id_)
-    #
-    #     if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
-    #
-    #     return item
-    
         
 #####################################################################################################################################################
 
@@ -809,14 +783,16 @@ Space:
 
 """
 
-
 #####################################################################################################################################################
 #####
 #####  GLOBALS
 #####
 
-site = Item.__site__ = Site.boot()          # for now, we assume the global Site object is the site of all items
+# site = Item.__site__ = Site.boot()          # for now, we assume the global Site object is the site of all items
 
-# print("categories:", Site.categories.cache)
+registry = Registry()
+site = Item.__site__ = registry.get_item(cid = SITE_CID, iid = SITE_IID)
+
+
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
 # print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
