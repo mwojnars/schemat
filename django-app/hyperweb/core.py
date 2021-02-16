@@ -1,7 +1,11 @@
-import re
-from django.http import HttpRequest, HttpResponse
+import re, threading
+from time import sleep
 from cachetools import TTLCache
 from bidict import bidict
+
+from django.http import HttpRequest, HttpResponse
+from django.core.signals import request_finished
+from django.dispatch import receiver
 
 from nifty.text import html_escape
 
@@ -408,7 +412,7 @@ class Category(Item):
             self.__category__ = self
         else:
         # if self.__category__ is None:
-            self.__category__ = Site.get_root_category()
+            self.__category__ = __registry__.get_category(ROOT_CID)
             
         super(Category, self).__init__(__registry__, **attrs)
         
@@ -420,7 +424,7 @@ class Category(Item):
         
         if self._is_root():
             self.itemclass = Category   # root Category doesn't have a schema, yet; attributes must be set/decoded manually
-            print('in Category.__init__ of root')
+            # print('in Category.__init__ of root')
             
         # print(f'Category.__init__(), created new category {self} - {id(self)}')
 
@@ -447,9 +451,10 @@ class Category(Item):
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
-        item = self.itemclass(self.__registry__, __category__ = self, __iid__ = iid)
-        if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
-        return item
+        return self.__registry__.get_item(iid = iid, category = self)
+        # item = self.itemclass(self.__registry__, __category__ = self, __iid__ = iid)
+        # if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
+        # return item
     
     def load(self, iid_str):
         """Load from DB an item that belongs to the category represented by self."""
@@ -554,21 +559,15 @@ class RootCategory(Category):
 
     def __init__(self, __registry__):
 
-        print('RootCategory.__init__ start')
+        # print('RootCategory.__init__ start')
         self.__category__ = self
         
         super(RootCategory, self).__init__(__registry__)
         
         self.name      = 'Category'
         self.itemclass = Category       # root Category doesn't have a schema, yet; attributes must be set/decoded manually
-        
-        # print(f'RootCategory.__init__(), created new category {self} - {id(self)}')
-        print('RootCategory.__init__ stop')
+        # print('RootCategory.__init__ stop')
 
-    # doc  = "Category of items that represent other categories"
-    # name = "Category"
-    # schema = Schema()
-    #
     # def __init__(self, **attrs):
     #     super(RootCategory, self).__init__(**attrs)
     #     self.itemclass = Category
@@ -622,7 +621,7 @@ class Registry:
     def new_item(self, category = None, cid = None):
         if not category: category = self.get_category(cid)
         itemclass = category.itemclass
-        return itemclass._create(__cid__ = cid)
+        return itemclass._create(self, __cid__ = cid)
         
     
     def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
@@ -649,7 +648,7 @@ class Registry:
         if cid == iid == ROOT_CID:
             item = RootCategory(self)._bootload()           # TODO: move to __init__ and mark this entry as protected to avoid removal
             self._set(id_, item)
-            print(f'Registry.get_item(): created root category - {id(item)}')
+            # print(f'Registry.get_item(): created root category - {id(item)}')
             return item
         
         # determine what itemclass to use for instantiation
@@ -663,13 +662,17 @@ class Registry:
         if load: item.__load__()
         self._set(id_, item)
 
-        print(f'Registry.get_item(): created item {id_} - {id(item)}')
+        # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
+    
+    def get_lazy(self, *args, **kwargs):
+        """Like get_item() but with load=False."""
+        return self.get_item(*args, **kwargs, load = False)
     
     def get_category(self, cid):
         # assert cid is not None
         return self.get_item((ROOT_CID, cid))
-        
+
     def _set(self, id_, item):
     
         item.__registry__ = self
@@ -688,7 +691,7 @@ class Site(Item):
     The global `site` object is created in hyperweb/__init__.py and can be imported with:
       from hyperweb import site
     """
-    
+
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
     # internal variables
@@ -699,6 +702,16 @@ class Site(Item):
                             # for URL routing and URL generation; some categories may be excluded from routing
                             # (no public visibility), yet they're still accessible through get_category()
 
+    # _thread_local = threading.local()
+    #
+    # @property
+    # def __registry__(self):
+    #     return self._thread_local.__registry__
+    #
+    # @__registry__.setter
+    # def __registry__(self, reg):
+    #     self._thread_local.__registry__ = reg
+    
     # @classmethod
     # def boot(cls):
     #     """Create initial global Site object with attributes loaded from DB. Called once during startup."""
@@ -726,15 +739,20 @@ class Site(Item):
         return registry.get_category(cid)
         # return cls.__registry__.get_category(cid)
     
-    @classmethod
-    def get_root_category(cls):
-        return cls.get_category(ROOT_CID)
+    # @classmethod
+    # def get_root_category(cls):
+    #     return cls.get_category(ROOT_CID)
+        
+    def get_item(self, *args, **kwargs):
+        return self.__registry__.get_item(*args, **kwargs)
         
     def get_qualifier(self, category = None, cid = None):
         if cid is None: cid = category.__iid__
         return self._qualifiers.inverse[cid]
 
     def load(self, descriptor, app = None):
+        
+        print(f'handler thread {threading.get_ident()}')
         
         # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
         # is category-dependent and can be customized by Category subclasses
@@ -774,11 +792,19 @@ Space:
 #####  GLOBALS
 #####
 
+@receiver(request_finished)
+def after_request(sender, **kwargs):
+    print(f'after_request() in thread {threading.get_ident()} start...')
+    sleep(5)
+    print(f'after_request() in thread {threading.get_ident()} ...stop')
+
 # site = Item.__site__ = Site.boot()          # for now, we assume the global Site object is the site of all items
 
 registry = Registry()
-site = Item.__site__ = registry.get_item(cid = SITE_CID, iid = SITE_IID)
+site = Item.__site__ = registry.get_lazy(cid = SITE_CID, iid = SITE_IID)
+site.__load__()
 
+print(f'main thread {threading.get_ident()}')
 
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
 # print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
