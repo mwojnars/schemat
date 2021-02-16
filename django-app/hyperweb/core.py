@@ -132,7 +132,7 @@ class Item(object, metaclass = MetaItem):
             self.__cid__ = self.__category__.__iid__
         elif self.__cid__ is not None:
         # else:
-            self.__category__ = (self.__site__ or Site).get_category(self.__cid__)
+            self.__category__ = __registry__.get_category(self.__cid__) #(self.__site__ or Site)
         # assert self.__category__ is not None
 
     def _get_current(self):
@@ -273,7 +273,7 @@ class Item(object, metaclass = MetaItem):
         
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
-        item.__category__ = item if (cid == iid == ROOT_CID) else Site.get_category(cid)
+        item.__category__ = item if (cid == iid == ROOT_CID) else __registry__.get_category(cid)
 
         # convert __data__ from JSON string to a struct
         if data:
@@ -617,8 +617,10 @@ class Registry:
     
     def __init__(self):
         self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only prune entries after web requests; protect RootCategory
+        # print(f'Registry() created in thread {threading.get_ident()}')
     
     def new_item(self, category = None, cid = None):
+        
         if not category: category = self.get_category(cid)
         itemclass = category.itemclass
         return itemclass._create(self, __cid__ = cid)
@@ -696,21 +698,25 @@ class Site(Item):
 
     # internal variables
     
-    # _categories = None      # class-global dict of all categories listed in DB under this site-app-space, as {CID: category_instance};
-    #                         # after boot(), it can be accessed through Site.get_category()
     _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
                             # for URL routing and URL generation; some categories may be excluded from routing
                             # (no public visibility), yet they're still accessible through get_category()
 
-    # _thread_local = threading.local()
-    #
-    # @property
-    # def __registry__(self):
-    #     return self._thread_local.__registry__
-    #
-    # @__registry__.setter
-    # def __registry__(self, reg):
-    #     self._thread_local.__registry__ = reg
+    # Site class is special in that it holds distinct Registry instances for each processing thread.
+    # This is to ensure each thread operates on separate item objects to avoid interference
+    # when two threads modify same-ID items concurrently.
+    _thread_local = threading.local()
+
+    @property
+    def __registry__(self):
+        reg = getattr(self._thread_local, '__registry__', None)
+        if reg is None:
+            reg = self._thread_local.__registry__ = Registry()
+        return reg
+
+    @__registry__.setter
+    def __registry__(self, reg):
+        self._thread_local.__registry__ = reg
     
     # @classmethod
     # def boot(cls):
@@ -732,27 +738,22 @@ class Site(Item):
                     self._qualifiers[qualifier] = category.__iid__
                     # print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
 
-    @classmethod
-    def get_category(cls, cid):
-        """Get a cached category instance from _categories, or load if not present and store in _categories."""
-        
-        return registry.get_category(cid)
-        # return cls.__registry__.get_category(cid)
+    def get_category(self, cid):
+        """Retrieve a category through the Registry that belongs to the current thread."""
+        return self.__registry__.get_category(cid)
     
-    # @classmethod
-    # def get_root_category(cls):
-    #     return cls.get_category(ROOT_CID)
-        
     def get_item(self, *args, **kwargs):
+        """Retrieve an item through the Registry that belongs to the current thread."""
         return self.__registry__.get_item(*args, **kwargs)
         
     def get_qualifier(self, category = None, cid = None):
+        """Get a qualifer of a given category that should be put in URL to access this category's items by IID."""
         if cid is None: cid = category.__iid__
         return self._qualifiers.inverse[cid]
 
-    def load(self, descriptor, app = None):
+    def load(self, descriptor):
         
-        print(f'handler thread {threading.get_ident()}')
+        # print(f'handler thread {threading.get_ident()}')
         
         # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
         # is category-dependent and can be customized by Category subclasses
@@ -798,13 +799,12 @@ def after_request(sender, **kwargs):
     sleep(5)
     print(f'after_request() in thread {threading.get_ident()} ...stop')
 
-# site = Item.__site__ = Site.boot()          # for now, we assume the global Site object is the site of all items
-
-registry = Registry()
-site = Item.__site__ = registry.get_lazy(cid = SITE_CID, iid = SITE_IID)
-site.__load__()
-
 print(f'main thread {threading.get_ident()}')
+
+#####################################################################################################################################################
+
+site = Item.__site__ = Registry().get_lazy(cid = SITE_CID, iid = SITE_IID)
+site.__load__()
 
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
 # print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
