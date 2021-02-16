@@ -53,16 +53,16 @@ class SimpleStore(DataStore):
         
         return {f'__{key}__': val for key, val in zip(self._item_columns, row)}
 
-    def load(self, id):
+    def select(self, id_):
         """Load from DB an item with a given ID = (CID,IID) and return as a record (dict)."""
         
         # select row from DB and convert to record (dict with field names)
         with self.db.cursor() as cur:
-            cur.execute(self._item_select_by_id, id)
+            cur.execute(self._item_select_by_id, id_)
             row = cur.fetchone()
-            return self._make_record(row, id)
+            return self._make_record(row, id_)
 
-    def load_all(self, cid, limit = None):
+    def select_all(self, cid, limit = None):
         """
         Load from DB all items of a given category (CID) ordered by IID, possibly with a limit.
         Items are returned as an iterable of records (dicts).
@@ -75,24 +75,24 @@ class SimpleStore(DataStore):
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
-    def bootload_category(self, iid = None, name = None):
-        """
-        Special method for loading category items during startup: finds all records having cid=ROOT_CID
-        and selects the one with a proper `iid` or $data.name.
-        """
-        def JSON(path):
-            return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
-        
-        #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
-        #cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
-        cond  = JSON(f'$.name') if name else f"iid = %s"
-        query = f"SELECT {self._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
-        arg   = [name or iid]
-        
-        with self.db.cursor() as cur:
-            cur.execute(query, arg)
-            row = cur.fetchone()
-            return self._make_record(row, arg)
+    # def bootload_category(self, iid = None, name = None):
+    #     """
+    #     Special method for loading category items during startup: finds all records having cid=ROOT_CID
+    #     and selects the one with a proper `iid` or $data.name.
+    #     """
+    #     def JSON(path):
+    #         return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
+    #
+    #     #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
+    #     #cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
+    #     cond  = JSON(f'$.name') if name else f"iid = %s"
+    #     query = f"SELECT {self._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
+    #     arg   = [name or iid]
+    #
+    #     with self.db.cursor() as cur:
+    #         cur.execute(query, arg)
+    #         row = cur.fetchone()
+    #         return self._make_record(row, arg)
     
     def insert(self, item):
         """
