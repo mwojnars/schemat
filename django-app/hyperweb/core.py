@@ -90,7 +90,6 @@ class Item(object, metaclass = MetaItem):
     __updated__  = None         # datetime when this item was last updated in DB; no timezone
     
     __category__ = None         # parent category of this item, as an instance of Category
-    __site__     = None         # Site instance that loaded this item
     __registry__ = None         # Registry that manages access to this item
     __loaded__   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
@@ -132,7 +131,7 @@ class Item(object, metaclass = MetaItem):
             self.__cid__ = self.__category__.__iid__
         elif self.__cid__ is not None:
         # else:
-            self.__category__ = __registry__.get_category(self.__cid__) #(self.__site__ or Site)
+            self.__category__ = __registry__.get_category(self.__cid__)
         # assert self.__category__ is not None
 
     def _get_current(self):
@@ -251,18 +250,18 @@ class Item(object, metaclass = MetaItem):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         store = self.__category__._store
         record = store.load(self.__id__)
-        self.__decode__(self.__registry__, record, item = self)
+        self.__decode__(record)
         return self
     
 
-    @classmethod
-    def __decode__(cls, __registry__, record, item = None, loaded = True):
+    def __decode__(self, record, loaded = True):
         """
         Decode fields from a DB `record` into item's attributes; or into a new instance
         of <cls> if `item` is None. Return the resulting item.
         If loaded=True, the resulting item is marked as fully loaded (__loaded__).
         """
-        item = item or cls(__registry__)
+        # item = item or cls(__registry__)
+        item = self
         item.__loaded__ = loaded
         
         data = record.pop('__data__')
@@ -273,7 +272,7 @@ class Item(object, metaclass = MetaItem):
         
         # impute __category__; note the special case: the root Category item is a category for itself!
         cid, iid = item.__id__
-        item.__category__ = item if (cid == iid == ROOT_CID) else __registry__.get_category(cid)
+        item.__category__ = item if (cid == iid == ROOT_CID) else self.__registry__.get_category(cid)
 
         # convert __data__ from JSON string to a struct
         if data:
@@ -283,8 +282,6 @@ class Item(object, metaclass = MetaItem):
         
         item._post_decode()
         #item.commit()
-        
-        return item
 
     def __handle__(self, request, endpoint = None):
         """
@@ -434,7 +431,7 @@ class Category(Item):
     def _bootload(self):
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         record = self._boot_store.bootload_category(name = self.name)
-        self.__decode__(self.__registry__, record, item = self)
+        self.__decode__(record)
         return self
 
     #####  Items in category (low-level interface that does NOT scale)  #####
@@ -452,9 +449,6 @@ class Category(Item):
         but do NOT load remaining contents from DB (lazy loading).
         """
         return self.__registry__.get_item(iid = iid, category = self)
-        # item = self.itemclass(self.__registry__, __category__ = self, __iid__ = iid)
-        # if self.itemclass is Category and iid == 0: print(f'Category.get_item() created a root category: {item} - {id(item)}')
-        # return item
     
     def load(self, iid_str):
         """Load from DB an item that belongs to the category represented by self."""
@@ -469,11 +463,9 @@ class Category(Item):
         """
         records = self._store.load_all(self.__iid__, limit)
         for record in records:
-            yield self.itemclass.__decode__(self.__registry__, record)
-        # return list(map(self.itemclass.__decode__, records))
-        # items = list(map(self.itemclass.__decode__, records))
-        # print(f'Category.all_items() loaded: {items} - {list(map(id,items))}')
-        # return items
+            item = self.itemclass(self.__registry__)
+            item.__decode__(record)
+            yield item
         
     def first_item(self):
         
@@ -531,8 +523,8 @@ class Category(Item):
         
         assert item.__cid__ == self.__iid__
         
-        base_url  = self.__site__.base_url
-        qualifier = self.__site__.get_qualifier(self)       #self._qualifier
+        base_url  = site.base_url
+        qualifier = site.get_qualifier(self)
         iid       = self._iid_encode(item.__iid__)
         # print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
         
@@ -718,13 +710,6 @@ class Site(Item):
     def __registry__(self, reg):
         self._thread_local.__registry__ = reg
     
-    # @classmethod
-    # def boot(cls):
-    #     """Create initial global Site object with attributes loaded from DB. Called once during startup."""
-    #
-    #     cls.__registry__ = Registry()
-    #     return cls.__registry__.get_item(cid = SITE_CID, iid = SITE_IID)
-    
     def _post_decode(self):
 
         self._qualifiers = bidict()
@@ -757,7 +742,13 @@ class Site(Item):
         
         # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
         # is category-dependent and can be customized by Category subclasses
-        qualifier, iid = descriptor.split(':', 1)
+        try:
+            qualifier, iid = descriptor.split(':', 1)
+        except Exception as ex:
+            print(ex)
+            print('incorrect descriptor:', descriptor)
+            raise
+            
         cid = self._qualifiers[qualifier]
         category = self.get_category(cid)
         return category.load(iid)
@@ -803,8 +794,13 @@ print(f'main thread {threading.get_ident()}')
 
 #####################################################################################################################################################
 
-site = Item.__site__ = Registry().get_lazy(cid = SITE_CID, iid = SITE_IID)
+site = Registry().get_lazy(cid = SITE_CID, iid = SITE_IID)
 site.__load__()
 
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
 # print("Site.schema:     ", Field._json.dumps(site.__category__.schema))
+
+
+# TODO:
+# - remove Item.__init__
+# - refactor Item.__loaded__
