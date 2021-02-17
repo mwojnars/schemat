@@ -14,7 +14,6 @@ from .data import Data
 from .errors import *
 from .store import SimpleStore
 from .schema import Schema
-from .document import Document
 
 from hypertag.core.run_html import HypertagHTML
 
@@ -103,14 +102,16 @@ class Item(object, metaclass = MetaItem):
     def __id__(self): return self.__cid__, self.__iid__
     
     @__id__.setter
-    def __id__(self, id): self.__cid__, self.__iid__ = id
+    def __id__(self, id_):
+        assert self.__iid__ is None or self.__iid__ == id_[1], 'changing IID of an existing item is forbidden'
+        self.__cid__, self.__iid__ = id_
 
     # @property
     # def data(self):
     #     return Data(self.__data__)
     
     # names that must not be used for attributes inside __data__
-    __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'url']
+    __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
     
     def __init__(self, __registry__, **attrs):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
@@ -217,14 +218,6 @@ class Item(object, metaclass = MetaItem):
         return f'<{category}:{self.__iid__}{name}>'
     
     @classmethod
-    def _create(cls, __registry__, category):
-        """Called by Registry to create a new instance."""
-        item = cls(__registry__)
-        item.__category__ = category
-        item.__cid__ = item.__category__.__iid__
-        return item
-        
-    @classmethod
     def __create__(cls, __registry__, _data = None, **attrs):
         """
         Create a new item initialized with `attrs` attribute values, typically passed from a web form;
@@ -238,7 +231,20 @@ class Item(object, metaclass = MetaItem):
             item.__data__[attr] = value
             
         return item
-    
+
+    @classmethod
+    def _create(cls, __registry__, category):
+        """Create an instance of an item that's (supposedly) present in DB and has __iid__ assigned. Should only be called by Registry."""
+        item = cls(__registry__)
+        item.__category__ = category
+        item.__cid__ = item.__category__.__iid__
+        return item
+        
+    @classmethod
+    def _new(cls, category):
+        """Create a new item, one that's not yet in DB and has no __iid__ assigned. Should only be called by Registry."""
+        
+
     def _load(self, force = False):
         """Load into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET."""
         if self.__loaded__ and not force: return self
@@ -251,7 +257,7 @@ class Item(object, metaclass = MetaItem):
         return self._load(force = True)
 
     def _decode(self, record):
-        """Decode fields from a DB `record` into item's attributes."""
+        """Decode raw information from a DB `record` and store in `self`."""
         self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
         
         data = record.pop('__data__')
@@ -272,6 +278,42 @@ class Item(object, metaclass = MetaItem):
         
         self._post_decode()
 
+    def _post_decode(self):
+        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
+        
+    def _to_json(self):
+        schema = self.__category__.get('schema')
+        return schema.encode_json(self.__data__)
+        
+    def insert(self):
+        """
+        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
+        The item might have already been present in DB, but still a new copy is created.
+        """
+        self.__category__._store.insert(self)
+        self.__registry__.save_item(self)
+        
+    def update(self):
+        """Update the contents of this item's row in DB."""
+        self.__category__._store.update(self)
+        self.__registry__.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
+
+    def save(self):
+        """
+        Save this item to DB. This means either an update of an existing DB row (if __iid__ is already present),
+        or an insert of a new row (iid is assigned and can be retrieved from self.__iid__).
+        """
+        if self.__iid__ is None:
+            self.insert()
+        else:
+            self.update()
+
+    def get_url(self, __endpoint = None, *args, **kwargs):
+        """Return canonical URL of this item, possibly extended with a non-default
+           endpoint designation and/or arguments to be passed to a handler function or a view template.
+        """
+        return self.__category__.get_url_of(self, __endpoint, *args, **kwargs)
+        
     def __handle__(self, request, endpoint = None):
         """
         Route a web request to a given endpoint.
@@ -322,55 +364,6 @@ class Item(object, metaclass = MetaItem):
         None: _default_view,
     }
 
-    # """
-    # from catalog.web import header, footer
-    # % __view__ item:
-    #     header
-    #     / $item.header()
-    #     for (name, value), class in alternate(item.data.items(), 'odd', 'even'):
-    #         field, something = item.get_field(name), something_else
-    #         tr .$class
-    #             td | $name
-    #             td | $field.render(value)
-    #             td / ala ma kota
-    #     footer
-    # """
-
-    def _post_decode(self):
-        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
-        
-    def _to_json(self):
-        schema = self.__category__.get('schema')
-        return schema.encode_json(self.__data__)
-        
-    def insert(self):
-        """
-        Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
-        The item might have already been present in DB, but still a new copy is created.
-        """
-        self.__category__._store.insert(self)
-        
-    def update(self):
-        """Update the contents of this item's row in DB."""
-        self.__category__._store.update(self)
-
-    def save(self):
-        """
-        Save this item to DB. This means either an update of an existing DB row (if __iid__ is already present),
-        or an insert of a new row (iid is assigned then and returned).
-        """
-        if self.__iid__ is None:
-            return self.insert()
-        else:
-            self.update()
-            return None
-
-    def get_url(self, __endpoint = None, *args, **kwargs):
-        """Return canonical URL of this item, possibly extended with a non-default
-           endpoint designation and/or arguments to be passed to a handler function or a view template.
-        """
-        return self.__category__.get_url_of(self, __endpoint, *args, **kwargs)
-        
 
 ItemDoesNotExist.item_class = Item
 
@@ -416,13 +409,12 @@ class Category(Item):
         
     #####  Items in category (low-level interface that does NOT scale)  #####
     
-    def new_item(self, *args, **kwargs):
-        """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
-        item = self.__registry__.new_item(*args, **kwargs, category = self)
-        # item = self.itemclass.__create__(self.__registry__, *args, **kwargs)
-        # item.__id__ = (self.__iid__, None)
-        # item.__category__ = self
-        return item
+    # def new_item(self, *args, **kwargs):
+    #     """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
+    #     item = self.itemclass.__create__(self.__registry__, *args, **kwargs)
+    #     item.__id__ = (self.__iid__, None)
+    #     item.__category__ = self
+    #     return item
 
     def get_item(self, iid):
         """
@@ -451,7 +443,10 @@ class Category(Item):
     def _handle_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
-        data = Data()
+        # data = Data()
+        
+        item = self.__registry__.new_item(self)
+        data = item.__data__
         
         # retrieve attribute values from GET/POST
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
@@ -460,9 +455,8 @@ class Category(Item):
         for attr, values in request.GET.lists():
             data.set(attr, *values)
 
-        item = self.new_item(data)
         item.save()
-        return HttpResponse(html_escape(f"Item created: {item}"))
+        return html_escape(f"Item created: {item}")
         
     _default_view = \
     """
@@ -575,11 +569,13 @@ class Registry:
         self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only prune entries after web requests; protect RootCategory
         # print(f'Registry() created in thread {threading.get_ident()}')
     
-    def new_item(self, data = None, category = None, cid = None):
+    def new_item(self, category):
         
-        if not category: category = self.get_category(cid)
         itemclass = category.itemclass
-        return itemclass.__create__(self, data, __category__ = category, __cid__ = category.__iid__)
+        item = itemclass.__create__(self)
+        item.__category__ = category
+        item.__cid__ = category.__iid__
+        return item
         
     
     def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
@@ -647,6 +643,10 @@ class Registry:
             item._decode(record)
             yield item
         
+    def save_item(self, item):
+        """Called after a new item was saved to DB, to put its IID in the registry."""
+        self._set(item)
+        
     def _set(self, item):
         self.items[item.__id__] = item
 
@@ -696,10 +696,8 @@ class Site(Item):
             for space_name, space in app.spaces.items():
                 for category_name, category in space.categories.items():
                     
-                    # category = self._categories.setdefault(category.__iid__, category)     # store category in self._categories if not yet there
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
                     self._qualifiers[qualifier] = category.__iid__
-                    # print(f'initialized category {qualifier}, {category._qualifier} - {id(category)}')
 
     def get_category(self, cid):
         """Retrieve a category through the Registry that belongs to the current thread."""
