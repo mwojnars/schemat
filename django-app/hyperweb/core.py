@@ -110,42 +110,20 @@ class Item(object, metaclass = MetaItem):
     # def data(self):
     #     return Data(self.__data__)
     
-    # names that must not be used for attributes inside __data__
-    __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
+    # # names that must not be used for attributes inside __data__
+    # __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
     
-    # def __init__(self, __registry__, __cid__ = None, __iid__ = None):
-    #     """None values in `attrs` are IGNORED when copying `attrs` to self."""
-    #
-    #     raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
-    #
-    #     if __cid__ is not None: self.__cid__ = __cid__
-    #     if __iid__ is not None: self.__iid__ = __iid__
-    #
-    #     self.__registry__ = __registry__
-    #     self.__data__ = Data()          # REFACTOR
-    #
-    #     # user-editable attributes & properties; can be missing in a particular item
-    #     self.name = None        # name of item; constraints on length and character set depend on category
-    #
-    #     # for attr, value in attrs.items():
-    #     #     if value is not None: setattr(self, attr, value)
-    #
-    #     # impute __cid__ and __category__
-    #     if self.__category__ and self.__cid__ is not None:
-    #         assert self.__cid__ == self.__category__.__iid__
-    #     elif self.__category__:
-    #         self.__cid__ = self.__category__.__iid__
-    #     elif self.__cid__ is not None:
-    #     # else:
-    #         self.__category__ = __registry__.get_category(self.__cid__)
-    #     # assert self.__category__ is not None
+    def __init__(self):
+        raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
 
     @classmethod
-    def _create(cls, registry, category, iid):
-        """Create an instance of an item that has __iid__ assigned and is supposedly present in DB. Should only be called by Registry."""
-        
+    def _create(cls, category, iid):
+        """
+        Create an instance of an item that has __iid__ already assigned and is supposedly present in DB.
+        Should only be called by Registry.
+        """
         item = cls.__new__(cls)                     # __init__() is disabled, do not call it
-        item.__registry__ = registry
+        item.__registry__ = category.__registry__
         item.__category__ = category
         item.__cid__  = category.__iid__
         item.__iid__  = iid
@@ -153,12 +131,9 @@ class Item(object, metaclass = MetaItem):
         return item
         
     @classmethod
-    def _new(cls, registry, category):
+    def _new(cls, category):
         """Create a new item, one that's not yet in DB and has no __iid__ assigned. Should only be called by Registry."""
-        # item = cls.__new__(cls)                     # __init__() is disabled, do not call it
-        # item.__category__ = category
-        # item.__cid__ = category.__iid__
-        return cls._create(registry, category, None)
+        return cls._create(category, None)
         
     def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
@@ -394,18 +369,16 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
-    # __cid__ = ROOT_CID
-    _store  = SimpleStore()              # data store used for regular access to items of this category
+    _store  = SimpleStore()              # DataStore used for reading/writing items of this category
 
-    #####  Items in category (low-level interface that does NOT scale)  #####
-    
+
     def load_data(self, iid):
         """Load item data from DB and return as a record (dict)."""
         return self._store.select(iid)
     
     def new_item(self):
         """"""
-        return self.itemclass._new(self.__registry__, self)
+        return self.itemclass._new(self)
         
     def get_item(self, iid):
         """
@@ -511,8 +484,7 @@ class Category(Item):
 class RootCategory(Category):
     """Root category: a category for all other categories."""
 
-    # __iid__     = ROOT_CID
-    # _boot_store = SimpleStore()         # data store used during startup for accessing category-items
+    _store = SimpleStore()                  # DataStore to be used for reading/writing all category-items including the root Category
 
     @classmethod
     def _create(cls, registry):
@@ -528,13 +500,10 @@ class RootCategory(Category):
         item.itemclass = Category           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return item
         
-    # def _load(self, force = False):
-    #     """RootCategory loads itself through _boot_store instead of _store; self._store is only used for child categories."""
-    #     if self.__loaded__ and not force: return self
-    #     record = self._boot_store.select(self.__id__)
-    #     self._decode(record)
-    #     return self
-
+    # def _load(self, record = None, force = False):
+    #     """"""
+    #     # bootstrap loading of RootCategory instance ?
+    
 
 #####################################################################################################################################################
 #####
@@ -612,7 +581,7 @@ class Registry:
         itemclass = category.itemclass                  # REFACTOR
         
         # create a new instance and insert to cache
-        item = itemclass._create(self, category, iid)
+        item = itemclass._create(category, iid)
         self._set(item)                            # _set() is called before item._load() to properly handle circular relationships between items
         if load: item._load()
 
@@ -641,7 +610,7 @@ class Registry:
             if cid == iid == ROOT_CID:
                 yield self._load_root(record)
             else:
-                item = itemclass._create(self, category, iid)
+                item = itemclass._create(category, iid)
                 self._set(item)
                 item._load(record)
                 yield item
@@ -660,7 +629,7 @@ class Registry:
         
     # def _load_item(self, itemclass, record = None):
     #
-    #     item = itemclass._create(self, category, iid)
+    #     item = itemclass._create(category, iid)
     #     self._set(item)
     #     item._load(record)
     #     return item
