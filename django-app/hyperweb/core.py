@@ -113,8 +113,11 @@ class Item(object, metaclass = MetaItem):
     # names that must not be used for attributes inside __data__
     __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
     
-    def __init__(self, __registry__, **attrs):
+    def __init__(self, __registry__, __cid__ = None, __iid__ = None):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
+        
+        if __cid__ is not None: self.__cid__ = __cid__
+        if __iid__ is not None: self.__iid__ = __iid__
         
         self.__registry__ = __registry__
         self.__data__ = Data()          # REFACTOR
@@ -122,8 +125,8 @@ class Item(object, metaclass = MetaItem):
         # user-editable attributes & properties; can be missing in a particular item
         self.name = None        # name of item; constraints on length and character set depend on category
         
-        for attr, value in attrs.items():
-            if value is not None: setattr(self, attr, value)
+        # for attr, value in attrs.items():
+        #     if value is not None: setattr(self, attr, value)
         
         # impute __cid__ and __category__
         if self.__category__ and self.__cid__ is not None:
@@ -134,6 +137,37 @@ class Item(object, metaclass = MetaItem):
         # else:
             self.__category__ = __registry__.get_category(self.__cid__)
         # assert self.__category__ is not None
+
+    @classmethod
+    def _create(cls, registry, category, iid):
+        """Create an instance of an item that's supposedly present in DB and has __iid__ assigned. Should only be called by Registry."""
+        
+        # item = cls.__new__(cls)                     # do not call __init__() - it is disabled
+        item = cls(registry)
+        item.__registry__ = registry
+        item.__category__ = category
+        item.__cid__  = category.__iid__
+        item.__iid__  = iid
+        item.__data__ = Data()                      # REFACTOR
+        
+        return item
+        
+        
+    @classmethod
+    def _new(cls, registry, category):
+        """Create a new item, one that's not yet in DB and has no __iid__ assigned. Should only be called by Registry."""
+        item = cls(registry)
+        item.__category__ = category
+        item.__cid__ = category.__iid__
+        return item
+        
+    # @classmethod
+    # def __create__(cls, __registry__):
+    #     """
+    #     Create a new item initialized with `attrs` attribute values, typically passed from a web form;
+    #     or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
+    #     """
+    #     return cls(__registry__)
 
     def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
@@ -150,6 +184,19 @@ class Item(object, metaclass = MetaItem):
             return self.getlist(basename)
         return self.get(name)
 
+    # def get(self, name):
+    #
+    #     # if self.__data__ is None:
+    #     #     self._load()
+    #
+    #     if name in self.__data__:                   # get `name` from __data__ if present there
+    #         return self.__data__[name]
+    #
+    #     # TODO: search `name` in __category__'s default values
+    #
+    #     raise AttributeError(name)
+    
+        
     def get(self, name, default = _RAISE_):
         """Get attribute value from:
            - self.__data__ OR
@@ -162,18 +209,18 @@ class Item(object, metaclass = MetaItem):
                 self._load()
             return self.__data__[name]
         except KeyError: pass
-        
+
         # # TODO: search `name` in __category__'s default values
         # category = _get_(self, '__category__')
         # if category:
         #     try:
         #         return category.get_default(name)
         #     except AttributeError: pass
-        
+
         try:
             return getattr(self.__class__, name)
         except AttributeError: pass
-        
+
         if default is _RAISE_:
             raise AttributeError(name)
         return default
@@ -217,39 +264,14 @@ class Item(object, metaclass = MetaItem):
         
         return f'<{category}:{self.__iid__}{name}>'
     
-    @classmethod
-    def __create__(cls, __registry__, _data = None, **attrs):
+    def _load(self, record = None, force = False):
         """
-        Create a new item initialized with `attrs` attribute values, typically passed from a web form;
-        or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
+        Load (decode) and store into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET.
+        Setting force=True or passing a `record` enforces decoding even if `self` was already loaded.
         """
-        item = cls(__registry__)
-        if _data is not None:
-            item.__data__ = _data
-            
-        for attr, value in attrs.items():
-            item.__data__[attr] = value
-            
-        return item
-
-    @classmethod
-    def _create(cls, __registry__, category):
-        """Create an instance of an item that's (supposedly) present in DB and has __iid__ assigned. Should only be called by Registry."""
-        item = cls(__registry__)
-        item.__category__ = category
-        item.__cid__ = item.__category__.__iid__
-        return item
-        
-    @classmethod
-    def _new(cls, category):
-        """Create a new item, one that's not yet in DB and has no __iid__ assigned. Should only be called by Registry."""
-        
-
-    def _load(self, force = False):
-        """Load into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET."""
-        if self.__loaded__ and not force: return self
-        store = self.__category__._store
-        record = store.select(self.__id__)
+        if self.__loaded__ and not force and record is None: return self
+        if record is None:
+            record = self.__category__._store.select(self.__id__)
         self._decode(record)
         return self
     
@@ -379,7 +401,10 @@ class Category(Item):
     and creation of new items within category.
     """
     __cid__ = ROOT_CID
-    _store  = None              # data store used for regular access to items of this category
+    _store  = SimpleStore()              # data store used for regular access to items of this category
+
+    # itemclass = Item
+    # schema    = Schema()
     
     def __init__(self, __registry__, __iid__ = None, **attrs):
         if __iid__ is not None: self.__iid__ = __iid__
@@ -392,7 +417,7 @@ class Category(Item):
             
         super(Category, self).__init__(__registry__, **attrs)
         
-        self._store = SimpleStore()
+        # self._store = SimpleStore()
 
         # public attributes of a category
         self.schema    = Schema()       # a Schema that puts constraints on attribute names and values allowed in this category
@@ -409,13 +434,10 @@ class Category(Item):
         
     #####  Items in category (low-level interface that does NOT scale)  #####
     
-    # def new_item(self, *args, **kwargs):
-    #     """Create a new item of this category, one that's not yet in DB. For web-based item creation, see the new() handler."""
-    #     item = self.itemclass.__create__(self.__registry__, *args, **kwargs)
-    #     item.__id__ = (self.__iid__, None)
-    #     item.__category__ = self
-    #     return item
-
+    def new_item(self):
+        """"""
+        return self.itemclass._new(self.__registry__, self)
+        
     def get_item(self, iid):
         """
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
@@ -437,6 +459,14 @@ class Category(Item):
         if not items: raise self.itemclass.DoesNotExist()
         return items[0]
 
+    def get_default(self, attr):
+        """ (UNUSED)
+        Get the default value of a given item attribute `attr` as defined in this category's schema.
+        Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
+        """
+        return self.schema.get_default(attr)
+        
+
     #####  Handlers & views  #####
 
     @handler('new')
@@ -444,11 +474,10 @@ class Category(Item):
         """Web handler that creates a new item of this category based on `request` data."""
         
         # data = Data()
-        
-        item = self.__registry__.new_item(self)
+        item = self.new_item()
         data = item.__data__
         
-        # retrieve attribute values from GET/POST
+        # retrieve attribute values from GET/POST and assign to `item`
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
         for attr, values in request.POST.lists():
             data.set(attr, *values)
@@ -569,19 +598,20 @@ class Registry:
         self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only prune entries after web requests; protect RootCategory
         # print(f'Registry() created in thread {threading.get_ident()}')
     
-    def new_item(self, category):
-        
-        itemclass = category.itemclass
-        item = itemclass.__create__(self)
-        item.__category__ = category
-        item.__cid__ = category.__iid__
-        return item
+    # def new_item(self, category):
+    #
+    #     itemclass = category.itemclass
+    #     return itemclass._new(self, category)
+    #     # the item has no IID yet, for this reason we can't add it into the registry at this stage;
+    #     # after an IID is assigned, the item should add itself by calling registry.save()
         
     
     def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
         """
-        If `load` is False, the returned item usually contains only __cid__ and __iid__ (no data).
-        This is not a strict rule, however, and if the item has been loaded or created before,
+        If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
+        as the item data may have been loaded earlier.
+        If load=False, the returned item usually contains only __cid__ and __iid__ (no data);
+        this is not a strict rule, however, and if the item has been loaded or created before,
         by this or a previous request handler, the item can already be fully initialized.
         Hence, the caller should never assume that the returned item's __data__ is missing.
         """
@@ -602,19 +632,16 @@ class Registry:
         
         # special handling for the root Category
         if cid == iid == ROOT_CID:
-            item = RootCategory(self)           # TODO: move to __init__ and mark this entry as protected to avoid removal
-            self._set(item)
-            item._load()
-            # print(f'Registry.get_item(): created root category - {id(item)}')
-            return item
+            return self._load_root()            # TODO: move to __init__ and mark this entry as protected to avoid removal
         
         # determine what itemclass to use for instantiation
         if not category:
             category = self.get_category(cid)
         itemclass = category.itemclass                  # REFACTOR
-
+        
         # create a new instance and insert to cache
-        item = itemclass(self, __cid__ = cid, __iid__ = iid)        # REFACTOR: _create()
+        # item = itemclass(self, __cid__ = cid, __iid__ = iid)        # REFACTOR: _create()
+        item = itemclass._create(self, category, iid)
         self._set(item)                            # _set() is called before item._load() to properly handle circular relationships between items
         if load: item._load()
 
@@ -638,15 +665,36 @@ class Registry:
         for record in records:
             cid = record.pop('__cid__')
             iid = record.pop('__iid__')
-            item = itemclass(self, __cid__ = cid, __iid__ = iid)                  # REFACTOR: _create()
-            self._set(item)
-            item._decode(record)
-            yield item
+            assert cid == category.__iid__
+            # item = itemclass(self, __cid__ = cid, __iid__ = iid)                  # REFACTOR: _create()
+
+            if cid == iid == ROOT_CID:
+                yield self._load_root(record)
+            else:
+                item = itemclass._create(self, category, iid)
+                self._set(item)
+                item._load(record)
+                yield item
         
     def save_item(self, item):
         """Called after a new item was saved to DB, to put its IID in the registry."""
         self._set(item)
         
+    def _load_root(self, record = None):
+        
+        item = RootCategory(self)
+        self._set(item)
+        item._load(record)
+        # print(f'Registry.get_item(): created root category - {id(item)}')
+        return item
+        
+    # def _load_item(self, itemclass, record = None):
+    #
+    #     item = itemclass._create(self, category, iid)
+    #     self._set(item)
+    #     item._load(record)
+    #     return item
+
     def _set(self, item):
         self.items[item.__id__] = item
 
