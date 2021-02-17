@@ -262,10 +262,10 @@ class Item(object, metaclass = MetaItem):
         Load (decode) and store into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET.
         Setting force=True or passing a `record` enforces decoding even if `self` was already loaded.
         """
-        assert self.__iid__ is not None, '_load() must not be called for a newly created item (not yet in DB)'
+        assert self.__iid__ is not None, '_load() must not be called for a newly created item with no IID'
         if self.__loaded__ and not force and record is None: return self
         if record is None:
-            record = self.__category__._store.select(self.__id__)
+            record = self.__category__.load_data(self.__id__)
         self._decode(record)
         return self
     
@@ -394,33 +394,14 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
-    __cid__ = ROOT_CID
+    # __cid__ = ROOT_CID
     _store  = SimpleStore()              # data store used for regular access to items of this category
 
-    # def __init__(self, __registry__, __iid__ = None, **attrs):
-    #     if __iid__ is not None: self.__iid__ = __iid__
-    #
-    #     if self._is_root():
-    #         self.__category__ = self
-    #     else:
-    #     # if self.__category__ is None:
-    #         self.__category__ = __registry__.get_category(ROOT_CID)
-    #
-    #     super(Category, self).__init__(__registry__, **attrs)
-    #
-    #     # self._store = SimpleStore()
-    #
-    #     # # public attributes of a category
-    #     # self.schema    = Schema()       # a Schema that puts constraints on attribute names and values allowed in this category
-    #     # self.itemclass = Item           # an Item subclass that most fully implements functionality of this category's items and should be used when instantiating items loaded from DB
-    #     #
-    #     # if self._is_root():
-    #     #     self.itemclass = Category   # root Category doesn't have a schema, yet; attributes must be set/decoded manually
-
-    def _is_root(self):
-        return False        #self.__iid__ == ROOT_CID
-        
     #####  Items in category (low-level interface that does NOT scale)  #####
+    
+    def load_data(self, iid):
+        """Load item data from DB and return as a record (dict)."""
+        return self._store.select(iid)
     
     def new_item(self):
         """"""
@@ -530,18 +511,8 @@ class Category(Item):
 class RootCategory(Category):
     """Root category: a category for all other categories."""
 
-    __iid__     = ROOT_CID
-    _boot_store = SimpleStore()         # data store used during startup for accessing category-items
-
-    def _is_root(self):
-        return True
-
-    def _load(self, force = False):
-        """RootCategory loads itself through _boot_store instead of _store; self._store is only used for child categories."""
-        if self.__loaded__ and not force: return self
-        record = self._boot_store.select(self.__id__)
-        self._decode(record)
-        return self
+    # __iid__     = ROOT_CID
+    # _boot_store = SimpleStore()         # data store used during startup for accessing category-items
 
     @classmethod
     def _create(cls, registry):
@@ -557,6 +528,13 @@ class RootCategory(Category):
         item.itemclass = Category           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return item
         
+    # def _load(self, force = False):
+    #     """RootCategory loads itself through _boot_store instead of _store; self._store is only used for child categories."""
+    #     if self.__loaded__ and not force: return self
+    #     record = self._boot_store.select(self.__id__)
+    #     self._decode(record)
+    #     return self
+
 
 #####################################################################################################################################################
 #####
@@ -634,7 +612,6 @@ class Registry:
         itemclass = category.itemclass                  # REFACTOR
         
         # create a new instance and insert to cache
-        # item = itemclass(self, __cid__ = cid, __iid__ = iid)        # REFACTOR: _create()
         item = itemclass._create(self, category, iid)
         self._set(item)                            # _set() is called before item._load() to properly handle circular relationships between items
         if load: item._load()
@@ -660,7 +637,6 @@ class Registry:
             cid = record.pop('__cid__')
             iid = record.pop('__iid__')
             assert cid == category.__iid__
-            # item = itemclass(self, __cid__ = cid, __iid__ = iid)                  # REFACTOR: _create()
 
             if cid == iid == ROOT_CID:
                 yield self._load_root(record)
@@ -809,7 +785,7 @@ Space:
 @receiver(request_finished)
 def after_request(sender, **kwargs):
     print(f'after_request() in thread {threading.get_ident()} start...')
-    sleep(5)
+    # sleep(5)
     print(f'after_request() in thread {threading.get_ident()} ...stop')
 
 print(f'main thread {threading.get_ident()}')
