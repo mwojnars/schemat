@@ -40,7 +40,8 @@ class Field:   # Type
     _json = JsonPickle()
     
     # instance-level settings
-    blank = True            # if True, None is a valid input value and is encoded as None; no other valid value can produce None as its serializable state
+    blank = True            # if True, None is a valid input value and is encoded as None;
+                            # no other valid value can produce None as its serializable state
     
     
     def encode_json(self, value):

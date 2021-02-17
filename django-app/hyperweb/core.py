@@ -116,6 +116,8 @@ class Item(object, metaclass = MetaItem):
     def __init__(self, __registry__, __cid__ = None, __iid__ = None):
         """None values in `attrs` are IGNORED when copying `attrs` to self."""
         
+        raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
+        
         if __cid__ is not None: self.__cid__ = __cid__
         if __iid__ is not None: self.__iid__ = __iid__
         
@@ -140,18 +142,15 @@ class Item(object, metaclass = MetaItem):
 
     @classmethod
     def _create(cls, registry, category, iid):
-        """Create an instance of an item that's supposedly present in DB and has __iid__ assigned. Should only be called by Registry."""
+        """Create an instance of an item that has __iid__ assigned and is supposedly present in DB. Should only be called by Registry."""
         
-        # item = cls.__new__(cls)                     # do not call __init__() - it is disabled
-        item = cls(registry)
+        item = cls.__new__(cls)                     # __init__() is disabled, do not call it
         item.__registry__ = registry
         item.__category__ = category
         item.__cid__  = category.__iid__
         item.__iid__  = iid
         item.__data__ = Data()                      # REFACTOR
-        
         return item
-        
         
     @classmethod
     def _new(cls, registry, category):
@@ -161,14 +160,6 @@ class Item(object, metaclass = MetaItem):
         item.__cid__ = category.__iid__
         return item
         
-    # @classmethod
-    # def __create__(cls, __registry__):
-    #     """
-    #     Create a new item initialized with `attrs` attribute values, typically passed from a web form;
-    #     or with an instance of Data (_data) to initialize attributes directly with a MultiDict.
-    #     """
-    #     return cls(__registry__)
-
     def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
         return self.__registry__.get_item(self.__id__)
@@ -193,6 +184,8 @@ class Item(object, metaclass = MetaItem):
     #         return self.__data__[name]
     #
     #     # TODO: search `name` in __category__'s default values
+    #     value, found = self.__category__.get_default(name)
+    #     if found: return value
     #
     #     raise AttributeError(name)
     
@@ -555,6 +548,20 @@ class RootCategory(Category):
         self._decode(record)
         return self
 
+    @classmethod
+    def _create(cls, registry):
+        """Create an instance of an item that has __iid__ assigned and is supposedly present in DB. Should only be called by Registry."""
+        
+        item = cls.__new__(cls)                     # __init__() is disabled, do not call it
+        item.__registry__ = registry
+        item.__category__ = item                    # RootCategory is a category for itself
+        item.__cid__   = ROOT_CID
+        item.__iid__   = ROOT_CID
+        item.__data__  = Data()
+        item.schema    = Schema()
+        item.itemclass = Category       # root Category doesn't have a schema, yet; attributes must be set/decoded manually
+        return item
+        
 
 #####################################################################################################################################################
 #####
@@ -682,7 +689,7 @@ class Registry:
         
     def _load_root(self, record = None):
         
-        item = RootCategory(self)
+        item = RootCategory._create(self)
         self._set(item)
         item._load(record)
         # print(f'Registry.get_item(): created root category - {id(item)}')
