@@ -185,9 +185,9 @@ class Runtime:
 
         if module is None:
             module = self._load_module(path, ast_node)
-            if module is None: raise ModuleNotFoundEx(f"import path not found '{path_original}'", ast_node)
+            if module is None: raise ModuleNotFoundEx(f"import path not found '{path_original}', try setting __package__ or __file__ in parsing context", ast_node)
             self.modules[path] = module
-        
+            
         return module
 
     def _canonical(self, path):
@@ -197,22 +197,17 @@ class Runtime:
         
     def _load_module(self, path, ast_node):
         """Path must be already converted to a canonical form."""
-        try:
-            return self._load_module_hypertag(path)
-        except:
-            pass
         
-        try:
-            return self._load_module_python(path)
-        except:
-            pass
+        module = self._load_module_hypertag(path)
+        if module is not None: return module
+
+        module = self._load_module_python(path)
+        if module is not None: return module
         
-        raise ModuleNotFoundEx(f"import path not found '{path}', try setting __package__ or __file__ for parsing", ast_node)
+        return None
         
     def _load_module_hypertag(self, path):
         """"""
-        raise Exception()
-
         # from package.script ...     -- "package." prefix must be present to allow file identification
         # from .package.script ...    --
         # from script ...             -- only possible when __file__ of the calling script is defined; "script.hy" is always looked for in the same folder as the calling script
@@ -233,6 +228,7 @@ class Runtime:
             
         else:
             # no package path? the script must be in the same folder as __file__
+            if referrer_file is None: return None
             folder   = os.path.dirname(referrer_file)
             filepath = f"{folder}/{path}"
             package_name = referrer_package

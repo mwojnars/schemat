@@ -1830,17 +1830,6 @@ if __name__ == '__main__':
         | $x
     """
     text = """
-        from hypertag.test.sample_module1 import $x, $f
-        | $x
-        | $f(2)
-    """
-    text = """
-        from hypertag.test.sample_module2 import %H
-        H 3
-    """
-    # H 3
-    #     | Ala ma kota
-    text = """
         if False:
             $ x = 5
         else:
@@ -1892,6 +1881,16 @@ if __name__ == '__main__':
     # """
     # TODO: dodać czyszczenie slotów w `state` po wykonaniu bloku, przynajmniej dla xblock_def.expand() ??
     
+    # text = """
+    #     from hypertag.test.sample1 import $x, $f
+    #     | $x
+    #     | $f(2)
+    # """
+    text = """
+        from hypertag.test.sample2 import %H
+        H 3
+    """
+    #     | Ala ma kota
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)
     
@@ -1926,6 +1925,10 @@ if __name__ == '__main__':
     
     
 # TODO:
+# - czyszczenie slotów w `state` po wykonaniu bloku, przynajmniej dla xblock_def.expand() ??
+# - error handling: catch Parsimonious parse error and use binary search to find the line that causes it
 # - inline hypertag definition with multiple tags:
 #     % aCategory : a href=$item.__category__.url() | {item.__category__.name? or item.__category__}
-# - short try block '?' allowed in outline mode, without "else" branches
+#     % aCategory : inline ...
+# - selectors @body[...]
+# - builtin tags

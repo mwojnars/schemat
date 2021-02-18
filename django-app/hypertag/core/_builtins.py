@@ -14,6 +14,7 @@ TODO
 - unique strip=True   -- render body to text and remove duplicate lines (or blocks?)
 - unique_lines
 - unique_blocks
+- inline merge=True   -- convert block to "inline" (no margin, no indent); merge newlines and spaces to a single space if merge=True
 - css                 -- marks its content as a CSS script that shall be moved to a <style> section of the document
 - js                  -- JavaScript code to be put into a <script> section
 - error               -- inserts a standard error message in a place of occurrence; root document node might collect all <error> nodes and produce a combined (hidden) error message

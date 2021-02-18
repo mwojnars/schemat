@@ -1,8 +1,9 @@
 """
-Run on server:
+Run:
 $
-$  cd django-app/hypertag/tests
-$  pytest -vW ignore::DeprecationWarning tests.py
+$  cd django-app
+$  pytest -vW ignore::DeprecationWarning hypertag/test/tests.py
+$
 
 """
 
@@ -853,7 +854,45 @@ def test_020_expression_in_string():
     """
     assert render(src).strip() == out.strip()
 
-def test_021_import():
+def test_021_recursion():
+    src = """
+        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
+                                                            | kot
+    """
+    assert 'kot' in render(src)
+    
+def test_022_builtins():
+    src = """
+        dedent
+            div
+                p
+                    i
+                        | kot
+    """
+    out = """
+        <div>
+        <p>
+        <i>
+        kot
+        </i>
+        </p>
+        </div>
+    """
+    assert render(src).strip() == out.strip()
+
+def test_023_import_std():
     src = """
         import $x, $y
         | $x, $y
@@ -883,44 +922,23 @@ def test_021_import():
     """
     assert render(src).strip() == "<p>kot</p>"
 
-def test_022_builtins():
+def test_024_import_ext():
     src = """
-        dedent
-            div
-                p
-                    i
-                        | kot
+        from hypertag.test.sample1 import $x, $f
+        | $x
+        | $f(2)
     """
     out = """
-        <div>
-        <p>
-        <i>
-        kot
-        </i>
-        </p>
-        </div>
+        155
+        310
     """
     assert render(src).strip() == out.strip()
-
-def test_023_recursion():
     src = """
-        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                            p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                                p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                                    p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                                        p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p:p
-                                                            | kot
+        from hypertag.test.sample2 import $x
+        | $x
     """
-    assert 'kot' in render(src)
-    
+    assert render(src).strip() == "155"
+
 
 #####################################################################################################################################################
 
