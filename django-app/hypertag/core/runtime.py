@@ -32,6 +32,13 @@ def _read_module(module):
     return symbols
 
 
+class Module:
+    
+    def __init__(self, symbols, state = None):
+        self.symbols = symbols
+        self.state   = state
+        
+
 #####################################################################################################################################################
 #####
 #####  RUNTIME
@@ -121,7 +128,7 @@ class Runtime:
                         # in a subclass, staticmethod() must be applied as a wrapper to prevent this attr be treated as a regular method:
                         #   escape = staticmethod(custom_function)
 
-    modules  = None     # cached modules and their symbols: {canonical_path: module}, where "module" is a dict of symbols and their values
+    modules  = None     # cached symbols of modules: {canonical_path: module}, where "module" is a dict of symbols and their values
     
     @property
     def context(self): return self.modules[self.PATH_CONTEXT]
@@ -154,21 +161,21 @@ class Runtime:
             context.update({MARK_VAR + name : value for name, value in variables.items()})
         return context
 
-    def import_one(self, symbol, path = None, ast_node = None):
-        """`symbol` must start with either % or $ to denote whether a tag or a variable should be imported."""
-
-        module = self._get_module(path, ast_node)
-        if symbol not in module: raise ImportErrorEx(f"cannot import '{symbol}' from a given path ({path})", ast_node)
-        return module[symbol]
-    
-    def import_all(self, path = None, ast_node = None):
-        """
-        Import all available symbols (tags and variables) from a given `path`, private symbols excluded.
-        A private symbol is the one whose name (after %$) starts with "_".
-        Return a dict of {symbol: object} pairs. Every symbol starts with either % (a tag) or $ (a variable).
-        """
-        module = self._get_module(path, ast_node)
-        return {name: value for name, value in module.items() if name[1] != '_'}
+    # def import_one(self, symbol, path = None, ast_node = None):
+    #     """`symbol` must start with either % or $ to denote whether a tag or a variable should be imported."""
+    #
+    #     module = self.import_module(path, ast_node)
+    #     if symbol not in module: raise ImportErrorEx(f"cannot import '{symbol}' from a given path ({path})", ast_node)
+    #     return module[symbol]
+    #
+    # def import_all(self, path = None, ast_node = None):
+    #     """
+    #     Import all available symbols (tags and variables) from a given `path`, private symbols excluded.
+    #     A private symbol is the one whose name (after %$) starts with "_".
+    #     Return a dict of {symbol: object} pairs. Every symbol starts with either % (a tag) or $ (a variable).
+    #     """
+    #     module = self.import_module(path, ast_node)
+    #     return {name: value for name, value in module.items() if name[1] != '_'}
 
     def import_default(self):
         """
@@ -178,17 +185,20 @@ class Runtime:
         return self.DEFAULT
     
         
-    def _get_module(self, path_original, ast_node):
+    def import_module(self, path, ast_node):
 
-        path   = self._canonical(path_original)
-        module = self.modules.get(path)
+        path_canonical = self._canonical(path)
+        module = self.modules.get(path_canonical)
 
         if module is None:
-            module = self._load_module(path, ast_node)
-            if module is None: raise ModuleNotFoundEx(f"import path not found '{path_original}', try setting __package__ or __file__ in parsing context", ast_node)
-            self.modules[path] = module
+            module = self._load_module(path_canonical, ast_node)
+            if not module: raise ModuleNotFoundEx(f"import path not found '{path}', try setting __package__ or __file__ in parsing context", ast_node)
+            self.modules[path_canonical] = module
             
-        return module
+        if isinstance(module, Module):
+            return module.symbols, module.state
+        else:
+            return module, None
 
     def _canonical(self, path):
         """Convert `path` to its canonical form."""
@@ -199,10 +209,10 @@ class Runtime:
         """Path must be already converted to a canonical form."""
         
         module = self._load_module_hypertag(path)
-        if module is not None: return module
+        if module: return module
 
         module = self._load_module_python(path)
-        if module is not None: return module
+        if module: return module
         
         return None
         
@@ -239,8 +249,8 @@ class Runtime:
         script = open(filepath).read()
 
         # context (~) has already been initialized by a calling method and will be available to the script below (!)
-        dom, symbols = self.translate(script, __file__ = filepath, __package__ = package_name)
-        return symbols
+        dom, symbols, state = self.translate(script, __file__ = filepath, __package__ = package_name)
+        return Module(symbols, state)
     
         
     def _load_module_python(self, path):
@@ -251,7 +261,7 @@ class Runtime:
         package = self.context.get(f'{MARK_VAR}__package__')
         try:
             module = importlib.import_module(path, package)
-            return _read_module(module)
+            return Module(_read_module(module))
         except:
             return None
 
@@ -267,7 +277,7 @@ class Runtime:
         
     def render(self, script, __file__ = None, __package__ = None, __tags__ = None, **variables):
         
-        dom, symbols = self.translate(script, __file__, __package__, __tags__, **variables)
+        dom, symbols, state = self.translate(script, __file__, __package__, __tags__, **variables)
         return dom.render()
         
 

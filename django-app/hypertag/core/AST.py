@@ -13,11 +13,12 @@ from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hypertag.core.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx
-from hypertag.core.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS
+from hypertag.core.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, \
+    UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx, ImportErrorEx
+from hypertag.core.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS, MARK_TAG, IS_TAG
 from hypertag.core.structs import Context, State, Slot, ValueSlot
 from hypertag.core.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
-from hypertag.core.tag import Tag, null_tag
+from hypertag.core.tag import Tag, NativeTag, null_tag
 
 DEBUG = False
 
@@ -37,6 +38,22 @@ def STR(value, node = None, msg = "expression to be embedded in markup text eval
     """Convert `value` to a string for embedding in text markup. Raise NoneStringEx if value=None."""
     if value is None: raise NoneStringEx(msg, node)
     return text_type(value)
+
+class ImportedTag(Tag):
+    """
+    Wrapper around an imported NativeTag instance. Stores the global state of the imported module,
+    so that it can replace the state of the importing module when translate_tag() of the imported hypertag is called.
+    """
+    def __init__(self, native_tag, module_symbols):
+        
+        assert isinstance(native_tag, NativeTag)
+        self.native_tag = native_tag
+        self.module_symbols = module_symbols
+        
+    def translate_tag(self, state, *args, **kwargs):
+        
+        module_state = State(self.module_symbols)
+        return self.native_tag.translate_tag(module_state, *args, **kwargs)
 
 
 #####################################################################################################################################################
@@ -288,7 +305,7 @@ class NODES(object):
     class xdocument(node):
         
         slots_in  = None    # dict of slots created for each default value to be imported into `ctx` upon startup
-        slots_out = None    # dict of top-level symbols defined by this document, and their Slots
+        slots_out = None    # dict of top-level symbols defined by this document, and their Slots: {symbol: slot}
         globals   = None    # dict of global symbols to be automatically imported into `ctx` when analysis begins
         
         # def setup(self):
@@ -309,21 +326,31 @@ class NODES(object):
             self.slots_out = ctx.asdict(position)           # pull newly defined top-level symbols from the tree
 
         def translate(self, state):
+            """
+            Because <xdocument> is the root of every AST, its translate() is unusual, in that it returns a triple:
+            - HRoot node of the final DOM generated as a result of translation of the entire AST
+            - dict of top-level symbols indexed by their names: {symbol_name: value}
+            - dict of top-level symbols indexed by slots: {slot: value}, for use as an initial state
+              in case some hypertags get imported by other Hypertag documents and need to be expanded
+              in the original (final) state of the model they were defined in
+            """
             for slot in self.slots_in.values(): slot.set_value(state)
             nodes = [c.translate(state) for c in self.children]
             hroot = HRoot(body = nodes, indent = '\n')
             hroot.indent = ''       # fix indent to '' instead of '\n' after all child indents have been relativized
             
             # pull actual values of top-level output symbols
-            symbols = {}
+            symbols   = {}
+            state_out = {}
             for symbol, slot in self.slots_out.items():
                 try:
-                    symbols[symbol] = slot.get(state)
+                    symbols[symbol] = value = slot.get(state)
+                    state_out[slot] = value
                     
                 except KeyError:            # some top-level slots may remain uninitialized if defined inside a control block (if/for/...)
                     continue
-
-            return hroot, symbols
+                    
+            return hroot, symbols, state_out
 
         # def compactify(self, state):
         #     # if DEBUG: print("compact", "DOC", state)
@@ -431,7 +458,7 @@ class NODES(object):
             body.set_indent(state.indentation)
             return body
 
-    class xblock_def(node, Tag):
+    class xblock_def(node, NativeTag):
         """Definition of a native hypertag."""
         name       = None
         attrs      = None           # all attributes as a list of children nodes, including @body
@@ -440,6 +467,8 @@ class NODES(object):
         attr_regul = None           # all regular (non-body) attributes, as a list of children
         body       = None
         slot       = None
+        # state      = None           # in a top-level hypertag, copy of the global state for use in expansion;
+        #                             # this is required to properly expand hypertags exported to other modules
         
         def setup(self):
             self.name  = self.children[0].value
@@ -450,7 +479,7 @@ class NODES(object):
             self.attr_names = {attr.name: attr for attr in self.attrs}
 
             # TODO: check that attr names are Python identifiers (name_id), otherwise they can't be used in expressions
-
+            
             # check that attr names are unique
             if len(self.attr_names) < len(self.attrs):
                 raise SyntaxErrorEx(f"duplicate attribute '{duplicate(self.attrs)}' in hypertag definition '{self.name}'", self)
@@ -486,6 +515,7 @@ class NODES(object):
             ctx.push(symbol, self.slot)
             
         def translate(self, state):
+            # self.state = state.copy()       # TODO: avoid full copy, only keep frozen state (position) and re-use it in a chained state during expand
             self.slot.set_value(state)
             return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
 
@@ -565,7 +595,16 @@ class NODES(object):
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
-            symbols = runtime.import_all(self.path, self)
+            # symbols = runtime.import_all(self.path, self)
+            # symbols = {name: value for name, value in module.items() if name[1] != '_'}
+            
+            symbols, state = runtime.import_module(self.path, self)         # top-level symbols of the imported module
+
+            # exclude private symbols AND wrap up all NativeTag instances within ImportedTag
+            # to preserve original runtime state of their module, for translate_tag()
+            symbols = {name: ImportedTag(value, state) if (IS_TAG(name) and isinstance(value, NativeTag)) else value
+                       for name, value in symbols.items() if name[1] != '_'}
+            
             self.slots = {symbol: ValueSlot(symbol, value, ctx) for symbol, value in symbols.items()}
             ctx.pushall(self.slots)
 
@@ -578,9 +617,19 @@ class NODES(object):
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
-            symbol  = self.children[0].value                         # original symbol name with leading % or $
+            symbol  = self.children[0].value                            # original symbol name with leading % or $
             rename  = (symbol[0] + self.children[1].value) if len(self.children) == 2 else symbol
-            value   = runtime.import_one(symbol, self.path, self)
+            
+            symbols, state = runtime.import_module(self.path, self)     # top-level symbols of the imported module
+            
+            if symbol not in symbols: raise ImportErrorEx(f"cannot import '{symbol}' from a given path ({self.path})", self)
+            value = symbols[symbol]
+            
+            if IS_TAG(symbol) and isinstance(value, NativeTag):
+                value = ImportedTag(value, state)
+            
+            # value   = runtime.import_one(symbol, self.path, self)
+            
             self.slot = ValueSlot(rename, value, ctx)
             ctx.push(rename, self.slot)
 
@@ -1724,13 +1773,14 @@ class HypertagAST(BaseTree):
     #     self.root.compactify(State())
     
     def translate(self):
-        dom, symbols = self.root.translate(State())
+        # below, NODES.xdocument.translate() is being called - see there for detailed description of returned objects
+        dom, symbols, state = self.root.translate(State())
         assert isinstance(dom, HRoot)
         # print(f'top-level symbols: {symbols}')
-        return dom, symbols
+        return dom, symbols, state
 
     def render(self):
-        dom, symbols = self.translate()
+        dom, symbols, state = self.translate()
         return dom.render()
         # output = dom.render()
         # if not output: return output
@@ -1739,6 +1789,7 @@ class HypertagAST(BaseTree):
 
     def __getitem__(self, tag_name):
         """Returns a top-level hypertag node wrapped up in Hypertag, for isolated rendering. Analysis must have been performed first."""
+        # TODO
         return self.hypertags[tag_name]
         
 
@@ -1889,7 +1940,14 @@ if __name__ == '__main__':
     text = """
         from hypertag.test.sample2 import %H
         H 3
+        H 0
+            | abc
     """
+    # text = """
+    #     $x = 155
+    #     %H @body y=5:
+    #         | $x
+    # """
     #     | Ala ma kota
 
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)

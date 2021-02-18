@@ -571,6 +571,20 @@ def test_012_hypertags():
         in G
     """
     assert render(src).strip() == out.strip()
+    src = """
+        $x = 1
+        %H
+            | $x
+        $x = 2
+        H
+        $x = 3
+        H
+    """                     # if a variable is re-assigned in the same block (naming scope), hypertags use the most recent value at the point of expansion
+    out = """
+        2
+        3
+    """
+    assert render(src).strip() == out.strip()
 
 def test_013_hypertags_err():
     with pytest.raises(Exception, match = 'undefined tag') as ex_info:
@@ -892,7 +906,7 @@ def test_022_builtins():
     """
     assert render(src).strip() == out.strip()
 
-def test_023_import_std():
+def test_023_import():
     src = """
         import $x, $y
         | $x, $y
@@ -922,7 +936,6 @@ def test_023_import_std():
     """
     assert render(src).strip() == "<p>kot</p>"
 
-def test_024_import_ext():
     src = """
         from hypertag.test.sample1 import $x, $f
         | $x
@@ -938,6 +951,20 @@ def test_024_import_ext():
         | $x
     """
     assert render(src).strip() == "155"
+    src = """
+        from hypertag.test.sample2 import %H
+        H 3
+        H 0
+            | abc
+    """
+    out = """
+        158
+        465
+        155
+        abc
+        0
+    """
+    assert render(src).strip() == out.strip()
 
 
 #####################################################################################################################################################

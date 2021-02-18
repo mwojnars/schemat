@@ -790,4 +790,9 @@ def VARS(names):
     """Mapping of a dict of variable names (and their linked objects) to a dict of symbols."""
     return {MARK_VAR + name: link for name, link in names.items()}
 
+def IS_TAG(symbol):
+    return symbol.startswith(MARK_TAG)
+
+def IS_VAR(symbol):
+    return symbol.startswith(MARK_VAR)
 

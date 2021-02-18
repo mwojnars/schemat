@@ -361,8 +361,8 @@ class State:
     # initial \n is used to mark that an indentation is absolute rather than relative to a parent node
     indentation = '\n'
     
-    def __init__(self):
-        self.values = {}   #odict()
+    def __init__(self, values = None):
+        self.values = values.copy() if values else {}   #odict()
 
     def __contains__(self, slot):
         return slot in self.values
@@ -373,6 +373,11 @@ class State:
     def __setitem__(self, slot, value):
         #assert slot not in self.values     # this assert is not true inside "for" loops
         self.values[slot] = value
+        
+    def copy(self):
+        dup = State()
+        dup.values = self.values.copy()
+        return dup
         
     def update(self, values):
         self.values.update(values)

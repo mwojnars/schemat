@@ -70,6 +70,9 @@ class ExternalTag(Tag):
         """
         raise NotImplementedError
 
+class NativeTag(Tag):
+    """Base class for a native tag: a tag implemented inside Hypertag code."""
+    
 class SpecialTag(Tag): pass
 
 class NullTag(SpecialTag):
