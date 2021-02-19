@@ -5,17 +5,18 @@
 
 import sys, re, operator
 from collections import OrderedDict
+from six import reraise, text_type
 
 from parsimonious.grammar import Grammar as Parsimonious
-from six import reraise, text_type
+from parsimonious.exceptions import IncompleteParseError
 
 from nifty.util import asnumber, escape as slash_escape, ObjDict
 from nifty.text import html_escape
 from nifty.parsing.parsing import ParsimoniousTree as BaseTree
 
-from hypertag.core.errors import HError, SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, \
+from hypertag.core.errors import SyntaxErrorEx, ValueErrorEx, TypeErrorEx, MissingValueEx, NameErrorEx, \
     UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx, ImportErrorEx
-from hypertag.core.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, TAGS, VARS, MARK_TAG, IS_TAG
+from hypertag.core.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, IS_TAG
 from hypertag.core.structs import Context, State, Slot, ValueSlot
 from hypertag.core.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hypertag.core.tag import Tag, NativeTag, null_tag
@@ -467,8 +468,6 @@ class NODES(object):
         attr_regul = None           # all regular (non-body) attributes, as a list of children
         body       = None
         slot       = None
-        # state      = None           # in a top-level hypertag, copy of the global state for use in expansion;
-        #                             # this is required to properly expand hypertags exported to other modules
         
         def setup(self):
             self.name  = self.children[0].value
@@ -515,7 +514,6 @@ class NODES(object):
             ctx.push(symbol, self.slot)
             
         def translate(self, state):
-            # self.state = state.copy()       # TODO: avoid full copy, only keep frozen state (position) and re-use it in a chained state during expand
             self.slot.set_value(state)
             return None                 # hypertag produces NO output in the place of its definition (only in places of occurrence)
 
@@ -595,9 +593,6 @@ class NODES(object):
         
         def analyse(self, ctx):
             runtime = self.tree.runtime
-            # symbols = runtime.import_all(self.path, self)
-            # symbols = {name: value for name, value in module.items() if name[1] != '_'}
-            
             symbols, state = runtime.import_module(self.path, self)         # top-level symbols of the imported module
 
             # exclude private symbols AND wrap up all NativeTag instances within ImportedTag
@@ -627,8 +622,6 @@ class NODES(object):
             
             if IS_TAG(symbol) and isinstance(value, NativeTag):
                 value = ImportedTag(value, state)
-            
-            # value   = runtime.import_one(symbol, self.path, self)
             
             self.slot = ValueSlot(rename, value, ctx)
             ctx.push(rename, self.slot)
@@ -761,12 +754,13 @@ class NODES(object):
         test = None             # <expression> node containing a test to be performed
         body = None             # <body> to be rendered if the clause is positive
         def setup(self):
-            assert len(self.children) == 2
-            self.test, self.body = self.children
+            assert 1 <= len(self.children) <= 2
+            self.test = self.children[0]
+            self.body = self.children[1] if len(self.children) == 2 else None
         def translate(self, state):
-            return self.body.translate(state)
-        def render(self, state):
-            return self.body.render(state)
+            return self.body.translate(state) if self.body else Sequence()
+        # def render(self, state):
+        #     return self.body.render(state)
             
     class xblock_while(control_block):
         def _analyse_branches(self, ctx):
@@ -1727,11 +1721,18 @@ class HypertagAST(BaseTree):
         self.globals = globals if globals is not None else runtime.import_default()
         self.parser  = Grammar.get_parser(script)
         
-        script = self.parser.preprocess(script, verbose = verbose)
+        # replace indentation with special characters INDENT/DEDENT
+        flat_script = self.parser.preprocess(script, verbose = verbose)
         
         # parse input text to the 1st version of AST (self.ast) as returned by Parsimonious,
         # then rewrite it to custom NODES.* classes rooted at self.root
-        super(HypertagAST, self).__init__(script, stopAfter = stopAfter)
+        try:
+            super(HypertagAST, self).__init__(flat_script, stopAfter = stopAfter)
+            
+        except IncompleteParseError as ex:
+            L = 15
+            line, line_num = self._locate_error(script)
+            raise SyntaxErrorEx(f'invalid syntax near line {line_num}: {line[:L]}{"..." if len(line) > L else ""}')
         
         if self.root is None:           # workaround for Parsimonious bug in the special case of empty document (Parsimonious returns None instead of a tree root)
             self.root = NODES.xdocument(self, ObjDict(start = 0, end = 0, children = [], expr_name = 'document'))
@@ -1742,6 +1743,28 @@ class HypertagAST(BaseTree):
         self.analyse()
         if stopAfter == "analyse": return
 
+    def _locate_error(self, script):
+        """Find the line of `script` that causes Parsimonious' IncompleteParseError. Uses binary search and script truncation."""
+        
+        lines = script.split('\n')
+        
+        line_good = 0               # the last known line before the error
+        line_bad  = len(lines)      # the first known line after or containing the error
+        
+        while line_good + 1 < line_bad:
+            split   = (line_good + line_bad) // 2
+            partial = '\n'.join(lines[:split])
+            flat    = self.parser.preprocess(partial)
+            try:
+                super(HypertagAST, self).__init__(flat)
+                line_good = split
+                
+            except Exception:
+                line_bad = split
+        
+        return lines[line_bad].strip(), line_bad + 1
+        
+        
     def analyse(self):
         "Link occurences of variables and hypertags with their definition nodes, collect all symbols defined in the document."
         
@@ -1888,12 +1911,6 @@ if __name__ == '__main__':
         | {x}
     """
     # text = """
-    #     $x = 1
-    #     %H | $x
-    #     $x = 2
-    #     H
-    # """
-    # text = """
     #     if False
     #         $x = 1
     #         %H | $x
@@ -1912,6 +1929,14 @@ if __name__ == '__main__':
     #     H
     # """
 
+    # text = """
+    #     for i in [2,1,0]:
+    #         if $i
+    #             $a = 1
+    #         else
+    #             $b = 2
+    #         | $a
+    # """
     text = """
         %H x
             if $x
@@ -1922,34 +1947,22 @@ if __name__ == '__main__':
         H 1
         H 0
     """
-    # text = """
-    #     for i in [2,1,0]:
-    #         if $i
-    #             $a = 1
-    #         else
-    #             $b = 2
-    #         | $a
-    # """
     # TODO: dodać czyszczenie slotów w `state` po wykonaniu bloku, przynajmniej dla xblock_def.expand() ??
     
     # text = """
-    #     from hypertag.test.sample1 import $x, $f
-    #     | $x
-    #     | $f(2)
-    # """
+    #     if 5
+    #     for i in [0,1]:
+    #         | x
+    #     try
+    #         | x
+    # """     # empty control blocks
     text = """
-        from hypertag.test.sample2 import %H
-        H 3
-        H 0
-            | abc
+        if False
+            |Ala
+        elif (True * 5) :
+            div | Ola
     """
-    # text = """
-    #     $x = 155
-    #     %H @body y=5:
-    #         | $x
-    # """
-    #     | Ala ma kota
-
+    
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)
     
     # print()

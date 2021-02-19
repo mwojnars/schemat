@@ -169,12 +169,19 @@ def test_005_doc_margins():
     assert out == render(src)           # no .strip()
 
 def test_006_if():
+    # src = """
+    #     if {False}:
+    #         |Ala
+    #     elif True * 5:
+    #         div | Ola
+    # """                     # ^ here, {False} is interpreted as an embedded expression {...} that evaluates to False
+    # assert render(src).strip() == "<div>Ola</div>"
     src = """
-        if {False}:
+        if (False):
             |Ala
         elif True * 5:
             div | Ola
-    """                     # ^ here, {False} is interpreted as an embedded expression {...} that evaluates to False
+    """
     assert render(src).strip() == "<div>Ola</div>"
     src = """
         if {} | Ala
@@ -954,6 +961,7 @@ def test_023_import():
     src = """
         from hypertag.test.sample2 import %H
         H 3
+        $x = 10
         H 0
             | abc
     """

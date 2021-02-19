@@ -18,10 +18,13 @@ Why to use Hypertag:
 - unprecedented support for **modularity** and **code re-use**
 - Object-Oriented Programming (**OOP**) inside markup,
   through native language structures (???)
+  
+<!--- (TODO)
 - high performace in web applications achieved through caching of parsed AST,
   combined with their **compactification**: constant parts of the AST are
   pre-rendered and merged into single nodes, to avoid repeated rendering
   with every web page request.
+--->
 
 If you try Hypertag, you will never go back to pure HTML or a templating language.
 

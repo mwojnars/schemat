@@ -50,6 +50,7 @@ class NotATagEx(HError):                                pass
 class NoneStringEx(HError):                             pass
 class ModuleNotFoundEx(HError, ModuleNotFoundError):    pass
 class ImportErrorEx(HError, ImportError):               pass
+class ParseErrorEx(HError):                             pass
 
 class MissingValueEx(HError):
     """
