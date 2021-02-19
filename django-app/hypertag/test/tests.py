@@ -181,7 +181,7 @@ def test_006_if():
             |Ala
         elif True * 5:
             div | Ola
-    """
+    """                     # ^ embeddings, like {False}, are no longer allowed in "if" and "for"; should be replaced with (..)
     assert render(src).strip() == "<div>Ola</div>"
     src = """
         if {} | Ala
@@ -974,6 +974,51 @@ def test_023_import():
     """
     assert render(src).strip() == out.strip()
 
+def test_024_empty_control():
+    """
+    Empty control blocks (missing body) are considered by Hypertag as syntactically correct.
+    This is necessary for detailed error reporting: method HypertagAST._locate_error() relies on the fact
+    that truncating an arbitrary number of trailing lines of a script never introduces syntax errors
+    unless they already have been present in the preceeding lines.
+    """
+    src = """
+        if False
+        elif (True * 5)
+        else
+        if (3*4):
+        if True |
+        elif False /
+    """
+    assert render(src).strip() == ""
+    src = """
+        for i in [1,2]
+        for i in [1,2]:
+        for i in [1,2] :
+        for i in [1,2] /
+        for i in [1,2] |
+        for i in [1,2]!
+    """
+    assert render(src).strip() == ""
+    src = """
+        while True and False
+        while 1 + 2 != 3:
+        while False|
+    """
+    assert render(src).strip() == ""
+    src = """
+        ?
+        ? |
+        try
+        try:
+        try :
+        try |
+        try
+        else
+        else :
+    """
+    assert render(src).strip() == ""
+    
+    
 
 #####################################################################################################################################################
 

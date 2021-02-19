@@ -25,8 +25,8 @@ dedent           =  '<' ws
 block_control    =  block_assign / block_if / block_try / block_for / block_while
 
 block_try        =  try_long / try_short
-try_long         =  'try' generic_control (nl 'else' generic_control)*
-try_short        =  '?' ws (block_struct / body_control)        # short version of "try" block:  ?tag ... or ?|...
+try_long         =  'try' generic_control? (nl 'else' generic_control?)*
+try_short        =  '?' ws (block_struct / body_control)?       # short version of "try" block:  ?tag ... or ?|...
 
 block_assign     =  mark_eval ws targets ws op_inplace? '=' ws (embedding / expr_augment) (ws inline_comment)?
 op_inplace       =  ~"//|\%%|<<|>>|[-+*/&|^]"
@@ -41,10 +41,7 @@ target           =  ('(' ws targets ws ')') / var_def           # left side of a
 var_def          =  name_id ''                                  # definition (assignment) of a variable
 
 tail_for         =  (expr_factor generic_control) / (expr_augment body_control?)
-tail_if          =  (expr_factor generic_control) / (expr         body_control?)         # expr may contain hanging / or | operators, hence it can't be followed by generic_control which may contain /| as a text block mark
-
-# tail_for         =  (embedding / expr_augment) body_control
-# tail_if          =  (embedding / expr) body_control             # (embedding generic_control) / ...  -- inline syntax could be handled in the future, but only when a test expression is enclosed in {..}, NO qualifier (collisions with operators |/ and qualifier !)
+tail_if          =  (expr_factor generic_control) / (expr         body_control?)         # expr may contain hanging operators (/|) hence it can't be followed by generic_control which may contain /| as a text block marker
 
 ###  DEFINITION BLOCKS
 

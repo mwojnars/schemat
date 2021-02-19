@@ -782,7 +782,8 @@ class NODES(object):
         body    = None
         
         def setup(self):
-            self.targets, self.expr, self.body = self.children
+            self.targets, self.expr = self.children[:2]
+            self.body = self.children[2] if len(self.children) == 3 else None
             assert isinstance(self.expr, NODES.expression)
             assert self.targets.type == 'targets'
             # assert self.targets.type == 'var', 'Support for multiple targets in <for> not yet implemented'
@@ -790,15 +791,16 @@ class NODES(object):
         def _analyse_branches(self, ctx):
             self.expr.analyse(ctx)
             self.targets.analyse(ctx)
-            self.body.analyse(ctx)
+            if self.body: self.body.analyse(ctx)
 
         def translate(self, state):
             out = []
             sequence = self.expr.evaluate(state)
             for value in sequence:                  # translate self.body multiple times, once for each value in `sequence`
                 self.targets.assign(state, value)
-                body = self.body.translate(state)
-                out += body.nodes
+                if self.body:
+                    body = self.body.translate(state)
+                    out += body.nodes
                 
             out = Sequence(*out)
             out.set_indent(state.indentation)
@@ -1744,8 +1746,13 @@ class HypertagAST(BaseTree):
         if stopAfter == "analyse": return
 
     def _locate_error(self, script):
-        """Find the line of `script` that causes Parsimonious' IncompleteParseError. Uses binary search and script truncation."""
+        """
+        Find the first line of `script` that causes Parsimonious' IncompleteParseError. Uses binary search and script truncation.
         
+        This method relies on the fact that truncating an arbitrary number of trailing lines of a script
+        never introduces syntax errors unless they already have been present in the preceeding lines.
+        For this to be true, all control blocks are allowed by Hypertag grammar to have empty body.
+        """
         lines = script.split('\n')
         
         line_good = 0               # the last known line before the error
@@ -1761,8 +1768,9 @@ class HypertagAST(BaseTree):
                 
             except Exception:
                 line_bad = split
-        
-        return lines[line_bad].strip(), line_bad + 1
+
+        if not line_bad: line_bad = 1
+        return lines[line_bad-1].strip(), line_bad
         
         
     def analyse(self):
@@ -1957,10 +1965,7 @@ if __name__ == '__main__':
     #         | x
     # """     # empty control blocks
     text = """
-        if False
-            |Ala
-        elif (True * 5) :
-            div | Ola
+        try
     """
     
     tree = HypertagAST(text, HypertagHTML(**ctx), stopAfter = "rewrite", verbose = True)
