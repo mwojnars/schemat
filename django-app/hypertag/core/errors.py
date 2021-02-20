@@ -24,8 +24,6 @@ class HError(ParserError):
         else:
             return msg + " at line %s, column %s (%s)" % (line, column, self.text)
 
-# class HSyntaxError(ParserError): pass
-# class HRuntimeError(ParserError): pass
 
 # class HBaseException(BaseException):
 #     """

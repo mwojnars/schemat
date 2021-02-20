@@ -1,7 +1,7 @@
 from nifty.text import html_escape
 
 from hypertag.core.runtime import Runtime, _read_module
-import hypertag.HTML
+import hypertag.html
 
 
 ########################################################################################################################################################
@@ -16,5 +16,5 @@ class HypertagHTML(Runtime):
     escape   = staticmethod(html_escape)
     
     DEFAULT = Runtime.DEFAULT.copy()
-    DEFAULT.update(_read_module(hypertag.HTML))
+    DEFAULT.update(_read_module(hypertag.html))
     

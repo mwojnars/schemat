@@ -1,7 +1,6 @@
 """
 Run:
 $
-$  cd django-app
 $  pytest -vW ignore::DeprecationWarning hypertag/test/tests.py
 $
 
@@ -937,8 +936,8 @@ def test_023_import():
     """
     assert render(src, x = 'A').strip() == "65"
     src = """
-        from hypertag.HTML import *
-        from hypertag.HTML import %p as PARAGRAPH
+        from hypertag.html import *
+        from hypertag.html import %p as PARAGRAPH
         PARAGRAPH | kot
     """
     assert render(src).strip() == "<p>kot</p>"

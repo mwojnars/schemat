@@ -1,5 +1,7 @@
 #
-# Hypertag's built-in symbols can be imported manually into a script with a statement of the form:
+# Hypertag built-ins that are common to all target languages.
+#
+# They can be imported manually into a script with a statement of the form:
 #
 #    from hypertag.builtins import %dedent
 #

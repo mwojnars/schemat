@@ -1,5 +1,5 @@
 """
-Data structures for semantic analysis of HyML's AST.
+Data structures for semantic analysis of Hypertag's AST.
 """
 
 import six
@@ -462,8 +462,4 @@ class ValueSlot(Slot):
     def set_value(self, state):
         self.set(state, self.value)
 
-# class VariantSlot(Slot):
-#     """
-#     A slot that
-#     """
 

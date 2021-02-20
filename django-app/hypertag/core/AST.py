@@ -18,7 +18,7 @@ from hypertag.core.errors import SyntaxErrorEx, ValueErrorEx, TypeErrorEx, Missi
     UnboundLocalEx, UndefinedTagEx, NotATagEx, NoneStringEx, VoidTagEx, ImportErrorEx
 from hypertag.core.grammar import grammar, XML_StartChar, XML_Char, XML_EndChar, TAG, VAR, IS_TAG
 from hypertag.core.structs import Context, State, Slot, ValueSlot
-from hypertag.core.dom import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
+from hypertag.core.DOM import add_indent, del_indent, get_indent, Sequence, HText, HNode, HRoot
 from hypertag.core.tag import Tag, NativeTag, null_tag
 
 DEBUG = False
@@ -2002,7 +2002,6 @@ if __name__ == '__main__':
     
 # TODO:
 # - czyszczenie slotów w `state` po wykonaniu bloku, przynajmniej dla xblock_def.expand() ??
-# - error handling: catch Parsimonious parse error and use binary search to find the line that causes it
 # - inline hypertag definition with multiple tags:
 #     % aCategory : a href=$item.__category__.url() | {item.__category__.name? or item.__category__}
 #     % aCategory : inline ...

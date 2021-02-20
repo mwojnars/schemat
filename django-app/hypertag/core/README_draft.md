@@ -6,27 +6,25 @@ where indentation marks nested HTML elements and thus removes the need for expli
 closing tags. 
 
 Hypertag enables advanced control of document rendering process through
-native **control blocks** (if-elif-else, for, while, try).
-
-provides native support for
-features control blocks similar to statements known from Python 
- and introduces modularity through 
+native **control blocks** (if-elif-else, for, while, try) and provides **modularity** 
+through custom tags and import blocks. 
 
 Why to use Hypertag:
 - less typing; cleaner code 
 - no need to remember about (reduntant) closing tags; no more unmatched open-closing tags
 - unprecedented support for **modularity** and **code re-use**
+
+<!--- (TODO)
 - Object-Oriented Programming (**OOP**) inside markup,
   through native language structures (???)
   
-<!--- (TODO)
 - high performace in web applications achieved through caching of parsed AST,
   combined with their **compactification**: constant parts of the AST are
   pre-rendered and merged into single nodes, to avoid repeated rendering
   with every web page request.
 --->
 
-If you try Hypertag, you will never go back to pure HTML or a templating language.
+If you try Hypertag, you will never go back to an old-school templating language.
 
 ## Quick Start
 
@@ -519,7 +517,7 @@ to **selectors** and can be operated on during expansion of other (non-terminal)
 
 Note that:
 - All external tags that return plain text (their property `terminal = True`) are terminal.
-- All native hypertags that 
+- All native hypertags that .......
 
 
 ## Modules
@@ -546,12 +544,14 @@ dictionary can be imported as tags (%NAME) into a Hypertag script.
 ## Script execution
 
 Execution of a Hypertag script constists of 3 phases:
-1. parsing (script > AST)
-2. translation (AST > DOM)
-3. rendering (DOM > markup)
+
+1. **parsing** (script > AST)
+2. **translation** (AST > DOM) -- all *native* hypertags expanded, 
+   external hypertags NOT expanded; DOM can be manipulated
+3. **rendering** (DOM > markup)
 
 Typically, the client code will call `Hypertag.render()` to perform all the above 
-steps at once. In rare cases, the client may wish to obtain the structured representation
+steps at once. In some cases, the client may wish to obtain the structured representation
 of the resulting document - the DOM (Document Object Model) - for example, to manipulate
 the DOM tree before it gets rendered. In such case, the client should call 
 `Hypertag.translate()` and then `render()` on the resulting DOM tree.
@@ -570,6 +570,6 @@ the DOM tree before it gets rendered. In such case, the client should call
 
 If you have technical questions related to Hypertag, please post them
 on [StackOverflow](https://stackoverflow.com/questions/ask) 
-and tag them with, guess... the "**hypertag**" tag ;)
+and tag them with, guess... the "**hypertag**" tag.
 
 Other questions can be posted in the _Discussions_ section on Hypertag's page in GitHub.
