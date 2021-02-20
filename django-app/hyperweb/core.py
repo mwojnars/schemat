@@ -79,6 +79,9 @@ class MetaItem(type):
 
 
 class Item(object, metaclass = MetaItem):
+    """
+    Item is an elementary object operated upon by Hyperweb and a unit of storage in DB.
+    """
     
     # builtin instance attributes & properties, not user-editable ...
     __cid__      = None         # __cid__ (Category ID) of this item
@@ -164,7 +167,6 @@ class Item(object, metaclass = MetaItem):
     #
     #     raise AttributeError(name)
     
-        
     def get(self, name, default = _RAISE_):
         """Get attribute value from:
            - self.__data__ OR
@@ -538,7 +540,6 @@ class Registry:
     (TODO...)
     - Discarding of expired/excessive items is ONLY performed after request handling is finished
     (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates.
-    - In a multi-threaded web app, or when sub-threads are spawned during request handling, each thread must have its own Registry (!)
     """
     
     items = None        # cache (TTLCache) containing {ID: item_instance} pairs
@@ -770,5 +771,4 @@ site._load()
 
 
 # TODO:
-# - remove Item.__init__
-# - refactor Item.__loaded__
+# - refactor Item.__loaded__, Item.__data__, Item._load (?)
