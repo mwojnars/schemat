@@ -55,6 +55,12 @@ ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
     {
+        'BACKEND': 'hypertag.django.backend.Hypertag',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {},
+    },
+    {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
         'DIRS': [],
         'APP_DIRS': True,

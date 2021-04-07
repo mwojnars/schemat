@@ -45,5 +45,5 @@ nosetests.xml
 config_local.py
 
 nifty
-hypertag
+/hypertag
 

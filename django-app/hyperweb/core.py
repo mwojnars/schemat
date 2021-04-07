@@ -15,7 +15,7 @@ from .errors import *
 from .store import SimpleStore
 from .schema import Schema
 
-from hypertag.core.run_html import HypertagHTML
+from hypertag import HyperHTML
 
 #####################################################################################################################################################
 
@@ -315,10 +315,14 @@ class Item(object, metaclass = MetaItem):
         """
         # TODO: route through a predefined pipeline of handlers
         
+        # from django.template.loader import get_template
+        # template = get_template((endpoint or 'view') + '.hy')
+        # return template.render({'item': self}, request)
+        
         # search for a Hypertag script in __views__
         view = self.__views__.get(endpoint, None)
         if view is not None:
-            return HypertagHTML(item = self).render(view)
+            return HyperHTML().render(view, item = self)
 
         # no view found; search for a handler method in __handlers__
         hdl = self.__handlers__.get(endpoint, None)
@@ -329,7 +333,8 @@ class Item(object, metaclass = MetaItem):
         
     _default_view = \
     """
-        import $item
+        context $item
+        
         % aCategory
             a href=$item.__category__.get_url() | {item.__category__.name? or item.__category__}
             -- TODO: aCategory should be inserted in inline mode to avoid spaces around parentheses (...)
@@ -433,7 +438,8 @@ class Category(Item):
         
     _default_view = \
     """
-        import $item as cat
+        context $item as cat
+        
         html
             head
                 title | {cat.name ' -' }? category #{cat.__iid__}
