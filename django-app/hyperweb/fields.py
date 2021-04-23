@@ -9,7 +9,7 @@ from .jsonpickle import JsonPickle
 #####
 
 class Field:   # Type
-    """
+    """ 
     A Type object defines:
     - constraints on the set of values that can be assigned to a given field/attribute/variable
     A Type class provides:

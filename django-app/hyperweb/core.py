@@ -227,8 +227,8 @@ class Item(object, metaclass = MetaItem):
     def __repr__(self, max_len_name = 30):
         
         cat = self.__category__
-        category = f'{cat.name}' if cat and cat.name else f'CID({self.__cid__})'
-        name     = f' {self.name}' if self.name is not None else ''
+        category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.__cid__})'
+        name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
         if len(name) > max_len_name:
             name = name[:max_len_name-3] + '...'
         
@@ -335,21 +335,23 @@ class Item(object, metaclass = MetaItem):
     """
         context $item
         
-        % aCategory
-            a href=$item.__category__.get_url() | {item.__category__.name? or item.__category__}
-            -- TODO: aCategory should be inserted in inline mode to avoid spaces around parentheses (...)
+        style !
+            body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+            h1 { font-size: 26px; line-height: 34px }
+            .catlink { font-size: 14px; margin-top: -20px }
+        
+        % category
+            p .catlink
+                a href=$item.__category__.get_url() | {item.__category__.name? or item.__category__}
+                | ($item.__cid__,$item.__iid__)
             
         html
             head
                 title | {item.name? or item}
             body
-                h1
-                    | {item.name? or item} (
-                    aCategory
-                    | ) -- ID {item.__id__}
-                p
-                    | Category:
-                    aCategory
+                h1  | {item.name? or item}
+                category
+                #p  | ID {item.__id__}
                 h2  | Attributes
                 ul
                     for attr, value in item.__data__.items()
@@ -442,16 +444,16 @@ class Category(Item):
         
         html
             head
-                title | {cat.name ' -' }? category #{cat.__iid__}
+                title | {(cat.name? or cat) ' -' }? category #{cat.__iid__}
             body
                 h1
                     try
-                        i | {cat.name}
+                        i | {cat.name? or cat}
                         . | -
                     | category #{cat.__iid__}
                 p
                     . | Items in category
-                    i | {cat.name}:
+                    i | {cat.name or cat}:
                 table
                     for item in cat.load_items()
                         tr
@@ -760,11 +762,12 @@ Space:
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
-    print(f'after_request() in thread {threading.get_ident()} start...')
+    pass
+    # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
-    print(f'after_request() in thread {threading.get_ident()} ...stop')
+    # print(f'after_request() in thread {threading.get_ident()} ...stop')
 
-print(f'main thread {threading.get_ident()}')
+# print(f'main thread {threading.get_ident()}')
 
 
 #####################################################################################################################################################
