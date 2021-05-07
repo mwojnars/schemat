@@ -81,6 +81,35 @@ class MetaItem(type):
 class Item(object, metaclass = MetaItem):
     """
     Item is an elementary object operated upon by Hyperweb and a unit of storage in DB.
+    
+    Item's category metadata:
+    - views
+    - handlers
+    - methods
+    
+    Item's class methods:
+    - get_url()
+    - insert(), update(), save()
+    - load() ??
+    - get(), getlist(), set()
+    
+    Item's metadata - in DB:
+    - cid, iid
+    - created, updated
+    - mock: a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
+    Item's metadata - temporary (in memory):
+    - category, registry
+    
+    Item's status -- temporary (in memory):
+    - draft: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB
+    - dirty: has local modifications that may deviate from the contents of the corresponding DB record
+    - frame/shell/dummy/stub/short: IID is present, but no data loaded yet (lazy loading)
+    - loaded:
+    
+    Mapping an internal Item to an ItemView for read-only access in views and handlers:
+    - itemview.FIELD       -->  item.data.get_first(FIELD)
+    - itemview.FIELD_list  -->  item.data.get_list(FIELD)
+    - itemview._get_first(FIELD), _get_list()
     """
     
     # builtin instance attributes & properties, not user-editable ...
@@ -357,7 +386,7 @@ class Item(object, metaclass = MetaItem):
                     for attr, value in item.__data__.items()
                         li
                             b | {attr}:
-                            . | {value}
+                            . | {str(value)}
     """
     
     __views__ = {
