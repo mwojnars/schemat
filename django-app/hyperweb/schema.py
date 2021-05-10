@@ -1,7 +1,7 @@
 
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .multidict import MultiDict
-from .fields import Field
+from .types import Type
 
 
 #####################################################################################################################################################
@@ -9,7 +9,7 @@ from .fields import Field
 #####  SCHEMA
 #####
 
-class Schema(Field):
+class Schema(Type):
     """Schema of item data in a category, as a list of field names and their types."""
 
     class Attribute:  # Field

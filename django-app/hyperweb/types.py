@@ -5,11 +5,14 @@ from .jsonpickle import JsonPickle
 
 #####################################################################################################################################################
 #####
-#####  FIELD
+#####  TYPE
 #####
 
-class Field:   # Type
+class Type:
     """ 
+    Base class for definition of data elements: values and sub-values of items' fields.
+    Provides schema-based validation of form values and schema-aware serialization. Types can be nested.
+    
     A Type object defines:
     - constraints on the set of values that can be assigned to a given field/attribute/variable
     A Type class provides:
@@ -18,10 +21,6 @@ class Field:   # Type
     - normalization: tranforming related variants of a value to their unique canonical (normal) form
     - encoding & decoding: serialization of valid values to a raw format (a string) for transmission and storage
     - rendering & formatting: for human-readable display of valid values
-    
-    Base class for definition of data fields: their values and sub-values.
-    Provides schema-based validation of form values and schema-aware serialization.
-    Fields can be nested.
     
                             RESPONSE
                                ^^
@@ -123,7 +122,7 @@ class Field:   # Type
 #####  ATOMIC types
 #####
 
-class Object(Field):
+class Object(Type):
     """
     Accepts any python object, optionally restricted to objects of a predefined class.
     During decoding, the predefined class is implied if the data deserialized don't have class specification.
@@ -169,7 +168,7 @@ class Object(Field):
         return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
 
 
-class Class(Field):
+class Class(Type):
     """
     Accepts any global python class and encodes as a string containing its full package-module name.
     The name is transformed through global `aliases`.
@@ -184,7 +183,7 @@ class Class(Field):
         return aliases.import_(value)
         
 
-class String(Field):
+class String(Type):
     
     def _encode(self, value):
         if not isinstance(value, str): raise EncodeError(f"expected a <str>, not {value}")
@@ -195,7 +194,7 @@ class String(Field):
         return value
 
 
-class Dict(Field):
+class Dict(Type):
     """
     Field that accepts <dict> objects as data values and ensures that keys and values of the dict
     are interpreted as fields of particular Field types.
@@ -237,7 +236,7 @@ class Dict(Field):
         return d
 
 
-class Link(Field):
+class Link(Type):
     """
     The python value is an Item object.
     The DB value is an ID=(CID,IID), or just IID, of an item.
