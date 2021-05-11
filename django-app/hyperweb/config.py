@@ -25,10 +25,6 @@ STOP_ATTR = {
 }
 
 
-CLASS_ALIASES = {
-    "hyperweb.data.Data": "Data",
-}
-
 ALIASES = [
     # special names are mapped from "package.module.name" to "$name" during serialization
     ('hyperweb.data.',   '$', ['Data']),

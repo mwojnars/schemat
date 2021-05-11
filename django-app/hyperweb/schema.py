@@ -9,22 +9,22 @@ from .types import Type
 #####  SCHEMA
 #####
 
+class Field:
+    """Specification of a field in a Schema."""
+    info    = None      # human-readable description
+    type    = None      # subclass of Type represented by a Class instance
+    default = None      # value assumed if this field is missing in an item
+    multi   = False     # whether this field can take on multiple values
+
+
 class Schema(Type):
     """Schema of item data in a category, as a list of field names and their types."""
 
-    class Attribute:  # Field
-        """Helper class to store all pieces of information about a particular field."""
-        info    = None      # human-readable description
-        type    = None      # subclass of Type represented by a Class instance
-        default = None      # value assumed if this field is missing in an item
-        multi   = False     # whether this field can take on multiple values
-    
     fields   = None     # dict of field names & their types; generic type is assumed if a type is None or missing
     defaults = None     # dict of default values for selected fields
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     
     def __init__(self):
-        # self.attrs = []
         self.fields = {}
     
     def _encode(self, data):

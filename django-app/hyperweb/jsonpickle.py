@@ -31,7 +31,7 @@ class JsonPickle:
     STATE_ATTR = "="
     
     def __init__(self):
-        from hyperweb.globals import aliases
+        from hyperweb.names import aliases
         self.aliases = aliases
 
     def dumps(self, obj, **kwargs):

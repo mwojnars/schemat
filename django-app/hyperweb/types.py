@@ -1,5 +1,5 @@
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .globals import aliases
+from .names import aliases
 from .jsonpickle import JsonPickle
 
 

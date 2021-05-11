@@ -1,6 +1,12 @@
+"""
+Global Hyperweb objects. This module must NOT be imported at the beginning of another module,
+but rather it should only be imported inside functions, to avoid cyclic module dependencies.
+"""
+
 from importlib import import_module
 
 from .errors import SysConfigError
+from .config import ALIASES
 
 
 #####################################################################################################################################################
@@ -152,3 +158,7 @@ class Aliases:
         else:
             obj.__dict__ = state
         return obj
+
+#####################################################################################################################################################
+
+aliases = Aliases(ALIASES)
