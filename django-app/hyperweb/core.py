@@ -1,6 +1,5 @@
 import re, threading
 from time import sleep
-from cachetools import TTLCache
 from bidict import bidict
 
 from django.http import HttpRequest, HttpResponse
@@ -14,6 +13,7 @@ from .data import Data
 from .errors import *
 from .store import SimpleStore
 from .schema import Schema
+from .cache import LRUCache
 
 from hypertag import HyperHTML
 
@@ -110,6 +110,12 @@ class Item(object, metaclass = MetaItem):
     - itemview.FIELD       -->  item.data.get_first(FIELD)
     - itemview.FIELD_list  -->  item.data.get_list(FIELD)
     - itemview._get_first(FIELD), _get_list()
+    
+    BaseItem,Core,Seed... -- when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
+    - method() --
+    - METHOD() -- calls METHOD of NAME_XXX
+    ItemView
+    - _base    -- ref to the base item; enables access to methods and full data[]
     """
     
     # builtin instance attributes & properties, not user-editable ...
@@ -376,9 +382,9 @@ class Item(object, metaclass = MetaItem):
             
         html
             head
-                title | {item.name? or item}
+                title | {item.__data__['name']? or item}
             body
-                h1  | {item.name? or item}
+                h1  | {item.__data__['name']? or item}
                 category
                 #p  | ID {item.__id__}
                 h2  | Attributes
@@ -410,9 +416,10 @@ class Category(Item):
     _store  = SimpleStore()              # DataStore used for reading/writing items of this category
 
 
-    def load_data(self, iid):
+    def load_data(self, id):
         """Load item data from DB and return as a record (dict)."""
-        return self._store.select(iid)
+        print(f'load_data: loading item {id} in thread {threading.get_ident()} ')
+        return self._store.select(id)
     
     def new_item(self):
         """"""
@@ -523,7 +530,7 @@ class Category(Item):
 class RootCategory(Category):
     """Root category: a category for all other categories."""
 
-    _store = SimpleStore()                  # DataStore to be used for reading/writing all category-items including the root Category
+    # _store = SimpleStore()                  # DataStore to be used for reading/writing all category-items including the root Category
 
     @classmethod
     def _create(cls, registry):
@@ -552,15 +559,15 @@ class RootCategory(Category):
 class Application(Item): pass
 class Space(Item): pass
 
-class TTLCacheX(TTLCache):
-    """
-    Extended version of cachetools.TTLCache:
-    - __init__ accepts maxsize=None
-    - explicit set(key, val, ttl, protect=False) accepts explicit per-item TTL value that can differ from the global one supplied to __init__
-      - if ttl=None the item never expires
-      - if protect=True the item never gets evicted from cache, neither due to expiration nor LRU
-    - explicit flush(maxsize=...) to truncate the cache and discard expired/excessive items to match the desired maxsize
-    """
+# class TTLCacheX(TTLCache):
+#     """
+#     Extended version of cachetools.TTLCache:
+#     - __init__ accepts maxsize=None
+#     - explicit set(key, val, ttl, protect=False) accepts explicit per-item TTL value that can differ from the global one supplied to __init__
+#       - if ttl=None the item never expires
+#       - if protect=True the item never gets evicted from cache, neither due to expiration nor LRU
+#     - explicit flush(maxsize=...) to truncate the cache and discard expired/excessive items to match the desired maxsize
+#     """
 
 class Registry:
     """
@@ -576,13 +583,15 @@ class Registry:
     are the same objects or are identical. This also applies to Category objects referrenced by items through __category__.
     (TODO...)
     - Discarding of expired/excessive items is ONLY performed after request handling is finished
-    (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates.
+    (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates, but means that
+    the last request before item refresh operates on an already-expired item.
     """
     
-    items = None        # cache (TTLCache) containing {ID: item_instance} pairs
+    cache = None        # cached pairs of {ID: item}, with TTL configured on per-item basis
     
     def __init__(self):
-        self.items = TTLCache(1000000, 1000000)     # TODO: use customized subclass of Cache; only prune entries after web requests; protect RootCategory
+        self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        self._load_root()
         # print(f'Registry() created in thread {threading.get_ident()}')
     
     def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
@@ -604,14 +613,16 @@ class Registry:
         if iid is None: raise Exception('missing IID')
         
         # ID requested is already present in the registry? return the existing instance
-        item = self.items.get(id_)
+        item = self.cache.get(id_)
         if item:
             if load: item._load()
             return item
-        
-        # special handling for the root Category
-        if cid == iid == ROOT_CID:
-            return self._load_root()            # TODO: move to __init__ and mark this entry as protected to avoid removal
+
+        assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
+
+        # # special handling for the root Category
+        # if cid == iid == ROOT_CID:
+        #     return self._load_root()
         
         # determine what itemclass to use for instantiation
         if not category:
@@ -646,7 +657,7 @@ class Registry:
             assert cid == category.__iid__
 
             if cid == iid == ROOT_CID:
-                yield self._load_root(record)
+                yield self.cache.get((cid, iid)) or self._load_root(record)
             else:
                 item = itemclass._create(category, iid)
                 self._set(item)
@@ -660,8 +671,8 @@ class Registry:
     def _load_root(self, record = None):
         
         item = RootCategory._create(self)
-        self._set(item)
-        item._load(record)
+        self._set(item, ttl = 0, protect = True)
+        item._load(record)              # this loads the root data from DB if record=None
         # print(f'Registry.get_item(): created root category - {id(item)}')
         return item
         
@@ -672,9 +683,14 @@ class Registry:
     #     item._load(record)
     #     return item
 
-    def _set(self, item):
-        self.items[item.__id__] = item
+    def _set(self, item, ttl = None, protect = False):
+        """If ttl=None, default (positive) TTL of self.cache is used."""
+        self.cache.set(item.__id__, item, ttl, protect)
 
+    def after_request(self, sender, **kwargs):
+        """Cleanup and maintenance after a response has been sent, in the same thread."""
+        self.cache.evict()
+        
 
 class Site(Item):
     """
@@ -702,16 +718,16 @@ class Site(Item):
     # when two threads modify same-ID items concurrently.
     _thread_local = threading.local()
 
-    @property
-    def __registry__(self):
-        reg = getattr(self._thread_local, '__registry__', None)
-        if reg is None:
-            reg = self._thread_local.__registry__ = Registry()
-        return reg
-
-    @__registry__.setter
-    def __registry__(self, reg):
-        self._thread_local.__registry__ = reg
+    # @property
+    # def __registry__(self):
+    #     reg = getattr(self._thread_local, '__registry__', None)
+    #     if reg is None:
+    #         reg = self._thread_local.__registry__ = Registry()
+    #     return reg
+    #
+    # @__registry__.setter
+    # def __registry__(self, reg):
+    #     self._thread_local.__registry__ = reg
     
     def _post_decode(self):
 
@@ -757,33 +773,13 @@ class Site(Item):
         
         iid = category.decode_url(iid_str)
         return reg.get_item((cid, iid))
+
+    def after_request(self, sender, **kwargs):
+        """Cleanup and maintenance after a response has been sent, in the same thread."""
+        
+        self.__registry__.after_request(sender, **kwargs)
         
         
-#####################################################################################################################################################
-
-"""
-Schema...
-
-Category:
-"schema": {
-    "fields": {
-        "itemclass": {"@": "$Class"},
-        "schema": {"class_": {"=": "$Schema", "@": "!type"}, "strict": true, "@": "$Object"}
-    },
-    "@": "$Schema"
-}
-
-Site:
-"schema": {"fields": {"app": {"cid": 2, "@": "$Link"}}}
-
-Application:
-"schema": {"fields": {"spaces": {"keys": {"@": "$String"}, "values": {"cid": 3, "@": "$Link"}, "@": "$Dict"}}}
-
-Space:
-"schema": {"fields": {"categories": {"keys": {"@": "$String"}, "values": {"cid": 0, "@": "$Link"}, "@": "$Dict"}}}
-
-"""
-
 #####################################################################################################################################################
 #####
 #####  GLOBALS
@@ -791,7 +787,7 @@ Space:
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
-    pass
+    site.after_request(sender, **kwargs)
     # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
     # print(f'after_request() in thread {threading.get_ident()} ...stop')
@@ -803,6 +799,10 @@ def after_request(sender, **kwargs):
 
 site = Registry().get_lazy(cid = SITE_CID, iid = SITE_IID)
 site._load()
+
+# root = site.__registry__.get_item((0,0))
+# print('root:', root)
+# print('root.schema:', root.schema.fields)
 
 # print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
 # print("Site.schema:     ", Field._json.dumps(site.__category__.schema))

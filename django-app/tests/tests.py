@@ -41,5 +41,6 @@ def test_environment():
 def test_basic():
 
     assert200("meta.category:0")
+    assert200("meta.category:100")
     assert200("meta.item:1")
     
