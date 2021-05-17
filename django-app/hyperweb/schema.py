@@ -10,18 +10,23 @@ from .types import Type
 #####
 
 class Field:
-    """Specification of a field in a Schema."""
+    """Specification of a field in a dict-like record of data (Record)."""
     info    = None      # human-readable description
     type    = None      # subclass of Type represented by a Class instance
     default = None      # value assumed if this field is missing in an item
     multi   = False     # whether this field can take on multiple values
 
 
-class Schema(Type):
-    """Schema of item data in a category, as a list of field names and their types."""
+class Record(Type):
+    """
+    Dict-like record of data composed of named fields. Primarily used as a type for schema definition inside categories.
+    Can also be used as a sub-type in compound type definitions.
+    
+    Record recognizes MultiDict as valid objects for encoding.
+    The ORDERING of fields in an Record instance is the same
+    """
 
     fields   = None     # dict of field names & their types; generic type is assumed if a type is None or missing
-    defaults = None     # dict of default values for selected fields
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     
     def __init__(self):
@@ -34,7 +39,7 @@ class Schema(Type):
         errors = []
         
         # encode & compactify values of fields through per-field type definitions
-        encoded = data.asdict_multi()
+        encoded = data.asdict_lists()
         for field, values in encoded.items():
             
             if self.strict and field not in self.fields:
@@ -79,19 +84,22 @@ class Schema(Type):
         return data
     
     
-    def get_default(self, name):
-        """
-        Get the default value of a given item attribute as defined in this schema.
-        Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
-        """
-        field = self.fields.get(name)
-        if field.default is MISSING:
-            return None, False
-        else:
-            return field.default, True
-        
-        # if self.defaults and attr in self.defaults:
-        #     return self.defaults[attr], True
-        # else:
-        #     return None, False
+    # def get_default(self, name):
+    #     """
+    #     Get the default value of a given item attribute as defined in this schema.
+    #     Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
+    #     """
+    #     field = self.fields.get(name)
+    #     if field.default is MISSING:
+    #         return None, False
+    #     else:
+    #         return field.default, True
+    #
+    #     # if self.defaults and attr in self.defaults:
+    #     #     return self.defaults[attr], True
+    #     # else:
+    #     #     return None, False
 
+
+class Schema(Record):
+    pass

@@ -67,7 +67,7 @@ class Data2:
         if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
             basename = name[:-len(MULTI_SUFFIX)]
             if not (loaded or basename in data): load()
-            return data.get_multi(basename)
+            return data.get_list(basename)
 
         if not (loaded or name in data): load()
         return data[name]

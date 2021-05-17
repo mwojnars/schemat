@@ -124,11 +124,12 @@ class MultiDict:
         if values is None: return default
         return values[-1]
 
-    def get_multi(self, key, default = None, copy_list = False):
+    def get_list(self, key, default = None, copy_list = False):
         """
         Return a list of values for the key. If key doesn't exist,
         return an empty list, or the `default` value if not None.
-        If copy_list is True, return a new copy of the list of values.
+        If copy_list is True, return a new copy of the list of values
+        instead of the one stored internally in self.
         """
         if key not in self._values:
             if default is None: return []
@@ -180,11 +181,11 @@ class MultiDict:
 
     #############################################
     
-    def asdict(self, mode = 'multi'):
+    def asdict(self, mode = 'lists'):
         """`mode` is either 'multi' (return lists of all values) or 'first' (only first values)
             or 'last' (only last values).
         """
-        if mode == 'multi': return self.asdict_multi()
+        if mode == 'lists': return self.asdict_lists()
         if mode == 'first': return self.asdict_first()
         if mode == 'last':  return self.asdict_last()
         raise Exception(f'unknown mode ({mode})')
@@ -197,7 +198,7 @@ class MultiDict:
         """Return all last values per key as a standard dict."""
         return {key: values[-1] for key, values in self._values.items()}
 
-    def asdict_multi(self):
+    def asdict_lists(self):
         """Return a dict of lists of values per key; same as self._values.copy()."""
         return self._values.copy()
 
@@ -221,7 +222,7 @@ class MultiDict:
         for key, values in self._values.items():
             yield key, values[-1]
 
-    def items_multi(self):
+    def items_lists(self):
         """Generator of (key, list_of_values) pairs. Whenever possible, items() should be preferred."""
         return self._values.items()
     
@@ -230,7 +231,7 @@ class MultiDict:
     def get_compact(self):
         """Like dict_all(), but singleton lists whose value is NOT a list are replaced with this value."""
         
-        state = self.asdict_multi()
+        state = self.asdict_lists()
         for key, values in state.items():
             if len(values) != 1: continue
             value = values[0]

@@ -95,15 +95,22 @@ class Item(object, metaclass = MetaItem):
     
     Item's metadata - in DB:
     - cid, iid
-    - created, updated
-    - mock: a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
-    Item's metadata - temporary (in memory):
+    - revision -- current revision id 1,2,3,...; increased after each modification of the item
+    ? created_at, updated_at -- kept inside MySQL as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    - owner + permissions (?) -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
+    ? D is_draft -- this item is under construction, not fully functional yet (app-level feature)
+    ? M is_mock  -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
+    ? H is_honeypot -- artificial empty item for detection and tracking of automated access
+    ? R is_removed -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
+    
+    Item's metadata - derived (in memory):
     - category, registry
+    - namespace -- the namespace this item was loaded through; should be used for
     
     Item's status -- temporary (in memory):
     - draft: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB
     - dirty: has local modifications that may deviate from the contents of the corresponding DB record
-    - frame/shell/dummy/stub/short: IID is present, but no data loaded yet (lazy loading)
+    - stub/dummy/short/frame: IID is present, but no data loaded yet (lazy loading)
     - loaded:
     
     Mapping an internal Item to an ItemView for read-only access in views and handlers:
@@ -231,10 +238,10 @@ class Item(object, metaclass = MetaItem):
         return default
 
     def getlist(self, name, default = None, copy_list = False):
-        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.get_multi()"""
+        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.get_list()"""
         if not (self.__loaded__ or name in self.__data__):
             self._load()
-        return self.__data__.get_multi(name, default, copy_list)
+        return self.__data__.get_list(name, default, copy_list)
 
     def set(self, key, *values):
         """
@@ -321,8 +328,15 @@ class Item(object, metaclass = MetaItem):
         self.__category__._store.insert(self)
         self.__registry__.save_item(self)
         
-    def update(self):
+    def update(self, fields = None):
         """Update the contents of this item's row in DB."""
+        # TODO: allow granular update of selected fields by making combined
+        #       SELECT (of newest revision) + UPDATE (of selected fields WHERE revision=last_seen_revision)
+        #  `fields` -- if None, all "dirty" fields are included
+        #  `base_revision` (optional)
+        #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
+        # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
+        
         self.__category__._store.update(self)
         self.__registry__.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
 
@@ -418,7 +432,7 @@ class Category(Item):
 
     def load_data(self, id):
         """Load item data from DB and return as a record (dict)."""
-        print(f'load_data: loading item {id} in thread {threading.get_ident()} ')
+        print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
         return self._store.select(id)
     
     def new_item(self):
@@ -440,18 +454,18 @@ class Category(Item):
         records = self._store.select_all(self.__iid__, limit)
         return self.__registry__.decode_items(records, self)
         
-    def first_item(self):
-        
-        items = list(self.load_items(limit = 1))
-        if not items: raise self.itemclass.DoesNotExist()
-        return items[0]
-
-    def get_default(self, attr):
-        """ (UNUSED)
-        Get the default value of a given item attribute `attr` as defined in this category's schema.
-        Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
-        """
-        return self.schema.get_default(attr)
+    # def first_item(self):
+    #
+    #     items = list(self.load_items(limit = 1))
+    #     if not items: raise self.itemclass.DoesNotExist()
+    #     return items[0]
+    #
+    # def get_default(self, attr):
+    #     """ (UNUSED)
+    #     Get the default value of a given item attribute `attr` as defined in this category's schema.
+    #     Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
+    #     """
+    #     return self.schema.get_default(attr)
         
 
     #####  Handlers & views  #####
@@ -591,6 +605,9 @@ class Registry:
     
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        self.bootstrap()
+    
+    def bootstrap(self):
         self._load_root()
         # print(f'Registry() created in thread {threading.get_ident()}')
     
@@ -685,6 +702,7 @@ class Registry:
 
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
+        print(f'registry: creating item {item.__id__} in thread {threading.get_ident()} ', flush = True)
         self.cache.set(item.__id__, item, ttl, protect)
 
     def after_request(self, sender, **kwargs):
@@ -703,6 +721,8 @@ class Site(Item):
     
     The global `site` object is created in hyperweb/__init__.py and can be imported with:
       from hyperweb import site
+      
+    There should be only 1 thread that processes requests and accesses `site` after initialization.
     """
 
     re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
@@ -713,11 +733,11 @@ class Site(Item):
                             # for URL routing and URL generation; some categories may be excluded from routing
                             # (no public visibility), yet they're still accessible through get_category()
 
-    # Site class is special in that it holds distinct Registry instances for each processing thread.
-    # This is to ensure each thread operates on separate item objects to avoid interference
-    # when two threads modify same-ID items concurrently.
-    _thread_local = threading.local()
-
+    # # Site class is special in that it holds distinct Registry instances for each processing thread.
+    # # This is to ensure each thread operates on separate item objects to avoid interference
+    # # when two threads modify same-ID items concurrently.
+    # _thread_local = threading.local()
+    #
     # @property
     # def __registry__(self):
     #     reg = getattr(self._thread_local, '__registry__', None)
@@ -776,9 +796,11 @@ class Site(Item):
 
     def after_request(self, sender, **kwargs):
         """Cleanup and maintenance after a response has been sent, in the same thread."""
-        
+
+        print(f'after_request() in thread {threading.get_ident()}...', flush = True)
         self.__registry__.after_request(sender, **kwargs)
-        
+        # sleep(5)
+
         
 #####################################################################################################################################################
 #####

@@ -28,7 +28,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 """The cache module provides the :class:`Cache` class which is used as the base for all other cache
 types."""
 
-import asyncio
+import asyncio, threading
 from collections import OrderedDict
 from collections.abc import Mapping
 from decimal import Decimal
@@ -328,6 +328,7 @@ class Cache:
         try:
             del self._cache[key]
             count = 1
+            print(f'cache: deleted key {key} in thread {threading.get_ident()}', flush = True)
         except KeyError:
             pass
 
