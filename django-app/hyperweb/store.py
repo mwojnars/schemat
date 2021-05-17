@@ -2,7 +2,7 @@
 DATA STORE -- an abstract DB storage layer for items. Handles sharding, replication etc.
 """
 
-import json
+import csv
 from pymysql.cursors import DictCursor
 #from django.db import connection as db
 from nifty.db import MySQL
@@ -11,6 +11,7 @@ from main.settings import DATABASES
 
 from .config import ROOT_CID
 from .errors import ItemDoesNotExist
+from .jsonpickle import JsonPickle
 
 
 #####################################################################################################################################################
@@ -18,15 +19,17 @@ from .errors import ItemDoesNotExist
 #####  GLOBAL
 #####
 
-_settings = DATABASES['default']
+default_db = None
 
-# local database for startup
-default_db = MySQL(host         = _settings.get('HOST'),
-                   port         = _settings.get('PORT'),
-                   user         = _settings.get('USER'),
-                   password     = _settings.get('PASSWORD'),
-                   db           = _settings.get('NAME'),
-                   )
+# _settings = DATABASES['default']
+#
+# # local database for startup
+# default_db = MySQL(host         = _settings.get('HOST'),
+#                    port         = _settings.get('PORT'),
+#                    user         = _settings.get('USER'),
+#                    password     = _settings.get('PASSWORD'),
+#                    db           = _settings.get('NAME'),
+#                    )
 
 #####################################################################################################################################################
 #####
@@ -62,38 +65,19 @@ class SimpleStore(DataStore):
             row = cur.fetchone()
             return self._make_record(row, id_)
 
-    def select_all(self, cid, limit = None):
+    def select_all(self, cid):
         """
         Load from DB all items of a given category (CID) ordered by IID, possibly with a limit.
         Items are returned as an iterable of records (dicts).
         """
         query = self._item_select + f"WHERE cid = {cid} ORDER BY iid"
-        if limit is not None:
-            query += f" LIMIT {limit}"
+        # if limit is not None:
+        #     query += f" LIMIT {limit}"
             
         with self.db.cursor() as cur:
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
-    # def bootload_category(self, iid = None, name = None):
-    #     """
-    #     Special method for loading category items during startup: finds all records having cid=ROOT_CID
-    #     and selects the one with a proper `iid` or $data.name.
-    #     """
-    #     def JSON(path):
-    #         return f"JSON_UNQUOTE(JSON_EXTRACT(data,'{path}')) = %s"
-    #
-    #     #cond  = f"JSON_UNQUOTE(JSON_EXTRACT(data,'$.name')) = %s" if name else f"iid = %s"
-    #     #cond  = JSON(f'$.itemclass') if itemclass else JSON(f'$.name') if name else f"iid = %s"
-    #     cond  = JSON(f'$.name') if name else f"iid = %s"
-    #     query = f"SELECT {self._item_select_cols} FROM hyper_items WHERE cid = {ROOT_CID} AND {cond}"
-    #     arg   = [name or iid]
-    #
-    #     with self.db.cursor() as cur:
-    #         cur.execute(query, arg)
-    #         row = cur.fetchone()
-    #         return self._make_record(row, arg)
-    
     def insert(self, item):
         """
         Insert `item` as a new row in DB. Assign a new IID (self.__iid__) and return it.
@@ -134,3 +118,40 @@ class SimpleStore(DataStore):
 
     def update(self, item):
         """Update the contents of the item's row in DB."""
+
+
+class CsvStore(SimpleStore):
+    """Items stored in a JSON file. For use during development only."""
+    
+    filename = None
+    items    = None
+    
+    def __init__(self, filename = None):
+        self.filename = filename or DATABASES['csv']['FILE']
+        
+        with open(self.filename, newline = '') as f:
+            reader = csv.reader(f, delimiter = ';', quotechar = '"')
+            items = list(reader)
+            self.items = {(int(cid), int(iid)): data for cid, iid, data in items[1:]}
+            
+            print('CsvStore items loaded:')
+            for id, data in self.items.items():
+                print(id, data)
+    
+    def select(self, id_):
+        
+        data = self.items[id_]
+        row = id_ + (data, None, None)
+        return self._make_record(row, id_)
+
+    def select_all(self, cid):
+        
+        for row in self.items.items():
+            (cid_, iid_), data = row
+            if cid != cid_: continue
+            yield self._make_record((cid_, iid_, data, None, None))
+        
+    def insert(self, item):
+        raise NotImplementedError
+    
+    

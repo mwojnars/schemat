@@ -11,7 +11,7 @@ from nifty.text import html_escape
 from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
-from .store import SimpleStore
+from .store import SimpleStore, CsvStore
 from .schema import Schema
 from .cache import LRUCache
 
@@ -427,7 +427,7 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
-    _store  = SimpleStore()              # DataStore used for reading/writing items of this category
+    _store  = CsvStore()              # DataStore used for reading/writing items of this category
 
 
     def load_data(self, id):
@@ -446,26 +446,13 @@ class Category(Item):
         """
         return self.__registry__.get_item(iid = iid, category = self)
     
-    def load_items(self, limit = None):
+    def load_items(self):
         """
         Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
         A generator.
         """
-        records = self._store.select_all(self.__iid__, limit)
+        records = self._store.select_all(self.__iid__)
         return self.__registry__.decode_items(records, self)
-        
-    # def first_item(self):
-    #
-    #     items = list(self.load_items(limit = 1))
-    #     if not items: raise self.itemclass.DoesNotExist()
-    #     return items[0]
-    #
-    # def get_default(self, attr):
-    #     """ (UNUSED)
-    #     Get the default value of a given item attribute `attr` as defined in this category's schema.
-    #     Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
-    #     """
-    #     return self.schema.get_default(attr)
         
 
     #####  Handlers & views  #####
@@ -543,8 +530,6 @@ class Category(Item):
         
 class RootCategory(Category):
     """Root category: a category for all other categories."""
-
-    # _store = SimpleStore()                  # DataStore to be used for reading/writing all category-items including the root Category
 
     @classmethod
     def _create(cls, registry):
