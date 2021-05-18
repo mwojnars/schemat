@@ -10,8 +10,9 @@ from .jsonpickle import JsonPickle
 
 class Type:
     """ 
-    Base class for definition of data elements: values and sub-values of items' fields.
+    Base class for type specifications of data elements: values and sub-values of items' fields.
     Provides schema-based validation of form values and schema-aware serialization. Types can be nested.
+    An instance of Type contains a type specification and NOT an actual value.
     
     A Type object defines:
     - constraints on the set of values that can be assigned to a given field/attribute/variable

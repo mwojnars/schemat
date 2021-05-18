@@ -134,9 +134,9 @@ class CsvStore(SimpleStore):
             items = list(reader)
             self.items = {(int(cid), int(iid)): data for cid, iid, data in items[1:]}
             
-            # print('CsvStore items loaded:')
-            # for id, data in self.items.items():
-            #     print(id, data)
+            print('CsvStore items loaded:')
+            for id, data in self.items.items():
+                print(id, data)
     
     def select(self, id_):
         

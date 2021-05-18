@@ -2,6 +2,7 @@
 *.py[cod]
 *.kate-swp
 *.npy
+.~*
 
 # Drafts
 *.draft.*
