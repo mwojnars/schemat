@@ -1,0 +1,105 @@
+[
+{
+  "id": [0,0],
+  "name": "Category",
+  "info": "Category of items that represent categories",
+  "schema": {
+    "fields": {
+      "schema": {
+        "@": "hyperweb.types.Object",
+        "class_": {
+          "=": "hyperweb.schema.Schema",
+          "@": "builtins.type"
+        }
+      },
+      "itemclass": {"@": "hyperweb.types.Class"},
+      "name": {"@": "hyperweb.types.String"},
+      "info": {"@": "hyperweb.types.String"}
+    },
+    "strict": true
+  }
+},
+
+{
+  "id": [0,1],
+  "name": "Site",
+  "info": "Category of site records. A site contains information about applications, servers, start up",
+  "schema": {
+    "fields": {
+      "app": {"@": "hyperweb.types.Link", "cid": 2}
+    }
+  },
+  "itemclass": "hyperweb.core.Site"
+},
+
+{
+  "id": [0,2],
+  "name": "Application",
+  "info": "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
+  "schema": {
+    "fields": {
+      "spaces": {
+        "@": "hyperweb.types.Dict",
+        "keys": {"@": "hyperweb.types.String"},
+        "values": {"@": "hyperweb.types.Link", "cid": 3}
+      }
+    }
+  },
+  "itemclass": "hyperweb.core.Application"
+},
+
+{
+  "id": [0,3],
+  "name": "Space",
+  "info": "Category of items that represent item spaces.",
+  "schema": {
+    "fields": {
+      "categories": {
+        "@": "hyperweb.types.Dict",
+        "keys": {"@": "hyperweb.types.String"},
+        "values": {"@": "hyperweb.types.Link", "cid": 0}
+      }
+    }
+  },
+  "itemclass": "hyperweb.core.Space"
+},
+
+{
+  "id": [0,4],
+  "name": "Mapping",
+  "info": "Category of items that represent mappings, i.e., sharded indexes on top of item-item or item-value relations"
+},
+
+{
+  "id": [0,100],
+  "name": "Item",
+  "info": "Category of items that do not belong to any specific category",
+  "schema": {"fields": {}, "strict": false},
+  "itemclass": "hyperweb.core.Item"
+},
+
+{"id": [1,1], "app": 1, "name": "catalog.wiki", "base_url": "http://localhost:8001"},
+{"id": [2,1], "name": "Catalog.wiki", "spaces": {"sys": 2, "meta": 1}},
+{"id": [3,1], "name": "Meta", "categories": {"map": 4, "item": 100, "category": 0}},
+{"id": [3,2], "name": "System", "categories": {"app": 2, "site": 1, "space": 3}},
+
+{
+  "id": [100,1],
+  "multi": [1, 2, null], 
+  "title": "Ala ma kota Sierściucha i psa Kłapoucha.", 
+  "value": 100000, 
+  "struct": [[123, 4567854, 98765400, null]], 
+  "fulltext": "some text some text some text some text some text some text some text some text", 
+  "another_value": 23.046
+},
+
+{"id": [100,2], "name": ["test_item", "duplicate"], "title": "ąłęÓŁŻŹŚ"},
+{"id": [100,3], "name": ["test_item2"], "title": "ąłęÓŁŻŹŚ"},
+{"id": [100,4], "name": "test_item3", "title": "ąłęÓŁŻŹŚ"},
+{"id": [100,5], "name": "test_item4", "title": "ąłęÓŁŻŹŚ"},
+{"id": [100,6], "name": ["test_item", "duplicate"], "title": "ąłęÓŁŻŹŚ"},
+{"id": [100,7], "name": ["test_item", "duplicate"], "title": "ABCD"},
+{"id": [100,8], "name": ["test_item", "duplicate"], "title": "ABCD"},
+{"id": [100,9], "name": ["test_item", "duplicate"], "title": "ABCD"},
+{"id": [100,10], "name": ["test_item", "duplicate"], "title": "ABCD"}
+]

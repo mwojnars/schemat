@@ -2,7 +2,7 @@
 DATA STORE -- an abstract DB storage layer for items. Handles sharding, replication etc.
 """
 
-import csv
+import csv, json
 from pymysql.cursors import DictCursor
 #from django.db import connection as db
 from nifty.db import MySQL
@@ -120,22 +120,13 @@ class SimpleStore(DataStore):
         """Update the contents of the item's row in DB."""
 
 
-class CsvStore(SimpleStore):
-    """Items stored in a JSON file. For use during development only."""
-    
+#####################################################################################################################################################
+
+class FileStore(SimpleStore):
+    """Items stored in a file. For use during development only."""
+
     filename = None
-    items    = None
-    
-    def __init__(self, filename = None):
-        self.filename = filename or DATABASES['csv']['FILE']
-        
-        with open(self.filename, newline = '') as f:
-            reader = csv.reader(f, delimiter = ';', quotechar = '"')
-            self.items = {(int(cid), int(iid)): data for cid, iid, data in list(reader)}
-            
-            print('CsvStore items loaded:')
-            for id, data in self.items.items():
-                print(id, data)
+    items    = None         # dict of {item_id: json_data}, keys are tuples (cid,iid), values are strings
     
     def select(self, id_):
         
@@ -152,5 +143,34 @@ class CsvStore(SimpleStore):
         
     def insert(self, item):
         raise NotImplementedError
+    
+    
+class CsvStore(FileStore):
+    
+    def __init__(self, filename = None):
+        self.filename = filename or DATABASES['csv']['FILE']
+        
+        with open(self.filename, newline = '') as f:
+            reader = csv.reader(f, delimiter = ';', quotechar = '"')
+            self.items = {(int(cid), int(iid)): data for cid, iid, data in list(reader)}
+            
+            print('CsvStore items loaded:')
+            for id, data in self.items.items():
+                print(id, data)
+    
+class JsonStore(FileStore):
+    """Items stored in a JSON file. For use during development only."""
+    
+    def __init__(self, filename = None):
+        self.filename = filename or DATABASES['json']['FILE']
+        self.items = {}
+        
+        for data in json.load(open(self.filename)):
+            id_ = data.pop('id')
+            self.items[tuple(id_)] = json.dumps(data)
+        
+        print('JsonStore items loaded:')
+        for id, data in self.items.items():
+            print(id, data)
     
     

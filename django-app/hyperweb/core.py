@@ -11,7 +11,7 @@ from nifty.text import html_escape
 from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
-from .store import SimpleStore, CsvStore
+from .store import SimpleStore, CsvStore, JsonStore
 from .types import Object, String
 from .schema import Schema
 from .cache import LRUCache
@@ -428,7 +428,7 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to 
     and creation of new items within category.
     """
-    _store  = CsvStore()              # DataStore used for reading/writing items of this category
+    _store  = JsonStore()              # DataStore used for reading/writing items of this category
 
 
     def load_data(self, id):
