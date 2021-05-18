@@ -25,11 +25,11 @@ STOP_ATTR = {
 }
 
 
-ALIASES = [
-    # special names are mapped from "package.module.name" to "$name" during serialization
-    ('hyperweb.data.',   '$', ['Data']),
-    ('hyperweb.schema.', '$', ['Record', 'Schema']),
-    ('hyperweb.types.',  '$', ['Object', 'Class', 'String', 'Dict', 'Link']),
-    ('hyperweb.core.',   '$', ['Item', 'Category', 'Site', 'Application', 'Space']),
-    ('builtins.',        '!', ['type', 'set', 'str'])
-]
+# ALIASES = [
+#     # special names are mapped from "package.module.name" to "$name" during serialization
+#     ('hyperweb.data.',   '$', ['Data']),
+#     ('hyperweb.schema.', '$', ['Record', 'Schema']),
+#     ('hyperweb.types.',  '$', ['Object', 'Class', 'String', 'Dict', 'Link']),
+#     ('hyperweb.core.',   '$', ['Item', 'Category', 'Site', 'Application', 'Space']),
+#     ('builtins.',        '!', ['type', 'set', 'str'])
+# ]

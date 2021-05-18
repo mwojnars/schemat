@@ -12,6 +12,7 @@ from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore, CsvStore
+from .types import String
 from .schema import Schema
 from .cache import LRUCache
 
@@ -534,6 +535,13 @@ class RootCategory(Category):
     @classmethod
     def _create(cls, registry):
         """Create an instance of an item that has __iid__ assigned and is supposedly present in DB. Should only be called by Registry."""
+        
+        schema = Schema()
+        schema.fields = {
+            'schema':   Schema,
+            'name':     String,
+            'info':     String,
+        }
         
         item = cls.__new__(cls)             # __init__() is disabled, do not call it
         item.__registry__ = registry

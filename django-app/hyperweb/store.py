@@ -131,8 +131,7 @@ class CsvStore(SimpleStore):
         
         with open(self.filename, newline = '') as f:
             reader = csv.reader(f, delimiter = ';', quotechar = '"')
-            items = list(reader)
-            self.items = {(int(cid), int(iid)): data for cid, iid, data in items[1:]}
+            self.items = {(int(cid), int(iid)): data for cid, iid, data in list(reader)}
             
             print('CsvStore items loaded:')
             for id, data in self.items.items():

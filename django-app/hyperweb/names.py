@@ -6,7 +6,7 @@ but rather it should only be imported inside functions, to avoid cyclic module d
 from importlib import import_module
 
 from .errors import SysConfigError
-from .config import ALIASES
+# from .config import ALIASES
 
 
 #####################################################################################################################################################
@@ -161,4 +161,4 @@ class Aliases:
 
 #####################################################################################################################################################
 
-aliases = Aliases(ALIASES)
+aliases = Aliases([]) #ALIASES

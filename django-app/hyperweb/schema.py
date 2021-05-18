@@ -69,7 +69,7 @@ class Record(Type):
         for field, values in data.items():
             
             if self.strict and field not in self.fields:
-                raise DecodeError(f'unknown field "{field}"')
+                raise DecodeError(f'field "{field}" found in an item but not present in category schema')
             
             # de-compactification of singleton lists
             if not isinstance(values, list):
