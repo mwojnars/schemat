@@ -12,7 +12,7 @@ from .types import Type
 class Field:
     """Specification of a field in a dict-like record of data (Record)."""
     info    = None      # human-readable description
-    type    = None      # subclass of Type represented by a Class instance
+    type    = None      # instance of Type
     default = None      # value assumed if this field is missing in an item
     multi   = False     # whether this field can take on multiple values
 
@@ -28,6 +28,7 @@ class Record(Type):
 
     fields   = None     # dict of field names & their types; generic type is assumed if a type is None or missing
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
+    # TODO: strict=True by default
     
     def __init__(self):
         self.fields = {}
@@ -69,7 +70,7 @@ class Record(Type):
         for field, values in data.items():
             
             if self.strict and field not in self.fields:
-                raise DecodeError(f'field "{field}" found in an item but not present in category schema')
+                raise DecodeError(f'field "{field}" found in a record but not allowed by its type')
             
             # de-compactification of singleton lists
             if not isinstance(values, list):

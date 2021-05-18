@@ -12,7 +12,7 @@ from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore, CsvStore
-from .types import String
+from .types import Object, String
 from .schema import Schema
 from .cache import LRUCache
 
@@ -538,9 +538,9 @@ class RootCategory(Category):
         
         schema = Schema()
         schema.fields = {
-            'schema':   Schema,
-            'name':     String,
-            'info':     String,
+            'schema':   Object(Schema),
+            'name':     String(),
+            'info':     String(),
         }
         
         item = cls.__new__(cls)             # __init__() is disabled, do not call it
@@ -549,7 +549,7 @@ class RootCategory(Category):
         item.__cid__   = ROOT_CID
         item.__iid__   = ROOT_CID
         item.__data__  = Data()
-        item.schema    = Schema()
+        item.schema    = schema
         item.itemclass = Category           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return item
         
@@ -557,6 +557,7 @@ class RootCategory(Category):
     #     """"""
     #     # bootstrap loading of RootCategory instance ?
     
+    # {"info":"Category of items that represent categories.","name":"Category","schema":{"@":"hyperweb.schema.Schema","fields":{"schema":{"@":"hyperweb.types.Object","class_":{"=":"hyperweb.schema.Schema","@":"builtins.type"}},"itemclass":{"@":"hyperweb.types.Class"},"name":{"@":"hyperweb.types.String"},"info":{"@":"hyperweb.types.String"}},"strict":true}}
 
 #####################################################################################################################################################
 #####

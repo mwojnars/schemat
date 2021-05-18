@@ -130,7 +130,7 @@ class Object(Type):
     """
 
     class_ = None       # python class to be implied for objects during decoding; if strict=True, only objects of this class can be encoded
-    strict = False      # [bool] if True, only instances of <class_> are allowed in encode/decode, otherwise an exception is raised
+    strict = True       # [bool] if True, only instances of <class_> are allowed in encode/decode, otherwise an exception is raised
     #skip_empty = False # if True, empty collections (list/tuple/set/dict) in the object are removed during encoding
     
     def __init__(self, class_ = None, strict = False):
