@@ -185,16 +185,16 @@ class Item(object, metaclass = MetaItem):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
         return self.__registry__.get_item(self.__id__)
 
-    def __getattr__(self, name):
-        """
-            Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
-            __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
-            has NOT been found in the object's __dict__ or in a parent class (!)
-        """
-        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-            basename = name[:-len(MULTI_SUFFIX)]
-            return self.getlist(basename)
-        return self.get(name)
+    # def __getattr__(self, name):
+    #     """
+    #         Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
+    #         __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
+    #         has NOT been found in the object's __dict__ or in a parent class (!)
+    #     """
+    #     if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
+    #         basename = name[:-len(MULTI_SUFFIX)]
+    #         return self.getlist(basename)
+    #     return self.get(name)
 
     # def get(self, name):
     #
@@ -308,7 +308,7 @@ class Item(object, metaclass = MetaItem):
 
         # convert __data__ from JSON string to a struct
         if data:
-            schema = self.__category__.schema
+            schema = self.__category__.get('schema')
             data = schema.decode_json(data)
             self.__data__.update(data)
         
@@ -392,14 +392,15 @@ class Item(object, metaclass = MetaItem):
         
         % category
             p .catlink
-                a href=$item.__category__.get_url() | {item.__category__.name? or item.__category__}
+                a href=$item.__category__.get_url() | {item.__category__.get('name')? or item.__category__}
                 | ($item.__cid__,$item.__iid__)
             
         html
+            $name = item.get('name')? or str(item)
             head
-                title | {item.__data__['name']? or item}
+                title | {name}
             body
-                h1  | {item.__data__['name']? or item}
+                h1  | {name}
                 category
                 #p  | ID {item.__id__}
                 h2  | Attributes
@@ -481,23 +482,24 @@ class Category(Item):
         context $item as cat
         
         html
+            $name = cat.get('name')? or str(cat)
             head
-                title | {(cat.name? or cat) ' -' }? category #{cat.__iid__}
+                title | {name ' -' }? category #{cat.__iid__}
             body
                 h1
                     try
-                        i | {cat.name? or cat}
+                        i | $name
                         . | -
                     | category #{cat.__iid__}
                 p
                     . | Items in category
-                    i | {cat.name or cat}:
+                    i | $name:
                 table
                     for item in cat.load_items()
                         tr
                             td / #{item.__iid__} &nbsp;
                             td : a href=$item.get_url()
-                                | {item.name? or item}
+                                | {item.get('name')? or item}
     """
     
     __views__ = {
@@ -508,7 +510,7 @@ class Category(Item):
         
         assert item.__cid__ == self.__iid__
         
-        base_url  = site.base_url
+        base_url  = site.get('base_url')
         qualifier = site.get_qualifier(self)
         iid       = self.encode_url(item.__iid__)
         # print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
@@ -638,7 +640,7 @@ class Registry:
         # determine what itemclass to use for instantiation
         if not category:
             category = self.get_category(cid)
-        itemclass = category.itemclass                  # REFACTOR
+        itemclass = category.get('itemclass')                  # REFACTOR
         
         # create a new instance and insert to cache
         item = itemclass._create(category, iid)
@@ -661,7 +663,7 @@ class Registry:
         Given a sequence of raw DB `records` decode each of them and yield as an item.
         The items are saved in the registry and so they may override existing items.
         """
-        itemclass = category.itemclass
+        itemclass = category.get('itemclass')
         for record in records:
             cid = record.pop('__cid__')
             iid = record.pop('__iid__')
@@ -747,9 +749,9 @@ class Site(Item):
 
         self._qualifiers = bidict()
         
-        for app in self.app_list:
-            for space_name, space in app.spaces.items():
-                for category_name, category in space.categories.items():
+        for app in self.getlist('app'):
+            for space_name, space in app.get('spaces').items():
+                for category_name, category in space.get('categories').items():
                     
                     qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
                     self._qualifiers[qualifier] = category.__iid__
