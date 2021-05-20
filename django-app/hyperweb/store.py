@@ -42,7 +42,7 @@ class DataStore:
 class SimpleStore(DataStore):
     """Data store that uses only local DB, no sharding."""
 
-    _item_columns       = 'cid iid data created updated'.split()
+    _item_columns       = '__cid__ __iid__ data created updated'.split()
     _item_select_cols   = ','.join(_item_columns)
     _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
     _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"
@@ -54,7 +54,8 @@ class SimpleStore(DataStore):
         if row is None:
             raise ItemDoesNotExist(*((query_args,) if query_args is not None else ()))
         
-        return {f'__{key}__': val for key, val in zip(self._item_columns, row)}
+        return dict(zip(self._item_columns, row))
+        # return {f'__{key}__': val for key, val in zip(self._item_columns, row)}
 
     def select(self, id_):
         """Load from DB an item with a given ID = (CID,IID) and return as a record (dict)."""
@@ -80,7 +81,7 @@ class SimpleStore(DataStore):
         
     def insert(self, item):
         """
-        Insert `item` as a new row in DB. Assign a new IID (self.__iid__) and return it.
+        Insert `item` as a new row in DB. Assign a new IID and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
         cid = item.__cid__
@@ -93,8 +94,8 @@ class SimpleStore(DataStore):
         item.__id__ = (cid, iid)
         
         # item.__encode__()
-        assert item.__data__ is not None
-        # print("store:", list(item.__data__.lists()))
+        assert item.data is not None
+        # print("store:", list(item.data.lists()))
         
         record = {'cid':   cid,
                   'iid':   iid,
@@ -102,8 +103,8 @@ class SimpleStore(DataStore):
                   }
         self.db.insert_dict('hyper_items', record)
         
-        # get imputed fields from DB
-        (item.__created__, item.__updated__) = self.db.select_one(f"SELECT created, updated FROM hyper_items WHERE cid = {cid} AND iid = {iid}")
+        # # get imputed fields from DB
+        # (item.created, item.updated) = self.db.select_one(f"SELECT created, updated FROM hyper_items WHERE cid = {cid} AND iid = {iid}")
         
         self.db.commit()
         return iid

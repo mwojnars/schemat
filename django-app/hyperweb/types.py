@@ -287,7 +287,7 @@ class Link(Type):
             cid = self.cid
 
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
-        from .core import registry
+        from .site import registry
         
         return registry.get_item((cid, iid))
         

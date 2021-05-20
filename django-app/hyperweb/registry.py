@@ -21,7 +21,7 @@ class Registry:
     WARNING: some duplicate items can still exist and be hanging around as references from other items - due to cache flushing,
     which removes items from the Registry but does NOT remove/update references from other items that are still kept in cache.
     Hence, you shall NEVER assume that two items of the same IID - even if both retrieved through the Registry -
-    are the same objects or are identical. This also applies to Category objects referrenced by items through __category__.
+    are the same objects or are identical. This also applies to Category objects referrenced by items through item.category.
     (TODO...)
     - Discarding of expired/excessive items is ONLY performed after request handling is finished
     (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates, but means that
@@ -42,10 +42,10 @@ class Registry:
         """
         If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
         as the item data may have been loaded earlier.
-        If load=False, the returned item usually contains only __cid__ and __iid__ (no data);
+        If load=False, the returned item usually contains only CID and IID (no data);
         this is not a strict rule, however, and if the item has been loaded or created before,
         by this or a previous request handler, the item can already be fully initialized.
-        Hence, the caller should never assume that the returned item's __data__ is missing.
+        Hence, the caller should never assume that the returned item.data is missing.
         """
         if not id_:
             if category: cid = category.__iid__

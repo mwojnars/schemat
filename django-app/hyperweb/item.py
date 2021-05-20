@@ -55,7 +55,7 @@ class MetaItem(type):
         cls.DoesNotExist = DoesNotExist
         
         # fill out the dict of handlers
-        cls.__handlers__ = handlers = {}
+        cls.handlers = handlers = {}
         for attr in dir(cls):
             method = getattr(cls, attr)
             if not callable(method): continue
@@ -122,22 +122,20 @@ class Item(object, metaclass = MetaItem):
     """
     
     # builtin instance attributes & properties, not user-editable ...
-    __cid__      = None         # __cid__ (Category ID) of this item
-    __iid__      = None         # __iid__ (Item ID within category) of this item
+    __cid__      = None         # CID (Category ID) of this item
+    __iid__      = None         # IID (Item ID within category) of this item
                                 # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
-    __data__     = None         # MultiDict with values of object attributes; an attribute can have multiple values
-    __created__  = None         # datetime when this item was created in DB; no timezone
-    __updated__  = None         # datetime when this item was last updated in DB; no timezone
+    data     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     
-    __category__ = None         # parent category of this item, as an instance of Category
-    __registry__ = None         # Registry that manages access to this item
-    __loaded__   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
+    category = None         # parent category of this item, as an instance of Category
+    registry = None         # Registry that manages access to this item
+    loaded   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
-    __handlers__ = None         # dict {handler_name: method} of all handlers (= public web methods)
-                                # exposed by items of the current Item subclass
-    __views__    = None         # similar to __handlers__, but stores Hypertag scripts (<str>) instead of methods;
-                                # if a handler is not found in __handlers__, a script is looked up in __views__
-                                # and compiled to HTML through Hypertag
+    handlers = None         # dict {handler_name: method} of all handlers (= public web methods)
+                            # exposed by items of the current Item subclass
+    views    = None         # similar to handlers, but stores Hypertag scripts (<str>) instead of methods;
+                            # if a handler is not found in handlers, a script is looked up in views
+                            # and compiled to HTML through Hypertag
     
     @property
     def __id__(self): return self.__cid__, self.__iid__
@@ -149,9 +147,9 @@ class Item(object, metaclass = MetaItem):
 
     # @property
     # def data(self):
-    #     return Data(self.__data__)
+    #     return Data(self.data)
     
-    # # names that must not be used for attributes inside __data__
+    # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
     
     def __init__(self):
@@ -164,11 +162,11 @@ class Item(object, metaclass = MetaItem):
         Should only be called by Registry.
         """
         item = cls.__new__(cls)                     # __init__() is disabled, do not call it
-        item.__registry__ = category.__registry__
-        item.__category__ = category
+        item.registry = category.registry
+        item.category = category
         item.__cid__  = category.__iid__
         item.__iid__  = iid
-        item.__data__ = Data()                      # REFACTOR
+        item.data = Data()                      # REFACTOR
         return item
         
     @classmethod
@@ -178,7 +176,7 @@ class Item(object, metaclass = MetaItem):
         
     def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
-        return self.__registry__.get_item(self.__id__)
+        return self.registry.get_item(self.__id__)
 
     # def __getattr__(self, name):
     #     """
@@ -193,33 +191,33 @@ class Item(object, metaclass = MetaItem):
 
     # def get(self, name):
     #
-    #     # if self.__data__ is None:
+    #     # if self.data is None:
     #     #     self._load()
     #
-    #     if name in self.__data__:                   # get `name` from __data__ if present there
-    #         return self.__data__[name]
+    #     if name in self.data:                   # get `name` from data if present there
+    #         return self.data[name]
     #
-    #     # TODO: search `name` in __category__'s default values
-    #     value, found = self.__category__.get_default(name)
+    #     # TODO: search `name` in category's default values
+    #     value, found = self.category.get_default(name)
     #     if found: return value
     #
     #     raise AttributeError(name)
     
     def get(self, name, default = _RAISE_):
         """Get attribute value from:
-           - self.__data__ OR
-           - self.__category__'s schema defaults OR
+           - self.data OR
+           - self.category's schema defaults OR
            - self.__class__'s class-level defaults.
            If `name` is not found, `default` is returned if present, or AttributeError raised otherwise.
         """
         try:
-            if not (self.__loaded__ or name in self.__data__):
+            if not (self.loaded or name in self.data):
                 self._load()
-            return self.__data__[name]
+            return self.data[name]
         except KeyError: pass
 
-        # # TODO: search `name` in __category__'s default values
-        # category = _get_(self, '__category__')
+        # # TODO: search `name` in category's default values
+        # category = _get_(self, 'category')
         # if category:
         #     try:
         #         return category.get_default(name)
@@ -234,37 +232,37 @@ class Item(object, metaclass = MetaItem):
         return default
 
     def getlist(self, name, default = None, copy_list = False):
-        """Get a list of all values of an attribute from __data__. Shorthand for self.__data__.get_list()"""
-        if not (self.__loaded__ or name in self.__data__):
+        """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
+        if not (self.loaded or name in self.data):
             self._load()
-        return self.__data__.get_list(name, default, copy_list)
+        return self.data.get_list(name, default, copy_list)
 
     def set(self, key, *values):
         """
-        Assign `values` to a given key in __data__. This can be used instead of __setattr__ when the key looks
+        Assign `values` to a given key in data. This can be used instead of __setattr__ when the key looks
         like a private attr and would be assigned to __dict__ otherwise; or when mutliple values have to be assigned.
         """
-        self.__data__.set(key, *values)
+        self.data.set(key, *values)
 
     # def __setattr__(self, name, value):
-    #     """Assigns a singleton `value` to a given name in __data__; or to __dict__ if `name` is a private attr."""
+    #     """Assigns a singleton `value` to a given name in data; or to __dict__ if `name` is a private attr."""
     #
-    #     # store private attributes in __dict__, not __data__
+    #     # store private attributes in __dict__, not data
     #     if name[0] == '_':
     #         object.__setattr__(self, name, value)
     #     else:
-    #         self.__data__[name] = value
-    #     # data = object.__getattribute__(self, '__data__')
+    #         self.data[name] = value
+    #     # data = object.__getattribute__(self, 'data')
     #     # data[name] = value
     
     def __dir__(self):
         attrs = set(super().__dir__())
-        attrs.update(self.__data__.keys())
+        attrs.update(self.data.keys())
         return attrs
         
     def __repr__(self, max_len_name = 30):
         
-        cat = self.__category__
+        cat = self.category
         category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.__cid__})'
         name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
         if len(name) > max_len_name:
@@ -278,9 +276,9 @@ class Item(object, metaclass = MetaItem):
         Setting force=True or passing a `record` enforces decoding even if `self` was already loaded.
         """
         assert self.__iid__ is not None, '_load() must not be called for a newly created item with no IID'
-        if self.__loaded__ and not force and record is None: return self
+        if self.loaded and not force and record is None: return self
         if record is None:
-            record = self.__category__.load_data(self.__id__)
+            record = self.category.load_data(self.__id__)
         self._decode(record)
         return self
     
@@ -289,23 +287,23 @@ class Item(object, metaclass = MetaItem):
 
     def _decode(self, record):
         """Decode raw information from a DB `record` and store in `self`."""
-        self.__loaded__ = True                      # this must be set already here to avoid infinite recursion
+        self.loaded = True                      # this must be set already here to avoid infinite recursion
         
-        data = record.pop('__data__')
+        data = record.pop('data')
         
         for field, value in record.items():
             if value in (None, ''): continue
             setattr(self, field, value)
         
-        # impute __category__; note the special case: the root Category item is a category for itself!
+        # impute category; note the special case: the root Category item is a category for itself!
         cid, iid = self.__id__
-        self.__category__ = self if (cid == iid == ROOT_CID) else self.__registry__.get_category(cid)
+        self.category = self if (cid == iid == ROOT_CID) else self.registry.get_category(cid)
 
-        # convert __data__ from JSON string to a struct
+        # convert data from JSON string to a struct
         if data:
-            schema = self.__category__.get('schema')
+            schema = self.category.get('schema')
             data = schema.decode_json(data)
-            self.__data__.update(data)
+            self.data.update(data)
         
         self._post_decode()
 
@@ -313,16 +311,16 @@ class Item(object, metaclass = MetaItem):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
     def _to_json(self):
-        schema = self.__category__.get('schema')
-        return schema.encode_json(self.__data__)
+        schema = self.category.get('schema')
+        return schema.encode_json(self.data)
         
     def insert(self):
         """
         Insert this item as a new row in DB. Assign a new IID (self.__iid__) and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
-        self.__category__._store.insert(self)
-        self.__registry__.save_item(self)
+        self.category._store.insert(self)
+        self.registry.save_item(self)
         
     def update(self, fields = None):
         """Update the contents of this item's row in DB."""
@@ -333,8 +331,8 @@ class Item(object, metaclass = MetaItem):
         #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
-        self.__category__._store.update(self)
-        self.__registry__.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
+        self.category._store.update(self)
+        self.registry.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
 
     def save(self):
         """
@@ -350,7 +348,7 @@ class Item(object, metaclass = MetaItem):
         """Return canonical URL of this item, possibly extended with a non-default
            endpoint designation and/or arguments to be passed to a handler function or a view template.
         """
-        return self.__category__.get_url_of(self, __endpoint, *args, **kwargs)
+        return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
     def __handle__(self, request, endpoint = None):
         """
@@ -364,13 +362,13 @@ class Item(object, metaclass = MetaItem):
         # template = get_template((endpoint or 'view') + '.hy')
         # return template.render({'item': self}, request)
         
-        # search for a Hypertag script in __views__
-        view = self.__views__.get(endpoint, None)
+        # search for a Hypertag script in views
+        view = self.views.get(endpoint, None)
         if view is not None:
             return HyperHTML().render(view, item = self)
 
-        # no view found; search for a handler method in __handlers__
-        hdl = self.__handlers__.get(endpoint, None)
+        # no view found; search for a handler method in handlers
+        hdl = self.handlers.get(endpoint, None)
         if hdl is not None:
             return hdl(self, request)
         
@@ -387,7 +385,7 @@ class Item(object, metaclass = MetaItem):
         
         % category
             p .catlink
-                a href=$item.__category__.get_url() | {item.__category__.get('name')? or item.__category__}
+                a href=$item.category.get_url() | {item.category.get('name')? or item.category}
                 | ($item.__cid__,$item.__iid__)
             
         html
@@ -400,13 +398,13 @@ class Item(object, metaclass = MetaItem):
                 #p  | ID {item.__id__}
                 h2  | Attributes
                 ul
-                    for attr, value in item.__data__.items()
+                    for attr, value in item.data.items()
                         li
                             b | {attr}:
                             . | {str(value)}
     """
     
-    __views__ = {
+    views = {
         None: _default_view,
     }
 
@@ -441,7 +439,7 @@ class Category(Item):
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
-        return self.__registry__.get_item(iid = iid, category = self)
+        return self.registry.get_item(iid = iid, category = self)
     
     def load_items(self):
         """
@@ -449,7 +447,7 @@ class Category(Item):
         A generator.
         """
         records = self._store.select_all(self.__iid__)
-        return self.__registry__.decode_items(records, self)
+        return self.registry.decode_items(records, self)
         
 
     #####  Handlers & views  #####
@@ -460,7 +458,7 @@ class Category(Item):
         
         # data = Data()
         item = self.new_item()
-        data = item.__data__
+        data = item.data
         
         # retrieve attribute values from GET/POST and assign to `item`
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
@@ -497,14 +495,14 @@ class Category(Item):
                                 | {item.get('name')? or item}
     """
     
-    __views__ = {
+    views = {
         None: _default_view,
     }
 
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         
         assert item.__cid__ == self.__iid__
-        site_ = self.__registry__.get_site()
+        site_ = self.registry.get_site()
 
         base_url  = site_.get('base_url')
         qualifier = site_.get_qualifier(self)
@@ -541,14 +539,14 @@ class RootCategory(Category):
             'info':     String(),
         }
         
-        item = cls.__new__(cls)             # __init__() is disabled, do not call it
-        item.__registry__ = registry
-        item.__category__ = item            # RootCategory is a category for itself
+        item = cls.__new__(cls)                 # __init__() is disabled, do not call it
+        item.registry = registry
+        item.category = item                # RootCategory is a category for itself
         item.__cid__   = ROOT_CID
         item.__iid__   = ROOT_CID
-        item.__data__  = Data()
+        item.data  = Data()
         item.set('schema', schema)
-        item.set('itemclass', Category)           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+        item.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return item
         
 
@@ -589,15 +587,15 @@ class Site(Item):
     # _thread_local = threading.local()
     #
     # @property
-    # def __registry__(self):
-    #     reg = getattr(self._thread_local, '__registry__', None)
+    # def registry(self):
+    #     reg = getattr(self._thread_local, 'registry', None)
     #     if reg is None:
-    #         reg = self._thread_local.__registry__ = Registry()
+    #         reg = self._thread_local.registry = Registry()
     #     return reg
     #
-    # @__registry__.setter
-    # def __registry__(self, reg):
-    #     self._thread_local.__registry__ = reg
+    # @registry.setter
+    # def registry(self, reg):
+    #     self._thread_local.registry = reg
     
     def _post_decode(self):
 
@@ -612,11 +610,11 @@ class Site(Item):
 
     def get_category(self, cid):
         """Retrieve a category through the Registry that belongs to the current thread."""
-        return self.__registry__.get_category(cid)
+        return self.registry.get_category(cid)
     
     def get_item(self, *args, **kwargs):
         """Retrieve an item through the Registry that belongs to the current thread."""
-        return self.__registry__.get_item(*args, **kwargs)
+        return self.registry.get_item(*args, **kwargs)
         
     def get_qualifier(self, category = None, cid = None):
         """Get a qualifer of a given category that should be put in URL to access this category's items by IID."""
@@ -636,7 +634,7 @@ class Site(Item):
             print('incorrect descriptor in URL:', descriptor)
             raise
             
-        reg = self.__registry__
+        reg = self.registry
         
         cid = self._qualifiers[qualifier]
         category = reg.get_category(cid)
@@ -648,7 +646,7 @@ class Site(Item):
         """Cleanup and maintenance after a response has been sent, in the same thread."""
 
         print(f'after_request() in thread {threading.get_ident()}...', flush = True)
-        self.__registry__.after_request(sender, **kwargs)
+        self.registry.after_request(sender, **kwargs)
         # sleep(5)
 
         

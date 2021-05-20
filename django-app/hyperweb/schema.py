@@ -34,7 +34,7 @@ class Record(Type):
         self.fields = {}
     
     def _encode(self, data):
-        """Convert item's __data__ object (multidict) to a dict of {attr_name: encoded_values} pairs."""
+        """Convert item's data (multidict) to a dict of {attr_name: encoded_values} pairs."""
         
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, not {data}")
         errors = []
