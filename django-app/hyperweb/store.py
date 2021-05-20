@@ -42,7 +42,7 @@ class DataStore:
 class SimpleStore(DataStore):
     """Data store that uses only local DB, no sharding."""
 
-    _item_columns       = '__cid__ iid data created updated'.split()
+    _item_columns       = 'cid iid data created updated'.split()
     _item_select_cols   = ','.join(_item_columns)
     _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
     _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"
@@ -84,7 +84,7 @@ class SimpleStore(DataStore):
         Insert `item` as a new row in DB. Assign a new IID and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
-        cid = item.__cid__
+        cid = item.cid
         
         max_iid = self.db.select_one(f"SELECT MAX(iid) FROM hyper_items WHERE cid = {cid} FOR UPDATE")[0]
         if max_iid is None:

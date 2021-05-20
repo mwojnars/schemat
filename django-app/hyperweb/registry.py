@@ -95,7 +95,7 @@ class Registry:
         """
         itemclass = category.get('itemclass')
         for record in records:
-            cid = record.pop('__cid__')
+            cid = record.pop('cid')
             iid = record.pop('iid')
             assert cid == category.iid
 

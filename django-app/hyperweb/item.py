@@ -122,7 +122,7 @@ class Item(object, metaclass = MetaItem):
     """
     
     # builtin instance attributes & properties, not user-editable ...
-    __cid__      = None         # CID (Category ID) of this item
+    cid      = None         # CID (Category ID) of this item
     iid      = None         # IID (Item ID within category) of this item
                                 # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
     data     = None         # MultiDict with values of object attributes; an attribute can have multiple values
@@ -138,12 +138,12 @@ class Item(object, metaclass = MetaItem):
                             # and compiled to HTML through Hypertag
     
     @property
-    def __id__(self): return self.__cid__, self.iid
+    def __id__(self): return self.cid, self.iid
     
     @__id__.setter
     def __id__(self, id_):
         assert self.iid is None or self.iid == id_[1], 'changing IID of an existing item is forbidden'
-        self.__cid__, self.iid = id_
+        self.cid, self.iid = id_
 
     # @property
     # def data(self):
@@ -164,7 +164,7 @@ class Item(object, metaclass = MetaItem):
         item = cls.__new__(cls)                     # __init__() is disabled, do not call it
         item.registry = category.registry
         item.category = category
-        item.__cid__  = category.iid
+        item.cid  = category.iid
         item.iid  = iid
         item.data = Data()                      # REFACTOR
         return item
@@ -263,7 +263,7 @@ class Item(object, metaclass = MetaItem):
     def __repr__(self, max_len_name = 30):
         
         cat = self.category
-        category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.__cid__})'
+        category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.cid})'
         name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
         if len(name) > max_len_name:
             name = name[:max_len_name-3] + '...'
@@ -386,7 +386,7 @@ class Item(object, metaclass = MetaItem):
         % category
             p .catlink
                 a href=$item.category.get_url() | {item.category.get('name')? or item.category}
-                | ($item.__cid__,$item.iid)
+                | ($item.cid,$item.iid)
             
         html
             $name = item.get('name')? or str(item)
@@ -501,7 +501,7 @@ class Category(Item):
 
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         
-        assert item.__cid__ == self.iid
+        assert item.cid == self.iid
         site_ = self.registry.get_site()
 
         base_url  = site_.get('base_url')
@@ -542,7 +542,7 @@ class RootCategory(Category):
         item = cls.__new__(cls)                 # __init__() is disabled, do not call it
         item.registry = registry
         item.category = item                # RootCategory is a category for itself
-        item.__cid__   = ROOT_CID
+        item.cid   = ROOT_CID
         item.iid   = ROOT_CID
         item.data  = Data()
         item.set('schema', schema)
