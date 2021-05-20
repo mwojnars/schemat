@@ -29,7 +29,7 @@
       "app": {"@": "hyperweb.types.Link", "cid": 2}
     }
   },
-  "itemclass": "hyperweb.core.Site"
+  "itemclass": "hyperweb.item.Site"
 },
 
 {
@@ -45,7 +45,7 @@
       }
     }
   },
-  "itemclass": "hyperweb.core.Application"
+  "itemclass": "hyperweb.item.Application"
 },
 
 {
@@ -61,7 +61,7 @@
       }
     }
   },
-  "itemclass": "hyperweb.core.Space"
+  "itemclass": "hyperweb.item.Space"
 },
 
 {
@@ -75,7 +75,7 @@
   "name": "Item",
   "info": "Category of items that do not belong to any specific category",
   "schema": {"fields": {}, "strict": false},
-  "itemclass": "hyperweb.core.Item"
+  "itemclass": "hyperweb.item.Item"
 },
 
 {"id": [1,1], "app": 1, "name": "catalog.wiki", "base_url": "http://localhost:8001"},
