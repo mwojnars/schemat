@@ -251,16 +251,16 @@ class Item(object, metaclass = MetaItem):
         """
         self.__data__.set(key, *values)
 
-    def __setattr__(self, name, value):
-        """Assigns a singleton `value` to a given name in __data__; or to __dict__ if `name` is a private attr."""
-        
-        # store private attributes in __dict__, not __data__
-        if name[0] == '_':
-            object.__setattr__(self, name, value)
-        else:
-            self.__data__[name] = value
-        # data = object.__getattribute__(self, '__data__')
-        # data[name] = value
+    # def __setattr__(self, name, value):
+    #     """Assigns a singleton `value` to a given name in __data__; or to __dict__ if `name` is a private attr."""
+    #
+    #     # store private attributes in __dict__, not __data__
+    #     if name[0] == '_':
+    #         object.__setattr__(self, name, value)
+    #     else:
+    #         self.__data__[name] = value
+    #     # data = object.__getattribute__(self, '__data__')
+    #     # data[name] = value
         
     def __dir__(self):
         attrs = set(super().__dir__())
@@ -551,15 +551,10 @@ class RootCategory(Category):
         item.__cid__   = ROOT_CID
         item.__iid__   = ROOT_CID
         item.__data__  = Data()
-        item.schema    = schema
-        item.itemclass = Category           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+        item.set('schema', schema)
+        item.set('itemclass', Category)           # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return item
         
-    # def _load(self, record = None, force = False):
-    #     """"""
-    #     # bootstrap loading of RootCategory instance ?
-    
-    # {"info":"Category of items that represent categories.","name":"Category","schema":{"@":"hyperweb.schema.Schema","fields":{"schema":{"@":"hyperweb.types.Object","class_":{"=":"hyperweb.schema.Schema","@":"builtins.type"}},"itemclass":{"@":"hyperweb.types.Class"},"name":{"@":"hyperweb.types.String"},"info":{"@":"hyperweb.types.String"}},"strict":true}}
 
 #####################################################################################################################################################
 #####
@@ -568,16 +563,6 @@ class RootCategory(Category):
 
 class Application(Item): pass
 class Space(Item): pass
-
-# class TTLCacheX(TTLCache):
-#     """
-#     Extended version of cachetools.TTLCache:
-#     - __init__ accepts maxsize=None
-#     - explicit set(key, val, ttl, protect=False) accepts explicit per-item TTL value that can differ from the global one supplied to __init__
-#       - if ttl=None the item never expires
-#       - if protect=True the item never gets evicted from cache, neither due to expiration nor LRU
-#     - explicit flush(maxsize=...) to truncate the cache and discard expired/excessive items to match the desired maxsize
-#     """
 
 class Registry:
     """
@@ -633,10 +618,6 @@ class Registry:
 
         assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
 
-        # # special handling for the root Category
-        # if cid == iid == ROOT_CID:
-        #     return self._load_root()
-        
         # determine what itemclass to use for instantiation
         if not category:
             category = self.get_category(cid)
@@ -689,13 +670,6 @@ class Registry:
         # print(f'Registry.get_item(): created root category - {id(item)}')
         return item
         
-    # def _load_item(self, itemclass, record = None):
-    #
-    #     item = itemclass._create(category, iid)
-    #     self._set(item)
-    #     item._load(record)
-    #     return item
-
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
         print(f'registry: creating item {item.__id__} in thread {threading.get_ident()} ', flush = True)
