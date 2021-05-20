@@ -14,13 +14,6 @@ SITE_ID  = (1,1)    # (CID,IID) of the site to be loaded upon startup
 # of a given attribute from item.data rather than the 1st value only
 MULTI_SUFFIX = '_list'
 
-# rules for detecting disallowed attribute names in category definitions
-STOP_ATTR = {
-    'special':      (lambda name: name[0] == '_'),
-    'reserved':     (lambda name: name in 'load insert update save'),
-    'multidict':    (lambda name: name.endswith(MULTI_SUFFIX)),
-}
-
 
 # ALIASES = [
 #     # special names are mapped from "package.module.name" to "$name" during serialization

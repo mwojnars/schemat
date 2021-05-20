@@ -113,7 +113,7 @@ class Type:
             
             # Link:
             # item = self.value
-            # cid, iid = item.__id__
+            # cid, iid = item.id
             # url = item.get_url()
             # return f"<link href='{url}'>{item.data.name or item.data.title}</link>"
         
@@ -251,13 +251,13 @@ class Link(Type):
     
     def _encode(self, item):
         
-        if None in item.__id__:
-            raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.__id__}")
+        if None in item.id:
+            raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.id}")
             
         if self.cid is not None and item.cid == self.cid:
             return item.iid
         
-        return item.__id__
+        return item.id
 
     def _decode(self, value):
         

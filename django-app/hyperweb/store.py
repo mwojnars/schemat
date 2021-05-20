@@ -91,7 +91,7 @@ class SimpleStore(DataStore):
             max_iid = 0
         
         iid = max_iid + 1
-        item.__id__ = (cid, iid)
+        item.iid = iid
         
         # item.__encode__()
         assert item.data is not None

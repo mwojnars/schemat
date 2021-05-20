@@ -2,7 +2,6 @@
 Representation of attribute values of an item (item data).
 """
 
-from .config import MULTI_SUFFIX
 from .jsonpickle import JsonPickle
 from .multidict import MultiDict
 

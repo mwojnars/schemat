@@ -112,7 +112,7 @@ class Item(object, metaclass = MetaItem):
     Mapping an internal Item to an ItemView for read-only access in views and handlers:
     - itemview.FIELD       -->  item.data.get_first(FIELD)
     - itemview.FIELD_list  -->  item.data.get_list(FIELD)
-    - itemview._get_first(FIELD), _get_list()
+    - itemview._first(FIELD), _last(), _list()
     
     BaseItem,Core,Seed... -- when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
     - method() --
@@ -124,7 +124,8 @@ class Item(object, metaclass = MetaItem):
     # builtin instance attributes & properties, not user-editable ...
     cid      = None         # CID (Category ID) of this item
     iid      = None         # IID (Item ID within category) of this item
-                                # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
+                            # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
+    
     data     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     
     category = None         # parent category of this item, as an instance of Category
@@ -138,12 +139,12 @@ class Item(object, metaclass = MetaItem):
                             # and compiled to HTML through Hypertag
     
     @property
-    def __id__(self): return self.cid, self.iid
+    def id(self): return self.cid, self.iid
     
-    @__id__.setter
-    def __id__(self, id_):
-        assert self.iid is None or self.iid == id_[1], 'changing IID of an existing item is forbidden'
-        self.cid, self.iid = id_
+    # @id.setter
+    # def id(self, id_):
+    #     assert self.iid is None or self.iid == id_[1], 'changing IID of an existing item is forbidden'
+    #     self.cid, self.iid = id_
 
     # @property
     # def data(self):
@@ -176,33 +177,8 @@ class Item(object, metaclass = MetaItem):
         
     def _get_current(self):
         """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
-        return self.registry.get_item(self.__id__)
+        return self.registry.get_item(self.id)
 
-    # def __getattr__(self, name):
-    #     """
-    #         Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
-    #         __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
-    #         has NOT been found in the object's __dict__ or in a parent class (!)
-    #     """
-    #     if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-    #         basename = name[:-len(MULTI_SUFFIX)]
-    #         return self.getlist(basename)
-    #     return self.get(name)
-
-    # def get(self, name):
-    #
-    #     # if self.data is None:
-    #     #     self._load()
-    #
-    #     if name in self.data:                   # get `name` from data if present there
-    #         return self.data[name]
-    #
-    #     # TODO: search `name` in category's default values
-    #     value, found = self.category.get_default(name)
-    #     if found: return value
-    #
-    #     raise AttributeError(name)
-    
     def get(self, name, default = _RAISE_):
         """Get attribute value from:
            - self.data OR
@@ -278,7 +254,7 @@ class Item(object, metaclass = MetaItem):
         assert self.iid is not None, '_load() must not be called for a newly created item with no IID'
         if self.loaded and not force and record is None: return self
         if record is None:
-            record = self.category.load_data(self.__id__)
+            record = self.category.load_data(self.id)
         self._decode(record)
         return self
     
@@ -296,7 +272,7 @@ class Item(object, metaclass = MetaItem):
             setattr(self, field, value)
         
         # impute category; note the special case: the root Category item is a category for itself!
-        cid, iid = self.__id__
+        cid, iid = self.id
         self.category = self if (cid == iid == ROOT_CID) else self.registry.get_category(cid)
 
         # convert data from JSON string to a struct
@@ -395,7 +371,7 @@ class Item(object, metaclass = MetaItem):
             body
                 h1  | {name}
                 category
-                #p  | ID {item.__id__}
+                #p  | ID {item.id}
                 h2  | Attributes
                 ul
                     for attr, value in item.data.items()
@@ -524,7 +500,14 @@ class Category(Item):
         """Convert an encoded IID representation found in a URL back to an <int>. Reverse operation to encode_url()."""
         return int(iid_str)
         
-        
+# # rules for detecting disallowed attribute names in category definitions
+# STOP_ATTR = {
+#     'special':      (lambda name: name[0] == '_'),
+#     'reserved':     (lambda name: name in 'load insert update save'),
+#     'multidict':    (lambda name: name.endswith(MULTI_SUFFIX)),
+# }
+
+
 class RootCategory(Category):
     """Root category: a category for all other categories."""
 
@@ -648,5 +631,26 @@ class Site(Item):
         print(f'after_request() in thread {threading.get_ident()}...', flush = True)
         self.registry.after_request(sender, **kwargs)
         # sleep(5)
-
         
+        
+#####################################################################################################################################################
+#####
+#####  ITEM VIEW
+#####
+
+class View:
+    """View of an item. This class provides convenient read access to `data` of an underlying item."""
+    
+    __item__ = None         # the underlying Item instance
+    
+    def __getattr__(self, name):
+        """
+            Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
+            __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
+            has NOT been found in the object's __dict__ or in a parent class (!)
+        """
+        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
+            basename = name[:-len(MULTI_SUFFIX)]
+            return self.getlist(basename)
+        return self.get(name)
+

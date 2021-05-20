@@ -121,8 +121,8 @@ class Registry:
         
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
-        print(f'registry: creating item {item.__id__} in thread {threading.get_ident()} ', flush = True)
-        self.cache.set(item.__id__, item, ttl, protect)
+        print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
+        self.cache.set(item.id, item, ttl, protect)
 
     def after_request(self, sender, **kwargs):
         """Cleanup and maintenance after a response has been sent, in the same thread."""
