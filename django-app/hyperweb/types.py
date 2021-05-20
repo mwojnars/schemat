@@ -255,7 +255,7 @@ class Link(Type):
             raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.__id__}")
             
         if self.cid is not None and item.__cid__ == self.cid:
-            return item.__iid__
+            return item.iid
         
         return item.__id__
 

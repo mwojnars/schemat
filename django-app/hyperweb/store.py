@@ -42,7 +42,7 @@ class DataStore:
 class SimpleStore(DataStore):
     """Data store that uses only local DB, no sharding."""
 
-    _item_columns       = '__cid__ __iid__ data created updated'.split()
+    _item_columns       = '__cid__ iid data created updated'.split()
     _item_select_cols   = ','.join(_item_columns)
     _item_select        = f"SELECT {_item_select_cols} FROM hyper_items "
     _item_select_by_id  = _item_select + "WHERE cid = %s AND iid = %s"

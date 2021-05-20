@@ -48,7 +48,7 @@ class Registry:
         Hence, the caller should never assume that the returned item.data is missing.
         """
         if not id_:
-            if category: cid = category.__iid__
+            if category: cid = category.iid
             id_ = (cid, iid)
         else:
             (cid, iid) = id_
@@ -96,8 +96,8 @@ class Registry:
         itemclass = category.get('itemclass')
         for record in records:
             cid = record.pop('__cid__')
-            iid = record.pop('__iid__')
-            assert cid == category.__iid__
+            iid = record.pop('iid')
+            assert cid == category.iid
 
             if cid == iid == ROOT_CID:
                 yield self.cache.get((cid, iid)) or self._load_root(record)
