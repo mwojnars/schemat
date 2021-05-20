@@ -79,7 +79,7 @@ class Item(object, metaclass = MetaItem):
     Item is an elementary object operated upon by Hyperweb and a unit of storage in DB.
     
     Item's category metadata:
-    - views
+    - templates
     - handlers
     - methods
     
@@ -109,7 +109,7 @@ class Item(object, metaclass = MetaItem):
     - stub/dummy/short/frame: IID is present, but no data loaded yet (lazy loading)
     - loaded:
     
-    Mapping an internal Item to an ItemView for read-only access in views and handlers:
+    Mapping an internal Item to an ItemView for read-only access in templates and handlers:
     - itemview.FIELD       -->  item.data.get_first(FIELD)
     - itemview.FIELD_list  -->  item.data.get_list(FIELD)
     - itemview._first(FIELD), _last(), _list()
@@ -134,8 +134,8 @@ class Item(object, metaclass = MetaItem):
     
     handlers = None         # dict {handler_name: method} of all handlers (= public web methods)
                             # exposed by items of the current Item subclass
-    views    = None         # similar to handlers, but stores Hypertag scripts (<str>) instead of methods;
-                            # if a handler is not found in handlers, a script is looked up in views
+    templates    = None         # similar to handlers, but stores Hypertag scripts (<str>) instead of methods;
+                            # if a handler is not found in handlers, a script is looked up in templates
                             # and compiled to HTML through Hypertag
     
     @property
@@ -322,35 +322,35 @@ class Item(object, metaclass = MetaItem):
 
     def get_url(self, __endpoint = None, *args, **kwargs):
         """Return canonical URL of this item, possibly extended with a non-default
-           endpoint designation and/or arguments to be passed to a handler function or a view template.
+           endpoint designation and/or arguments to be passed to a handler function or a template.
         """
         return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
     def __handle__(self, request, endpoint = None):
         """
         Route a web request to a given endpoint.
-        Endpoint can be implemented as a handler function/method, or a view template.
+        Endpoint can be implemented as a handler function/method, or a template.
         Handler functions are stored in a parent category object.
         """
         # TODO: route through a predefined pipeline of handlers
         
         # from django.template.loader import get_template
-        # template = get_template((endpoint or 'view') + '.hy')
+        # template = get_template((endpoint or 'template') + '.hy')
         # return template.render({'item': self}, request)
         
-        # search for a Hypertag script in views
-        view = self.views.get(endpoint, None)
-        if view is not None:
-            return HyperHTML().render(view, item = self)
+        # search for a Hypertag script in templates
+        template = self.templates.get(endpoint, None)
+        if template is not None:
+            return HyperHTML().render(template, item = self)
 
-        # no view found; search for a handler method in handlers
+        # no template found; search for a handler method in handlers
         hdl = self.handlers.get(endpoint, None)
         if hdl is not None:
             return hdl(self, request)
         
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    _default_view = \
+    _default_template = \
     """
         context $item
         
@@ -380,8 +380,8 @@ class Item(object, metaclass = MetaItem):
                             . | {str(value)}
     """
     
-    views = {
-        None: _default_view,
+    templates = {
+        None: _default_template,
     }
 
 
@@ -426,7 +426,7 @@ class Category(Item):
         return self.registry.decode_items(records, self)
         
 
-    #####  Handlers & views  #####
+    #####  Handlers & templates  #####
 
     @handler('new')
     def _handle_new(self, request):
@@ -446,7 +446,7 @@ class Category(Item):
         item.save()
         return html_escape(f"Item created: {item}")
         
-    _default_view = \
+    _default_template = \
     """
         context $item as cat
         
@@ -471,8 +471,8 @@ class Category(Item):
                                 | {item.get('name')? or item}
     """
     
-    views = {
-        None: _default_view,
+    templates = {
+        None: _default_template,
     }
 
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
