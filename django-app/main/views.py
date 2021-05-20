@@ -3,11 +3,12 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-from hyperweb.core import site
+from hyperweb.core import registry
 
 
 def item_view(request, descriptor, endpoint = None):
     
+    site = registry.get_site()
     item = site.get_from_url(descriptor)
     doc  = item.__handle__(request, endpoint)
     return HttpResponse(doc)

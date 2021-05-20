@@ -4,7 +4,7 @@ from bidict import bidict
 
 from nifty.text import html_escape
 
-from .config import ROOT_CID, SITE_ID, MULTI_SUFFIX
+from .config import ROOT_CID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore, CsvStore, JsonStore
@@ -504,7 +504,7 @@ class Category(Item):
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         
         assert item.__cid__ == self.__iid__
-        site_ = self.__registry__.get_item(SITE_ID)
+        site_ = self.__registry__.get_site()
 
         base_url  = site_.get('base_url')
         qualifier = site_.get_qualifier(self)

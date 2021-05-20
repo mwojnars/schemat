@@ -2,7 +2,6 @@ from django.http import HttpRequest, HttpResponse
 from django.core.signals import request_finished
 from django.dispatch import receiver
 
-from .config import SITE_ID
 from .registry import Registry
 
 
@@ -13,6 +12,7 @@ from .registry import Registry
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
+    site = registry.get_site()
     site.after_request(sender, **kwargs)
     # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
@@ -24,7 +24,6 @@ def after_request(sender, **kwargs):
 #####################################################################################################################################################
 
 registry = Registry()
-site = registry.get_item(SITE_ID)
 
 # root = registry.get_item((0,0))
 # print('root:', root)

@@ -1,6 +1,6 @@
 import threading
 
-from .config import ROOT_CID
+from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
 from .item import RootCategory
 
@@ -84,6 +84,9 @@ class Registry:
     def get_category(self, cid):
         # assert cid is not None
         return self.get_item((ROOT_CID, cid))
+    
+    def get_site(self):
+        return self.get_item(SITE_ID)
     
     def decode_items(self, records, category):
         """
