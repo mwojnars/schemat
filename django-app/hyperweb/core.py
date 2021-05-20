@@ -8,7 +8,7 @@ from django.dispatch import receiver
 
 from nifty.text import html_escape
 
-from .config import ROOT_CID, SITE_CID, SITE_IID, MULTI_SUFFIX
+from .config import ROOT_CID, SITE_ID, MULTI_SUFFIX
 from .data import Data
 from .errors import *
 from .store import SimpleStore, CsvStore, JsonStore
@@ -509,9 +509,10 @@ class Category(Item):
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         
         assert item.__cid__ == self.__iid__
-        
-        base_url  = site.get('base_url')
-        qualifier = site.get_qualifier(self)
+        site_ = self.__registry__.get_item(SITE_ID)
+
+        base_url  = site_.get('base_url')
+        qualifier = site_.get_qualifier(self)
         iid       = self.encode_url(item.__iid__)
         # print(f'category {self.__iid__} {id(self)}, qualifier {qualifier} {self._qualifier}')
         
@@ -789,8 +790,11 @@ def after_request(sender, **kwargs):
 
 #####################################################################################################################################################
 
-site = Registry().get_lazy(cid = SITE_CID, iid = SITE_IID)
-site._load()
+registry = Registry()
+site = registry.get_item(SITE_ID)
+
+# site = Registry().get_lazy(SITE_ID)
+# site._load()
 
 # root = site.__registry__.get_item((0,0))
 # print('root:', root)

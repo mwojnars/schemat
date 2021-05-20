@@ -286,7 +286,8 @@ class Link(Type):
         if cid is None:
             cid = self.cid
 
-        from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
+        # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
+        from .core import registry
         
-        return site.get_item((cid, iid))
+        return registry.get_item((cid, iid))
         
