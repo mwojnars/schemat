@@ -164,15 +164,14 @@ class MultiDict:
     #         return default
     #     return values[-1]
 
-    def get_list(self, key, default = None, copy_list = False):
+    def get_list(self, key, copy_list = False):
         """
         Return a list of values for the key, or an empty list if the key doesn't exist.
         If copy_list is True, a new copy of the list is created, otherwise the one stored
         internally is returned (should not be modified by the caller!).
         """
         if key not in self._values:
-            if default is None: return []
-            return default
+            return []
         
         # if key in self._singletons:
         #     return [self._values[key]]

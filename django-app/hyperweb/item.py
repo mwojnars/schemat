@@ -106,8 +106,8 @@ class Item(object, metaclass = MetaItem):
     
     Mapping an internal Item to an ItemView for read-only access in templates and handlers:
     - itemview.FIELD       -->  item.data.get_first(FIELD)
-    - itemview.FIELD_list  -->  item.data.get_list(FIELD)
-    - itemview.FIELD_first, FIELD_last
+    - itemview.FIELD__list  -->  item.data.get_list(FIELD)
+    - itemview.FIELD__first, FIELD__last
     - itemview._first(FIELD), _last(), _list()
     
     BaseItem,Core,Seed... -- when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
@@ -171,16 +171,10 @@ class Item(object, metaclass = MetaItem):
         """Create a new item, one that's not yet in DB and has no iid assigned. Should only be called by Registry."""
         return cls._create(category, None)
         
-    # def current(self):
-    #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
-    #     return self.registry.get_item(self.id)
-    
-    def prepare(self, field):
-        """Make sure that a given `field` is present in self.data; load it from DB if not."""
-        if self.loaded or field in self.data: return
-        self._load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
-    
-    def get(self, field, default = None, category_default = True, mode = 'uniq'):
+    def __getitem__(self, field):
+        return self.get(field, Item.RAISE)
+        
+    def get(self, field, default = None, category_default = True, mode = 'first'):
         """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
            if category_default=True. If the field is missing and has no default, `default` is returned,
            or KeyError is raised if default=RAISE.
@@ -196,28 +190,19 @@ class Item(object, metaclass = MetaItem):
         
         return default
 
+    def get_uniq(self, field, default = None, category_default = True):
+        return self.get(field, default, category_default, 'uniq')
+        
     def get_first(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'first')
         
     def get_last(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'last')
         
-    # def get_first(self, field, default = None, category_default = True):
-    #     """Get the first value of a `field` from self.data using data.get(), or from self.category's schema defaults
-    #        if category_default=True. If the field is missing and has no default, `default` is returned if not RAISE,
-    #        or KeyError is raised.
-    #     """
-    #     self.prepare(field)
-    #     if field in self.data:
-    #         return self.data.get_first(field)
-    #     return self.category.get_default(field, default)
-
-
-    def get_list(self, name, copy_list = False):
+    def get_list(self, field, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
-        if not (self.loaded or name in self.data):
-            self._load()
-        return self.data.get_list(name, copy_list)
+        self.prepare(field)
+        return self.data.get_list(field, copy_list)
 
     def set(self, key, *values):
         """
@@ -244,13 +229,24 @@ class Item(object, metaclass = MetaItem):
         
     def __repr__(self, max_len_name = 30):
         
-        cat = self.category
-        category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.cid})'
-        name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
+        category = self.category.get('name', f'CID({self.cid})')
+        name     = self.get('name', '')
+        # cat = self.category
+        # category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.cid})'
+        # name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
         if len(name) > max_len_name:
             name = name[:max_len_name-3] + '...'
         
-        return f'<{category}:{self.iid}{name}>'
+        return f'<{category}:{self.iid} {name}>'
+    
+    # def current(self):
+    #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
+    #     return self.registry.get_item(self.id)
+    
+    def prepare(self, field):
+        """Make sure that a given `field` is present in self.data; load it from DB if not."""
+        if self.loaded or field in self.data: return
+        self._load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
     
     def _load(self, record = None, force = False):
         """
@@ -367,11 +363,11 @@ class Item(object, metaclass = MetaItem):
         
         % category
             p .catlink
-                a href=$item.category.get_url() | {item.category.get('name')? or item.category}
+                a href=$item.category.get_url() | {item.category['name']? or item.category}
                 | ($item.cid,$item.iid)
             
         html
-            $name = item.get('name')? or str(item)
+            $name = item['name']? or str(item)
             head
                 title | {name}
             body
@@ -431,6 +427,12 @@ class Category(Item):
         records = self._store.select_all(self.iid)
         return self.registry.decode_items(records, self)
         
+    def get_default(self, field, default):
+        """Get default value of a field from category schema."""
+        # TODO
+        
+        if default is Item.RAISE: raise KeyError(field)
+        return default
 
     #####  Handlers & templates  #####
 
@@ -457,7 +459,7 @@ class Category(Item):
         context $item as cat
         
         html
-            $name = cat.get('name')? or str(cat)
+            $name = cat['name']? or str(cat)
             head
                 title | {name ' -' }? category #{cat.iid}
             body
@@ -474,7 +476,7 @@ class Category(Item):
                         tr
                             td / #{item.iid} &nbsp;
                             td : a href=$item.get_url()
-                                | {item.get('name')? or item}
+                                | {item['name']? or item}
     """
     
     templates = {
@@ -644,23 +646,32 @@ class Site(Item):
 class View:
     """View of an item. This class provides convenient read access to `data` of an underlying item."""
     
-    # suffixes appended to attribute names to indicate which (multiple) values of a given attribute to retrieve
-    GET_FIRST = '_first'
-    GET_LAST  = '_last'
-    GET_LIST  = '_list'
+    # modes of value access in Item.data, and suffixes appended to attribute names to indicate
+    # which (multiple) values of a given attribute to retrieve
+    _GET_MODES    = ('uniq', 'first', 'last', 'list')
+    
+    _mode_separator = '__'
+    _default_mode   = 'first'
+    _default_miss   = Item.RAISE
     
     __item__ = None         # the underlying Item instance; enables access to methods and full data[]
     __namespace__ = None    # ???
     
     def __getattr__(self, name):
         """
-            Calls either get() or get_list(), depending on whether MULTI_SUFFIX is present in `name`.
-            __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
-            has NOT been found in the object's __dict__ or in a parent class (!)
+            Calls __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
+            or does it contain a suffix indicating the mode of access (uniq, first, last, list).
         """
-        if self.GET_LIST and name.endswith(self.GET_LIST):
-            attr = name[:-len(self.GET_LIST)]
-            return self.__item__.get_list(attr)
+        field = name
+        mode  = self._default_mode
         
-        return self.__item__.get(name)
+        sep = self._mode_separator
+        if sep and sep in name:
+            field, mode = name.rsplit(sep, 1)
+            if mode not in self._GET_MODES:
+                field = name
+                mode  = self._default_mode
+        
+        return self.__item__.get(field, self._default_miss, mode = mode)
 
+    
