@@ -45,7 +45,7 @@
       }
     }
   },
-  "itemclass": "hyperweb.item.Application"
+  "itemclass": "hyperweb.item.Item"
 },
 
 {
@@ -61,7 +61,7 @@
       }
     }
   },
-  "itemclass": "hyperweb.item.Space"
+  "itemclass": "hyperweb.item.Item"
 },
 
 {

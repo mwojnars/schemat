@@ -3,14 +3,8 @@ MultiDict. A dict-like collection of key-value pairs such that every key may be 
 more than once. The order of values under a given key is preserved.
 """
 
-# from django.utils.datastructures import MultiValueDict
-
-
-class MultiDictKeyError(KeyError):
-    """Key not found error."""
-
-class MultiDictSingleKeyError(KeyError):
-    """Multiple values found for a key when a singleton value was expected."""
+class MultiKeyError(KeyError):
+    """Multiple values are present for a key, but a singleton value was expected."""
 
 
 #####################################################################################################################################################
@@ -30,8 +24,10 @@ class MultiDict:
     Side note: as of Python 3.7, <dict> preserves insertion order, as a language feature not an implementation detail.
     """
     
+    RAISE = object()        # token that indicates that a KeyError should be raised in get***() if a given key is not found
+    
     _values = None          # dict {key: list_of_values}
-    # _singletons = None      # predefined set of keys to be stored as singletons (no multi-values; no lists as wrappers)
+    
     
     def __init__(self, singular = None, multiple = None, compact = None): #singletons = None):
         """
@@ -61,15 +57,20 @@ class MultiDict:
             self._values = values
         
     def __getitem__(self, key):
-        """Return the first value for the key; raise MultiDictKeyError if not found."""
-        try:
-            values = self._values[key]
-        except KeyError:
-            raise MultiDictKeyError(key)
+        """
+        Return the (unique) value for the key; raise KeyError if not found,
+        or MultiKeyError if multiple values are present.
+        """
+        return self.get(key, MultiDict.RAISE)
         
-        # assert len(list_) >= 1
-        # if key in self._singletons: return values
-        return values[0]
+        # try:
+        #     values = self._values[key]
+        # except KeyError:
+        #     raise MultiDictKeyError(key)
+        #
+        # # assert len(list_) >= 1
+        # # if key in self._singletons: return values
+        # return values[0]
 
     def __setitem__(self, key, value):
         # if key in self._singletons:
@@ -81,8 +82,9 @@ class MultiDict:
         del self._values[key]
 
     def __contains__(self, key):
-        values = self._values.get(key)
-        return bool(values)
+        return key in self._values
+        # values = self._values.get(key)
+        # return bool(values)
         
     def __len__(self):
         return len(self._values)
@@ -92,44 +94,81 @@ class MultiDict:
         
     #############################################
 
+    def add(self, key, *values):
+        """Add value(s) to a given key without removing the existing ones. Values are added at the end of a list."""
+        if not values: return
+        if key in self._values:
+            self._values[key] += list(values)
+        else:
+            self._values[key] = list(values)
+        
     def set(self, key, *values):
         """
-        Assign an arbitrary number of `values` to a given `key`. If no values are provided,
-        this is equivalent to removing the key from the multidict (if the key exists) or doing nothing.
+        Assign an arbitrary number of `values` to a given `key` while removing any existing value.
+        If no value is provided, the key is removed (if present).
         """
         if values: self._values[key] = list(values)
         else:      self._values.pop(key, None)              # do NOT store empty lists, this would violate MultiDict invariant
         
-    def get(self, key, default = None):
+    def get(self, key, default = None, mode = 'uniq'):
         """
-        Return the (unique) value for the key; or `default` if the key doesn't exist.
-        Raise an exception if there is more than one value for the key.
+        Return a value for the key, or `default` if the key doesn't exist, or raise KeyError if default=RAISE.
+        What value is picked depends on `mode`: the first one (mode="first"), the last one ("last"),
+        or the single unique value ("uniq"), in the latter case a MultiKeyError is raised if multiple values
+        are present for the key.
         """
         values = self._values.get(key, None)
-        if values is None: return default
-        if len(values) > 1: raise MultiDictSingleKeyError(key)
-        return values[0]
-        
-    def get_first(self, key, default = None):
-        """Return the first value for the key; or `default` if the key doesn't exist."""
-        # if key in self._singletons:
-        #     return self._values.get(key, default)
-        values = self._values.get(key, None)
-        if values is None: return default
-        return values[0]
+        if not values:
+            if default is MultiDict.RAISE: raise KeyError(key)
+            return default
+        if mode == 'uniq':
+            if len(values) > 1: raise MultiKeyError(f"multiple values are present for a key ({key}) but a single value was expected")
+            return values[0]
+        return values[-1] if mode == 'last' else values[0]
 
+    def get_first(self, key, default = None):
+        return self.get(key, default, 'first')
+        
     def get_last(self, key, default = None):
-        """Return the last value for the key; or `default` if the key doesn't exist."""
-        values = self._values.get(key, None)
-        if values is None: return default
-        return values[-1]
+        return self.get(key, default, 'last')
+        
+    # def get(self, key, default = None):
+    #     """
+    #     Return the (unique) value for the key, or `default` if the key doesn't exist.
+    #     Raise KeyError if default=RAISE, or MultiKeyError if multiple values are present.
+    #     """
+    #     values = self._values.get(key, None)
+    #     if values is None:
+    #         if default is MultiDict.RAISE: raise KeyError(key)
+    #         return default
+    #     if len(values) > 1: raise MultiKeyError(f"multiple values are present for a key ({key}) when a single value was expected")
+    #     return values[0]
+    #
+    # def get_first(self, key, default = None):
+    #     """
+    #     Return the first value for the key, or `default` if the key doesn't exist, or raise KeyError if default=RAISE.
+    #     """
+    #     values = self._values.get(key, None)
+    #     if values is None:
+    #         if default is MultiDict.RAISE: raise KeyError(key)
+    #         return default
+    #     return values[0]
+    #
+    # def get_last(self, key, default = None):
+    #     """
+    #     Return the last value for the key, or `default` if the key doesn't exist, or raise KeyError if default=RAISE.
+    #     """
+    #     values = self._values.get(key, None)
+    #     if values is None:
+    #         if default is MultiDict.RAISE: raise KeyError(key)
+    #         return default
+    #     return values[-1]
 
     def get_list(self, key, default = None, copy_list = False):
         """
-        Return a list of values for the key. If key doesn't exist,
-        return an empty list, or the `default` value if not None.
-        If copy_list is True, return a new copy of the list of values
-        instead of the one stored internally in self.
+        Return a list of values for the key, or an empty list if the key doesn't exist.
+        If copy_list is True, a new copy of the list is created, otherwise the one stored
+        internally is returned (should not be modified by the caller!).
         """
         if key not in self._values:
             if default is None: return []
@@ -147,7 +186,6 @@ class MultiDict:
         if copy_list: return list(values)
         return values
         
-    # get = get_first                 # get() is an alias for get_first()
 
     #############################################
 
@@ -182,7 +220,7 @@ class MultiDict:
     #############################################
     
     def asdict(self, mode = 'lists'):
-        """`mode` is either 'multi' (return lists of all values) or 'first' (only first values)
+        """`mode` is either 'lists' (return lists of all values) or 'first' (only first values)
             or 'last' (only last values).
         """
         if mode == 'lists': return self.asdict_lists()

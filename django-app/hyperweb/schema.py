@@ -19,13 +19,12 @@ class Field:
 
 class Record(Type):
     """
-    Dict-like record of data composed of named fields. Primarily used as a type for schema definition inside categories.
-    Can also be used as a sub-type in compound type definitions.
-    
-    Record recognizes MultiDict as valid objects for encoding.
-    The ORDERING of fields in an Record instance is the same
+    Record of data composed of named fields stored as a MultiDict. Primarily used as a type for schema definition
+    inside categories. Can also be used as a sub-type in compound type definitions. Instances of MultiDict
+    are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
+    to False in all fields.
     """
-
+    
     fields   = None     # dict of field names & their types; generic type is assumed if a type is None or missing
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     # TODO: strict=True by default

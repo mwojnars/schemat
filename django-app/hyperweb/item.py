@@ -4,9 +4,10 @@ from bidict import bidict
 
 from nifty.text import html_escape
 
-from .config import ROOT_CID, MULTI_SUFFIX
+from .config import ROOT_CID
 from .data import Data
 from .errors import *
+from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore
 from .types import Object, String
 from .schema import Schema
@@ -31,12 +32,6 @@ class handler:
         if method.__name__ != '__view__':
             self.name = self.name or method.__name__
         return method
-
-class _RAISE_:
-    """A token used to indicate that an exception should be raised if an attribute value is not found."""
-
-# # shorthand for use inside Item.__getattribute__()
-# _get_ = object.__getattribute__
 
 
 #####################################################################################################################################################
@@ -87,7 +82,7 @@ class Item(object, metaclass = MetaItem):
     - get_url()
     - insert(), update(), save()
     - load() ??
-    - get(), getlist(), set()
+    - get(), get_list(), set()
     
     Item's metadata - in DB:
     - cid, iid
@@ -112,14 +107,15 @@ class Item(object, metaclass = MetaItem):
     Mapping an internal Item to an ItemView for read-only access in templates and handlers:
     - itemview.FIELD       -->  item.data.get_first(FIELD)
     - itemview.FIELD_list  -->  item.data.get_list(FIELD)
+    - itemview.FIELD_first, FIELD_last
     - itemview._first(FIELD), _last(), _list()
     
     BaseItem,Core,Seed... -- when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
     - method() --
     - METHOD() -- calls METHOD of NAME_XXX
-    ItemView
-    - _base    -- ref to the base item; enables access to methods and full data[]
     """
+    
+    RAISE = MultiDict.RAISE
     
     # builtin instance attributes & properties, not user-editable ...
     cid      = None         # CID (Category ID) of this item
@@ -151,7 +147,7 @@ class Item(object, metaclass = MetaItem):
     #     return Data(self.data)
     
     # # names that must not be used for attributes inside data
-    # __reserved__ = ['set', 'get', 'getlist', 'insert', 'update', 'save', 'get_url']
+    # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
     def __init__(self):
         raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
@@ -175,43 +171,53 @@ class Item(object, metaclass = MetaItem):
         """Create a new item, one that's not yet in DB and has no iid assigned. Should only be called by Registry."""
         return cls._create(category, None)
         
-    def _get_current(self):
-        """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
-        return self.registry.get_item(self.id)
-
-    def get(self, name, default = _RAISE_):
-        """Get attribute value from:
-           - self.data OR
-           - self.category's schema defaults OR
-           - self.__class__'s class-level defaults.
-           If `name` is not found, `default` is returned if present, or AttributeError raised otherwise.
+    # def current(self):
+    #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
+    #     return self.registry.get_item(self.id)
+    
+    def prepare(self, field):
+        """Make sure that a given `field` is present in self.data; load it from DB if not."""
+        if self.loaded or field in self.data: return
+        self._load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
+    
+    def get(self, field, default = None, category_default = True, mode = 'uniq'):
+        """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
+           if category_default=True. If the field is missing and has no default, `default` is returned,
+           or KeyError is raised if default=RAISE.
         """
-        try:
-            if not (self.loaded or name in self.data):
-                self._load()
-            return self.data[name]
-        except KeyError: pass
-
-        # # TODO: search `name` in category's default values
-        # category = _get_(self, 'category')
-        # if category:
-        #     try:
-        #         return category.get_default(name)
-        #     except AttributeError: pass
-
-        try:
-            return getattr(self.__class__, name)
-        except AttributeError: pass
-
-        if default is _RAISE_:
-            raise AttributeError(name)
+        self.prepare(field)
+        
+        if field in self.data:
+            return self.data.get(field, mode = mode)
+        if category_default:
+            return self.category.get_default(field, default)
+        if default is Item.RAISE:
+            raise KeyError(field)
+        
         return default
 
-    def getlist(self, name, default = None, copy_list = False):
+    def get_first(self, field, default = None, category_default = True):
+        return self.get(field, default, category_default, 'first')
+        
+    def get_last(self, field, default = None, category_default = True):
+        return self.get(field, default, category_default, 'last')
+        
+    # def get_first(self, field, default = None, category_default = True):
+    #     """Get the first value of a `field` from self.data using data.get(), or from self.category's schema defaults
+    #        if category_default=True. If the field is missing and has no default, `default` is returned if not RAISE,
+    #        or KeyError is raised.
+    #     """
+    #     self.prepare(field)
+    #     if field in self.data:
+    #         return self.data.get_first(field)
+    #     return self.category.get_default(field, default)
+
+
+    def get_list(self, name, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
         if not (self.loaded or name in self.data):
             self._load()
-        return self.data.get_list(name, default, copy_list)
+        return self.data.get_list(name, copy_list)
 
     def set(self, key, *values):
         """
@@ -538,9 +544,6 @@ class RootCategory(Category):
 #####  SITE
 #####
 
-class Application(Item): pass
-class Space(Item): pass
-
 class Site(Item):
     """
     A Site is responsible for two things:
@@ -584,7 +587,7 @@ class Site(Item):
 
         self._qualifiers = bidict()
         
-        for app in self.getlist('app'):
+        for app in self.get_list('app'):
             for space_name, space in app.get('spaces').items():
                 for category_name, category in space.get('categories').items():
                     
@@ -641,16 +644,23 @@ class Site(Item):
 class View:
     """View of an item. This class provides convenient read access to `data` of an underlying item."""
     
-    __item__ = None         # the underlying Item instance
+    # suffixes appended to attribute names to indicate which (multiple) values of a given attribute to retrieve
+    GET_FIRST = '_first'
+    GET_LAST  = '_last'
+    GET_LIST  = '_list'
+    
+    __item__ = None         # the underlying Item instance; enables access to methods and full data[]
+    __namespace__ = None    # ???
     
     def __getattr__(self, name):
         """
-            Calls either get() or getlist(), depending on whether MULTI_SUFFIX is present in `name`.
+            Calls either get() or get_list(), depending on whether MULTI_SUFFIX is present in `name`.
             __getattr__() is a fallback for regular attribute access, so it gets called ONLY when the attribute
             has NOT been found in the object's __dict__ or in a parent class (!)
         """
-        if MULTI_SUFFIX and name.endswith(MULTI_SUFFIX):
-            basename = name[:-len(MULTI_SUFFIX)]
-            return self.getlist(basename)
-        return self.get(name)
+        if self.GET_LIST and name.endswith(self.GET_LIST):
+            attr = name[:-len(self.GET_LIST)]
+            return self.__item__.get_list(attr)
+        
+        return self.__item__.get(name)
 
