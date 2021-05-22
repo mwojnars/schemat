@@ -181,7 +181,7 @@ class YamlStore(FileStore):
         self.filename = filename or DATABASES['yaml']['FILE']
         self.items = {}
         
-        for data in yaml.load(open(self.filename)):
+        for data in yaml.safe_load(open(self.filename)):
             id_ = data.pop('id')
             self.items[tuple(id_)] = json.dumps(data)
         

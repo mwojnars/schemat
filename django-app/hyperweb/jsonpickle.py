@@ -3,6 +3,8 @@ Custom implementation of JSON-pickling of objects of arbitrary classes.
 """
 
 import json
+from importlib import import_module
+
 from hyperweb.errors import DecodeError
 
 
@@ -30,9 +32,9 @@ class JsonPickle:
     # special attribute that stores a non-dict state of data types normally not handled by JSON: tuple, set, type ...
     STATE_ATTR = "="
     
-    def __init__(self):
-        from hyperweb.names import aliases
-        self.aliases = aliases
+    # def __init__(self):
+    #     from hyperweb.names import aliases
+    #     self.aliases = aliases
 
     def dumps(self, obj, **kwargs):
         # kwargs.setdefault('separators', (',', ':'))     # most compact separators (no whitespace)
@@ -46,7 +48,7 @@ class JsonPickle:
         # return self._decode(obj)
     
     def _getstate(self, obj):
-        return self.aliases.getstate(obj, self.CLASS_ATTR, self.STATE_ATTR)
+        return self.getstate(obj, self.CLASS_ATTR, self.STATE_ATTR)
         
         
     def _decode(self, value):
@@ -56,15 +58,112 @@ class JsonPickle:
 
         # load class by its full name
         try:
-            cls = self.aliases.import_(classname)
+            cls = self.import_(classname)
         except:
             raise DecodeError(f"failed to load class '{classname}' during decoding")
             # print(f"WARNING in JsonPickle._decode(): failed to load class '{classname}', no decoding")
             # return value
             
         # create an object with `value` as its state
-        return self.aliases.setstate(cls, value, state_attr = self.STATE_ATTR)
+        return self.setstate(cls, value, state_attr = self.STATE_ATTR)
         
+    ##############
+    
+    def import_(self, fullname):
+        """
+        Dynamic import of a python class/function/variable given its full (dotted) package-module name.
+        If no module name is present, __main__ is used.
+        """
+        if '.' not in fullname:
+            mod, name = '__main__', fullname
+            #raise Exception("Can't import an object without module/package name: %s" % path)
+        else:
+            mod, name = fullname.rsplit('.', 1)
+        # if mod == "builtins":
+        #     return getattr(globals()['__builtins__'], name)
+        module = import_module(mod) #, fromlist = [mod])
+        try:
+            return getattr(module, name)
+        except:
+            raise ImportError(f"cannot import name '{name}' from '{mod}'")
+        
+    
+    def classname(self, obj = None, cls = None):
+        """Fully qualified class name of an object 'obj' or class 'cls'."""
+        if cls is None: cls = obj.__class__
+        name = cls.__module__ + "." + cls.__name__
+        return name
+    
+    
+    def getstate(self, obj, class_attr = None, state_attr = None):
+        """
+        Retrieve object's state with __getstate__(), or take it from __dict__.
+        Append class name in the resulting dictionary, if needed, and if `class_attr` is provided.
+        `obj` shall not be an instance of a standard JSON-serializable type: int/float/list/tuple/dict/NoneType...
+        """
+        getstate = getattr(obj, '__getstate__', None)
+    
+        # call __getstate__() if present and bound;
+        # 'obj' can be a class! then __getstate__ is present but unbound
+        if hasattr(getstate, '__self__'):
+            state = getstate()
+            if not isinstance(state, dict):
+                raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
+            # return with_classname(state)
+    
+        # otherwise check against other standard types, normally not JSON-serializable
+        elif getattr(obj, '__class__', None) in (set, type):
+            cls = obj.__class__
+            if cls is set:
+                state = list(obj)
+            elif cls is type:
+                state = self.classname(cls = obj)
+            else:
+                assert 0
+            
+            state = {state_attr: state}
+            # return with_classname(state)
+    
+        # otherwise use __dict__
+        else:
+            state = getattr(obj, '__dict__', None)
+            if state is None:
+                raise TypeError(f"__dict__ not present in {obj}")
+            # else:
+            #     return with_classname(state)
+        
+        if class_attr is None: return state
+
+        # append class name to `state`
+        assert class_attr not in state
+        state = state.copy()
+        state[class_attr] = self.classname(obj)
+        return state
+        
+    
+    def setstate(self, cls, state, state_attr = None):
+        """
+        Create an object of a given class and set its state using __setstate__(), if present,
+        or by assigning directly to __dict__ otherwise.
+        """
+        
+        # handle special classes: set, type
+        if cls is type:
+            name = state[state_attr]
+            return self.import_(name)
+        if cls is set:
+            values = state[state_attr]
+            return set(values)
+    
+        # instantiate and fill out an object of a custom class
+        obj = cls()
+        _setstate = getattr(obj, '__setstate__', None)
+        if _setstate:
+            _setstate(state)
+        else:
+            obj.__dict__ = state
+        return obj
+
 
 #####################################################################################################################################################
 #####

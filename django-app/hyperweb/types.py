@@ -2,6 +2,8 @@ from .errors import EncodeError, EncodeErrors, DecodeError
 from .names import aliases
 from .jsonpickle import JsonPickle
 
+jsonp = JsonPickle()
+
 
 #####################################################################################################################################################
 #####
@@ -36,9 +38,6 @@ class Type:
     - DataError in decode() -- inconsistent data in DB
     """
     
-    # class-level global object
-    _json = JsonPickle()
-    
     # instance-level settings
     blank = True            # if True, None is a valid input value and is encoded as None;
                             # no other valid value can produce None as its serializable state
@@ -47,11 +46,11 @@ class Type:
     def encode_json(self, value):
         
         flat = self.encode(value)
-        return self._json.dumps(flat)
+        return jsonp.dumps(flat)
 
     def decode_json(self, dump):
 
-        flat = self._json.loads(dump)
+        flat = jsonp.loads(dump)
         return self.decode(flat)
     
 
@@ -142,7 +141,7 @@ class Object(Type):
         if not cls: return obj
         
         if isinstance(obj, cls):
-            if self._json_primitive(obj): return obj
+            if jsonp_primitive(obj): return obj
             try:
                 return aliases.getstate(obj, class_attr = None)
             except TypeError as ex:

@@ -646,8 +646,8 @@ class Site(Item):
 
 class View:
     """
-    View of an item. This class provides convenient read access to `data` of an underlying item,
-    as well as to parameters of the web request.
+    View of an item's data in the context of a particular web request.
+    Provides convenient read access to `data` of an underlying item, as well as to parameters of the web request.
     """
     
     # modes of value access in Item.data, and suffixes appended to attribute names to indicate

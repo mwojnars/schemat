@@ -10,7 +10,7 @@ from .types import Type
 #####
 
 class Field:
-    """Specification of a field in a dict-like record of data (Record)."""
+    """Specification of a field in a Record."""
     info    = None      # human-readable description
     type    = None      # instance of Type
     default = None      # value assumed if this field is missing in an item

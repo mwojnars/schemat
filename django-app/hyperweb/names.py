@@ -6,7 +6,6 @@ but rather it should only be imported inside functions, to avoid cyclic module d
 from importlib import import_module
 
 from .errors import SysConfigError
-# from .config import ALIASES
 
 
 #####################################################################################################################################################
@@ -84,7 +83,7 @@ class Aliases:
         
     
     def classname(self, obj = None, cls = None):
-        """Fully qualified class name of the object 'obj' or class 'cls'."""
+        """Fully qualified class name of an object 'obj' or class 'cls'."""
         if cls is None: cls = obj.__class__
         name = cls.__module__ + "." + cls.__name__
         return self.encode(name)
