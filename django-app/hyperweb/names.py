@@ -1,4 +1,6 @@
 """
+TODO: remove this file as unused.
+
 Global Hyperweb objects. This module must NOT be imported at the beginning of another module,
 but rather it should only be imported inside functions, to avoid cyclic module dependencies.
 """

@@ -32,10 +32,7 @@ class JsonPickle:
     # special attribute that stores a non-dict state of data types normally not handled by JSON: tuple, set, type ...
     STATE_ATTR = "="
     
-    # def __init__(self):
-    #     from hyperweb.names import aliases
-    #     self.aliases = aliases
-
+    
     def dumps(self, obj, **kwargs):
         # kwargs.setdefault('separators', (',', ':'))     # most compact separators (no whitespace)
         kwargs.setdefault('ensure_ascii', False)        # non-ascii chars left as UTF-8
@@ -69,7 +66,8 @@ class JsonPickle:
         
     ##############
     
-    def import_(self, fullname):
+    @staticmethod
+    def import_(fullname):
         """
         Dynamic import of a python class/function/variable given its full (dotted) package-module name.
         If no module name is present, __main__ is used.
@@ -87,15 +85,15 @@ class JsonPickle:
         except:
             raise ImportError(f"cannot import name '{name}' from '{mod}'")
         
-    
-    def classname(self, obj = None, cls = None):
+    @staticmethod
+    def classname(obj = None, cls = None):
         """Fully qualified class name of an object 'obj' or class 'cls'."""
         if cls is None: cls = obj.__class__
         name = cls.__module__ + "." + cls.__name__
         return name
     
-    
-    def getstate(self, obj, class_attr = None, state_attr = None):
+    @staticmethod
+    def getstate(obj, class_attr = None, state_attr = None):
         """
         Retrieve object's state with __getstate__(), or take it from __dict__.
         Append class name in the resulting dictionary, if needed, and if `class_attr` is provided.
@@ -117,7 +115,7 @@ class JsonPickle:
             if cls is set:
                 state = list(obj)
             elif cls is type:
-                state = self.classname(cls = obj)
+                state = JsonPickle.classname(cls = obj)
             else:
                 assert 0
             
@@ -137,11 +135,11 @@ class JsonPickle:
         # append class name to `state`
         assert class_attr not in state
         state = state.copy()
-        state[class_attr] = self.classname(obj)
+        state[class_attr] = JsonPickle.classname(obj)
         return state
         
-    
-    def setstate(self, cls, state, state_attr = None):
+    @staticmethod
+    def setstate(cls, state, state_attr = None):
         """
         Create an object of a given class and set its state using __setstate__(), if present,
         or by assigning directly to __dict__ otherwise.
@@ -150,7 +148,7 @@ class JsonPickle:
         # handle special classes: set, type
         if cls is type:
             name = state[state_attr]
-            return self.import_(name)
+            return JsonPickle.import_(name)
         if cls is set:
             values = state[state_attr]
             return set(values)

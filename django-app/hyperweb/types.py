@@ -1,5 +1,4 @@
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .names import aliases
 from .jsonpickle import JsonPickle
 
 jsonp = JsonPickle()
@@ -141,9 +140,9 @@ class Object(Type):
         if not cls: return obj
         
         if isinstance(obj, cls):
-            if jsonp_primitive(obj): return obj
+            if self._json_primitive(obj): return obj
             try:
-                return aliases.getstate(obj, class_attr = None)
+                return jsonp.getstate(obj, class_attr = None)
             except TypeError as ex:
                 raise EncodeError(f"can't retrieve state of an object: {ex}")
             
@@ -158,7 +157,7 @@ class Object(Type):
         
         # cast a <dict> to an instance of the implicit class
         if isinstance(state, dict):
-            return aliases.setstate(cls, state)
+            return jsonp.setstate(cls, state)
         if self.strict:
             raise DecodeError(f"the object decoded is not an instance of {cls}: {state}")
         return state
@@ -171,16 +170,14 @@ class Object(Type):
 class Class(Type):
     """
     Accepts any global python class and encodes as a string containing its full package-module name.
-    The name is transformed through global `aliases`.
     """
-    
     def _encode(self, value):
         if value is None: return None
-        return aliases.classname(cls = value)
+        return jsonp.classname(cls = value)
     
     def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        return aliases.import_(value)
+        return jsonp.import_(value)
         
 
 class String(Type):
