@@ -8,7 +8,7 @@ from .config import ROOT_CID
 from .data import Data
 from .errors import *
 from .multidict import MultiDict
-from .store import SimpleStore, CsvStore, JsonStore
+from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 from .types import Object, String
 from .schema import Schema
 
@@ -130,9 +130,8 @@ class Item(object, metaclass = MetaItem):
     
     handlers = None         # dict {handler_name: method} of all handlers (= public web methods)
                             # exposed by items of the current Item subclass
-    templates    = None         # similar to handlers, but stores Hypertag scripts (<str>) instead of methods;
-                            # if a handler is not found in handlers, a script is looked up in templates
-                            # and compiled to HTML through Hypertag
+    templates = None        # dict of {endpoint: template} that stores Hypertag scripts to be rendered into HTML
+                            # if a suitable handler is not found in `handlers`
     
     @property
     def id(self): return self.cid, self.iid
@@ -343,7 +342,7 @@ class Item(object, metaclass = MetaItem):
         # search for a Hypertag script in templates
         template = self.templates.get(endpoint, None)
         if template is not None:
-            return HyperHTML().render(template, item = self)
+            return HyperHTML().render(template, view = View(self, request))
 
         # no template found; search for a handler method in handlers
         hdl = self.handlers.get(endpoint, None)
@@ -354,7 +353,9 @@ class Item(object, metaclass = MetaItem):
         
     _default_template = \
     """
-        context $item
+        context $view
+        $item = view._item
+        $cat  = item.category
         
         style !
             body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
@@ -363,7 +364,7 @@ class Item(object, metaclass = MetaItem):
         
         % category
             p .catlink
-                a href=$item.category.get_url() | {item.category['name']? or item.category}
+                a href=$cat.get_url() | {cat['name']? or cat}
                 | ($item.cid,$item.iid)
             
         html
@@ -373,7 +374,6 @@ class Item(object, metaclass = MetaItem):
             body
                 h1  | {name}
                 category
-                #p  | ID {item.id}
                 h2  | Attributes
                 ul
                     for attr, value in item.data.items()
@@ -400,7 +400,7 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to
     and creation of new items within category.
     """
-    _store  = JsonStore()              # DataStore used for reading/writing items of this category
+    _store  = YamlStore()              # DataStore used for reading/writing items of this category
 
 
     def load_data(self, id):
@@ -456,7 +456,8 @@ class Category(Item):
         
     _default_template = \
     """
-        context $item as cat
+        context $view
+        $cat = view._item
         
         html
             $name = cat['name']? or str(cat)
@@ -644,23 +645,34 @@ class Site(Item):
 #####
 
 class View:
-    """View of an item. This class provides convenient read access to `data` of an underlying item."""
+    """
+    View of an item. This class provides convenient read access to `data` of an underlying item,
+    as well as to parameters of the web request.
+    """
     
     # modes of value access in Item.data, and suffixes appended to attribute names to indicate
     # which (multiple) values of a given attribute to retrieve
     _GET_MODES    = ('uniq', 'first', 'last', 'list')
     
+    # configuration parameters
     _mode_separator = '__'
     _default_mode   = 'first'
     _default_miss   = Item.RAISE
     
-    __item__ = None         # the underlying Item instance; enables access to methods and full data[]
-    __namespace__ = None    # ???
+    # internal structures
+    _item       = None          # the underlying Item instance; enables access to methods and full data[]
+    _user       = None          # user profile / identification
+    _request    = None          # web request object
+    _namespace  = None          # URL namespace that resolved the request
+    
+    def __init__(self, item, request):
+        self._item = item
+        self._request = request
     
     def __getattr__(self, name):
         """
-            Calls __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
-            or does it contain a suffix indicating the mode of access (uniq, first, last, list).
+        Call __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
+        or does it contain a suffix indicating the mode of access (uniq, first, last, list).
         """
         field = name
         mode  = self._default_mode
@@ -672,6 +684,8 @@ class View:
                 field = name
                 mode  = self._default_mode
         
-        return self.__item__.get(field, self._default_miss, mode = mode)
+        return self._item.get(field, self._default_miss, mode = mode)
 
-    
+    def _uniq(self, field):
+        return self._item.get(field, self._default_miss, mode ='uniq')
+

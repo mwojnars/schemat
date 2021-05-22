@@ -71,11 +71,14 @@
 },
 
 {
-  "id": [0,100],
-  "name": "Item",
-  "info": "Category of items that do not belong to any specific category",
-  "schema": {"fields": {}, "strict": false},
-  "itemclass": "hyperweb.item.Item"
+    "id": [0,100],
+    "name": "Item",
+    "info": "Category of items that do not belong to any specific category",
+    "schema": {"fields": {}, "strict": false},
+    "itemclass": "hyperweb.item.Item",
+    "templates": {
+        "": ""
+    }
 },
 
 {"id": [1,1], "app": 1, "name": "catalog.wiki", "base_url": "http://localhost:8001"},

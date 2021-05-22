@@ -2,7 +2,7 @@
 DATA STORE -- an abstract DB storage layer for items. Handles sharding, replication etc.
 """
 
-import csv, json
+import csv, json, yaml
 from pymysql.cursors import DictCursor
 #from django.db import connection as db
 from nifty.db import MySQL
@@ -171,6 +171,21 @@ class JsonStore(FileStore):
             self.items[tuple(id_)] = json.dumps(data)
         
         print('JsonStore items loaded:')
+        for id, data in self.items.items():
+            print(id, data)
+    
+class YamlStore(FileStore):
+    """Items stored in a YAML file. For use during development only."""
+    
+    def __init__(self, filename = None):
+        self.filename = filename or DATABASES['yaml']['FILE']
+        self.items = {}
+        
+        for data in yaml.load(open(self.filename)):
+            id_ = data.pop('id')
+            self.items[tuple(id_)] = json.dumps(data)
+        
+        print('YamlStore items loaded:')
         for id, data in self.items.items():
             print(id, data)
     
