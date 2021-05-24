@@ -113,11 +113,11 @@ class Registry:
         
     def _load_root(self, record = None):
         
-        item = RootCategory._create(self)
-        self._set(item, ttl = 0, protect = True)
-        item._load(record)              # this loads the root data from DB if record=None
-        # print(f'Registry.get_item(): created root category - {id(item)}')
-        return item
+        root = RootCategory.create_root(self)
+        self._set(root, ttl = 0, protect = True)
+        root._load(record)              # this loads the root data from DB if record=None
+        # print(f'Registry.get_item(): created root category - {id(root)}')
+        return root
         
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""

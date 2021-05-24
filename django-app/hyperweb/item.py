@@ -9,7 +9,7 @@ from .data import Data
 from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-from .types import Object, String
+from .types import Object, String, Class, Dict
 from .schema import Schema, Field
 
 from hypertag import HyperHTML
@@ -522,25 +522,27 @@ class RootCategory(Category):
     """Root category: a category for all other categories."""
 
     @classmethod
-    def _create(cls, registry):
-        """Create an instance of an item that has iid assigned and is supposedly present in DB. Should only be called by Registry."""
-        
-        fields = {
-            'schema':   Object(Schema),
-            'name':     String(),
-            'info':     String(),
-        }
-        schema = Schema(fields)
+    def create_root(cls, registry):
+        """Create an instance of the root category item."""
 
-        item = cls.__new__(cls)                 # __init__() is disabled, do not call it
-        item.registry = registry
-        item.category = item                # RootCategory is a category for itself
-        item.cid   = ROOT_CID
-        item.iid   = ROOT_CID
-        item.data  = Data()
-        item.set('schema', schema)
-        item.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
-        return item
+        fields = {
+            'schema':       Object(Schema),
+            'name':         String(),
+            'info':         String(),
+            'itemclass':    Class(),
+            'templates':    Dict(String(), String()),
+        }
+        schema = Schema(fields)                 # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
+
+        root = cls.__new__(cls)                 # __init__() is disabled, do not call it
+        root.registry = registry
+        root.category = root                    # RootCategory is a category for itself
+        root.cid   = ROOT_CID
+        root.iid   = ROOT_CID
+        root.data  = Data()
+        root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+        root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+        return root
         
 
 #####################################################################################################################################################
