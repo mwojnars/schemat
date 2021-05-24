@@ -16,14 +16,68 @@
         type: {"@": hyperweb.types.Class}
         default: {"=": hyperweb.item.Item, "@": builtins.type}
       templates:
-        "@": hyperweb.types.Dict
-        keys: {"@": hyperweb.types.String}
-        values: {"@": hyperweb.types.String}
+        "@": hyperweb.schema.Field
+        type: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
+        default:
+          "": |
+              context $view
+              $item = view._item
+              $cat  = item.category
+
+              style !
+                  body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+                  h1 { font-size: 26px; line-height: 34px }
+                  .catlink { font-size: 14px; margin-top: -20px }
+
+              % category
+                  p .catlink
+                      a href=$cat.get_url() | {cat['name']? or cat}
+                      | ($item.cid,$item.iid)
+
+              html
+                  $name = item['name']? or str(item)
+                  head
+                      title | {name}
+                  body
+                      h1  | {name} - from YAML
+                      category
+                      h2  | Attributes
+                      ul
+                          for attr, value in item.data.items()
+                              li
+                                  b | {attr}:
+                                  . | {str(value)}
 
     strict: true
   itemclass: hyperweb.item.Category
   templates:
-    null: |
+    "": |
+        context $view
+        $cat = view._item
+
+        html
+            $name = cat['name']? or str(cat)
+            head
+                title | {name ' -' }? category #{cat.iid}
+            body
+                h1
+                    try
+                        i | $name
+                        . | -
+                    | category #{cat.iid} - from YAML
+                h2  | Attributes
+                ul
+                    for attr, value in cat.data.items()
+                        li
+                            b | {attr}:
+                            . | {str(value)}
+                h2  | Items
+                table
+                    for item in cat.load_items()
+                        tr
+                            td / #{item.iid} &nbsp;
+                            td : a href=$item.get_url()
+                                | {item['name']? or item}
 
 - id: [0,1]
   name: Site

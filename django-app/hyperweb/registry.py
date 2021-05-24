@@ -59,7 +59,7 @@ class Registry:
         # ID requested is already present in the registry? return the existing instance
         item = self.cache.get(id_)
         if item:
-            if load: item._load()
+            if load: item.load()
             return item
 
         assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
@@ -71,8 +71,8 @@ class Registry:
         
         # create a new instance and insert to cache
         item = itemclass._create(category, iid)
-        self._set(item)                            # _set() is called before item._load() to properly handle circular relationships between items
-        if load: item._load()
+        self._set(item)                            # _set() is called before item.load() to properly handle circular relationships between items
+        if load: item.load()
 
         # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
@@ -104,7 +104,7 @@ class Registry:
             else:
                 item = itemclass._create(category, iid)
                 self._set(item)
-                item._load(record)
+                item.load(record)
                 yield item
         
     def save_item(self, item):
@@ -115,7 +115,7 @@ class Registry:
         
         root = RootCategory.create_root(self)
         self._set(root, ttl = 0, protect = True)
-        root._load(record)              # this loads the root data from DB if record=None
+        root.load(record)              # this loads the root data from DB if record=None
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
         

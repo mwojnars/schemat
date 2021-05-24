@@ -249,23 +249,23 @@ class Item(object, metaclass = MetaItem):
     def prepare(self, field):
         """Make sure that a given `field` is present in self.data; load it from DB if not."""
         if self.loaded or field in self.data: return
-        self._load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
+        self.load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
     
-    def _load(self, record = None, force = False):
+    def reload(self):
+        return self.load(force = True)
+
+    def load(self, record = None, force = False):
         """
         Load (decode) and store into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET.
         Setting force=True or passing a `record` enforces decoding even if `self` was already loaded.
         """
-        assert self.iid is not None, '_load() must not be called for a newly created item with no IID'
+        assert self.iid is not None, 'load() must not be called for a newly created item with no IID'
         if self.loaded and not force and record is None: return self
         if record is None:
             record = self.category.load_data(self.id)
         self._decode(record)
         return self
     
-    def _reload(self):
-        return self._load(force = True)
-
     def _decode(self, record):
         """Decode raw information from a DB `record` and store in `self`."""
         self.loaded = True                      # this must be set already here to avoid infinite recursion
@@ -331,7 +331,7 @@ class Item(object, metaclass = MetaItem):
         """
         return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
-    def __handle__(self, request, endpoint = None):
+    def __handle__(self, request, endpoint = ""):
         """
         Route a web request to a given endpoint.
         Endpoint can be implemented as a handler function/method, or a template.
@@ -343,52 +343,52 @@ class Item(object, metaclass = MetaItem):
         # template = get_template((endpoint or 'template') + '.hy')
         # return template.render({'item': self}, request)
         
-        # search for a Hypertag script in templates
-        template = self.templates.get(endpoint, None)
-        if template is not None:
-            return HyperHTML().render(template, view = View(self, request))
-
-        # no template found; search for a handler method in handlers
-        hdl = self.handlers.get(endpoint, None)
+        # search for a handler method in handlers
+        hdl = self.handlers.get(endpoint)
         if hdl is not None:
             return hdl(self, request)
         
+        # search for a Hypertag script in templates
+        template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
+        if template is not None:
+            return HyperHTML().render(template, view = View(self, request))
+
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    _default_template = \
-    """
-        context $view
-        $item = view._item
-        $cat  = item.category
-        
-        style !
-            body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-            h1 { font-size: 26px; line-height: 34px }
-            .catlink { font-size: 14px; margin-top: -20px }
-        
-        % category
-            p .catlink
-                a href=$cat.get_url() | {cat['name']? or cat}
-                | ($item.cid,$item.iid)
-            
-        html
-            $name = item['name']? or str(item)
-            head
-                title | {name}
-            body
-                h1  | {name}
-                category
-                h2  | Attributes
-                ul
-                    for attr, value in item.data.items()
-                        li
-                            b | {attr}:
-                            . | {str(value)}
-    """
-    
-    templates = {
-        None: _default_template,
-    }
+    # _default_template = \
+    # """
+    #     context $view
+    #     $item = view._item
+    #     $cat  = item.category
+    #
+    #     style !
+    #         body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    #         h1 { font-size: 26px; line-height: 34px }
+    #         .catlink { font-size: 14px; margin-top: -20px }
+    #
+    #     % category
+    #         p .catlink
+    #             a href=$cat.get_url() | {cat['name']? or cat}
+    #             | ($item.cid,$item.iid)
+    #
+    #     html
+    #         $name = item['name']? or str(item)
+    #         head
+    #             title | {name}
+    #         body
+    #             h1  | {name}
+    #             category
+    #             h2  | Attributes
+    #             ul
+    #                 for attr, value in item.data.items()
+    #                     li
+    #                         b | {attr}:
+    #                         . | {str(value)}
+    # """
+    #
+    # templates = {
+    #     "": _default_template,
+    # }
 
 
 ItemDoesNotExist.item_class = Item
@@ -414,7 +414,7 @@ class Category(Item):
     
     def new_item(self):
         """"""
-        return self.itemclass._new(self)
+        return self['itemclass']._new(self)
         
     def get_item(self, iid):
         """
@@ -455,35 +455,35 @@ class Category(Item):
         item.save()
         return html_escape(f"Item created: {item}")
         
-    _default_template = \
-    """
-        context $view
-        $cat = view._item
-        
-        html
-            $name = cat['name']? or str(cat)
-            head
-                title | {name ' -' }? category #{cat.iid}
-            body
-                h1
-                    try
-                        i | $name
-                        . | -
-                    | category #{cat.iid}
-                p
-                    . | Items in category
-                    i | $name:
-                table
-                    for item in cat.load_items()
-                        tr
-                            td / #{item.iid} &nbsp;
-                            td : a href=$item.get_url()
-                                | {item['name']? or item}
-    """
-    
-    templates = {
-        None: _default_template,
-    }
+    # _default_template = \
+    # """
+    #     context $view
+    #     $cat = view._item
+    #
+    #     html
+    #         $name = cat['name']? or str(cat)
+    #         head
+    #             title | {name ' -' }? category #{cat.iid}
+    #         body
+    #             h1
+    #                 try
+    #                     i | $name
+    #                     . | -
+    #                 | category #{cat.iid}
+    #             p
+    #                 . | Items in category
+    #                 i | $name:
+    #             table
+    #                 for item in cat.load_items()
+    #                     tr
+    #                         td / #{item.iid} &nbsp;
+    #                         td : a href=$item.get_url()
+    #                             | {item['name']? or item}
+    # """
+    #
+    # templates = {
+    #     "": _default_template,
+    # }
 
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         

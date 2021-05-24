@@ -6,7 +6,7 @@ from django.shortcuts import render
 from hyperweb.site import registry
 
 
-def item_view(request, descriptor, endpoint = None):
+def item_view(request, descriptor, endpoint = ""):
     
     site = registry.get_site()
     item = site.get_from_url(descriptor)
