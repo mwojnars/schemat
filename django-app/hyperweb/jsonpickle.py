@@ -19,8 +19,8 @@ class JsonPickle:
     To be serializable AND deserializable, a class must provide:
     1) __dict__, or __getstate__() that returns a dict
     2) __init__ can be called without arguments
-    3) optionally: __setstate__(); if this is not provided, __dict__ will be assigned directly
-       and all its contents assigned during __init__() - if any - will be lost.
+    3) optionally: __setstate__(); if this is not provided, __dict__ will be assigned directly,
+       without any further initialization / postprocessing.
        
     By default, JsonPickle leaves non-ASCII characters in their original form (no encoding),
     which is compatible with MySQL: JSON columns use utf8mb4 charset.

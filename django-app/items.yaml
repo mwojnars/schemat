@@ -23,6 +23,8 @@
       app:
         "@": hyperweb.types.Link
         cid: 2
+      name: {"@": hyperweb.types.String}
+      base_url: {"@": hyperweb.types.String}
   itemclass: hyperweb.item.Site
 
 - id: [0,2]
@@ -35,6 +37,7 @@
         "@": hyperweb.types.Dict
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 3}
+      name: {"@": hyperweb.types.String}
   itemclass: hyperweb.item.Item
 
 - id: [0,3]
@@ -46,6 +49,7 @@
         "@": hyperweb.types.Dict
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 0}
+      name: {"@": hyperweb.types.String}
   itemclass: hyperweb.item.Item
 
 - id: [0,4]

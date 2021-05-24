@@ -524,13 +524,13 @@ class RootCategory(Category):
     def _create(cls, registry):
         """Create an instance of an item that has iid assigned and is supposedly present in DB. Should only be called by Registry."""
         
-        schema = Schema()
-        schema.fields = {
+        fields = {
             'schema':   Object(Schema),
             'name':     String(),
             'info':     String(),
         }
-        
+        schema = Schema(fields)
+
         item = cls.__new__(cls)                 # __init__() is disabled, do not call it
         item.registry = registry
         item.category = item                # RootCategory is a category for itself
