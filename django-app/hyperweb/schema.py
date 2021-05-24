@@ -129,15 +129,7 @@ class Record(Type):
         Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
         """
         field = self.fields.get(name)
-        if field.default is Field.MISSING:
-            return None, False
-        else:
-            return field.default, True
-
-        # if self.defaults and attr in self.defaults:
-        #     return self.defaults[attr], True
-        # else:
-        #     return None, False
+        return field.default if field else Field.MISSING
 
 
 class Schema(Record):

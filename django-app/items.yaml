@@ -6,9 +6,15 @@
       schema:
         "@": hyperweb.types.Object
         class_: {"=": hyperweb.schema.Schema, "@": builtins.type}
-      name: {"@": hyperweb.types.String}
+      name:
+        "@": hyperweb.schema.Field
+        type: {"@": hyperweb.types.String}
+        info: human-readable title of the category
       info: {"@": hyperweb.types.String}
-      itemclass: {"@": hyperweb.types.Class}
+      itemclass:
+        "@": hyperweb.schema.Field
+        type: {"@": hyperweb.types.Class}
+        default: {"=": hyperweb.item.Item, "@": builtins.type}
       templates:
         "@": hyperweb.types.Dict
         keys: {"@": hyperweb.types.String}
@@ -38,7 +44,7 @@
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 3}
       name: {"@": hyperweb.types.String}
-  itemclass: hyperweb.item.Item
+  #itemclass: hyperweb.item.Item
 
 - id: [0,3]
   name: Space
@@ -50,7 +56,7 @@
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 0}
       name: {"@": hyperweb.types.String}
-  itemclass: hyperweb.item.Item
+  #itemclass: hyperweb.item.Item
 
 - id: [0,4]
   name: Mapping
@@ -63,7 +69,7 @@
   schema:
     fields: {}
     strict: false
-  itemclass: hyperweb.item.Item
+  #itemclass: hyperweb.item.Item
   templates:
     '': ''
 

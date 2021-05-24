@@ -10,7 +10,7 @@ from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 from .types import Object, String
-from .schema import Schema
+from .schema import Schema, Field
 
 from hypertag import HyperHTML
 
@@ -182,8 +182,12 @@ class Item(object, metaclass = MetaItem):
         
         if field in self.data:
             return self.data.get(field, mode = mode)
+        
         if category_default:
-            return self.category.get_default(field, default)
+            cat_default = self.category.get_default(field)
+            if cat_default is not Field.MISSING:
+                return cat_default
+            
         if default is Item.RAISE:
             raise KeyError(field)
         
@@ -427,12 +431,9 @@ class Category(Item):
         records = self._store.select_all(self.iid)
         return self.registry.decode_items(records, self)
         
-    def get_default(self, field, default):
-        """Get default value of a field from category schema."""
-        # TODO
-        
-        if default is Item.RAISE: raise KeyError(field)
-        return default
+    def get_default(self, field):
+        """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
+        return self['schema'].get_default(field)
 
     #####  Handlers & templates  #####
 
