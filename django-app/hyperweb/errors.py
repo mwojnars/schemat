@@ -2,6 +2,8 @@
 Exceptions for Hyperweb.
 """
 
+class HyperwebException(Exception): pass
+
 class ConfigError(Exception): pass
 class SysConfigError(ConfigError): pass
 

@@ -31,7 +31,8 @@ It is possible to write (sub)domain information into the request object, so it's
 urlpatterns = [
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
-    path('<descriptor>', item_view),
-    path('<descriptor>/<endpoint>', item_view),
+    path('<path:path>', item_view),
+    # path('<descriptor>', item_view),
+    # path('<descriptor>/<endpoint>', item_view),
     #path('',       include('hyperweb.urls')),
 ]

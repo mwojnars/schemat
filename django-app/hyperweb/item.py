@@ -193,19 +193,21 @@ class Item(object, metaclass = MetaItem):
         
         return default
 
-    def get_uniq(self, field, default = None, category_default = True):
+    def uniq(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'uniq')
         
-    def get_first(self, field, default = None, category_default = True):
+    def first(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'first')
         
-    def get_last(self, field, default = None, category_default = True):
+    def last(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'last')
         
-    def get_list(self, field, copy_list = False):
+    def list(self, field, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
         self.prepare(field)
         return self.data.get_list(field, copy_list)
+
+    # get_list = list
 
     def set(self, key, *values):
         """
@@ -320,12 +322,13 @@ class Item(object, metaclass = MetaItem):
         """
         return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
-    def handle(self, request, endpoint = ""):
+    def serve(self, request, endpoint, args):
         """
-        Route a web request to a given endpoint.
+        Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.
         Handler functions are stored in a parent category object.
         """
+        # TODO: parse `args` string and pass to the handler
         # TODO: route through a predefined pipeline of handlers
         
         # from django.template.loader import get_template
@@ -430,9 +433,9 @@ class Category(Item):
         """
         return str(iid)
     
-    def decode_url(self, iid_str):
-        """Convert an encoded IID representation found in a URL back to an <int>. Reverse operation to encode_url()."""
-        return int(iid_str)
+    # def decode_url(self, iid_str):
+    #     """Convert an encoded IID representation found in a URL back to an <int>. Reverse operation to encode_url()."""
+    #     return int(iid_str)
         
 # # rules for detecting disallowed attribute names in category definitions
 # STOP_ATTR = {
@@ -481,16 +484,54 @@ class Route:
     Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
     and a target application object.
     """
-    base = None         # base URL: protocol+domain
-    path = None         # fixed prefix of URL paths after the domain part
-    app  = None         # Application that interprets the dynamic part of a URL and handles requests
+    base = None         # base URL: scheme (protocol) + domain, without trailing '/'
+    path = None         # fixed prefix of URL paths after the domain part; should start with '/'
+    app  = None         # Application that interprets the dynamic part of a URL and maps it bidirectionally to an item
     
+    def match(self, url):
+        """Check if this route matches a given URL."""
+        return url.startswith(self.base + self.path)
+    
+    def find(self, path, registry):
+        """
+        Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments).
+        Raise an exception if item not found or the path not recognized.
+        Return (item, endpoint, args) tuple.
+        """
+        endpoint = args = ""
+
+        if '?' in path:
+            path, args = path.split('?', 1)
+        
+        if '/' in path:
+            path, endpoint = path.rsplit('/', 1)
+
+        try:
+            space_category, item_id = path.split(':')
+            space_name, category_name = space_category.split('.')
+        except Exception as ex:
+            print(ex)
+            print('incorrect URL path:', path)
+            raise
+            
+        app = registry.get_item(tuple(self.app))
+        assert isinstance(app, Application)
+        
+        space    = app.get_space(space_name)
+        category = space.get_category(category_name)
+        item     = category.get_item(int(item_id))
+        
+        return item, endpoint, args
+        
+        # cid = self._qualifiers[qualifier]
+        # category = registry.get_category(cid)
+        #
+        # iid = category.decode_url(item_id)
+        # return registry.get_item((cid, iid))
+
     def url(self, item):
         """Generate URL of an `item` when accessed through this URL route."""
     
-    def resolve(self, path):
-        """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
-
 
 class Site(Item):
     """
@@ -524,9 +565,11 @@ class Site(Item):
     
     def _post_decode(self):
 
+        print('Site.routes:', self['routes'])
+
         self._qualifiers = bidict()
         
-        for app in self.get_list('app'):
+        for app in self.list('app'):
             for space_name, space in app.get('spaces').items():
                 for category_name, category in space.get('categories').items():
                     
@@ -546,27 +589,42 @@ class Site(Item):
         if cid is None: cid = category.iid
         return self._qualifiers.inverse[cid]
 
-    def resolve(self, path):
-        """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
+    def handle(self, request, path):
+        item, endpoint, args = self.route(request, path)
+        return item.serve(request, endpoint, args)
+
+    def route(self, request, path):
+    
+        url = request.build_absolute_uri()
         
-        # print(f'handler thread {threading.get_ident()}')
+        # find the first route that matches the `path`
+        for route in self['routes'].values():
+            if not route.match(url): continue
+            return route.find(path, self.registry)
         
-        # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
-        # is category-dependent and can be customized by Category subclasses
-        try:
-            qualifier, iid_str = path.split(':', 1)
-        except Exception as ex:
-            print(ex)
-            print('incorrect URL path:', path)
-            raise
-            
-        reg = self.registry
-        
-        cid = self._qualifiers[qualifier]
-        category = reg.get_category(cid)
-        
-        iid = category.decode_url(iid_str)
-        return reg.get_item((cid, iid))
+        raise Exception(f'route not found for "{path}" path')
+
+    # def resolve(self, path):
+    #     """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
+    #
+    #     # print(f'handler thread {threading.get_ident()}')
+    #
+    #     # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
+    #     # is category-dependent and can be customized by Category subclasses
+    #     try:
+    #         qualifier, iid_str = path.split(':', 1)
+    #     except Exception as ex:
+    #         print(ex)
+    #         print('incorrect URL path:', path)
+    #         raise
+    #
+    #     reg = self.registry
+    #
+    #     cid = self._qualifiers[qualifier]
+    #     category = reg.get_category(cid)
+    #
+    #     iid = category.decode_url(iid_str)
+    #     return reg.get_item((cid, iid))
 
     def after_request(self, sender, **kwargs):
         """Cleanup and maintenance after a response has been sent, in the same thread."""
@@ -577,10 +635,16 @@ class Site(Item):
         
 
 class Application(Item):
-    pass
 
+    def get_space(self, name):
+        return self['spaces'][name]
 
+class Space(Item):
     
+    def get_category(self, name):
+        return self['categories'][name]
+    
+
 #####################################################################################################################################################
 #####
 #####  ITEM VIEW

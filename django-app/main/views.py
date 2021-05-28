@@ -6,12 +6,15 @@ from django.shortcuts import render
 from hyperweb.site import registry
 
 
-def item_view(request, descriptor, endpoint = ""):
+def item_view(request, path):    # descriptor, endpoint = ""):
     
     site = registry.get_site()
-    item = site.resolve(descriptor)
-    doc  = item.handle(request, endpoint)
-    return HttpResponse(doc)
+    text = site.handle(request, path)
+    return HttpResponse(text)
+    
+    # item = site.resolve(descriptor)
+    # doc  = item.serve(request, endpoint)
+    # return HttpResponse(doc)
 
     # if isinstance(doc, str):
     #     return HttpResponse(doc)

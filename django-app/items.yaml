@@ -93,6 +93,7 @@
 - id: [0,1]
   name: Site
   info: Category of site records. A site contains information about applications, servers, startup
+  itemclass: hyperweb.item.Site
   schema:
     fields:
       name: {"@": hyperweb.types.String}
@@ -103,18 +104,18 @@
           "@": hyperweb.types.Dict
           keys: {"@": hyperweb.types.String}
           values: {"@": hyperweb.types.Object, class_: {"=": hyperweb.item.Route, "@": builtins.type}}
-        multi: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
-               regex pattern for URL matching, and a target application object
+        info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
+              fixed URL path prefix, and a target application object
+        multi: false
       app:
         "@": hyperweb.types.Link
         cid: 2
 
-  itemclass: hyperweb.item.Site
-
 - id: [0,2]
   name: Application
   info: Category of application records. An application groups all spaces & categories
-    available in the system and provides system-level configuration.
+        available in the system and provides system-level configuration.
+  itemclass: hyperweb.item.Application
   schema:
     fields:
       spaces:
@@ -122,11 +123,11 @@
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 3}
       name: {"@": hyperweb.types.String}
-  itemclass: hyperweb.item.Application
 
 - id: [0,3]
   name: Space
   info: Category of items that represent item spaces.
+  itemclass: hyperweb.item.Space
   schema:
     fields:
       categories:
@@ -134,12 +135,6 @@
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 0}
       name: {"@": hyperweb.types.String}
-
-#- id: [0,4]
-#  name: Router
-#  info: Routers translate public URLs to internal item-method descriptors and the other way round.
-#        The default router implementation keeps a list of namespaces and tries to match an input URL
-#        against each consecutive namespace until a matching one is found.
 
 - id: [0,5]
   name: Namespace
@@ -157,9 +152,14 @@
     strict: false
 
 - id: [1,1]
-  app: 1
   name: catalog.wiki
-  base_url: http://localhost:8001
+  base_url: http://localhost:8001         # TODO: remove
+  app: 1                                  # TODO: remove
+  routes:
+    default:
+      base: http://localhost:8001
+      path: /
+      app:  [2, 1]
 
 - id: [2,1]
   name: Catalog.wiki
