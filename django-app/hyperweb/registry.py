@@ -13,6 +13,10 @@ from .item import RootCategory
 class Registry:
     """
     A registry of Item instances recently created or loaded from DB during current web request or previous ones.
+    Managing the pool of items through the entire execution of an application:
+      - transfering items to/from DB storage(s) and through the cache
+      - tracking changes
+      - creating new items
     Registry makes sure there are no two different Item instances for the same item ID (no duplicates).
     When request processing wants to access or create an item, this must always be done through Site.get_item(),
     so that the item is checked in the Registry and taken from there if it already exists.

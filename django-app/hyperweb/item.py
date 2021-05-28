@@ -214,31 +214,20 @@ class Item(object, metaclass = MetaItem):
         """
         self.data.set(key, *values)
 
-    # def __setattr__(self, name, value):
-    #     """Assigns a singleton `value` to a given name in data; or to __dict__ if `name` is a private attr."""
-    #
-    #     # store private attributes in __dict__, not data
-    #     if name[0] == '_':
-    #         object.__setattr__(self, name, value)
-    #     else:
-    #         self.data[name] = value
-    #     # data = object.__getattribute__(self, 'data')
-    #     # data[name] = value
-    
     def __dir__(self):
         attrs = set(super().__dir__())
         attrs.update(self.data.keys())
         return attrs
         
-    def __repr__(self, max_len_name = 30):
+    def __repr__(self, max_len = 30):
         
         category = self.category.get('name', f'CID({self.cid})')
         name     = self.get('name', '')
         # cat = self.category
         # category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.cid})'
         # name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
-        if len(name) > max_len_name:
-            name = name[:max_len_name-3] + '...'
+        if len(name) > max_len:
+            name = name[:max_len - 3] + '...'
         
         return f'<{category}:{self.iid} {name}>'
     
@@ -331,7 +320,7 @@ class Item(object, metaclass = MetaItem):
         """
         return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
-    def __handle__(self, request, endpoint = ""):
+    def handle(self, request, endpoint = ""):
         """
         Route a web request to a given endpoint.
         Endpoint can be implemented as a handler function/method, or a template.
@@ -355,41 +344,6 @@ class Item(object, metaclass = MetaItem):
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    # _default_template = \
-    # """
-    #     context $view
-    #     $item = view._item
-    #     $cat  = item.category
-    #
-    #     style !
-    #         body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-    #         h1 { font-size: 26px; line-height: 34px }
-    #         .catlink { font-size: 14px; margin-top: -20px }
-    #
-    #     % category
-    #         p .catlink
-    #             a href=$cat.get_url() | {cat['name']? or cat}
-    #             | ($item.cid,$item.iid)
-    #
-    #     html
-    #         $name = item['name']? or str(item)
-    #         head
-    #             title | {name}
-    #         body
-    #             h1  | {name}
-    #             category
-    #             h2  | Attributes
-    #             ul
-    #                 for attr, value in item.data.items()
-    #                     li
-    #                         b | {attr}:
-    #                         . | {str(value)}
-    # """
-    #
-    # templates = {
-    #     "": _default_template,
-    # }
-
 
 ItemDoesNotExist.item_class = Item
 
@@ -455,36 +409,6 @@ class Category(Item):
         item.save()
         return html_escape(f"Item created: {item}")
         
-    # _default_template = \
-    # """
-    #     context $view
-    #     $cat = view._item
-    #
-    #     html
-    #         $name = cat['name']? or str(cat)
-    #         head
-    #             title | {name ' -' }? category #{cat.iid}
-    #         body
-    #             h1
-    #                 try
-    #                     i | $name
-    #                     . | -
-    #                 | category #{cat.iid}
-    #             p
-    #                 . | Items in category
-    #                 i | $name:
-    #             table
-    #                 for item in cat.load_items()
-    #                     tr
-    #                         td / #{item.iid} &nbsp;
-    #                         td : a href=$item.get_url()
-    #                             | {item['name']? or item}
-    # """
-    #
-    # templates = {
-    #     "": _default_template,
-    # }
-
     def get_url_of(self, item, __endpoint = None, *args, **kwargs):
         
         assert item.cid == self.iid
@@ -512,10 +436,12 @@ class Category(Item):
         
 # # rules for detecting disallowed attribute names in category definitions
 # STOP_ATTR = {
-#     'special':      (lambda name: name[0] == '_'),
-#     'reserved':     (lambda name: name in 'load insert update save'),
-#     'multidict':    (lambda name: name.endswith(MULTI_SUFFIX)),
+#     'special':      (lambda attr: attr[0] == '_'),
+#     'reserved':     (lambda attr: attr in 'load insert update save'),
+#     'multidict':    (lambda attr: attr.endswith(MULTI_SUFFIX)),
 # }
+
+# re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
 
 class RootCategory(Category):
@@ -524,7 +450,7 @@ class RootCategory(Category):
     @classmethod
     def create_root(cls, registry):
         """Create an instance of the root category item."""
-
+        
         fields = {
             'schema':       Object(Schema),
             'name':         String(),
@@ -533,7 +459,7 @@ class RootCategory(Category):
             'templates':    Dict(String(), String()),
         }
         schema = Schema(fields)                 # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
-
+        
         root = cls.__new__(cls)                 # __init__() is disabled, do not call it
         root.registry = registry
         root.category = root                    # RootCategory is a category for itself
@@ -550,22 +476,29 @@ class RootCategory(Category):
 #####  SITE
 #####
 
+class Route:
+    """
+    Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
+    and a target application object.
+    """
+    base = None         # base URL: protocol+domain
+    path = None         # fixed prefix of URL paths after the domain part
+    app  = None         # Application that interprets the dynamic part of a URL and handles requests
+    
+    def url(self, item):
+        """Generate URL of an `item` when accessed through this URL route."""
+    
+    def resolve(self, path):
+        """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
+
+
 class Site(Item):
     """
-    A Site is responsible for two things:
-    - bootstrapping the application(s)
-    - managing the pool of items through the entire execution of an application:
-      - transfering items to/from DB storage(s) and through the cache
-      - tracking changes
-      - creating new items
-    
-    The global `site` object is created in hyperweb/__init__.py and can be imported with:
-      from hyperweb import site
-      
-    There should be only 1 thread that processes requests and accesses `site` after initialization.
+    Site represents the entire website as seen by clients:
+    - all (sub)domains
+    - all (sub)applications
+    - routing of all URLs
     """
-
-    re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
     # internal variables
     
@@ -613,17 +546,18 @@ class Site(Item):
         if cid is None: cid = category.iid
         return self._qualifiers.inverse[cid]
 
-    def get_from_url(self, descriptor):
+    def resolve(self, path):
+        """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
         
         # print(f'handler thread {threading.get_ident()}')
         
         # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
         # is category-dependent and can be customized by Category subclasses
         try:
-            qualifier, iid_str = descriptor.split(':', 1)
+            qualifier, iid_str = path.split(':', 1)
         except Exception as ex:
             print(ex)
-            print('incorrect descriptor in URL:', descriptor)
+            print('incorrect URL path:', path)
             raise
             
         reg = self.registry
@@ -641,7 +575,12 @@ class Site(Item):
         self.registry.after_request(sender, **kwargs)
         # sleep(5)
         
-        
+
+class Application(Item):
+    pass
+
+
+    
 #####################################################################################################################################################
 #####
 #####  ITEM VIEW
@@ -665,8 +604,8 @@ class View:
     # internal structures
     _item       = None          # the underlying Item instance; enables access to methods and full data[]
     _user       = None          # user profile / identification
+    _route      = None          # the site's Route where this request came through
     _request    = None          # web request object
-    _namespace  = None          # URL namespace that resolved the request
     
     def __init__(self, item, request):
         self._item = item
@@ -692,3 +631,12 @@ class View:
     def _uniq(self, field):
         return self._item.get(field, self._default_miss, mode ='uniq')
 
+    def url(self, target_item = None):
+        """
+        Generate URL of a target_item when accessed through self._app application;
+        or URL of self._item if target_item=None.
+        """
+        if target_item is None: target_item = self._item
+        return target_item.get_url()
+        # return self._route.url(target_item)
+    

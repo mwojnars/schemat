@@ -1,3 +1,12 @@
+# item.title: type Text; any string, any language, possibly rich text; multiple variants for different languages;
+#             no need to ensure uniqueness (!)
+# item.name: type String; human-readable non-unique name; different languages, but NO rich text
+# directory[item].name: open relation, unique names; no natural "auto-increment"; new names assigned by item creator;
+#            names must be stored in a TABLE to allow transactional inserts (primary data, not derived);
+#            derived INDEX maps item IDs back to names (reversed link)
+# Directory: one-directional mapping name -> item
+# Namespace: bidirectional mapping name <-> item
+
 - id: [0,0]
   name: Category
   info: Category of items that represent categories
@@ -19,6 +28,7 @@
         "@": hyperweb.schema.Field
         type: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
         default:
+          # default template that displays a generic item page if a category-specific template is missing
           "": |
               context $view
               $item = view._item
@@ -29,9 +39,9 @@
                   h1 { font-size: 26px; line-height: 34px }
                   .catlink { font-size: 14px; margin-top: -20px }
 
-              % category
+              % print_headline
                   p .catlink
-                      a href=$cat.get_url() | {cat['name']? or cat}
+                      a href=$view.url(cat) | {cat['name']? or cat}
                       | ($item.cid,$item.iid)
 
               html
@@ -39,8 +49,8 @@
                   head
                       title | {name}
                   body
-                      h1  | {name} - from YAML
-                      category
+                      h1  | {name}
+                      print_headline
                       h2  | Attributes
                       ul
                           for attr, value in item.data.items()
@@ -51,6 +61,7 @@
     strict: true
   itemclass: hyperweb.item.Category
   templates:
+    # template that displays a category page
     "": |
         context $view
         $cat = view._item
@@ -64,7 +75,7 @@
                     try
                         i | $name
                         . | -
-                    | category #{cat.iid} - from YAML
+                    | category #{cat.iid}
                 h2  | Attributes
                 ul
                     for attr, value in cat.data.items()
@@ -76,7 +87,7 @@
                     for item in cat.load_items()
                         tr
                             td / #{item.iid} &nbsp;
-                            td : a href=$item.get_url()
+                            td : a href=$view.url(item)
                                 | {item['name']? or item}
 
 - id: [0,1]
@@ -84,11 +95,20 @@
   info: Category of site records. A site contains information about applications, servers, startup
   schema:
     fields:
+      name: {"@": hyperweb.types.String}
+      base_url: {"@": hyperweb.types.String}
+      routes:
+        "@": hyperweb.schema.Field
+        type:
+          "@": hyperweb.types.Dict
+          keys: {"@": hyperweb.types.String}
+          values: {"@": hyperweb.types.Object, class_: {"=": hyperweb.item.Route, "@": builtins.type}}
+        multi: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
+               regex pattern for URL matching, and a target application object
       app:
         "@": hyperweb.types.Link
         cid: 2
-      name: {"@": hyperweb.types.String}
-      base_url: {"@": hyperweb.types.String}
+
   itemclass: hyperweb.item.Site
 
 - id: [0,2]
@@ -102,6 +122,7 @@
         keys: {"@": hyperweb.types.String}
         values: {"@": hyperweb.types.Link, cid: 3}
       name: {"@": hyperweb.types.String}
+  itemclass: hyperweb.item.Application
 
 - id: [0,3]
   name: Space
@@ -114,10 +135,19 @@
         values: {"@": hyperweb.types.Link, cid: 0}
       name: {"@": hyperweb.types.String}
 
-- id: [0,4]
+#- id: [0,4]
+#  name: Router
+#  info: Routers translate public URLs to internal item-method descriptors and the other way round.
+#        The default router implementation keeps a list of namespaces and tries to match an input URL
+#        against each consecutive namespace until a matching one is found.
+
+- id: [0,5]
+  name: Namespace
+  info: Namespaces perform mapping of strings (names) to items.
+
+- id: [0,10]
   name: Mapping
-  info: Category of items that represent mappings, i.e., sharded indexes on top of
-    item-item or item-value relations
+  info: Category of items that represent mappings, i.e., sharded indexes on top of item-item or item-value relations
 
 - id: [0,100]
   name: Item
@@ -140,7 +170,7 @@
 - id: [3,1]
   name: Meta
   categories:
-    map: 4
+    # map: 10
     item: 100
     category: 0
 

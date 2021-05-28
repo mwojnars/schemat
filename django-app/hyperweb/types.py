@@ -13,7 +13,8 @@ class Type:
     """ 
     Base class for type specifications of data elements: values and sub-values of items' fields.
     Provides schema-based validation of form values and schema-aware serialization. Types can be nested.
-    An instance of Type contains a type specification and NOT an actual value.
+    An instance of Type serves only as a type specification, and NOT as an actual value,
+    similar to standard Python type annotations.
     
     A Type object defines:
     - constraints on the set of values that can be assigned to a given field/attribute/variable
@@ -100,7 +101,8 @@ class Type:
     #############################################
     
     def render(self, value, target = "HTML"):
-        return value
+        """Default rendering of this value for display in a markup document."""
+        return str(value)
     
     class Render:
         
@@ -189,7 +191,6 @@ class String(Type):
     def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return value
-
 
 class Dict(Type):
     """
@@ -287,3 +288,18 @@ class Link(Type):
         
         return registry.get_item((cid, iid))
         
+
+#####################################################################################################################################################
+#####
+#####  Python types
+#####
+
+class text(str):
+    """
+    Localized rich text. Stores information about the language of the string, as well as its rich-text
+    encoding: markup language, wiki language etc. Both can be missing (None), in such case the `text`
+    instance is equivalent to a plain string <str>.
+    """
+
+
+    

@@ -9,9 +9,7 @@ from nifty.db import MySQL
 
 from main.settings import DATABASES
 
-from .config import ROOT_CID
 from .errors import ItemDoesNotExist
-from .jsonpickle import JsonPickle
 
 
 #####################################################################################################################################################

@@ -9,8 +9,8 @@ from hyperweb.site import registry
 def item_view(request, descriptor, endpoint = ""):
     
     site = registry.get_site()
-    item = site.get_from_url(descriptor)
-    doc  = item.__handle__(request, endpoint)
+    item = site.resolve(descriptor)
+    doc  = item.handle(request, endpoint)
     return HttpResponse(doc)
 
     # if isinstance(doc, str):
