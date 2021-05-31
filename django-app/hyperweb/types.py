@@ -7,6 +7,7 @@ DRAFT
 - widget
 - errors returned as a list/dict rather than raised (?); json/xpath paths as keys like in:
   - 'phones[0].location': '"bar" is not one of "home", "work"'
+- to_primitive()
 
 types:
 
@@ -32,16 +33,16 @@ jsonp = JsonPickle()
 #####  TYPE
 #####
 
-class Type:
+class Schema:
     """ 
-    Base class for type specifications of data elements: values and sub-values of items' fields.
-    Provides schema-based validation of form values and schema-aware serialization. Types can be nested.
-    An instance of Type serves only as a type specification, and NOT as an actual value,
+    Base class for schema validators of data elements, i.e., of values and sub-values of items' fields.
+    Provides schema-based validation of form values and schema-aware serialization. Schemas can be nested.
+    An instance of Schema serves only as a schema specification, and NOT as an actual value of a type,
     similar to standard Python type annotations.
     
-    A Type object defines:
+    A Schema object defines:
     - constraints on the set of values that can be assigned to a given field/attribute/variable
-    A Type class provides:
+    A Schema class provides:
     - validation: determining if a value satisfies the constraints (= valid value) or not
     - sanitization: removing or cleansing any parts of value that could have harmful side-effects in further processing
     - normalization: tranforming related variants of a value to their unique canonical (normal) form
@@ -152,7 +153,7 @@ class Type:
 #####  ATOMIC types
 #####
 
-class Object(Type):
+class Object(Schema):
     """
     Accepts any python object, optionally restricted to objects of a predefined class.
     During decoding, the predefined class is implied if the data deserialized don't have class specification.
@@ -198,7 +199,7 @@ class Object(Type):
         return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
 
 
-class Class(Type):
+class Class(Schema):
     """
     Accepts any global python class and encodes as a string containing its full package-module name.
     """
@@ -211,7 +212,7 @@ class Class(Type):
         return jsonp.import_(value)
         
 
-class String(Type):
+class String(Schema):
     
     def _encode(self, value):
         if not isinstance(value, str): raise EncodeError(f"expected a <str>, not {value}")
@@ -221,7 +222,7 @@ class String(Type):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return value
 
-class Dict(Type):
+class Dict(Schema):
     """
     Field that accepts <dict> objects as data values and ensures that keys and values of the dict
     are interpreted as fields of particular Field types.
@@ -263,7 +264,7 @@ class Dict(Type):
         return d
 
 
-class Link(Type):
+class Link(Schema):
     """
     The python value is an Item object.
     The DB value is an ID=(CID,IID), or just IID, of an item.

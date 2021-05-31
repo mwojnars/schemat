@@ -481,7 +481,7 @@ class RootCategory(Category):
 #####  SITE
 #####
 
-# RouteType = Record(base = String(), path = String(), app = Link(cid=2), class_ = 'hyperweb.item.Route')
+# RouteSchema = Record(base = String(), path = String(), app = Link(cid=2), class_ = 'hyperweb.item.Route')
 
 class Route:
     """

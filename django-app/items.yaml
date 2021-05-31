@@ -17,16 +17,16 @@
         class_: {"=": hyperweb.schema.Record, "@": builtins.type}
       name:
         "@": hyperweb.schema.Field
-        type: {"@": hyperweb.types.String}
+        schema: {"@": hyperweb.types.String}
         info: human-readable title of the category
       info: {"@": hyperweb.types.String}
       itemclass:
         "@": hyperweb.schema.Field
-        type: {"@": hyperweb.types.Class}
+        schema: {"@": hyperweb.types.Class}
         default: {"=": hyperweb.item.Item, "@": builtins.type}
       templates:
         "@": hyperweb.schema.Field
-        type: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
+        schema: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
         default:
           # default template that displays a generic item page if a category-specific template is missing
           "": |
@@ -100,7 +100,7 @@
       base_url: {"@": hyperweb.types.String}
       routes:
         "@": hyperweb.schema.Field
-        type:
+        schema:
           "@": hyperweb.types.Dict
           keys: {"@": hyperweb.types.String}
           values: {"@": hyperweb.types.Object, class_: {"=": hyperweb.item.Route, "@": builtins.type}}
