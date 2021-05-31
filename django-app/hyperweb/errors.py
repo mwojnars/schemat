@@ -24,7 +24,7 @@ class SchemaError(Exception): pass
 class EncodeError(SchemaError):
     """Python value passed to validation or serialization (Type.encode()) doesn't match the schema."""
 class EncodeErrors(EncodeError):
-    """Raised by Schema to inform about multiple validation errors in attributes."""
+    """Raised during schema validation to inform about a number of validation errors."""
 class DecodeError(SchemaError):
     """Raw value passed to deserialization (Type.decode()) is incorrect and can't be decoded."""
 

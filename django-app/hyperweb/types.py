@@ -1,3 +1,26 @@
+"""
+DRAFT
+
+- coerce -- target python class/type to cast onto
+- required
+- require_all
+- widget
+- errors returned as a list/dict rather than raised (?); json/xpath paths as keys like in:
+  - 'phones[0].location': '"bar" is not one of "home", "work"'
+
+types:
+
+Int -- with min-max range of values
+Range
+Enum
+Email
+
+Tuple
+List / Sequence
+Dict / Mapping
+
+"""
+
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .jsonpickle import JsonPickle
 
@@ -43,12 +66,18 @@ class Type:
                             # no other valid value can produce None as its serializable state
     
     
-    def encode_json(self, value):
+    def to_json(self, value, registry):
+        """
+        JSON-encoding proceeds in two phases:
+        1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
+           type information that's available; the flat object may still contain nested non-primitive objects;
+        2) encoding of the `flat` object through JsonPickle; external type information is no longer used.
+        """
         
         flat = self.encode(value)
         return jsonp.dumps(flat)
 
-    def decode_json(self, dump):
+    def from_json(self, dump, registry):
 
         flat = jsonp.loads(dump)
         return self.decode(flat)

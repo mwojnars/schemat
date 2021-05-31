@@ -14,7 +14,7 @@
     fields:
       schema:
         "@": hyperweb.types.Object
-        class_: {"=": hyperweb.schema.Schema, "@": builtins.type}
+        class_: {"=": hyperweb.schema.Record, "@": builtins.type}
       name:
         "@": hyperweb.schema.Field
         type: {"@": hyperweb.types.String}
@@ -104,6 +104,12 @@
           "@": hyperweb.types.Dict
           keys: {"@": hyperweb.types.String}
           values: {"@": hyperweb.types.Object, class_: {"=": hyperweb.item.Route, "@": builtins.type}}
+          # values:
+          #   "@": hyperweb.schema.Record
+          #   fields:
+          #     base: {"@": hyperweb.types.String}
+          #     path: {"@": hyperweb.types.String}
+          #     app:  {"@": hyperweb.types.Link, cid: 2}
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
               fixed URL path prefix, and a target application object
         multi: false
@@ -159,7 +165,7 @@
     default:
       base: http://localhost:8001
       path: /
-      app:  [2, 1]
+      app:  [2, 1]      # {"@": hyperweb.item.Application, cid: 2, iid: 1}
 
 - id: [2,1]
   name: Catalog.wiki

@@ -16,12 +16,17 @@ from hyperweb.errors import DecodeError
 class JsonPickle:
     """
     Custom implementation of JSON-pickling of objects of arbitrary classes.
+    Primitive types are
+    
     To be serializable AND deserializable, a class must provide:
     1) __dict__, or __getstate__() that returns a dict
     2) __init__ can be called without arguments
     3) optionally: __setstate__(); if this is not provided, __dict__ will be assigned directly,
        without any further initialization / postprocessing.
        
+    TODO: Items occuring inside the data are serialized as references (ID only, no contents),
+    and retrieved back from the Registry during deserialization.
+    
     By default, JsonPickle leaves non-ASCII characters in their original form (no encoding),
     which is compatible with MySQL: JSON columns use utf8mb4 charset.
     """
@@ -36,7 +41,7 @@ class JsonPickle:
     def dumps(self, obj, **kwargs):
         # kwargs.setdefault('separators', (',', ':'))     # most compact separators (no whitespace)
         kwargs.setdefault('ensure_ascii', False)        # non-ascii chars left as UTF-8
-        return json.dumps(obj, default = self._getstate, **kwargs)
+        return json.dumps(obj, default = self._encode, **kwargs)
     
     def loads(self, dump, **kwargs):
         return json.loads(dump, object_hook = self._decode, **kwargs)
@@ -44,7 +49,7 @@ class JsonPickle:
         # # recursively convert dicts containing CLASS_ATTR to instances of corresponding classes
         # return self._decode(obj)
     
-    def _getstate(self, obj):
+    def _encode(self, obj):
         return self.getstate(obj, self.CLASS_ATTR, self.STATE_ATTR)
         
         
@@ -99,21 +104,23 @@ class JsonPickle:
         Append class name in the resulting dictionary, if needed, and if `class_attr` is provided.
         `obj` shall not be an instance of a standard JSON-serializable type: int/float/list/tuple/dict/NoneType...
         """
-        getstate = getattr(obj, '__getstate__', None)
+        getstate_method = getattr(obj, '__getstate__', None)
     
         # call __getstate__() if present and bound;
         # 'obj' can be a class! then __getstate__ is present but unbound
-        if hasattr(getstate, '__self__'):
-            state = getstate()
+        if hasattr(getstate_method, '__self__'):
+            state = getstate_method()
             if not isinstance(state, dict):
                 raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
             # return with_classname(state)
-    
+            
+        # TODO: when `obj` is a
+        
         # otherwise check against other standard types, normally not JSON-serializable
         elif getattr(obj, '__class__', None) in (set, type):
             cls = obj.__class__
             if cls is set:
-                state = list(obj)
+                state = sorted(obj)         # sorting of values is applied to ensure unique output representation of the set
             elif cls is type:
                 state = JsonPickle.classname(cls = obj)
             else:
@@ -177,6 +184,14 @@ def loads(*args, **kwargs): return _default_encoder.loads(*args, **kwargs)
 
 if __name__ == "__main__":
     
+    def dumpload(obj):
+        print('object:  ', obj)
+        s = dumps(obj)
+        print('dump:    ', s)
+        d = loads(s)
+        print('reloaded:', d)
+        return d
+    
     class C:
         x = 5.0
         s = {'A','B','C'}
@@ -187,9 +202,8 @@ if __name__ == "__main__":
     c.d = C()
     c.y = [3,4,'5']
     
-    s = dumps([{'a':1, 'łąęńÓŚŹŻ':2, 3:[]}, None, c, C])
-    print(s)
-    d = loads(s)
-    print(d)
+    d = dumpload([{'a':1, 'łąęńÓŚŹŻ':2, 3:[]}, None, c, C])
     print(d[2].d, d[2].y)
+    print()
     
+    dumpload({"@": "xyz", "v": 5})

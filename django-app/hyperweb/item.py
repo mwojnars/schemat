@@ -10,7 +10,7 @@ from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 from .types import Object, String, Class, Dict
-from .schema import Schema, Field
+from .schema import Record, Field
 
 from hypertag import HyperHTML
 
@@ -274,7 +274,7 @@ class Item(object, metaclass = MetaItem):
         # convert data from JSON string to a struct
         if data:
             schema = self.category.get('schema')
-            data = schema.decode_json(data)
+            data = schema.from_json(data, self.registry)
             self.data.update(data)
         
         self._post_decode()
@@ -284,7 +284,7 @@ class Item(object, metaclass = MetaItem):
         
     def _to_json(self):
         schema = self.category.get('schema')
-        return schema.encode_json(self.data)
+        return schema.to_json(self.data, self.registry)
         
     def insert(self):
         """
@@ -347,6 +347,8 @@ class Item(object, metaclass = MetaItem):
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
+    def __getstate__(self):
+        raise Exception("Item instance cannot be directly serialized, incorrect type configuration")
 
 ItemDoesNotExist.item_class = Item
 
@@ -455,13 +457,13 @@ class RootCategory(Category):
         """Create an instance of the root category item."""
         
         fields = {
-            'schema':       Object(Schema),
+            'schema':       Object(Record),
             'name':         String(),
             'info':         String(),
             'itemclass':    Class(),
             'templates':    Dict(String(), String()),
         }
-        schema = Schema(fields)                 # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
+        schema = Record(fields)                 # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
         
         root = cls.__new__(cls)                 # __init__() is disabled, do not call it
         root.registry = registry
@@ -478,6 +480,8 @@ class RootCategory(Category):
 #####
 #####  SITE
 #####
+
+# RouteType = Record(base = String(), path = String(), app = Link(cid=2), class_ = 'hyperweb.item.Route')
 
 class Route:
     """
@@ -703,4 +707,18 @@ class View:
         if target_item is None: target_item = self._item
         return target_item.get_url()
         # return self._route.url(target_item)
+
     
+#####################################################################################################################################################
+#####
+#####  Remarks
+#####
+
+# TODO:
+# - JsonPickle: if a dict to be encoded contains "@" key, it gets serialized to a json dict that's incorrectly
+#   interpreted as an object of a custom class during deserialization - security threat;
+#   this cannot be fixed when using the standard `json` library (api is too narrow), only if the client
+#   guarantees that "@" key never occurs in a dict to be encoded
+
+# ISSUES:
+# - strict typing in schema is necessary to properly serialize nested Item instances as references

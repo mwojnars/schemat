@@ -131,6 +131,3 @@ class Record(Type):
         field = self.fields.get(name)
         return field.default if field else Field.MISSING
 
-
-class Schema(Record):
-    pass
