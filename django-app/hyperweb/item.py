@@ -348,7 +348,7 @@ class Item(object, metaclass = MetaItem):
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
     def __getstate__(self):
-        raise Exception("Item instance cannot be directly serialized, incorrect type configuration")
+        raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
 
 ItemDoesNotExist.item_class = Item
 
@@ -456,14 +456,19 @@ class RootCategory(Category):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
         
+        # schema_field  = Struct(Field, schema = Class(), default, multi, info = String())
+        # schema_schema = Struct(Record, fields = Dict(String(), schema_field))
+        # schema_schema = Struct(Record, fields = Dict(String(), Object(Field)))
+        schema_schema = Object(Record)
+        
         fields = {
-            'schema':       Object(Record),
+            'schema':       schema_schema,
             'name':         String(),
             'info':         String(),
             'itemclass':    Class(),
             'templates':    Dict(String(), String()),
         }
-        schema = Record(fields)                 # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
+        schema = Record(**fields)               # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
         
         root = cls.__new__(cls)                 # __init__() is disabled, do not call it
         root.registry = registry

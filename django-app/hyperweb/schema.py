@@ -9,16 +9,16 @@ from .types import Schema
 #####  SCHEMA
 #####
 
-class Field:
+class Field(Schema):
     """Specification of a field in a Record."""
     
     MISSING = object()      # token indicating that `default` value is missing; removed from output during serialization
+    blank   = False         # all app-values to a Field are lists of actual values and None shall never occur
     
-    schema    = None        # instance of Schema
+    schema  = None          # instance of Schema
     default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
     multi   = False         # whether this field can take on multiple values
     info    = None          # human-readable description of the field
-    # compact = True          # whether a list of values (when multi=True) should be compactified if possible
     
     def __init__(self, schema = None, default = None, multi = None, info = None):
         if schema is not None:  self.schema = schema
@@ -27,7 +27,7 @@ class Field:
         if info is not None:    self.info = info
     
     def __getstate__(self):
-        if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compact state when only `schema` is configured
+        if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
             return self.schema
         
         if self.__dict__.get('default') is Field.MISSING:           # exclude explicit MISSING value from serialization
@@ -38,8 +38,27 @@ class Field:
             
         return state
     
-    def encode(self, values):
-        pass
+    def _encode(self, values):
+        """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
+        if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
+        encoded = list(map(self.schema.encode, values))
+
+        # compactify singleton lists
+        if not self.multi or (len(encoded) == 1 and not isinstance(encoded[0], list)):
+            encoded = encoded[0]
+            
+        return encoded
+        
+    def _decode(self, encoded):
+        """Returns a list of value(s)."""
+        
+        # de-compactification of singleton lists
+        if not self.multi or not isinstance(encoded, list):
+            encoded = [encoded]
+    
+        # schema-based decoding
+        return list(map(self.schema.decode, encoded))
+        
         
 
 class Record(Schema):
@@ -53,8 +72,9 @@ class Record(Schema):
     fields   = None     # dict of field names & their Field() schema descriptors
     strict   = True     # if True, only the fields present in `fields` can occur in the data being encoded
     
-    def __init__(self, fields = None):
-        self.fields = dict(fields) if fields else {}
+    def __init__(self, **fields):
+        assert all(isinstance(name, str) and isinstance(schema, Schema) for name, schema in fields.items())
+        self.fields = fields
         self._init_fields()
     
     def __setstate__(self, state):
@@ -63,18 +83,22 @@ class Record(Schema):
 
     def _init_fields(self):
         """Wrap up in Field all the fields whose values are plain Schema instances."""
-        if self.fields is None: self.fields = {}
         for name, field in self.fields.items():
             if isinstance(field, Field): continue
-            assert not field or isinstance(field, Schema)
+            # assert not field or isinstance(field, Schema)
             self.fields[name] = Field(schema = field)
         
     
     def _encode(self, data):
-        """Convert item's data (multidict) to a dict of {attr_name: encoded_values} pairs."""
+        """
+        Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
+        while schema-encoding each field value beforehand.
+        """
         
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, not {data}")
         errors = []
+        
+        assert self.strict
         
         # encode & compactify values of fields through per-field schema definitions
         encoded = data.asdict_lists()
@@ -86,12 +110,12 @@ class Record(Schema):
             # schema-aware encoding
             field = self.fields.get(name)
             if field:
-                encoded[name] = values = list(map(field.schema.encode, values))
+                encoded[name] = values = field.encode(values)   #list(map(field.schema.encode, values))
             # TODO: catch atype.encode() exceptions and append to `errors`
             
-            # compactify singleton lists
-            if len(values) == 1 and not isinstance(values[0], list):
-                encoded[name] = values[0]
+            # # compactify singleton lists
+            # if len(values) == 1 and not isinstance(values[0], list):
+            #     encoded[name] = values[0]
             
         if errors:
             raise EncodeErrors(errors)
@@ -100,9 +124,13 @@ class Record(Schema):
         
         
     def _decode(self, data):
-        """Decode a dict of {attr: value(s)} back to a MultiDict."""
+        """
+        Decode a dict of {attr: value(s)} back to a MultiDict.
+        Perform recursive top-down schema-based decoding of field values.
+        """
         
         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
+        assert self.strict
 
         # de-compactify & decode values of fields
         for name, values in data.items():
@@ -110,17 +138,16 @@ class Record(Schema):
             if self.strict and name not in self.fields:
                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
             
-            # de-compactification of singleton lists
-            if not isinstance(values, list):
-                data[name] = values = [values]
+            # # de-compactification of singleton lists
+            # if not isinstance(values, list):
+            #     data[name] = values = [values]
         
             # schema-based decoding
             field = self.fields.get(name)
             if field:
-                data[name] = list(map(field.schema.decode, values))
+                data[name] = field.decode(values)   #list(map(field.schema.decode, values))
                 
-        data = MultiDict(multiple = data)
-        return data
+        return MultiDict(multiple = data)
     
     
     def get_default(self, name):
@@ -131,12 +158,21 @@ class Record(Schema):
         field = self.fields.get(name)
         return field.default if field else Field.MISSING
 
+
 #####################################################################################################################################################
 
-class Struct(Schema):
+class Struct(Record):
     """
     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
     Similar to Record, but the app-representation is a regular python object matching the schema
     rather than a MultiDict; and multiple values are not allowed for a field.
     """
     
+    type   = None       # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
+    
+    def __init__(self, __type__ = object, **fields):
+        self.type = __type__
+        super(Struct, self).__init__(**fields)
+        for name, field in self.fields.items():
+            if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
+            

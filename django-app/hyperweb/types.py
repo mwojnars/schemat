@@ -62,9 +62,12 @@ class Schema:
     - DataError in decode() -- inconsistent data in DB
     """
     
+    name  = None            # name of this schema instance for messaging purposes
+    
     # instance-level settings
     blank = True            # if True, None is a valid input value and is encoded as None;
                             # no other valid value can produce None as its serializable state
+    required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
     
     def to_json(self, value, registry):
@@ -91,7 +94,7 @@ class Schema:
         
         state = self._encode(value)
         if self.blank:
-            assert state is not None, f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true"
+            if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
 
         return state
         
@@ -127,6 +130,10 @@ class Schema:
         back into custom python types.
         """
         return value
+
+    def __str__(self):
+        name = self.name or self.__class__.__name__
+        return name
 
     #############################################
     

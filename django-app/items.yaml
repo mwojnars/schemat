@@ -154,8 +154,10 @@
   name: Item
   info: Category of items that do not belong to any specific category
   schema:
-    fields: {}
-    strict: false
+    fields:
+      name:  {"@": hyperweb.schema.Field, "schema": {"@": hyperweb.types.String}, "multi": true}
+      title: {"@": hyperweb.types.String}
+    #strict: false
 
 - id: [1,1]
   name: catalog.wiki
@@ -188,13 +190,13 @@
     space: 3
 
 - id: [100,1]
-  multi: [1,2,null]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-  value: 100000
-  struct: [[123, 4567854, 98765400, null]]
-  fulltext: some text some text some text some text some text some text some text
-    some text STOP
-  another_value: 23.046
+#  multi: [1,2,null]
+#  value: 100000
+#  struct: [[123, 4567854, 98765400, null]]
+#  fulltext: some text some text some text some text some text some text some text
+#    some text STOP
+#  another_value: 23.046
 
 - {id: [100,2], name: ["test_item", "duplicate"], title: ąłęÓŁŻŹŚ}
 - {id: [100,3], name: ["test_item2"], title: ąłęÓŁŻŹŚ}
