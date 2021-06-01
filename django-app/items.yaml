@@ -13,8 +13,8 @@
   schema:
     fields:
       schema:
-        "@": hyperweb.types.Object
-        class_: {"=": hyperweb.schema.Record, "@": builtins.type}
+        "@": hyperweb.schema.Field
+        schema: {"@": hyperweb.types.Object, class_: {"=": hyperweb.schema.Record, "@": builtins.type}}
       name:
         "@": hyperweb.schema.Field
         schema: {"@": hyperweb.types.String}
@@ -58,7 +58,6 @@
                                   b | {attr}:
                                   . | {str(value)}
 
-    strict: true
   itemclass: hyperweb.item.Category
   templates:
     # template that displays a category page
@@ -157,7 +156,6 @@
     fields:
       name:  {"@": hyperweb.schema.Field, "schema": {"@": hyperweb.types.String}, "multi": true}
       title: {"@": hyperweb.types.String}
-    #strict: false
 
 - id: [1,1]
   name: catalog.wiki

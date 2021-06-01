@@ -25,10 +25,12 @@ def after_request(sender, **kwargs):
 
 registry = Registry()
 
-# root = registry.get_item((0,0))
 # print('root:', root)
 # print('root.schema:', root.schema.fields)
 
-# print("Category.schema: ", Field._json.dumps(site._categories['Category'].schema))
+# root = registry.get_item((0,0))
+# site = registry.get_site()
+#
+# print("Category.schema: ", root.schema.to_json())
 # print("Site.schema:     ", Field._json.dumps(site.category.schema))
 

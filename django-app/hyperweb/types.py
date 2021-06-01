@@ -70,7 +70,7 @@ class Schema:
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
     
-    def to_json(self, value, registry):
+    def to_json(self, value, registry, **params):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
@@ -79,7 +79,7 @@ class Schema:
         """
         
         flat = self.encode(value)
-        return jsonp.dumps(flat)
+        return jsonp.dumps(flat, **params)
 
     def from_json(self, dump, registry):
 
@@ -218,24 +218,58 @@ class Class(Schema):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return jsonp.import_(value)
         
-
-class String(Schema):
+class Primitive(Schema):
+    """Schema of a specific primitive JSON-serializable python type."""
+    
+    type = None     # the predefined standard python type of all app-layer values; same type for db-layer values
+    
+    def __init__(self, type = None):
+        if type is None: return
+        assert type in (bool, int, float, str)
+        self.type = type
     
     def _encode(self, value):
-        if not isinstance(value, str): raise EncodeError(f"expected a <str>, not {value}")
+        if not isinstance(value, self.type): raise EncodeError(f"expected an instance of {self.type}, got {value}")
         return value
 
     def _decode(self, value):
-        if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
+        if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {value}")
         return value
 
-class Dict(Schema):
-    """
-    Field that accepts <dict> objects as data values and ensures that keys and values of the dict
-    are interpreted as fields of particular Field types.
-    """
+class Boolean(Primitive):
+    type = bool
+
+class Integer(Primitive):
+    type = int
+
+class Float(Primitive):
+    type = float
+
+class String(Primitive):
+    type = str
     
-    # optional specification of Fields to be used for interpreting keys/values of incoming dicts
+class List(Schema):
+    type = list
+    schema = None       # schema of individual elements
+    
+    def __init__(self, schema):
+        self.schema = schema
+        
+    def _encode(self, values):
+        if not isinstance(values, self.type): raise EncodeError(f"expected a {self.type}, got {values}")
+        return [self.schema.encode(v) for v in values]
+
+    def _decode(self, encoded):
+        if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
+        return self.type(self.schema.decode(e) for e in encoded)
+
+class Tuple(List):
+    type = tuple
+    
+class Dict(Schema):
+    """Accepts <dict> objects as data values. Outputs a dict with keys and values encoded through their own schema."""
+    
+    # schema of keys and values of app-layer dicts
     keys   = None
     values = None
     

@@ -10,6 +10,49 @@ from hyperweb.errors import DecodeError
 
 #####################################################################################################################################################
 #####
+#####  UTILITIES
+#####
+
+def getstate(obj):
+    """
+    Retrieve object's state with __getstate__() or take it from __dict__.
+    `obj` shall not be an instance of a standard type: int/float/list/tuple/dict/NoneType...
+    """
+    getstate_method = getattr(obj, '__getstate__', None)
+
+    # call __getstate__() if present and bound ('obj' shall be an instance not a class)
+    if getstate_method:
+        if not hasattr(getstate_method, '__self__'): raise TypeError(f'expected an instance in getstate(), got a class')
+        state = getstate_method()
+        if not isinstance(state, dict):
+            raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
+        
+    # otherwise use __dict__
+    else:
+        state = getattr(obj, '__dict__', None)
+        if state is None:
+            raise TypeError(f"__dict__ not present in {obj}")
+    
+    return state
+    
+def setstate(cls, state):
+    """
+    Create an object of a given class and set its state using __setstate__(), if present,
+    or by assigning directly to __dict__ otherwise.
+    """
+    
+    # instantiate and fill out an object of a custom class
+    obj = cls()
+    _setstate = getattr(obj, '__setstate__', None)
+    if _setstate:
+        _setstate(state)
+    else:
+        obj.__dict__ = dict(state)
+    return obj
+
+
+#####################################################################################################################################################
+#####
 #####  JSONPICKLE
 #####
 
@@ -111,7 +154,7 @@ class JsonPickle:
         if hasattr(getstate_method, '__self__'):
             state = getstate_method()
             if not isinstance(state, dict):
-                raise TypeError(f"The result of __getstate__() is not a dict in {obj}")
+                raise TypeError(f"invalid result of __getstate__() in {obj}, expected <dict>, got {state}")
             # return with_classname(state)
             
         # TODO: when `obj` is a

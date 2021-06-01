@@ -1,4 +1,6 @@
 import re, threading
+from pprint import pprint
+
 from time import sleep
 from bidict import bidict
 
@@ -9,8 +11,8 @@ from .data import Data
 from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-from .types import Object, String, Class, Dict
-from .schema import Record, Field
+from .types import Object, String, Class, Dict, Boolean
+from .schema import Record, Field, Struct
 
 from hypertag import HyperHTML
 
@@ -456,10 +458,10 @@ class RootCategory(Category):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
         
-        # schema_field  = Struct(Field, schema = Class(), default, multi, info = String())
+        # schema_field  = Struct(Field, schema = Object(Schema), default = Object(), multi = Boolean(), info = String())
         # schema_schema = Struct(Record, fields = Dict(String(), schema_field))
-        # schema_schema = Struct(Record, fields = Dict(String(), Object(Field)))
-        schema_schema = Object(Record)
+        schema_schema = Struct(Record, fields = Dict(String(), Object(Field)), strict = Boolean())
+        # schema_schema = Object(Record)
         
         fields = {
             'schema':       schema_schema,
@@ -478,6 +480,12 @@ class RootCategory(Category):
         root.data  = Data()
         root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+
+        # root.load()
+        # new_schema = root['schema']
+        # print("RootCategory.schema:")
+        # print(schema_schema.to_json(new_schema, registry, indent = 2))
+        
         return root
         
 
