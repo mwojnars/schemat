@@ -23,7 +23,7 @@ Dict / Mapping
 """
 
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .jsonpickle import JsonPickle
+from .jsonpickle import JsonPickle, classname, import_, getstate, setstate
 
 jsonp = JsonPickle()
 
@@ -162,48 +162,140 @@ class Schema:
 
 class Object(Schema):
     """
-    Accepts any python object, optionally restricted to objects of a predefined class.
-    During decoding, the predefined class is implied if the data deserialized don't have class specification.
+    Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
+    predefined type(s) - the `type` parameter - or isinstance() of one of predefined base classes
+    - the `base` parameter; at least one of these conditions must hold.
+    If there is only one type in `type`, and an empty `base`, the type name is excluded
+    from serializated output and is implied automatically during deserialization.
+    Types can be given as import paths (strings), which will be automatically converted to a type object.
     """
+    CLASS_ATTR = "@"    # name of a special attribute appended to object state to store a class name (with package) of the object being encoded
 
-    class_ = None       # python class to be implied for objects during decoding; if strict=True, only objects of this class can be encoded
-    strict = True       # [bool] if True, only instances of <class_> are allowed in encode/decode, otherwise an exception is raised
-    #skip_empty = False # if True, empty collections (list/tuple/set/dict) in the object are removed during encoding
+    type = None         # python type(s) for exact type checks: type(obj)==T
+    base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
     
-    def __init__(self, class_ = None, strict = False):
-        self.class_ = class_
-        self.strict = strict
+    def __init__(self, type_ = None, base = None):
+        self.__setstate__({'type': type_, 'base': base})
+        
+    def __setstate__(self, state):
+        """Custom __setstate__/__getstate__() is needed to allow compact encoding of 1-element lists in `type` and `base`."""
+        self.type = self._prepare_types(state['type']) if 'type' in state else []
+        self.base = self._prepare_types(state['base']) if 'base' in state else []
+        
+    @staticmethod
+    def _prepare_types(types):
+        types = list(types) if isinstance(types, (list, tuple)) else [types] if types else []
+        types = [import_(t) if isinstance(t, str) else t for t in types]
+        assert all(isinstance(t, type) for t in types)
+        return types
+        
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if len(self.type) == 1: state['type'] = self.type[0]
+        if len(self.base) == 1: state['base'] = self.base[0]
+        return state
+    
+    def _valid_type(self, obj):
+        if not (self.type or self.base): return True        # all objects are treated as valid when no reference types are configured
+        t = type(obj)
+        if t in self.type: return True
+        if any(isinstance(obj, base) for base in self.base): return True
+        return False
+
+    def _unique_type(self):
+        return len(self.type) == 1 and not self.base
 
     def _encode(self, obj):
-        cls = self.class_
-        if not cls: return obj
         
-        if isinstance(obj, cls):
-            if self._json_primitive(obj): return obj
-            try:
-                return jsonp.getstate(obj, class_attr = None)
-            except TypeError as ex:
-                raise EncodeError(f"can't retrieve state of an object: {ex}")
-            
-        elif self.strict:
-            raise EncodeError(f"expected an instance of {cls}, but found: {obj}")
-        else:
-            return obj
+        if not self._valid_type(obj):
+            raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
+        
+        state = getstate(obj)
+        assert isinstance(state, dict)
 
-    def _decode(self, state):
-        cls = self.class_
-        if not cls or isinstance(state, cls): return state
+        # if the exact class is known upfront let's output compact state without "@" for class designation
+        if self._unique_type():
+            return state
         
-        # cast a <dict> to an instance of the implicit class
-        if isinstance(state, dict):
-            return jsonp.setstate(cls, state)
-        if self.strict:
-            raise DecodeError(f"the object decoded is not an instance of {cls}: {state}")
+        if self.CLASS_ATTR in state:
+            raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
+            
+        # append class designator
+        state[self.CLASS_ATTR] = classname(obj)
         return state
 
-    def _json_primitive(self, obj):
+    def _decode(self, state):
+        
+        if self._unique_type():
+            if self.CLASS_ATTR in state:
+                raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is present, but not needed: {state}')
+            class_ = self.type[0]
+
+        else:
+            if self.CLASS_ATTR not in state:
+                raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
+            
+            fullname = state.pop(self.CLASS_ATTR)
+            class_ = import_(fullname)
+            
+        obj = setstate(class_, state)
+        
+        if not self._valid_type(obj):
+            raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
+            
+        return obj
     
-        return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
+
+# class Object_(Schema):
+#     """
+#     Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
+#     predefined type(s) - the `type` parameter - or isinstance() of one of predefined base classes
+#     - the `base` parameter; at least one of these conditions must hold.
+#     If there is only one type in `type`, and an empty `base`, the type name is excluded
+#     from serializated output and is implied automatically during deserialization.
+#     """
+#
+#     base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
+#     type = None         # python type(s) for equality checks: type(obj)==T
+#     strict = True       # [bool] if True, only instances of <type> are allowed in encode/decode, otherwise an exception is raised
+#
+#     def __init__(self, type = None, base = None, strict = True):
+#         self.base = base
+#         self.type = type
+#         self.strict = strict
+#
+#     def _encode(self, obj):
+#         cls = self.type
+#         if not cls: return obj
+#
+#         if isinstance(obj, cls):
+#             if self._json_primitive(obj): return obj
+#             try:
+#                 return jsonp.getstate(obj, class_attr = None)
+#             except TypeError as ex:
+#                 raise EncodeError(f"can't retrieve state of an object: {ex}")
+#
+#         elif self.strict:
+#             raise EncodeError(f"expected an instance of {cls}, but found: {obj}")
+#         else:
+#             return obj
+#
+#         # TODO: extended (wrapped) serialization of <dict> to avoid ambiguity of dicts containing "@" as a regular key
+#
+#     def _decode(self, state):
+#         cls = self.type
+#         if not cls or isinstance(state, cls): return state
+#
+#         # cast a <dict> to an instance of the implicit class
+#         if isinstance(state, dict):
+#             return jsonp.setstate(cls, state)
+#         if self.strict:
+#             raise DecodeError(f"the object decoded is not an instance of {cls}: {state}")
+#         return state
+#
+#     def _json_primitive(self, obj):
+#
+#         return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
 
 
 class Class(Schema):
@@ -358,6 +450,45 @@ class Link(Schema):
         from .site import registry
         
         return registry.get_item((cid, iid))
+        
+
+class Switch(Schema):
+    """
+    Logical alternative of a number of distinct schemas: an app-layer object is serialized through
+    the first matching sub-schema, and the schema name or index 0,1,... is stored in the output
+    to allow deserialization through the same sub-schema.
+    """
+    schemas = None      # dict of sub-schemas; keys are names or numeric IDs to be output during serialization
+    
+    def __init__(self, *schema_list, **schema_dict):
+        """Either schema_list or schema_dict should be provided, but not both."""
+        if schema_list and schema_dict:
+            raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
+        if schema_list:
+            self.schemas = dict(enumerate(schema_list))
+        else:
+            self.schemas = schema_dict
+            
+    def _encode(self, value):
+        
+        for name, schema in self.schemas:
+            try:
+                encoded = schema.encode(value)
+                return [name, encoded]
+                
+            except EncodeError:
+                continue
+                
+        raise EncodeError(f"invalid value, no matching sub-schema in Switch for: {value}")
+        
+    def _decode(self, encoded):
+        
+        if not (isinstance(encoded, list) and len(encoded) == 2):
+            raise DecodeError(f"data corruption in Switch, the encoded object should be a 2-element list, got {encoded} instead")
+        
+        name, encoded = encoded
+        schema = self.schemas[name]
+        return schema.decode(encoded)
         
 
 #####################################################################################################################################################

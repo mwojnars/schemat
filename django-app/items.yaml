@@ -14,7 +14,14 @@
     fields:
       schema:
         "@": hyperweb.schema.Field
-        schema: {"@": hyperweb.types.Object, class_: {"=": hyperweb.schema.Record, "@": builtins.type}}
+        schema: {"@": hyperweb.types.Object, type: hyperweb.schema.Record}
+        #schema: {"@": hyperweb.schema.ItemSchema}
+#        schema:
+#          "@": hyperweb.schema.Struct
+#          type: {"=": hyperweb.schema.Record, "@": builtins.type}
+#          fields:
+#            fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.Object, type: {"=": hyperweb.schema.Field, "@": builtins.type}}}
+#            strict: {"@": hyperweb.types.Boolean}
       name:
         "@": hyperweb.schema.Field
         schema: {"@": hyperweb.types.String}
@@ -102,7 +109,8 @@
         schema:
           "@": hyperweb.types.Dict
           keys: {"@": hyperweb.types.String}
-          values: {"@": hyperweb.types.Object, class_: {"=": hyperweb.item.Route, "@": builtins.type}}
+          values: {"@": hyperweb.types.Object, type: hyperweb.item.Route}
+          # values: {"@": hyperweb.item.RouteSchema}
           # values:
           #   "@": hyperweb.schema.Record
           #   fields:
@@ -112,9 +120,7 @@
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
               fixed URL path prefix, and a target application object
         multi: false
-      app:
-        "@": hyperweb.types.Link
-        cid: 2
+      app: {"@": hyperweb.types.Link, cid: 2}
 
 - id: [0,2]
   name: Application

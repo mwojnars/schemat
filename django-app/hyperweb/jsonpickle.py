@@ -13,6 +13,30 @@ from hyperweb.errors import DecodeError
 #####  UTILITIES
 #####
 
+def classname(obj = None, cls = None):
+    """Fully qualified class name of an object 'obj' or class 'cls'."""
+    if cls is None: cls = obj.__class__
+    name = cls.__module__ + "." + cls.__name__
+    return name
+
+def import_(fullname):
+    """
+    Dynamic import of a python class/function/variable given its full (dotted) package-module name.
+    If no module name is present, __main__ is used.
+    """
+    if '.' not in fullname:
+        mod, name = '__main__', fullname
+        #raise Exception("Can't import an object without module/package name: %s" % path)
+    else:
+        mod, name = fullname.rsplit('.', 1)
+    # if mod == "builtins":
+    #     return getattr(globals()['__builtins__'], name)
+    module = import_module(mod) #, fromlist = [mod])
+    try:
+        return getattr(module, name)
+    except:
+        raise ImportError(f"cannot import name '{name}' from '{mod}'")
+
 def getstate(obj):
     """
     Retrieve object's state with __getstate__() or take it from __dict__.
@@ -31,7 +55,7 @@ def getstate(obj):
     else:
         state = getattr(obj, '__dict__', None)
         if state is None:
-            raise TypeError(f"__dict__ not present in {obj}")
+            raise TypeError(f"cannot retrieve state of an object of type <{type(obj)}>: {obj}")
     
     return state
     
@@ -47,7 +71,11 @@ def setstate(cls, state):
     if _setstate:
         _setstate(state)
     else:
-        obj.__dict__ = dict(state)
+        try:
+            obj.__dict__ = dict(state)
+        except:
+            raise TypeError(f"cannot assign state to an object of type <{cls}>, the state: {state}")
+        
     return obj
 
 
@@ -182,8 +210,11 @@ class JsonPickle:
         
         if class_attr is None: return state
 
+        # assert class_attr not in state
+        if class_attr in state:
+            raise Exception(f'non-serializable object state: includes the special character "{class_attr}" as a key in the state dictionary')
+        
         # append class name to `state`
-        assert class_attr not in state
         state = state.copy()
         state[class_attr] = JsonPickle.classname(obj)
         return state

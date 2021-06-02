@@ -458,10 +458,10 @@ class RootCategory(Category):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
         
-        # schema_field  = Struct(Field, schema = Object(Schema), default = Object(), multi = Boolean(), info = String())
+        # schema_field  = Struct(Field, schema = Object(baseclass = Schema), default = Object(), multi = Boolean(), info = String())
         # schema_schema = Struct(Record, fields = Dict(String(), schema_field))
-        schema_schema = Struct(Record, fields = Dict(String(), Object(Field)), strict = Boolean())
-        # schema_schema = Object(Record)
+        # schema_schema = Struct(Record, fields = Dict(String(), Object(Field)), strict = Boolean())
+        schema_schema = Object(Record)
         
         fields = {
             'schema':       schema_schema,
@@ -494,7 +494,7 @@ class RootCategory(Category):
 #####  SITE
 #####
 
-# RouteSchema = Record(base = String(), path = String(), app = Link(cid=2), class_ = 'hyperweb.item.Route')
+# RouteSchema = Struct(Route, base = String(), path = String(), app = Link(cid=2))
 
 class Route:
     """

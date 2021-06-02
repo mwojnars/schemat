@@ -2,7 +2,7 @@
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .jsonpickle import getstate, setstate
 from .multidict import MultiDict
-from .types import Schema
+from .types import Schema, Boolean, String, Dict, Object
 
 
 #####################################################################################################################################################
@@ -78,6 +78,7 @@ class Record(Schema):
     
     fields   = None     # dict of field names & their Field() schema descriptors
     strict   = True     # if True, only the fields present in `fields` can occur in the data being encoded
+    blank    = False
     
     def __init__(self, **fields):
         assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
@@ -209,4 +210,25 @@ class Struct(Record):
                 
         return setstate(self.type, attrs)
     
-        
+#####################################################################################################################################################
+
+class FieldSchema(Struct):
+    """Schema of a field specification inside item's schema definition."""
+    
+    type = Field
+    fields = {
+        'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
+        'default': Object(),
+        'multi':   Boolean(),
+        'info':    String(),
+    }
+
+class ItemSchema(Struct):
+    """Schema of item's schema for use inside category definitions."""
+    
+    type = Record
+    fields = {
+        'fields': Dict(String(), FieldSchema),  #Object(type_=Field or base=Schema) Object(base=(Field,Schema))
+        'strict': Boolean(),
+    }
+    
