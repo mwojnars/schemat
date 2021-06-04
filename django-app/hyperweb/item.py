@@ -257,7 +257,7 @@ class Item(object, metaclass = MetaItem):
         assert self.iid is not None, 'load() must not be called for a newly created item with no IID'
         if self.loaded and not force and record is None: return self
         if record is None:
-            record = self.category.load_data(self.id)
+            record = self.registry.load_data(self.id)
         self._decode(record)
         return self
     
@@ -295,8 +295,9 @@ class Item(object, metaclass = MetaItem):
         Insert this item as a new row in DB. Assign a new IID (self.iid) and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
-        self.category._store.insert(self)
-        self.registry.save_item(self)
+        self.registry.insert_item(self)
+        # self.category._store.insert(self)
+        # self.registry.save_item(self)
         
     def update(self, fields = None):
         """Update the contents of this item's row in DB."""
@@ -307,8 +308,9 @@ class Item(object, metaclass = MetaItem):
         #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
-        self.category._store.update(self)
-        self.registry.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
+        self.registry.update_item(self)
+        # self.category._store.update(self)
+        # self.registry.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
 
     def save(self):
         """
@@ -367,13 +369,13 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to
     and creation of new items within category.
     """
-    _store  = YamlStore()              # DataStore used for reading/writing items of this category
+    # _store  = YamlStore()              # DataStore used for reading/writing items of this category
 
 
-    def load_data(self, id):
-        """Load item data from DB and return as a record (dict)."""
-        print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
-        return self._store.select(id)
+    # def load_data(self, id):
+    #     """Load item data from DB and return as a record (dict)."""
+    #     print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
+    #     return self._store.select(id)
     
     def new_item(self):
         """"""
@@ -386,13 +388,13 @@ class Category(Item):
         """
         return self.registry.get_item(iid = iid, category = self)
     
-    def load_items(self):
-        """
-        Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
-        A generator.
-        """
-        records = self._store.select_all(self.iid)
-        return self.registry.decode_items(records, self)
+    # def load_items(self):
+    #     """
+    #     Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
+    #     A generator.
+    #     """
+    #     records = self._store.select_all(self.iid)
+    #     return self.registry.decode_items(records, self)
         
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""

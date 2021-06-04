@@ -3,6 +3,7 @@ import threading
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
 from .item import RootCategory
+from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 
 #####################################################################################################################################################
@@ -32,7 +33,8 @@ class Registry:
     the last request before item refresh operates on an already-expired item.
     """
     
-    cache = None        # cached pairs of {ID: item}, with TTL configured on per-item basis
+    store = YamlStore()         # DataStore where items are read from and saved to
+    cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
@@ -111,10 +113,6 @@ class Registry:
                 item.load(record)
                 yield item
         
-    def save_item(self, item):
-        """Called after a new item was saved to DB, to put its IID in the registry."""
-        self._set(item)
-        
     def _load_root(self, record = None):
         
         root = RootCategory.create_root(self)
@@ -122,6 +120,35 @@ class Registry:
         root.load(record)              # this loads the root data from DB if record=None
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
+        
+    def load_data(self, id):
+        """Load item data from DB and return as a record (dict)."""
+        print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
+        return self.store.select(id)
+    
+    def load_items(self, category):
+        """Load from DB all items of a given category, ordered by IID. A generator."""
+        records = self.store.select_all(category.iid)
+        return self.decode_items(records, category)
+        
+    def insert_item(self, item):
+        """
+        Insert `item` as a new entry in DB. Create a new IID and assign to `item.iid`,
+        which must have been None before insertion.
+        """
+        assert item.iid is None
+        self.store.insert(item)
+        assert item.iid is not None
+        self._set(item)
+
+    def update_item(self, item):
+        """Update the contents of the item's data in DB."""
+        self.store.update(item)
+        self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
+
+    # def save_item(self, item):
+    #     """Called after a new item was saved to DB, to put its IID in the registry."""
+    #     self._set(item)
         
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""

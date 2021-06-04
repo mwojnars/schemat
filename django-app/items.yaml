@@ -90,7 +90,7 @@
                             . | {str(value)}
                 h2  | Items
                 table
-                    for item in cat.load_items()
+                    for item in cat.registry.load_items(cat)
                         tr
                             td / #{item.iid} &nbsp;
                             td : a href=$view.url(item)

@@ -297,7 +297,10 @@ class Object(Schema):
         
         # default object decoding via setstate()
         state = self._decode_dict(state)
-        return setstate(class_, state)
+        obj = setstate(class_, state)
+        
+        # TODO: if `obj` is a <reference> to an item, replace it with the actual Item instance
+        return obj
         
         
     @staticmethod
@@ -384,6 +387,8 @@ class Link(Schema):
     """
     The python value is an Item object.
     The DB value is an ID=(CID,IID), or just IID, of an item.
+    Link() is equivalent to Object(Item), however, Link instance can also be parameterized
+    with a predefined CID, Link(cid), which is not possible when using Object.
     """
     
     # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
@@ -394,6 +399,7 @@ class Link(Schema):
     
     def _encode(self, item):
         
+        # if not isinstance(item, Item): pass
         if None in item.id:
             raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.id}")
             
@@ -540,6 +546,18 @@ class Switch(Schema):
 #####
 #####  Python types
 #####
+
+class reference:
+    """
+    Reference to an Item. Only used internally during serialization to replace an original Item instance
+    and store only its ID in the output, to be replaced back with a Registry-loaded item during decoding.
+    """
+    id = None       # ID of the referenced item
+    
+    def __init__(self, item):
+        self.id = item.id
+    def __getstate__(self):
+        return self.id
 
 class text(str):
     """
