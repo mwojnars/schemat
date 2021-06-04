@@ -551,53 +551,53 @@ class text(str):
 
 #####################################################################################################################################################
 
-if __name__ == "__main__":
-    
-    def test(schema, obj):
-        print()
-        print('object:', obj, getattr(obj, '__dict__', 'no __dict__'))
-        flat = schema.encode(obj)
-        print('encoded:', flat)
-        obj2 = schema.decode(flat)
-        print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
-        
-    test(Integer(), None)
-    # test(Integer(), 10.5)       # hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
-    test(Object(Class), None)
-    test(Object(Class), Class())
-
-    class _T:
-        def __init__(self, x = None): self.x = x
-    class float_(float):
-        def __init__(self, x = None): self.x = x
-
-    test(Object(Class), Class())
-    test(Object(_T), _T(x=10))
-    test(Object(base = _T), _T(x=10))
-    test(Object(str), 'kot')
-    test(Object(type = (int, float)), 5.5)
-    test(Object(base = (int, float)), float_(5.5))
-    test(Object(dict), {'a': 1, 'b': 2})
-    test(Object(), {'a': 1, 'b': 2})
-    test(Object(), {'a': 1, 'b': 2, '@': 'ampersand'})
-    test(Object(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
-    test(Object(), Integer())
-    test(Object(base = Schema), Integer())
-    test(Object(type = Integer), Integer())
-    test(Object(base = Schema), Object(dict))
-    test(Object(base = Schema), Object((list,dict,str,_T)))
-
-    class C:
-        x = 5.0
-        s = {'A','B','C'}
-        t = (1,2,3)
-        def f(self): return 1
-    
-    c = C()
-    c.d = C()
-    c.y = [3,4,'5']
-    
-    # test(Object(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
-    test(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
-    test(Object(), {"@": "xyz", "v": 5})
+# if __name__ == "__main__":
+#
+#     def test(schema, obj):
+#         print()
+#         print('object: ', obj, getattr(obj, '__dict__', 'no __dict__'))
+#         flat = schema.encode(obj)
+#         print('encoded:', flat)
+#         obj2 = schema.decode(flat)
+#         print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
+#
+#     test(Integer(), None)
+#     # test(Integer(), 10.5)       # hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
+#     test(Object(Class), None)
+#     test(Object(Class), Class())
+#
+#     class _T:
+#         def __init__(self, x = None): self.x = x
+#     class float_(float):
+#         def __init__(self, x = None): self.x = x
+#
+#     test(Object(Class), Class())
+#     test(Object(_T), _T(x=10))
+#     test(Object(base = _T), _T(x=10))
+#     test(Object(str), 'kot')
+#     test(Object(type = (int, float)), 5.5)
+#     test(Object(base = (int, float)), float_(5.5))
+#     test(Object(dict), {'a': 1, 'b': 2})
+#     test(Object(), {'a': 1, 'b': 2})
+#     test(Object(), {'a': 1, 'b': 2, '@': 'ampersand'})
+#     test(Object(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
+#     test(Object(), Integer())
+#     test(Object(base = Schema), Integer())
+#     test(Object(type = Integer), Integer())
+#     test(Object(base = Schema), Object(dict))
+#     test(Object(base = Schema), Object((list,dict,str,_T)))
+#
+#     class C:
+#         x = 5.0
+#         s = {'A','B','C'}
+#         t = (1,2,3)
+#         def f(self): return 1
+#
+#     c = C()
+#     c.d = C()
+#     c.y = [3,4,'5']
+#
+#     # test(Object(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
+#     test(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
+#     test(Object(), {"@": "xyz", "v": 5})
     

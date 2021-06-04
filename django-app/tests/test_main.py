@@ -2,7 +2,7 @@
 """
 Run in "tests" folder:
 $
-$  py.test-3 -vW ignore::DeprecationWarning tests.py
+$  py.test-3 -vW ignore::DeprecationWarning .
 $
 
 """
