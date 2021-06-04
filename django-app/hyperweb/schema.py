@@ -1,6 +1,6 @@
 
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .jsonpickle import getstate, setstate
+from .serialize import getstate, setstate
 from .multidict import MultiDict
 from .types import Schema, Boolean, String, Dict, Object
 

@@ -24,7 +24,7 @@ Dict / Mapping
 import json
 
 from hyperweb.errors import EncodeError, EncodeErrors, DecodeError
-from hyperweb.jsonpickle import classname, import_, getstate, setstate
+from hyperweb.serialize import classname, import_, getstate, setstate
 
 # jsonp = JsonPickle()
 
@@ -562,7 +562,7 @@ if __name__ == "__main__":
         print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
         
     test(Integer(), None)
-    # test(Integer(), 10.5)       # raises exception: hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
+    # test(Integer(), 10.5)       # hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
     test(Object(Class), None)
     test(Object(Class), Class())
 
@@ -586,3 +586,18 @@ if __name__ == "__main__":
     test(Object(type = Integer), Integer())
     test(Object(base = Schema), Object(dict))
     test(Object(base = Schema), Object((list,dict,str,_T)))
+
+    class C:
+        x = 5.0
+        s = {'A','B','C'}
+        t = (1,2,3)
+        def f(self): return 1
+    
+    c = C()
+    c.d = C()
+    c.y = [3,4,'5']
+    
+    # test(Object(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
+    test(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
+    test(Object(), {"@": "xyz", "v": 5})
+    
