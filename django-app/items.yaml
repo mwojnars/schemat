@@ -20,7 +20,7 @@
 #          "@": hyperweb.schema.Struct
 #          type: {"=": hyperweb.schema.Record, "@": builtins.type}
 #          fields:
-#            fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.Object, type: {"=": hyperweb.schema.Field, "@": builtins.type}}}
+#            fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.Object, type: hyperweb.schema.Field}}
 #            strict: {"@": hyperweb.types.Boolean}
       name:
         "@": hyperweb.schema.Field

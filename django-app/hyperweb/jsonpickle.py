@@ -115,7 +115,7 @@ class JsonPickle:
         return json.dumps(obj, default = self._encode, **kwargs)
     
     def loads(self, dump, **kwargs):
-        return json.loads(dump, object_hook = self._decode, **kwargs)
+        return json.loads(dump, **kwargs)       # object_hook = self._decode
         
         # # recursively convert dicts containing CLASS_ATTR to instances of corresponding classes
         # return self._decode(obj)

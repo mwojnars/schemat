@@ -22,8 +22,8 @@ Dict / Mapping
 
 """
 
-from .errors import EncodeError, EncodeErrors, DecodeError
-from .jsonpickle import JsonPickle, classname, import_, getstate, setstate
+from hyperweb.errors import EncodeError, EncodeErrors, DecodeError
+from hyperweb.jsonpickle import JsonPickle, classname, import_, getstate, setstate
 
 jsonp = JsonPickle()
 
@@ -86,7 +86,7 @@ class Schema:
         flat = jsonp.loads(dump)
         return self.decode(flat)
     
-
+    
     def encode(self, value):
         if value is None:
             if self.blank: return None
@@ -157,25 +157,27 @@ class Schema:
 
 #####################################################################################################################################################
 #####
-#####  ATOMIC types
+#####  ATOMIC schema types
 #####
 
 class Object(Schema):
     """
     Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
-    predefined type(s) - the `type` parameter - or isinstance() of one of predefined base classes
+    predefined type(s) - the `type` parameter - or the object is an instance of one of predefined base classes
     - the `base` parameter; at least one of these conditions must hold.
     If there is only one type in `type`, and an empty `base`, the type name is excluded
     from serializated output and is implied automatically during deserialization.
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     """
-    CLASS_ATTR = "@"    # name of a special attribute appended to object state to store a class name (with package) of the object being encoded
-
+    CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
+    STATE_ATTR = "="    # special attribute to store a non-dict state of data types normally not handled by JSON: tuple, set, type ...
+    PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are returned unchanged during encoding
+    
     type = None         # python type(s) for exact type checks: type(obj)==T
     base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
     
-    def __init__(self, type_ = None, base = None):
-        self.__setstate__({'type': type_, 'base': base})
+    def __init__(self, type = None, base = None):
+        self.__setstate__({'type': type, 'base': base})
         
     def __setstate__(self, state):
         """Custom __setstate__/__getstate__() is needed to allow compact encoding of 1-element lists in `type` and `base`."""
@@ -196,7 +198,7 @@ class Object(Schema):
         return state
     
     def _valid_type(self, obj):
-        if not (self.type or self.base): return True        # all objects are treated as valid when no reference types are configured
+        if not (self.type or self.base): return True        # all objects are valid when no reference types configured
         t = type(obj)
         if t in self.type: return True
         if any(isinstance(obj, base) for base in self.base): return True
@@ -210,41 +212,128 @@ class Object(Schema):
         if not self._valid_type(obj):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
         
-        state = getstate(obj)
-        assert isinstance(state, dict)
+        t = type(obj)
 
-        # if the exact class is known upfront let's output compact state without "@" for class designation
-        if self._unique_type():
-            return state
+        # retrieve object's state while checking against standard python types that need special handling
+        if t in self.PRIMITIVES:
+            return obj
+        if t is list:
+            return self._encode_list(obj)                           # return a list, but first encode recursively all its elements
+        if t is dict:
+            obj = self._encode_dict(obj)
+            return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
+            # an "escape" wrapper is added around a dict containing the reserved "@" key
+        elif t is type:
+            state = {self.STATE_ATTR: classname(cls = obj)}
+        elif t in (set, tuple):
+            state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+        else:
+            state = getstate(obj)
+            state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
+        
+        assert isinstance(state, dict)
         
         if self.CLASS_ATTR in state:
             raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
             
+        # if the exact class is known upfront, let's output compact state without adding "@" for class designation
+        if self._unique_type():
+            return state
+        
         # append class designator
         state[self.CLASS_ATTR] = classname(obj)
         return state
-
+    
     def _decode(self, state):
         
+        obj = self._decode_object(state)
+        if not self._valid_type(obj):
+            raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
+        return obj
+
+    def _decode_object(self, state, _name_dict = classname(cls = dict)):
+
+        t = type(state)
+        
+        # check against standard python types that need special (or no) decoding
+        if t in self.PRIMITIVES:
+            return state
+        if t is list:
+            return self._decode_list(state)
+        
+        if t is not dict: raise DecodeError(f'invalid arguments for decoding, expected a <dict> instance, got {state}')
+        
+        # decoding of a standard python dict
+        if state.get(self.CLASS_ATTR, None) == _name_dict:
+            if self.STATE_ATTR in state:
+                state = state[self.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
+            return self._decode_dict(state)
+        
+        # determine the expected type `class_` of the output object
         if self._unique_type():
             if self.CLASS_ATTR in state:
-                raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is present, but not needed: {state}')
+                raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is not needed but present: {state}')
             class_ = self.type[0]
 
+        elif self.CLASS_ATTR not in state:
+            class_ = dict
+            # raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
+        
         else:
-            if self.CLASS_ATTR not in state:
-                raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
-            
             fullname = state.pop(self.CLASS_ATTR)
             class_ = import_(fullname)
             
-        obj = setstate(class_, state)
+        # instantiate the output object; special handling for standard python types
+        if class_ is dict:
+            return self._decode_dict(state)
+        if class_ is type:
+            typename = state[self.STATE_ATTR]
+            return import_(typename)
+        if class_ in (set, tuple):
+            values = state[self.STATE_ATTR]
+            return class_(values)
         
-        if not self._valid_type(obj):
-            raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
-            
-        return obj
+        # default object decoding via setstate()
+        state = self._decode_dict(state)
+        return setstate(class_, state)
+        
+        
+    @staticmethod
+    def _encode_list(values):
+        """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = Object()."""
+        return [object_schema._encode(v) for v in values]
+        
+    @staticmethod
+    def _decode_list(state):
+        """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = Object()."""
+        return [object_schema._decode(v) for v in state]
+        
+    @staticmethod
+    def _encode_dict(state):
+        """Encode recursively all non-primitive objects inside `state` using the generic object_schema = Object()."""
+        # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
+        for key in state:
+            if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
+
+        return {k: object_schema._encode(v) for k, v in state.items()}
+
+        # encode = object_schema._encode
+        # for key, value in state.items():
+        #     # JSON only allows <str> as a type of dictionary keys
+        #     if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
+        #     if type(value) not in self.PRIMITIVES:
+        #         state[key] = encode(value)
+        # return state
     
+    @staticmethod
+    def _decode_dict(state):
+        """Decode recursively all non-primitive objects inside `state` using the generic object_schema = Object()."""
+        return {k: object_schema._decode(v) for k, v in state.items()}
+
+
+# the most generic schema for encoding/decoding any types of objects; used internally in Object()
+# for recursive encoding/decoding of individual values inside a given object's state
+object_schema = Object()
 
 # class Object_(Schema):
 #     """
@@ -304,11 +393,11 @@ class Class(Schema):
     """
     def _encode(self, value):
         if value is None: return None
-        return jsonp.classname(cls = value)
+        return classname(cls = value)
     
     def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        return jsonp.import_(value)
+        return import_(value)
         
 class Primitive(Schema):
     """Schema of a specific primitive JSON-serializable python type."""
@@ -321,11 +410,11 @@ class Primitive(Schema):
         self.type = type
     
     def _encode(self, value):
-        if not isinstance(value, self.type): raise EncodeError(f"expected an instance of {self.type}, got {value}")
+        if not isinstance(value, self.type): raise EncodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
     def _decode(self, value):
-        if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {value}")
+        if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
 class Boolean(Primitive):
@@ -340,6 +429,66 @@ class Float(Primitive):
 class String(Primitive):
     type = str
     
+class Link(Schema):
+    """
+    The python value is an Item object.
+    The DB value is an ID=(CID,IID), or just IID, of an item.
+    """
+    
+    # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
+    cid = None
+    
+    def __init__(self, cid = None):
+        self.cid = cid
+    
+    def _encode(self, item):
+        
+        if None in item.id:
+            raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.id}")
+            
+        if self.cid is not None and item.cid == self.cid:
+            return item.iid
+        
+        return item.id
+
+    def _decode(self, value):
+        
+        cid = None
+        
+        if isinstance(value, int):
+            iid = value
+            if self.cid is None:
+                raise DecodeError(f"expected a (CID,IID) tuple, but got only IID ({iid})")
+        else:
+            # unpack (CID,IID)
+            try:
+                cid, iid = value
+            except Exception as ex:
+                raise DecodeError(f"expected a (CID,IID) tuple, not {value} - {ex}")
+
+            if not isinstance(cid, int):
+                raise DecodeError(f"expected CID to be an integer, but got {type(cid)} instead: {cid}")
+            if not isinstance(iid, int):
+                raise DecodeError(f"expected IID to be an integer, but got {type(iid)} instead: {iid}")
+
+        # if self.cid is not None:
+        #     if cid is not None and cid != self.cid:
+        #         raise DecodeError(f"expected CID={self.cid}, not {cid}")
+        
+        if cid is None:
+            cid = self.cid
+
+        # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
+        from .site import registry
+        
+        return registry.get_item((cid, iid))
+        
+    
+#####################################################################################################################################################
+#####
+#####  COMPOUND schema types
+#####
+
 class List(Schema):
     type = list
     schema = None       # schema of individual elements
@@ -397,61 +546,6 @@ class Dict(Schema):
         return d
 
 
-class Link(Schema):
-    """
-    The python value is an Item object.
-    The DB value is an ID=(CID,IID), or just IID, of an item.
-    """
-    
-    # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
-    cid = None
-    
-    def __init__(self, cid = None):
-        self.cid = cid
-    
-    def _encode(self, item):
-        
-        if None in item.id:
-            raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.id}")
-            
-        if self.cid is not None and item.cid == self.cid:
-            return item.iid
-        
-        return item.id
-
-    def _decode(self, value):
-        
-        cid = None
-        
-        if isinstance(value, int):
-            iid = value
-            if self.cid is None:
-                raise DecodeError(f"expected a (CID,IID) tuple, but got only IID ({iid})")
-        else:
-            # unpack (CID,IID)
-            try:
-                cid, iid = value
-            except Exception as ex:
-                raise DecodeError(f"expected a (CID,IID) tuple, not {value} - {ex}")
-
-            if not isinstance(cid, int):
-                raise DecodeError(f"expected CID to be an integer, but got {type(cid)} instead: {cid}")
-            if not isinstance(iid, int):
-                raise DecodeError(f"expected IID to be an integer, but got {type(iid)} instead: {iid}")
-
-        # if self.cid is not None:
-        #     if cid is not None and cid != self.cid:
-        #         raise DecodeError(f"expected CID={self.cid}, not {cid}")
-        
-        if cid is None:
-            cid = self.cid
-
-        # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
-        from .site import registry
-        
-        return registry.get_item((cid, iid))
-        
-
 class Switch(Schema):
     """
     Logical alternative of a number of distinct schemas: an app-layer object is serialized through
@@ -504,4 +598,40 @@ class text(str):
     """
 
 
+#####################################################################################################################################################
+
+if __name__ == "__main__":
     
+    def test(schema, obj):
+        print()
+        print('object:', obj, getattr(obj, '__dict__', 'no __dict__'))
+        flat = schema.encode(obj)
+        print('encoded:', flat)
+        obj2 = schema.decode(flat)
+        print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
+        
+    test(Integer(), None)
+    # test(Integer(), 10.5)       # raises exception: hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
+    test(Object(Class), None)
+    test(Object(Class), Class())
+
+    class _T:
+        def __init__(self, x = None): self.x = x
+    class float_(float):
+        def __init__(self, x = None): self.x = x
+
+    test(Object(Class), Class())
+    test(Object(_T), _T(x=10))
+    test(Object(base = _T), _T(x=10))
+    test(Object(str), 'kot')
+    test(Object(type = (int, float)), 5.5)
+    test(Object(base = (int, float)), float_(5.5))
+    test(Object(dict), {'a': 1, 'b': 2})
+    test(Object(), {'a': 1, 'b': 2})
+    test(Object(), {'a': 1, 'b': 2, '@': 'ampersand'})
+    test(Object(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
+    test(Object(), Integer())
+    test(Object(base = Schema), Integer())
+    test(Object(type = Integer), Integer())
+    test(Object(base = Schema), Object(dict))
+    test(Object(base = Schema), Object((list,dict,str,_T)))

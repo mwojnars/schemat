@@ -7,7 +7,6 @@ from bidict import bidict
 from nifty.text import html_escape
 
 from .config import ROOT_CID
-from .data import Data
 from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
@@ -15,6 +14,9 @@ from .types import Object, String, Class, Dict, Boolean
 from .schema import Record, Field, Struct
 
 from hypertag import HyperHTML
+
+Data = MultiDict        # Data is just an alias for MultiDict class
+
 
 #####################################################################################################################################################
 

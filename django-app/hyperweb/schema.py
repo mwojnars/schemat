@@ -228,7 +228,7 @@ class ItemSchema(Struct):
     
     type = Record
     fields = {
-        'fields': Dict(String(), FieldSchema),  #Object(type_=Field or base=Schema) Object(base=(Field,Schema))
+        'fields': Dict(String(), FieldSchema),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
         'strict': Boolean(),
     }
     
