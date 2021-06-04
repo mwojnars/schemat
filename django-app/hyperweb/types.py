@@ -19,13 +19,14 @@ Email
 Tuple
 List / Sequence
 Dict / Mapping
-
 """
 
-from hyperweb.errors import EncodeError, EncodeErrors, DecodeError
-from hyperweb.jsonpickle import JsonPickle, classname, import_, getstate, setstate
+import json
 
-jsonp = JsonPickle()
+from hyperweb.errors import EncodeError, EncodeErrors, DecodeError
+from hyperweb.jsonpickle import classname, import_, getstate, setstate
+
+# jsonp = JsonPickle()
 
 
 #####################################################################################################################################################
@@ -79,11 +80,12 @@ class Schema:
         """
         
         flat = self.encode(value)
-        return jsonp.dumps(flat, **params)
+        return json.dumps(flat, ensure_ascii = False, **params)
+        # return jsonp.dumps(flat, **params)
 
     def from_json(self, dump, registry):
 
-        flat = jsonp.loads(dump)
+        flat = json.loads(dump)
         return self.decode(flat)
     
     
@@ -170,7 +172,7 @@ class Object(Schema):
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     """
     CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
-    STATE_ATTR = "="    # special attribute to store a non-dict state of data types normally not handled by JSON: tuple, set, type ...
+    STATE_ATTR = "="    # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are returned unchanged during encoding
     
     type = None         # python type(s) for exact type checks: type(obj)==T
@@ -334,57 +336,6 @@ class Object(Schema):
 # the most generic schema for encoding/decoding any types of objects; used internally in Object()
 # for recursive encoding/decoding of individual values inside a given object's state
 object_schema = Object()
-
-# class Object_(Schema):
-#     """
-#     Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
-#     predefined type(s) - the `type` parameter - or isinstance() of one of predefined base classes
-#     - the `base` parameter; at least one of these conditions must hold.
-#     If there is only one type in `type`, and an empty `base`, the type name is excluded
-#     from serializated output and is implied automatically during deserialization.
-#     """
-#
-#     base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
-#     type = None         # python type(s) for equality checks: type(obj)==T
-#     strict = True       # [bool] if True, only instances of <type> are allowed in encode/decode, otherwise an exception is raised
-#
-#     def __init__(self, type = None, base = None, strict = True):
-#         self.base = base
-#         self.type = type
-#         self.strict = strict
-#
-#     def _encode(self, obj):
-#         cls = self.type
-#         if not cls: return obj
-#
-#         if isinstance(obj, cls):
-#             if self._json_primitive(obj): return obj
-#             try:
-#                 return jsonp.getstate(obj, class_attr = None)
-#             except TypeError as ex:
-#                 raise EncodeError(f"can't retrieve state of an object: {ex}")
-#
-#         elif self.strict:
-#             raise EncodeError(f"expected an instance of {cls}, but found: {obj}")
-#         else:
-#             return obj
-#
-#         # TODO: extended (wrapped) serialization of <dict> to avoid ambiguity of dicts containing "@" as a regular key
-#
-#     def _decode(self, state):
-#         cls = self.type
-#         if not cls or isinstance(state, cls): return state
-#
-#         # cast a <dict> to an instance of the implicit class
-#         if isinstance(state, dict):
-#             return jsonp.setstate(cls, state)
-#         if self.strict:
-#             raise DecodeError(f"the object decoded is not an instance of {cls}: {state}")
-#         return state
-#
-#     def _json_primitive(self, obj):
-#
-#         return obj is None or isinstance(obj, (bool, int, float, tuple, list, dict))
 
 
 class Class(Schema):
