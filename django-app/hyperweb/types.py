@@ -225,31 +225,37 @@ class Object(Schema):
         if t is dict:
             obj = self._encode_dict(obj)
             return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
-            # an "escape" wrapper is added around a dict containing the reserved "@" key
+            # an "escape" wrapper must be added around a dict that contains the reserved key "@"
         
         if t is type:
-            state = {self.STATE_ATTR: classname(cls = obj)}
+            state = classname(cls = obj)
+            # state = {self.STATE_ATTR: classname(cls = obj)}
         elif t in (set, tuple):
-            state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+            state = self._encode_list(obj)                          # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+            # state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         elif issubclass(t, Item):
             if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
-            state = {self.STATE_ATTR: list(obj.id)}
+            state = list(obj.id)
+            # state = {self.STATE_ATTR: list(obj.id)}
         else:
             state = getstate(obj)
             state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
             #TODO: allow non-dict state from getstate()
         
-        assert isinstance(state, dict)
-        
-        if self.CLASS_ATTR in state:
-            raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
+            assert isinstance(state, dict)
+            
+            if self.CLASS_ATTR in state:
+                raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
             
         # if the exact class is known upfront, let's output compact state without adding "@" for class designation
         if self._unique_type():
             return state
         
-        # append class designator
+        # wrap up in a dict and append class designator
+        if not isinstance(state, dict):
+            state = {self.STATE_ATTR: state}
         state[self.CLASS_ATTR] = classname(obj)
+        
         return state
     
     def _decode(self, state):
@@ -266,46 +272,74 @@ class Object(Schema):
 
         t = type(state)
         
-        # check against standard python types that need special (or no) decoding
-        if t in self.PRIMITIVES:
-            return state
-        if t is list:
-            return self._decode_list(state)
-        
-        if t is not dict: raise DecodeError(f'invalid arguments for decoding, expected a <dict> instance, got {state}')
-        
         # decoding of a standard python dict
-        if state.get(self.CLASS_ATTR, None) == _name_dict:
+        if t is dict and state.get(self.CLASS_ATTR, None) == _name_dict:
             if self.STATE_ATTR in state:
                 state = state[self.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
             return self._decode_dict(state)
         
+        # if t is dict:
+        #     if self.CLASS_ATTR in state:
+        #         fullname = state.pop(self.CLASS_ATTR)
+        #         if self.STATE_ATTR in state:
+        #             state_attr = state.pop(self.STATE_ATTR)
+        #             if state: raise DecodeError(f'invalid serialized state, expected only {self.CLASS_ATTR} and {self.STATE_ATTR} special keys but got others: {state}')
+        #             state = state_attr
+        #         elif self._unique_type():
+        #             raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is not needed but present: {state}')
+        #
+        #         class_ = import_(fullname)
+        #     else:
+        #         class_ = dict
+        #
+        # elif self._unique_type():
+        #     class_ = self.type[0]
+        # else:
+        #     class_ = t              # the object is of standard python type (non-unique type, but not a dict either)
+
         # determine the expected type `class_` of the output object
         if self._unique_type():
-            if self.CLASS_ATTR in state:
+            if t is dict and self.CLASS_ATTR in state and self.STATE_ATTR not in state:
                 raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is not needed but present: {state}')
             class_ = self.type[0]
+
+        elif t is not dict:
+            class_ = t              # an object of a standard python type must have been encoded (non-unique type, but not a dict either)
 
         elif self.CLASS_ATTR not in state:
             class_ = dict
             # raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
-        
+
         else:
             fullname = state.pop(self.CLASS_ATTR)
             class_ = import_(fullname)
-            
+            if self.STATE_ATTR in state:
+                state_attr = state.pop(self.STATE_ATTR)
+                if state: raise DecodeError(f'invalid serialized state, expected only {self.CLASS_ATTR} and {self.STATE_ATTR} special keys but got others: {state}')
+                state = state_attr
+                
+        # check against standard python types that need special (or no) decoding
+        if class_ in self.PRIMITIVES:
+            return state
+        if class_ is list:
+            return self._decode_list(state)
+        
+        # if class_ is not dict: raise DecodeError(f'invalid arguments for decoding, expected a <dict> instance, got {state}')
+
         # instantiate the output object; special handling for standard python types and Item
         if class_ is dict:
+            # if self.CLASS_ATTR in state:
+            #     state = state[self.STATE_ATTR]
             return self._decode_dict(state)
         if class_ is type:
-            typename = state[self.STATE_ATTR]
+            typename = state #[self.STATE_ATTR]
             return import_(typename)
         if class_ in (set, tuple):
-            values = state[self.STATE_ATTR]
+            values = state #[self.STATE_ATTR]
             return class_(values)
         if issubclass(class_, Item):
-            id  = state.pop(self.STATE_ATTR)
-            if state: raise DecodeError(f'invalid serialized state of a reference to an Item, expected ID only, got non-empty item data: {state}')
+            id = state  #.pop(self.STATE_ATTR)
+            # if state: raise DecodeError(f'invalid serialized state of a reference to an Item, expected ID only, got non-empty item data: {state}')
             return registry.get_item(id)                # get the referenced item from the Registry
 
         # default object decoding via setstate()

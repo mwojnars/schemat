@@ -75,7 +75,8 @@ def test_Object():
         run(Object(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
     run(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
     run(Object(), {"@": "xyz", "v": 5})
-    
+
+
 def test_Item():
     
     # category = registry.get_category(cid = 1)
@@ -87,7 +88,7 @@ def test_Item():
     # otherwise the deserialization will raise an exception
     site = registry.get_site()
     
-    run(Object(base = Item), site, verbose = True)
-    run(Object(Site), site, verbose = True)
+    run(Object(base = Item), site, True)
+    run(Object(Site), site, True)
     
     
