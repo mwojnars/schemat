@@ -57,7 +57,7 @@ class Registry:
             if category: cid = category.iid
             id = (cid, iid)
         else:
-            (cid, iid) = id
+            id = (cid, iid) = tuple(id)
             
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
@@ -76,7 +76,7 @@ class Registry:
         itemclass = category.get('itemclass')                  # REFACTOR
         
         # create a new instance and insert to cache
-        item = itemclass._create(category, iid)
+        item = itemclass._new(category, iid)
         self._set(item)                            # _set() is called before item.load() to properly handle circular relationships between items
         if load: item.load()
 
@@ -108,7 +108,7 @@ class Registry:
             if cid == iid == ROOT_CID:
                 yield self.cache.get((cid, iid)) or self._load_root(record)
             else:
-                item = itemclass._create(category, iid)
+                item = itemclass._new(category, iid)
                 self._set(item)
                 item.load(record)
                 yield item
@@ -147,14 +147,10 @@ class Registry:
         self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
 
     def create_item(self, category):
-        """Create a new item that's not yet in DB and has no IID assigned."""
+        """Create a new item that's not yet in DB, has no IID assigned and empty `data`."""
         itemclass = category['itemclass']
-        return itemclass._create(category, None)
+        return itemclass._new(category, None)
     
-    # def save_item(self, item):
-    #     """Called after a new item was saved to DB, to put its IID in the registry."""
-    #     self._set(item)
-        
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
         print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)

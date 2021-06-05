@@ -233,7 +233,7 @@ class Object(Schema):
             state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         elif issubclass(t, Item):
             if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
-            return {self.CLASS_ATTR: classname(cls = Item), self.STATE_ATTR: obj.id}
+            state = {self.STATE_ATTR: list(obj.id)}
         else:
             state = getstate(obj)
             state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
@@ -257,9 +257,9 @@ class Object(Schema):
         obj = self._decode_object(state)
         if not self._valid_type(obj):
             raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
-        if isinstance(obj, Item):
-            if obj.data: raise DecodeError(f'invalid serialized state of an Item instance, expected ID only, got non-empty item data: {obj.data}')
-            obj = registry.get_item(obj.id)         # replace the decoded item with an object from the Registry
+        # if isinstance(obj, Item):
+        #     if obj.data: raise DecodeError(f'invalid serialized state of an Item instance, expected ID only, got non-empty item data: {obj.data}')
+        #     obj = registry.get_item(obj.id)         # replace the decoded item with an object from the Registry
         return obj
 
     def _decode_object(self, state, _name_dict = classname(cls = dict)):
@@ -294,7 +294,7 @@ class Object(Schema):
             fullname = state.pop(self.CLASS_ATTR)
             class_ = import_(fullname)
             
-        # instantiate the output object; special handling for standard python types
+        # instantiate the output object; special handling for standard python types and Item
         if class_ is dict:
             return self._decode_dict(state)
         if class_ is type:
@@ -303,13 +303,14 @@ class Object(Schema):
         if class_ in (set, tuple):
             values = state[self.STATE_ATTR]
             return class_(values)
-        
+        if issubclass(class_, Item):
+            id  = state.pop(self.STATE_ATTR)
+            if state: raise DecodeError(f'invalid serialized state of a reference to an Item, expected ID only, got non-empty item data: {state}')
+            return registry.get_item(id)                # get the referenced item from the Registry
+
         # default object decoding via setstate()
         state = self._decode_dict(state)
-        obj = setstate(class_, state)
-        
-        # TODO: if `obj` is a <reference> to an item, replace it with the actual Item instance
-        return obj
+        return setstate(class_, state)
         
         
     @staticmethod

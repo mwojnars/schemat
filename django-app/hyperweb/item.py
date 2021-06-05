@@ -154,9 +154,9 @@ class Item(object, metaclass = MetaItem):
         raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
 
     @classmethod
-    def _create(cls, category, iid):
+    def _new(cls, category, iid):
         """
-        Create an instance of an item that has iid already assigned and is supposedly present in DB.
+        Create an instance of Item that has IID already assigned and is (supposedly) present in DB.
         Should only be called by Registry.
         """
         item = cls.__new__(cls)                     # __init__() is disabled, do not call it
@@ -167,13 +167,11 @@ class Item(object, metaclass = MetaItem):
         item.data = Data()                      # REFACTOR
         return item
         
-    # @classmethod
-    # def _new(cls, category):
-    #     """Create a new item, one that's not yet in DB and has no iid assigned. Should only be called by Registry."""
-    #     return cls._create(category, None)
-        
     def __getitem__(self, field):
         return self.get(field, Item.RAISE)
+
+    def __setitem__(self, field, value):
+        return self.data.set(field, value)
         
     def get(self, field, default = None, category_default = True, mode = 'first'):
         """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
@@ -375,16 +373,15 @@ class Category(Item):
     #     print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
     #     return self._store.select(id)
     
-    # def new_item(self):
-    #     """"""
-    #     return self['itemclass']._new(self)
-        
     def get_item(self, iid):
         """
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
         return self.registry.get_item(iid = iid, category = self)
+    
+    def create_item(self):
+        return self.registry.create_item(self)
     
     # def load_items(self):
     #     """
@@ -405,7 +402,6 @@ class Category(Item):
         """Web handler that creates a new item of this category based on `request` data."""
         
         # data = Data()
-        # item = self.new_item()
         item = self.registry.create_item(self)
         data = item.data
         

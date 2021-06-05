@@ -1,6 +1,6 @@
 import pickle, pytest
 
-from hyperweb.item import Item
+from hyperweb.item import Item, Site
 from hyperweb.site import registry      # this import is necessary to ensure proper order of module initialization under circular imports of `registry` in types.py
 from hyperweb.types import Object, Integer, Class
 from hyperweb.schema import Schema
@@ -11,14 +11,13 @@ from hyperweb.schema import Schema
 #####  UTILITIES
 #####
 
-def run(schema, obj):
+def run(schema, obj, verbose = False):
     """Run encoding+decoding of `obj` through `schema` and check if the result is the same as `obj`."""
-    # print()
-    # print('object: ', obj, getattr(obj, '__dict__', 'no __dict__'))
+    if verbose: print('\nobject: ', obj, getattr(obj, '__dict__', 'no __dict__'))
     flat = schema.encode(obj)
-    # print('encoded:', flat)
+    if verbose: print('encoded:', flat)
     obj2 = schema.decode(flat)
-    # print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
+    if verbose: print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
     assert obj == obj2 or pickle.dumps(obj) == pickle.dumps(obj2)
 
 #####################################################################################################################################################
@@ -77,10 +76,18 @@ def test_Object():
     run(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
     run(Object(), {"@": "xyz", "v": 5})
     
-# def test_Item():
-#
-#     registry
-#     item = Item()
-#     run(Object(Item), item)
+def test_Item():
+    
+    # category = registry.get_category(cid = 1)
+    # item = category.create_item()
+    # item['name'] = "Test Name"
+    # item.iid = 12345                    # setting fake IID to allow serialization; normally this should be done through DB
+
+    # a sample item to refer to during serialization; it must actually exist in DB,
+    # otherwise the deserialization will raise an exception
+    site = registry.get_site()
+    
+    run(Object(base = Item), site, verbose = True)
+    run(Object(Site), site, verbose = True)
     
     
