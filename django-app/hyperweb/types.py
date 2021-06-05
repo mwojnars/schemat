@@ -23,10 +23,11 @@ Dict / Mapping
 
 import json
 
-from hyperweb.errors import EncodeError, EncodeErrors, DecodeError
-from hyperweb.serialize import classname, import_, getstate, setstate
+from .errors import EncodeError, EncodeErrors, DecodeError
+from .serialize import classname, import_, getstate, setstate
+from .item import Item
 
-# jsonp = JsonPickle()
+from .site import registry
 
 
 #####################################################################################################################################################
@@ -215,7 +216,7 @@ class Object(Schema):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
         
         t = type(obj)
-
+        
         # retrieve object's state while checking against standard python types that need special handling
         if t in self.PRIMITIVES:
             return obj
@@ -225,13 +226,18 @@ class Object(Schema):
             obj = self._encode_dict(obj)
             return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
             # an "escape" wrapper is added around a dict containing the reserved "@" key
-        elif t is type:
+        
+        if t is type:
             state = {self.STATE_ATTR: classname(cls = obj)}
         elif t in (set, tuple):
             state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+        elif issubclass(t, Item):
+            if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
+            return {self.CLASS_ATTR: classname(cls = Item), self.STATE_ATTR: obj.id}
         else:
             state = getstate(obj)
             state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
+            #TODO: allow non-dict state from getstate()
         
         assert isinstance(state, dict)
         
@@ -251,6 +257,9 @@ class Object(Schema):
         obj = self._decode_object(state)
         if not self._valid_type(obj):
             raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
+        if isinstance(obj, Item):
+            if obj.data: raise DecodeError(f'invalid serialized state of an Item instance, expected ID only, got non-empty item data: {obj.data}')
+            obj = registry.get_item(obj.id)         # replace the decoded item with an object from the Registry
         return obj
 
     def _decode_object(self, state, _name_dict = classname(cls = dict)):
@@ -385,10 +394,9 @@ class String(Primitive):
     
 class Link(Schema):
     """
-    The python value is an Item object.
-    The DB value is an ID=(CID,IID), or just IID, of an item.
-    Link() is equivalent to Object(Item), however, Link instance can also be parameterized
-    with a predefined CID, Link(cid), which is not possible when using Object.
+    Encodes an Item into its ID=(CID,IID), or just IID.
+    Link() is equivalent to Object(Item), however, Link can be parameterized
+    with a predefined CID, Link(cid), which is not possible using an Object.
     """
     
     # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
@@ -436,8 +444,9 @@ class Link(Schema):
             cid = self.cid
 
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
-        from .site import registry
-        
+        # from .site import registry
+        # print(f'registry loaded by Link in thread {threading.get_ident()}', flush = True)
+
         return registry.get_item((cid, iid))
         
     

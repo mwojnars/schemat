@@ -1,5 +1,8 @@
 """
 Utilities for JSON-pickling and serialization of objects of arbitrary classes.
+
+TODO: the functions below could be implemented as methods of Registry to allow customization in the future.
+
 """
 
 from importlib import import_module

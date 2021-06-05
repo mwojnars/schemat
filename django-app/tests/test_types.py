@@ -1,5 +1,7 @@
 import pickle, pytest
 
+from hyperweb.item import Item
+from hyperweb.site import registry      # this import is necessary to ensure proper order of module initialization under circular imports of `registry` in types.py
 from hyperweb.types import Object, Integer, Class
 from hyperweb.schema import Schema
 
@@ -74,4 +76,11 @@ def test_Object():
         run(Object(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
     run(Object(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
     run(Object(), {"@": "xyz", "v": 5})
+    
+# def test_Item():
+#
+#     registry
+#     item = Item()
+#     run(Object(Item), item)
+    
     

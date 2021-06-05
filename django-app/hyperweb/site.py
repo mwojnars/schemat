@@ -24,6 +24,7 @@ def after_request(sender, **kwargs):
 #####################################################################################################################################################
 
 registry = Registry()
+registry.bootstrap()
 
 # print('root:', root)
 # print('root.schema:', root.schema.fields)

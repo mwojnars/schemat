@@ -38,13 +38,13 @@ class Registry:
     
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
-        self.bootstrap()
+        # self.bootstrap()
     
     def bootstrap(self):
         self._load_root()
         # print(f'Registry() created in thread {threading.get_ident()}')
     
-    def get_item(self, id_ = None, cid = None, iid = None, category = None, load = True):
+    def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
         If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
         as the item data may have been loaded earlier.
@@ -53,17 +53,17 @@ class Registry:
         by this or a previous request handler, the item can already be fully initialized.
         Hence, the caller should never assume that the returned item.data is missing.
         """
-        if not id_:
+        if not id:
             if category: cid = category.iid
-            id_ = (cid, iid)
+            id = (cid, iid)
         else:
-            (cid, iid) = id_
+            (cid, iid) = id
             
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
         
         # ID requested is already present in the registry? return the existing instance
-        item = self.cache.get(id_)
+        item = self.cache.get(id)
         if item:
             if load: item.load()
             return item
@@ -146,6 +146,11 @@ class Registry:
         self.store.update(item)
         self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
 
+    def create_item(self, category):
+        """Create a new item that's not yet in DB and has no IID assigned."""
+        itemclass = category['itemclass']
+        return itemclass._create(category, None)
+    
     # def save_item(self, item):
     #     """Called after a new item was saved to DB, to put its IID in the registry."""
     #     self._set(item)

@@ -10,8 +10,6 @@ from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-from .types import Object, String, Class, Dict, Boolean
-from .schema import Record, Field, Struct
 
 from hypertag import HyperHTML
 
@@ -169,10 +167,10 @@ class Item(object, metaclass = MetaItem):
         item.data = Data()                      # REFACTOR
         return item
         
-    @classmethod
-    def _new(cls, category):
-        """Create a new item, one that's not yet in DB and has no iid assigned. Should only be called by Registry."""
-        return cls._create(category, None)
+    # @classmethod
+    # def _new(cls, category):
+    #     """Create a new item, one that's not yet in DB and has no iid assigned. Should only be called by Registry."""
+    #     return cls._create(category, None)
         
     def __getitem__(self, field):
         return self.get(field, Item.RAISE)
@@ -188,6 +186,7 @@ class Item(object, metaclass = MetaItem):
             return self.data.get(field, mode = mode)
         
         if category_default:
+            from .schema import Field
             cat_default = self.category.get_default(field)
             if cat_default is not Field.MISSING:
                 return cat_default
@@ -371,15 +370,14 @@ class Category(Item):
     """
     # _store  = YamlStore()              # DataStore used for reading/writing items of this category
 
-
     # def load_data(self, id):
     #     """Load item data from DB and return as a record (dict)."""
     #     print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
     #     return self._store.select(id)
     
-    def new_item(self):
-        """"""
-        return self['itemclass']._new(self)
+    # def new_item(self):
+    #     """"""
+    #     return self['itemclass']._new(self)
         
     def get_item(self, iid):
         """
@@ -407,7 +405,8 @@ class Category(Item):
         """Web handler that creates a new item of this category based on `request` data."""
         
         # data = Data()
-        item = self.new_item()
+        # item = self.new_item()
+        item = self.registry.create_item(self)
         data = item.data
         
         # retrieve attribute values from GET/POST and assign to `item`
@@ -461,7 +460,10 @@ class RootCategory(Category):
     @classmethod
     def create_root(cls, registry):
         """Create an instance of the root category item."""
-        
+
+        from .types import Object, String, Class, Dict, Boolean
+        from .schema import Record, Field, Struct
+
         # schema_field  = Struct(Field, schema = Object(baseclass = Schema), default = Object(), multi = Boolean(), info = String())
         # schema_schema = Struct(Record, fields = Dict(String(), schema_field))
         # schema_schema = Struct(Record, fields = Dict(String(), Object(Field)), strict = Boolean())

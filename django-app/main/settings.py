@@ -92,7 +92,8 @@ WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {
     'csv':  {'FILE': 'items.csv'},
     'json': {'FILE': 'items.json'},
-    'yaml': {'FILE': 'items.yaml'},
+    # 'yaml': {'FILE': 'items.yaml'},
+    'yaml': {'FILE': '/home/marcin/Documents/priv/catalog/src/django-app/items.yaml'},
     
     'default': {
         #'ENGINE': 'django.db.backends.sqlite3',
