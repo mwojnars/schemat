@@ -109,8 +109,8 @@
         schema:
           "@": hyperweb.types.Dict
           keys: {"@": hyperweb.types.String}
-          values: {"@": hyperweb.types.Object, type: hyperweb.item.Route}
-          # values: {"@": hyperweb.item.RouteSchema}
+          values: {"@": hyperweb.schema.RouteSchema}
+          #values: {"@": hyperweb.types.Object, type: hyperweb.item.Route}
           # values:
           #   "@": hyperweb.schema.Record
           #   fields:
@@ -171,7 +171,7 @@
     default:
       base: http://localhost:8001
       path: /
-      app:  [2, 1]      # {"@": hyperweb.item.Application, cid: 2, iid: 1}
+      app:  1  #[2, 1]      # {"@": hyperweb.item.Application, cid: 2, iid: 1}
 
 - id: [2,1]
   name: Catalog.wiki
@@ -192,6 +192,25 @@
     app: 2
     site: 1
     space: 3
+
+- id: []  #[0,?]
+  name: Struct    # (category)
+  schema:
+    fields:
+      name: {"@": hyperweb.types.String}
+      type: {"@": hyperweb.types.Class}
+      fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
+
+- id: []    # category: Struct
+  name: RouteSchema
+  type: hyperweb.item.Route
+  fields:
+      base: String(),
+      path: String(),
+      app:  Link(cid=2),
+
+- id: []
+  name: Route
 
 - id: [100,1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.

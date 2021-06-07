@@ -319,7 +319,7 @@ class Object(Schema):
         if class_ in (set, tuple):
             values = state
             return class_(values)
-        if issubclass(class_, Item):
+        if isinstance(class_, type) and issubclass(class_, Item):
             return registry.get_item(state)                 # get the referenced item from the Registry
 
         # default object decoding via setstate()
@@ -367,7 +367,7 @@ object_schema = Object()
 
 class Class(Schema):
     """
-    Accepts any global python class and encodes as a string containing its full package-module name.
+    Accepts any global python type and encodes as a string containing its full package-module name.
     """
     def _encode(self, value):
         if value is None: return None

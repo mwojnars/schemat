@@ -181,6 +181,7 @@ class YamlStore(FileStore):
         
         for data in yaml.safe_load(open(self.filename)):
             id_ = data.pop('id')
+            if not id_: continue            # if ID is null or empty [], treat this item as a draft that should be omitted
             self.items[tuple(id_)] = json.dumps(data)
         
         print('YamlStore items loaded:')

@@ -496,8 +496,6 @@ class RootCategory(Category):
 #####  SITE
 #####
 
-# RouteSchema = Struct(Route, base = String(), path = String(), app = Link(cid=2))
-
 class Route:
     """
     Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
@@ -533,8 +531,9 @@ class Route:
             print('incorrect URL path:', path)
             raise
             
-        app = registry.get_item(tuple(self.app))
-        assert isinstance(app, Application)
+        # app = registry.get_item(tuple(self.app))
+        # assert isinstance(app, Application)
+        app = self.app
         
         space    = app.get_space(space_name)
         category = space.get_category(category_name)
@@ -584,7 +583,7 @@ class Site(Item):
     
     def _post_decode(self):
 
-        print('Site.routes:', self['routes'])
+        # print('Site.routes:', self['routes'])
 
         self._qualifiers = bidict()
         

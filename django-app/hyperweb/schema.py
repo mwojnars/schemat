@@ -2,7 +2,7 @@
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import getstate, setstate
 from .multidict import MultiDict
-from .types import Schema, Boolean, String, Dict, Object
+from .types import Schema, Boolean, String, Dict, Object, Link
 
 
 #####################################################################################################################################################
@@ -210,25 +210,54 @@ class Struct(Record):
                 
         return setstate(self.type, attrs)
     
+# def struct(typename, __type__ = object, **__fields__):
+#     """Dynamically create a subclass of Struct."""
+#
+#     class _struct_(Struct):
+#         type = __type__
+#         fields = __fields__
+#
+#     _struct_.__name__ = typename
+#     return _struct_
+
+    
+#####################################################################################################################################################
+#####
+#####  Special-purpose schema
+#####
+
+# class FieldSchema(Struct):
+#     """Schema of a field specification inside item's schema definition."""
+#
+#     type = Field
+#     fields = {
+#         'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
+#         'default': Object(),
+#         'multi':   Boolean(),
+#         'info':    String(),
+#     }
+#
+# class ItemSchema(Struct):
+#     """Schema of item's schema for use inside category definitions."""
+#
+#     type = Record
+#     fields = {
+#         'fields': Dict(String(), FieldSchema),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
+#         'strict': Boolean(),
+#     }
+    
 #####################################################################################################################################################
 
-class FieldSchema(Struct):
-    """Schema of a field specification inside item's schema definition."""
-    
-    type = Field
-    fields = {
-        'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
-        'default': Object(),
-        'multi':   Boolean(),
-        'info':    String(),
-    }
+from .item import Route
 
-class ItemSchema(Struct):
-    """Schema of item's schema for use inside category definitions."""
-    
-    type = Record
+# RouteSchema = struct('RouteSchema', Route, base = String(), path = String(), app = Link(cid=2))
+# print(RouteSchema, RouteSchema.__module__, RouteSchema.__name__)
+
+class RouteSchema(Struct):
+
+    type = Route
     fields = {
-        'fields': Dict(String(), FieldSchema),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
-        'strict': Boolean(),
+        'base': String(),
+        'path': String(),
+        'app': Link(cid=2),
     }
-    
