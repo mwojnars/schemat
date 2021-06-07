@@ -16,7 +16,6 @@ Range
 Enum
 Email
 
-Tuple
 List / Sequence
 Dict / Mapping
 """
