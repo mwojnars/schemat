@@ -2,10 +2,11 @@
 Core system items defined as Python objects.
 """
 
+import yaml
 from hyperweb.schema import Record
 
 
-###  The dictionaries below represent `data` contents of particular items.
+###  The dictionaries below represent contents (`data`, id) of particular items.
 
 _RootCategory = dict(
     name = "Category",
@@ -35,4 +36,5 @@ items = [
 if __name__ == "__main__":
 
     # serialize items to YAML file
-    pass
+    yaml.dumps(items)
+    

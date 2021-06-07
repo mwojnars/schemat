@@ -457,8 +457,7 @@ class RootCategory(Category):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
 
-        from .types import Object, String, Class, Dict, Boolean
-        from .schema import Record, Field, Struct
+        from .schema import Object, String, Class, Dict, Boolean, Record, Field, Struct
 
         # schema_field  = Struct(Field, schema = Object(baseclass = Schema), default = Object(), multi = Boolean(), info = String())
         # schema_schema = Struct(Record, fields = Dict(String(), schema_field))

@@ -2,8 +2,7 @@ import pickle, pytest
 
 from hyperweb.item import Item, Site
 from hyperweb.site import registry      # this import is necessary to ensure proper order of module initialization under circular imports of `registry` in types.py
-from hyperweb.types import Object, Integer, Class
-from hyperweb.schema import Schema
+from hyperweb.schema import Schema, Object, Integer, Class
 
 
 #####################################################################################################################################################

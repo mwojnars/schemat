@@ -14,26 +14,26 @@
     fields:
       schema:
         "@": hyperweb.schema.Field
-        schema: {"@": hyperweb.types.Object, type: hyperweb.schema.Record}
+        schema: {"@": hyperweb.schema.Object, type: hyperweb.schema.Record}
         #schema: {"@": hyperweb.schema.ItemSchema}
 #        schema:
 #          "@": hyperweb.schema.Struct
 #          type: {"=": hyperweb.schema.Record, "@": builtins.type}
 #          fields:
-#            fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.Object, type: hyperweb.schema.Field}}
-#            strict: {"@": hyperweb.types.Boolean}
+#            fields: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.Object, type: hyperweb.schema.Field}}
+#            strict: {"@": hyperweb.schema.Boolean}
       name:
         "@": hyperweb.schema.Field
-        schema: {"@": hyperweb.types.String}
+        schema: {"@": hyperweb.schema.String}
         info: human-readable title of the category
-      info: {"@": hyperweb.types.String}
+      info: {"@": hyperweb.schema.String}
       itemclass:
         "@": hyperweb.schema.Field
-        schema: {"@": hyperweb.types.Class}
+        schema: {"@": hyperweb.schema.Class}
         default: {"=": hyperweb.item.Item, "@": builtins.type}
       templates:
         "@": hyperweb.schema.Field
-        schema: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
+        schema: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.String}}
         default:
           # default template that displays a generic item page if a category-specific template is missing
           "": |
@@ -102,25 +102,25 @@
   itemclass: hyperweb.item.Site
   schema:
     fields:
-      name: {"@": hyperweb.types.String}
-      base_url: {"@": hyperweb.types.String}
+      name: {"@": hyperweb.schema.String}
+      base_url: {"@": hyperweb.schema.String}
       routes:
         "@": hyperweb.schema.Field
         schema:
-          "@": hyperweb.types.Dict
-          keys: {"@": hyperweb.types.String}
+          "@": hyperweb.schema.Dict
+          keys: {"@": hyperweb.schema.String}
           values: {"@": hyperweb.schema.RouteSchema}
-          #values: {"@": hyperweb.types.Object, type: hyperweb.item.Route}
+          #values: {"@": hyperweb.schema.Object, type: hyperweb.item.Route}
           # values:
           #   "@": hyperweb.schema.Record
           #   fields:
-          #     base: {"@": hyperweb.types.String}
-          #     path: {"@": hyperweb.types.String}
-          #     app:  {"@": hyperweb.types.Link, cid: 2}
+          #     base: {"@": hyperweb.schema.String}
+          #     path: {"@": hyperweb.schema.String}
+          #     app:  {"@": hyperweb.schema.Link, cid: 2}
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
               fixed URL path prefix, and a target application object
         multi: false
-      app: {"@": hyperweb.types.Link, cid: 2}
+      app: {"@": hyperweb.schema.Link, cid: 2}
 
 - id: [0,2]
   name: Application
@@ -130,10 +130,10 @@
   schema:
     fields:
       spaces:
-        "@": hyperweb.types.Dict
-        keys: {"@": hyperweb.types.String}
-        values: {"@": hyperweb.types.Link, cid: 3}
-      name: {"@": hyperweb.types.String}
+        "@": hyperweb.schema.Dict
+        keys: {"@": hyperweb.schema.String}
+        values: {"@": hyperweb.schema.Link, cid: 3}
+      name: {"@": hyperweb.schema.String}
 
 - id: [0,3]
   name: Space
@@ -142,10 +142,10 @@
   schema:
     fields:
       categories:
-        "@": hyperweb.types.Dict
-        keys: {"@": hyperweb.types.String}
-        values: {"@": hyperweb.types.Link, cid: 0}
-      name: {"@": hyperweb.types.String}
+        "@": hyperweb.schema.Dict
+        keys: {"@": hyperweb.schema.String}
+        values: {"@": hyperweb.schema.Link, cid: 0}
+      name: {"@": hyperweb.schema.String}
 
 - id: [0,5]
   name: Namespace
@@ -160,8 +160,8 @@
   info: Category of items that do not belong to any specific category
   schema:
     fields:
-      name:  {"@": hyperweb.schema.Field, "schema": {"@": hyperweb.types.String}, "multi": true}
-      title: {"@": hyperweb.types.String}
+      name:  {"@": hyperweb.schema.Field, "schema": {"@": hyperweb.schema.String}, "multi": true}
+      title: {"@": hyperweb.schema.String}
 
 - id: [1,1]
   name: catalog.wiki
@@ -197,9 +197,9 @@
   name: Struct    # (category)
   schema:
     fields:
-      name: {"@": hyperweb.types.String}
-      type: {"@": hyperweb.types.Class}
-      fields: {"@": hyperweb.types.Dict, keys: {"@": hyperweb.types.String}, values: {"@": hyperweb.types.String}}
+      name: {"@": hyperweb.schema.String}
+      type: {"@": hyperweb.schema.Class}
+      fields: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.String}}
 
 - id: []    # category: Struct
   name: RouteSchema
