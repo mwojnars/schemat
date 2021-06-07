@@ -240,7 +240,7 @@ class Object(Schema):
             if self._unique_type(): return id
             return {self.STATE_ATTR: id, self.CLASS_ATTR: self.ITEM_FLAG}
         
-        if t is type:
+        if isinstance(obj, type):
             state = classname(cls = obj)
             # state = {self.STATE_ATTR: classname(cls = obj)}
         elif t in (set, tuple):
@@ -320,14 +320,15 @@ class Object(Schema):
             return self._decode_list(state, registry)
         if class_ is dict:
             return self._decode_dict(state, registry)
-        if class_ is type:
-            typename = state
-            return import_(typename)
         if class_ in (set, tuple):
             values = state
             return class_(values)
-        if isinstance(class_, type) and issubclass(class_, Item):
-            return registry.get_item(state)                 # get the referenced item from the Registry
+        if isinstance(class_, type):
+            if issubclass(class_, Item):
+                return registry.get_item(state)                 # get the referenced item from the Registry
+            if issubclass(class_, type):
+                typename = state
+                return import_(typename)
 
         # default object decoding via setstate()
         state = self._decode_dict(state, registry)
@@ -639,8 +640,8 @@ class Field:
     def encode_many(self, values, registry):
         """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
         if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
-        self.schema.registry = registry
         encoded = [self.schema.encode(v, registry) for v in values]
+        # self.schema.registry = registry
         # encoded = list(map(self.schema.encode, values))
 
         # compactify singleton lists
@@ -657,8 +658,8 @@ class Field:
             encoded = [encoded]
     
         # schema-based decoding
-        self.schema.registry = registry
         return [self.schema.decode(e, registry) for e in encoded]
+        # self.schema.registry = registry
         # return list(map(self.schema.decode, encoded))
         
         

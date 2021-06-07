@@ -20,12 +20,11 @@ registry = Registry()
 
 root_schema = Record(
     schema       = Object(Record),
-    name         = String(),
+    name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
-    itemclass    = Class(),
+    itemclass    = Field(schema = Class(), default = Item),
     templates    = Dict(String(), String()),
 )
-startup_schema = copy(root_schema)
 
 _RootCategory = RootCategory._raw(registry = registry,
     id          = (0, 0),
@@ -67,25 +66,18 @@ items = [
 if __name__ == "__main__":
     
     print()
-    # from hyperweb.multidict import MultiDict
     flats = []
 
     # serialize items to YAML
     for item in items:
         
-        # raw  = item.to_json()
-        schema = item.category['schema'] if item.id != (0,0) else startup_schema
-        raw = schema.to_json(item.data, registry)
-        
-        flat = {'id': item.id}
+        raw  = item.to_json()
+        flat = {'id': list(item.id)}
         flat.update(json.loads(raw))
         flats.append(flat)
-        print(yaml.dump(flat))
-
-        # data = MultiDict(item)
-        # flat = schema.encode(data)
+        # print(yaml.dump(flat))
         
     print()
     print("all:")
-    print(yaml.dump(flats))
+    print(yaml.dump(flats, default_flow_style = None, sort_keys = False))
     
