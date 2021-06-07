@@ -154,12 +154,33 @@ class Item(object, metaclass = MetaItem):
         raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
 
     @classmethod
+    def _raw(cls, id = None, category = None, registry = None, **fields):
+        """
+        Create an item that's potentially disconnected from registry/category (raw item)
+        and set given `fields` in self.data. For internal use only.
+        """
+        item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
+        item.data = Data()
+
+        if id is not None:
+            item.cid, item.iid = id
+        if category is not None:
+            item.category = category
+            assert item.cid is None or category.iid is None or item.cid == category.iid, "item's CID is inconsistent with category's IID"
+        if registry is not None:
+            item.registry = registry
+            
+        for field, value in fields.items():
+            item.data[field] = value
+        return item
+        
+    @classmethod
     def _new(cls, category, iid):
         """
         Create an instance of Item that has IID already assigned and is (supposedly) present in DB.
         Should only be called by Registry.
         """
-        item = cls.__new__(cls)                     # __init__() is disabled, do not call it
+        item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
         item.registry = category.registry
         item.category = category
         item.cid  = category.iid
@@ -283,7 +304,7 @@ class Item(object, metaclass = MetaItem):
     def _post_decode(self):
         """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
-    def _to_json(self):
+    def to_json(self):
         schema = self.category.get('schema')
         return schema.to_json(self.data, self.registry)
         

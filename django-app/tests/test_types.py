@@ -13,9 +13,9 @@ from hyperweb.schema import Schema, Object, Integer, Class
 def run(schema, obj, verbose = False):
     """Run encoding+decoding of `obj` through `schema` and check if the result is the same as `obj`."""
     if verbose: print('\nobject: ', obj, getattr(obj, '__dict__', 'no __dict__'))
-    flat = schema.encode(obj)
+    flat = schema.encode(obj, registry)
     if verbose: print('encoded:', flat)
-    obj2 = schema.decode(flat)
+    obj2 = schema.decode(flat, registry)
     if verbose: print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
     assert obj == obj2 or pickle.dumps(obj) == pickle.dumps(obj2)
 

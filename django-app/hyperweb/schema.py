@@ -27,7 +27,7 @@ from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
 
 from .item import Item
-from .site import registry
+# from .site import registry
 
 
 #####################################################################################################################################################
@@ -71,6 +71,7 @@ class Schema:
                             # no other valid value can produce None as its serializable state
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
+    registry = None
     
     def to_json(self, value, registry, **params):
         """
@@ -80,30 +81,36 @@ class Schema:
         2) encoding of the `flat` object through JsonPickle; external type information is no longer used.
         """
         
-        flat = self.encode(value)
+        flat = self.encode(value, registry)
         return json.dumps(flat, ensure_ascii = False, **params)
         # return jsonp.dumps(flat, **params)
 
     def from_json(self, dump, registry):
 
         flat = json.loads(dump)
-        return self.decode(flat)
+        return self.decode(flat, registry)
     
     
-    def encode(self, value):
+    def encode(self, value, registry = None):
         if value is None:
             if self.blank: return None
             raise EncodeError("missing value (None) not permitted")
         
+        self.registry = object_schema.registry = registry or self.registry
+        assert self.registry
+
         state = self._encode(value)
         if self.blank:
             if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
 
         return state
         
-    def decode(self, state):
+    def decode(self, state, registry = None):
         if self.blank and state is None:
             return None
+        
+        self.registry = object_schema.registry = registry or self.registry
+        assert self.registry
         
         value = self._decode(state)
         assert value is not None
@@ -303,7 +310,7 @@ class Object(Schema):
                 state = state_attr
 
             if fullname == self.ITEM_FLAG:                  # decoding a reference to an Item?
-                return registry.get_item(state)             # ...get it from the Registry
+                return self.registry.get_item(state)        # ...get it from the Registry
             class_ = import_(fullname)
             
         # instantiate the output object; special handling for standard python types and Item
@@ -320,7 +327,7 @@ class Object(Schema):
             values = state
             return class_(values)
         if isinstance(class_, type) and issubclass(class_, Item):
-            return registry.get_item(state)                 # get the referenced item from the Registry
+            return self.registry.get_item(state)                 # get the referenced item from the Registry
 
         # default object decoding via setstate()
         state = self._decode_dict(state)
@@ -462,7 +469,7 @@ class Link(Schema):
         # from .site import registry
         # print(f'registry loaded by Link in thread {threading.get_ident()}', flush = True)
 
-        return registry.get_item((cid, iid))
+        return self.registry.get_item((cid, iid))
         
     
 #####################################################################################################################################################
@@ -479,11 +486,11 @@ class List(Schema):
         
     def _encode(self, values):
         if not isinstance(values, self.type): raise EncodeError(f"expected a {self.type}, got {values}")
-        return [self.schema.encode(v) for v in values]
+        return [self.schema.encode(v, self.registry) for v in values]
 
     def _decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
-        return self.type(self.schema.decode(e) for e in encoded)
+        return self.type(self.schema.decode(e, self.registry) for e in encoded)
 
 class Tuple(List):
     type = tuple
@@ -507,9 +514,9 @@ class Dict(Schema):
         
         # encode keys & values through predefined field types
         for key, value in d.items():
-            k = self.keys.encode(key) if self.keys else key
+            k = self.keys.encode(key, self.registry) if self.keys else key
             if k in state: raise EncodeError(f"duplicate state ({k}) returned by field's {self.keys} encode() for 2 different values, one of them: {key}")
-            state[k] = self.values.encode(value) if self.values else value
+            state[k] = self.values.encode(value, self.registry) if self.values else value
         
         return state
         
@@ -520,9 +527,9 @@ class Dict(Schema):
         
         # decode keys & values through predefined field types
         for key, value in state.items():
-            k = self.keys.decode(key) if self.keys else key
+            k = self.keys.decode(key, self.registry) if self.keys else key
             if k in d: raise DecodeError(f"duplicate value ({k}) returned by field's {self.keys} decode() for 2 different states, one of them: {key}")
-            d[k] = self.values.decode(value) if self.values else value
+            d[k] = self.values.decode(value, self.registry) if self.values else value
             
         return d
 
@@ -548,7 +555,7 @@ class Switch(Schema):
         
         for name, schema in self.schemas:
             try:
-                encoded = schema.encode(value)
+                encoded = schema.encode(value, self.registry)
                 return [name, encoded]
                 
             except EncodeError:
@@ -563,7 +570,7 @@ class Switch(Schema):
         
         name, encoded = encoded
         schema = self.schemas[name]
-        return schema.decode(encoded)
+        return schema.decode(encoded, self.registry)
         
 
 #####################################################################################################################################################
@@ -623,15 +630,16 @@ class Field:
             
         return state
     
-    def encode_one(self, value):
-        return self.schema.encode(value)
+    def encode_one(self, value, registry):
+        return self.schema.encode(value, registry)
     
-    def decode_one(self, encoded):
-        return self.schema.decode(encoded)
+    def decode_one(self, encoded, registry):
+        return self.schema.decode(encoded, registry)
     
-    def encode_many(self, values):
+    def encode_many(self, values, registry):
         """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
         if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
+        self.schema.registry = registry
         encoded = list(map(self.schema.encode, values))
 
         # compactify singleton lists
@@ -640,7 +648,7 @@ class Field:
             
         return encoded
         
-    def decode_many(self, encoded):
+    def decode_many(self, encoded, registry):
         """Returns a list of value(s)."""
         
         # de-compactification of singleton lists
@@ -648,6 +656,7 @@ class Field:
             encoded = [encoded]
     
         # schema-based decoding
+        self.schema.registry = registry
         return list(map(self.schema.decode, encoded))
         
         
@@ -703,7 +712,7 @@ class Record(Schema):
             # schema-aware encoding
             field = self.fields.get(name)
             if field:
-                encoded[name] = field.encode_many(values)
+                encoded[name] = field.encode_many(values, self.registry)
             # TODO: catch atype.encode() exceptions and append to `errors`
             
         if errors:
@@ -730,7 +739,7 @@ class Record(Schema):
             # schema-based decoding
             field = self.fields.get(name)
             if field:
-                data[name] = field.decode_many(values)
+                data[name] = field.decode_many(values, self.registry)
                 
         return MultiDict(multiple = data)
     
@@ -775,7 +784,7 @@ class Struct(Record):
         for name, value in attrs.items():
             
             if name not in self.fields: raise EncodeError(f'unknown field "{name}"')
-            encoded[name] = self.fields[name].encode_one(value)
+            encoded[name] = self.fields[name].encode_one(value, self.registry)
             
         return encoded
         
@@ -791,7 +800,7 @@ class Struct(Record):
         for name, value in encoded.items():
             
             if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a Struct')
-            attrs[name] = self.fields[name].decode_one(value)
+            attrs[name] = self.fields[name].decode_one(value, self.registry)
                 
         return setstate(self.type, attrs)
     
