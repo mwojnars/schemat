@@ -1,4 +1,5 @@
 import threading
+from collections import defaultdict
 
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
@@ -40,10 +41,36 @@ class Registry:
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         # self.bootstrap()
     
-    def bootstrap(self):
-        self._load_root()
+    def bootstrap(self, core_items = None):
+        if core_items is None:
+            self._load_root()
+        else:
+            self.seed(core_items)
         # print(f'Registry() created in thread {threading.get_ident()}')
-    
+        
+    def seed(self, core_items):
+        """
+        Seed the DB and this registry with a list of initial "core" items.
+        The items should have empty IDs - they will be assigned here by the registry:
+        CIDs are taken from each item's category, while IIDs are assigned using
+        consecutive numbers within a category. The root category must be the first item on the list.
+        """
+        next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for the root category
+        
+        for i, item in enumerate(core_items):
+            item.registry = self
+            if i == 0:
+                assert isinstance(item, RootCategory), "root category must be the first item on the list"
+                assert ROOT_CID < 1
+                item.cid = item.iid = ROOT_CID
+            else:
+                item.cid = cid = item.category.iid
+                item.iid = next_iid[cid]
+                next_iid[cid] += 1
+                
+            self._set(item, ttl = 0, protect = True)
+
+        
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
         If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,

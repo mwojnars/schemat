@@ -86,16 +86,13 @@ root_schema = Record(
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
 )
 
-registry = Registry()
-
 
 #####################################################################################################################################################
 #####
 #####  CATEGORIES
 #####
 
-_RootCategory = RootCategory._raw(registry = registry,
-    id          = (ROOT_CID, ROOT_CID),
+_RootCategory = RootCategory._raw(
     name        = "Category",
     info        = "Category of items that represent categories",
     itemclass   = Category,
@@ -104,24 +101,21 @@ _RootCategory = RootCategory._raw(registry = registry,
 )
 _RootCategory.category = _RootCategory
 
-_Space = Category._raw(registry = registry, category = _RootCategory,
-    # id          = (0, 3),
+_Space = Category._raw(category = _RootCategory,
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     itemclass   = Space,
     schema      = Record(name = String(), categories = Dict(String(), Link(_RootCategory))),
 )
 
-_Application = Category._raw(registry = registry, category = _RootCategory,
-    # id          = (0, 2),
+_Application = Category._raw(category = _RootCategory,
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     itemclass   = Application,
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 
-_Site = Category._raw(registry = registry, category = _RootCategory,
-    # id          = (0, 1),
+_Site = Category._raw(category = _RootCategory,
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
@@ -131,8 +125,7 @@ _Site = Category._raw(registry = registry, category = _RootCategory,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
 )
 
-_Item = Category._raw(registry = registry, category = _RootCategory,
-    # id          = (0, 100),
+_Item = Category._raw(category = _RootCategory,
     name        = "Item",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
@@ -144,45 +137,39 @@ _Item = Category._raw(registry = registry, category = _RootCategory,
 #####  ITEMS
 #####
 
-meta_space = Item._raw(registry = registry, category = _Space,
-    # id          = (3, 1),
+meta_space = Item._raw(category = _Space,
     name        = "Meta",
     categories  = {'category': _RootCategory, 'item': _Item}
 )
 
-sys_space = Item._raw(registry = registry, category = _Space,
-    # id          = (3, 2),
+sys_space = Item._raw(category = _Space,
     name        = "System",
     categories  = {'space': _Space, 'app': _Application, 'site': _Site}
 )
 
-Catalog_wiki = Item._raw(registry = registry, category = _Application,
-    # id          = (2, 1),
+Catalog_wiki = Item._raw(category = _Application,
     name        = "Catalog.wiki",
     spaces      = {'meta': meta_space, 'sys': sys_space},
 )
 
-catalog_wiki = Item._raw(registry = registry, category = _Site,
-    # id          = (1, 1),
+catalog_wiki = Item._raw(category = _Site,
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
     #base_url    = "http://localhost:8001",
     #app         = Catalog_wiki,
 )
 
-# _Struct = Item._raw(registry = registry, category = '???',
+# _Struct = Item._raw(category = '???',
 #     name = 'Struct',
 #     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
 # )
 
 #####################################################################################################################################################
 
-item_001 = Item._raw(registry = registry, category = _Item,
-    # id          = (100, 1),
+item_001 = Item._raw(category = _Item,
     title       = "Ala ma kota Sierściucha i psa Kłapoucha.",
 )
-item_002 = Item._raw(registry = registry, category = _Item,
-    # id          = (100, 2),
+item_002 = Item._raw(category = _Item,
     title       = "ąłęÓŁŻŹŚ",
 )
 item_002.add('name', "test_item", "duplicate")
@@ -206,20 +193,24 @@ items = [
     item_002,
 ]
 
-def seed_items(items):
-    """
-    Assign IDs to a list of raw `items`: CID is taken from each item's category, while IID is assigned
-    consecutive numbers within a category. The root category must have its ID already assigned.
-    """
-    next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for root category
-    
-    for item in items:
-        if item.id == (ROOT_CID, ROOT_CID): continue
-        item.cid = cid = item.category.iid
-        item.iid = next_iid[cid]
-        next_iid[cid] += 1
-        
-    return items
+# def seed_items(items):
+#     """
+#     Assign IDs to a list of raw `items`: CID is taken from each item's category, while IID is assigned
+#     consecutive numbers within a category. The root category must be the first item on the list.
+#     """
+#     next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for root category
+#
+#     for i, item in enumerate(items):
+#         if i == 0:
+#             assert isinstance(item, RootCategory), "root category must be the first item on the list"
+#             assert ROOT_CID < 1
+#             item.cid = item.iid = ROOT_CID
+#         else:
+#             item.cid = cid = item.category.iid
+#             item.iid = next_iid[cid]
+#             next_iid[cid] += 1
+#         
+#     return items
 
 
 #####################################################################################################################################################
@@ -229,7 +220,10 @@ if __name__ == "__main__":
     print()
     flats = []
 
-    seed_items(items)
+    registry = Registry()
+
+    # seed_items(items)
+    registry.seed(items)
     
     # serialize items to YAML
     for item in items:
