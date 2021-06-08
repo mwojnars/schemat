@@ -237,7 +237,10 @@ class Item(object, metaclass = MetaItem):
         like a private attr and would be assigned to __dict__ otherwise; or when mutliple values have to be assigned.
         """
         self.data.set(key, *values)
-
+        
+    def add(self, key, *values):
+        self.data.add(key, *values)
+        
     def __dir__(self):
         attrs = set(super().__dir__())
         attrs.update(self.data.keys())
@@ -524,6 +527,9 @@ class Route:
     base = None         # base URL: scheme (protocol) + domain, without trailing '/'
     path = None         # fixed prefix of URL paths after the domain part; should start with '/'
     app  = None         # Application that interprets the dynamic part of a URL and maps it bidirectionally to an item
+    
+    def __init__(self, **attrs):
+        self.__dict__.update(attrs)
     
     def match(self, url):
         """Check if this route matches a given URL."""

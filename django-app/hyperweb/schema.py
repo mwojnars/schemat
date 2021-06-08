@@ -425,8 +425,9 @@ class Link(Schema):
     # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
     cid = None
     
-    def __init__(self, cid = None):
-        self.cid = cid
+    def __init__(self, category = None, cid = None):
+        if category is not None: self.cid = category.iid
+        elif cid is not None: self.cid = cid
     
     def _encode(self, item, registry):
         
@@ -510,7 +511,7 @@ class Dict(Schema):
         
     def _encode(self, d, registry):
         
-        if not isinstance(d, dict): raise EncodeError(f"expected a <dict>, not {d}")
+        if not isinstance(d, dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
         state = {}
         
         # encode keys & values through predefined field types
@@ -679,7 +680,8 @@ class Record(Schema):
     
     def __init__(self, **fields):
         assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
-        self.fields = fields
+        # self.fields = fields or self.fields or {}
+        if fields: self.fields = fields
         self._init_fields()
     
     def __setstate__(self, state):
@@ -688,6 +690,7 @@ class Record(Schema):
 
     def _init_fields(self):
         """Wrap up in Field all the fields whose values are plain Schema instances."""
+        if self.fields is None: self.fields = {}
         for name, field in self.fields.items():
             if isinstance(field, Field): continue
             # assert not field or isinstance(field, Schema)
@@ -786,7 +789,7 @@ class Struct(Record):
         # encode values of fields through per-field schema definitions
         for name, value in attrs.items():
             
-            if name not in self.fields: raise EncodeError(f'unknown field "{name}"')
+            if name not in self.fields: raise EncodeError(f'unknown field "{name}", expected one of {list(self.fields.keys())}')
             encoded[name] = self.fields[name].encode_one(value, registry)
             
         return encoded
@@ -823,25 +826,37 @@ class Struct(Record):
 #####  Special-purpose schema
 #####
 
-# class FieldSchema(Struct):
-#     """Schema of a field specification inside item's schema definition."""
+class FieldSchema(Struct):
+    """Schema of a field specification inside item's schema definition."""
+
+    type = Field
+    fields = {
+        'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
+        'default': Object(),
+        'multi':   Boolean(),
+        'info':    String(),
+    }
+
+class RecordSchema(Struct):
+    """Schema of item's schema for use inside category definitions."""
+
+    type = Record
+    fields = {
+        'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
+        'strict': Boolean(),
+    }
+    
+# field_schema = Struct(Field,
+#                       schema    = Object(base = Schema),
+#                       default   = Object(),
+#                       multi     = Boolean(),
+#                       info      = String(),
+#                       )
 #
-#     type = Field
-#     fields = {
-#         'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
-#         'default': Object(),
-#         'multi':   Boolean(),
-#         'info':    String(),
-#     }
-#
-# class ItemSchema(Struct):
-#     """Schema of item's schema for use inside category definitions."""
-#
-#     type = Record
-#     fields = {
-#         'fields': Dict(String(), FieldSchema),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
-#         'strict': Boolean(),
-#     }
+# record_schema = Struct(Record,
+#                        fields = Dict(String(), FieldSchema()),
+#                        strict = Boolean(),
+#                        )
     
 #####################################################################################################################################################
 
