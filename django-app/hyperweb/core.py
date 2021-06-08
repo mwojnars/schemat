@@ -3,6 +3,7 @@ Core system items defined as Python objects.
 """
 
 import json, yaml
+from collections import defaultdict
 
 from hyperweb.config import ROOT_CID
 from hyperweb.item import Item, Category, RootCategory, Site, Application, Space, Route
@@ -94,7 +95,7 @@ registry = Registry()
 #####
 
 _RootCategory = RootCategory._raw(registry = registry,
-    id          = (0, 0),
+    id          = (ROOT_CID, ROOT_CID),
     name        = "Category",
     info        = "Category of items that represent categories",
     itemclass   = Category,
@@ -104,7 +105,7 @@ _RootCategory = RootCategory._raw(registry = registry,
 _RootCategory.category = _RootCategory
 
 _Space = Category._raw(registry = registry, category = _RootCategory,
-    id          = (0, 3),
+    # id          = (0, 3),
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     itemclass   = Space,
@@ -112,7 +113,7 @@ _Space = Category._raw(registry = registry, category = _RootCategory,
 )
 
 _Application = Category._raw(registry = registry, category = _RootCategory,
-    id          = (0, 2),
+    # id          = (0, 2),
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     itemclass   = Application,
@@ -120,7 +121,7 @@ _Application = Category._raw(registry = registry, category = _RootCategory,
 )
 
 _Site = Category._raw(registry = registry, category = _RootCategory,
-    id          = (0, 1),
+    # id          = (0, 1),
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
@@ -131,7 +132,7 @@ _Site = Category._raw(registry = registry, category = _RootCategory,
 )
 
 _Item = Category._raw(registry = registry, category = _RootCategory,
-    id          = (0, 100),
+    # id          = (0, 100),
     name        = "Item",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
@@ -144,25 +145,25 @@ _Item = Category._raw(registry = registry, category = _RootCategory,
 #####
 
 meta_space = Item._raw(registry = registry, category = _Space,
-    id          = (3, 1),
+    # id          = (3, 1),
     name        = "Meta",
     categories  = {'category': _RootCategory, 'item': _Item}
 )
 
 sys_space = Item._raw(registry = registry, category = _Space,
-    id          = (3, 2),
+    # id          = (3, 2),
     name        = "System",
-    categories  = {'site': _Site, 'app': _Application, 'space': _Space}
+    categories  = {'space': _Space, 'app': _Application, 'site': _Site}
 )
 
 Catalog_wiki = Item._raw(registry = registry, category = _Application,
-    id          = (2, 1),
+    # id          = (2, 1),
     name        = "Catalog.wiki",
     spaces      = {'meta': meta_space, 'sys': sys_space},
 )
 
 catalog_wiki = Item._raw(registry = registry, category = _Site,
-    id          = (1, 1),
+    # id          = (1, 1),
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
     #base_url    = "http://localhost:8001",
@@ -177,11 +178,11 @@ catalog_wiki = Item._raw(registry = registry, category = _Site,
 #####################################################################################################################################################
 
 item_001 = Item._raw(registry = registry, category = _Item,
-    id          = (100, 1),
+    # id          = (100, 1),
     title       = "Ala ma kota Sierściucha i psa Kłapoucha.",
 )
 item_002 = Item._raw(registry = registry, category = _Item,
-    id          = (100, 2),
+    # id          = (100, 2),
     title       = "ąłęÓŁŻŹŚ",
 )
 item_002.add('name', "test_item", "duplicate")
@@ -195,15 +196,31 @@ items = [
     _Application,
     _Site,
     _Item,
-    catalog_wiki,
-    Catalog_wiki,
     meta_space,
     sys_space,
+    Catalog_wiki,
+    catalog_wiki,
     # _Struct,
     
     item_001,
     item_002,
 ]
+
+def seed_items(items):
+    """
+    Assign IDs to a list of raw `items`: CID is taken from each item's category, while IID is assigned
+    consecutive numbers within a category. The root category must have its ID already assigned.
+    """
+    next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for root category
+    
+    for item in items:
+        if item.id == (ROOT_CID, ROOT_CID): continue
+        item.cid = cid = item.category.iid
+        item.iid = next_iid[cid]
+        next_iid[cid] += 1
+        
+    return items
+
 
 #####################################################################################################################################################
 
@@ -212,6 +229,8 @@ if __name__ == "__main__":
     print()
     flats = []
 
+    seed_items(items)
+    
     # serialize items to YAML
     for item in items:
         

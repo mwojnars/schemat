@@ -166,7 +166,7 @@ class Item(object, metaclass = MetaItem):
             item.cid, item.iid = id
         if category is not None:
             item.category = category
-            assert item.cid is None or category.iid is None or item.cid == category.iid, "item's CID is inconsistent with category's IID"
+            assert item.cid is None or category.iid is None or item.cid == category.iid, "item's CID is inconsistent with its category's IID"
         if registry is not None:
             item.registry = registry
             
