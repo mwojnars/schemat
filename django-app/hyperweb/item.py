@@ -343,12 +343,6 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def get_url(self, __endpoint = None, *args, **kwargs):
-        """Return canonical URL of this item, possibly extended with a non-default
-           endpoint designation and/or arguments to be passed to a handler function or a template.
-        """
-        return self.category.get_url_of(self, __endpoint, *args, **kwargs)
-        
     def serve(self, route, request, endpoint, args):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
@@ -440,22 +434,6 @@ class Category(Item):
         item.save()
         return html_escape(f"Item created: {item}")
         
-    def get_url_of(self, item, __endpoint = None, *args, **kwargs):
-        
-        assert item.cid == self.iid
-        site_ = self.registry.get_site()
-        
-        # base_url  = site_.get('base_url')
-        base_url  = site_['routes']['default'].base                    # TODO: refactor
-        qualifier = site_.get_qualifier(self)
-        iid       = self.encode_url(item.iid)
-        # print(f'category {self.iid} {id(self)}, qualifier {qualifier} {self._qualifier}')
-        
-        url = f'{base_url}/{qualifier}:{iid}'
-        if __endpoint: url += f'/{__endpoint}'
-        
-        return url
-    
     def encode_url(self, iid):
         """This method, together with decode_url(), can be customized in subclasses to provide
            a different way of representing IIDs inside URLs.
@@ -575,21 +553,27 @@ class Route:
         # iid = category.decode_url(item_id)
         # return registry.get_item((cid, iid))
 
-    def url(self, item, __endpoint = None, *args, **kwargs):
-        """Generate URL path of an `item` when accessed through this URL route."""
-    
-        category = item.category
-        site = item.registry.get_site()
-        
-        base_url  = site['routes']['default'].base                    # TODO: refactor
-        qualifier = site.get_qualifier(category)
-        iid       = category.encode_url(item.iid)
-        # print(f'category {self.iid} {id(self)}, qualifier {qualifier} {self._qualifier}')
-        
-        url = f'{base_url}/{qualifier}:{iid}'
-        if __endpoint: url += f'/{__endpoint}'
-        
+    def url(self, __item__, __endpoint__ = None, **params):
+        """
+        Get URL of `item` when accessed through this URL route, possibly extended with a non-default
+        endpoint designation and/or arguments to be passed to a handler function or a template.
+        """
+        category = __item__.category
+        path = self._qualifier(category)
+        iid  = category.encode_url(__item__.iid)
+        url  = f'{self.base}/{path}:{iid}'
+        if __endpoint__: url += f'/{__endpoint__}'
         return url
+
+    def _qualifier(self, category):
+        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+        for space_name, space in self.app['spaces'].items():
+            for category_name, cat in space['categories'].items():
+                if cat.id != category.id: continue
+                return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+        
+        raise Exception(f"no URL pattern exists for the requested category: {category}")
+    
 
 class Site(Item):
     """
@@ -599,40 +583,22 @@ class Site(Item):
     - routing of all URLs
     """
 
-    # internal variables
-    
-    _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
-                            # for URL routing and URL generation; some categories may be excluded from routing
-                            # (no public visibility), yet they're still accessible through get_category()
+    # _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
+    #                         # for URL routing and URL generation; some categories may be excluded from routing
+    #                         # (no public visibility), yet they're still accessible through get_category()
 
-    # # Site class is special in that it holds distinct Registry instances for each processing thread.
-    # # This is to ensure each thread operates on separate item objects to avoid interference
-    # # when two threads modify same-ID items concurrently.
-    # _thread_local = threading.local()
+    # def _post_decode(self):         # TODO: refactor this out to avoid any item-specific post-processing and instance-level temporary variables
     #
-    # @property
-    # def registry(self):
-    #     reg = getattr(self._thread_local, 'registry', None)
-    #     if reg is None:
-    #         reg = self._thread_local.registry = Registry()
-    #     return reg
+    #     # print('Site.routes:', self['routes'])
     #
-    # @registry.setter
-    # def registry(self, reg):
-    #     self._thread_local.registry = reg
-    
-    def _post_decode(self):         # TODO: refactor this out to avoid any item-specific post-processing and instance-level temporary variables
-
-        # print('Site.routes:', self['routes'])
-
-        self._qualifiers = bidict()
-        
-        for app in self.list('app'):
-            for space_name, space in app.get('spaces').items():
-                for category_name, category in space.get('categories').items():
-                    
-                    qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-                    self._qualifiers[qualifier] = category.iid
+    #     self._qualifiers = bidict()
+    #
+    #     for app in self.list('app'):
+    #         for space_name, space in app.get('spaces').items():
+    #             for category_name, category in space.get('categories').items():
+    #
+    #                 qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    #                 self._qualifiers[qualifier] = category.iid
 
     def get_category(self, cid):
         """Retrieve a category through the Registry that belongs to the current thread."""
@@ -642,20 +608,19 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    def get_qualifier(self, category = None):
-        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-        route = self['routes']['default']           # TODO: choice of route controlled by client
-        # route.url(category)
-        
-        app = route.app
-        for space_name, space in app['spaces'].items():
-            for category_name, cat in space['categories'].items():
-                if cat.id != category.id: continue
-                qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-                return qualifier
-                # self._qualifiers[qualifier] = cat.iid
-        
-        # return self._qualifiers.inverse[category.iid]
+    # def get_qualifier(self, category = None):
+    #     """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+    #     route = self['routes']['default']           # TODO: choice of route controlled by client
+    #
+    #     app = route.app
+    #     for space_name, space in app['spaces'].items():
+    #         for category_name, cat in space['categories'].items():
+    #             if cat.id != category.id: continue
+    #             qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    #             return qualifier
+    #             # self._qualifiers[qualifier] = cat.iid
+    #
+    #     # return self._qualifiers.inverse[category.iid]
 
     def handle(self, request, path):
         route = self.find_route(request, path)
@@ -765,14 +730,13 @@ class View:
     def _uniq(self, field):
         return self._item.get(field, self._default_miss, mode ='uniq')
 
-    def url(self, target_item = None):
+    def url(self, __target_item__ = None, __endpoint__ = None, **params):
         """
         Generate URL of a target_item when accessed through self._app application;
         or URL of self._item if target_item=None.
         """
-        if target_item is None: target_item = self._item
-        # return target_item.get_url()
-        return self._route.url(target_item)
+        if __target_item__ is None: __target_item__ = self._item
+        return self._route.url(__target_item__, __endpoint__, **params)
 
     
 #####################################################################################################################################################
