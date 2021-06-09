@@ -155,10 +155,7 @@ Catalog_wiki = Application._raw(category = _Application,
 catalog_wiki = Site._raw(category = _Site,
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
-    #base_url    = "http://localhost:8001",
-    #app         = Catalog_wiki,
 )
-# catalog_wiki._post_decode()     # TODO: refactor
 
 # _Struct = Item._raw(category = '???',
 #     name = 'Struct',

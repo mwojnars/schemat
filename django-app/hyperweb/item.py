@@ -1,7 +1,5 @@
 import re, threading
 from pprint import pprint
-
-from time import sleep
 from bidict import bidict
 
 from nifty.text import html_escape
@@ -9,7 +7,6 @@ from nifty.text import html_escape
 from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
-from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 from hypertag import HyperHTML
 
@@ -143,10 +140,6 @@ class Item(object, metaclass = MetaItem):
     #     assert self.iid is None or self.iid == id_[1], 'changing IID of an existing item is forbidden'
     #     self.cid, self.iid = id_
 
-    # @property
-    # def data(self):
-    #     return Data(self.data)
-    
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
@@ -317,8 +310,6 @@ class Item(object, metaclass = MetaItem):
         The item might have already been present in DB, but still a new copy is created.
         """
         self.registry.insert_item(self)
-        # self.category._store.insert(self)
-        # self.registry.save_item(self)
         
     def update(self, fields = None):
         """Update the contents of this item's row in DB."""
@@ -330,8 +321,6 @@ class Item(object, metaclass = MetaItem):
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
         self.registry.update_item(self)
-        # self.category._store.update(self)
-        # self.registry.save_item(self)           # only needed for a hypothetical case when `self` has been overriden in the registry by another version of the same item
 
     def save(self):
         """
@@ -385,12 +374,6 @@ class Category(Item):
     A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to
     and creation of new items within category.
     """
-    # _store  = YamlStore()              # DataStore used for reading/writing items of this category
-
-    # def load_data(self, id):
-    #     """Load item data from DB and return as a record (dict)."""
-    #     print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
-    #     return self._store.select(id)
     
     def get_item(self, iid):
         """
@@ -402,14 +385,6 @@ class Category(Item):
     def create_item(self):
         return self.registry.create_item(self)
     
-    # def load_items(self):
-    #     """
-    #     Load all items of this category, ordered by IID, optionally limited to max. `limit` items with lowest IID.
-    #     A generator.
-    #     """
-    #     records = self._store.select_all(self.iid)
-    #     return self.registry.decode_items(records, self)
-        
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
         return self['schema'].get_default(field)
@@ -440,10 +415,6 @@ class Category(Item):
         """
         return str(iid)
     
-    # def decode_url(self, iid_str):
-    #     """Convert an encoded IID representation found in a URL back to an <int>. Reverse operation to encode_url()."""
-    #     return int(iid_str)
-        
 # # rules for detecting disallowed attribute names in category definitions
 # STOP_ATTR = {
 #     'special':      (lambda attr: attr[0] == '_'),
@@ -461,22 +432,8 @@ class RootCategory(Category):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
 
-        from .schema import Object, String, Class, Dict, Boolean, Record, Field, Struct
+        from .core import root_schema as schema
 
-        # schema_field  = Struct(Field, schema = Object(baseclass = Schema), default = Object(), multi = Boolean(), info = String())
-        # schema_schema = Struct(Record, fields = Dict(String(), schema_field))
-        # schema_schema = Struct(Record, fields = Dict(String(), Object(Field)), strict = Boolean())
-        schema_schema = Object(Record)
-        
-        fields = {
-            'schema':       schema_schema,
-            'name':         String(),
-            'info':         String(),
-            'itemclass':    Class(),
-            'templates':    Dict(String(), String()),
-        }
-        schema = Record(**fields)               # this schema is ONLY used as a type definition during loading of the root category item itself, and it gets overwritten later on
-        
         root = cls.__new__(cls)                 # __init__() is disabled, do not call it
         root.registry = registry
         root.category = root                    # RootCategory is a category for itself
@@ -485,12 +442,6 @@ class RootCategory(Category):
         root.data  = Data()
         root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
-
-        # root.load()
-        # new_schema = root['schema']
-        # print("RootCategory.schema:")
-        # print(schema_schema.to_json(new_schema, registry, indent = 2))
-        
         return root
         
 
@@ -537,21 +488,11 @@ class Route:
             print('incorrect URL path:', path)
             raise
             
-        # app = registry.get_item(tuple(self.app))
-        # assert isinstance(app, Application)
-        app = self.app
-        
-        space    = app.get_space(space_name)
+        space    = self.app.get_space(space_name)
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
         
         return item, endpoint, args
-        
-        # cid = self._qualifiers[qualifier]
-        # category = registry.get_category(cid)
-        #
-        # iid = category.decode_url(item_id)
-        # return registry.get_item((cid, iid))
 
     def url(self, __item__, __endpoint__ = None, **params):
         """
@@ -567,6 +508,7 @@ class Route:
 
     def _qualifier(self, category):
         """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+        # TODO: precompute/cache the results of this method; recalculate when configuration of spaces changes (!?)
         for space_name, space in self.app['spaces'].items():
             for category_name, cat in space['categories'].items():
                 if cat.id != category.id: continue
@@ -608,33 +550,17 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    # def get_qualifier(self, category = None):
-    #     """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-    #     route = self['routes']['default']           # TODO: choice of route controlled by client
-    #
-    #     app = route.app
-    #     for space_name, space in app['spaces'].items():
-    #         for category_name, cat in space['categories'].items():
-    #             if cat.id != category.id: continue
-    #             qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-    #             return qualifier
-    #             # self._qualifiers[qualifier] = cat.iid
-    #
-    #     # return self._qualifiers.inverse[category.iid]
-
     def handle(self, request, path):
         route = self.find_route(request, path)
         item, endpoint, args = route.find(path, self.registry)
         return item.serve(route, request, endpoint, args)
 
     def find_route(self, request, path):
-    
+        """Find the first route that matches the URL `path`."""
+
         url = request.build_absolute_uri()
-        
-        # find the first route that matches the `path`
         for route in self['routes'].values():
             if route.match(url): return route
-            # return route.find(path, self.registry)
         
         raise Exception(f'route not found for "{path}" path')
 
@@ -745,10 +671,7 @@ class View:
 #####
 
 # TODO:
-# - JsonPickle: if a dict to be encoded contains "@" key, it gets serialized to a json dict that's incorrectly
-#   interpreted as an object of a custom class during deserialization - security threat;
-#   this cannot be fixed when using the standard `json` library (api is too narrow), only if the client
-#   guarantees that "@" key never occurs in a dict to be encoded
+# -
 
 # ISSUES:
-# - strict typing in schema is necessary to properly serialize nested Item instances as references
+# -
