@@ -349,7 +349,7 @@ class Item(object, metaclass = MetaItem):
         """
         return self.category.get_url_of(self, __endpoint, *args, **kwargs)
         
-    def serve(self, request, endpoint, args):
+    def serve(self, route, request, endpoint, args):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.
@@ -370,7 +370,8 @@ class Item(object, metaclass = MetaItem):
         # search for a Hypertag script in templates
         template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
         if template is not None:
-            return HyperHTML().render(template, view = View(self, request))
+            view = View(self, route, request)
+            return HyperHTML().render(template, view = view)
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
@@ -574,9 +575,21 @@ class Route:
         # iid = category.decode_url(item_id)
         # return registry.get_item((cid, iid))
 
-    def url(self, item):
+    def url(self, item, __endpoint = None, *args, **kwargs):
         """Generate URL path of an `item` when accessed through this URL route."""
     
+        category = item.category
+        site = item.registry.get_site()
+        
+        base_url  = site['routes']['default'].base                    # TODO: refactor
+        qualifier = site.get_qualifier(category)
+        iid       = category.encode_url(item.iid)
+        # print(f'category {self.iid} {id(self)}, qualifier {qualifier} {self._qualifier}')
+        
+        url = f'{base_url}/{qualifier}:{iid}'
+        if __endpoint: url += f'/{__endpoint}'
+        
+        return url
 
 class Site(Item):
     """
@@ -645,17 +658,18 @@ class Site(Item):
         # return self._qualifiers.inverse[category.iid]
 
     def handle(self, request, path):
-        item, endpoint, args = self.route(request, path)
-        return item.serve(request, endpoint, args)
+        route = self.find_route(request, path)
+        item, endpoint, args = route.find(path, self.registry)
+        return item.serve(route, request, endpoint, args)
 
-    def route(self, request, path):
+    def find_route(self, request, path):
     
         url = request.build_absolute_uri()
         
         # find the first route that matches the `path`
         for route in self['routes'].values():
-            if not route.match(url): continue
-            return route.find(path, self.registry)
+            if route.match(url): return route
+            # return route.find(path, self.registry)
         
         raise Exception(f'route not found for "{path}" path')
 
@@ -723,11 +737,12 @@ class View:
     # internal structures
     _item       = None          # the underlying Item instance; enables access to methods and full data[]
     _user       = None          # user profile / identification
-    _route      = None          # the site's Route where this request came through
+    _route      = None          # the site's Route that this request came from
     _request    = None          # web request object
     
-    def __init__(self, item, request):
+    def __init__(self, item, route, request):
         self._item = item
+        self._route = route
         self._request = request
     
     def __getattr__(self, name):
@@ -756,8 +771,8 @@ class View:
         or URL of self._item if target_item=None.
         """
         if target_item is None: target_item = self._item
-        return target_item.get_url()
-        # return self._route.url(target_item)
+        # return target_item.get_url()
+        return self._route.url(target_item)
 
     
 #####################################################################################################################################################
