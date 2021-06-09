@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
-from .item import RootCategory
+from .item import RootCategory, Site
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 
@@ -37,40 +37,53 @@ class Registry:
     store = YamlStore()         # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
+    site_id = None
+    
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
-        # self.bootstrap()
     
-    def bootstrap(self, core_items = None):
-        if core_items is None:
-            self._load_root()
-        else:
-            self.seed(core_items)
-        # print(f'Registry() created in thread {threading.get_ident()}')
+    def boot(self, core_items = None):
+        self._load_root()
+        self.site_id = SITE_ID
+        # print(f'Registry() booted in thread {threading.get_ident()}')
         
     def seed(self, core_items):
         """
         Seed the DB and this registry with a list of initial "core" items.
-        The items should have empty IDs - they will be assigned here by the registry:
+        The items are treated as newly created ones and get inserted to DB as such,
+        where they get assigned IDs along the way.
+        
+        The items should have empty IDs, which will be assigned here by the registry:
         CIDs are taken from each item's category, while IIDs are assigned using
         consecutive numbers within a category. The root category must be the first item on the list.
         """
+        site = None
         next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for the root category
         
         for i, item in enumerate(core_items):
             item.registry = self
+            item.loaded = True
+            
             if i == 0:
                 assert isinstance(item, RootCategory), "root category must be the first item on the list"
                 assert ROOT_CID < 1
                 item.cid = item.iid = ROOT_CID
             else:
-                item.cid = cid = item.category.iid
-                item.iid = next_iid[cid]
-                next_iid[cid] += 1
+                # item.cid = cid = item.category.iid
+                # item.iid = next_iid[cid]
+                # assert cid is not None
+                # next_iid[cid] += 1
+                if isinstance(item, Site):
+                    site = item
                 
+        self.store.insert_many(core_items)
+        for item in core_items:
             self._set(item, ttl = 0, protect = True)
 
+        assert site is not None, "Site item not found among core items"
+        self.site_id = site.id
         
+
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
         If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
@@ -119,7 +132,7 @@ class Registry:
         return self.get_item((ROOT_CID, cid))
     
     def get_site(self):
-        return self.get_item(SITE_ID)
+        return self.get_item(self.site_id)
     
     def decode_items(self, records, category):
         """

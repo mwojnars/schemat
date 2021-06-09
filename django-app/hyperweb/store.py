@@ -36,7 +36,19 @@ default_db = None
 
 class DataStore:
     """"""
+
+    def insert_many(self, items):
+        for item in items:
+            self.insert(item, flush = False)
+        self.flush()
     
+    def insert(self, item, flush = True):
+        raise NotImplementedError
+    
+    def flush(self):
+        raise NotImplementedError
+
+
 class SimpleStore(DataStore):
     """Data store that uses only local DB, no sharding."""
 
@@ -77,11 +89,13 @@ class SimpleStore(DataStore):
             cur.execute(query)
             return map(self._make_record, cur.fetchall())
         
-    def insert(self, item):
+    def insert(self, item, flush = True):
         """
         Insert `item` as a new row in DB. Assign a new IID and return it.
         The item might have already been present in DB, but still a new copy is created.
         """
+        if item.cid is None:
+            item.cid = item.category.iid
         cid = item.cid
         
         max_iid = self.db.select_one(f"SELECT MAX(iid) FROM hyper_items WHERE cid = {cid} FOR UPDATE")[0]
@@ -91,7 +105,6 @@ class SimpleStore(DataStore):
         iid = max_iid + 1
         item.iid = iid
         
-        # item.__encode__()
         assert item.data is not None
         # print("store:", list(item.data.lists()))
         
@@ -104,8 +117,8 @@ class SimpleStore(DataStore):
         # # get imputed fields from DB
         # (item.created, item.updated) = self.db.select_one(f"SELECT created, updated FROM hyper_items WHERE cid = {cid} AND iid = {iid}")
         
-        self.db.commit()
-        return iid
+        if flush: self.db.commit()
+        # return iid
         
         # # here, it is possible to split SELECT out from INSERT, but then SELECT ... FOR UPDATE must be used,
         # # so as to create a stronger lock on the DB rows involved and enable correct concurrent INSERTs
@@ -118,6 +131,9 @@ class SimpleStore(DataStore):
     def update(self, item):
         """Update the contents of the item's row in DB."""
 
+    def flush(self):
+        self.db.commit()
+        
 
 #####################################################################################################################################################
 
@@ -140,9 +156,6 @@ class FileStore(SimpleStore):
             if cid != cid_: continue
             yield self._make_record((cid_, iid_, data, None, None))
         
-    def insert(self, item):
-        raise NotImplementedError
-    
     
 class CsvStore(FileStore):
     
@@ -162,8 +175,10 @@ class JsonStore(FileStore):
     
     def __init__(self, filename = None):
         self.filename = filename or DATABASES['json']['FILE']
-        self.items = {}
+        self.reload()
         
+    def reload(self):
+        self.items = {}
         for data in json.load(open(self.filename)):
             id_ = data.pop('id')
             self.items[tuple(id_)] = json.dumps(data)
@@ -174,18 +189,68 @@ class JsonStore(FileStore):
     
 class YamlStore(FileStore):
     """Items stored in a YAML file. For use during development only."""
-    
+
+    max_iid = None      # dict of current maximum IIDs per category, as {cid: maximum_iid}
+
     def __init__(self, filename = None):
         self.filename = filename or DATABASES['yaml']['FILE']
         self.items = {}
+        self.max_iid = {}
+        # self.load()
+    
+    def load(self):
+        db = yaml.safe_load(open(self.filename))
+        self.items = {}
+        self.max_iid = {}
         
-        for data in yaml.safe_load(open(self.filename)):
-            id_ = data.pop('id')
-            if not id_: continue            # if ID is null or empty [], treat this item as a draft that should be omitted
-            self.items[tuple(id_)] = json.dumps(data)
+        for flat in db or []:
+            id = flat.pop('id')
+            if not id: continue             # if ID is null or empty [], treat this item as a draft that should be omitted
+            cid, iid = id
+            id = (cid, iid)
+            assert id not in self.items, f"duplicate item ID: {id}"
+            curr_max = self.max_iid.get(cid, 0)
+            self.max_iid[cid] = max(curr_max, iid)
+            self.items[id] = json.dumps(flat)
         
         print('YamlStore items loaded:')
         for id, data in self.items.items():
             print(id, data)
     
+    def insert(self, item, flush = True):
+        
+        if item.cid is None:
+            item.cid = item.category.iid
+        cid = item.cid
+        
+        if cid == 0 and cid not in self.max_iid:
+            max_iid = -1
+        else:
+            max_iid  = self.max_iid.get(cid, 0)
+            
+        item.iid = iid = max_iid + 1
+        self.max_iid[cid] = iid
+        
+        assert item.data is not None
+        assert item.id not in self.items
+        # print("store:", list(item.data.lists()))
+        
+        self.items[item.id] = item.to_json()
+
+        if flush: self.flush()
+    
+    def flush(self):
+        """Save the entire database (self.items) to a file."""
+        flats = []
+
+        for id, raw in self.items.items():
+            
+            flat = {'id': list(id)}
+            flat.update(json.loads(raw))
+            flats.append(flat)
+            
+        print(f"YamlStore flushing {len(self.items)} items to {self.filename}...")
+        out = open(self.filename, 'wt')
+        yaml.dump(flats, stream = out, default_flow_style = None, sort_keys = False, allow_unicode = True)
+        
     

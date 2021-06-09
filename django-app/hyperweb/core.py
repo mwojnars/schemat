@@ -119,7 +119,7 @@ _Site = Category._raw(category = _RootCategory,
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
-    schema      = Record(name = String(), base_url = String(), app = Link(_Application),
+    schema      = Record(name = String(), #base_url = String(), app = Link(_Application),
                          routes = Field(schema = Dict(String(), RouteSchema()),
                                         multi = False,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
@@ -137,27 +137,28 @@ _Item = Category._raw(category = _RootCategory,
 #####  ITEMS
 #####
 
-meta_space = Item._raw(category = _Space,
+meta_space = Space._raw(category = _Space,
     name        = "Meta",
     categories  = {'category': _RootCategory, 'item': _Item}
 )
 
-sys_space = Item._raw(category = _Space,
+sys_space = Space._raw(category = _Space,
     name        = "System",
     categories  = {'space': _Space, 'app': _Application, 'site': _Site}
 )
 
-Catalog_wiki = Item._raw(category = _Application,
+Catalog_wiki = Application._raw(category = _Application,
     name        = "Catalog.wiki",
     spaces      = {'meta': meta_space, 'sys': sys_space},
 )
 
-catalog_wiki = Item._raw(category = _Site,
+catalog_wiki = Site._raw(category = _Site,
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
     #base_url    = "http://localhost:8001",
     #app         = Catalog_wiki,
 )
+# catalog_wiki._post_decode()     # TODO: refactor
 
 # _Struct = Item._raw(category = '???',
 #     name = 'Struct',
@@ -177,7 +178,7 @@ item_002.add('name', "test_item", "duplicate")
 
 #####################################################################################################################################################
 
-items = [
+core_items = [
     _RootCategory,
     _Space,
     _Application,
@@ -193,25 +194,6 @@ items = [
     item_002,
 ]
 
-# def seed_items(items):
-#     """
-#     Assign IDs to a list of raw `items`: CID is taken from each item's category, while IID is assigned
-#     consecutive numbers within a category. The root category must be the first item on the list.
-#     """
-#     next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for root category
-#
-#     for i, item in enumerate(items):
-#         if i == 0:
-#             assert isinstance(item, RootCategory), "root category must be the first item on the list"
-#             assert ROOT_CID < 1
-#             item.cid = item.iid = ROOT_CID
-#         else:
-#             item.cid = cid = item.category.iid
-#             item.iid = next_iid[cid]
-#             next_iid[cid] += 1
-#         
-#     return items
-
 
 #####################################################################################################################################################
 
@@ -221,12 +203,10 @@ if __name__ == "__main__":
     flats = []
 
     registry = Registry()
-
-    # seed_items(items)
-    registry.seed(items)
+    registry.seed(core_items)
     
     # serialize items to YAML
-    for item in items:
+    for item in core_items:
         
         raw  = item.to_json()
         flat = {'id': list(item.id)}

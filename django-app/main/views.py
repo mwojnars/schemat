@@ -3,12 +3,23 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-from hyperweb.site import registry
+# from hyperweb.site import registry
+from hyperweb.registry import Registry
+from hyperweb.core import core_items
+
+registry = None         # registry is initialized on the first web request
+
+def get_registry():
+    global registry
+    if registry is None:
+        registry = Registry()
+        registry.seed(core_items)
+    return registry
 
 
 def item_view(request, path):    # descriptor, endpoint = ""):
     
-    site = registry.get_site()
+    site = get_registry().get_site()
     text = site.handle(request, path)
     return HttpResponse(text)
     

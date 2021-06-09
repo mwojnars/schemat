@@ -574,7 +574,7 @@ class Route:
         # return registry.get_item((cid, iid))
 
     def url(self, item):
-        """Generate URL of an `item` when accessed through this URL route."""
+        """Generate URL path of an `item` when accessed through this URL route."""
     
 
 class Site(Item):
@@ -607,7 +607,7 @@ class Site(Item):
     # def registry(self, reg):
     #     self._thread_local.registry = reg
     
-    def _post_decode(self):
+    def _post_decode(self):         # TODO: refactor this out to avoid any item-specific post-processing and instance-level temporary variables
 
         # print('Site.routes:', self['routes'])
 
@@ -628,10 +628,20 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    def get_qualifier(self, category = None, cid = None):
-        """Get a qualifer of a given category that should be put in URL to access this category's items by IID."""
-        if cid is None: cid = category.iid
-        return self._qualifiers.inverse[cid]
+    def get_qualifier(self, category = None):
+        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+        route = self['routes']['default']           # TODO: choice of route controlled by client
+        # route.url(category)
+        
+        app = route.app
+        for space_name, space in app['spaces'].items():
+            for category_name, cat in space['categories'].items():
+                if cat.id != category.id: continue
+                qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+                return qualifier
+                # self._qualifiers[qualifier] = cat.iid
+        
+        # return self._qualifiers.inverse[category.iid]
 
     def handle(self, request, path):
         item, endpoint, args = self.route(request, path)

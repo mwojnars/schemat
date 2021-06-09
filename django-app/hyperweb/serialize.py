@@ -74,7 +74,8 @@ def setstate(cls, state):
         try:
             obj.__dict__ = dict(state)
         except:
-            raise TypeError(f"cannot assign state to an object of type <{cls}>, the state: {state}")
+            raise
+            # raise TypeError(f"cannot assign state to an object of type <{cls}>, the state: {state}")
         
     return obj
 

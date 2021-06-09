@@ -3,6 +3,7 @@ from django.core.signals import request_finished
 from django.dispatch import receiver
 
 from .registry import Registry
+from .core import core_items
 
 
 #####################################################################################################################################################
@@ -24,7 +25,8 @@ def after_request(sender, **kwargs):
 #####################################################################################################################################################
 
 registry = Registry()
-registry.bootstrap()
+registry.seed(core_items)
+# registry.boot()
 
 # print('root:', root)
 # print('root.schema:', root.schema.fields)

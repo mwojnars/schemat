@@ -770,8 +770,8 @@ class Struct(Record):
     
     type = None         # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
     
-    def __init__(self, __type__ = object, **fields):
-        self.type = __type__
+    def __init__(self, __type__ = None, **fields):
+        if __type__: self.type = __type__
         super(Struct, self).__init__(**fields)
         for name, field in self.fields.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
