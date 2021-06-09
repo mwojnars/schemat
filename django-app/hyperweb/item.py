@@ -443,8 +443,9 @@ class Category(Item):
         
         assert item.cid == self.iid
         site_ = self.registry.get_site()
-
-        base_url  = site_.get('base_url')
+        
+        # base_url  = site_.get('base_url')
+        base_url  = site_['routes']['default'].base                    # TODO: refactor
         qualifier = site_.get_qualifier(self)
         iid       = self.encode_url(item.iid)
         # print(f'category {self.iid} {id(self)}, qualifier {qualifier} {self._qualifier}')

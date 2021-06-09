@@ -1,0 +1,232 @@
+# item.title: type Text; any string, any language, possibly rich text; multiple variants for different languages;
+#             no need to ensure uniqueness (!)
+# item.name: type String; human-readable non-unique name; different languages, but NO rich text
+# directory[item].name: open relation, unique names; no natural "auto-increment"; new names assigned by item creator;
+#            names must be stored in a TABLE to allow transactional inserts (primary data, not derived);
+#            derived INDEX maps item IDs back to names (reversed link)
+# Directory: one-directional mapping name -> item
+# Namespace: bidirectional mapping name <-> item
+
+- id: [0,0]
+  name: Category
+  info: Category of items that represent categories
+  schema:
+    fields:
+      schema:
+        "@": hyperweb.schema.Field
+        schema: {"@": hyperweb.schema.Object, type: hyperweb.schema.Record}
+        #schema: {"@": hyperweb.schema.ItemSchema}
+#        schema:
+#          "@": hyperweb.schema.Struct
+#          type: {"=": hyperweb.schema.Record, "@": builtins.type}
+#          fields:
+#            fields: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.Object, type: hyperweb.schema.Field}}
+#            strict: {"@": hyperweb.schema.Boolean}
+      name:
+        "@": hyperweb.schema.Field
+        schema: {"@": hyperweb.schema.String}
+        info: human-readable title of the category
+      info: {"@": hyperweb.schema.String}
+      itemclass:
+        "@": hyperweb.schema.Field
+        schema: {"@": hyperweb.schema.Class}
+        default: {"=": hyperweb.item.Item, "@": builtins.type}
+      templates:
+        "@": hyperweb.schema.Field
+        schema: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.String}}
+        default:
+          # default template that displays a generic item page if a category-specific template is missing
+          "": |
+              context $view
+              $item = view._item
+              $cat  = item.category
+
+              style !
+                  body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+                  h1 { font-size: 26px; line-height: 34px }
+                  .catlink { font-size: 14px; margin-top: -20px }
+
+              % print_headline
+                  p .catlink
+                      a href=$view.url(cat) | {cat['name']? or cat}
+                      | ($item.cid,$item.iid)
+
+              html
+                  $name = item['name']? or str(item)
+                  head
+                      title | {name}
+                  body
+                      h1  | {name}
+                      print_headline
+                      h2  | Attributes
+                      ul
+                          for attr, value in item.data.items()
+                              li
+                                  b | {attr}:
+                                  . | {str(value)}
+
+  itemclass: hyperweb.item.Category
+  templates:
+    # template that displays a category page
+    "": |
+        context $view
+        $cat = view._item
+
+        html
+            $name = cat['name']? or str(cat)
+            head
+                title | {name ' -' }? category #{cat.iid}
+            body
+                h1
+                    try
+                        i | $name
+                        . | -
+                    | category #{cat.iid}
+                h2  | Attributes
+                ul
+                    for attr, value in cat.data.items()
+                        li
+                            b | {attr}:
+                            . | {str(value)}
+                h2  | Items
+                table
+                    for item in cat.registry.load_items(cat)
+                        tr
+                            td / #{item.iid} &nbsp;
+                            td : a href=$view.url(item)
+                                | {item['name']? or item}
+
+- id: [0,1]
+  name: Site
+  info: Category of site records. A site contains information about applications, servers, startup
+  itemclass: hyperweb.item.Site
+  schema:
+    fields:
+      name: {"@": hyperweb.schema.String}
+      base_url: {"@": hyperweb.schema.String}
+      routes:
+        "@": hyperweb.schema.Field
+        schema:
+          "@": hyperweb.schema.Dict
+          keys: {"@": hyperweb.schema.String}
+          values: {"@": hyperweb.schema.RouteSchema}
+          #values: {"@": hyperweb.schema.Object, type: hyperweb.item.Route}
+          # values:
+          #   "@": hyperweb.schema.Record
+          #   fields:
+          #     base: {"@": hyperweb.schema.String}
+          #     path: {"@": hyperweb.schema.String}
+          #     app:  {"@": hyperweb.schema.Link, cid: 2}
+        info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
+              fixed URL path prefix, and a target application object
+        multi: false
+      app: {"@": hyperweb.schema.Link, cid: 2}
+
+- id: [0,2]
+  name: Application
+  info: Category of application records. An application groups all spaces & categories
+        available in the system and provides system-level configuration.
+  itemclass: hyperweb.item.Application
+  schema:
+    fields:
+      spaces:
+        "@": hyperweb.schema.Dict
+        keys: {"@": hyperweb.schema.String}
+        values: {"@": hyperweb.schema.Link, cid: 3}
+      name: {"@": hyperweb.schema.String}
+
+- id: [0,3]
+  name: Space
+  info: Category of items that represent item spaces.
+  itemclass: hyperweb.item.Space
+  schema:
+    fields:
+      categories:
+        "@": hyperweb.schema.Dict
+        keys: {"@": hyperweb.schema.String}
+        values: {"@": hyperweb.schema.Link, cid: 0}
+      name: {"@": hyperweb.schema.String}
+
+- id: [0,5]
+  name: Namespace
+  info: Namespaces perform mapping of strings (names) to items.
+
+- id: [0,10]
+  name: Mapping
+  info: Category of items that represent mappings, i.e., sharded indexes on top of item-item or item-value relations
+
+- id: [0,100]
+  name: Item
+  info: Category of items that do not belong to any specific category
+  schema:
+    fields:
+      name:  {"@": hyperweb.schema.Field, "schema": {"@": hyperweb.schema.String}, "multi": true}
+      title: {"@": hyperweb.schema.String}
+
+- id: [1,1]
+  name: catalog.wiki
+  base_url: http://localhost:8001         # TODO: remove
+  app: 1                                  # TODO: remove
+  routes:
+    default:
+      base: http://localhost:8001
+      path: /
+      app:  1  #[2, 1]      # {"@": hyperweb.item.Application, cid: 2, iid: 1}
+
+- id: [2,1]
+  name: Catalog.wiki
+  spaces:
+    sys: 2
+    meta: 1
+
+- id: [3,1]
+  name: Meta
+  categories:
+    # map: 10
+    item: 100
+    category: 0
+
+- id: [3,2]
+  name: System
+  categories:
+    app: 2
+    site: 1
+    space: 3
+
+- id: []  #[0,?]
+  name: Struct    # (category)
+  schema:
+    fields:
+      name: {"@": hyperweb.schema.String}
+      type: {"@": hyperweb.schema.Class}
+      fields: {"@": hyperweb.schema.Dict, keys: {"@": hyperweb.schema.String}, values: {"@": hyperweb.schema.String}}
+
+- id: []    # category: Struct
+  name: RouteSchema
+  type: hyperweb.item.Route
+  fields:
+      base: String(),
+      path: String(),
+      app:  Link(cid=2),
+
+- id: []
+  name: Route
+
+- id: [100,1]
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+#  multi: [1,2,null]
+#  value: 100000
+#  struct: [[123, 4567854, 98765400, null]]
+#  fulltext: some text some text some text some text some text some text some text
+#    some text STOP
+#  another_value: 23.046
+
+- {id: [100,2], name: ["test_item", "duplicate"], title: ąłęÓŁŻŹŚ}
+- {id: [100,3], name: ["test_item2"], title: ąłęÓŁŻŹŚ}
+- {id: [100,4], name: test_item3, title: ąłęÓŁŻŹŚ}
+- {id: [100,5], name: test_item4, title: ąłęÓŁŻŹŚ}
+- {id: [100,6], name: ["test_item", "duplicate"], title: ąłęÓŁŻŹŚ}
+- {id: [100,7], name: ["test_item", "duplicate"], title: ABCD}
+- {id: [100,8], name: ["test_item", "duplicate"], title: ABCD}
+- {id: [100,9], name: ["test_item", "duplicate"], title: ABCD}
+- {id: [100,10], name: ["test_item", "duplicate"], title: ABCD}
