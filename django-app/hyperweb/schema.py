@@ -25,9 +25,7 @@ import json
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
-
 from .item import Item
-# from .site import registry
 
 
 #####################################################################################################################################################
@@ -579,18 +577,6 @@ class Switch(Schema):
 #####
 #####  Python types
 #####
-
-# class reference:
-#     """
-#     Reference to an Item. Only used internally during serialization to replace an original Item instance
-#     and store only its ID in the output, to be replaced back with a Registry-loaded item during decoding.
-#     """
-#     id = None       # ID of the referenced item
-#
-#     def __init__(self, item):
-#         self.id = item.id
-#     def __getstate__(self):
-#         return self.id
 
 class text(str):
     """

@@ -87,7 +87,7 @@
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
           fixed URL path prefix, and a target application object
 - id: [0, 4]
-  name: Item
+  name: Varia
   info: Category of items that do not belong to any specific category
   itemclass: hyperweb.item.Item
   schema:

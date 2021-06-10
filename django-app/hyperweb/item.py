@@ -3,12 +3,12 @@ from pprint import pprint
 from bidict import bidict
 
 from nifty.text import html_escape
+from hypertag import HyperHTML
 
 from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
-
-from hypertag import HyperHTML
+from .cache import LRUCache
 
 Data = MultiDict        # Data is just an alias for MultiDict class
 
@@ -32,7 +32,38 @@ class handler:
             self.name = self.name or method.__name__
         return method
 
+class cached:
+    """
+    Decorator that wraps a given function/method with LRU caching of result values, possibly with TTL.
+    The wrapper performs a simple but exact matching of function arguments.
+    A more complex handling of arguments, with support for edge cases, is performed by Cache.memoize() in cache.py,
+    but that approach is based on hashes, so in rare cases it can signal a false match.
+    Note: there is only one cache created for a given function/method, and so all the calls,
+    even if directed to different items (through `self`), share the same cache capacity.
+    """
+    def __init__(self, size = 1000, ttl = None):
+        self.cache = LRUCache(maxsize = size, ttl = ttl)
+        
+    def __call__(self, func):
+        missing = object()
+        
+        def wrapper(*args, **kwargs):
+            
+            self.cache.evict()              # the modified Cache implementation does NOT perform automatic eviction
+            key = (args, tuple(kwargs.items()))
+            result = self.cache.get(key, missing)
+            if result is not missing:
+                #print(f"function cache, result loaded: {result}")
+                return result
+            
+            result = func(*args, **kwargs)
+            self.cache.set(key, result)
+            #print(f"function cache, result saved: {result}")
+            return result
+            
+        return wrapper
 
+    
 #####################################################################################################################################################
 #####
 #####  ITEM
@@ -506,6 +537,7 @@ class Route:
         if __endpoint__: url += f'/{__endpoint__}'
         return url
 
+    @cached(ttl = 10)
     def _qualifier(self, category):
         """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
         # TODO: precompute/cache the results of this method; recalculate when configuration of spaces changes (!?)
@@ -529,7 +561,7 @@ class Site(Item):
     #                         # for URL routing and URL generation; some categories may be excluded from routing
     #                         # (no public visibility), yet they're still accessible through get_category()
 
-    # def _post_decode(self):         # TODO: refactor this out to avoid any item-specific post-processing and instance-level temporary variables
+    # def _post_decode(self):
     #
     #     # print('Site.routes:', self['routes'])
     #

@@ -79,7 +79,7 @@ page_category = """
 """
 
 root_schema = Record(
-    schema       = RecordSchema(),  #Object(Record),
+    schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
     itemclass    = Field(schema = Class(), default = Item),
@@ -119,18 +119,30 @@ _Site = Category._raw(category = _RootCategory,
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
-    schema      = Record(name = String(), #base_url = String(), app = Link(_Application),
+    schema      = Record(name = String(),
                          routes = Field(schema = Dict(String(), RouteSchema()),
                                         multi = False,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
 )
 
-_Item = Category._raw(category = _RootCategory,
-    name        = "Item",
+_Varia = Category._raw(category = _RootCategory,
+    name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
+
+# _SchemaType = Category._raw(category = _RootCategory,
+#     name        = "SchemaType",
+#     itemclass   = SchemaType,
+#     schema      = '???',
+# )
+
+# _Struct = Item._raw(category = '???',
+#     name = 'Struct',
+#     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
+# )
+
 
 #####################################################################################################################################################
 #####
@@ -139,7 +151,7 @@ _Item = Category._raw(category = _RootCategory,
 
 meta_space = Space._raw(category = _Space,
     name        = "Meta",
-    categories  = {'category': _RootCategory, 'item': _Item}
+    categories  = {'category': _RootCategory, 'item': _Varia}
 )
 
 sys_space = Space._raw(category = _Space,
@@ -157,17 +169,12 @@ catalog_wiki = Site._raw(category = _Site,
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
 )
 
-# _Struct = Item._raw(category = '???',
-#     name = 'Struct',
-#     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
-# )
-
 #####################################################################################################################################################
 
-item_001 = Item._raw(category = _Item,
+item_001 = Item._raw(category = _Varia,
     title       = "Ala ma kota Sierściucha i psa Kłapoucha.",
 )
-item_002 = Item._raw(category = _Item,
+item_002 = Item._raw(category = _Varia,
     title       = "ąłęÓŁŻŹŚ",
 )
 item_002.add('name', "test_item", "duplicate")
@@ -180,7 +187,7 @@ core_items = [
     _Space,
     _Application,
     _Site,
-    _Item,
+    _Varia,
     meta_space,
     sys_space,
     Catalog_wiki,

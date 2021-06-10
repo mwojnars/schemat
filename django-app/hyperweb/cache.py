@@ -1,9 +1,9 @@
 """
-Below is source code of "cacheout" project:
+The source code below is based on the "cacheout" project:
  
     https://github.com/dgilland/cacheout
  
-adapted to turn OFF the automatic eviction of expired entries; turn OFF multi-threading; add protection for selected keys.
+adapted to turn OFF the automatic eviction of expired entries, turn OFF multi-threading, and add protection for selected keys.
 Only a part of the original code was copied: cache.py and lru.py.
 
 Original LICENSE:
