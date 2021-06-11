@@ -62,7 +62,6 @@ class Registry:
         
         for i, item in enumerate(core_items):
             item.registry = self
-            item.loaded = True
             
             if i == 0:
                 assert isinstance(item, RootCategory), "root category must be the first item on the list"

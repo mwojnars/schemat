@@ -40,6 +40,7 @@ class cached:
     but that approach is based on hashes, so in rare cases it can signal a false match.
     Note: there is only one cache created for a given function/method, and so all the calls,
     even if directed to different items (through `self`), share the same cache capacity.
+    Note: exceptions are NOT cached currently.
     """
     def __init__(self, size = 1000, ttl = None):
         self.cache = LRUCache(maxsize = size, ttl = ttl)
@@ -180,11 +181,13 @@ class Item(object, metaclass = MetaItem):
     @classmethod
     def _raw(cls, id = None, category = None, registry = None, **fields):
         """
-        Create an item that's potentially disconnected from registry/category (raw item)
-        and set given `fields` in self.data. For internal use only.
+        Create a new item that's potentially disconnected from registry/category/DB (raw item)
+        Set given `fields` in self.data. The item is assumed to be "loaded" (no record in DB).
+        For internal use only.
         """
         item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
         item.data = Data()
+        item.loaded = True
 
         if id is not None:
             item.cid, item.iid = id
@@ -406,6 +409,11 @@ class Category(Item):
     and creation of new items within category.
     """
     
+    def __call__(self, **fields):
+        """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
+        itemclass = self.get('itemclass')
+        return itemclass._raw(category = self, **fields)
+        
     def get_item(self, iid):
         """
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
@@ -540,7 +548,6 @@ class Route:
     @cached(ttl = 10)
     def _qualifier(self, category):
         """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-        # TODO: precompute/cache the results of this method; recalculate when configuration of spaces changes (!?)
         for space_name, space in self.app['spaces'].items():
             for category_name, cat in space['categories'].items():
                 if cat.id != category.id: continue

@@ -101,21 +101,21 @@ _RootCategory = RootCategory._raw(
 )
 _RootCategory.category = _RootCategory
 
-_Space = Category._raw(category = _RootCategory,
+_Space = _RootCategory(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     itemclass   = Space,
     schema      = Record(name = String(), categories = Dict(String(), Link(_RootCategory))),
 )
 
-_Application = Category._raw(category = _RootCategory,
+_Application = _RootCategory(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     itemclass   = Application,
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 
-_Site = Category._raw(category = _RootCategory,
+_Site = _RootCategory(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
@@ -125,12 +125,30 @@ _Site = Category._raw(category = _RootCategory,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
 )
 
-_Varia = Category._raw(category = _RootCategory,
+_Varia = _RootCategory(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
+
+def category(name = None, info = None, itemclass = None, schema = None):
+    params = {}
+    if name is not None: params['name'] = name
+    if info is not None: params['info'] = info
+    if itemclass is not None: params['itemclass'] = itemclass
+    if schema is not None: params['schema'] = schema
+    return _RootCategory(**params)
+
+# _Text = category('Text', 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
+#                  schema = Text())
+_Code = category('Code', 'A piece of source code. May keep information about programming language.',
+                 schema = String())
+
+# _PythonClass = Category._raw(category = _RootCategory,
+#     name        = "PythonClass",
+#     schema      = Record(methods = Dict(String(), Tuple(ArgsList(), String()))),
+# )
 
 # _SchemaType = Category._raw(category = _RootCategory,
 #     name        = "SchemaType",
@@ -143,40 +161,38 @@ _Varia = Category._raw(category = _RootCategory,
 #     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
 # )
 
-
 #####################################################################################################################################################
 #####
 #####  ITEMS
 #####
 
-meta_space = Space._raw(category = _Space,
+meta_space = _Space(
     name        = "Meta",
     categories  = {'category': _RootCategory, 'item': _Varia}
 )
 
-sys_space = Space._raw(category = _Space,
+sys_space = _Space(
     name        = "System",
     categories  = {'space': _Space, 'app': _Application, 'site': _Site}
 )
 
-Catalog_wiki = Application._raw(category = _Application,
+Catalog_wiki = _Application(
     name        = "Catalog.wiki",
     spaces      = {'meta': meta_space, 'sys': sys_space},
 )
 
-catalog_wiki = Site._raw(category = _Site,
+catalog_wiki = _Site(
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
 )
 
+pages_common = _Code(code = '')
+
+
 #####################################################################################################################################################
 
-item_001 = Item._raw(category = _Varia,
-    title       = "Ala ma kota Sierściucha i psa Kłapoucha.",
-)
-item_002 = Item._raw(category = _Varia,
-    title       = "ąłęÓŁŻŹŚ",
-)
+item_001 = _Varia(title = "Ala ma kota Sierściucha i psa Kłapoucha.")
+item_002 = _Varia(title = "ąłęÓŁŻŹŚ")
 item_002.add('name', "test_item", "duplicate")
 
 
