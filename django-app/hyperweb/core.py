@@ -3,13 +3,10 @@ Core system items defined as Python objects.
 """
 
 import json, yaml
-from collections import defaultdict
 
-from hyperweb.config import ROOT_CID
 from hyperweb.item import Item, Category, RootCategory, Site, Application, Space, Route
 from hyperweb.registry import Registry
-from hyperweb.schema import Schema, Object, String, Boolean, Class, Dict, Link, Field, Record, Struct, \
-    RecordSchema, RouteSchema
+from hyperweb.schema import Schema, Object, String, Boolean, Class, Dict, Link, Field, Record, Struct, RecordSchema
 
 
 #####################################################################################################################################################
@@ -63,6 +60,7 @@ page_category = """
                     i | $name
                     . | -
                 | category #{cat.iid}
+            # $item.print_data()
             h2  | Attributes
             ul
                 for attr, value in cat.data.items()
@@ -78,11 +76,13 @@ page_category = """
                             | {item['name']? or item}
 """
 
+# schemat of categories, including the root category
 root_schema = Record(
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
     itemclass    = Field(schema = Class(), default = Item),
+    methods      = Field(schema = Dict(String(), String())),
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
 )
 
@@ -115,12 +115,14 @@ _Application = _Category(
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 
+route_schema    = Struct(Route, base = String(), path = String(), app = Link(_Application))
+
 _Site = _Category(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
     schema      = Record(name = String(),
-                         routes = Field(schema = Dict(String(), RouteSchema()),
+                         routes = Field(schema = Dict(String(), route_schema),
                                         multi = False,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
 )
@@ -132,31 +134,33 @@ _Varia = _Category(
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
 
-def category(name = None, info = None, itemclass = None, schema = None):
-    params = {}
-    if name is not None: params['name'] = name
-    if info is not None: params['info'] = info
-    if itemclass is not None: params['itemclass'] = itemclass
-    if schema is not None: params['schema'] = schema
-    return _Category(**params)
 
-# _Text = category('Text', 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
-#                  schema = Text())
-_Code = category('Code', 'A piece of source code. May keep information about programming language.',
-                 schema = String())
+_Text = _Category(
+    name = 'Text',
+    info = 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
+    schema = Struct(name = String(), lang = String(), markup = String(), text = String()))   # HumanLang() MarkupLang() Text()
 
-# _PythonClass = _Category(
-#     name        = "PythonClass",
-#     schema      = Record(methods = Dict(String(), Tuple(ArgsList(), String()))),
-# )
+_Code = _Category(
+    name = 'Code',
+    info = '''A piece of source code. May keep information about programming language.
+        If Code item is used in a context where a single object (a class, a function) is expected,
+        the `name` property must be set and equal to the name of the object that should be imported
+        from the code after its compilation. Some uses may allow multiple names to be declared.
+    ''',
+    schema = Struct(name = String(), lang = String(), code = String()),   # ProgramLang() Code()
+)
+
+Code = Struct(name = String(), lang = String(), code = String())
+
+# _CodeObject = Struct(name = String(), code = String())         # inline code with a python object: a class, a function, ...
+# _Import     = Struct(name = String(), code = Link(_Code))      # an object imported from a Code item
 
 # _SchemaType = _Category(
 #     name        = "SchemaType",
 #     itemclass   = SchemaType,
 #     schema      = '???',
 # )
-
-# _Struct = _Schema(
+# _Struct = _SchemaType(
 #     name = 'Struct',
 #     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
 # )
@@ -186,7 +190,16 @@ catalog_wiki = _Site(
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
 )
 
-pages_common = _Code(code = '')
+pages_common = _Code(code =
+"""
+    %item_data $item
+        h2  | Data
+        ul
+            for field, value in item.data.items()
+                li
+                    b | {field}:
+                    . | {str(value)}
+""")
 
 
 #####################################################################################################################################################

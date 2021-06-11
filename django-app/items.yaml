@@ -14,6 +14,11 @@
       itemclass:
         schema: {'@': hyperweb.schema.Class}
         default: {'=': hyperweb.item.Item, '@': hyperweb.item.MetaItem}
+      methods:
+        schema:
+          keys: {'@': hyperweb.schema.String}
+          values: {'@': hyperweb.schema.String}
+          '@': hyperweb.schema.Dict
       templates:
         schema:
           keys: {'@': hyperweb.schema.String}
@@ -35,13 +40,14 @@
       \     $name = cat['name']? or str(cat)\n        head\n            title | {name\
       \ ' -' }? category #{cat.iid}\n        body\n            h1\n              \
       \  try\n                    i | $name\n                    . | -\n         \
-      \       | category #{cat.iid}\n            h2  | Attributes\n            ul\n\
-      \                for attr, value in cat.data.items()\n                    li\n\
-      \                        b | {attr}:\n                        . | {str(value)}\n\
-      \            h2  | Items\n            table\n                for item in cat.registry.load_items(cat)\n\
-      \                    tr\n                        td / #{item.iid} &nbsp;\n \
-      \                       td : a href=$view.url(item)\n                      \
-      \      | {item['name']? or item}\n"}
+      \       | category #{cat.iid}\n            # $item.print_data()\n          \
+      \  h2  | Attributes\n            ul\n                for attr, value in cat.data.items()\n\
+      \                    li\n                        b | {attr}:\n             \
+      \           . | {str(value)}\n            h2  | Items\n            table\n \
+      \               for item in cat.registry.load_items(cat)\n                 \
+      \   tr\n                        td / #{item.iid} &nbsp;\n                  \
+      \      td : a href=$view.url(item)\n                            | {item['name']?\
+      \ or item}\n"}
 - id: [0, 1]
   name: Space
   info: Category of items that represent item spaces.
@@ -81,7 +87,19 @@
       routes:
         schema:
           keys: {'@': hyperweb.schema.String}
-          values: {'@': hyperweb.schema.RouteSchema}
+          values:
+            type: {'=': hyperweb.item.Route, '@': builtins.type}
+            fields:
+              base:
+                schema: {'@': hyperweb.schema.String}
+                '@': hyperweb.schema.Field
+              path:
+                schema: {'@': hyperweb.schema.String}
+                '@': hyperweb.schema.Field
+              app:
+                schema: {cid: null, '@': hyperweb.schema.Link}
+                '@': hyperweb.schema.Field
+            '@': hyperweb.schema.Struct
           '@': hyperweb.schema.Dict
         multi: false
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
@@ -116,7 +134,10 @@
 - id: [3, 1]
   name: catalog.wiki
   routes:
-    default: {base: 'http://localhost:8001', path: /, app: 1}
+    default:
+      base: http://localhost:8001
+      path: /
+      app: [2, 1]
 - id: [4, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [4, 2]

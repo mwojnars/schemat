@@ -534,22 +534,22 @@ class Dict(Schema):
         return d
 
 
-class Switch(Schema):
+class Select(Schema):
     """
     Logical alternative of a number of distinct schemas: an app-layer object is serialized through
-    the first matching sub-schema, and the schema name or index 0,1,... is stored in the output
-    to allow deserialization through the same sub-schema.
+    the first matching sub-schema, and its name is stored in the output to allow deserialization
+    through the same sub-schema.
     """
-    schemas = None      # dict of sub-schemas; keys are names or numeric IDs to be output during serialization
+    schemas = None      # dict of sub-schemas; keys are names to be output during serialization
     
-    def __init__(self, *schema_list, **schema_dict):
+    def __init__(self, **schemas):
         """Either schema_list or schema_dict should be provided, but not both."""
-        if schema_list and schema_dict:
-            raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
-        if schema_list:
-            self.schemas = dict(enumerate(schema_list))
-        else:
-            self.schemas = schema_dict
+        # if schema_list and schema_dict:
+        #     raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
+        # if schema_list:
+        #     self.schemas = dict(enumerate(schema_list))
+        # else:
+        self.schemas = schemas
             
     def _encode(self, value, registry):
         
@@ -561,12 +561,12 @@ class Switch(Schema):
             except EncodeError:
                 continue
                 
-        raise EncodeError(f"invalid value, no matching sub-schema in Switch for: {value}")
+        raise EncodeError(f"invalid value, no matching sub-schema in Select for: {value}")
         
     def _decode(self, encoded, registry):
         
         if not (isinstance(encoded, list) and len(encoded) == 2):
-            raise DecodeError(f"data corruption in Switch, the encoded object should be a 2-element list, got {encoded} instead")
+            raise DecodeError(f"data corruption in Select, the encoded object should be a 2-element list, got {encoded} instead")
         
         name, encoded = encoded
         schema = self.schemas[name]
@@ -665,7 +665,7 @@ class Record(Schema):
     blank    = False
     
     def __init__(self, **fields):
-        assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
+        # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
         # self.fields = fields or self.fields or {}
         if fields: self.fields = fields
         self._init_fields()
@@ -678,8 +678,9 @@ class Record(Schema):
         """Wrap up in Field all the fields whose values are plain Schema instances."""
         if self.fields is None: self.fields = {}
         for name, field in self.fields.items():
+            assert isinstance(name, str)
             if isinstance(field, Field): continue
-            # assert not field or isinstance(field, Schema)
+            if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
             self.fields[name] = Field(schema = field)
         
     
@@ -817,7 +818,7 @@ class FieldSchema(Struct):
 
     type = Field
     fields = {
-        'schema':  Object(base = Schema),       # Switch(Object(base=Schema), Link(schema-category))
+        'schema':  Object(base = Schema),       # Select(Object(base=Schema), Link(schema-category))
         'default': Object(),
         'multi':   Boolean(),
         'info':    String(),
@@ -831,7 +832,10 @@ class RecordSchema(Struct):
         'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
         'strict': Boolean(),
     }
-    
+
+# INFO: it's possible to use field_schema and record_schema, as below,
+#       only the YAML output of the root category is more verbose then (multiple nesting levels)
+#
 # field_schema = Struct(Field,
 #                       schema    = Object(base = Schema),
 #                       default   = Object(),
@@ -844,18 +848,3 @@ class RecordSchema(Struct):
 #                        strict = Boolean(),
 #                        )
     
-#####################################################################################################################################################
-
-from .item import Route
-
-# RouteSchema = struct('RouteSchema', Route, base = String(), path = String(), app = Link(cid=2))
-# print(RouteSchema, RouteSchema.__module__, RouteSchema.__name__)
-
-class RouteSchema(Struct):
-
-    type = Route
-    fields = {
-        'base': String(),
-        'path': String(),
-        'app': Link(cid=2),
-    }

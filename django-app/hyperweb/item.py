@@ -387,6 +387,10 @@ class Category(Item):
     def __call__(self, **fields):
         """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get('itemclass')
+        
+        # methods = self.get('methods')
+        # itemclass = self._create_subclass(itemclass, methods)
+        
         return itemclass(self, **fields)
         
     def get_item(self, iid):
