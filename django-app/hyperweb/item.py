@@ -167,45 +167,55 @@ class Item(object, metaclass = MetaItem):
     @property
     def id(self): return self.cid, self.iid
     
-    # @id.setter
-    # def id(self, id_):
-    #     assert self.iid is None or self.iid == id_[1], 'changing IID of an existing item is forbidden'
-    #     self.cid, self.iid = id_
-
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
-    def __init__(self):
-        raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
+    # def __init__(self):
+    #     raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
 
-    @classmethod
-    def _raw(cls, id = None, category = None, registry = None, **fields):
+    def __init__(self, __category__ = None, **fields):
         """
-        Create a new item that's potentially disconnected from registry/category/DB (raw item)
-        Set given `fields` in self.data. The item is assumed to be "loaded" (no record in DB).
-        For internal use only.
+        Create a new item that's not yet in DB (no IID).
+        Assign `fields` into self.data. The item is assumed to be "loaded".
         """
-        item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
-        item.data = Data()
-        item.loaded = True
-
-        if id is not None:
-            item.cid, item.iid = id
-        if category is not None:
-            item.category = category
-            assert item.cid is None or category.iid is None or item.cid == category.iid, "item's CID is inconsistent with its category's IID"
-        if registry is not None:
-            item.registry = registry
-            
+        self.data = Data()
+        self.loaded = True
+        if __category__ is not None:
+            self.category = __category__
+            self.registry = __category__.registry           # this can be None
+            self.cid      = __category__.iid
+        
         for field, value in fields.items():
-            item.data[field] = value
-        return item
+            self.data[field] = value
+
+    # @classmethod
+    # def _raw(cls, __category__ = None, **fields):
+    #     """
+    #     Create a new item that's potentially disconnected from registry/category/DB (raw item)
+    #     Set given `fields` in self.data. The item is assumed to be "loaded" (no record in DB).
+    #     For internal use only.
+    #     """
+    #     item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
+    #     item.data = Data()
+    #     item.loaded = True
+    #
+    #     # if id is not None:
+    #     #     item.cid, item.iid = id
+    #     if __category__ is not None:
+    #         item.category = __category__
+    #         item.registry = __category__.registry       # this can be None
+    #         assert item.cid is None or __category__.iid is None or item.cid == __category__.iid, "item's CID is inconsistent with its category's IID"
+    #         item.cid = __category__.iid
+    #
+    #     for field, value in fields.items():
+    #         item.data[field] = value
+    #     return item
         
     @classmethod
-    def _new(cls, category, iid):
+    def _stub(cls, category, iid):
         """
-        Create an instance of Item that has IID already assigned and is (supposedly) present in DB.
-        Should only be called by Registry.
+        Create a "stub" instance of Item that has IID already assigned and is (supposedly) present in DB,
+        but data fields are not yet loaded. Should only be called by Registry.
         """
         item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
         item.registry = category.registry
@@ -412,7 +422,7 @@ class Category(Item):
     def __call__(self, **fields):
         """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get('itemclass')
-        return itemclass._raw(category = self, **fields)
+        return itemclass(self, **fields)
         
     def get_item(self, iid):
         """
@@ -420,9 +430,6 @@ class Category(Item):
         but do NOT load remaining contents from DB (lazy loading).
         """
         return self.registry.get_item(iid = iid, category = self)
-    
-    def create_item(self):
-        return self.registry.create_item(self)
     
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
@@ -434,8 +441,7 @@ class Category(Item):
     def _handle_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
-        # data = Data()
-        item = self.registry.create_item(self)
+        item = self()       #self.registry.create_item(self)
         data = item.data
         
         # retrieve attribute values from GET/POST and assign to `item`

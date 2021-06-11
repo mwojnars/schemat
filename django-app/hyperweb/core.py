@@ -92,30 +92,30 @@ root_schema = Record(
 #####  CATEGORIES
 #####
 
-_RootCategory = RootCategory._raw(
+_Category = RootCategory(
     name        = "Category",
     info        = "Category of items that represent categories",
     itemclass   = Category,
     schema      = root_schema,
     templates   = {"": page_category},
 )
-_RootCategory.category = _RootCategory
+_Category.category = _Category
 
-_Space = _RootCategory(
+_Space = _Category(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     itemclass   = Space,
-    schema      = Record(name = String(), categories = Dict(String(), Link(_RootCategory))),
+    schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
 )
 
-_Application = _RootCategory(
+_Application = _Category(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     itemclass   = Application,
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 
-_Site = _RootCategory(
+_Site = _Category(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
@@ -125,7 +125,7 @@ _Site = _RootCategory(
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
 )
 
-_Varia = _RootCategory(
+_Varia = _Category(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
@@ -138,25 +138,25 @@ def category(name = None, info = None, itemclass = None, schema = None):
     if info is not None: params['info'] = info
     if itemclass is not None: params['itemclass'] = itemclass
     if schema is not None: params['schema'] = schema
-    return _RootCategory(**params)
+    return _Category(**params)
 
 # _Text = category('Text', 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
 #                  schema = Text())
 _Code = category('Code', 'A piece of source code. May keep information about programming language.',
                  schema = String())
 
-# _PythonClass = Category._raw(category = _RootCategory,
+# _PythonClass = _Category(
 #     name        = "PythonClass",
 #     schema      = Record(methods = Dict(String(), Tuple(ArgsList(), String()))),
 # )
 
-# _SchemaType = Category._raw(category = _RootCategory,
+# _SchemaType = _Category(
 #     name        = "SchemaType",
 #     itemclass   = SchemaType,
 #     schema      = '???',
 # )
 
-# _Struct = Item._raw(category = '???',
+# _Struct = _Schema(
 #     name = 'Struct',
 #     schema = Record(name = String(), type = Class(), fields = Dict(String(), Object(Schema))),
 # )
@@ -168,7 +168,7 @@ _Code = category('Code', 'A piece of source code. May keep information about pro
 
 meta_space = _Space(
     name        = "Meta",
-    categories  = {'category': _RootCategory, 'item': _Varia}
+    categories  = {'category': _Category, 'item': _Varia}
 )
 
 sys_space = _Space(
@@ -199,7 +199,7 @@ item_002.add('name', "test_item", "duplicate")
 #####################################################################################################################################################
 
 core_items = [
-    _RootCategory,
+    _Category,
     _Space,
     _Application,
     _Site,
