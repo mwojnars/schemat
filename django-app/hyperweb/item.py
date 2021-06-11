@@ -188,41 +188,20 @@ class Item(object, metaclass = MetaItem):
         for field, value in fields.items():
             self.data[field] = value
 
-    # @classmethod
-    # def _raw(cls, __category__ = None, **fields):
-    #     """
-    #     Create a new item that's potentially disconnected from registry/category/DB (raw item)
-    #     Set given `fields` in self.data. The item is assumed to be "loaded" (no record in DB).
-    #     For internal use only.
-    #     """
-    #     item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
-    #     item.data = Data()
-    #     item.loaded = True
-    #
-    #     # if id is not None:
-    #     #     item.cid, item.iid = id
-    #     if __category__ is not None:
-    #         item.category = __category__
-    #         item.registry = __category__.registry       # this can be None
-    #         assert item.cid is None or __category__.iid is None or item.cid == __category__.iid, "item's CID is inconsistent with its category's IID"
-    #         item.cid = __category__.iid
-    #
-    #     for field, value in fields.items():
-    #         item.data[field] = value
-    #     return item
-        
     @classmethod
     def _stub(cls, category, iid):
         """
-        Create a "stub" instance of Item that has IID already assigned and is (supposedly) present in DB,
-        but data fields are not yet loaded. Should only be called by Registry.
+        Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
+        but data fields are not loaded yet. Should only be called by Registry.
         """
-        item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
-        item.registry = category.registry
-        item.category = category
-        item.cid  = category.iid
-        item.iid  = iid
-        item.data = Data()                      # REFACTOR
+        item = cls(category)
+        item.iid = iid
+        # item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
+        # item.registry = category.registry
+        # item.category = category
+        # item.cid  = category.iid
+        # item.iid  = iid
+        # item.data = Data()                      # REFACTOR
         return item
         
     def __getitem__(self, field):
