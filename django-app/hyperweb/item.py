@@ -109,12 +109,6 @@ class Item(object, metaclass = MetaItem):
     - handlers
     - methods
     
-    Item's class methods:
-    - get_url()
-    - insert(), update(), save()
-    - load() ??
-    - get(), get_list(), set()
-    
     Item's metadata - in DB:
     - cid, iid
     - revision -- current revision id 1,2,3,...; increased after each modification of the item
@@ -170,9 +164,6 @@ class Item(object, metaclass = MetaItem):
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
-    # def __init__(self):
-    #     raise Exception('Item.__init__() is disabled, use Registry.get_item() instead')
-
     def __init__(self, __category__ = None, **fields):
         """
         Create a new item that's not yet in DB (no IID).
@@ -180,6 +171,7 @@ class Item(object, metaclass = MetaItem):
         """
         self.data = Data()
         self.loaded = True
+
         if __category__ is not None:
             self.category = __category__
             self.registry = __category__.registry           # this can be None
@@ -196,12 +188,6 @@ class Item(object, metaclass = MetaItem):
         """
         item = cls(category)
         item.iid = iid
-        # item = cls.__new__(cls)                     # __init__() is disabled, must call __new__() instead
-        # item.registry = category.registry
-        # item.category = category
-        # item.cid  = category.iid
-        # item.iid  = iid
-        # item.data = Data()                      # REFACTOR
         return item
         
     def __getitem__(self, field):

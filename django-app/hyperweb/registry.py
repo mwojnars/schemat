@@ -185,11 +185,6 @@ class Registry:
         self.store.update(item)
         self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
 
-    # def create_item(self, category):
-    #     """Create a new item that's not yet in DB, has no IID assigned and empty `data`."""
-    #     itemclass = category['itemclass']
-    #     return itemclass._new(category, None)
-    
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
         print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
