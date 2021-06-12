@@ -121,7 +121,9 @@ class Registry:
     
     def get_category(self, cid):
         # assert cid is not None
-        return self.get_item((ROOT_CID, cid))
+        cat = self.get_item((ROOT_CID, cid))
+        assert isinstance(cat, Category)
+        return cat
     
     def get_site(self):
         site = self.get_item(self.site_id)

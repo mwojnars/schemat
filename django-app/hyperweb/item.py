@@ -460,23 +460,18 @@ class Category(Item):
 
 # re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
-
-# class RootCategory(Category):
-#     """Root category: a category for all other categories."""
-
     @classmethod
     def create_root(cls, registry):
         """Create an instance of the root category item."""
 
         from .core import root_schema as schema
-
-        root = cls.__new__(cls)                 # __init__() is disabled, do not call it
+        
+        root = cls(__loaded__ = False)
         root.registry = registry
         root.category = root                    # root category is a category for itself
-        root.cid   = ROOT_CID
-        root.iid   = ROOT_CID
-        root.data  = Data()
-        root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+        root.cid = ROOT_CID
+        root.iid = ROOT_CID
+        root['schema'] = schema              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         # root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         # root['class_name'] = 'hyperweb.item.Category'
         return root
