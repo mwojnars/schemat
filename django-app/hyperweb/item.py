@@ -393,6 +393,19 @@ class Category(Item):
         
         return itemclass(self, **fields)
         
+    def stub(self, iid):
+        """
+        Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
+        but data fields are not loaded yet. Should only be called by Registry.
+        """
+        item = self()
+        item.iid = iid
+        return item
+        
+    @cached(ttl = 3600)
+    def _create_subclass(self, itemclass):
+        pass
+        
     def get_item(self, iid):
         """
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),

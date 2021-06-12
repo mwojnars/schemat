@@ -109,13 +109,15 @@ class Registry:
 
         assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
 
-        # determine what itemclass to use for instantiation
         if not category:
             category = self.get_category(cid)
-        itemclass = category.get('itemclass')                  # REFACTOR
+
+        # # determine what itemclass to use for instantiation
+        # itemclass = category.get('itemclass')                  # REFACTOR
+        # item = itemclass._stub(category, iid)
         
         # create a new instance and insert to cache
-        item = itemclass._stub(category, iid)
+        item = category.stub(iid)
         self._set(item)                            # _set() is called before item.load() to properly handle circular relationships between items
         if load: item.load()
 
@@ -138,7 +140,7 @@ class Registry:
         Given a sequence of raw DB `records` decode each of them and yield as an item.
         The items are saved in the registry and so they may override existing items.
         """
-        itemclass = category.get('itemclass')
+        # itemclass = category.get('itemclass')
         for record in records:
             cid = record.pop('cid')
             iid = record.pop('iid')
@@ -147,7 +149,8 @@ class Registry:
             if cid == iid == ROOT_CID:
                 yield self.cache.get((cid, iid)) or self._load_root(record)
             else:
-                item = itemclass._stub(category, iid)
+                # item = itemclass._stub(category, iid)
+                item = category.stub(iid)
                 self._set(item)
                 item.load(record)
                 yield item

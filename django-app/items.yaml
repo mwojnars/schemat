@@ -25,29 +25,39 @@
           values: {'@': hyperweb.schema.String}
           '@': hyperweb.schema.Dict
         default: {? '' : "\n    context $view\n    $item = view._item\n    $cat  =\
-            \ item.category\n\n    style !\n        body { font: 20px/30px 'Quattrocento\
+            \ item.category\n\n    style !\n        body { font: 16px/24px 'Quattrocento\
             \ Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif; }\n       \
-            \ h1 { font-size: 26px; line-height: 34px }\n        .catlink { font-size:\
-            \ 14px; margin-top: -20px }\n\n    % print_headline\n        p .catlink\n\
-            \            a href=$view.url(cat) | {cat['name']? or cat}\n         \
-            \   | ($item.cid,$item.iid)\n\n    html\n        $name = item['name']?\
-            \ or str(item)\n        head\n            title | {name}\n        body\n\
-            \            h1  | {name}\n            print_headline\n            h2\
-            \  | Attributes\n            ul\n                for attr, value in item.data.items()\n\
-            \                    li\n                        b | {attr}:\n       \
-            \                 . | {str(value)}\n"}
-  templates: {? '' : "\n    context $view\n    $cat = view._item\n\n    html\n   \
-      \     $name = cat['name']? or str(cat)\n        head\n            title | {name\
-      \ ' -' }? category #{cat.iid}\n        body\n            h1\n              \
-      \  try\n                    i | $name\n                    . | -\n         \
-      \       | category #{cat.iid}\n            # $item.print_data()\n          \
-      \  h2  | Attributes\n            ul\n                for attr, value in cat.data.items()\n\
-      \                    li\n                        b | {attr}:\n             \
-      \           . | {str(value)}\n            h2  | Items\n            table\n \
-      \               for item in cat.registry.load_items(cat)\n                 \
-      \   tr\n                        td / #{item.iid} &nbsp;\n                  \
-      \      td : a href=$view.url(item)\n                            | {item['name']?\
-      \ or item}\n"}
+            \ .page { width: 980px; margin: 0 auto; overflow: hidden }\n        h1\
+            \ { font-size: 26px; line-height: 34px; margin-top: 30px }\n        .catlink\
+            \ { font-size: 14px; margin-top: -20px }\n\n    % print_headline\n   \
+            \     p .catlink\n            a href=$view.url(cat) | {cat['name']? or\
+            \ cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
+            \ = item['name']? or str(item)\n        head\n            title | {name}\n\
+            \        body .page\n            h1  | {name}\n            print_headline\n\
+            \            # from hyperweb.pages import %print_data\n            # from\
+            \ +pages import %print_data\n            # print_data $view\n        \
+            \    # $view.print_data()\n            # $view.data       $paper.title\
+            \    $paper.data()\n            h2  | Properties\n            ul\n   \
+            \             for attr, value in item.data.items()\n                 \
+            \   li\n                        b | {attr}:\n                        .\
+            \ | {str(value)}\n"}
+      code:
+        schema: {'@': hyperweb.schema.String}
+  templates: {? '' : "\n    context $view\n    $cat = view._item\n\n    style !\n\
+      \        body { font: 16px/24px 'Quattrocento Sans', \"Helvetica Neue\", Helvetica,\
+      \ Arial, sans-serif; }\n        .page { width: 980px; margin: 0 auto; overflow:\
+      \ hidden }\n        h1 { font-size: 26px; line-height: 34px; margin-top: 30px\
+      \ }\n        .catlink { font-size: 14px; margin-top: -20px }\n\n    html\n \
+      \       $name = cat['name']? or str(cat)\n        head\n            title |\
+      \ {name ' -' }? category #{cat.iid}\n        body .page\n            h1\n  \
+      \              try\n                    i | $name\n                    . | -\n\
+      \                | category #{cat.iid}\n            h2  | Properties\n     \
+      \       ul\n                for attr, value in cat.data.items()\n          \
+      \          li\n                        b | {attr}:\n                       \
+      \ . | {str(value)}\n            h2  | Items\n            table\n           \
+      \     for item in cat.registry.load_items(cat)\n                    tr\n   \
+      \                     td / #{item.iid} &nbsp;\n                        td :\
+      \ a href=$view.url(item)\n                            | {item['name']? or item}\n"}
 - id: [0, 1]
   name: Space
   info: Category of items that represent item spaces.

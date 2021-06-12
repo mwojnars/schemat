@@ -6,7 +6,7 @@ import json, yaml
 
 from hyperweb.item import Item, Category, RootCategory, Site, Application, Space, Route
 from hyperweb.registry import Registry
-from hyperweb.schema import Schema, Object, String, Boolean, Class, Dict, Link, Field, Record, Struct, RecordSchema
+from hyperweb.schema import Schema, Object, Boolean, String, Text, Class, Dict, Link, Select, Field, Record, Struct, RecordSchema
 
 
 #####################################################################################################################################################
@@ -21,8 +21,9 @@ page_item = """
     $cat  = item.category
 
     style !
-        body { font: 20px/30px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-        h1 { font-size: 26px; line-height: 34px }
+        body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+        .page { width: 980px; margin: 0 auto; overflow: hidden }
+        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
         .catlink { font-size: 14px; margin-top: -20px }
 
     % print_headline
@@ -34,10 +35,15 @@ page_item = """
         $name = item['name']? or str(item)
         head
             title | {name}
-        body
+        body .page
             h1  | {name}
             print_headline
-            h2  | Attributes
+            # from hyperweb.pages import %print_data
+            # from +pages import %print_data
+            # print_data $view
+            # $view.print_data()
+            # $view.data       $paper.title    $paper.data()
+            h2  | Properties
             ul
                 for attr, value in item.data.items()
                     li
@@ -50,18 +56,23 @@ page_category = """
     context $view
     $cat = view._item
 
+    style !
+        body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+        .page { width: 980px; margin: 0 auto; overflow: hidden }
+        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
+        .catlink { font-size: 14px; margin-top: -20px }
+
     html
         $name = cat['name']? or str(cat)
         head
             title | {name ' -' }? category #{cat.iid}
-        body
+        body .page
             h1
                 try
                     i | $name
                     . | -
                 | category #{cat.iid}
-            # $item.print_data()
-            h2  | Attributes
+            h2  | Properties
             ul
                 for attr, value in cat.data.items()
                     li
@@ -76,7 +87,13 @@ page_category = """
                             | {item['name']? or item}
 """
 
-# schemat of categories, including the root category
+text_schema = Struct(name = String(), language = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
+code_schema = Struct(name = String(), language = String(), code = Text())   # ProgramLang() Code()
+
+class_schema = Select(native = Class(), inline = code_schema)       # reference = Link(_Code)
+
+
+# schema of categories, including the root category
 root_schema = Record(
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
@@ -84,6 +101,8 @@ root_schema = Record(
     itemclass    = Field(schema = Class(), default = Item),
     methods      = Field(schema = Dict(String(), String())),
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
+    # template   = Field(schema = Struct(name = String(), code = String()), default = ("", page_item)),
+    code         = String(),
 )
 
 
@@ -134,23 +153,20 @@ _Varia = _Category(
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
 
-
 _Text = _Category(
-    name = 'Text',
-    info = 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
-    schema = Struct(name = String(), lang = String(), markup = String(), text = String()))   # HumanLang() MarkupLang() Text()
-
-_Code = _Category(
-    name = 'Code',
-    info = '''A piece of source code. May keep information about programming language.
-        If Code item is used in a context where a single object (a class, a function) is expected,
-        the `name` property must be set and equal to the name of the object that should be imported
-        from the code after its compilation. Some uses may allow multiple names to be declared.
-    ''',
-    schema = Struct(name = String(), lang = String(), code = String()),   # ProgramLang() Code()
+    name    = 'Text',
+    info    = 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
+    schema  = text_schema,
 )
-
-Code = Struct(name = String(), lang = String(), code = String())
+_Code = _Category(
+    name    = 'Code',
+    info    = '''A piece of source code. May keep information about programming language.
+                If Code item is used in a context where a single object (a class, a function) is expected,
+                the `name` property must be set and equal to the name of the object that should be imported
+                from the code after its compilation. Some uses may allow multiple names to be declared.
+    ''',
+    schema  = code_schema,
+)
 
 # _CodeObject = Struct(name = String(), code = String())         # inline code with a python object: a class, a function, ...
 # _Import     = Struct(name = String(), code = Link(_Code))      # an object imported from a Code item
@@ -190,16 +206,20 @@ catalog_wiki = _Site(
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
 )
 
-pages_common = _Code(code =
-"""
-    %item_data $item
-        h2  | Data
-        ul
-            for field, value in item.data.items()
-                li
-                    b | {field}:
-                    . | {str(value)}
-""")
+# pages_common = code_schema(...)
+pages_common = _Code(
+    name = 'print_data',
+    lang = 'hypertag',
+    code = """
+        %print_data $item
+            h2  | Data
+            ul
+                for field, value in item.data.items()
+                    li
+                        b | {field}:
+                        . | {str(value)}
+    """,
+)
 
 
 #####################################################################################################################################################

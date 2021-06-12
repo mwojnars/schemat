@@ -413,6 +413,11 @@ class Float(Primitive):
 class String(Primitive):
     type = str
     
+class Text(Primitive):
+    """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
+    type = str
+    
+    
 class Link(Schema):
     """
     Encodes an Item into its ID=(CID,IID), or just IID.
