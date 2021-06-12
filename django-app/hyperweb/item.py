@@ -468,12 +468,10 @@ class Category(Item):
         
         root = cls(__loaded__ = False)
         root.registry = registry
-        root.category = root                    # root category is a category for itself
+        root.category = root            # root category is a category for itself
         root.cid = ROOT_CID
         root.iid = ROOT_CID
-        root['schema'] = schema              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-        # root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
-        # root['class_name'] = 'hyperweb.item.Category'
+        root['schema'] = schema         # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         return root
         
 
