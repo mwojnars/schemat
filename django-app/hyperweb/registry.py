@@ -43,6 +43,7 @@ class Registry:
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
     
     def boot(self, core_items = None):
+        self.store.load()
         self._load_root()
         self.site_id = SITE_ID
         # print(f'Registry() booted in thread {threading.get_ident()}')
@@ -129,7 +130,9 @@ class Registry:
         return self.get_item((ROOT_CID, cid))
     
     def get_site(self):
-        return self.get_item(self.site_id)
+        site = self.get_item(self.site_id)
+        assert isinstance(site, Site), f'incorrect class of a site item ({type(site)}), possibly wrong site_id ({self.site_id})'
+        return site
     
     def decode_items(self, records, category):
         """

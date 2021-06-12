@@ -165,13 +165,13 @@ class Item(object, metaclass = MetaItem):
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
-    def __init__(self, __category__ = None, **fields):
+    def __init__(self, __category__ = None, __loaded__ = True, **fields):
         """
         Create a new item that's not yet in DB (no IID).
         Assign `fields` into self.data. The item is assumed to be "loaded".
         """
         self.data = Data()
-        self.loaded = True
+        self.loaded = __loaded__
         
         if __category__ is not None:
             self.category = __category__
@@ -385,10 +385,10 @@ class Category(Item):
     and creation of new items within category.
     """
     
-    def new(self, **fields):
+    def new(self, __loaded__ = True, **fields):
         """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get_class()
-        return itemclass(self, **fields)
+        return itemclass(self, __loaded__, **fields)
 
     __call__ = new
     
@@ -397,7 +397,7 @@ class Category(Item):
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
         but data fields are not loaded yet. Should only be called by Registry.
         """
-        item = self()
+        item = self.new(__loaded__ = False)
         item.iid = iid
         return item
         
@@ -413,6 +413,8 @@ class Category(Item):
             return symbols[name]
         
         assert name, f'no class_name defined for category {self}: {name}'
+        
+        print(f'Category.get_class(): name is {name}')
         return import_(name)
         
     def get_item(self, iid):
@@ -478,6 +480,7 @@ class RootCategory(Category):
         root.data  = Data()
         root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         # root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+        root['class_name'] = 'hyperweb.item.Category'
         return root
         
 

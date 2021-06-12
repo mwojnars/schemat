@@ -13,7 +13,8 @@ def get_registry():
     global registry
     if registry is None:
         registry = Registry()
-        registry.seed(core_items)
+        # registry.seed(core_items)
+        registry.boot()
     return registry
 
 
