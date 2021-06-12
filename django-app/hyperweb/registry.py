@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
-from .item import RootCategory, Site
+from .item import Category, Site
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 
@@ -59,22 +59,16 @@ class Registry:
         consecutive numbers within a category. The root category must be the first item on the list.
         """
         site = None
-        next_iid = defaultdict(lambda: 1)           # all IIDs start from 1, except for the root category
         
         for i, item in enumerate(core_items):
             item.registry = self
             
             if i == 0:
-                assert isinstance(item, RootCategory), "root category must be the first item on the list"
+                assert isinstance(item, Category) and item.get('name') == 'Category', "root category must be the first item on the list"
                 assert ROOT_CID < 1
                 item.cid = item.iid = ROOT_CID
-            else:
-                # item.cid = cid = item.category.iid
-                # item.iid = next_iid[cid]
-                # assert cid is not None
-                # next_iid[cid] += 1
-                if isinstance(item, Site):
-                    site = item
+            elif isinstance(item, Site):
+                site = item
                 
         self.store.insert_many(core_items)
         for item in core_items:
@@ -154,7 +148,7 @@ class Registry:
         
     def _load_root(self, record = None):
         
-        root = RootCategory.create_root(self)
+        root = Category.create_root(self)
         self._set(root, ttl = 0, protect = True)
         root.load(record)              # this loads the root data from DB if record=None
         # print(f'Registry.get_item(): created root category - {id(root)}')

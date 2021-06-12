@@ -413,8 +413,6 @@ class Category(Item):
             return symbols[name]
         
         assert name, f'no class_name defined for category {self}: {name}'
-        
-        print(f'Category.get_class(): name is {name}')
         return import_(name)
         
     def get_item(self, iid):
@@ -463,8 +461,8 @@ class Category(Item):
 # re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
 
 
-class RootCategory(Category):
-    """Root category: a category for all other categories."""
+# class RootCategory(Category):
+#     """Root category: a category for all other categories."""
 
     @classmethod
     def create_root(cls, registry):
@@ -474,13 +472,13 @@ class RootCategory(Category):
 
         root = cls.__new__(cls)                 # __init__() is disabled, do not call it
         root.registry = registry
-        root.category = root                    # RootCategory is a category for itself
+        root.category = root                    # root category is a category for itself
         root.cid   = ROOT_CID
         root.iid   = ROOT_CID
         root.data  = Data()
         root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         # root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
-        root['class_name'] = 'hyperweb.item.Category'
+        # root['class_name'] = 'hyperweb.item.Category'
         return root
         
 
