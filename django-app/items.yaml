@@ -2,6 +2,7 @@
   name: Category
   info: Category of items that represent categories
   itemclass: hyperweb.item.Category
+  class_name: hyperweb.item.Category
   schema:
     fields:
       schema:
@@ -14,11 +15,11 @@
       itemclass:
         schema: {'@': hyperweb.schema.Class}
         default: {'=': hyperweb.item.Item, '@': hyperweb.item.MetaItem}
-      methods:
-        schema:
-          keys: {'@': hyperweb.schema.String}
-          values: {'@': hyperweb.schema.String}
-          '@': hyperweb.schema.Dict
+      class_name:
+        schema: {'@': hyperweb.schema.String}
+        default: hyperweb.item.Item
+      class_code:
+        schema: {'@': hyperweb.schema.Text}
       templates:
         schema:
           keys: {'@': hyperweb.schema.String}
@@ -41,8 +42,6 @@
             \             for attr, value in item.data.items()\n                 \
             \   li\n                        b | {attr}:\n                        .\
             \ | {str(value)}\n"}
-      code:
-        schema: {'@': hyperweb.schema.String}
   templates: {? '' : "\n    context $view\n    $cat = view._item\n\n    style !\n\
       \        body { font: 16px/24px 'Quattrocento Sans', \"Helvetica Neue\", Helvetica,\
       \ Arial, sans-serif; }\n        .page { width: 980px; margin: 0 auto; overflow:\
@@ -62,6 +61,7 @@
   name: Space
   info: Category of items that represent item spaces.
   itemclass: hyperweb.item.Space
+  class_name: hyperweb.item.Space
   schema:
     fields:
       name:
@@ -76,6 +76,7 @@
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
   itemclass: hyperweb.item.Application
+  class_name: hyperweb.item.Application
   schema:
     fields:
       name:
@@ -90,6 +91,7 @@
   info: Category of site records. A site contains information about applications,
     servers, startup
   itemclass: hyperweb.item.Site
+  class_name: hyperweb.item.Site
   schema:
     fields:
       name:
@@ -118,6 +120,7 @@
   name: Varia
   info: Category of items that do not belong to any specific category
   itemclass: hyperweb.item.Item
+  class_name: hyperweb.item.Item
   schema:
     fields:
       name:

@@ -9,6 +9,7 @@ from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
 from .cache import LRUCache
+from .serialize import import_
 
 Data = MultiDict        # Data is just an alias for MultiDict class
 
@@ -171,7 +172,7 @@ class Item(object, metaclass = MetaItem):
         """
         self.data = Data()
         self.loaded = True
-
+        
         if __category__ is not None:
             self.category = __category__
             self.registry = __category__.registry           # this can be None
@@ -180,15 +181,15 @@ class Item(object, metaclass = MetaItem):
         for field, value in fields.items():
             self.data[field] = value
 
-    @classmethod
-    def _stub(cls, category, iid):
-        """
-        Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-        but data fields are not loaded yet. Should only be called by Registry.
-        """
-        item = cls(category)
-        item.iid = iid
-        return item
+    # @classmethod
+    # def _stub(cls, category, iid):
+    #     """
+    #     Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
+    #     but data fields are not loaded yet. Should only be called by Registry.
+    #     """
+    #     item = cls(category)
+    #     item.iid = iid
+    #     return item
         
     def __getitem__(self, field):
         return self.get(field, Item.RAISE)
@@ -384,15 +385,13 @@ class Category(Item):
     and creation of new items within category.
     """
     
-    def __call__(self, **fields):
+    def new(self, **fields):
         """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
-        itemclass = self.get('itemclass')
-        
-        # methods = self.get('methods')
-        # itemclass = self._create_subclass(itemclass, methods)
-        
+        itemclass = self.get_class()
         return itemclass(self, **fields)
-        
+
+    __call__ = new
+    
     def stub(self, iid):
         """
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
@@ -402,9 +401,30 @@ class Category(Item):
         item.iid = iid
         return item
         
+    # @cached(ttl = 3600)
+    # def get_class(self):
+    #     """
+    #     Get python class of items of this category. The class is indicated by `itemclass` property,
+    #     but may need subclassing if custom code (methods) has to be added.
+    #     """
+    #     itemclass = self.get('itemclass')
+    #     # methods = self.get('methods')
+    #
+    #     return itemclass
+        
     @cached(ttl = 3600)
-    def _create_subclass(self, itemclass):
-        pass
+    def get_class(self):
+
+        name = self.get('class_name')
+        code = self.get('class_code')
+        
+        if code:
+            symbols = {}
+            exec(code, symbols)
+            return symbols[name]
+        
+        assert name, f'no class_name defined for category {self}: {name}'
+        return import_(name)
         
     def get_item(self, iid):
         """

@@ -99,10 +99,11 @@ root_schema = Record(
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
     itemclass    = Field(schema = Class(), default = Item),
-    methods      = Field(schema = Dict(String(), String())),
+    class_name   = Field(schema = String(), default = 'hyperweb.item.Item'),
+    class_code   = Text(),
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
     # template   = Field(schema = Struct(name = String(), code = String()), default = ("", page_item)),
-    code         = String(),
+    # methods      = Field(schema = Dict(String(), String())),
 )
 
 
@@ -115,6 +116,7 @@ _Category = RootCategory(
     name        = "Category",
     info        = "Category of items that represent categories",
     itemclass   = Category,
+    class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
     templates   = {"": page_category},
 )
@@ -124,6 +126,7 @@ _Space = _Category(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     itemclass   = Space,
+    class_name  = 'hyperweb.item.Space',
     schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
 )
 
@@ -131,6 +134,7 @@ _Application = _Category(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     itemclass   = Application,
+    class_name  = 'hyperweb.item.Application',
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 
@@ -140,6 +144,7 @@ _Site = _Category(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     itemclass   = Site,
+    class_name  = 'hyperweb.item.Site',
     schema      = Record(name = String(),
                          routes = Field(schema = Dict(String(), route_schema),
                                         multi = False,
@@ -150,6 +155,7 @@ _Varia = _Category(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     itemclass   = Item,
+    class_name  = 'hyperweb.item.Item',
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
 
