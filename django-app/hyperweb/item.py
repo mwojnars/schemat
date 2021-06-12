@@ -1,6 +1,7 @@
 import re, threading
-from pprint import pprint
-from bidict import bidict
+from textwrap import dedent
+# from pprint import pprint
+# from bidict import bidict
 
 from nifty.text import html_escape
 from hypertag import HyperHTML
@@ -409,6 +410,7 @@ class Category(Item):
         
         if code:
             symbols = {}
+            code = dedent(code)
             exec(code, symbols)
             return symbols[name]
         
@@ -624,15 +626,15 @@ class Site(Item):
         # sleep(5)
         
 
-class Application(Item):
-
-    def get_space(self, name):
-        return self['spaces'][name]
-
-class Space(Item):
-    
-    def get_category(self, name):
-        return self['categories'][name]
+# class Application(Item):
+#
+#     def get_space(self, name):
+#         return self['spaces'][name]
+#
+# class Space(Item):
+#
+#     def get_category(self, name):
+#         return self['categories'][name]
     
 
 #####################################################################################################################################################

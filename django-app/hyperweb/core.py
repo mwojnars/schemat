@@ -4,7 +4,7 @@ Core system items defined as Python objects.
 
 import json, yaml
 
-from hyperweb.item import Item, Category, Site, Application, Space, Route
+from hyperweb.item import Category, Route
 from hyperweb.registry import Registry
 from hyperweb.schema import Schema, Object, Boolean, String, Text, Class, Dict, Link, Select, Field, Record, Struct, RecordSchema
 
@@ -98,7 +98,7 @@ root_schema = Record(
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
-    class_name   = Field(schema = String(), default = 'hyperweb.item.Item'),
+    class_name   = Field(schema = String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Text(),
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
     # template   = Field(schema = Struct(name = String(), code = String()), default = ("", page_item)),
@@ -122,14 +122,30 @@ _Category.category = _Category
 _Space = _Category(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    class_name  = 'hyperweb.item.Space',
+    # class_name  = 'hyperweb.item.Space',
+    class_name  = "Space",
+    class_code  =
+    """
+        from hyperweb.item import Item
+        class Space(Item):
+            def get_category(self, name):
+                return self['categories'][name]
+    """,
     schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
 )
 
 _Application = _Category(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-    class_name  = 'hyperweb.item.Application',
+    # class_name  = 'hyperweb.item.Application',
+    class_name  = "Application",
+    class_code  =
+    """
+        from hyperweb.item import Item
+        class Application(Item):
+            def get_space(self, name):
+                return self['spaces'][name]
+    """,
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
 

@@ -14,6 +14,8 @@
       class_name:
         schema: {'@': hyperweb.schema.String}
         default: hyperweb.item.Item
+        info: Full (dotted) path of a python class. Or the class name that should
+          be imported from `class_code` after its execution.
       class_code:
         schema: {'@': hyperweb.schema.Text}
       templates:
@@ -56,7 +58,10 @@
 - id: [0, 1]
   name: Space
   info: Category of items that represent item spaces.
-  class_name: hyperweb.item.Space
+  class_name: Space
+  class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
+    \            def get_category(self, name):\n                return self['categories'][name]\n\
+    \    "
   schema:
     fields:
       name:
@@ -70,7 +75,10 @@
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
-  class_name: hyperweb.item.Application
+  class_name: Application
+  class_code: "\n        from hyperweb.item import Item\n        class Application(Item):\n\
+    \            def get_space(self, name):\n                return self['spaces'][name]\n\
+    \    "
   schema:
     fields:
       name:
