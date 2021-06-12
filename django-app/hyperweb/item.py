@@ -401,17 +401,6 @@ class Category(Item):
         item.iid = iid
         return item
         
-    # @cached(ttl = 3600)
-    # def get_class(self):
-    #     """
-    #     Get python class of items of this category. The class is indicated by `itemclass` property,
-    #     but may need subclassing if custom code (methods) has to be added.
-    #     """
-    #     itemclass = self.get('itemclass')
-    #     # methods = self.get('methods')
-    #
-    #     return itemclass
-        
     @cached(ttl = 3600)
     def get_class(self):
 
@@ -488,7 +477,7 @@ class RootCategory(Category):
         root.iid   = ROOT_CID
         root.data  = Data()
         root.set('schema', schema)              # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-        root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
+        # root.set('itemclass', Category)         # root category doesn't have a schema (not yet loaded); attributes must be set/decoded manually
         return root
         
 

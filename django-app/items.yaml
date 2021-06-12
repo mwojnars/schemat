@@ -1,7 +1,6 @@
 - id: [0, 0]
   name: Category
   info: Category of items that represent categories
-  itemclass: hyperweb.item.Category
   class_name: hyperweb.item.Category
   schema:
     fields:
@@ -12,9 +11,6 @@
         info: human-readable title of the category
       info:
         schema: {'@': hyperweb.schema.String}
-      itemclass:
-        schema: {'@': hyperweb.schema.Class}
-        default: {'=': hyperweb.item.Item, '@': hyperweb.item.MetaItem}
       class_name:
         schema: {'@': hyperweb.schema.String}
         default: hyperweb.item.Item
@@ -60,7 +56,6 @@
 - id: [0, 1]
   name: Space
   info: Category of items that represent item spaces.
-  itemclass: hyperweb.item.Space
   class_name: hyperweb.item.Space
   schema:
     fields:
@@ -75,7 +70,6 @@
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
-  itemclass: hyperweb.item.Application
   class_name: hyperweb.item.Application
   schema:
     fields:
@@ -90,7 +84,6 @@
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
-  itemclass: hyperweb.item.Site
   class_name: hyperweb.item.Site
   schema:
     fields:
@@ -119,7 +112,6 @@
 - id: [0, 4]
   name: Varia
   info: Category of items that do not belong to any specific category
-  itemclass: hyperweb.item.Item
   class_name: hyperweb.item.Item
   schema:
     fields:

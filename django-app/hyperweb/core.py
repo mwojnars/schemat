@@ -98,12 +98,11 @@ root_schema = Record(
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
-    itemclass    = Field(schema = Class(), default = Item),
+    # itemclass    = Field(schema = Class(), default = Item),
     class_name   = Field(schema = String(), default = 'hyperweb.item.Item'),
     class_code   = Text(),
     templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
     # template   = Field(schema = Struct(name = String(), code = String()), default = ("", page_item)),
-    # methods      = Field(schema = Dict(String(), String())),
 )
 
 
@@ -115,7 +114,7 @@ root_schema = Record(
 _Category = RootCategory(
     name        = "Category",
     info        = "Category of items that represent categories",
-    itemclass   = Category,
+    # itemclass   = Category,
     class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
     templates   = {"": page_category},
@@ -125,7 +124,7 @@ _Category.category = _Category
 _Space = _Category(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    itemclass   = Space,
+    # itemclass   = Space,
     class_name  = 'hyperweb.item.Space',
     schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
 )
@@ -133,7 +132,7 @@ _Space = _Category(
 _Application = _Category(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-    itemclass   = Application,
+    # itemclass   = Application,
     class_name  = 'hyperweb.item.Application',
     schema      = Record(name = String(), spaces = Dict(String(), Link(_Space))),
 )
@@ -143,7 +142,7 @@ route_schema    = Struct(Route, base = String(), path = String(), app = Link(_Ap
 _Site = _Category(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
-    itemclass   = Site,
+    # itemclass   = Site,
     class_name  = 'hyperweb.item.Site',
     schema      = Record(name = String(),
                          routes = Field(schema = Dict(String(), route_schema),
@@ -154,7 +153,7 @@ _Site = _Category(
 _Varia = _Category(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
-    itemclass   = Item,
+    # itemclass   = Item,
     class_name  = 'hyperweb.item.Item',
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
@@ -179,7 +178,6 @@ _Code = _Category(
 
 # _SchemaType = _Category(
 #     name        = "SchemaType",
-#     itemclass   = SchemaType,
 #     schema      = '???',
 # )
 # _Struct = _SchemaType(
