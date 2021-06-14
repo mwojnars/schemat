@@ -214,6 +214,8 @@ class Item(object, metaclass = MetaItem):
             if cat_default is not Field.MISSING:
                 return cat_default
             
+            # TODO: check category-level field of the same name (another way to define a default value)
+            
         if default is Item.RAISE:
             raise KeyError(field)
         
@@ -390,7 +392,7 @@ class Category(Item):
         """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get_class()
         return itemclass(self, __loaded__, **fields)
-
+    
     __call__ = new
     
     def stub(self, iid):
@@ -407,6 +409,8 @@ class Category(Item):
 
         name = self.get('class_name')
         code = self.get('class_code')
+        
+        # TODO: check self.data for individual methods & templates to be treated as methods
         
         if code:
             symbols = {}

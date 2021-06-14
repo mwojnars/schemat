@@ -27,7 +27,7 @@ page_item = """
         .catlink { font-size: 14px; margin-top: -20px }
 
     % print_headline
-        p .catlink
+            p .catlink
             a href=$view.url(cat) | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
@@ -41,8 +41,10 @@ page_item = """
             # from hyperweb.pages import %print_data
             # from +pages import %print_data
             # print_data $view
-            # $view.print_data()
-            # $view.data       $paper.title    $paper.data()
+            # $item.print_data()
+            # $item.print_data x1 x2 x3
+            # $item.view.data x1 x2 x3     # `view` is a complete HT script that exposes multiple symbols
+            # $item.data       $paper.title    $paper.data()
             h2  | Properties
             ul
                 for attr, value in item.data.items()
@@ -89,20 +91,37 @@ page_category = """
 
 text_schema = Struct(name = String(), language = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
 code_schema = Struct(name = String(), language = String(), code = Text())   # ProgramLang() Code()
+method_schema = Struct(language = String(), code = Text())
 
 class_schema = Select(native = Class(), inline = code_schema)       # reference = Link(_Code)
 
 
 # schema of categories, including the root category
 root_schema = Record(
+    __strict__   = False,
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
     class_name   = Field(schema = String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
-    class_code   = Text(),
-    templates    = Field(schema = Dict(String(), String()), default = {"": page_item}),
-    # template   = Field(schema = Struct(name = String(), code = String()), default = ("", page_item)),
+    class_code   = Text(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
+    templates    = Field(schema = Dict(String(), Text()), default = {"": page_item}),
+    # templates  = Field(schema = Catalog(Text()), default = {"": page_item}),
+    # template   = Field(schema = Struct(name = String(), code = Text()), default = ("", page_item)),
+    # methods    = Catalog(method_schema),
+    # handlers... views...
+    # ...
+    # properties = Catalog(Property())
 )
+
+# category-level properties:
+# - Method -> code + language + caching settings
+# ? Handler -> code
+# - View / template -> Hypertag code (full script)
+# ? Hypertag / snippet -> Hypertag code (individual symbol)
+
+# item-level properties:
+# - Field -> schema + default
+# - Asset: style (css), javascript (js), image, ...
 
 
 #####################################################################################################################################################
@@ -116,12 +135,34 @@ _Category = Category(
     class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
     templates   = {"": page_category},
+    # view_category = Template(page_category),
+    # view_item     = Template(page_item),
+    # fun  = Method(...),
+    # new  = Handler(...),
+    
+    base_style = """::hypertag::
+        style !
+            body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+            .page { width: 980px; margin: 0 auto; overflow: hidden }
+            h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
+            .catlink { font-size: 14px; margin-top: -20px }
+    """,
+    base_widgets = """::hypertag::
+        %properties_list
+            h2  | Properties
+            ul
+                for attr, value in item.data.items()
+                    li
+                        b | {attr}:
+                        . | {str(value)}
+    """
 )
 _Category.category = _Category
 
 _Space = _Category(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
+    schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -131,7 +172,10 @@ _Space = _Category(
             def get_category(self, name):
                 return self['categories'][name]
     """,
-    schema      = Record(name = String(), categories = Dict(String(), Link(_Category))),
+    # get_category = Method("""
+    #     def get_category(self, name):
+    #         return self['categories'][name]
+    # """),
 )
 
 _Application = _Category(

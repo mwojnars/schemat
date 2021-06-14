@@ -659,19 +659,23 @@ class Field:
 
 class Record(Schema):
     """
-    Record of data composed of named fields stored as a MultiDict. Primarily used for schema definition
+    Schema of a record of data composed of named fields stored as a MultiDict. Primarily used for schema definition
     inside categories. Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
     to False in all fields.
     """
+
+    # default field specification to be used for fields not present in `fields`
+    default_field = Field(schema = object_schema, multi = True)
     
     fields   = None     # dict of field names & their Field() schema descriptors
     strict   = True     # if True, only the fields present in `fields` can occur in the data being encoded
     blank    = False
     
-    def __init__(self, **fields):
+    def __init__(self, __strict__ = None, **fields):
         # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
         # self.fields = fields or self.fields or {}
+        if __strict__ is not None: self.strict = __strict__
         if fields: self.fields = fields
         self._init_fields()
     
@@ -698,8 +702,6 @@ class Record(Schema):
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
         errors = []
         
-        assert self.strict
-        
         # encode & compactify values of fields through per-field schema definitions
         encoded = data.asdict_lists()
         for name, values in encoded.items():
@@ -711,6 +713,8 @@ class Record(Schema):
             field = self.fields.get(name)
             if field:
                 encoded[name] = field.encode_many(values, registry)
+            else:
+                encoded[name] = self.default_field.encode_many(values, registry)
             # TODO: catch atype.encode() exceptions and append to `errors`
             
         if errors:
@@ -724,9 +728,7 @@ class Record(Schema):
         Decode a dict of {attr: value(s)} back to a MultiDict.
         Perform recursive top-down schema-based decoding of field values.
         """
-        
         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
-        assert self.strict
 
         # de-compactify & decode values of fields
         for name, values in data.items():
@@ -738,6 +740,8 @@ class Record(Schema):
             field = self.fields.get(name)
             if field:
                 data[name] = field.decode_many(values, registry)
+            else:
+                data[name] = self.default_field.decode_many(values, registry)
                 
         return MultiDict(multiple = data)
     
