@@ -669,7 +669,7 @@ class Record(Schema):
     default_field = Field(schema = object_schema, multi = True)
     
     fields   = None     # dict of field names & their Field() schema descriptors
-    strict   = True     # if True, only the fields present in `fields` can occur in the data being encoded
+    strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     blank    = False
     
     def __init__(self, __strict__ = None, **fields):

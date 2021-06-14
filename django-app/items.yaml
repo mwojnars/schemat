@@ -3,7 +3,6 @@
   info: Category of items that represent categories
   class_name: hyperweb.item.Category
   schema:
-    strict: false
     fields:
       schema:
         schema: {'@': hyperweb.schema.RecordSchema}
@@ -58,15 +57,6 @@
       \     for item in cat.registry.load_items(cat)\n                    tr\n   \
       \                     td / #{item.iid} &nbsp;\n                        td :\
       \ a href=$view.url(item)\n                            | {item['name']? or item}\n"}
-  base_style: "::hypertag::\n        style !\n            body { font: 16px/24px 'Quattrocento\
-    \ Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif; }\n            .page\
-    \ { width: 980px; margin: 0 auto; overflow: hidden }\n            h1 { font-size:\
-    \ 26px; line-height: 34px; margin-top: 30px }\n            .catlink { font-size:\
-    \ 14px; margin-top: -20px }\n    "
-  base_widgets: "::hypertag::\n        %properties_list\n            h2  | Properties\n\
-    \            ul\n                for attr, value in item.data.items()\n      \
-    \              li\n                        b | {attr}:\n                     \
-    \   . | {str(value)}\n    "
 - id: [0, 1]
   name: Space
   info: Category of items that represent item spaces.
@@ -156,6 +146,14 @@
   spaces:
     meta: [1, 1]
     sys: [1, 2]
+  base_style: "\n        body { font: 16px/24px 'Quattrocento Sans', \"Helvetica Neue\"\
+    , Helvetica, Arial, sans-serif; }\n        .page { width: 980px; margin: 0 auto;\
+    \ overflow: hidden }\n        h1 { font-size: 26px; line-height: 34px; margin-top:\
+    \ 30px }\n        .catlink { font-size: 14px; margin-top: -20px }\n    "
+  base_widgets: "::hypertag::\n        %properties_list item\n            h2  | Properties\n\
+    \            ul\n                for attr, value in item.data.items()\n      \
+    \              li\n                        b | {attr}:\n                     \
+    \   . | {str(value)}\n    "
 - id: [3, 1]
   name: catalog.wiki
   routes:

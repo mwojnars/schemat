@@ -98,7 +98,6 @@ class_schema = Select(native = Class(), inline = code_schema)       # reference 
 
 # schema of categories, including the root category
 root_schema = Record(
-    __strict__   = False,
     schema       = RecordSchema(),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
@@ -139,23 +138,6 @@ _Category = Category(
     # view_item     = Template(page_item),
     # fun  = Method(...),
     # new  = Handler(...),
-    
-    base_style = """::hypertag::
-        style !
-            body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-            .page { width: 980px; margin: 0 auto; overflow: hidden }
-            h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
-            .catlink { font-size: 14px; margin-top: -20px }
-    """,
-    base_widgets = """::hypertag::
-        %properties_list
-            h2  | Properties
-            ul
-                for attr, value in item.data.items()
-                    li
-                        b | {attr}:
-                        . | {str(value)}
-    """
 )
 _Category.category = _Category
 
@@ -257,11 +239,27 @@ sys_space = _Space(
 Catalog_wiki = _Application(
     name        = "Catalog.wiki",
     spaces      = {'meta': meta_space, 'sys': sys_space},
+
+    base_style  = """
+        body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
+        .page { width: 980px; margin: 0 auto; overflow: hidden }
+        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
+        .catlink { font-size: 14px; margin-top: -20px }
+    """,
+    base_widgets = """::hypertag::
+        %properties_list item
+            h2  | Properties
+            ul
+                for attr, value in item.data.items()
+                    li
+                        b | {attr}:
+                        . | {str(value)}
+    """
 )
 
 catalog_wiki = _Site(
     name        = "catalog.wiki",
-    routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)}
+    routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)},
 )
 
 # pages_common = code_schema(...)
