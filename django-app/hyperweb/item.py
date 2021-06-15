@@ -671,6 +671,7 @@ class View:
     _user       = None          # user profile / identification
     _route      = None          # the site's Route that this request came from
     _request    = None          # web request object
+    # _directory  = None
     
     def __init__(self, item, route, request):
         self._item = item

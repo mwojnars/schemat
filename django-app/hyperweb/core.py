@@ -24,6 +24,9 @@ from hyperweb.schema import *
 #####  ELEMENTS of items
 #####
 
+# TODO pass context objects separately: $data, $item, $category, $user, $route, $request, $load
+# TODO allow imports from directory
+
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
     context $view
@@ -45,6 +48,10 @@ page_item = """
         body .page
             h1  | {name}
             print_headline
+            
+            p
+                | directory: $item.registry.get_site()['directory']['items']
+            
             # from /site/pages import %print_data
             # from /site/app_X/pages import %print_data
             # from /templates import %print_data
@@ -247,6 +254,27 @@ _Code = _Category(
 #####  ITEMS
 #####
 
+pages_common = _Code(
+    lang = 'hypertag',
+    code = """
+        %print_data $item
+            h2  | Data
+            ul
+                for field, value in item.data.items()
+                    li
+                        b | {field}:
+                        . | {str(value)}
+    """,
+)
+
+directory = _Directory(
+    items = {
+        'pages_common': pages_common,
+    },
+)
+
+#####################################################################################################################################################
+
 meta_space = _Space(
     name        = "Meta",
     categories  = {'category': _Category, 'item': _Varia}
@@ -278,27 +306,10 @@ Catalog_wiki = _Application(
     """,
 )
 
-pages_common = _Code(
-    lang = 'hypertag',
-    code = """
-        %print_data $item
-            h2  | Data
-            ul
-                for field, value in item.data.items()
-                    li
-                        b | {field}:
-                        . | {str(value)}
-    """,
-)
-
 catalog_wiki = _Site(
     name        = "catalog.wiki",
     routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = Catalog_wiki)},
-    # directory   = _Directory(
-    #     items = {
-    #         'pages_common': pages_common,
-    #     },
-    # ),
+    directory   = directory,
 )
 
 
