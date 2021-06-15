@@ -26,6 +26,7 @@ from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
 from .item import Item
+from .types import struct
 
 
 #####################################################################################################################################################
@@ -416,7 +417,15 @@ class String(Primitive):
 class Text(Primitive):
     """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
     type = str
+
+class PathString(String):
+    """Path to an item in a Directory."""
     
+class EntryName(String):
+    """
+    Name of an individual entry in a Directory, without path.
+    Names that end with '/' indicate directories and must link to items of Directory category.
+    """
     
 class Link(Schema):
     """
@@ -538,6 +547,16 @@ class Dict(Schema):
             
         return d
 
+class Catalog(Dict):
+    """Similar to Dict, but assumes keys are strings. Watch out the reversed ordering of arguments in __init__() !!"""
+    
+    def __init__(self, values = None, keys = None):
+        if keys is None:
+            keys = String()
+        else:
+            assert isinstance(keys, String)             # `keys` may inherit from String, not necessarily be a String
+        super(Catalog, self).__init__(keys, values)
+        
 
 class Select(Schema):
     """
@@ -577,18 +596,6 @@ class Select(Schema):
         schema = self.schemas[name]
         return schema.decode(encoded, registry)
         
-
-#####################################################################################################################################################
-#####
-#####  Python types
-#####
-
-class text(str):
-    """
-    Localized rich text. Stores information about the language of the string, as well as its rich-text
-    encoding: markup language, wiki language etc. Both can be missing (None), in such case the `text`
-    instance is equivalent to a plain string <str>.
-    """
 
 #####################################################################################################################################################
 #####
@@ -762,12 +769,16 @@ class Struct(Record):
     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
     Similar to Record, but the app-representation is a regular python object matching the schema
     rather than a MultiDict; and multiple values are not allowed for a field.
+    When self.type is `struct`, both <struct> <dict> instances are accepted during encoding,
+    with the latter being automatically converted to a <struct> during decoding (!).
     """
     
     type = None         # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
     
     def __init__(self, __type__ = None, **fields):
-        if __type__: self.type = __type__
+        self.type = self.type or __type__ or struct
+        assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
+        
         super(Struct, self).__init__(**fields)
         for name, field in self.fields.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
@@ -777,9 +788,14 @@ class Struct(Record):
         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
         while schema-encoding each field value beforehand.
         """
+        if self.type is struct:
+            assert isinstance(obj, dict), f'not a dict or struct: {obj}'
+            attrs = dict(obj)
+        elif not isinstance(obj, self.type):
+            raise EncodeError(f"expected an object of type {self.type}, got {obj}")
+        else:
+            attrs = getstate(obj)
         
-        if not isinstance(obj, self.type): raise EncodeError(f"expected an object of type {self.type}, got {obj}")
-        attrs = getstate(obj)
         encoded = {}
         
         # encode values of fields through per-field schema definitions
@@ -803,7 +819,10 @@ class Struct(Record):
             
             if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a Struct')
             attrs[name] = self.fields[name].decode_one(value, registry)
-                
+            
+        if self.type is struct:
+            return struct(attrs)
+        
         return setstate(self.type, attrs)
     
 # def struct(typename, __type__ = object, **__fields__):
