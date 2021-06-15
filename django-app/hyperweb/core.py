@@ -19,12 +19,9 @@ page_item = """
     context $view
     $item = view._item
     $cat  = item.category
+    $app  = view._route.app
 
-    style !
-        body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-        .page { width: 980px; margin: 0 auto; overflow: hidden }
-        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
-        .catlink { font-size: 14px; margin-top: -20px }
+    style / $app['base_style']
 
     % print_headline
             p .catlink
@@ -57,12 +54,9 @@ page_item = """
 page_category = """
     context $view
     $cat = view._item
+    $app = view._route.app
 
-    style !
-        body { font: 16px/24px 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif; }
-        .page { width: 980px; margin: 0 auto; overflow: hidden }
-        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
-        .catlink { font-size: 14px; margin-top: -20px }
+    style / $app['base_style']
 
     html
         $name = cat['name']? or str(cat)
@@ -254,7 +248,7 @@ Catalog_wiki = _Application(
                     li
                         b | {attr}:
                         . | {str(value)}
-    """
+    """,
 )
 
 catalog_wiki = _Site(
