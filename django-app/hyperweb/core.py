@@ -104,7 +104,7 @@ page_category = """
 
 # schema of categories, including the root category
 root_schema = Record(
-    schema       = RecordSchema(),
+    schema       = Field(schema = RecordSchema(), default = Record()),
     name         = Field(schema = String(), info = "human-readable title of the category"),
     info         = String(),
     class_name   = Field(schema = String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
@@ -150,7 +150,7 @@ _Category.category = _Category
 _Directory = _Category(
     info        = "A directory is a collection of named references to items. May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    items       = Catalog(keys = EntryName(), values = Link()),      # file & directory names mapped to item IDs
+    schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -311,28 +311,12 @@ item_002.add('name', "test_item", "duplicate")
 
 #####################################################################################################################################################
 
-core_items = [
-    _Category,
-    _Space,
-    _Application,
-    _Site,
-    _Varia,
-    meta_space,
-    sys_space,
-    Catalog_wiki,
-    catalog_wiki,
-    # _Struct,
+core_items = {name: obj for name, obj in globals().items() if isinstance(obj, Item)}
 
-    item_001,
-    item_002,
-]
-
-# print('core items:')
-# for name, obj in list(globals().items()):
-#     if isinstance(obj, Item): print(name)
-# print()
-#
-# core_items = [obj for obj in globals().values() if isinstance(obj, Item)]
+print('core items:')
+for name in core_items.keys(): print(name)
+print()
+core_items = list(core_items.values())
 
 
 #####################################################################################################################################################

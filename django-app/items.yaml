@@ -8,6 +8,9 @@
         schema:
           type: {'=': hyperweb.schema.Record, '@': builtins.type}
           '@': hyperweb.schema.RecordSchema
+        default:
+          fields: {}
+          '@': hyperweb.schema.Record
       name:
         schema: {'@': hyperweb.schema.String}
         info: human-readable title of the category
@@ -55,6 +58,17 @@
       \                   td : a href=$view.url(item)\n                          \
       \  | {item['name']? or item}\n"}
 - id: [0, 1]
+  info: A directory is a collection of named references to items. May contain nested
+    subdirectories. Similar to a file system.
+  class_name: hyperweb.item.Directory
+  schema:
+    fields:
+      items:
+        schema:
+          keys: {'@': hyperweb.schema.EntryName}
+          values: {'@': hyperweb.schema.Link}
+          '@': hyperweb.schema.Catalog
+- id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
   schema:
@@ -70,7 +84,7 @@
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
     \            def get_category(self, name):\n                return self['categories'][name]\n\
     \    "
-- id: [0, 2]
+- id: [0, 3]
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
@@ -88,7 +102,7 @@
           values: {cid: null, '@': hyperweb.schema.Link}
           '@': hyperweb.schema.Catalog
   path_data: {'@': hyperweb.schema.PathString}
-- id: [0, 3]
+- id: [0, 4]
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -118,7 +132,7 @@
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
           fixed URL path prefix, and a target application object
   directory: {cid: null, '@': hyperweb.schema.Link}
-- id: [0, 4]
+- id: [0, 5]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
@@ -129,22 +143,34 @@
         multi: true
       title:
         schema: {'@': hyperweb.schema.String}
-- id: [1, 1]
+- id: [0, 6]
+  name: Text
+  info: A piece of plain or rich text for human consumption. May keep information
+    about language and/or markup.
+- id: [0, 7]
+  name: Code
+  info: "A piece of source code. May keep information about programming language.\n\
+    \                If Code item is used in a context where a single object (a class,\
+    \ a function) is expected,\n                the `name` property must be set and\
+    \ equal to the name of the object that should be imported\n                from\
+    \ the code after its compilation. Some uses may allow multiple names to be declared.\n\
+    \    "
+- id: [2, 1]
   name: Meta
   categories:
     category: [0, 0]
-    item: [0, 4]
-- id: [1, 2]
+    item: [0, 5]
+- id: [2, 2]
   name: System
   categories:
-    space: [0, 1]
-    app: [0, 2]
-    site: [0, 3]
-- id: [2, 1]
+    space: [0, 2]
+    app: [0, 3]
+    site: [0, 4]
+- id: [3, 1]
   name: Catalog.wiki
   spaces:
-    meta: [1, 1]
-    sys: [1, 2]
+    meta: [2, 1]
+    sys: [2, 2]
   base_style: "\n        body { font: 16px/24px 'Quattrocento Sans', \"Helvetica Neue\"\
     , Helvetica, Arial, sans-serif; }\n        .page { width: 980px; margin: 0 auto;\
     \ overflow: hidden }\n        h1 { font-size: 26px; line-height: 34px; margin-top:\
@@ -153,15 +179,21 @@
     \           ul\n                for attr, value in item.data.items()\n       \
     \             li\n                        b | {attr}:\n                      \
     \  . | {str(value)}\n    "
-- id: [3, 1]
+- id: [7, 1]
+  lang: hypertag
+  code: "\n        %print_data $item\n            h2  | Data\n            ul\n   \
+    \             for field, value in item.data.items()\n                    li\n\
+    \                        b | {field}:\n                        . | {str(value)}\n\
+    \    "
+- id: [4, 1]
   name: catalog.wiki
   routes:
     default:
       base: http://localhost:8001
       path: /
-      app: [2, 1]
-- id: [4, 1]
+      app: [3, 1]
+- id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-- id: [4, 2]
+- id: [5, 2]
   title: ąłęÓŁŻŹŚ
   name: [test_item, duplicate]
