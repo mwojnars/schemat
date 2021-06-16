@@ -24,21 +24,18 @@ from hyperweb.schema import *
 #####  ELEMENTS of items
 #####
 
-# TODO pass context objects separately: $data, $item, $category, $user, $route, $request, $load
+# TODO pass context objects separately: $data, $item, $category, $user, $request, $route, $app, $site, ($load)
 # TODO allow imports from directory
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-    context $view
-    $item = view._item
-    $cat  = item.category
-    $app  = view._route.app
+    context $item, $category as cat, $app, $route, $directory
 
     style / $app['base_style']
 
     % print_headline
             p .catlink
-            a href=$view.url(cat) | {cat['name']? or cat}
+            a href=$route(cat) | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
     html
@@ -50,18 +47,20 @@ page_item = """
             print_headline
             
             p
-                | directory: $item.registry.get_site()['directory']['items']
+                | script:
+                pre
+                    / $directory['items']['pages_common']['code']
             
             # from /site/pages import %print_data
             # from /site/app_X/pages import %print_data
             # from /templates import %print_data
             # from ./pages import %print_data
-            # print_data $view
             # $item.print_data()
             # $item.print_data x1 x2 x3
             # $item.view.data x1 x2 x3     # `view` is a complete HT script that exposes multiple symbols
             # $item.data       $paper.title    $paper.data()
             # $app['base_widgets']
+            
             h2  | Properties
             ul
                 for attr, value in item.data.items()
@@ -72,9 +71,7 @@ page_item = """
 
 # template that displays a category page
 page_category = """
-    context $view
-    $cat = view._item
-    $app = view._route.app
+    context $item, $category as cat, $app, $route, $directory
 
     style / $app['base_style']
 
@@ -99,7 +96,7 @@ page_category = """
                 for item in cat.registry.load_items(cat)
                     tr
                         td / #{item.iid} &nbsp;
-                        td : a href=$view.url(item)
+                        td : a href=$route(item)
                             | {item['name']? or item}
 """
 

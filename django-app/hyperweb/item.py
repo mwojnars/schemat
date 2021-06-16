@@ -367,7 +367,11 @@ class Item(object, metaclass = MetaItem):
         template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
         if template is not None:
             view = View(self, route, request)
-            return HyperHTML().render(template, view = view)
+            site = self.registry.get_site()
+            context = dict(item = self, data = view, category = self.category, route = route, request = request,
+                           app = route.app, site = site, directory = site['directory'])
+            
+            return HyperHTML().render(template, **context)
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
@@ -541,6 +545,9 @@ class Route:
         url  = f'{self.base}/{path}:{iid}'
         if __endpoint__: url += f'/{__endpoint__}'
         return url
+
+    # route(item) is equivalent to route.url(item):
+    __call__ = url
 
     @cached(ttl = 10)
     def _qualifier(self, category):

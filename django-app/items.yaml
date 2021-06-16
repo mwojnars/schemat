@@ -28,26 +28,25 @@
           keys: {'@': hyperweb.schema.String}
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
-        default: {? '' : "\n    context $view\n    $item = view._item\n    $cat  =\
-            \ item.category\n    $app  = view._route.app\n\n    style / $app['base_style']\n\
-            \n    % print_headline\n            p .catlink\n            a href=$view.url(cat)\
-            \ | {cat['name']? or cat}\n            | ($item.cid,$item.iid)\n\n   \
-            \ html\n        $name = item['name']? or str(item)\n        head\n   \
-            \         title | {name}\n        body .page\n            h1  | {name}\n\
-            \            print_headline\n            \n            p\n           \
-            \     | directory: $item.registry.get_site()['directory']['items']\n \
+        default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\n\
+            \n    style / $app['base_style']\n\n    % print_headline\n           \
+            \ p .catlink\n            a href=$route(cat) | {cat['name']? or cat}\n\
+            \            | ($item.cid,$item.iid)\n\n    html\n        $name = item['name']?\
+            \ or str(item)\n        head\n            title | {name}\n        body\
+            \ .page\n            h1  | {name}\n            print_headline\n      \
+            \      \n            p\n                | script:\n                pre\n\
+            \                    / $directory['items']['pages_common']['code']\n \
             \           \n            # from /site/pages import %print_data\n    \
             \        # from /site/app_X/pages import %print_data\n            # from\
             \ /templates import %print_data\n            # from ./pages import %print_data\n\
-            \            # print_data $view\n            # $item.print_data()\n  \
-            \          # $item.print_data x1 x2 x3\n            # $item.view.data\
-            \ x1 x2 x3     # `view` is a complete HT script that exposes multiple\
-            \ symbols\n            # $item.data       $paper.title    $paper.data()\n\
-            \            # $app['base_widgets']\n            h2  | Properties\n  \
-            \          ul\n                for attr, value in item.data.items()\n\
-            \                    li\n                        b | {attr}:\n       \
-            \                 . | {str(value)}\n"}
-  templates: {? '' : "\n    context $view\n    $cat = view._item\n    $app = view._route.app\n\
+            \            # $item.print_data()\n            # $item.print_data x1 x2\
+            \ x3\n            # $item.view.data x1 x2 x3     # `view` is a complete\
+            \ HT script that exposes multiple symbols\n            # $item.data  \
+            \     $paper.title    $paper.data()\n            # $app['base_widgets']\n\
+            \            \n            h2  | Properties\n            ul\n        \
+            \        for attr, value in item.data.items()\n                    li\n\
+            \                        b | {attr}:\n                        . | {str(value)}\n"}
+  templates: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\n\
       \n    style / $app['base_style']\n\n    html\n        $name = cat['name']? or\
       \ str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
       \        body .page\n            h1\n                try\n                 \
@@ -57,8 +56,8 @@
       \                        . | {str(value)}\n            h2  | Items\n       \
       \     table\n                for item in cat.registry.load_items(cat)\n    \
       \                tr\n                        td / #{item.iid} &nbsp;\n     \
-      \                   td : a href=$view.url(item)\n                          \
-      \  | {item['name']? or item}\n"}
+      \                   td : a href=$route(item)\n                            |\
+      \ {item['name']? or item}\n"}
 - id: [0, 1]
   info: A directory is a collection of named references to items. May contain nested
     subdirectories. Similar to a file system.
