@@ -146,22 +146,22 @@ class Schema:
 
     #############################################
     
-    def render(self, value, target = "HTML"):
-        """Default rendering of this value for display in a markup document."""
-        return str(value)
-    
-    class Render:
-        
-        def __init__(self, value): self.value = value
-        
-        def __hyml__(self):
-            return html_escape(str(self.value))
-            
-            # Link:
-            # item = self.value
-            # cid, iid = item.id
-            # url = item.get_url()
-            # return f"<link href='{url}'>{item.data.name or item.data.title}</link>"
+    # def render(self, value, target = "HTML"):
+    #     """Default rendering of this value for display in a markup document."""
+    #     return str(value)
+    #
+    # class Render:
+    #
+    #     def __init__(self, value): self.value = value
+    #
+    #     def __hypertag__(self):
+    #         return html_escape(str(self.value))
+    #
+    #         # inside Link:
+    #         item = value
+    #         cid, iid = item.id
+    #         url = item.get_url()
+    #         return f"<link href='{url}'>{item.data.name or item.data.title}</link>"
         
 
 #####################################################################################################################################################
