@@ -418,14 +418,6 @@ class Text(Primitive):
     """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
     type = str
 
-class PathString(String):
-    """Path to an item in a Directory."""
-    
-class EntryName(String):
-    """
-    Name of an individual entry in a Directory, without path.
-    Names that end with '/' indicate directories and must link to items of Directory category.
-    """
     
 class Link(Schema):
     """
@@ -485,6 +477,24 @@ class Link(Schema):
 
         return registry.get_item((cid, iid))
         
+#####################################################################################################################################################
+
+class PathString(String):
+    """Path to an item in a Directory."""
+    
+class EntryName(String):
+    """
+    Name of an individual entry in a Directory, without path.
+    Names that end with '/' indicate directories and must link to items of Directory category.
+    """
+
+class Entry(Link):
+    """
+    Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
+    indicating whether this item should be interpreted as-is or as a subfolder.
+    """
+    
+    
     
 #####################################################################################################################################################
 #####

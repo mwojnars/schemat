@@ -1,9 +1,9 @@
 import re, threading
 from textwrap import dedent
-# from pprint import pprint
-# from bidict import bidict
 
 from nifty.text import html_escape
+
+from hypertag.core.runtime import HyLoader, PyLoader, join_path
 from hypertag import HyperHTML
 
 from .config import ROOT_CID
@@ -192,6 +192,9 @@ class Item(object, metaclass = MetaItem):
     #     item.iid = iid
     #     return item
         
+    def __contains__(self, field):
+        return field in self.data
+        
     def __getitem__(self, field):
         return self.get(field, Item.RAISE)
 
@@ -368,10 +371,17 @@ class Item(object, metaclass = MetaItem):
         if template is not None:
             view = View(self, route, request)
             site = self.registry.get_site()
-            context = dict(item = self, data = view, category = self.category, route = route, request = request,
-                           app = route.app, site = site, directory = site['directory'])
+            app  = route.app
+            directory = site['directory']
             
-            return HyperHTML().render(template, **context)
+            context = dict(item = self, data = view, category = self.category, route = route, request = request,
+                           app = app, site = site, directory = directory)
+            
+            loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
+            hypertag = HyperHTML(loaders)
+            # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
+
+            return hypertag.render(template, **context)
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
@@ -380,6 +390,61 @@ class Item(object, metaclass = MetaItem):
 
 ItemDoesNotExist.item_class = Item
 
+
+class HyItemLoader(HyLoader):
+    """
+    Loader of Hypertag scripts that searches the site's directory instead of local disk.
+    Supported import paths:
+    
+    - .folder.module
+    - ...folder.module
+    - folder.module -- folder is searched for starting from "search paths" (/system /apps/APP)
+      or from the "anchor folder" of the referrer (parent folder of the top-level package)
+    - from /apps/XYZ/src/pkg1.pkg2.module import ...  -- the last "/" indicates the anchor folder
+      from ../../dir/pkg1.pkg2.module import ...
+    """
+    
+    PATH_SYSTEM = '/system'
+    
+    def __init__(self, app, directory):
+        super(HyItemLoader, self).__init__()
+        self.app = app
+        self.directory = directory
+        
+    def load(self, path, referrer, runtime):
+        """`referrer` is a Module that should have been loaded by this loader."""
+        
+        location = path
+        try:
+            item = self.directory.open(location)
+        except:
+            return None
+        
+        assert 'code' in item
+        assert item.category.get('name') == 'Code'
+        
+        script = item['code']
+        # print('script loaded:\n', script)
+        
+        # # relative import path is always resolved relative to the referrer's location
+        # if path[:1] == '.':
+        #     location = join_path(referrer.location, path)
+        #
+        # # absolute import path is resolved relative to search paths
+        # else:
+        #     search_paths = [
+        #         self.app['folder'],
+        #         self.PATH_SYSTEM,
+        #     ]
+
+        if not location: return None
+
+        module = self.cache[location] = runtime.translate(script, location)
+        module.location = location
+
+        return module
+        
+    
 
 #####################################################################################################################################################
 #####
@@ -650,7 +715,15 @@ class Site(Item):
 class Directory(Item):
     """"""
     
+    def exists(self, path):
+        """Check whether a given path exists in this folder."""
     
+    def open(self, path):
+        """
+        Load an item identified by a given `path`.
+        The search is performed recursively in this directory and subdirectories (TODO).
+        """
+        return self['items'][path]
     
 
 #####################################################################################################################################################

@@ -34,32 +34,37 @@
             \            | ($item.cid,$item.iid)\n\n    html\n        $name = item['name']?\
             \ or str(item)\n        head\n            title | {name}\n        body\
             \ .page\n            h1  | {name}\n            print_headline\n      \
-            \      \n            p\n                | script:\n                pre\n\
-            \                    / $directory['items']['pages_common']['code']\n \
-            \           \n            # from /site/pages import %print_data\n    \
-            \        # from /site/app_X/pages import %print_data\n            # from\
-            \ /templates import %print_data\n            # from ./pages import %print_data\n\
-            \            # $item.print_data()\n            # $item.print_data x1 x2\
+            \      \n            # p\n            #     | script:\n            # \
+            \    pre\n            #         / $directory.open('pages_common')['code']\n\
+            \            \n            # from /site/pages import %print_data\n   \
+            \         # from /site/app_X/pages import %print_data\n            # from\
+            \ /templates import %print_data\n            # $item.print_data x1 x2\
             \ x3\n            # $item.view.data x1 x2 x3     # `view` is a complete\
             \ HT script that exposes multiple symbols\n            # $item.data  \
             \     $paper.title    $paper.data()\n            # $app['base_widgets']\n\
-            \            \n            h2  | Properties\n            ul\n        \
-            \        for attr, value in item.data.items()\n                    li\n\
-            \                        b | {attr}:\n                        . | {str(value)}\n"}
+            \            # @(item.dom_properties())     -- item's method returns a\
+            \ DOM tree for embedding into a document\n            # %(item.print_data)\
+            \ x1 x2     -- item's attr is a Hypertag that can be used as a tag in\
+            \ a document\n            \n            h2 | Properties\n            \n\
+            \            from pages_common import %print_data\n            print_data\
+            \ $item\n            \n            # ul\n            #     for attr, value\
+            \ in item.data.items()\n            #         li\n            #      \
+            \       b | {attr}:\n            #             . | {str(value)}\n"}
   templates: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\n\
       \n    style / $app['base_style']\n\n    html\n        $name = cat['name']? or\
       \ str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
       \        body .page\n            h1\n                try\n                 \
       \   i | $name\n                    . | -\n                | category #{cat.iid}\n\
-      \            h2  | Properties\n            ul\n                for attr, value\
-      \ in cat.data.items()\n                    li\n                        b | {attr}:\n\
-      \                        . | {str(value)}\n            h2  | Items\n       \
-      \     table\n                for item in cat.registry.load_items(cat)\n    \
-      \                tr\n                        td / #{item.iid} &nbsp;\n     \
-      \                   td : a href=$route(item)\n                            |\
-      \ {item['name']? or item}\n"}
+      \n            h2 | Properties\n            \n            from pages_common import\
+      \ %print_data\n            print_data $cat\n\n            # ul\n           \
+      \ #     for attr, value in cat.data.items()\n            #         li\n    \
+      \        #             b | {attr}:\n            #             . | {str(value)}\n\
+      \n            h2  | Items\n            table\n                for item in cat.registry.load_items(cat)\n\
+      \                    tr\n                        td / #{item.iid} &nbsp;\n \
+      \                       td : a href=$route(item)\n                         \
+      \   | {item['name']? or item}\n"}
 - id: [0, 1]
-  info: A directory is a collection of named references to items. May contain nested
+  info: A directory of items, each item has a unique name (path). May contain nested
     subdirectories. Similar to a file system.
   class_name: hyperweb.item.Directory
   schema:
@@ -102,7 +107,7 @@
           keys: {'@': hyperweb.schema.String}
           values: {cid: null, '@': hyperweb.schema.Link}
           '@': hyperweb.schema.Catalog
-  path_data: {'@': hyperweb.schema.PathString}
+  folder: {'@': hyperweb.schema.PathString}
 - id: [0, 4]
   name: Site
   info: Category of site records. A site contains information about applications,
@@ -158,10 +163,9 @@
     \    "
 - id: [7, 1]
   lang: hypertag
-  code: "\n        %print_data $item\n            h2  | Data\n            ul\n   \
-    \             for field, value in item.data.items()\n                    li\n\
-    \                        b | {field}:\n                        . | {str(value)}\n\
-    \    "
+  code: "\n        %print_data item\n            ul\n                for field, value\
+    \ in item.data.items()\n                    li\n                        b | {field}:\n\
+    \                        . | {str(value)}\n    "
 - id: [1, 1]
   items:
     pages_common: [7, 1]

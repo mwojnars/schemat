@@ -46,27 +46,31 @@ page_item = """
             h1  | {name}
             print_headline
             
-            p
-                | script:
-                pre
-                    / $directory['items']['pages_common']['code']
+            # p
+            #     | script:
+            #     pre
+            #         / $directory.open('pages_common')['code']
             
             # from /site/pages import %print_data
             # from /site/app_X/pages import %print_data
             # from /templates import %print_data
-            # from ./pages import %print_data
-            # $item.print_data()
             # $item.print_data x1 x2 x3
             # $item.view.data x1 x2 x3     # `view` is a complete HT script that exposes multiple symbols
             # $item.data       $paper.title    $paper.data()
             # $app['base_widgets']
+            # @(item.dom_properties())     -- item's method returns a DOM tree for embedding into a document
+            # %(item.print_data) x1 x2     -- item's attr is a Hypertag that can be used as a tag in a document
             
-            h2  | Properties
-            ul
-                for attr, value in item.data.items()
-                    li
-                        b | {attr}:
-                        . | {str(value)}
+            h2 | Properties
+            
+            from pages_common import %print_data
+            print_data $item
+            
+            # ul
+            #     for attr, value in item.data.items()
+            #         li
+            #             b | {attr}:
+            #             . | {str(value)}
 """
 
 # template that displays a category page
@@ -85,12 +89,18 @@ page_category = """
                     i | $name
                     . | -
                 | category #{cat.iid}
-            h2  | Properties
-            ul
-                for attr, value in cat.data.items()
-                    li
-                        b | {attr}:
-                        . | {str(value)}
+
+            h2 | Properties
+            
+            from pages_common import %print_data
+            print_data $cat
+
+            # ul
+            #     for attr, value in cat.data.items()
+            #         li
+            #             b | {attr}:
+            #             . | {str(value)}
+
             h2  | Items
             table
                 for item in cat.registry.load_items(cat)
@@ -152,14 +162,14 @@ _Category = Category(
 _Category.category = _Category
 
 _Directory = _Category(
-    info        = "A directory is a collection of named references to items. May contain nested subdirectories. Similar to a file system.",
+    info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
     schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
 #  /items/CAT/* (auto) -- items in a category, CAT, listed by *IID* ... /item/Category/* lists categories by IID
-#  /assets/* -- global resources available in this installation: schemas, templates, images, css, js, ...
+#  /system/* -- global resources available in this installation: schemas, templates, images, css, js, ...
 #  /apps/APP/* -- assets of an application, APP; no writes, only reads; on search path when loading assets internally
 #  /data/APP/* -- working directory of an application, APP, where app-specific data items can be created and modified
 #  /site -- the global Site item that's booted upon startup (?)
@@ -196,7 +206,9 @@ _Application = _Category(
                 return self['spaces'][name]
     """,
     schema      = Record(name = String(), spaces = Catalog(Link(_Space))),
-    path_data   = PathString(),             # data folder of this application in site's root directory
+    folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
+                                        # if the app needs to store data items in the directory, it's recommended
+                                        # to do this inside a .../data subfolder
 )
 
 route_schema    = Struct(Route, base = String(), path = String(), app = Link(_Application))
@@ -254,8 +266,7 @@ _Code = _Category(
 pages_common = _Code(
     lang = 'hypertag',
     code = """
-        %print_data $item
-            h2  | Data
+        %print_data item
             ul
                 for field, value in item.data.items()
                     li
