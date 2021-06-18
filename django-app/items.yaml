@@ -152,9 +152,13 @@
     \    "
 - id: [7, 1]
   lang: hypertag
-  code: "\n        %print_data item\n            ul\n                for field, value\
-    \ in item.data.items()\n                    li\n                        b | {field}:\n\
-    \                        . | {str(value)}\n    "
+  code: "\n        %print_data item\n            table .data : tbody\n           \
+    \     for field, value in item.data.items()\n                    tr\n        \
+    \                td .name  | {field}\n                        td .value | {str(value)}\n\
+    \                        \n        %print_data_ul item\n            ul\n     \
+    \           for field, value in item.data.items()\n                    li\n  \
+    \                      b | {field}:\n                        . | {str(value)}\n\
+    \    "
 - id: [1, 1]
   items:
     pages_common: [7, 1]
@@ -174,14 +178,24 @@
   spaces:
     meta: [2, 1]
     sys: [2, 2]
-  base_style: "\n        body { font: 16px/24px 'Quattrocento Sans', \"Helvetica Neue\"\
-    , Helvetica, Arial, sans-serif; }\n        .page { width: 980px; margin: 0 auto;\
-    \ overflow: hidden }\n        h1 { font-size: 26px; line-height: 34px; margin-top:\
-    \ 30px }\n        .catlink { font-size: 14px; margin-top: -20px }\n    "
-  base_widgets: "\n        %properties_list item\n            h2  | Properties\n \
-    \           ul\n                for attr, value in item.data.items()\n       \
-    \             li\n                        b | {attr}:\n                      \
-    \  . | {str(value)}\n    "
+  base_style: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
+    \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        }\n\
+    \        .page { width: 980px; margin: 0 auto; overflow: hidden }\n        h1\
+    \ { font-size: 26px; line-height: 34px; margin-top: 30px }\n        .catlink {\
+    \ font-size: 14px; margin-top: -20px }\n        \n        table.data {\n     \
+    \     width: 100%;\n          # font-family: \"Times New Roman\", Times, serif;\n\
+    \          border: 1px solid #FFFFFF;\n          background-color: #F6F6F6;\n\
+    \          text-align: center;\n          border-collapse: collapse;\n       \
+    \ }\n        table.data td, table.data th {\n          border: 1px solid #FFFFFF;\n\
+    \          padding: 11px 12px 8px;\n        }\n        table.data tbody td {\n\
+    \          line-height: 20px;\n          color: #555555;\n        }\n        table.data\
+    \ tbody td.name  {\n          width: 20%;\n          font-size: 15px;\n      \
+    \    font-weight: bold;\n          text-align: right;\n          padding-right:\
+    \ 25px;\n        }\n        table.data tbody td.value {\n          width: 80%;\n\
+    \          font-size: 13px;\n          font-family: monospace;     /* courier\
+    \ */\n        }\n\n        table.data tr:nth-child(even) {\n          background:\
+    \ #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data tfoot td { font-size:\
+    \ 14px; } */\n    "
 - id: [4, 1]
   name: catalog.wiki
   routes:

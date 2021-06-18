@@ -104,7 +104,7 @@ root_schema = Record(
 
 #####################################################################################################################################################
 #####
-#####  CATEGORIES - the underscore _ is appended to names to avoid name clash with schema classes
+#####  CATEGORIES... The underscore _ is appended to names to avoid name clash with schema classes
 #####
 
 Category_ = Category(
@@ -217,5 +217,3 @@ Code_ = Category_(
 #     schema = Record(name = String(), type = Class(), fields = Catalog(Object(Schema))),
 # )
 
-
-# __all__ = list(globals().keys())
