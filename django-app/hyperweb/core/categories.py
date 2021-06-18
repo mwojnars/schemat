@@ -40,7 +40,7 @@ page_item = """
 
 # template that displays a category page
 page_category = """
-    context $item, $category as cat, $app, $route, $directory
+    context $item as cat, $app, $route, $directory
 
     style / $app['base_style']
 
@@ -65,8 +65,11 @@ page_category = """
                 for item in cat.registry.load_items(cat)
                     tr
                         td / #{item.iid} &nbsp;
-                        td : a href=$route(item)
-                            | {item['name']? or item}
+                        td
+                            $ iname = item['name']? or item
+                            try:
+                                a href=$route(item) | $iname
+                            else | $iname (no public URL)
 """
 
 # text_schema = Struct(name = String(), language = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
@@ -121,6 +124,7 @@ Category_ = Category(
 Category_.category = Category_
 
 Directory_ = Category_(
+    name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
     schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs

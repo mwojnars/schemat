@@ -70,7 +70,7 @@ Catalog_wiki = Application_(
         }
         table.data tbody td {
           line-height: 20px;
-          color: #555555;
+          color: #444;
         }
         table.data tbody td.name  {
           width: 20%;

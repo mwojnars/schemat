@@ -41,18 +41,21 @@
             \ from APP/pages import %print_data\n            # from /apps/APP/pages\
             \ import %print_data\n            from pages_common import %print_data\n\
             \n            h2 | Properties\n            print_data $item\n"}
-  templates: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\n\
-      \n    style / $app['base_style']\n\n    html\n        $name = cat['name']? or\
-      \ str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
-      \        body .page\n            h1\n                try\n                 \
-      \   i | $name\n                    . | -\n                | category #{cat.iid}\n\
-      \n            h2 | Properties\n            \n            from pages_common import\
+  templates: {? '' : "\n    context $item as cat, $app, $route, $directory\n\n   \
+      \ style / $app['base_style']\n\n    html\n        $name = cat['name']? or str(cat)\n\
+      \        head\n            title | {name ' -' }? category #{cat.iid}\n     \
+      \   body .page\n            h1\n                try\n                    i |\
+      \ $name\n                    . | -\n                | category #{cat.iid}\n\n\
+      \            h2 | Properties\n            \n            from pages_common import\
       \ %print_data\n            print_data $cat\n\n            h2 | Items\n     \
       \       table\n                for item in cat.registry.load_items(cat)\n  \
       \                  tr\n                        td / #{item.iid} &nbsp;\n   \
-      \                     td : a href=$route(item)\n                           \
-      \ | {item['name']? or item}\n"}
+      \                     td\n                            $ iname = item['name']?\
+      \ or item\n                            try:\n                              \
+      \  a href=$route(item) | $iname\n                            else | $iname (no\
+      \ public URL)\n"}
 - id: [0, 1]
+  name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
     subdirectories. Similar to a file system.
   class_name: hyperweb.item.Directory
@@ -188,7 +191,7 @@
     \          text-align: center;\n          border-collapse: collapse;\n       \
     \ }\n        table.data td, table.data th {\n          border: 1px solid #FFFFFF;\n\
     \          padding: 11px 12px 8px;\n        }\n        table.data tbody td {\n\
-    \          line-height: 20px;\n          color: #555555;\n        }\n        table.data\
+    \          line-height: 20px;\n          color: #444;\n        }\n        table.data\
     \ tbody td.name  {\n          width: 20%;\n          font-size: 15px;\n      \
     \    font-weight: bold;\n          text-align: right;\n          padding-right:\
     \ 25px;\n        }\n        table.data tbody td.value {\n          width: 80%;\n\

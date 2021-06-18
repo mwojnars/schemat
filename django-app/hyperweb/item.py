@@ -264,8 +264,9 @@ class Item(object, metaclass = MetaItem):
         # name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
         if len(name) > max_len:
             name = name[:max_len - 3] + '...'
+        if name: name = ' ' + name
         
-        return f'<{category}:{self.iid} {name}>'
+        return f'<{category}:{self.iid}{name}>'
     
     # def current(self):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
