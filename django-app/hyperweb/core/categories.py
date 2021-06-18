@@ -9,9 +9,10 @@ from hyperweb.schema import *
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-    context $item, $category as cat, $app, $route, $directory
+    context $item, $category as cat, $app, $route, $directory as dir
 
-    style / $app['base_style']
+    # style / $app['base_style']
+    style / $dir.open('common.css')['code']
 
     % print_headline
             p .catlink
@@ -40,9 +41,10 @@ page_item = """
 
 # template that displays a category page
 page_category = """
-    context $item as cat, $app, $route, $directory
+    context $item as cat, $app, $route, $directory as dir
 
-    style / $app['base_style']
+    # style / $app['base_style']
+    style / $dir.open('common.css')['code']
 
     html
         $name = cat['name']? or str(cat)
@@ -72,8 +74,8 @@ page_category = """
                             else | $iname (no public URL)
 """
 
-# text_schema = Struct(name = String(), language = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
-# code_schema = Struct(name = String(), language = String(), code = Text())   # ProgramLang() Code()
+# text_schema = Struct(name = String(), lang = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
+# code_schema = Struct(name = String(), lang = String(), code = Text())   # ProgramLang() Code()
 # method_schema = Struct(language = String(), code = Text())
 # class_schema = Select(native = Class(), inline = code_schema)       # reference = Link(_Code)
 
@@ -194,24 +196,51 @@ Varia_ = Category_(
     schema      = Record(name = Field(schema = String(), multi = True), title = String()),
 )
 
-Text_ = Category_(
-    name    = 'Text',
-    info    = 'A piece of plain or rich text for human consumption. May keep information about language and/or markup.',
-    # schema  = text_schema,
-)
+
 Code_ = Category_(
-    name    = 'Code',
-    info    = '''A piece of source code. May keep information about programming language.
+    name    = "Code",
+    info    = """Source code. May keep information about programming language.
                 If Code item is used in a context where a single object (a class, a function) is expected,
                 the `name` property must be set and equal to the name of the object that should be imported
-                from the code after its compilation. Some uses may allow multiple names to be declared.
-    ''',
-    # schema  = code_schema,
+                after compilation. Some uses may allow multiple names to be declared.
+              """,
+    schema  = Record(
+        language = String(),    # ProgramLanguage()
+        code     = Text(),
+    ),
 )
+Text_ = Category_(
+    name    = "Text",
+    info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
+    schema  = Record(
+        language = String(),    # HumanLanguage()
+        markup   = String(),    # MarkupLanguage()
+        text     = Text()
+    ),
+)
+File_ = Category_(
+    name    = "File",
+    info    = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
+    schema  = Record(
+        format  = String(),
+        content = Select(bin = Bytes(), txt = Text()),
+    ),
+)
+# File_ = Category_(
+#     name    = "File",
+#     info    = """Equivalent of a plain disk file. Text or binary content can be
+#                  accompanied with information about language and markup encoding (for text files).
+#     """,
+#     schema  = Record(
+#         # lang = String(),
+#         # markup = String(),
+#         format = String(),      # file format: pdf, xlsx, ...
+#         content = Select(txt = Text(), bin = Bytes()),
+#     ),   # HumanLang() MarkupLang()
+# )
 
-# CodeObject_ = Struct(name = String(), code = String())         # inline code with a python object: a class, a function, ...
+
 # Import_     = Struct(name = String(), code = Link(_Code))      # an object imported from a Code item
-
 # SchemaType_ = Category_(
 #     name        = "SchemaType",
 #     schema      = '???',

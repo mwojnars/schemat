@@ -415,12 +415,9 @@ class HyItemLoader(HyLoader):
     def load(self, path, referrer, runtime):
         """`referrer` is a Module that should have been loaded by this loader."""
         
-        location = path
-        try:
-            item = self.directory.open(location)
-        except:
-            return None
-        
+        item, location = self._find_item(path, referrer)
+        if item is None: return None
+
         assert 'code' in item
         assert item.category.get('name') == 'Code'
         
@@ -438,13 +435,28 @@ class HyItemLoader(HyLoader):
         #         self.PATH_SYSTEM,
         #     ]
 
-        if not location: return None
-
         module = self.cache[location] = runtime.translate(script, location)
         module.location = location
 
         return module
         
+    def _find_item(self, path, referrer):
+        
+        # try the original `path` as location
+        try:
+            item = self.directory.open(path)
+            return item, path
+        except Exception: pass
+        
+        # try appending .hy extension to `path`
+        if not path.lower().endswith(self.SCRIPT_EXTENSION):
+            location = path + self.SCRIPT_EXTENSION
+            try:
+                item = self.directory.open(location)
+                return item, location
+            except Exception: pass
+            
+        return None, None
     
 
 #####################################################################################################################################################
@@ -724,8 +736,13 @@ class Directory(Item):
         Load an item identified by a given `path`.
         The search is performed recursively in this directory and subdirectories (TODO).
         """
-        return self['items'][path]
-    
+        return self.data['items'][path]
+
+class File(Item):
+
+    def read(self):
+        return self.data['content']
+        
 
 #####################################################################################################################################################
 #####

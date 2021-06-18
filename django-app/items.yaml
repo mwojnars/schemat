@@ -28,32 +28,33 @@
           keys: {'@': hyperweb.schema.String}
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
-        default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\n\
-            \n    style / $app['base_style']\n\n    % print_headline\n           \
-            \ p .catlink\n            a href=$route(cat) | {cat['name']? or cat}\n\
-            \            | ($item.cid,$item.iid)\n\n    html\n        $name = item['name']?\
-            \ or str(item)\n        head\n            title | {name}\n        body\
-            \ .page\n            h1  | {name}\n            print_headline\n      \
-            \      \n            # $item.print_data x1 x2 x3\n            # @(item.dom_properties())\
-            \     -- item's method returns a DOM tree for embedding into a document\n\
-            \            # %(item.print_data) x1 x2     -- item's attr is a Hypertag\
-            \ that can be used as a tag in a document\n            \n            #\
-            \ from APP/pages import %print_data\n            # from /apps/APP/pages\
-            \ import %print_data\n            from pages_common import %print_data\n\
-            \n            h2 | Properties\n            print_data $item\n"}
-  templates: {? '' : "\n    context $item as cat, $app, $route, $directory\n\n   \
-      \ style / $app['base_style']\n\n    html\n        $name = cat['name']? or str(cat)\n\
-      \        head\n            title | {name ' -' }? category #{cat.iid}\n     \
-      \   body .page\n            h1\n                try\n                    i |\
-      \ $name\n                    . | -\n                | category #{cat.iid}\n\n\
-      \            h2 | Properties\n            \n            from pages_common import\
-      \ %print_data\n            print_data $cat\n\n            h2 | Items\n     \
-      \       table\n                for item in cat.registry.load_items(cat)\n  \
-      \                  tr\n                        td / #{item.iid} &nbsp;\n   \
-      \                     td\n                            $ iname = item['name']?\
-      \ or item\n                            try:\n                              \
-      \  a href=$route(item) | $iname\n                            else | $iname (no\
-      \ public URL)\n"}
+        default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\
+            \ as dir\n\n    # style / $app['base_style']\n    style / $dir.open('common.css')['code']\n\
+            \n    % print_headline\n            p .catlink\n            a href=$route(cat)\
+            \ | {cat['name']? or cat}\n            | ($item.cid,$item.iid)\n\n   \
+            \ html\n        $name = item['name']? or str(item)\n        head\n   \
+            \         title | {name}\n        body .page\n            h1  | {name}\n\
+            \            print_headline\n            \n            # $item.print_data\
+            \ x1 x2 x3\n            # @(item.dom_properties())     -- item's method\
+            \ returns a DOM tree for embedding into a document\n            # %(item.print_data)\
+            \ x1 x2     -- item's attr is a Hypertag that can be used as a tag in\
+            \ a document\n            \n            # from APP/pages import %print_data\n\
+            \            # from /apps/APP/pages import %print_data\n            from\
+            \ pages_common import %print_data\n\n            h2 | Properties\n   \
+            \         print_data $item\n"}
+  templates: {? '' : "\n    context $item as cat, $app, $route, $directory as dir\n\
+      \n    # style / $app['base_style']\n    style / $dir.open('common.css')['code']\n\
+      \n    html\n        $name = cat['name']? or str(cat)\n        head\n       \
+      \     title | {name ' -' }? category #{cat.iid}\n        body .page\n      \
+      \      h1\n                try\n                    i | $name\n            \
+      \        . | -\n                | category #{cat.iid}\n\n            h2 | Properties\n\
+      \            \n            from pages_common import %print_data\n          \
+      \  print_data $cat\n\n            h2 | Items\n            table\n          \
+      \      for item in cat.registry.load_items(cat)\n                    tr\n  \
+      \                      td / #{item.iid} &nbsp;\n                        td\n\
+      \                            $ iname = item['name']? or item\n             \
+      \               try:\n                                a href=$route(item) |\
+      \ $iname\n                            else | $iname (no public URL)\n"}
 - id: [0, 1]
   name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
@@ -142,19 +143,46 @@
       title:
         schema: {'@': hyperweb.schema.String}
 - id: [0, 6]
-  name: Text
-  info: A piece of plain or rich text for human consumption. May keep information
-    about language and/or markup.
-- id: [0, 7]
   name: Code
-  info: "A piece of source code. May keep information about programming language.\n\
-    \                If Code item is used in a context where a single object (a class,\
-    \ a function) is expected,\n                the `name` property must be set and\
-    \ equal to the name of the object that should be imported\n                from\
-    \ the code after its compilation. Some uses may allow multiple names to be declared.\n\
-    \    "
-- id: [7, 1]
-  lang: hypertag
+  info: "Source code. May keep information about programming language.\n         \
+    \       If Code item is used in a context where a single object (a class, a function)\
+    \ is expected,\n                the `name` property must be set and equal to the\
+    \ name of the object that should be imported\n                after compilation.\
+    \ Some uses may allow multiple names to be declared.\n              "
+  schema:
+    fields:
+      language:
+        schema: {'@': hyperweb.schema.String}
+      code:
+        schema: {'@': hyperweb.schema.Text}
+- id: [0, 7]
+  name: Text
+  info: Plain or rich text for human consumption. May keep information about language
+    and/or markup.
+  schema:
+    fields:
+      language:
+        schema: {'@': hyperweb.schema.String}
+      markup:
+        schema: {'@': hyperweb.schema.String}
+      text:
+        schema: {'@': hyperweb.schema.Text}
+- id: [0, 8]
+  name: File
+  info: 'Binary or text file that can be accompanied with information about its format:
+    pdf, jpg, zip, ...'
+  schema:
+    fields:
+      format:
+        schema: {'@': hyperweb.schema.String}
+      content:
+        schema:
+          schemas:
+            bin: {'@': hyperweb.schema.Bytes}
+            txt: {'@': hyperweb.schema.Text}
+          '@': hyperweb.schema.Select
+- id: [6, 1]
+  language: hypertag
   code: "\n        %print_data item\n            table .data : tbody\n           \
     \     for field, value in item.data.items()\n                    tr\n        \
     \                td .name  | {field}\n                        td .value | {str(value)}\n\
@@ -162,9 +190,30 @@
     \           for field, value in item.data.items()\n                    li\n  \
     \                      b | {field}:\n                        . | {str(value)}\n\
     \    "
+- id: [6, 2]
+  language: css
+  code: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
+    \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        \
+    \  color: #444;\n        }\n        .page {\n          width: 980px;\n       \
+    \   margin: 0 auto;\n          overflow: hidden\n        }\n        h1 { font-size:\
+    \ 26px; line-height: 34px; margin-top: 30px }\n        .catlink { font-size: 14px;\
+    \ margin-top: -20px }\n        \n        table.data {\n          width: 100%;\n\
+    \          # font-family: \"Times New Roman\", Times, serif;\n          border:\
+    \ 1px solid #FFFFFF;\n          background-color: #F6F6F6;\n          text-align:\
+    \ center;\n          border-collapse: collapse;\n        }\n        table.data\
+    \ td, table.data th {\n          border: 1px solid #FFFFFF;\n          padding:\
+    \ 11px 12px 8px;\n        }\n        table.data tbody td {\n          line-height:\
+    \ 20px;\n        }\n        table.data tbody td.name  {\n          width: 20%;\n\
+    \          font-size: 15px;\n          font-weight: bold;\n          text-align:\
+    \ right;\n          padding-right: 25px;\n        }\n        table.data tbody\
+    \ td.value {\n          width: 80%;\n          font-size: 13px;\n          font-family:\
+    \ monospace;     /* courier */\n        }\n\n        table.data tr:nth-child(even)\
+    \ {\n          background: #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data\
+    \ tfoot td { font-size: 14px; } */\n    "
 - id: [1, 1]
   items:
-    pages_common: [7, 1]
+    pages_common.hy: [6, 1]
+    common.css: [6, 2]
 - id: [2, 1]
   name: Meta
   categories:
@@ -176,29 +225,12 @@
     space: [0, 2]
     app: [0, 3]
     site: [0, 4]
+    dir: [0, 1]
 - id: [3, 1]
   name: Catalog.wiki
   spaces:
     meta: [2, 1]
     sys: [2, 2]
-  base_style: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
-    \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        }\n\
-    \        .page { width: 980px; margin: 0 auto; overflow: hidden }\n        h1\
-    \ { font-size: 26px; line-height: 34px; margin-top: 30px }\n        .catlink {\
-    \ font-size: 14px; margin-top: -20px }\n        \n        table.data {\n     \
-    \     width: 100%;\n          # font-family: \"Times New Roman\", Times, serif;\n\
-    \          border: 1px solid #FFFFFF;\n          background-color: #F6F6F6;\n\
-    \          text-align: center;\n          border-collapse: collapse;\n       \
-    \ }\n        table.data td, table.data th {\n          border: 1px solid #FFFFFF;\n\
-    \          padding: 11px 12px 8px;\n        }\n        table.data tbody td {\n\
-    \          line-height: 20px;\n          color: #444;\n        }\n        table.data\
-    \ tbody td.name  {\n          width: 20%;\n          font-size: 15px;\n      \
-    \    font-weight: bold;\n          text-align: right;\n          padding-right:\
-    \ 25px;\n        }\n        table.data tbody td.value {\n          width: 80%;\n\
-    \          font-size: 13px;\n          font-family: monospace;     /* courier\
-    \ */\n        }\n\n        table.data tr:nth-child(even) {\n          background:\
-    \ #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data tfoot td { font-size:\
-    \ 14px; } */\n    "
 - id: [4, 1]
   name: catalog.wiki
   routes:

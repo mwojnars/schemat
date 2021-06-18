@@ -20,7 +20,7 @@ List / Sequence
 Dict / Mapping
 """
 
-import json
+import json, base64
 
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
@@ -418,6 +418,19 @@ class Text(Primitive):
     """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
     type = str
 
+class Bytes(Primitive):
+    """Encodes a <bytes> object as a string using Base64 encoding."""
+    type = bytes
+    
+    def _encode(self, value, registry):
+        if not isinstance(value, bytes): raise EncodeError(f"expected an instance of {bytes}, got {type(value)}: {value}")
+        return base64.b64encode(value).decode('ascii')
+
+    def _decode(self, encoded, registry):
+        if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
+        return base64.b64decode(encoded)
+    
+    
     
 class Link(Schema):
     """
@@ -622,7 +635,7 @@ class Field:
     multi   = False         # whether this field can take on multiple values
     info    = None          # human-readable description of the field
     
-    def __init__(self, schema = None, default = None, multi = None, info = None):
+    def __init__(self, schema = None, default = None, info = None, multi = None):
         if schema is not None:  self.schema = schema
         if default is not None: self.default = default
         if multi is not None:   self.multi = multi
