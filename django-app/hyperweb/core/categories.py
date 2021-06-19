@@ -11,8 +11,7 @@ from hyperweb.schema import *
 page_item = """
     context $item, $category as cat, $app, $route, $directory as dir
 
-    # style / $app['base_style']
-    style / $dir.open('common.css')['code']
+    style / $dir.open('base.css')['code']
 
     % print_headline
             p .catlink
@@ -31,9 +30,9 @@ page_item = """
             # @(item.dom_properties())     -- item's method returns a DOM tree for embedding into a document
             # %(item.print_data) x1 x2     -- item's attr is a Hypertag that can be used as a tag in a document
             
-            # from APP/pages import %print_data
-            # from /apps/APP/pages import %print_data
-            from pages_common import %print_data
+            # from APP/base import %print_data
+            # from /apps/APP/base import %print_data
+            from base import %print_data
 
             h2 | Properties
             print_data $item
@@ -43,13 +42,13 @@ page_item = """
 page_category = """
     context $item as cat, $app, $route, $directory as dir
 
-    # style / $app['base_style']
-    style / $dir.open('common.css')['code']
+    style / $dir.open('base.css')['code']
 
     html
         $name = cat['name']? or str(cat)
         head
             title | {name ' -' }? category #{cat.iid}
+
         body .page
             h1
                 try
@@ -58,20 +57,21 @@ page_category = """
                 | category #{cat.iid}
 
             h2 | Properties
-            
-            from pages_common import %print_data
+
+            from base import %print_data
             print_data $cat
 
             h2 | Items
             table
-                for item in cat.registry.load_items(cat)
+                for item in list(cat.registry.load_items(cat))
                     tr
                         td / #{item.iid} &nbsp;
                         td
                             $ iname = item['name']? or item
-                            try:
-                                a href=$route(item) | $iname
-                            else | $iname (no public URL)
+                            try
+                                a href=route(item) | $iname
+                            else
+                                | $iname (no public URL)
 """
 
 # text_schema = Struct(name = String(), lang = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()

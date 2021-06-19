@@ -382,6 +382,8 @@ class Item(object, metaclass = MetaItem):
             hypertag = HyperHTML(loaders)
             # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
 
+            # print('template:')
+            # print(template)
             return hypertag.render(template, **context)
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')

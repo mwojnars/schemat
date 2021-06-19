@@ -29,32 +29,32 @@
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
         default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\
-            \ as dir\n\n    # style / $app['base_style']\n    style / $dir.open('common.css')['code']\n\
-            \n    % print_headline\n            p .catlink\n            a href=$route(cat)\
-            \ | {cat['name']? or cat}\n            | ($item.cid,$item.iid)\n\n   \
-            \ html\n        $name = item['name']? or str(item)\n        head\n   \
-            \         title | {name}\n        body .page\n            h1  | {name}\n\
-            \            print_headline\n            \n            # $item.print_data\
-            \ x1 x2 x3\n            # @(item.dom_properties())     -- item's method\
-            \ returns a DOM tree for embedding into a document\n            # %(item.print_data)\
-            \ x1 x2     -- item's attr is a Hypertag that can be used as a tag in\
-            \ a document\n            \n            # from APP/pages import %print_data\n\
-            \            # from /apps/APP/pages import %print_data\n            from\
-            \ pages_common import %print_data\n\n            h2 | Properties\n   \
-            \         print_data $item\n"}
+            \ as dir\n\n    style / $dir.open('base.css')['code']\n\n    % print_headline\n\
+            \            p .catlink\n            a href=$route(cat) | {cat['name']?\
+            \ or cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
+            \ = item['name']? or str(item)\n        head\n            title | {name}\n\
+            \        body .page\n            h1  | {name}\n            print_headline\n\
+            \            \n            # $item.print_data x1 x2 x3\n            #\
+            \ @(item.dom_properties())     -- item's method returns a DOM tree for\
+            \ embedding into a document\n            # %(item.print_data) x1 x2  \
+            \   -- item's attr is a Hypertag that can be used as a tag in a document\n\
+            \            \n            # from APP/base import %print_data\n      \
+            \      # from /apps/APP/base import %print_data\n            from base\
+            \ import %print_data\n\n            h2 | Properties\n            print_data\
+            \ $item\n"}
   templates: {? '' : "\n    context $item as cat, $app, $route, $directory as dir\n\
-      \n    # style / $app['base_style']\n    style / $dir.open('common.css')['code']\n\
-      \n    html\n        $name = cat['name']? or str(cat)\n        head\n       \
-      \     title | {name ' -' }? category #{cat.iid}\n        body .page\n      \
-      \      h1\n                try\n                    i | $name\n            \
-      \        . | -\n                | category #{cat.iid}\n\n            h2 | Properties\n\
-      \            \n            from pages_common import %print_data\n          \
-      \  print_data $cat\n\n            h2 | Items\n            table\n          \
-      \      for item in cat.registry.load_items(cat)\n                    tr\n  \
-      \                      td / #{item.iid} &nbsp;\n                        td\n\
-      \                            $ iname = item['name']? or item\n             \
-      \               try:\n                                a href=$route(item) |\
-      \ $iname\n                            else | $iname (no public URL)\n"}
+      \n    style / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
+      \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
+      \n        body .page\n            h1\n                try\n                \
+      \    i | $name\n                    . | -\n                | category #{cat.iid}\n\
+      \n            h2 | Properties\n\n            from base import %print_data\n\
+      \            print_data $cat\n\n            h2 | Items\n            table\n\
+      \                for item in list(cat.registry.load_items(cat))\n          \
+      \          tr\n                        td / #{item.iid} &nbsp;\n           \
+      \             td\n                            $ iname = item['name']? or item\n\
+      \                            try\n                                a href=route(item)\
+      \ | $iname\n                            else\n                             \
+      \   | $iname (no public URL)\n"}
 - id: [0, 1]
   name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
@@ -207,13 +207,13 @@
     \          font-size: 15px;\n          font-weight: bold;\n          text-align:\
     \ right;\n          padding-right: 25px;\n        }\n        table.data tbody\
     \ td.value {\n          width: 80%;\n          font-size: 13px;\n          font-family:\
-    \ monospace;     /* courier */\n        }\n\n        table.data tr:nth-child(even)\
+    \ monospace;     /* courier */\n        }\n\n        table.data tr:nth-child(odd)\
     \ {\n          background: #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data\
     \ tfoot td { font-size: 14px; } */\n    "
 - id: [1, 1]
   items:
-    pages_common.hy: [6, 1]
-    common.css: [6, 2]
+    base.hy: [6, 1]
+    base.css: [6, 2]
 - id: [2, 1]
   name: Meta
   categories:
