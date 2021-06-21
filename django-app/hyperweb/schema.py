@@ -434,17 +434,27 @@ class Bytes(Primitive):
     
 class Link(Schema):
     """
-    Encodes an Item into its ID=(CID,IID), or just IID.
-    Link() is equivalent to Object(Item), however, Link can be parameterized
-    with a predefined CID, Link(cid), which is not possible using an Object.
+    Encodes an Item into its ID=(CID,IID), or just IID if `category` or `cid` was provided.
+    Link without parameters is equivalent to Object(Item), however, Link can also be parameterized,
+    which is not possible using an Object.
     """
     
-    # default CID: if item's CID is equal to this, only IID is stored; otherwise, complete ID is stored
-    cid = None
+    # the required category or CID of items to be encoded; if None, all items can be encoded
+    category = None
+    cid      = None
     
     def __init__(self, category = None, cid = None):
-        if category is not None: self.cid = category.iid
-        elif cid is not None: self.cid = cid
+        if cid is not None: self.cid = cid
+        if category is not None: self.category = category
+            # if category.iid is None:
+            #     print(f"WARNING: category {category} has empty ID in Link.__init__()")
+            #     self.category = category
+            # self.cid = category.iid
+    
+    def _get_cid(self):
+        if self.cid is not None: return self.cid
+        if self.category: return self.category.iid
+        return None
     
     def _encode(self, item, registry):
         
@@ -452,7 +462,9 @@ class Link(Schema):
         if None in item.id:
             raise EncodeError(f"Linked item does not exist or its ID is missing, ID={item.id}")
             
-        if self.cid is not None and item.cid == self.cid:
+        cid = self._get_cid()
+        
+        if None != cid == item.cid:
             return item.iid
         
         return item.id
@@ -460,10 +472,11 @@ class Link(Schema):
     def _decode(self, value, registry):
         
         cid = None
-        
+        ref_cid = self._get_cid()
+
         if isinstance(value, int):
             iid = value
-            if self.cid is None:
+            if ref_cid is None:
                 raise DecodeError(f"expected a (CID,IID) tuple, but got only IID ({iid})")
         else:
             # unpack (CID,IID)
@@ -482,7 +495,7 @@ class Link(Schema):
         #         raise DecodeError(f"expected CID={self.cid}, not {cid}")
         
         if cid is None:
-            cid = self.cid
+            cid = ref_cid
 
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
         # from .site import registry
@@ -529,15 +542,49 @@ class List(Schema):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         return self.type(self.schema.decode(e, registry) for e in encoded)
 
-class Tuple(List):
+class Tuple(Schema):
+    """
+    If multiple `schemas` are given, each tuple must have this exact length and each element is encoded
+    through a different schema, as provided. If there is one schema, this schema is used for
+    all elements and the length of an input tuple can differ. If no schema is provided, the effect
+    is the same as providing a single `object_schema`.
+    """
     type = tuple
+    schemas = None      # list of schemas of individual elements
+
+    def __init__(self, *schemas):
+        self.schemas = list(schemas)
+        
+    def _encode(self, values, registry):
+        if not isinstance(values, tuple): raise EncodeError(f"expected a tuple, got {values}")
+        if len(self.schemas) <= 1:
+            schema = self.schemas[0] if self.schemas else object_schema
+            return [schema.encode(v, registry) for v in values]
+        if len(values) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple, got {len(values)}")
+        return [schema.encode(v, registry) for v, schema in zip(values, self.schemas)]
+
+    def _decode(self, encoded, registry):
+        if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
+        if len(self.schemas) <= 1:
+            schema = self.schemas[0] if self.schemas else object_schema
+            return [schema.decode(e, registry) for e in encoded]
+        if len(encoded) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple to be decoded, got {len(encoded)}")
+        return tuple(schema.decode(e, registry) for e, schema in zip(encoded, self.schemas))
+
     
 class Dict(Schema):
-    """Accepts <dict> objects as data values. Outputs a dict with keys and values encoded through their own schema."""
+    """
+    Accepts <dict> objects as data values. Outputs a dict with keys and values encoded through their own schema.
+    If no schema is provided, `object_schema` is used as a default.
+    """
     
     # schema of keys and values of app-layer dicts
     keys   = None
     values = None
+    
+    # the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
+    keys_default   = object_schema
+    values_default = object_schema
     
     def __init__(self, keys = None, values = None):
         
@@ -549,11 +596,14 @@ class Dict(Schema):
         if not isinstance(d, dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
         state = {}
         
+        schema_keys   = self.keys or self.keys_default
+        schema_values = self.values or self.values_default
+        
         # encode keys & values through predefined field types
         for key, value in d.items():
-            k = self.keys.encode(key, registry) if self.keys else key
+            k = schema_keys.encode(key, registry)
             if k in state: raise EncodeError(f"duplicate state ({k}) returned by field's {self.keys} encode() for 2 different values, one of them: {key}")
-            state[k] = self.values.encode(value, registry) if self.values else value
+            state[k] = schema_values.encode(value, registry)
         
         return state
         
@@ -562,22 +612,29 @@ class Dict(Schema):
         if not isinstance(state, dict): raise DecodeError(f"expected a <dict>, not {state}")
         d = {}
         
+        schema_keys   = self.keys or self.keys_default
+        schema_values = self.values or self.values_default
+        
         # decode keys & values through predefined field types
         for key, value in state.items():
-            k = self.keys.decode(key, registry) if self.keys else key
-            if k in d: raise DecodeError(f"duplicate value ({k}) returned by field's {self.keys} decode() for 2 different states, one of them: {key}")
-            d[k] = self.values.decode(value, registry) if self.values else value
+            k = schema_keys.decode(key, registry)
+            if k in d: raise DecodeError(f"duplicate key ({k}) returned by field's {schema_keys} decode() for 2 different states, one of them: {key}")
+            d[k] = schema_values.decode(value, registry)
             
         return d
 
 class Catalog(Dict):
     """Similar to Dict, but assumes keys are strings. Watch out the reversed ordering of arguments in __init__() !!"""
     
+    keys_default = String()
+    
     def __init__(self, values = None, keys = None):
-        if keys is None:
-            keys = String()
-        else:
-            assert isinstance(keys, String)             # `keys` may inherit from String, not necessarily be a String
+        # if keys is None:
+        #     keys = String()
+        # else:
+        #     assert isinstance(keys, String)             # `keys` may inherit from String, not necessarily be a String
+        
+        if keys: assert isinstance(keys, String)        # `keys` may inherit from String, not necessarily be a String
         super(Catalog, self).__init__(keys, values)
         
 

@@ -183,6 +183,7 @@ Site_ = Category_(
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
     schema      = Record(name = String(),
+                         apps = Catalog(Tuple(String(), Link(Application_))),
                          routes = Field(schema = Catalog(route_schema),
                                         multi = False,
                                         info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),

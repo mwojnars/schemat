@@ -25,7 +25,6 @@
         schema: {'@': hyperweb.schema.Text}
       templates:
         schema:
-          keys: {'@': hyperweb.schema.String}
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
         default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\
@@ -76,8 +75,11 @@
         schema: {'@': hyperweb.schema.String}
       categories:
         schema:
-          keys: {'@': hyperweb.schema.String}
-          values: {cid: null, '@': hyperweb.schema.Link}
+          values:
+            category:
+              '=': [0, 0]
+              '@': null
+            '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
@@ -97,8 +99,11 @@
         schema: {'@': hyperweb.schema.String}
       spaces:
         schema:
-          keys: {'@': hyperweb.schema.String}
-          values: {cid: null, '@': hyperweb.schema.Link}
+          values:
+            category:
+              '=': [0, 2]
+              '@': null
+            '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
   folder: {'@': hyperweb.schema.PathString}
 - id: [0, 4]
@@ -110,9 +115,19 @@
     fields:
       name:
         schema: {'@': hyperweb.schema.String}
+      apps:
+        schema:
+          values:
+            schemas:
+            - {'@': hyperweb.schema.String}
+            - category:
+                '=': [0, 3]
+                '@': null
+              '@': hyperweb.schema.Link
+            '@': hyperweb.schema.Tuple
+          '@': hyperweb.schema.Catalog
       routes:
         schema:
-          keys: {'@': hyperweb.schema.String}
           values:
             type: {'=': hyperweb.item.Route, '@': builtins.type}
             fields:
@@ -123,14 +138,22 @@
                 schema: {'@': hyperweb.schema.String}
                 '@': hyperweb.schema.Field
               app:
-                schema: {cid: null, '@': hyperweb.schema.Link}
+                schema:
+                  category:
+                    '=': [0, 3]
+                    '@': null
+                  '@': hyperweb.schema.Link
                 '@': hyperweb.schema.Field
             '@': hyperweb.schema.Struct
           '@': hyperweb.schema.Catalog
         multi: false
         info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
           fixed URL path prefix, and a target application object
-  directory: {cid: null, '@': hyperweb.schema.Link}
+  directory:
+    category:
+      '=': [0, 1]
+      '@': null
+    '@': hyperweb.schema.Link
 - id: [0, 5]
   name: Varia
   info: Category of items that do not belong to any specific category
@@ -216,31 +239,22 @@
     base.css: [6, 2]
 - id: [2, 1]
   name: Meta
-  categories:
-    category: [0, 0]
-    item: [0, 5]
+  categories: {category: 0, item: 5}
 - id: [2, 2]
   name: System
-  categories:
-    space: [0, 2]
-    app: [0, 3]
-    site: [0, 4]
-    dir: [0, 1]
+  categories: {space: 2, app: 3, site: 4, dir: 1}
 - id: [3, 1]
-  name: Catalog.wiki
-  spaces:
-    meta: [2, 1]
-    sys: [2, 2]
+  name: Catalog
+  spaces: {meta: 1, sys: 2}
 - id: [4, 1]
   name: catalog.wiki
   routes:
-    default:
-      base: http://localhost:8001
-      path: /
-      app: [3, 1]
+    default: {base: 'http://localhost:8001', path: /, app: 1}
   directory:
     '=': [1, 1]
     '@': null
+  apps:
+    catalog: ['http://localhost:8001/', 1]
 - id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [5, 2]

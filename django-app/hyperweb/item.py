@@ -106,11 +106,6 @@ class Item(object, metaclass = MetaItem):
     """
     Item is an elementary object operated upon by Hyperweb and a unit of storage in DB.
     
-    Item's category metadata:
-    - templates
-    - handlers
-    - methods
-    
     Item's metadata - in DB:
     - cid, iid
     - revision -- current revision id 1,2,3,...; increased after each modification of the item
@@ -312,11 +307,17 @@ class Item(object, metaclass = MetaItem):
             data = schema.from_json(data, self.registry)
             self.data.update(data)
         
-        self._post_decode()
-
-    def _post_decode(self):
-        """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
+    #     self._post_decode()
+    #
+    # def _post_decode(self):
+    #     """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
         
+    # def on_load(self, fields):
+    #     """Post-processing performed right after raw data have been loaded from DB, decoded from JSON, and saved to self.data."""
+    #
+    # def on_change(self, fields):
+    #     """Post-processing performed right after new values of `fields` have been written to `data`."""
+    
     def to_json(self):
         schema = self.category.get('schema')
         return schema.to_json(self.data, self.registry)
@@ -751,10 +752,10 @@ class File(Item):
 #####  ITEM VIEW
 #####
 
-class View:
+class View:  # Snap / Snapshot / Data
     """
-    View of an item's data in the context of a particular web request.
-    Provides convenient read access to `data` of an underlying item, as well as to parameters of the web request.
+    View of an item's data that provides convenient read access to particular fields
+    using dot notation instead of array indexing.
     """
     
     # modes of value access in Item.data, and suffixes appended to attribute names to indicate
