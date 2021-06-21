@@ -350,7 +350,7 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def serve(self, route, request, endpoint, args):
+    def serve(self, request, route, app, endpoint, args):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.
@@ -371,9 +371,9 @@ class Item(object, metaclass = MetaItem):
         # search for a Hypertag script in templates
         template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
         if template is not None:
-            view = View(self, route, request)
+            view = View(self, request)
             site = self.registry.get_site()
-            app  = route.app
+            # app  = route.app
             directory = site['directory']
             
             context = dict(item = self, data = view, category = self.category, route = route, request = request,
@@ -583,24 +583,97 @@ class Route:
     def __init__(self, **attrs):
         self.__dict__.update(attrs)
     
-    def match(self, url):
-        """Check if this route matches a given URL."""
-        return url.startswith(self.base + self.path)
+    # def match(self, url):
+    #     """Check if this route matches a given URL."""
+    #     return url.startswith(self.base + self.path)
+    #
+    # def find(self, path, registry):
+    #     """
+    #     Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments).
+    #     Raise an exception if item not found or the path not recognized.
+    #     Return (item, endpoint, args) tuple.
+    #     """
+    #     endpoint = args = ""
+    #
+    #     if '?' in path:
+    #         path, args = path.split('?', 1)
+    #
+    #     if '/' in path:
+    #         path, endpoint = path.rsplit('/', 1)
+    #
+    #     try:
+    #         space_category, item_id = path.split(':')
+    #         space_name, category_name = space_category.split('.')
+    #     except Exception as ex:
+    #         print(ex)
+    #         print('incorrect URL path:', path)
+    #         raise
+    #
+    #     space    = self.app.get_space(space_name)
+    #     category = space.get_category(category_name)
+    #     item     = category.get_item(int(item_id))
+    #
+    #     return item, endpoint, args
+    #
+    # def url(self, __item__, __endpoint__ = None, **params):
+    #     """
+    #     Get URL of `item` when accessed through this URL route, possibly extended with a non-default
+    #     endpoint designation and/or arguments to be passed to a handler function or a template.
+    #     """
+    #     category = __item__.category
+    #     path = self._qualifier(category)
+    #     iid  = category.encode_url(__item__.iid)
+    #     url  = f'{self.base}/{path}:{iid}'
+    #     if __endpoint__: url += f'/{__endpoint__}'
+    #     return url
+    #
+    # # route(item) is equivalent to route.url(item):
+    # __call__ = url
+    #
+    # @cached(ttl = 10)
+    # def _qualifier(self, category):
+    #     """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+    #     for space_name, space in self.app['spaces'].items():
+    #         for category_name, cat in space['categories'].items():
+    #             if cat.id != category.id: continue
+    #             return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    #
+    #     raise Exception(f"no URL pattern exists for the requested category: {category}")
     
-    def find(self, path, registry):
+
+# class Space(Item):
+#
+#     def get_category(self, name):
+#         return self['categories'][name]
+
+class Application(Item):
+    """An application implements a mapping of URL paths to item methods, and the way back."""
+
+    def get_space(self, name):
+        return self['spaces'][name]
+
+    def handle(self, request, route, path):
         """
-        Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments).
+        Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
-        Return (item, endpoint, args) tuple.
+        """
+        return self._handle_space_cat_iid(request, route, path)
+
+    def _handle_space_cat_iid(self, request, route, path):
+        """
+        Handle requests identified by standard URL paths of the form:
+          <space_name>.<category_name>:<item_iid>/endpoint
         """
         endpoint = args = ""
-
+        
+        # decode `endpoint` and `args` from the path
         if '?' in path:
             path, args = path.split('?', 1)
         
         if '/' in path:
             path, endpoint = path.rsplit('/', 1)
 
+        # decode names of space and category
         try:
             space_category, item_id = path.split(':')
             space_name, category_name = space_category.split('.')
@@ -609,31 +682,30 @@ class Route:
             print('incorrect URL path:', path)
             raise
             
-        space    = self.app.get_space(space_name)
+        # map space-category names and the iid to items
+        space    = self['spaces'][space_name]
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
         
-        return item, endpoint, args
+        return item.serve(request, route, self, endpoint, args)
 
-    def url(self, __item__, __endpoint__ = None, **params):
+    def url(self, __item__, __endpoint__ = None, **args):
         """
-        Get URL of `item` when accessed through this URL route, possibly extended with a non-default
+        Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
         endpoint designation and/or arguments to be passed to a handler function or a template.
         """
         category = __item__.category
         path = self._qualifier(category)
+        base = self['base_url']
         iid  = category.encode_url(__item__.iid)
-        url  = f'{self.base}/{path}:{iid}'
+        url  = f'{base}/{path}:{iid}'
         if __endpoint__: url += f'/{__endpoint__}'
         return url
-
-    # route(item) is equivalent to route.url(item):
-    __call__ = url
 
     @cached(ttl = 10)
     def _qualifier(self, category):
         """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-        for space_name, space in self.app['spaces'].items():
+        for space_name, space in self['spaces'].items():
             for category_name, cat in space['categories'].items():
                 if cat.id != category.id: continue
                 return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
@@ -674,19 +746,35 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    def handle(self, request, path):
-        route = self.find_route(request, path)
-        item, endpoint, args = route.find(path, self.registry)
-        return item.serve(route, request, endpoint, args)
-
-    def find_route(self, request, path):
-        """Find the first route that matches the URL `path`."""
-
-        url = request.build_absolute_uri()
-        for route in self['routes'].values():
-            if route.match(url): return route
+    def handle(self, request):
+        route, path, app = self.find_app(request)
+        return app.handle(request, route, path)
+    
+    def find_app(self, request):
+        """Find the first application in data['apps'] that matches the URL `path`."""
         
-        raise Exception(f'route not found for "{path}" path')
+        url = request.build_absolute_uri()
+        for route, app in self['apps'].items():
+            base = app['base_url']
+            if url.startswith(base):
+                path = url[len(base):]
+                return route, path, app
+        
+        raise Exception(f'page not found: {url}')
+
+    # def handle_(self, request, path):
+    #     route = self.find_route(request, path)
+    #     item, endpoint, args = route.find(path, self.registry)
+    #     return item.serve(route, request, endpoint, args)
+    #
+    # def find_route(self, request, path):
+    #     """Find the first route that matches the URL `path`."""
+    #
+    #     url = request.build_absolute_uri()
+    #     for route in self['routes'].values():
+    #         if route.match(url): return route
+    #
+    #     raise Exception(f'route not found for "{path}" path')
 
     # def resolve(self, path):
     #     """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
@@ -717,16 +805,6 @@ class Site(Item):
         self.registry.after_request(sender, **kwargs)
         # sleep(5)
         
-
-# class Application(Item):
-#
-#     def get_space(self, name):
-#         return self['spaces'][name]
-#
-# class Space(Item):
-#
-#     def get_category(self, name):
-#         return self['categories'][name]
 
 class Directory(Item):
     """"""
@@ -774,9 +852,8 @@ class View:  # Snap / Snapshot / Data
     _request    = None          # web request object
     # _directory  = None
     
-    def __init__(self, item, route, request):
+    def __init__(self, item, request):
         self._item = item
-        self._route = route
         self._request = request
     
     def __getattr__(self, name):

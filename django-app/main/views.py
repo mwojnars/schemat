@@ -20,7 +20,7 @@ def get_registry():
 def item_view(request, path):    # descriptor, endpoint = ""):
     
     site = get_registry().get_site()
-    text = site.handle(request, path)
+    text = site.handle(request)
     return HttpResponse(text)
     
     # item = site.resolve(descriptor)

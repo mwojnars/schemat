@@ -27,9 +27,9 @@
         schema:
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
-        default: {? '' : "\n    context $item, $category as cat, $app, $route, $directory\
+        default: {? '' : "\n    context $item, $category as cat, $app, $directory\
             \ as dir\n\n    style / $dir.open('base.css')['code']\n\n    % print_headline\n\
-            \            p .catlink\n            a href=$route(cat) | {cat['name']?\
+            \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
             \ or cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
             \ = item['name']? or str(item)\n        head\n            title | {name}\n\
             \        body .page\n            h1  | {name}\n            print_headline\n\
@@ -41,8 +41,8 @@
             \      # from /apps/APP/base import %print_data\n            from base\
             \ import %print_data\n\n            h2 | Properties\n            print_data\
             \ $item\n"}
-  templates: {? '' : "\n    context $item as cat, $app, $route, $directory as dir\n\
-      \n    style / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
+  templates: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
+      \ / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
       \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
       \n        body .page\n            h1\n                try\n                \
       \    i | $name\n                    . | -\n                | category #{cat.iid}\n\
@@ -51,7 +51,7 @@
       \                for item in list(cat.registry.load_items(cat))\n          \
       \          tr\n                        td / #{item.iid} &nbsp;\n           \
       \             td\n                            $ iname = item['name']? or item\n\
-      \                            try\n                                a href=route(item)\
+      \                            try\n                                a href=app.url(item)\
       \ | $iname\n                            else\n                             \
       \   | $iname (no public URL)\n"}
 - id: [0, 1]
@@ -89,10 +89,7 @@
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
-  class_name: Application
-  class_code: "\n        from hyperweb.item import Item\n        class Application(Item):\n\
-    \            def get_space(self, name):\n                return self['spaces'][name]\n\
-    \    "
+  class_name: hyperweb.item.Application
   schema:
     fields:
       name:
@@ -118,37 +115,11 @@
       apps:
         schema:
           values:
-            schemas:
-            - {'@': hyperweb.schema.String}
-            - category:
-                '=': [0, 3]
-                '@': null
-              '@': hyperweb.schema.Link
-            '@': hyperweb.schema.Tuple
+            category:
+              '=': [0, 3]
+              '@': null
+            '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
-      routes:
-        schema:
-          values:
-            type: {'=': hyperweb.item.Route, '@': builtins.type}
-            fields:
-              base:
-                schema: {'@': hyperweb.schema.String}
-                '@': hyperweb.schema.Field
-              path:
-                schema: {'@': hyperweb.schema.String}
-                '@': hyperweb.schema.Field
-              app:
-                schema:
-                  category:
-                    '=': [0, 3]
-                    '@': null
-                  '@': hyperweb.schema.Link
-                '@': hyperweb.schema.Field
-            '@': hyperweb.schema.Struct
-          '@': hyperweb.schema.Catalog
-        multi: false
-        info: dictionary of named URL routes, each route specifies a base URL (protocol+domain),
-          fixed URL path prefix, and a target application object
   directory:
     category:
       '=': [0, 1]
@@ -246,15 +217,13 @@
 - id: [3, 1]
   name: Catalog
   spaces: {meta: 1, sys: 2}
+  base_url: http://localhost:8001/
 - id: [4, 1]
   name: catalog.wiki
-  routes:
-    default: {base: 'http://localhost:8001', path: /, app: 1}
   directory:
     '=': [1, 1]
     '@': null
-  apps:
-    catalog: ['http://localhost:8001/', 1]
+  apps: {catalog: 1}
 - id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [5, 2]

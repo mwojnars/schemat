@@ -9,13 +9,13 @@ from hyperweb.schema import *
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-    context $item, $category as cat, $app, $route, $directory as dir
+    context $item, $category as cat, $app, $directory as dir
 
     style / $dir.open('base.css')['code']
 
     % print_headline
             p .catlink
-            a href=$route(cat) | {cat['name']? or cat}
+            a href=$app.url(cat) | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
     html
@@ -40,7 +40,7 @@ page_item = """
 
 # template that displays a category page
 page_category = """
-    context $item as cat, $app, $route, $directory as dir
+    context $item as cat, $app, $directory as dir
 
     style / $dir.open('base.css')['code']
 
@@ -69,7 +69,7 @@ page_category = """
                         td
                             $ iname = item['name']? or item
                             try
-                                a href=route(item) | $iname
+                                a href=app.url(item) | $iname
                             else
                                 | $iname (no public URL)
 """
@@ -161,15 +161,15 @@ Space_ = Category_(
 Application_ = Category_(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-    # class_name  = 'hyperweb.item.Application',
-    class_name  = "Application",
-    class_code  =
-    """
-        from hyperweb.item import Item
-        class Application(Item):
-            def get_space(self, name):
-                return self['spaces'][name]
-    """,
+    class_name  = 'hyperweb.item.Application',
+    # class_name  = "Application",
+    # class_code  =
+    # """
+    #     from hyperweb.item import Item
+    #     class Application(Item):
+    #         def get_space(self, name):
+    #             return self['spaces'][name]
+    # """,
     schema      = Record(name = String(), spaces = Catalog(Link(Space_))),
     folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
@@ -183,10 +183,11 @@ Site_ = Category_(
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
     schema      = Record(name = String(),
-                         apps = Catalog(Tuple(String(), Link(Application_))),
-                         routes = Field(schema = Catalog(route_schema),
-                                        multi = False,
-                                        info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")),
+                         apps = Catalog(Link(Application_)),
+                         # routes = Field(schema = Catalog(route_schema),
+                         #                multi = False,
+                         #                info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")
+                         ),
     directory   = Link(Directory_),     # root of the site-global hierarchical directory of items
 )
 

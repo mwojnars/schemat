@@ -97,6 +97,7 @@ space_sys = Space_(
 app_catalog = Application_(
     name        = "Catalog",
     spaces      = {'meta': space_meta, 'sys': space_sys},
+    base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
 )
 # app_admin = Application_(
 #     name        = "Admin"
@@ -104,11 +105,11 @@ app_catalog = Application_(
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",
-    routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = app_catalog)},
+    # routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = app_catalog)},
     directory   = directory,
     apps        = {
-        # 'admin':    ("http://localhost:8001/admin/", app_admin),
-        'catalog':  ("http://localhost:8001/", app_catalog),
+        # 'admin':    app_admin,
+        'catalog':  app_catalog,
     },
     # apps        = [
     #     ('admin', "http://localhost:8001/admin/", app_admin),
