@@ -94,27 +94,25 @@ space_sys = Space_(
     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_}
 )
 
+app_admin = Application_(
+    name        = "Admin",
+    base_url    = "http://localhost:8001/admin/",
+    url_scheme  = "raw",
+)
 app_catalog = Application_(
     name        = "Catalog",
-    spaces      = {'meta': space_meta, 'sys': space_sys},
     base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
+    spaces      = {'meta': space_meta, 'sys': space_sys},
 )
-# app_admin = Application_(
-#     name        = "Admin"
-# )
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",
     # routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = app_catalog)},
     directory   = directory,
     apps        = {
-        # 'admin':    app_admin,
+        'admin':    app_admin,
         'catalog':  app_catalog,
     },
-    # apps        = [
-    #     ('admin', "http://localhost:8001/admin/", app_admin),
-    #     ('catalog', "http://localhost:8001/", app_catalog),
-    # ],
 )
 
 #####################################################################################################################################################

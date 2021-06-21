@@ -13,7 +13,6 @@ types:
 
 Int -- with min-max range of values
 Range
-Enum
 Email
 
 List / Sequence
@@ -430,6 +429,57 @@ class Bytes(Primitive):
         if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
         return base64.b64decode(encoded)
     
+class Enum(Schema):
+    """
+    Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
+    or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
+    of values in __init__() is meaningful for subsequent decoding.
+    """
+    
+    schema   = String()
+    values   = None
+    valueset = None         # (temporary) set of permitted values
+    indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
+    
+    def __init__(self, *values, schema = None, indices = None):
+        self.values = list(values)
+        if schema is not None: self.schema = schema
+        if indices:
+            self.indices = indices
+        self._init()
+        
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['valueset']
+        state['indices'] = bool(self.indices)
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._init()
+        
+    def _init(self):
+        self.valueset = set(self.values)         # for fast lookups
+        if self.indices:
+            self.indices = {v: idx for idx, v in enumerate(self.values)}
+
+    def _encode(self, value, registry):
+        if value not in self.valueset: raise EncodeError(f"unknown Enum value: {value}")
+        if self.indices:
+            return self.indices[value]
+        else:
+            return self.schema.encode(value, registry)
+    
+    def _decode(self, encoded, registry):
+        # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
+        
+        if self.indices:
+            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded Enum value, got {encoded}")
+            return self.values[encoded]
+        
+        value = self.schema.decode(encoded, registry)
+        if value not in self.valueset: raise DecodeError(f"unknown Enum value after decoding: {value}")
+        return value
     
     
 class Link(Schema):

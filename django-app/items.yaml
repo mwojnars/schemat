@@ -94,6 +94,8 @@
     fields:
       name:
         schema: {'@': hyperweb.schema.String}
+      url_scheme:
+        schema: {'@': hyperweb.schema.String}
       spaces:
         schema:
           values:
@@ -215,15 +217,19 @@
   name: System
   categories: {space: 2, app: 3, site: 4, dir: 1}
 - id: [3, 1]
+  name: Admin
+  base_url: http://localhost:8001/admin/
+  url_scheme: raw
+- id: [3, 2]
   name: Catalog
-  spaces: {meta: 1, sys: 2}
   base_url: http://localhost:8001/
+  spaces: {meta: 1, sys: 2}
 - id: [4, 1]
   name: catalog.wiki
   directory:
     '=': [1, 1]
     '@': null
-  apps: {catalog: 1}
+  apps: {admin: 1, catalog: 2}
 - id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [5, 2]

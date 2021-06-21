@@ -474,7 +474,7 @@ class Category(Item):
     """
     
     def new(self, __loaded__ = True, **fields):
-        """Create a new raw item, not yet in Registry and without self.registry explicitly set."""
+        """Create a new raw item of this category, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get_class()
         return itemclass(self, __loaded__, **fields)
     
@@ -657,7 +657,11 @@ class Application(Item):
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
         """
-        return self._handle_space_cat_iid(request, route, path)
+        
+        # if this application has spaces configured, use the space.category:iid scheme for URLs;
+        # otherwise use the raw scheme
+        if self.get('spaces'):
+            return self._handle_space_cat_iid(request, route, path)
 
     def _handle_space_cat_iid(self, request, route, path):
         """
@@ -848,9 +852,8 @@ class View:  # Snap / Snapshot / Data
     # internal structures
     _item       = None          # the underlying Item instance; enables access to methods and full data[]
     _user       = None          # user profile / identification
-    _route      = None          # the site's Route that this request came from
+    # _route      = None          # the site's Route that this request came from
     _request    = None          # web request object
-    # _directory  = None
     
     def __init__(self, item, request):
         self._item = item
@@ -876,13 +879,13 @@ class View:  # Snap / Snapshot / Data
     def _uniq(self, field):
         return self._item.get(field, self._default_miss, mode ='uniq')
 
-    def url(self, __target_item__ = None, __endpoint__ = None, **params):
-        """
-        Generate URL of a target_item when accessed through self._app application;
-        or URL of self._item if target_item=None.
-        """
-        if __target_item__ is None: __target_item__ = self._item
-        return self._route.url(__target_item__, __endpoint__, **params)
+    # def url(self, __target_item__ = None, __endpoint__ = None, **params):
+    #     """
+    #     Generate URL of a target_item when accessed through self._app application;
+    #     or URL of self._item if target_item=None.
+    #     """
+    #     if __target_item__ is None: __target_item__ = self._item
+    #     return self._route.url(__target_item__, __endpoint__, **params)
 
     
 #####################################################################################################################################################
