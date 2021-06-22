@@ -1,5 +1,6 @@
 import re, threading
 from textwrap import dedent
+from urllib.parse import urlencode
 
 from nifty.text import html_escape
 
@@ -157,6 +158,8 @@ class Item(object, metaclass = MetaItem):
     
     @property
     def id(self): return self.cid, self.iid
+    
+    def has_id(self): return self.cid is not None and self.iid is not None
     
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
@@ -657,25 +660,41 @@ class Application(Item):
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
         """
-        
-        # if this application has spaces configured, use the space.category:iid scheme for URLs;
-        # otherwise use the raw scheme
-        if self.get('spaces'):
-            return self._handle_space_cat_iid(request, route, path)
+        # choose the right URL scheme resolver to use
+        if self.get('url_scheme') == 'raw':
+            resolve = self._handle_raw
+        else:
+            resolve = self._handle_spaces
+        return resolve(request, route, path)
 
-    def _handle_space_cat_iid(self, request, route, path):
+    def url(self, __item__, __endpoint__ = None, **args):
+        """
+        Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
+        endpoint designation and/or arguments to be passed to a handler function or a template.
+        """
+        if self.get('url_scheme') == 'raw':
+            f = self._url_raw
+        else:
+            f = self._url_spaces
+        return f(__item__, __endpoint__, **args)
+        
+    def _handle_raw(self, request, route, path):
+        """
+        The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
+        only be used for an Admin application.
+        `path` should have a form of: CID,IID
+        """
+        path, endpoint, args = self._get_endpoint(path)
+        cid, iid = map(int, path.split(','))
+        item = self.registry.get_item((cid, iid))
+        return item.serve(request, route, self, endpoint, args)
+        
+    def _handle_spaces(self, request, route, path):
         """
         Handle requests identified by standard URL paths of the form:
           <space_name>.<category_name>:<item_iid>/endpoint
         """
-        endpoint = args = ""
-        
-        # decode `endpoint` and `args` from the path
-        if '?' in path:
-            path, args = path.split('?', 1)
-        
-        if '/' in path:
-            path, endpoint = path.rsplit('/', 1)
+        path, endpoint, args = self._get_endpoint(path)
 
         # decode names of space and category
         try:
@@ -693,19 +712,21 @@ class Application(Item):
         
         return item.serve(request, route, self, endpoint, args)
 
-    def url(self, __item__, __endpoint__ = None, **args):
-        """
-        Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
-        endpoint designation and/or arguments to be passed to a handler function or a template.
-        """
+    def _url_raw(self, __item__, __endpoint__ = None, **args):
+        
+        assert __item__.has_id()
+        cid, iid = __item__.id
+        url = f'{cid},{iid}'
+        return self._set_endpoint(url, __endpoint__, args)
+        
+    def _url_spaces(self, __item__, __endpoint__ = None, **args):
         category = __item__.category
         path = self._qualifier(category)
         base = self['base_url']
         iid  = category.encode_url(__item__.iid)
         url  = f'{base}/{path}:{iid}'
-        if __endpoint__: url += f'/{__endpoint__}'
-        return url
-
+        return self._set_endpoint(url, __endpoint__, args)
+    
     @cached(ttl = 10)
     def _qualifier(self, category):
         """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
@@ -715,6 +736,24 @@ class Application(Item):
                 return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
         
         raise Exception(f"no URL pattern exists for the requested category: {category}")
+    
+    def _get_endpoint(self, path):
+        """Decode /endpoint and ?arguments from the URL path."""
+        
+        endpoint = args = ""
+        
+        if '?' in path:
+            path, args = path.split('?', 1)
+        if '/' in path:
+            path, endpoint = path.rsplit('/', 1)
+        
+        return path, endpoint, args
+    
+    def _set_endpoint(self, url, endpoint, args):
+        
+        if endpoint: url += f'/{endpoint}'
+        if args: url += f'?{urlencode(args)}'
+        return url
     
 
 class Site(Item):

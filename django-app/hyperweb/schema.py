@@ -435,7 +435,6 @@ class Enum(Schema):
     or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
     of values in __init__() is meaningful for subsequent decoding.
     """
-    
     schema   = String()
     values   = None
     valueset = None         # (temporary) set of permitted values

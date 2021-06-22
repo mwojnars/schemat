@@ -170,7 +170,7 @@ Application_ = Category_(
     #         def get_space(self, name):
     #             return self['spaces'][name]
     # """,
-    schema      = Record(name = String(), url_scheme = String(), spaces = Catalog(Link(Space_))),
+    schema      = Record(name = String(), url_scheme = Enum('raw', 'spaces'), spaces = Catalog(Link(Space_))),
     folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
                                         # to do this inside a .../data subfolder

@@ -95,7 +95,10 @@
       name:
         schema: {'@': hyperweb.schema.String}
       url_scheme:
-        schema: {'@': hyperweb.schema.String}
+        schema:
+          values: [raw, spaces]
+          indices: false
+          '@': hyperweb.schema.Enum
       spaces:
         schema:
           values:
