@@ -353,7 +353,7 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def serve(self, request, route, app, endpoint, args):
+    def serve(self, request, args):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.
@@ -361,6 +361,9 @@ class Item(object, metaclass = MetaItem):
         """
         # TODO: parse `args` string and pass to the handler
         # TODO: route through a predefined pipeline of handlers
+
+        request.item = self
+        endpoint = request.endpoint
         
         # from django.template.loader import get_template
         # template = get_template((endpoint or 'template') + '.hy')
@@ -373,14 +376,16 @@ class Item(object, metaclass = MetaItem):
         
         # search for a Hypertag script in templates
         template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
+        
+        #template = app.
+        
         if template is not None:
-            view = View(self, request)
-            site = self.registry.get_site()
-            # app  = route.app
+            app  = request.app
+            site = request.site
             directory = site['directory']
             
-            context = dict(item = self, data = view, category = self.category, route = route, request = request,
-                           app = app, site = site, directory = directory)
+            context = dict(item = self, data = View(self), category = self.category, request = request,
+                           app = app, directory = directory)
             
             loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
             hypertag = HyperHTML(loaders)
@@ -574,17 +579,17 @@ class Category(Item):
 #####  SITE
 #####
 
-class Route:
-    """
-    Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
-    and a target application object.
-    """
-    base = None         # base URL: scheme (protocol) + domain, without trailing '/'
-    path = None         # fixed prefix of URL paths after the domain part; should start with '/'
-    app  = None         # Application that interprets the dynamic part of a URL and maps it bidirectionally to an item
-    
-    def __init__(self, **attrs):
-        self.__dict__.update(attrs)
+# class Route:
+#     """
+#     Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
+#     and a target application object.
+#     """
+#     base = None         # base URL: scheme (protocol) + domain, without trailing '/'
+#     path = None         # fixed prefix of URL paths after the domain part; should start with '/'
+#     app  = None         # Application that interprets the dynamic part of a URL and maps it bidirectionally to an item
+#
+#     def __init__(self, **attrs):
+#         self.__dict__.update(attrs)
     
     # def match(self, url):
     #     """Check if this route matches a given URL."""
@@ -655,7 +660,7 @@ class Application(Item):
     def get_space(self, name):
         return self['spaces'][name]
 
-    def handle(self, request, route, path):
+    def handle(self, request):
         """
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
@@ -665,7 +670,7 @@ class Application(Item):
             resolve = self._handle_raw
         else:
             resolve = self._handle_spaces
-        return resolve(request, route, path)
+        return resolve(request)
 
     def url(self, __item__, __endpoint__ = None, **args):
         """
@@ -678,23 +683,59 @@ class Application(Item):
             f = self._url_spaces
         return f(__item__, __endpoint__, **args)
         
-    def _handle_raw(self, request, route, path):
+    def _handle_raw(self, request):
         """
         The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
         only be used for an Admin application.
         `path` should have a form of: CID,IID
         """
-        path, endpoint, args = self._get_endpoint(path)
+        path, endpoint, args = self._get_endpoint(request.ipath)
         cid, iid = map(int, path.split(','))
         item = self.registry.get_item((cid, iid))
-        return item.serve(request, route, self, endpoint, args)
         
-    def _handle_spaces(self, request, route, path):
+        request.endpoint = endpoint
+        
+        # handler = self.resolve(item, endpoint)     # translate `endpoint` to a function that will actually process the request
+        # return handler(request, self, route, **args)
+        
+        return item.serve(request, args)
+        
+    def resolve(self, request, item, endpoint):
+        
+        if hasattr(item, endpoint):
+            handler = getattr(item, endpoint)
+        else:
+            handler = item.get(endpoint)
+            
+        if not handler: raise Exception("page not found")
+        
+        if isinstance(handler, str):
+            # handler is a Hypertag script that has to be rendered
+            def render():
+                app  = request.app
+                site = request.site
+                directory = site['directory']
+                
+                context = dict(item = self, data = View(self), category = self.category, request = request,
+                               app = app, directory = directory)
+                
+                loaders  = [HyItemLoader(self, directory), PyLoader]     # PyLoader is needed to load Python built-ins
+                hypertag = HyperHTML(loaders)
+                # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
+    
+                # print('template:')
+                # print(template)
+                return hypertag.render(template, **context)
+            
+            return render
+        
+        
+    def _handle_spaces(self, request):
         """
         Handle requests identified by standard URL paths of the form:
           <space_name>.<category_name>:<item_iid>/endpoint
         """
-        path, endpoint, args = self._get_endpoint(path)
+        path, endpoint, args = self._get_endpoint(request.ipath)
 
         # decode names of space and category
         try:
@@ -710,7 +751,9 @@ class Application(Item):
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
         
-        return item.serve(request, route, self, endpoint, args)
+        request.endpoint = endpoint
+        
+        return item.serve(request, args)
 
     def _url_raw(self, __item__, __endpoint__ = None, **args):
         
@@ -790,8 +833,17 @@ class Site(Item):
         return self.registry.get_item(*args, **kwargs)
         
     def handle(self, request):
-        route, path, app = self.find_app(request)
-        return app.handle(request, route, path)
+        """
+        The site extends the `request` here in handle() with `route`, `app`, and `path` attributes,
+        for the use in downstream processing functions.
+        """
+        route, ipath, app = self.find_app(request)
+        
+        request.route = route
+        request.ipath = ipath
+        request.app   = app
+        
+        return app.handle(request)
     
     def find_app(self, request):
         """Find the first application in data['apps'] that matches the URL `path`."""
@@ -892,11 +944,10 @@ class View:  # Snap / Snapshot / Data
     _item       = None          # the underlying Item instance; enables access to methods and full data[]
     _user       = None          # user profile / identification
     # _route      = None          # the site's Route that this request came from
-    _request    = None          # web request object
+    # _request    = None          # web request object
     
-    def __init__(self, item, request):
+    def __init__(self, item):
         self._item = item
-        self._request = request
     
     def __getattr__(self, name):
         """

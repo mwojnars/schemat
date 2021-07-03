@@ -39,6 +39,8 @@ base_css = Code_(
           overflow: hidden
         }
         h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
+        a { color: #006ecc }
+        a:visited { color: #00427a }
         .catlink { font-size: 14px; margin-top: -20px }
         
         table.data {
@@ -94,9 +96,9 @@ space_sys = Space_(
     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_}
 )
 
-app_admin = Application_(
-    name        = "Admin",
-    base_url    = "http://localhost:8001/admin/",
+app_items = Application_(
+    name        = "Items",
+    base_url    = "http://localhost:8001/admin/item/",
     url_scheme  = "raw",
 )
 app_catalog = Application_(
@@ -110,8 +112,8 @@ catalog_wiki = Site_(
     # routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = app_catalog)},
     directory   = directory,
     apps        = {
-        'admin':    app_admin,
-        'catalog':  app_catalog,
+        'items':        app_items,
+        'catalog':      app_catalog,
     },
 )
 

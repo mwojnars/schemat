@@ -195,17 +195,18 @@
     \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        \
     \  color: #444;\n        }\n        .page {\n          width: 980px;\n       \
     \   margin: 0 auto;\n          overflow: hidden\n        }\n        h1 { font-size:\
-    \ 26px; line-height: 34px; margin-top: 30px }\n        .catlink { font-size: 14px;\
-    \ margin-top: -20px }\n        \n        table.data {\n          width: 100%;\n\
-    \          # font-family: \"Times New Roman\", Times, serif;\n          border:\
-    \ 1px solid #FFFFFF;\n          background-color: #F6F6F6;\n          text-align:\
-    \ center;\n          border-collapse: collapse;\n        }\n        table.data\
-    \ td, table.data th {\n          border: 1px solid #FFFFFF;\n          padding:\
-    \ 11px 12px 8px;\n        }\n        table.data tbody td {\n          line-height:\
-    \ 20px;\n        }\n        table.data tbody td.name  {\n          width: 20%;\n\
-    \          font-size: 15px;\n          font-weight: bold;\n          text-align:\
-    \ right;\n          padding-right: 25px;\n        }\n        table.data tbody\
-    \ td.value {\n          width: 80%;\n          font-size: 13px;\n          font-family:\
+    \ 26px; line-height: 34px; margin-top: 30px }\n        a { color: #006ecc }\n\
+    \        a:visited { color: #00427a }\n        .catlink { font-size: 14px; margin-top:\
+    \ -20px }\n        \n        table.data {\n          width: 100%;\n          #\
+    \ font-family: \"Times New Roman\", Times, serif;\n          border: 1px solid\
+    \ #FFFFFF;\n          background-color: #F6F6F6;\n          text-align: center;\n\
+    \          border-collapse: collapse;\n        }\n        table.data td, table.data\
+    \ th {\n          border: 1px solid #FFFFFF;\n          padding: 11px 12px 8px;\n\
+    \        }\n        table.data tbody td {\n          line-height: 20px;\n    \
+    \    }\n        table.data tbody td.name  {\n          width: 20%;\n         \
+    \ font-size: 15px;\n          font-weight: bold;\n          text-align: right;\n\
+    \          padding-right: 25px;\n        }\n        table.data tbody td.value\
+    \ {\n          width: 80%;\n          font-size: 13px;\n          font-family:\
     \ monospace;     /* courier */\n        }\n\n        table.data tr:nth-child(odd)\
     \ {\n          background: #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data\
     \ tfoot td { font-size: 14px; } */\n    "
@@ -220,8 +221,8 @@
   name: System
   categories: {space: 2, app: 3, site: 4, dir: 1}
 - id: [3, 1]
-  name: Admin
-  base_url: http://localhost:8001/admin/
+  name: Items
+  base_url: http://localhost:8001/admin/item/
   url_scheme: raw
 - id: [3, 2]
   name: Catalog
@@ -232,7 +233,7 @@
   directory:
     '=': [1, 1]
     '@': null
-  apps: {admin: 1, catalog: 2}
+  apps: {items: 1, catalog: 2}
 - id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [5, 2]

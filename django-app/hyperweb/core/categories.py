@@ -1,4 +1,4 @@
-from hyperweb.item import Category, Route
+from hyperweb.item import Category
 from hyperweb.schema import *
 
 
@@ -118,8 +118,8 @@ Category_ = Category(
     class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
     templates   = {"": page_category},
-    # view_category = Template(page_category),
-    # view_item     = Template(page_item),
+    # page_category = Template(page_category),
+    # page_item     = Template(page_item),
     # fun  = Method(...),
     # new  = Handler(...),
 )
@@ -176,7 +176,7 @@ Application_ = Category_(
                                         # to do this inside a .../data subfolder
 )
 
-route_schema    = Struct(Route, base = String(), path = String(), app = Link(Application_))
+# route_schema    = Struct(Route, base = String(), path = String(), app = Link(Application_))
 
 Site_ = Category_(
     name        = "Site",
