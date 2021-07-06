@@ -87,13 +87,12 @@ root_schema = Record(
     info         = String(),
     class_name   = Field(schema = String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Text(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    templates    = Field(schema = Catalog(Text()), default = {"": page_item}),
-    # templates  = Field(schema = Catalog(Text()), default = {"": page_item}),
+    endpoints    = Field(schema = Catalog(Text()), default = {"": page_item}),
     # template   = Field(schema = Struct(name = String(), code = Text()), default = ("", page_item)),
     # methods    = Catalog(method_schema),
     # handlers... views...
     # ...
-    # properties = Catalog(Property())
+    # properties = Catalog(Property())   "data field"
 )
 
 # category-level properties:
@@ -117,7 +116,7 @@ Category_ = Category(
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
-    templates   = {"": page_category},
+    endpoints   = {"": page_category},
     # page_category = Template(page_category),
     # page_item     = Template(page_item),
     # fun  = Method(...),

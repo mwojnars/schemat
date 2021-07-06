@@ -673,7 +673,12 @@ class Dict(Schema):
         return d
 
 class Catalog(Dict):
-    """Similar to Dict, but assumes keys are strings. Watch out the reversed ordering of arguments in __init__() !!"""
+    """
+    Similar to Dict, but assumes keys are strings.
+    Provides tight integration with the UI: convenient layout for display of items,
+    and access paths for locating form validation errors.
+    Watch out the reversed ordering of arguments in __init__() !!
+    """
     
     keys_default = String()
     
@@ -738,7 +743,7 @@ class Field:
     
     schema  = None          # instance of Schema
     default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
-    multi   = False         # whether this field can take on multiple values
+    multi   = False         # whether this field can be repeated (take on multiple values)
     info    = None          # human-readable description of the field
     
     def __init__(self, schema = None, default = None, info = None, multi = None):
@@ -800,13 +805,15 @@ class Record(Schema):
     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
     to False in all fields.
     """
-
+    
     # default field specification to be used for fields not present in `fields`
     default_field = Field(schema = object_schema, multi = True)
     
     fields   = None     # dict of field names & their Field() schema descriptors
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     blank    = False
+    
+    # constraints = None       # constraints that span multiple fields
     
     def __init__(self, __strict__ = None, **fields):
         # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())

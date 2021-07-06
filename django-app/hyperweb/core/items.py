@@ -80,8 +80,10 @@ base_css = Code_(
 
 directory = Directory_(
     items = {
-        'base.hy':  base_hy,
-        'base.css': base_css,
+        'base.hy':      base_hy,            # reusable components for use in pages
+        'base.css':     base_css,           # global styles for use in pages
+        # 'item.hy':      page_item,          # generic page of an item
+        # 'category.hy':  page_category,      # generic page of a category
     },
 )
 

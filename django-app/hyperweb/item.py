@@ -1,4 +1,4 @@
-import re, threading
+import re, threading, types
 from textwrap import dedent
 from urllib.parse import urlencode
 
@@ -222,6 +222,26 @@ class Item(object, metaclass = MetaItem):
         
         return default
 
+    # def getfield(self, field, default = None, mode = 'first'):
+    #     """
+    #     Like get(), but additionally looks for `field` inside `self` (instance or class attribute)
+    #     before returning the default.
+    #     """
+    #     try:
+    #         return self.get(field, Item.RAISE, mode = mode)
+    #     except KeyError:
+    #         pass
+    #
+    #     try:
+    #         return getattr(self, field)
+    #     except AttributeError:
+    #         pass
+    #
+    #     if default is Item.RAISE:
+    #         raise KeyError(field)
+    #
+    #     return default
+
     def uniq(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'uniq')
         
@@ -353,49 +373,72 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def serve(self, request, args):
-        """
-        Process a web request submitted to a given endpoint of `self` and return a response document.
-        Endpoint can be implemented as a handler function/method, or a template.
-        Handler functions are stored in a parent category object.
-        """
-        # TODO: parse `args` string and pass to the handler
-        # TODO: route through a predefined pipeline of handlers
+    # def serve(self, request):
+    #     """
+    #     Process a web request submitted to a given endpoint of `self` and return a response document.
+    #     Endpoint can be implemented as a handler function/method, or a template.
+    #     Handler functions are stored in a parent category object.
+    #     URL query parameters are passed inside request.GET, e.g., q=request.GET.get('q','')
+    #     """
+    #     # TODO: parse `args` string and pass to the handler
+    #     # TODO: route through a predefined pipeline of handlers
+    #
+    #     endpoint = request.endpoint
+    #
+    #     # from django.template.loader import get_template
+    #     # template = get_template((endpoint or 'template') + '.hy')
+    #     # return template.render({'item': self}, request)
+    #
+    #     # search for a handler method in handlers
+    #     hdl = self.handlers.get(endpoint)
+    #     if hdl is not None:
+    #         request.item = self
+    #         return hdl(self, request)
+    #
+    #     # search for a Hypertag script in templates
+    #     template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
+    #
+    #     if template is not None:
+    #         return self.render(template, request)
+    #
+    #     raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
+    
+    def get_handler(self, endpoint, default_endpoint = '_view_'):
+        
+        # search for a handler function/template in category's endpoints
+        endpoints = self.category.get('endpoints', {})
+        handler = endpoints.get(endpoint)
+        if not handler: raise Exception("page not found")
 
+        # handler is a Hypertag script that has to be rendered through Item.render() ?
+        if isinstance(handler, str):
+            def render(request):
+                template = handler
+                return self.render(template, request)
+            return render
+        
+        # handler is a regular (bound) python method of the item? return unchanged; it should accept `request` as its only arg
+        if isinstance(handler, types.MethodType):
+            return handler
+        
+    def render(self, template, request):
+        """Render a given template script as a response to a given request."""
+        
+        app  = request.app
+        site = request.site
+        directory = site['directory']
         request.item = self
-        endpoint = request.endpoint
-        
-        # from django.template.loader import get_template
-        # template = get_template((endpoint or 'template') + '.hy')
-        # return template.render({'item': self}, request)
-        
-        # search for a handler method in handlers
-        hdl = self.handlers.get(endpoint)
-        if hdl is not None:
-            return hdl(self, request)
-        
-        # search for a Hypertag script in templates
-        template = self.category.get('templates', {}).get(endpoint)   #or self.templates.get(endpoint)
-        
-        #template = app.
-        
-        if template is not None:
-            app  = request.app
-            site = request.site
-            directory = site['directory']
-            
-            context = dict(item = self, data = View(self), category = self.category, request = request,
-                           app = app, directory = directory)
-            
-            loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
-            hypertag = HyperHTML(loaders)
-            # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
 
-            # print('template:')
-            # print(template)
-            return hypertag.render(template, **context)
+        context = dict(item = self, data = View(self), category = self.category, request = request,
+                       app = app, directory = directory)
+        
+        loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
+        hypertag = HyperHTML(loaders)
+        # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
 
-        raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
+        # print('template:')
+        # print(template)
+        return hypertag.render(template, **context)
         
     def __getstate__(self):
         raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
@@ -689,53 +732,22 @@ class Application(Item):
         only be used for an Admin application.
         `path` should have a form of: CID,IID
         """
-        path, endpoint, args = self._get_endpoint(request.ipath)
+        path, endpoint = self._split_endpoint(request.ipath)
         cid, iid = map(int, path.split(','))
         item = self.registry.get_item((cid, iid))
         
         request.endpoint = endpoint
         
-        # handler = self.resolve(item, endpoint)     # translate `endpoint` to a function that will actually process the request
-        # return handler(request, self, route, **args)
-        
-        return item.serve(request, args)
-        
-    def resolve(self, request, item, endpoint):
-        
-        if hasattr(item, endpoint):
-            handler = getattr(item, endpoint)
-        else:
-            handler = item.get(endpoint)
-            
-        if not handler: raise Exception("page not found")
-        
-        if isinstance(handler, str):
-            # handler is a Hypertag script that has to be rendered
-            def render():
-                app  = request.app
-                site = request.site
-                directory = site['directory']
-                
-                context = dict(item = self, data = View(self), category = self.category, request = request,
-                               app = app, directory = directory)
-                
-                loaders  = [HyItemLoader(self, directory), PyLoader]     # PyLoader is needed to load Python built-ins
-                hypertag = HyperHTML(loaders)
-                # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
-    
-                # print('template:')
-                # print(template)
-                return hypertag.render(template, **context)
-            
-            return render
-        
+        handler = item.get_handler(endpoint)     # translate `endpoint` to a function that will actually process the request
+        return handler(request)
+        # return item.serve(request)
         
     def _handle_spaces(self, request):
         """
         Handle requests identified by standard URL paths of the form:
           <space_name>.<category_name>:<item_iid>/endpoint
         """
-        path, endpoint, args = self._get_endpoint(request.ipath)
+        path, endpoint = self._split_endpoint(request.ipath)
 
         # decode names of space and category
         try:
@@ -753,7 +765,9 @@ class Application(Item):
         
         request.endpoint = endpoint
         
-        return item.serve(request, args)
+        handler = item.get_handler(endpoint)     # translate `endpoint` to a function that will actually process the request
+        return handler(request)
+        # return item.serve(request)
 
     def _url_raw(self, __item__, __endpoint__ = None, **args):
         
@@ -780,17 +794,16 @@ class Application(Item):
         
         raise Exception(f"no URL pattern exists for the requested category: {category}")
     
-    def _get_endpoint(self, path):
-        """Decode /endpoint and ?arguments from the URL path."""
+    def _split_endpoint(self, path):
+        """Decode /endpoint from the URL path."""
         
-        endpoint = args = ""
-        
+        endpoint = ""
         if '?' in path:
             path, args = path.split('?', 1)
         if '/' in path:
             path, endpoint = path.rsplit('/', 1)
         
-        return path, endpoint, args
+        return path, endpoint
     
     def _set_endpoint(self, url, endpoint, args):
         

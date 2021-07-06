@@ -23,7 +23,7 @@
           be imported from `class_code` after its execution.
       class_code:
         schema: {'@': hyperweb.schema.Text}
-      templates:
+      endpoints:
         schema:
           values: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Catalog
@@ -41,7 +41,7 @@
             \      # from /apps/APP/base import %print_data\n            from base\
             \ import %print_data\n\n            h2 | Properties\n            print_data\
             \ $item\n"}
-  templates: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
+  endpoints: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
       \ / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
       \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
       \n        body .page\n            h1\n                try\n                \
