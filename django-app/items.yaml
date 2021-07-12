@@ -181,15 +181,6 @@
             txt: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Select
 - id: [6, 1]
-  language: hypertag
-  code: "\n        %print_data item\n            table .data : tbody\n           \
-    \     for field, value in item.data.items()\n                    tr\n        \
-    \                td .name  | {field}\n                        td .value | {str(value)}\n\
-    \                        \n        %print_data_ul item\n            ul\n     \
-    \           for field, value in item.data.items()\n                    li\n  \
-    \                      b | {field}:\n                        . | {str(value)}\n\
-    \    "
-- id: [6, 2]
   language: css
   code: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
     \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        \
@@ -210,10 +201,24 @@
     \ monospace;     /* courier */\n        }\n\n        table.data tr:nth-child(odd)\
     \ {\n          background: #e2eef9;    /* #D0E4F5 */\n        }\n        /* table.data\
     \ tfoot td { font-size: 14px; } */\n    "
+- id: [6, 2]
+  language: hypertag
+  code: "\n        %print_data item\n            table .data : tbody\n           \
+    \     for field, value in item.data.items()\n                    tr\n        \
+    \                # schemas = item.category.get_schema()          # = item.category.get('schema')\
+    \ or object_schema\n                        # schema  = schemas.fields.get(field).schema\
+    \    # category.get_field(field) ... category.get_schema(field)\n            \
+    \            # if schema.is_collection:\n                        #     td .name\
+    \ colspan=2 | {field}\n                        #     data_table value\n      \
+    \                  td .name  | {field}\n                        td .value | {str(value)}\n\
+    \                        \n        %print_data_ul item\n            ul\n     \
+    \           for field, value in item.data.items()\n                    li\n  \
+    \                      b | {field}:\n                        . | {str(value)}\n\
+    \    "
 - id: [1, 1]
   items:
-    base.hy: [6, 1]
-    base.css: [6, 2]
+    base.hy: [6, 2]
+    base.css: [6, 1]
 - id: [2, 1]
   name: Meta
   categories: {category: 0, item: 5}

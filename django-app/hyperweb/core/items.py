@@ -6,25 +6,6 @@ from hyperweb.core.categories import *
 #####  ITEMS
 #####
 
-base_hy = Code_(
-    language = 'hypertag',
-    code = """
-        %print_data item
-            table .data : tbody
-                for field, value in item.data.items()
-                    tr
-                        td .name  | {field}
-                        td .value | {str(value)}
-                        
-        %print_data_ul item
-            ul
-                for field, value in item.data.items()
-                    li
-                        b | {field}:
-                        . | {str(value)}
-    """,
-)
-
 base_css = Code_(
     language = 'css',
     code = """
@@ -77,6 +58,53 @@ base_css = Code_(
         /* table.data tfoot td { font-size: 14px; } */
     """,
 )
+
+base_hy = Code_(
+    language = 'hypertag',
+    code = """
+        %print_data item
+            table .data : tbody
+                for field, value in item.data.items()
+                    tr
+                        # schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
+                        # schema  = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
+                        # if schema.is_collection:
+                        #     td .name colspan=2 | {field}
+                        #     data_table value
+                        td .name  | {field}
+                        td .value | {str(value)}
+                        
+        %print_data_ul item
+            ul
+                for field, value in item.data.items()
+                    li
+                        b | {field}:
+                        . | {str(value)}
+    """,
+)
+
+"""
+%catalog1 data schema=None fields=None
+    table .data : tbody
+        for field, value in data.items()
+            $ schema = schema or fields[field].schema
+            tr
+                td .name  | {field}
+                td .value | {schema.render(value)}
+
+%catalog2 data schema
+    table .data : tbody
+        for field, value in data.items()
+            tr
+                schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
+                value_schema = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
+                if value_schema.is_catalog:
+                    td .name colspan=2 | {field}
+                    catalog1 value value_schema
+                else
+                    td .name  | {field}
+                    td .value | {schema.render(value)}
+"""
 
 directory = Directory_(
     items = {
