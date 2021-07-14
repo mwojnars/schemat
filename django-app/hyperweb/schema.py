@@ -680,6 +680,9 @@ class Catalog(Dict):
     Watch out the reversed ordering of arguments in __init__() !!
     """
     
+    type = None             # optional subtype of <catalog> (which is a subtype of <dict>);
+                            # if present, only objects of this type are accepted for encoding
+
     keys_default = String()
     
     def __init__(self, values = None, keys = None):
@@ -994,7 +997,7 @@ class RecordSchema(Struct):
     type = Record
     fields = {
         'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
-        'strict': Boolean(),
+        # 'strict': Boolean(),
     }
 
 # INFO: it's possible to use field_schema and record_schema, as below,

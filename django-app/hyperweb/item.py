@@ -1,4 +1,4 @@
-import re, threading, types
+import re, threading, types, json
 from textwrap import dedent
 from urllib.parse import urlencode
 
@@ -210,7 +210,7 @@ class Item(object, metaclass = MetaItem):
             return self.data.get(field, mode = mode)
         
         if category_default:
-            from .schema import Field
+            from .schema import Field                       # TODO: refactor Field.MISSING -> Item.MISSING
             cat_default = self.category.get_default(field)
             if cat_default is not Field.MISSING:
                 return cat_default
@@ -326,9 +326,13 @@ class Item(object, metaclass = MetaItem):
 
         # convert data from JSON string to a struct
         if data:
-            schema = self.category.get('schema')
-            data = schema.from_json(data, self.registry)
+            # schema = self.category.get('schema')
+            from .schema import Record                  # TODO: refactor so that local import is avoided
+            fields = self.category.get('fields')        # specification of fields {field_name: schema}
+            schema = Record(**fields)
+            data   = schema.from_json(data, self.registry)
             self.data.update(data)
+
         
     #     self._post_decode()
     #
@@ -342,7 +346,10 @@ class Item(object, metaclass = MetaItem):
     #     """Post-processing performed right after new values of `fields` have been written to `data`."""
     
     def to_json(self):
-        schema = self.category.get('schema')
+        # schema = self.category.get('schema')
+        from .schema import Record                  # TODO: refactor so that local import is avoided
+        fields = self.category.get('fields')        # specification of fields {field_name: schema}
+        schema = Record(**fields)
         return schema.to_json(self.data, self.registry)
         
     def insert(self):
@@ -566,7 +573,10 @@ class Category(Item):
     
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
-        return self['schema'].get_default(field)
+        # return self['schema'].get_default(field)
+        from .schema import Field                       # TODO: refactor, use Item.MISSING instead of Field.MISSING
+        field = self['fields'].get(field)
+        return field.default if field else Field.MISSING
 
     #####  Handlers & templates  #####
 
@@ -606,14 +616,15 @@ class Category(Item):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
 
-        from .core import root_schema as schema
+        from .core import root_schema
         
         root = cls(__loaded__ = False)
         root.registry = registry
-        root.category = root            # root category is a category for itself
+        root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
         root.iid = ROOT_CID
-        root['schema'] = schema         # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+        # root['schema'] = root_schema            # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+        root['fields'] = root_schema.fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         return root
         
 
