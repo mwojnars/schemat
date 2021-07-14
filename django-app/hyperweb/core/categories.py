@@ -200,8 +200,8 @@ Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.item.Item',
-    schema      = Record(name = Field(String(), multi = True), title = String()),
-    fields      = dict(name = Field(String(), multi = True), title = Field(String())),
+    schema      = Record(name = Field(String()), title = String()),                 # multi = True
+    fields      = dict(name = Field(String()), title = Field(String())),            # multi = True
 )
 
 

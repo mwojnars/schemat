@@ -225,13 +225,11 @@
     fields:
       name:
         schema: {'@': hyperweb.schema.String}
-        multi: true
       title:
         schema: {'@': hyperweb.schema.String}
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
-      multi: true
     title:
       schema: {'@': hyperweb.schema.String}
 - id: [0, 6]
@@ -357,4 +355,4 @@
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [5, 2]
   title: ąłęÓŁŻŹŚ
-  name: [test_item, duplicate]
+  name: test_item

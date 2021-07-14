@@ -603,15 +603,6 @@ class Category(Item):
         """
         return str(iid)
     
-# # rules for detecting disallowed attribute names in category definitions
-# STOP_ATTR = {
-#     'special':      (lambda attr: attr[0] == '_'),
-#     'reserved':     (lambda attr: attr in 'load insert update save'),
-#     'multidict':    (lambda attr: attr.endswith(MULTI_SUFFIX)),
-# }
-
-# re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid codename of a space or category
-
     @classmethod
     def create_root(cls, registry):
         """Create an instance of the root category item."""

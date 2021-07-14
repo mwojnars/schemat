@@ -818,10 +818,10 @@ class Record(Schema):
     
     # constraints = None       # constraints that span multiple fields
     
-    def __init__(self, __strict__ = None, **fields):
+    def __init__(self, **fields):
         # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
         # self.fields = fields or self.fields or {}
-        if __strict__ is not None: self.strict = __strict__
+        # if __strict__ is not None: self.strict = __strict__
         if fields: self.fields = fields
         self._init_fields()
     
@@ -914,8 +914,8 @@ class Struct(Record):
     
     type = None         # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
     
-    def __init__(self, __type__ = None, **fields):
-        self.type = self.type or __type__ or struct
+    def __init__(self, **fields):
+        self.type = self.type or struct
         assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
         
         super(Struct, self).__init__(**fields)
@@ -923,10 +923,7 @@ class Struct(Record):
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
     
     def _encode(self, obj, registry):
-        """
-        Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
-        while schema-encoding each field value beforehand.
-        """
+
         if self.type is struct:
             assert isinstance(obj, dict), f'not a dict or struct: {obj}'
             attrs = dict(obj)
@@ -946,10 +943,7 @@ class Struct(Record):
         return encoded
         
     def _decode(self, encoded, registry):
-        """
-        Decode a dict of {attr: value(s)} back to a MultiDict.
-        Perform recursive top-down schema-based decoding of field values.
-        """
+
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
         attrs = {}
         
