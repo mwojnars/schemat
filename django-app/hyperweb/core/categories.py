@@ -82,12 +82,13 @@ page_category = """
 
 # schema of categories, including the root category
 root_schema = Record(
-    schema       = Field(schema = RecordSchema(), default = Record()),
-    name         = Field(schema = String(), info = "human-readable title of the category"),
+    schema       = Field(RecordSchema()),
+    name         = Field(String(), info = "human-readable title of the category"),
     info         = String(),
-    class_name   = Field(schema = String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
+    class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Text(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(schema = Catalog(Text()), default = {"": page_item}),
+    endpoints    = Field(Catalog(Text()), default = {"": page_item}),
+    fields       = Catalog(FieldSchema()),
     # template   = Field(schema = Struct(name = String(), code = Text()), default = ("", page_item)),
     # methods    = Catalog(method_schema),
     # handlers... views...
@@ -117,6 +118,7 @@ Category_ = Category(
     class_name  = 'hyperweb.item.Category',
     schema      = root_schema,
     endpoints   = {"": page_category},
+    fields      = root_schema.fields,
     # page_category = Template(page_category),
     # page_item     = Template(page_item),
     # fun  = Method(...),
@@ -129,6 +131,7 @@ Directory_ = Category_(
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
     schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs
+    fields      = dict(items = Field(Catalog(keys = EntryName(), values = Link())))
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -142,6 +145,7 @@ Space_ = Category_(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
     schema      = Record(name = String(), categories = Catalog(Link(Category_))),
+    fields      = dict(name = Field(String()), categories = Field(Catalog(Link(Category_)))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -170,6 +174,7 @@ Application_ = Category_(
     #             return self['spaces'][name]
     # """,
     schema      = Record(name = String(), url_scheme = Enum('raw', 'spaces'), spaces = Catalog(Link(Space_))),
+    fields      = dict(name = Field(String()), url_scheme = Field(Enum('raw', 'spaces')), spaces = Field(Catalog(Link(Space_)))),
     folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
                                         # to do this inside a .../data subfolder
@@ -187,6 +192,7 @@ Site_ = Category_(
                          #                multi = False,
                          #                info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")
                          ),
+    fields      = dict(name = Field(String()), apps = Field(Catalog(Link(Application_)))),
     directory   = Link(Directory_),     # root of the site-global hierarchical directory of items
 )
 
@@ -194,7 +200,8 @@ Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.item.Item',
-    schema      = Record(name = Field(schema = String(), multi = True), title = String()),
+    schema      = Record(name = Field(String(), multi = True), title = String()),
+    fields      = dict(name = Field(String(), multi = True), title = Field(String())),
 )
 
 
@@ -209,6 +216,10 @@ Code_ = Category_(
         language = String(),    # ProgramLanguage()
         code     = Text(),
     ),
+    fields  = dict(
+        language = Field(String()),    # ProgramLanguage()
+        code     = Field(Text()),
+    ),
 )
 Text_ = Category_(
     name    = "Text",
@@ -218,6 +229,11 @@ Text_ = Category_(
         markup   = String(),    # MarkupLanguage()
         text     = Text()
     ),
+    fields  = dict(
+        language = Field(String()),    # HumanLanguage()
+        markup   = Field(String()),    # MarkupLanguage()
+        text     = Field(Text())
+    ),
 )
 File_ = Category_(
     name    = "File",
@@ -225,6 +241,10 @@ File_ = Category_(
     schema  = Record(
         format  = String(),
         content = Select(bin = Bytes(), txt = Text()),
+    ),
+    fields  = dict(
+        format  = Field(String()),
+        content = Field(Select(bin = Bytes(), txt = Text())),
     ),
 )
 # File_ = Category_(

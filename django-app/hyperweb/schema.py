@@ -746,9 +746,9 @@ class Field:
     multi   = False         # whether this field can be repeated (take on multiple values)
     info    = None          # human-readable description of the field
     
-    def __init__(self, schema = None, default = None, info = None, multi = None):
+    def __init__(self, schema = None, default = MISSING, info = None, multi = None):
         if schema is not None:  self.schema = schema
-        if default is not None: self.default = default
+        if default is not Field.MISSING: self.default = default
         if multi is not None:   self.multi = multi
         if info is not None:    self.info = info
     

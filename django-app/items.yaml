@@ -8,9 +8,6 @@
         schema:
           type: {'=': hyperweb.schema.Record, '@': builtins.type}
           '@': hyperweb.schema.RecordSchema
-        default:
-          fields: {}
-          '@': hyperweb.schema.Record
       name:
         schema: {'@': hyperweb.schema.String}
         info: human-readable title of the category
@@ -41,6 +38,12 @@
             \      # from /apps/APP/base import %print_data\n            from base\
             \ import %print_data\n\n            h2 | Properties\n            print_data\
             \ $item\n"}
+      fields:
+        schema:
+          values:
+            type: {'=': hyperweb.schema.Field, '@': builtins.type}
+            '@': hyperweb.schema.FieldSchema
+          '@': hyperweb.schema.Catalog
   endpoints: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
       \ / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
       \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
@@ -54,6 +57,46 @@
       \                            try\n                                a href=app.url(item)\
       \ | $iname\n                            else\n                             \
       \   | $iname (no public URL)\n"}
+  fields:
+    schema:
+      schema:
+        type: {'=': hyperweb.schema.Record, '@': builtins.type}
+        '@': hyperweb.schema.RecordSchema
+    name:
+      schema: {'@': hyperweb.schema.String}
+      info: human-readable title of the category
+    info:
+      schema: {'@': hyperweb.schema.String}
+    class_name:
+      schema: {'@': hyperweb.schema.String}
+      default: hyperweb.item.Item
+      info: Full (dotted) path of a python class. Or the class name that should be
+        imported from `class_code` after its execution.
+    class_code:
+      schema: {'@': hyperweb.schema.Text}
+    endpoints:
+      schema:
+        values: {'@': hyperweb.schema.Text}
+        '@': hyperweb.schema.Catalog
+      default: {? '' : "\n    context $item, $category as cat, $app, $directory as\
+          \ dir\n\n    style / $dir.open('base.css')['code']\n\n    % print_headline\n\
+          \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
+          \ or cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
+          \ = item['name']? or str(item)\n        head\n            title | {name}\n\
+          \        body .page\n            h1  | {name}\n            print_headline\n\
+          \            \n            # $item.print_data x1 x2 x3\n            # @(item.dom_properties())\
+          \     -- item's method returns a DOM tree for embedding into a document\n\
+          \            # %(item.print_data) x1 x2     -- item's attr is a Hypertag\
+          \ that can be used as a tag in a document\n            \n            # from\
+          \ APP/base import %print_data\n            # from /apps/APP/base import\
+          \ %print_data\n            from base import %print_data\n\n            h2\
+          \ | Properties\n            print_data $item\n"}
+    fields:
+      schema:
+        values:
+          type: {'=': hyperweb.schema.Field, '@': builtins.type}
+          '@': hyperweb.schema.FieldSchema
+        '@': hyperweb.schema.Catalog
 - id: [0, 1]
   name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
@@ -66,6 +109,12 @@
           keys: {'@': hyperweb.schema.EntryName}
           values: {'@': hyperweb.schema.Link}
           '@': hyperweb.schema.Catalog
+  fields:
+    items:
+      schema:
+        keys: {'@': hyperweb.schema.EntryName}
+        values: {'@': hyperweb.schema.Link}
+        '@': hyperweb.schema.Catalog
 - id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
@@ -81,6 +130,17 @@
               '@': null
             '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.String}
+    categories:
+      schema:
+        values:
+          category:
+            '=': [0, 0]
+            '@': null
+          '@': hyperweb.schema.Link
+        '@': hyperweb.schema.Catalog
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
     \            def get_category(self, name):\n                return self['categories'][name]\n\
@@ -107,6 +167,22 @@
               '@': null
             '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.String}
+    url_scheme:
+      schema:
+        values: [raw, spaces]
+        indices: false
+        '@': hyperweb.schema.Enum
+    spaces:
+      schema:
+        values:
+          category:
+            '=': [0, 2]
+            '@': null
+          '@': hyperweb.schema.Link
+        '@': hyperweb.schema.Catalog
   folder: {'@': hyperweb.schema.PathString}
 - id: [0, 4]
   name: Site
@@ -125,6 +201,17 @@
               '@': null
             '@': hyperweb.schema.Link
           '@': hyperweb.schema.Catalog
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.String}
+    apps:
+      schema:
+        values:
+          category:
+            '=': [0, 3]
+            '@': null
+          '@': hyperweb.schema.Link
+        '@': hyperweb.schema.Catalog
   directory:
     category:
       '=': [0, 1]
@@ -141,6 +228,12 @@
         multi: true
       title:
         schema: {'@': hyperweb.schema.String}
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.String}
+      multi: true
+    title:
+      schema: {'@': hyperweb.schema.String}
 - id: [0, 6]
   name: Code
   info: "Source code. May keep information about programming language.\n         \
@@ -154,6 +247,11 @@
         schema: {'@': hyperweb.schema.String}
       code:
         schema: {'@': hyperweb.schema.Text}
+  fields:
+    language:
+      schema: {'@': hyperweb.schema.String}
+    code:
+      schema: {'@': hyperweb.schema.Text}
 - id: [0, 7]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
@@ -166,6 +264,13 @@
         schema: {'@': hyperweb.schema.String}
       text:
         schema: {'@': hyperweb.schema.Text}
+  fields:
+    language:
+      schema: {'@': hyperweb.schema.String}
+    markup:
+      schema: {'@': hyperweb.schema.String}
+    text:
+      schema: {'@': hyperweb.schema.Text}
 - id: [0, 8]
   name: File
   info: 'Binary or text file that can be accompanied with information about its format:
@@ -180,6 +285,15 @@
             bin: {'@': hyperweb.schema.Bytes}
             txt: {'@': hyperweb.schema.Text}
           '@': hyperweb.schema.Select
+  fields:
+    format:
+      schema: {'@': hyperweb.schema.String}
+    content:
+      schema:
+        schemas:
+          bin: {'@': hyperweb.schema.Bytes}
+          txt: {'@': hyperweb.schema.Text}
+        '@': hyperweb.schema.Select
 - id: [6, 1]
   language: css
   code: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
