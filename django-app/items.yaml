@@ -2,48 +2,6 @@
   name: Category
   info: Category of items that represent categories
   class_name: hyperweb.item.Category
-  schema:
-    fields:
-      schema:
-        schema:
-          type: {'=': hyperweb.schema.Record, '@': builtins.type}
-          '@': hyperweb.schema.RecordSchema
-      name:
-        schema: {'@': hyperweb.schema.String}
-        info: human-readable title of the category
-      info:
-        schema: {'@': hyperweb.schema.String}
-      class_name:
-        schema: {'@': hyperweb.schema.String}
-        default: hyperweb.item.Item
-        info: Full (dotted) path of a python class. Or the class name that should
-          be imported from `class_code` after its execution.
-      class_code:
-        schema: {'@': hyperweb.schema.Text}
-      endpoints:
-        schema:
-          values: {'@': hyperweb.schema.Text}
-          '@': hyperweb.schema.Catalog
-        default: {? '' : "\n    context $item, $category as cat, $app, $directory\
-            \ as dir\n\n    style / $dir.open('base.css')['code']\n\n    % print_headline\n\
-            \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
-            \ or cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
-            \ = item['name']? or str(item)\n        head\n            title | {name}\n\
-            \        body .page\n            h1  | {name}\n            print_headline\n\
-            \            \n            # $item.print_data x1 x2 x3\n            #\
-            \ @(item.dom_properties())     -- item's method returns a DOM tree for\
-            \ embedding into a document\n            # %(item.print_data) x1 x2  \
-            \   -- item's attr is a Hypertag that can be used as a tag in a document\n\
-            \            \n            # from APP/base import %print_data\n      \
-            \      # from /apps/APP/base import %print_data\n            from base\
-            \ import %print_data\n\n            h2 | Properties\n            print_data\
-            \ $item\n"}
-      fields:
-        schema:
-          values:
-            type: {'=': hyperweb.schema.Field, '@': builtins.type}
-            '@': hyperweb.schema.FieldSchema
-          '@': hyperweb.schema.Catalog
   endpoints: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
       \ / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
       \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
@@ -58,10 +16,6 @@
       \ | $iname\n                            else\n                             \
       \   | $iname (no public URL)\n"}
   fields:
-    schema:
-      schema:
-        type: {'=': hyperweb.schema.Record, '@': builtins.type}
-        '@': hyperweb.schema.RecordSchema
     name:
       schema: {'@': hyperweb.schema.String}
       info: human-readable title of the category
@@ -102,13 +56,6 @@
   info: A directory of items, each item has a unique name (path). May contain nested
     subdirectories. Similar to a file system.
   class_name: hyperweb.item.Directory
-  schema:
-    fields:
-      items:
-        schema:
-          keys: {'@': hyperweb.schema.EntryName}
-          values: {'@': hyperweb.schema.Link}
-          '@': hyperweb.schema.Catalog
   fields:
     items:
       schema:
@@ -118,18 +65,6 @@
 - id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
-  schema:
-    fields:
-      name:
-        schema: {'@': hyperweb.schema.String}
-      categories:
-        schema:
-          values:
-            category:
-              '=': [0, 0]
-              '@': null
-            '@': hyperweb.schema.Link
-          '@': hyperweb.schema.Catalog
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
@@ -150,23 +85,6 @@
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
   class_name: hyperweb.item.Application
-  schema:
-    fields:
-      name:
-        schema: {'@': hyperweb.schema.String}
-      url_scheme:
-        schema:
-          values: [raw, spaces]
-          indices: false
-          '@': hyperweb.schema.Enum
-      spaces:
-        schema:
-          values:
-            category:
-              '=': [0, 2]
-              '@': null
-            '@': hyperweb.schema.Link
-          '@': hyperweb.schema.Catalog
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
@@ -189,18 +107,6 @@
   info: Category of site records. A site contains information about applications,
     servers, startup
   class_name: hyperweb.item.Site
-  schema:
-    fields:
-      name:
-        schema: {'@': hyperweb.schema.String}
-      apps:
-        schema:
-          values:
-            category:
-              '=': [0, 3]
-              '@': null
-            '@': hyperweb.schema.Link
-          '@': hyperweb.schema.Catalog
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
@@ -221,12 +127,6 @@
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
-  schema:
-    fields:
-      name:
-        schema: {'@': hyperweb.schema.String}
-      title:
-        schema: {'@': hyperweb.schema.String}
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
@@ -239,12 +139,6 @@
     \ is expected,\n                the `name` property must be set and equal to the\
     \ name of the object that should be imported\n                after compilation.\
     \ Some uses may allow multiple names to be declared.\n              "
-  schema:
-    fields:
-      language:
-        schema: {'@': hyperweb.schema.String}
-      code:
-        schema: {'@': hyperweb.schema.Text}
   fields:
     language:
       schema: {'@': hyperweb.schema.String}
@@ -254,14 +148,6 @@
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
     and/or markup.
-  schema:
-    fields:
-      language:
-        schema: {'@': hyperweb.schema.String}
-      markup:
-        schema: {'@': hyperweb.schema.String}
-      text:
-        schema: {'@': hyperweb.schema.Text}
   fields:
     language:
       schema: {'@': hyperweb.schema.String}
@@ -273,16 +159,6 @@
   name: File
   info: 'Binary or text file that can be accompanied with information about its format:
     pdf, jpg, zip, ...'
-  schema:
-    fields:
-      format:
-        schema: {'@': hyperweb.schema.String}
-      content:
-        schema:
-          schemas:
-            bin: {'@': hyperweb.schema.Bytes}
-            txt: {'@': hyperweb.schema.Text}
-          '@': hyperweb.schema.Select
   fields:
     format:
       schema: {'@': hyperweb.schema.String}

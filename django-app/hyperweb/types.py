@@ -17,7 +17,7 @@ class text(str):
 
 class catalog(dict):
     """
-    Base class for any special-purpose dict class that provides custom functionality
+    Base class for any special-purpose dictionary that provides custom functionality
     and assumes that keys are strings.
     Subclasses can be used as `type` inside Catalog schema.
     """
@@ -34,7 +34,7 @@ class struct(catalog):
     def __setattr__(self, field, value):
         self[field] = value
 
-def item_schema(catalog):
+def fields(catalog):
     """
     Schema of items in a category: a dictionary of field names and their individual schemas.
     Provides methods for schema-aware encoding and decoding of items,

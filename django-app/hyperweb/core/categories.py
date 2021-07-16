@@ -80,20 +80,29 @@ page_category = """
 # class_schema = Select(native = Class(), inline = code_schema)       # reference = Link(_Code)
 
 
-# schema of categories, including the root category
-root_schema = Record(
-    schema       = Field(RecordSchema()),
+# root_schema = Record(
+#     schema       = Field(RecordSchema()),
+#     name         = Field(String(), info = "human-readable title of the category"),
+#     info         = String(),
+#     class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
+#     class_code   = Text(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
+#     endpoints    = Field(Catalog(Text()), default = {"": page_item}),
+#     fields       = Catalog(FieldSchema()),
+#     # template   = Field(schema = Struct(name = String(), code = Text()), default = ("", page_item)),
+#     # methods    = Catalog(method_schema),
+#     # handlers... views...
+#     # ...
+#     # properties = Catalog(Property())   "data field"
+# )
+
+# fields of categories, including the root category
+root_fields = dict(
     name         = Field(String(), info = "human-readable title of the category"),
-    info         = String(),
+    info         = Field(String()),
     class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
-    class_code   = Text(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
+    class_code   = Field(Text()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(Catalog(Text()), default = {"": page_item}),
-    fields       = Catalog(FieldSchema()),
-    # template   = Field(schema = Struct(name = String(), code = Text()), default = ("", page_item)),
-    # methods    = Catalog(method_schema),
-    # handlers... views...
-    # ...
-    # properties = Catalog(Property())   "data field"
+    fields       = Field(Catalog(FieldSchema())),
 )
 
 # category-level properties:
@@ -116,9 +125,9 @@ Category_ = Category(
     name        = "Category",
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.item.Category',
-    schema      = root_schema,
     endpoints   = {"": page_category},
-    fields      = root_schema.fields,
+    fields      = root_fields,
+    # schema      = root_schema,
     # page_category = Template(page_category),
     # page_item     = Template(page_item),
     # fun  = Method(...),
@@ -130,8 +139,8 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs
     fields      = dict(items = Field(Catalog(keys = EntryName(), values = Link())))
+    # schema      = Record(items = Catalog(keys = EntryName(), values = Link())),      # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -144,8 +153,8 @@ Directory_ = Category_(
 Space_ = Category_(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    schema      = Record(name = String(), categories = Catalog(Link(Category_))),
     fields      = dict(name = Field(String()), categories = Field(Catalog(Link(Category_)))),
+    # schema      = Record(name = String(), categories = Catalog(Link(Category_))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -173,7 +182,7 @@ Application_ = Category_(
     #         def get_space(self, name):
     #             return self['spaces'][name]
     # """,
-    schema      = Record(name = String(), url_scheme = Enum('raw', 'spaces'), spaces = Catalog(Link(Space_))),
+    # schema      = Record(name = String(), url_scheme = Enum('raw', 'spaces'), spaces = Catalog(Link(Space_))),
     fields      = dict(name = Field(String()), url_scheme = Field(Enum('raw', 'spaces')), spaces = Field(Catalog(Link(Space_)))),
     folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
@@ -186,12 +195,12 @@ Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
-    schema      = Record(name = String(),
-                         apps = Catalog(Link(Application_)),
-                         # routes = Field(schema = Catalog(route_schema),
-                         #                multi = False,
-                         #                info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")
-                         ),
+    # schema      = Record(name = String(),
+    #                      apps = Catalog(Link(Application_)),
+    #                      # routes = Field(schema = Catalog(route_schema),
+    #                      #                multi = False,
+    #                      #                info = "dictionary of named URL routes, each route specifies a base URL (protocol+domain), fixed URL path prefix, and a target application object")
+    #                      ),
     fields      = dict(name = Field(String()), apps = Field(Catalog(Link(Application_)))),
     directory   = Link(Directory_),     # root of the site-global hierarchical directory of items
 )
@@ -200,8 +209,8 @@ Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.item.Item',
-    schema      = Record(name = Field(String()), title = String()),                 # multi = True
     fields      = dict(name = Field(String()), title = Field(String())),            # multi = True
+    # schema      = Record(name = Field(String()), title = String()),                 # multi = True
 )
 
 
@@ -212,10 +221,10 @@ Code_ = Category_(
                 the `name` property must be set and equal to the name of the object that should be imported
                 after compilation. Some uses may allow multiple names to be declared.
               """,
-    schema  = Record(
-        language = String(),    # ProgramLanguage()
-        code     = Text(),
-    ),
+    # schema  = Record(
+    #     language = String(),    # ProgramLanguage()
+    #     code     = Text(),
+    # ),
     fields  = dict(
         language = Field(String()),    # ProgramLanguage()
         code     = Field(Text()),
@@ -224,11 +233,11 @@ Code_ = Category_(
 Text_ = Category_(
     name    = "Text",
     info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
-    schema  = Record(
-        language = String(),    # HumanLanguage()
-        markup   = String(),    # MarkupLanguage()
-        text     = Text()
-    ),
+    # schema  = Record(
+    #     language = String(),    # HumanLanguage()
+    #     markup   = String(),    # MarkupLanguage()
+    #     text     = Text()
+    # ),
     fields  = dict(
         language = Field(String()),    # HumanLanguage()
         markup   = Field(String()),    # MarkupLanguage()
@@ -238,10 +247,10 @@ Text_ = Category_(
 File_ = Category_(
     name    = "File",
     info    = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
-    schema  = Record(
-        format  = String(),
-        content = Select(bin = Bytes(), txt = Text()),
-    ),
+    # schema  = Record(
+    #     format  = String(),
+    #     content = Select(bin = Bytes(), txt = Text()),
+    # ),
     fields  = dict(
         format  = Field(String()),
         content = Field(Select(bin = Bytes(), txt = Text())),

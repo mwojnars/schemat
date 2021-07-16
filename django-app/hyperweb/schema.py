@@ -816,8 +816,6 @@ class Record(Schema):
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     blank    = False
     
-    # constraints = None       # constraints that span multiple fields
-    
     def __init__(self, **fields):
         # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
         # self.fields = fields or self.fields or {}

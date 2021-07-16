@@ -607,7 +607,7 @@ class Category(Item):
     def create_root(cls, registry):
         """Create an instance of the root category item."""
 
-        from .core import root_schema
+        from .core import root_fields
         
         root = cls(__loaded__ = False)
         root.registry = registry
@@ -615,7 +615,7 @@ class Category(Item):
         root.cid = ROOT_CID
         root.iid = ROOT_CID
         # root['schema'] = root_schema            # will ultimately be overwritten with a schema loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-        root['fields'] = root_schema.fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
         return root
         
 
