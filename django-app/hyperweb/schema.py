@@ -25,7 +25,7 @@ from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
 from .item import Item
-from .types import struct
+from .types import struct, catalog
 
 
 #####################################################################################################################################################
@@ -623,26 +623,29 @@ class Tuple(Schema):
     
 class Dict(Schema):
     """
-    Accepts <dict> objects as data values. Outputs a dict with keys and values encoded through their own schema.
+    Accepts <dict> objects as data values, or objects of a given `type` which should be a subclass of <dict>.
+    Outputs a dict with keys and values encoded through their own schema.
     If no schema is provided, `object_schema` is used as a default.
     """
     
     # schema of keys and values of app-layer dicts
     keys   = None
     values = None
-    
+    type   = None           # optional subtype of <dict>; if present, only objects of this type are accepted for encoding
+
     # the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
     keys_default   = object_schema
     values_default = object_schema
     
-    def __init__(self, keys = None, values = None):
+    def __init__(self, keys = None, values = None, type = None):
         
         if keys is not None: self.keys = keys
         if values is not None: self.values = values
+        if type is not None: self.type = type
         
     def _encode(self, d, registry):
         
-        if not isinstance(d, dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
+        if not isinstance(d, self.type or dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
         state = {}
         
         schema_keys   = self.keys or self.keys_default
@@ -659,7 +662,7 @@ class Dict(Schema):
     def _decode(self, state, registry):
         
         if not isinstance(state, dict): raise DecodeError(f"expected a <dict>, not {state}")
-        d = {}
+        d = (self.type or dict)()
         
         schema_keys   = self.keys or self.keys_default
         schema_values = self.values or self.values_default
@@ -674,26 +677,25 @@ class Dict(Schema):
 
 class Catalog(Dict):
     """
-    Similar to Dict, but assumes keys are strings.
+    Similar to Dict, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
     Provides tight integration with the UI: convenient layout for display of items,
     and access paths for locating form validation errors.
     Watch out the reversed ordering of arguments in __init__() !!
     """
     
-    type = None             # optional subtype of <catalog> (which is a subtype of <dict>);
-                            # if present, only objects of this type are accepted for encoding
-
     keys_default = String()
     
-    def __init__(self, values = None, keys = None):
+    def __init__(self, values = None, keys = None, type = None):
         # if keys is None:
         #     keys = String()
         # else:
         #     assert isinstance(keys, String)             # `keys` may inherit from String, not necessarily be a String
         
         if keys: assert isinstance(keys, String)        # `keys` may inherit from String, not necessarily be a String
-        super(Catalog, self).__init__(keys, values)
+        if type: assert issubclass(type, catalog)
+        super(Catalog, self).__init__(keys, values, type)
         
+    
 
 class Select(Schema):
     """
@@ -801,7 +803,7 @@ class Field:
         
 #####################################################################################################################################################
 
-class Record(Schema):
+class Record(Schema, catalog):
     """
     Schema of a record of data composed of named fields stored as a MultiDict. Primarily used for schema definition
     inside categories. Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
@@ -812,29 +814,31 @@ class Record(Schema):
     # default field specification to be used for fields not present in `fields`
     default_field = Field(schema = object_schema, multi = True)
     
-    fields   = None     # dict of field names & their Field() schema descriptors
+    # fields   = None     # dict of field names & their Field() schema descriptors
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     blank    = False
     
     def __init__(self, **fields):
-        # assert all(isinstance(name, str) and isinstance(schema, (Schema, Field)) for name, schema in fields.items())
-        # self.fields = fields or self.fields or {}
         # if __strict__ is not None: self.strict = __strict__
-        if fields: self.fields = fields
+        # if fields: self.fields = fields
+        super(Record, self).__init__(fields)
+        self.update(fields)
         self._init_fields()
     
     def __setstate__(self, state):
-        self.__dict__ = dict(state)
+        # self.__dict__ = dict(state)
+        self.clear()
+        self.update(state)
         self._init_fields()
 
     def _init_fields(self):
         """Wrap up in Field all the fields whose values are plain Schema instances."""
-        if self.fields is None: self.fields = {}
-        for name, field in self.fields.items():
+        # if self.fields is None: self.fields = {}
+        for name, field in self.items():
             assert isinstance(name, str)
             if isinstance(field, Field): continue
             if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
-            self.fields[name] = Field(schema = field)
+            self[name] = Field(schema = field)
         
     
     def _encode(self, data, registry):
@@ -850,11 +854,11 @@ class Record(Schema):
         encoded = data.asdict_lists()
         for name, values in encoded.items():
             
-            if self.strict and name not in self.fields:
+            if self.strict and name not in self:
                 raise EncodeError(f'unknown field "{name}"')
             
             # schema-aware encoding
-            field = self.fields.get(name)
+            field = self.get(name)
             if field:
                 encoded[name] = field.encode_many(values, registry)
             else:
@@ -877,11 +881,11 @@ class Record(Schema):
         # de-compactify & decode values of fields
         for name, values in data.items():
             
-            if self.strict and name not in self.fields:
+            if self.strict and name not in self:
                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
             
             # schema-based decoding
-            field = self.fields.get(name)
+            field = self.get(name)
             if field:
                 data[name] = field.decode_many(values, registry)
             else:
@@ -895,7 +899,7 @@ class Record(Schema):
         Get the default value of a given item attribute as defined in this schema.
         Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
         """
-        field = self.fields.get(name)
+        field = self.get(name)
         return field.default if field else Field.MISSING
 
 
@@ -917,7 +921,7 @@ class Struct(Record):
         assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
         
         super(Struct, self).__init__(**fields)
-        for name, field in self.fields.items():
+        for name, field in self.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
     
     def _encode(self, obj, registry):
@@ -935,8 +939,8 @@ class Struct(Record):
         # encode values of fields through per-field schema definitions
         for name, value in attrs.items():
             
-            if name not in self.fields: raise EncodeError(f'unknown field "{name}", expected one of {list(self.fields.keys())}')
-            encoded[name] = self.fields[name].encode_one(value, registry)
+            if name not in self: raise EncodeError(f'unknown field "{name}", expected one of {list(self.keys())}')
+            encoded[name] = self[name].encode_one(value, registry)
             
         return encoded
         
@@ -948,8 +952,8 @@ class Struct(Record):
         # decode values of fields
         for name, value in encoded.items():
             
-            if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a Struct')
-            attrs[name] = self.fields[name].decode_one(value, registry)
+            if name not in self: raise DecodeError(f'invalid field "{name}", not present in schema of a Struct')
+            attrs[name] = self[name].decode_one(value, registry)
             
         if self.type is struct:
             return struct(attrs)
@@ -983,14 +987,14 @@ class FieldSchema(Struct):
         'info':    String(),
     }
 
-class RecordSchema(Struct):
-    """Schema of item's schema for use inside category definitions."""
-
-    type = Record
-    fields = {
-        'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
-        # 'strict': Boolean(),
-    }
+# class RecordSchema(Struct):
+#     """Schema of item's schema for use inside category definitions."""
+#
+#     type = Record
+#     fields = {
+#         'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
+#         # 'strict': Boolean(),
+#     }
 
 # INFO: it's possible to use field_schema and record_schema, as below,
 #       only the YAML output of the root category is more verbose then (multiple nesting levels)

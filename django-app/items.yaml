@@ -19,15 +19,19 @@
     name:
       schema: {'@': hyperweb.schema.String}
       info: human-readable title of the category
+      '@': hyperweb.schema.Field
     info:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     class_name:
       schema: {'@': hyperweb.schema.String}
       default: hyperweb.item.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
+      '@': hyperweb.schema.Field
     class_code:
       schema: {'@': hyperweb.schema.Text}
+      '@': hyperweb.schema.Field
     endpoints:
       schema:
         values: {'@': hyperweb.schema.Text}
@@ -45,12 +49,15 @@
           \ APP/base import %print_data\n            # from /apps/APP/base import\
           \ %print_data\n            from base import %print_data\n\n            h2\
           \ | Properties\n            print_data $item\n"}
+      '@': hyperweb.schema.Field
     fields:
       schema:
         values:
           type: {'=': hyperweb.schema.Field, '@': builtins.type}
           '@': hyperweb.schema.FieldSchema
+        type: {'=': hyperweb.schema.Record, '@': builtins.type}
         '@': hyperweb.schema.Catalog
+      '@': hyperweb.schema.Field
 - id: [0, 1]
   name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
@@ -62,12 +69,14 @@
         keys: {'@': hyperweb.schema.EntryName}
         values: {'@': hyperweb.schema.Link}
         '@': hyperweb.schema.Catalog
+      '@': hyperweb.schema.Field
 - id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     categories:
       schema:
         values:
@@ -76,6 +85,7 @@
             '@': null
           '@': hyperweb.schema.Link
         '@': hyperweb.schema.Catalog
+      '@': hyperweb.schema.Field
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
     \            def get_category(self, name):\n                return self['categories'][name]\n\
@@ -88,11 +98,13 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     url_scheme:
       schema:
         values: [raw, spaces]
         indices: false
         '@': hyperweb.schema.Enum
+      '@': hyperweb.schema.Field
     spaces:
       schema:
         values:
@@ -101,6 +113,7 @@
             '@': null
           '@': hyperweb.schema.Link
         '@': hyperweb.schema.Catalog
+      '@': hyperweb.schema.Field
   folder: {'@': hyperweb.schema.PathString}
 - id: [0, 4]
   name: Site
@@ -110,6 +123,7 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     apps:
       schema:
         values:
@@ -118,6 +132,7 @@
             '@': null
           '@': hyperweb.schema.Link
         '@': hyperweb.schema.Catalog
+      '@': hyperweb.schema.Field
   directory:
     category:
       '=': [0, 1]
@@ -130,8 +145,10 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     title:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
 - id: [0, 6]
   name: Code
   info: "Source code. May keep information about programming language.\n         \
@@ -142,8 +159,10 @@
   fields:
     language:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     code:
       schema: {'@': hyperweb.schema.Text}
+      '@': hyperweb.schema.Field
 - id: [0, 7]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
@@ -151,10 +170,13 @@
   fields:
     language:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     markup:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     text:
       schema: {'@': hyperweb.schema.Text}
+      '@': hyperweb.schema.Field
 - id: [0, 8]
   name: File
   info: 'Binary or text file that can be accompanied with information about its format:
@@ -162,12 +184,14 @@
   fields:
     format:
       schema: {'@': hyperweb.schema.String}
+      '@': hyperweb.schema.Field
     content:
       schema:
         schemas:
           bin: {'@': hyperweb.schema.Bytes}
           txt: {'@': hyperweb.schema.Text}
         '@': hyperweb.schema.Select
+      '@': hyperweb.schema.Field
 - id: [6, 1]
   language: css
   code: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\

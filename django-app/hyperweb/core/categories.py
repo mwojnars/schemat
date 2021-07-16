@@ -81,13 +81,13 @@ page_category = """
 
 
 # fields of categories, including the root category
-root_fields = dict(
+root_fields = Record(
     name         = Field(String(), info = "human-readable title of the category"),
     info         = Field(String()),
     class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(Text()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(Catalog(Text()), default = {"": page_item}),
-    fields       = Field(Catalog(FieldSchema())),
+    fields       = Field(Catalog(FieldSchema(), type = Record)),
 )
 
 # category-level properties:
@@ -123,7 +123,7 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    fields      = dict(items = Field(Catalog(keys = EntryName(), values = Link())))     # file & directory names mapped to item IDs
+    fields      = Record(items = Field(Catalog(keys = EntryName(), values = Link())))     # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -136,7 +136,7 @@ Directory_ = Category_(
 Space_ = Category_(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    fields      = dict(name = Field(String()), categories = Field(Catalog(Link(Category_)))),
+    fields      = Record(name = Field(String()), categories = Field(Catalog(Link(Category_)))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -164,7 +164,7 @@ Application_ = Category_(
     #         def get_space(self, name):
     #             return self['spaces'][name]
     # """,
-    fields      = dict(name = Field(String()), url_scheme = Field(Enum('raw', 'spaces')), spaces = Field(Catalog(Link(Space_)))),
+    fields      = Record(name = Field(String()), url_scheme = Field(Enum('raw', 'spaces')), spaces = Field(Catalog(Link(Space_)))),
     folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
                                         # to do this inside a .../data subfolder
@@ -176,7 +176,7 @@ Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
-    fields      = dict(name = Field(String()), apps = Field(Catalog(Link(Application_)))),
+    fields      = Record(name = Field(String()), apps = Field(Catalog(Link(Application_)))),
     directory   = Link(Directory_),     # root of the site-global hierarchical directory of items
 )
 
@@ -184,7 +184,7 @@ Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.item.Item',
-    fields      = dict(name = Field(String()), title = Field(String())),            # multi = True
+    fields      = Record(name = Field(String()), title = Field(String())),            # multi = True
 )
 
 
@@ -195,7 +195,7 @@ Code_ = Category_(
                 the `name` property must be set and equal to the name of the object that should be imported
                 after compilation. Some uses may allow multiple names to be declared.
               """,
-    fields  = dict(
+    fields  = Record(
         language = Field(String()),    # ProgramLanguage()
         code     = Field(Text()),
     ),
@@ -203,7 +203,7 @@ Code_ = Category_(
 Text_ = Category_(
     name    = "Text",
     info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
-    fields  = dict(
+    fields  = Record(
         language = Field(String()),    # HumanLanguage()
         markup   = Field(String()),    # MarkupLanguage()
         text     = Field(Text())
@@ -212,7 +212,7 @@ Text_ = Category_(
 File_ = Category_(
     name    = "File",
     info    = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
-    fields  = dict(
+    fields  = Record(
         format  = Field(String()),
         content = Field(Select(bin = Bytes(), txt = Text())),
     ),

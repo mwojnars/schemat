@@ -329,8 +329,8 @@ class Item(object, metaclass = MetaItem):
             # schema = self.category.get('schema')
             from .schema import Record                  # TODO: refactor so that local import is avoided
             fields = self.category.get('fields')        # specification of fields {field_name: schema}
-            schema = Record(**fields)
-            data   = schema.from_json(data, self.registry)
+            # schema = Record(**fields)
+            data   = fields.from_json(data, self.registry)
             self.data.update(data)
 
         
@@ -349,8 +349,8 @@ class Item(object, metaclass = MetaItem):
         # schema = self.category.get('schema')
         from .schema import Record                  # TODO: refactor so that local import is avoided
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        schema = Record(**fields)
-        return schema.to_json(self.data, self.registry)
+        # schema = Record(**fields)
+        return fields.to_json(self.data, self.registry)
         
     def insert(self):
         """

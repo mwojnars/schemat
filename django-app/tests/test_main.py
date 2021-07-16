@@ -32,10 +32,10 @@ def assert200(relative_url):
 #####  TESTS
 #####
 
-def test_environment():
-    
-    response = requests.get("http://api.zippopotam.us/us/90210")
-    assert response.status_code == 200
+# def test_environment():
+#     
+#     response = requests.get("http://api.zippopotam.us/us/90210")
+#     assert response.status_code == 200
     
 
 def test_basic():
