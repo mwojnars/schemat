@@ -995,17 +995,8 @@ class FieldSchema(Struct):
         'info':    String(),
     }
 
-# class RecordSchema(Struct):
-#     """Schema of item's schema for use inside category definitions."""
-#
-#     type = FIELDS
-#     fields = {
-#         'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
-#         # 'strict': Boolean(),
-#     }
-
 # INFO: it's possible to use field_schema and record_schema, as below,
-#       only the YAML output of the root category is more verbose then (multiple nesting levels)
+#       but the YAML output of the root category becomes more verbose then (multiple nesting levels)
 #
 # field_schema = Struct(Field,
 #                       schema    = Object(base = Schema),
