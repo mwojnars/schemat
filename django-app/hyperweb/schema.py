@@ -902,6 +902,9 @@ class Record(Schema, catalog):
         field = self.get(name)
         return field.default if field else Field.MISSING
 
+    def __str__(self):
+        return str(dict(self))
+    
 
 #####################################################################################################################################################
 
