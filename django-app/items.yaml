@@ -55,7 +55,7 @@
         values:
           type: {'=': hyperweb.schema.Field, '@': builtins.type}
           '@': hyperweb.schema.FieldSchema
-        type: {'=': hyperweb.schema.Record, '@': builtins.type}
+        type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.Catalog
       '@': hyperweb.schema.Field
 - id: [0, 1]

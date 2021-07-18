@@ -36,9 +36,6 @@ class struct(catalog):
 
 def fields(catalog):
     """
-    Schema of items in a category: a dictionary of field names and their individual schemas.
-    Provides methods for schema-aware encoding and decoding of items,
-    with every field value encoded through its dedicated field-specific schema.
     """
 
 # # rules for detecting disallowed attribute names in category schema definitions

@@ -742,7 +742,7 @@ class Select(Schema):
 #####
 
 class Field:
-    """Specification of a field in a Record or Struct."""
+    """Specification of a field in a FIELDS or Struct."""
     
     MISSING = object()      # token indicating that `default` value is missing; removed from output during serialization
     
@@ -803,10 +803,15 @@ class Field:
         
 #####################################################################################################################################################
 
-class Record(Schema, catalog):
+class FIELDS(catalog, Schema):
     """
-    Schema of a record of data composed of named fields stored as a MultiDict. Primarily used for schema definition
-    inside categories. Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
+    Catalog of fields of items (MultiDict's) in a particular category;
+    a dictionary of field names and their individual schemas as Field objects.
+    Provides methods for schema-aware encoding and decoding of items,
+    with every field value encoded through its dedicated field-specific schema.
+
+    Primarily used for schema definition inside categories.
+    Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
     to False in all fields.
     """
@@ -821,7 +826,7 @@ class Record(Schema, catalog):
     def __init__(self, **fields):
         # if __strict__ is not None: self.strict = __strict__
         # if fields: self.fields = fields
-        super(Record, self).__init__(fields)
+        super(FIELDS, self).__init__(fields)
         self.update(fields)
         self._init_fields()
     
@@ -908,10 +913,10 @@ class Record(Schema, catalog):
 
 #####################################################################################################################################################
 
-class Struct(Record):
+class Struct(FIELDS):
     """
     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
-    Similar to Record, but the app-representation is a regular python object matching the schema
+    Similar to FIELDS, but the app-representation is a regular python object matching the schema
     rather than a MultiDict; and multiple values are not allowed for a field.
     When self.type is `struct`, both <struct> <dict> instances are accepted during encoding,
     with the latter being automatically converted to a <struct> during decoding (!).
@@ -993,7 +998,7 @@ class FieldSchema(Struct):
 # class RecordSchema(Struct):
 #     """Schema of item's schema for use inside category definitions."""
 #
-#     type = Record
+#     type = FIELDS
 #     fields = {
 #         'fields': Dict(String(), FieldSchema()),  #Object(type=Field or base=Schema) Object(base=(Field,Schema))
 #         # 'strict': Boolean(),
@@ -1009,7 +1014,7 @@ class FieldSchema(Struct):
 #                       info      = String(),
 #                       )
 #
-# record_schema = Struct(Record,
+# record_schema = Struct(FIELDS,
 #                        fields = Dict(String(), FieldSchema()),
 #                        strict = Boolean(),
 #                        )

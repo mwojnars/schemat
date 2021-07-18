@@ -327,9 +327,9 @@ class Item(object, metaclass = MetaItem):
         # convert data from JSON string to a struct
         if data:
             # schema = self.category.get('schema')
-            from .schema import Record                  # TODO: refactor so that local import is avoided
+            from .schema import FIELDS                  # TODO: refactor so that local import is avoided
             fields = self.category.get('fields')        # specification of fields {field_name: schema}
-            # schema = Record(**fields)
+            # schema = FIELDS(**fields)
             data   = fields.from_json(data, self.registry)
             self.data.update(data)
 
@@ -347,9 +347,9 @@ class Item(object, metaclass = MetaItem):
     
     def to_json(self):
         # schema = self.category.get('schema')
-        from .schema import Record                  # TODO: refactor so that local import is avoided
+        from .schema import FIELDS                  # TODO: refactor so that local import is avoided
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        # schema = Record(**fields)
+        # schema = FIELDS(**fields)
         return fields.to_json(self.data, self.registry)
         
     def insert(self):
