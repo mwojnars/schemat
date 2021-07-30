@@ -34,9 +34,6 @@ class struct(catalog):
     def __setattr__(self, field, value):
         self[field] = value
 
-def fields(catalog):
-    """
-    """
 
 # # rules for detecting disallowed attribute names in category schema definitions
 # STOP_ATTR = {

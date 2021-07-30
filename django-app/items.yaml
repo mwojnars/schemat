@@ -48,7 +48,8 @@
           \ that can be used as a tag in a document\n            \n            # from\
           \ APP/base import %print_data\n            # from /apps/APP/base import\
           \ %print_data\n            from base import %print_data\n\n            h2\
-          \ | Properties\n            print_data $item\n"}
+          \ | Properties\n            print_data $item\n            # print_catalog1\
+          \ $item\n"}
       '@': hyperweb.schema.Field
     fields:
       schema:
@@ -216,17 +217,15 @@
 - id: [6, 2]
   language: hypertag
   code: "\n        %print_data item\n            table .data : tbody\n           \
-    \     for field, value in item.data.items()\n                    tr\n        \
-    \                # schemas = item.category.get_schema()          # = item.category.get('schema')\
-    \ or object_schema\n                        # schema  = schemas.fields.get(field).schema\
-    \    # category.get_field(field) ... category.get_schema(field)\n            \
-    \            # if schema.is_collection:\n                        #     td .name\
-    \ colspan=2 | {field}\n                        #     data_table value\n      \
-    \                  td .name  | {field}\n                        td .value | {str(value)}\n\
-    \                        \n        %print_data_ul item\n            ul\n     \
-    \           for field, value in item.data.items()\n                    li\n  \
-    \                      b | {field}:\n                        . | {str(value)}\n\
-    \    "
+    \     for name, value in item.data.items()\n                    tr\n         \
+    \               $schema = item.get_schema(name)\n                        $text\
+    \   = schema.display(value)\n                        \n                      \
+    \  # from hypertag.core.dom import $DOM\n                        # if isinstance(text,\
+    \ DOM):\n                        #     text = text.render()\n                \
+    \        \n                        # if schema.is_collection:\n              \
+    \          #     td .name colspan=2 | {name}\n                        #     data_table\
+    \ value\n\n                        td .name  | {name}\n                      \
+    \  td .value | {text}\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 2]

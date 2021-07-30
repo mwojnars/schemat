@@ -64,27 +64,37 @@ base_hy = Code_(
     code = """
         %print_data item
             table .data : tbody
-                for field, value in item.data.items()
+                for name, value in item.data.items()
                     tr
-                        # schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
-                        # schema  = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
-                        # if schema.is_collection:
-                        #     td .name colspan=2 | {field}
-                        #     data_table value
-                        td .name  | {field}
-                        td .value | {str(value)}
+                        $schema = item.get_schema(name)
+                        $text   = schema.display(value)
                         
-        %print_data_ul item
-            ul
-                for field, value in item.data.items()
-                    li
-                        b | {field}:
-                        . | {str(value)}
+                        # from hypertag.core.dom import $DOM
+                        # if isinstance(text, DOM):
+                        #     text = text.render()
+                        
+                        # if schema.is_collection:
+                        #     td .name colspan=2 | {name}
+                        #     data_table value
+
+                        td .name  | {name}
+                        td .value | {text}
     """,
 )
 
 """
-%catalog1 data schema=None fields=None
+%print_data item
+    table .data : tbody
+        for field, value in item.data.items()
+            tr
+                # schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
+                # schema  = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
+                # if schema.is_collection:
+                #     td .name colspan=2 | {field}
+                #     data_table value
+                
+
+%print_catalog1 data schema=None fields=None
     table .data : tbody
         for field, value in data.items()
             $ schema = schema or fields[field].schema
@@ -92,7 +102,7 @@ base_hy = Code_(
                 td .name  | {field}
                 td .value | {schema.render(value)}
 
-%catalog2 data schema
+%print_catalog2 data schema
     table .data : tbody
         for field, value in data.items()
             tr
@@ -100,10 +110,11 @@ base_hy = Code_(
                 value_schema = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
                 if value_schema.is_catalog:
                     td .name colspan=2 | {field}
-                    catalog1 value value_schema
+                    print_catalog1 value value_schema
                 else
                     td .name  | {field}
                     td .value | {schema.render(value)}
+                    
 """
 
 directory = Directory_(

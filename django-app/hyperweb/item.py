@@ -44,6 +44,10 @@ class cached:
     Note: there is only one cache created for a given function/method, and so all the calls,
     even if directed to different items (through `self`), share the same cache capacity.
     Note: exceptions are NOT cached currently.
+    
+    A possible ALTERNATIVE in python 3.3:
+    - from functools import lru_cache
+    
     """
     def __init__(self, size = 1000, ttl = None):
         self.cache = LRUCache(maxsize = size, ttl = ttl)
@@ -442,6 +446,24 @@ class Item(object, metaclass = MetaItem):
         
     def __getstate__(self):
         raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
+
+    def get_schema(self, field_name):
+        """
+        Look up this item's category definition to retrieve a schema of a given field.
+        When called on a category object, this method returns a schema pulled from the ROOT category,
+        not from this one (!).
+        """
+        schema = None
+        fields = self.category.get('fields', {})
+
+        if field_name in fields:
+            schema = fields[field_name].schema
+        if schema is None:
+            from hyperweb.schema import object_schema               # TODO: refactor to remove a local import
+            schema = object_schema
+        
+        return schema
+
 
 ItemDoesNotExist.item_class = Item
 

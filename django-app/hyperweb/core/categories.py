@@ -36,6 +36,7 @@ page_item = """
 
             h2 | Properties
             print_data $item
+            # print_catalog1 $item
 """
 
 # template that displays a category page

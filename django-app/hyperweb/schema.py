@@ -51,7 +51,7 @@ class Schema:
     
                             RESPONSE
                                ^^
-                             render
+                             display
                sanitize >                encode >
        FORM       ---         DATA         ---      STATE
                 < form                  < decode
@@ -145,22 +145,12 @@ class Schema:
 
     #############################################
     
-    # def render(self, value, target = "HTML"):
-    #     """Default rendering of this value for display in a markup document."""
-    #     return str(value)
-    #
-    # class Render:
-    #
-    #     def __init__(self, value): self.value = value
-    #
-    #     def __hypertag__(self):
-    #         return html_escape(str(self.value))
-    #
-    #         # inside Link:
-    #         item = value
-    #         cid, iid = item.id
-    #         url = item.get_url()
-    #         return f"<link href='{url}'>{item.data.name or item.data.title}</link>"
+    def display(self, value, inline = False, target = "HTML"):
+        """
+        Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
+        In the future, this method may return a Hypertag's DOM representation to allow better customization.
+        """
+        return str(value)
         
 
 #####################################################################################################################################################
@@ -677,6 +667,7 @@ class Dict(Schema):
 
 class Catalog(Dict):
     """
+    Schema of a catalog of items.
     Similar to Dict, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
     Provides tight integration with the UI: convenient layout for display of items,
     and access paths for locating form validation errors.
