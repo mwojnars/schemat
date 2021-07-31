@@ -68,7 +68,7 @@ class Schema:
     blank = True            # if True, None is a valid input value and is encoded as None;
                             # no other valid value can produce None as its serializable state
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
-    
+    is_catalog = False      # True only in Catalog and subclasses
     # registry = None
     
     def to_json(self, value, registry, **params):
@@ -145,7 +145,7 @@ class Schema:
 
     #############################################
     
-    def display(self, value, inline = False, target = "HTML"):
+    def display(self, value):  # inline = False, target = "HTML"
         """
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
@@ -673,7 +673,7 @@ class Catalog(Dict):
     and access paths for locating form validation errors.
     Watch out the reversed ordering of arguments in __init__() !!
     """
-    
+    is_catalog   = True
     keys_default = String()
     
     def __init__(self, values = None, keys = None, type = None):
@@ -686,7 +686,19 @@ class Catalog(Dict):
         if type: assert issubclass(type, catalog)
         super(Catalog, self).__init__(keys, values, type)
         
-    
+    # def display(self, values):
+    #
+    #     from hypertag import HyperHTML                  # TODO: refactor to avoid import
+    #     view = """
+    #         context $catalog
+    #         ol
+    #             for key, value in catalog.items():
+    #                 li
+    #                     i  | $key
+    #                     ...| : $value
+    #     """
+    #     return HyperHTML().render(view, catalog = values)
+
 
 class Select(Schema):
     """

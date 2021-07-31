@@ -15,6 +15,15 @@ class text(str):
     instance is equivalent to a plain string <str>.
     """
 
+class code(text):
+    """"""
+    
+    def highlight(self):
+        """Returns HTML of the code after syntax highlighting."""
+    
+
+#####################################################################################################################################################
+
 class catalog(dict):
     """
     Base class for any special-purpose dictionary that provides custom functionality

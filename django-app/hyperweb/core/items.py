@@ -17,7 +17,6 @@ base_css = Code_(
         .page {
           width: 980px;
           margin: 0 auto;
-          overflow: hidden
         }
         h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
         a { color: #006ecc }
@@ -25,94 +24,114 @@ base_css = Code_(
         .catlink { font-size: 14px; margin-top: -20px }
         
         table.data {
-          width: 100%;
-          # font-family: "Times New Roman", Times, serif;
-          border: 1px solid #FFFFFF;
-          background-color: #F6F6F6;
+          /*font-family: "Times New Roman", Times, serif;*/
+          /* background: #F6F6F6; */
           text-align: center;
           border-collapse: collapse;
         }
-        table.data td, table.data th {
-          border: 1px solid #FFFFFF;
-          padding: 11px 12px 8px;
+        table.data tr:not(:last-child) {
+          border-bottom: 1px solid #fff;
         }
-        table.data tbody td {
+        table.data td {
+          /*border-right: none;*/
+          padding: 14px 35px 11px;
+        }
+        table.data td {
           line-height: 20px;
         }
-        table.data tbody td.name  {
-          width: 20%;
-          font-size: 15px;
-          font-weight: bold;
-          text-align: right;
+        table.data td.key  {
+          border-right: 1px solid #fff;
+          text-align: left;
           padding-right: 25px;
         }
-        table.data tbody td.value {
-          width: 80%;
+        table.data td.value {
           font-size: 13px;
           font-family: monospace;     /* courier */
         }
 
-        table.data tr:nth-child(odd) {
-          background: #e2eef9;    /* #D0E4F5 */
-        }
+        /* table.data tr:nth-child(odd) { background: #e2eef9; } */  /* #D0E4F5 */
         /* table.data tfoot td { font-size: 14px; } */
+
+        table.data tr.color0 { background: #e2eef9; }   /* #D0E4F5 */
+        table.data tr.color1 { background: #f6f6f6; }
+
+        table.data td.nested { padding-right: 0px; padding-bottom: 0px; }
+
+        table.data.depth1        { width: 980px; }
+        table.data.depth1 td.key { width: 200px; }
+        table.data.depth1 td.key {
+          font-size:   15px;
+          font-weight: bold;
+        }
+        /* widths below should be equal to depth1's only decreased by "padding-left" and "border" size of a td */
+        table.data.depth2        { width: 945px; margin-left: 20px; margin-top: 10px; }
+        table.data.depth2 td.key { width: 165px; }
+        table.data.depth2 td.key {
+          font-size:    15px;
+          font-style:   italic;
+          font-weight:  normal;
+          padding-left: 15px;
+        }
     """,
 )
 
 base_hy = Code_(
     language = 'hypertag',
     code = """
+        %print_catalog data schema start_color=0
+            $c = start_color
+            table .data .depth2
+                for name, value in data.items()
+                    $text = schema.display(value)
+                    tr class="color{c}"
+                        td .key   | $name
+                        td .value | $text
+                    $c = 1 - c
+        
         %print_data item
-            table .data : tbody
+            $c = 0          # alternating color of rows: 0 or 1
+            table .data .depth1
                 for name, value in item.data.items()
-                    tr
-                        $schema = item.get_schema(name)
-                        $text   = schema.display(value)
-                        
-                        # from hypertag.core.dom import $DOM
-                        # if isinstance(text, DOM):
-                        #     text = text.render()
-                        
-                        # if schema.is_collection:
-                        #     td .name colspan=2 | {name}
-                        #     data_table value
+                    $schema = item.get_schema(name)
 
-                        td .name  | {name}
-                        td .value | {text}
+                    # from hypertag.core.dom import $DOM
+                    # if isinstance(html, DOM):
+                    #     html = html.render()
+                    
+                    tr class="color{c}"
+                        if schema.is_catalog
+                            td .key .nested colspan=2
+                                | {name}
+                                print_catalog $value $schema.values $c
+                            # tr
+                            #     td .key | {name}
+                            #     td .value
+                            # tr
+                            #     td colspan=2
+                            #         print_catalog $value $schema.values
+                        else
+                            $text = schema.display(value)
+                            td .key   | $name
+                            td .value | $text
+                            
+                    $c = 1 - c
     """,
 )
 
 """
-%print_data item
-    table .data : tbody
-        for field, value in item.data.items()
-            tr
-                # schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
-                # schema  = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
-                # if schema.is_collection:
-                #     td .name colspan=2 | {field}
-                #     data_table value
-                
-
-%print_catalog1 data schema=None fields=None
-    table .data : tbody
-        for field, value in data.items()
-            $ schema = schema or fields[field].schema
-            tr
-                td .name  | {field}
-                td .value | {schema.render(value)}
+%flexi_table start_color=0 depth=1
 
 %print_catalog2 data schema
-    table .data : tbody
+    table .data
         for field, value in data.items()
             tr
                 schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
                 value_schema = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
                 if value_schema.is_catalog:
-                    td .name colspan=2 | {field}
+                    td .key colspan=2 | {field}
                     print_catalog1 value value_schema
                 else
-                    td .name  | {field}
+                    td .key  | {field}
                     td .value | {schema.render(value)}
                     
 """

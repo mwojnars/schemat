@@ -261,7 +261,7 @@ class Item(object, metaclass = MetaItem):
         return self.data.get_list(field, copy_list)
 
     # get_list = list
-
+    
     def set(self, key, *values):
         """
         Assign `values` to a given key in data. This can be used instead of __setattr__ when the key looks
