@@ -20,7 +20,9 @@ Dict / Mapping
 """
 
 import json, base64
+from hypertag.std.html import html_escape
 
+from .utils import hypertag
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
@@ -150,7 +152,11 @@ class Schema:
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
-        return str(value)
+        fun = getattr(value, '__html__', None)
+        if fun and callable(fun):
+            return fun(), 'HTML'
+
+        return str(value), 'plaintext'
         
 
 #####################################################################################################################################################
@@ -745,7 +751,7 @@ class Select(Schema):
 #####
 
 class Field:
-    """Specification of a field in a FIELDS or Struct."""
+    """Specification of a field in a FIELDS/Struct catalog."""
     
     MISSING = object()      # token indicating that `default` value is missing; removed from output during serialization
     
@@ -771,6 +777,26 @@ class Field:
             state = self.__dict__
             
         return state
+    
+    def __html__(self):
+        view = """
+            context $field as f
+            span .field
+                | $f.schema
+                ...if f.multi | *
+                if f.default <> f.MISSING
+                    span .default title="default value: $f.default"
+                        | [$f.default]
+                if f.info
+                    span .info
+                        .../ &middot;
+                        ...|  $f.info
+                        # larger dot: •
+        """
+        return hypertag(view, field = self)
+    
+        # multi = '*' if self.multi else ''
+        # return f"{self.schema}{multi} [{self.default}] / <i>{html_escape(self.info or '')}</i>"
     
     def encode_one(self, value, registry):
         return self.schema.encode(value, registry)
@@ -987,8 +1013,8 @@ class Struct(FIELDS):
 #####  Special-purpose schema
 #####
 
-class FieldSchema(Struct):
-    """Schema of a field specification inside item's schema definition."""
+class FIELD(Struct):
+    """Schema of a field specification in a category's list of fields."""
 
     type = Field
     fields = {
@@ -997,6 +1023,18 @@ class FieldSchema(Struct):
         'multi':   Boolean(),
         'info':    String(),
     }
+
+    # def display(self, obj):
+    #
+    #     parts = []
+    #     for name, schema in self.fields.items():
+    #         v = getattr(obj, name, 'MISSING')
+    #         s, t = schema.display(v)
+    #         if t == 'plaintext': s = html_escape(s)
+    #         parts.append(f"{name}:{s}")
+    #
+    #     return ' '.join(parts), 'HTML'
+        
 
 # INFO: it's possible to use field_schema and record_schema, as below,
 #       but the YAML output of the root category becomes more verbose then (multiple nesting levels)
@@ -1009,7 +1047,7 @@ class FieldSchema(Struct):
 #                       )
 #
 # record_schema = Struct(FIELDS,
-#                        fields = Dict(String(), FieldSchema()),
+#                        fields = Dict(String(), FIELD()),
 #                        strict = Boolean(),
 #                        )
     

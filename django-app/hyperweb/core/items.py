@@ -25,8 +25,7 @@ base_css = Code_(
         
         table.data {
           /*font-family: "Times New Roman", Times, serif;*/
-          /* background: #F6F6F6; */
-          text-align: center;
+          text-align: left;
           border-collapse: collapse;
         }
         table.data tr:not(:last-child) {
@@ -41,7 +40,6 @@ base_css = Code_(
         }
         table.data td.key  {
           border-right: 1px solid #fff;
-          text-align: left;
           padding-right: 25px;
         }
         table.data td.value {
@@ -57,6 +55,7 @@ base_css = Code_(
 
         table.data td.nested { padding-right: 0px; padding-bottom: 0px; }
 
+        table.data.depth1 tr     { border-top: 1px solid #fff; }
         table.data.depth1        { width: 980px; }
         table.data.depth1 td.key { width: 200px; }
         table.data.depth1 td.key {
@@ -64,7 +63,8 @@ base_css = Code_(
           font-weight: bold;
         }
         /* widths below should be equal to depth1's only decreased by "padding-left" and "border" size of a td */
-        table.data.depth2        { width: 945px; margin-left: 20px; margin-top: 10px; }
+        table.data.depth2 tr     { border-top: none; }
+        table.data.depth2        { width: 925px; margin-left: 20px; }
         table.data.depth2 td.key { width: 165px; }
         table.data.depth2 td.key {
           font-size:    15px;
@@ -72,6 +72,9 @@ base_css = Code_(
           font-weight:  normal;
           padding-left: 15px;
         }
+        
+        .value .field .default     { color: #888; }
+        /*.value .field .info        { font-style: italic; }*/
     """,
 )
 
@@ -82,11 +85,13 @@ base_hy = Code_(
             $c = start_color
             table .data .depth2
                 for name, value in data.items()
-                    $text = schema.display(value)
+                    $text, type = schema.display(value)
                     tr class="color{c}"
                         td .key   | $name
-                        td .value | $text
-                    $c = 1 - c
+                        td .value
+                            ...if (type=='HTML') / $text
+                            else                 | $text
+                    # $c = 1 - c
         
         %print_data item
             $c = 0          # alternating color of rows: 0 or 1
@@ -103,16 +108,12 @@ base_hy = Code_(
                             td .key .nested colspan=2
                                 | {name}
                                 print_catalog $value $schema.values $c
-                            # tr
-                            #     td .key | {name}
-                            #     td .value
-                            # tr
-                            #     td colspan=2
-                            #         print_catalog $value $schema.values
                         else
-                            $text = schema.display(value)
+                            $text, type = schema.display(value)
                             td .key   | $name
-                            td .value | $text
+                            td .value
+                                ...if (type=='HTML') / $text
+                                else                 | $text
                             
                     $c = 1 - c
     """,

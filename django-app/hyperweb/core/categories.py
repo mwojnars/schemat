@@ -88,7 +88,7 @@ root_fields = FIELDS(
     class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(Text()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(Catalog(Text()), default = {"": page_item}),
-    fields       = Field(Catalog(FieldSchema(), type = FIELDS)),
+    fields       = Field(Catalog(FIELD(), type = FIELDS)),
 )
 
 # category-level properties:
