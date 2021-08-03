@@ -70,8 +70,9 @@ class Schema:
     blank = True            # if True, None is a valid input value and is encoded as None;
                             # no other valid value can produce None as its serializable state
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
-    is_catalog = False      # True only in Catalog and subclasses
     # registry = None
+    
+    is_catalog = False      # True only in Catalog and subclasses
     
     def to_json(self, value, registry, **params):
         """
@@ -147,6 +148,10 @@ class Schema:
 
     #############################################
     
+    def is_lengthy(self, value):
+        """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
+        return True
+
     def display(self, value):  # inline = False, target = "HTML"
         """
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
@@ -381,7 +386,7 @@ class Class(Schema):
         
 class Primitive(Schema):
     """Schema of a specific primitive JSON-serializable python type."""
-    
+
     type = None     # the predefined standard python type of all app-layer values; same type for db-layer values
     
     def __init__(self, type = None):
@@ -396,6 +401,9 @@ class Primitive(Schema):
     def _decode(self, value, registry):
         if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
+
+    def is_lengthy(self, value):
+        return False
 
 class Boolean(Primitive):
     type = bool
@@ -413,6 +421,9 @@ class Text(Primitive):
     """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
     type = str
 
+    def is_lengthy(self, value):
+        return len(value) > 200 #or value.count('\n') > 3
+        
 class Bytes(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
     type = bytes
@@ -798,8 +809,9 @@ class Field:
                 | $f.schema
                 ...if f.multi | *
                 if f.default <> f.MISSING
-                    span .default title="default value: $f.default"
-                        | [$f.default]
+                    $default = str(f.default)
+                    span .default title="default value: {default:crop(1000)}"
+                        | [{default : crop(100)}]
                 if f.info
                     span .info | • $f.info
                     # smaller dot: &middot;
@@ -951,6 +963,8 @@ class FIELDS(catalog, Schema):
     def __str__(self):
         return str(dict(self))
     
+    def is_lengthy(self, value):
+        return False
 
 #####################################################################################################################################################
 

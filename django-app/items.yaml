@@ -231,11 +231,13 @@
 - id: [6, 2]
   language: hypertag
   source: "\n        %atomic_row key value schema\n            $text = schema.display(value)\n\
-    \            td .key   | $key\n            td .value : div .scroll.atomic\n  \
-    \              if (text.markup=='HTML') / $text\n                else        \
-    \             | $text\n    \n        %print_catalog data schema start_color=0\n\
-    \            $c = start_color\n            table .item-data .depth2\n        \
-    \        for name, value in data.items()\n                    tr class=\"color{c}\"\
+    \            td .key   | $key\n            td .value\n                $class =\
+    \ \"atomic\"\n                if schema.is_lengthy(value):\n                 \
+    \   $class += \" scroll\"\n                div class=$class\n                \
+    \    if (text.markup=='HTML') / $text\n                    else              \
+    \       | $text\n    \n        %print_catalog data schema start_color=0\n    \
+    \        $c = start_color\n            table .item-data .depth2\n            \
+    \    for name, value in data.items()\n                    tr class=\"color{c}\"\
     \n                        atomic_row $name $value $schema\n                  \
     \  # $c = 1 - c\n        \n        %print_data item\n            $c = 0      \
     \    # alternating color of rows: 0 or 1\n            table .item-data .depth1\n\

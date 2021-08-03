@@ -92,14 +92,14 @@ base_css = Code_(
         tr .colorX                              # X = 0 or 1
             # field with an atomic value:
             td .key
-            td .value : div .atomic
+            td .value : div .atomic [.scroll]
 
             # field with a catalog of sub-fields:
             td .key .nested colspan=2
             table .item-data .depth2
                 tr .colorX
                     td .key
-                    td .value : div .atomic
+                    td .value : div .atomic [.scroll]
 """
 
 base_hy = Code_(
@@ -108,9 +108,13 @@ base_hy = Code_(
         %atomic_row key value schema
             $text = schema.display(value)
             td .key   | $key
-            td .value : div .scroll.atomic
-                if (text.markup=='HTML') / $text
-                else                     | $text
+            td .value
+                $class = "atomic"
+                if schema.is_lengthy(value):
+                    $class += " scroll"
+                div class=$class
+                    if (text.markup=='HTML') / $text
+                    else                     | $text
     
         %print_catalog data schema start_color=0
             $c = start_color
