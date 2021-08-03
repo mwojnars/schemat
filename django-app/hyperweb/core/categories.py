@@ -11,7 +11,7 @@ from hyperweb.schema import *
 page_item = """
     context $item, $category as cat, $app, $directory as dir
 
-    style / $dir.open('base.css')['code']
+    style / $dir.open('base.css')['source']
 
     % print_headline
             p .catlink
@@ -43,7 +43,7 @@ page_item = """
 page_category = """
     context $item as cat, $app, $directory as dir
 
-    style / $dir.open('base.css')['code']
+    style / $dir.open('base.css')['source']
 
     html
         $name = cat['name']? or str(cat)
@@ -87,7 +87,7 @@ root_fields = FIELDS(
     info         = Field(String()),
     class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(Text()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(Catalog(Text()), default = {"": page_item}),
+    endpoints    = Field(Catalog(Text()), default = {"__view__": page_item}),
     fields       = Field(Catalog(FIELD(), type = FIELDS)),
 )
 
@@ -111,7 +111,7 @@ Category_ = Category(
     name        = "Category",
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.item.Category',
-    endpoints   = {"": page_category},
+    endpoints   = {"__view__": page_category},
     fields      = root_fields,
     # page_category = Template(page_category),
     # page_item     = Template(page_item),
@@ -198,7 +198,7 @@ Code_ = Category_(
               """,
     fields  = FIELDS(
         language = String(),    # ProgramLanguage()
-        code     = Text(),
+        source   = CODE(),
     ),
 )
 Text_ = Category_(

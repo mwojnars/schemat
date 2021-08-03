@@ -407,11 +407,11 @@ class Item(object, metaclass = MetaItem):
     #
     #     raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
     
-    def get_handler(self, endpoint, default_endpoint = '_view_'):
+    def get_handler(self, endpoint, default_endpoint = '__view__'):
         
         # search for a handler function/template in category's endpoints
         endpoints = self.category.get('endpoints', {})
-        handler = endpoints.get(endpoint)
+        handler = endpoints.get(endpoint or default_endpoint)
         if not handler: raise Exception("page not found")
 
         # handler is a Hypertag script that has to be rendered through Item.render() ?
@@ -494,10 +494,10 @@ class HyItemLoader(HyLoader):
         item, location = self._find_item(path, referrer)
         if item is None: return None
 
-        assert 'code' in item
+        assert 'source' in item
         assert item.category.get('name') == 'Code'
         
-        script = item['code']
+        script = item['source']
         # print('script loaded:\n', script)
         
         # # relative import path is always resolved relative to the referrer's location

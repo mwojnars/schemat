@@ -8,11 +8,12 @@ from hyperweb.core.categories import *
 
 base_css = Code_(
     language = 'css',
-    code = """
+    source = """
+        /*** GENERAL STYLES */
         body {
           font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
           font-size: 16px;
-          color: #444;
+          color: #333;
         }
         .page {
           width: 980px;
@@ -23,50 +24,55 @@ base_css = Code_(
         a:visited { color: #00427a }
         .catlink { font-size: 14px; margin-top: -20px }
         
-        table.data {
+        /*** UTILITIES */
+        /*** SITEWIDE */
+        
+        .scroll { overflow: scroll; }
+        
+        /*** ITEM PAGE */
+
+        .item-data {
           /*font-family: "Times New Roman", Times, serif;*/
           text-align: left;
           border-collapse: collapse;
         }
-        table.data tr:not(:last-child) {
+        .item-data tr:not(:last-child) {
           border-bottom: 1px solid #fff;
         }
-        table.data td {
+        .item-data td {
           /*border-right: none;*/
           padding: 14px 35px 11px;
-        }
-        table.data td {
           line-height: 20px;
         }
-        table.data td.key  {
+        .item-data td.key  {
           border-right: 1px solid #fff;
           padding-right: 25px;
         }
-        table.data td.value {
+        .item-data td.value {
           font-size: 13px;
           font-family: monospace;     /* courier */
         }
 
-        /* table.data tr:nth-child(odd) { background: #e2eef9; } */  /* #D0E4F5 */
-        /* table.data tfoot td { font-size: 14px; } */
+        /* .item-data tr:nth-child(odd) { background: #e2eef9; } */  /* #D0E4F5 */
+        /* .item-data tfoot td { font-size: 14px; } */
 
-        table.data tr.color0 { background: #e2eef9; }   /* #D0E4F5 */
-        table.data tr.color1 { background: #f6f6f6; }
+        .item-data tr.color0 { background: #e2eef9; }   /* #D0E4F5 */
+        .item-data tr.color1 { background: #f6f6f6; }
 
-        table.data td.nested { padding-right: 0px; padding-bottom: 0px; }
+        .item-data td.nested { padding-right: 0px; padding-bottom: 0px; }
 
-        table.data.depth1 tr     { border-top: 1px solid #fff; }
-        table.data.depth1        { width: 980px; }
-        table.data.depth1 td.key { width: 200px; }
-        table.data.depth1 td.key {
+        .item-data.depth1 tr     { border-top: 1px solid #fff; }
+        .item-data.depth1        { width: 980px; }
+        .item-data.depth1 td.key { width: 200px; }
+        .item-data.depth1 td.key {
           font-size:   15px;
           font-weight: bold;
         }
         /* widths below should be equal to depth1's only decreased by "padding-left" and "border" size of a td */
-        table.data.depth2 tr     { border-top: none; }
-        table.data.depth2        { width: 925px; margin-left: 20px; }
-        table.data.depth2 td.key { width: 165px; }
-        table.data.depth2 td.key {
+        .item-data.depth2 tr     { border-top: none; }
+        .item-data.depth2        { width: 925px; margin-left: 20px; }
+        .item-data.depth2 td.key { width: 165px; }
+        .item-data.depth2 td.key {
           font-size:    15px;
           font-style:   italic;
           font-weight:  normal;
@@ -74,28 +80,49 @@ base_css = Code_(
         }
         
         .value .field .default     { color: #888; }
-        /*.value .field .info        { font-style: italic; }*/
+        .value .field .info        { font-style: italic; }
+        .value pre                 { line-height: 10px; }
+        .value .scroll             { max-height: 150px; }
     """,
 )
 
+# box model of an item data table:
+"""
+    table .item-data .depth1
+        tr .colorX                              # X = 0 or 1
+            # field with an atomic value:
+            td .key
+            td .value : div .atomic
+
+            # field with a catalog of sub-fields:
+            td .key .nested colspan=2
+            table .item-data .depth2
+                tr .colorX
+                    td .key
+                    td .value : div .atomic
+"""
+
 base_hy = Code_(
     language = 'hypertag',
-    code = """
+    source = """
+        %atomic_row key value schema
+            $text = schema.display(value)
+            td .key   | $key
+            td .value : div .scroll.atomic
+                if (text.markup=='HTML') / $text
+                else                     | $text
+    
         %print_catalog data schema start_color=0
             $c = start_color
-            table .data .depth2
+            table .item-data .depth2
                 for name, value in data.items()
-                    $text, type = schema.display(value)
                     tr class="color{c}"
-                        td .key   | $name
-                        td .value
-                            ...if (type=='HTML') / $text
-                            else                 | $text
+                        atomic_row $name $value $schema
                     # $c = 1 - c
         
         %print_data item
             $c = 0          # alternating color of rows: 0 or 1
-            table .data .depth1
+            table .item-data .depth1
                 for name, value in item.data.items()
                     $schema = item.get_schema(name)
 
@@ -109,11 +136,7 @@ base_hy = Code_(
                                 | {name}
                                 print_catalog $value $schema.values $c
                         else
-                            $text, type = schema.display(value)
-                            td .key   | $name
-                            td .value
-                                ...if (type=='HTML') / $text
-                                else                 | $text
+                            atomic_row $name $value $schema
                             
                     $c = 1 - c
     """,
@@ -123,7 +146,7 @@ base_hy = Code_(
 %flexi_table start_color=0 depth=1
 
 %print_catalog2 data schema
-    table .data
+    table .item-data
         for field, value in data.items()
             tr
                 schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema

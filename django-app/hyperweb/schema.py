@@ -20,14 +20,14 @@ Dict / Mapping
 """
 
 import json, base64
-from hypertag.std.html import html_escape
+from hypertag.std.html import html_escape as esc
 
-from .utils import hypertag
+from .utils import hypertag, dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
 from .item import Item
-from .types import struct, catalog
+from .types import text, html, struct, catalog
 
 
 #####################################################################################################################################################
@@ -154,9 +154,9 @@ class Schema:
         """
         fun = getattr(value, '__html__', None)
         if fun and callable(fun):
-            return fun(), 'HTML'
+            return html(fun())
 
-        return str(value), 'plaintext'
+        return text(value)
         
 
 #####################################################################################################################################################
@@ -703,7 +703,7 @@ class Catalog(Dict):
     #                     i  | $key
     #                     ...| : $value
     #     """
-    #     return HyperHTML().render(view, catalog = values)
+    #     return html(HyperHTML().render(view, catalog = values))
 
 
 class Select(Schema):
@@ -744,6 +744,19 @@ class Select(Schema):
         schema = self.schemas[name]
         return schema.decode(encoded, registry)
         
+
+#####################################################################################################################################################
+#####
+#####  SPECIAL-PURPOSE SCHEMA
+#####
+
+class CODE(Text):
+    
+    def display(self, code):
+        code_html = dedent(esc(code))
+        code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
+        return html(f"<pre>{code_html}</pre>")
+    
 
 #####################################################################################################################################################
 #####
@@ -788,15 +801,14 @@ class Field:
                     span .default title="default value: $f.default"
                         | [$f.default]
                 if f.info
-                    span .info
-                        .../ &middot;
-                        ...|  $f.info
-                        # larger dot: •
+                    span .info | • $f.info
+                    # smaller dot: &middot;
+                    # larger dot: •
         """
         return hypertag(view, field = self)
     
         # multi = '*' if self.multi else ''
-        # return f"{self.schema}{multi} [{self.default}] / <i>{html_escape(self.info or '')}</i>"
+        # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
     
     def encode_one(self, value, registry):
         return self.schema.encode(value, registry)
@@ -1030,10 +1042,10 @@ class FIELD(Struct):
     #     for name, schema in self.fields.items():
     #         v = getattr(obj, name, 'MISSING')
     #         s, t = schema.display(v)
-    #         if t == 'plaintext': s = html_escape(s)
+    #         if t == 'plaintext': s = esc(s)
     #         parts.append(f"{name}:{s}")
     #
-    #     return ' '.join(parts), 'HTML'
+    #     return html(' '.join(parts))
         
 
 # INFO: it's possible to use field_schema and record_schema, as below,

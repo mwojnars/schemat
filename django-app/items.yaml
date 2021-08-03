@@ -2,8 +2,8 @@
   name: Category
   info: Category of items that represent categories
   class_name: hyperweb.item.Category
-  endpoints: {? '' : "\n    context $item as cat, $app, $directory as dir\n\n    style\
-      \ / $dir.open('base.css')['code']\n\n    html\n        $name = cat['name']?\
+  endpoints: {__view__: "\n    context $item as cat, $app, $directory as dir\n\n \
+      \   style / $dir.open('base.css')['source']\n\n    html\n        $name = cat['name']?\
       \ or str(cat)\n        head\n            title | {name ' -' }? category #{cat.iid}\n\
       \n        body .page\n            h1\n                try\n                \
       \    i | $name\n                    . | -\n                | category #{cat.iid}\n\
@@ -36,8 +36,8 @@
       schema:
         values: {'@': hyperweb.schema.Text}
         '@': hyperweb.schema.Catalog
-      default: {? '' : "\n    context $item, $category as cat, $app, $directory as\
-          \ dir\n\n    style / $dir.open('base.css')['code']\n\n    % print_headline\n\
+      default: {__view__: "\n    context $item, $category as cat, $app, $directory\
+          \ as dir\n\n    style / $dir.open('base.css')['source']\n\n    % print_headline\n\
           \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
           \ or cat}\n            | ($item.cid,$item.iid)\n\n    html\n        $name\
           \ = item['name']? or str(item)\n        head\n            title | {name}\n\
@@ -161,8 +161,8 @@
     language:
       schema: {'@': hyperweb.schema.String}
       '@': hyperweb.schema.Field
-    code:
-      schema: {'@': hyperweb.schema.Text}
+    source:
+      schema: {'@': hyperweb.schema.CODE}
       '@': hyperweb.schema.Field
 - id: [0, 7]
   name: Text
@@ -195,46 +195,50 @@
       '@': hyperweb.schema.Field
 - id: [6, 1]
   language: css
-  code: "\n        body {\n          font-family: 'Quattrocento Sans', \"Helvetica\
-    \ Neue\", Helvetica, Arial, sans-serif;\n          font-size: 16px;\n        \
-    \  color: #444;\n        }\n        .page {\n          width: 980px;\n       \
-    \   margin: 0 auto;\n        }\n        h1 { font-size: 26px; line-height: 34px;\
-    \ margin-top: 30px }\n        a { color: #006ecc }\n        a:visited { color:\
-    \ #00427a }\n        .catlink { font-size: 14px; margin-top: -20px }\n       \
-    \ \n        table.data {\n          /*font-family: \"Times New Roman\", Times,\
+  source: "\n        /*** GENERAL STYLES */\n        body {\n          font-family:\
+    \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
+    \       font-size: 16px;\n          color: #333;\n        }\n        .page {\n\
+    \          width: 980px;\n          margin: 0 auto;\n        }\n        h1 { font-size:\
+    \ 26px; line-height: 34px; margin-top: 30px }\n        a { color: #006ecc }\n\
+    \        a:visited { color: #00427a }\n        .catlink { font-size: 14px; margin-top:\
+    \ -20px }\n        \n        /*** UTILITIES */\n        /*** SITEWIDE */\n   \
+    \     \n        .scroll { overflow: scroll; }\n        \n        /*** ITEM PAGE\
+    \ */\n\n        .item-data {\n          /*font-family: \"Times New Roman\", Times,\
     \ serif;*/\n          text-align: left;\n          border-collapse: collapse;\n\
-    \        }\n        table.data tr:not(:last-child) {\n          border-bottom:\
-    \ 1px solid #fff;\n        }\n        table.data td {\n          /*border-right:\
-    \ none;*/\n          padding: 14px 35px 11px;\n        }\n        table.data td\
-    \ {\n          line-height: 20px;\n        }\n        table.data td.key  {\n \
-    \         border-right: 1px solid #fff;\n          padding-right: 25px;\n    \
-    \    }\n        table.data td.value {\n          font-size: 13px;\n          font-family:\
-    \ monospace;     /* courier */\n        }\n\n        /* table.data tr:nth-child(odd)\
-    \ { background: #e2eef9; } */  /* #D0E4F5 */\n        /* table.data tfoot td {\
-    \ font-size: 14px; } */\n\n        table.data tr.color0 { background: #e2eef9;\
-    \ }   /* #D0E4F5 */\n        table.data tr.color1 { background: #f6f6f6; }\n\n\
-    \        table.data td.nested { padding-right: 0px; padding-bottom: 0px; }\n\n\
-    \        table.data.depth1 tr     { border-top: 1px solid #fff; }\n        table.data.depth1\
-    \        { width: 980px; }\n        table.data.depth1 td.key { width: 200px; }\n\
-    \        table.data.depth1 td.key {\n          font-size:   15px;\n          font-weight:\
-    \ bold;\n        }\n        /* widths below should be equal to depth1's only decreased\
-    \ by \"padding-left\" and \"border\" size of a td */\n        table.data.depth2\
-    \ tr     { border-top: none; }\n        table.data.depth2        { width: 925px;\
-    \ margin-left: 20px; }\n        table.data.depth2 td.key { width: 165px; }\n \
-    \       table.data.depth2 td.key {\n          font-size:    15px;\n          font-style:\
-    \   italic;\n          font-weight:  normal;\n          padding-left: 15px;\n\
-    \        }\n        \n        .value .field .default     { color: #888; }\n  \
-    \      /*.value .field .info        { font-style: italic; }*/\n    "
+    \        }\n        .item-data tr:not(:last-child) {\n          border-bottom:\
+    \ 1px solid #fff;\n        }\n        .item-data td {\n          /*border-right:\
+    \ none;*/\n          padding: 14px 35px 11px;\n          line-height: 20px;\n\
+    \        }\n        .item-data td.key  {\n          border-right: 1px solid #fff;\n\
+    \          padding-right: 25px;\n        }\n        .item-data td.value {\n  \
+    \        font-size: 13px;\n          font-family: monospace;     /* courier */\n\
+    \        }\n\n        /* .item-data tr:nth-child(odd) { background: #e2eef9; }\
+    \ */  /* #D0E4F5 */\n        /* .item-data tfoot td { font-size: 14px; } */\n\n\
+    \        .item-data tr.color0 { background: #e2eef9; }   /* #D0E4F5 */\n     \
+    \   .item-data tr.color1 { background: #f6f6f6; }\n\n        .item-data td.nested\
+    \ { padding-right: 0px; padding-bottom: 0px; }\n\n        .item-data.depth1 tr\
+    \     { border-top: 1px solid #fff; }\n        .item-data.depth1        { width:\
+    \ 980px; }\n        .item-data.depth1 td.key { width: 200px; }\n        .item-data.depth1\
+    \ td.key {\n          font-size:   15px;\n          font-weight: bold;\n     \
+    \   }\n        /* widths below should be equal to depth1's only decreased by \"\
+    padding-left\" and \"border\" size of a td */\n        .item-data.depth2 tr  \
+    \   { border-top: none; }\n        .item-data.depth2        { width: 925px; margin-left:\
+    \ 20px; }\n        .item-data.depth2 td.key { width: 165px; }\n        .item-data.depth2\
+    \ td.key {\n          font-size:    15px;\n          font-style:   italic;\n \
+    \         font-weight:  normal;\n          padding-left: 15px;\n        }\n  \
+    \      \n        .value .field .default     { color: #888; }\n        .value .field\
+    \ .info        { font-style: italic; }\n        .value pre                 { line-height:\
+    \ 10px; }\n        .value .scroll             { max-height: 150px; }\n    "
 - id: [6, 2]
   language: hypertag
-  code: "\n        %print_catalog data schema start_color=0\n            $c = start_color\n\
-    \            table .data .depth2\n                for name, value in data.items()\n\
-    \                    $text, type = schema.display(value)\n                   \
-    \ tr class=\"color{c}\"\n                        td .key   | $name\n         \
-    \               td .value\n                            ...if (type=='HTML') /\
-    \ $text\n                            else                 | $text\n          \
-    \          # $c = 1 - c\n        \n        %print_data item\n            $c =\
-    \ 0          # alternating color of rows: 0 or 1\n            table .data .depth1\n\
+  source: "\n        %atomic_row key value schema\n            $text = schema.display(value)\n\
+    \            td .key   | $key\n            td .value : div .scroll.atomic\n  \
+    \              if (text.markup=='HTML') / $text\n                else        \
+    \             | $text\n    \n        %print_catalog data schema start_color=0\n\
+    \            $c = start_color\n            table .item-data .depth2\n        \
+    \        for name, value in data.items()\n                    tr class=\"color{c}\"\
+    \n                        atomic_row $name $value $schema\n                  \
+    \  # $c = 1 - c\n        \n        %print_data item\n            $c = 0      \
+    \    # alternating color of rows: 0 or 1\n            table .item-data .depth1\n\
     \                for name, value in item.data.items()\n                    $schema\
     \ = item.get_schema(name)\n\n                    # from hypertag.core.dom import\
     \ $DOM\n                    # if isinstance(html, DOM):\n                    #\
@@ -242,11 +246,8 @@
     color{c}\"\n                        if schema.is_catalog\n                   \
     \         td .key .nested colspan=2\n                                | {name}\n\
     \                                print_catalog $value $schema.values $c\n    \
-    \                    else\n                            $text, type = schema.display(value)\n\
-    \                            td .key   | $name\n                            td\
-    \ .value\n                                ...if (type=='HTML') / $text\n     \
-    \                           else                 | $text\n                   \
-    \         \n                    $c = 1 - c\n    "
+    \                    else\n                            atomic_row $name $value\
+    \ $schema\n                            \n                    $c = 1 - c\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 2]
