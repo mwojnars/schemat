@@ -72,7 +72,7 @@ class Schema:
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     # registry = None
     
-    is_catalog = False      # True only in Catalog and subclasses
+    is_catalog = False      # True only in CATALOG and subclasses
     
     def to_json(self, value, registry, **params):
         """
@@ -169,7 +169,7 @@ class Schema:
 #####  ATOMIC schema types
 #####
 
-class Object(Schema):
+class OBJECT(Schema):
     """
     Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
     predefined type(s) - the `type` parameter - or the object is an instance of one of predefined base classes
@@ -336,17 +336,17 @@ class Object(Schema):
         
     @staticmethod
     def _encode_list(values, registry):
-        """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = Object()."""
+        """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
         return [object_schema._encode(v, registry) for v in values]
         
     @staticmethod
     def _decode_list(state, registry):
-        """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = Object()."""
+        """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
         return [object_schema._decode(v, registry) for v in state]
         
     @staticmethod
     def _encode_dict(state, registry):
-        """Encode recursively all non-primitive objects inside `state` using the generic object_schema = Object()."""
+        """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
         # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
         for key in state:
             if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
@@ -363,16 +363,16 @@ class Object(Schema):
     
     @staticmethod
     def _decode_dict(state, registry):
-        """Decode recursively all non-primitive objects inside `state` using the generic object_schema = Object()."""
+        """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
         return {k: object_schema._decode(v, registry) for k, v in state.items()}
 
 
-# the most generic schema for encoding/decoding any types of objects; used internally in Object()
+# the most generic schema for encoding/decoding any types of objects; used internally in OBJECT()
 # for recursive encoding/decoding of individual values inside a given object's state
-object_schema = Object()
+object_schema = OBJECT()
 
 
-class Class(Schema):
+class CLASS(Schema):
     """
     Accepts any global python type and encodes as a string containing its full package-module name.
     """
@@ -384,8 +384,9 @@ class Class(Schema):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return import_(value)
         
+        
 class Primitive(Schema):
-    """Schema of a specific primitive JSON-serializable python type."""
+    """Base class for schemas of primitive JSON-serializable python types."""
 
     type = None     # the predefined standard python type of all app-layer values; same type for db-layer values
     
@@ -405,26 +406,26 @@ class Primitive(Schema):
     def is_lengthy(self, value):
         return False
 
-class Boolean(Primitive):
+class BOOLEAN(Primitive):
     type = bool
 
-class Integer(Primitive):
+class INTEGER(Primitive):
     type = int
 
-class Float(Primitive):
+class FLOAT(Primitive):
     type = float
 
-class String(Primitive):
+class STRING(Primitive):
     type = str
     
-class Text(Primitive):
-    """Similar to String, but differs in how the content is displayed: as a block rather than inline."""
+class TEXT(Primitive):
+    """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
     type = str
 
     def is_lengthy(self, value):
         return len(value) > 200 #or value.count('\n') > 3
         
-class Bytes(Primitive):
+class BYTES(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
     type = bytes
     
@@ -436,13 +437,13 @@ class Bytes(Primitive):
         if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
         return base64.b64decode(encoded)
     
-class Enum(Schema):
+class ENUM(Schema):
     """
     Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
     or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
     of values in __init__() is meaningful for subsequent decoding.
     """
-    schema   = String()
+    schema   = STRING()
     values   = None
     valueset = None         # (temporary) set of permitted values
     indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
@@ -470,7 +471,7 @@ class Enum(Schema):
             self.indices = {v: idx for idx, v in enumerate(self.values)}
 
     def _encode(self, value, registry):
-        if value not in self.valueset: raise EncodeError(f"unknown Enum value: {value}")
+        if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
         if self.indices:
             return self.indices[value]
         else:
@@ -480,19 +481,19 @@ class Enum(Schema):
         # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         
         if self.indices:
-            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded Enum value, got {encoded}")
+            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
             return self.values[encoded]
         
         value = self.schema.decode(encoded, registry)
-        if value not in self.valueset: raise DecodeError(f"unknown Enum value after decoding: {value}")
+        if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
         return value
     
     
-class Link(Schema):
+class LINK(Schema):
     """
     Encodes an Item into its ID=(CID,IID), or just IID if `category` or `cid` was provided.
-    Link without parameters is equivalent to Object(Item), however, Link can also be parameterized,
-    which is not possible using an Object.
+    LINK without parameters is equivalent to OBJECT(Item), however, LINK can also be parameterized,
+    which is not possible using an OBJECT.
     """
     
     # the required category or CID of items to be encoded; if None, all items can be encoded
@@ -503,7 +504,7 @@ class Link(Schema):
         if cid is not None: self.cid = cid
         if category is not None: self.category = category
             # if category.iid is None:
-            #     print(f"WARNING: category {category} has empty ID in Link.__init__()")
+            #     print(f"WARNING: category {category} has empty ID in LINK.__init__()")
             #     self.category = category
             # self.cid = category.iid
     
@@ -555,22 +556,22 @@ class Link(Schema):
 
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
         # from .site import registry
-        # print(f'registry loaded by Link in thread {threading.get_ident()}', flush = True)
+        # print(f'registry loaded by LINK in thread {threading.get_ident()}', flush = True)
 
         return registry.get_item((cid, iid))
         
 #####################################################################################################################################################
 
-class PathString(String):
+class PATH_STRING(STRING):
     """Path to an item in a Directory."""
     
-class EntryName(String):
+class ENTRY_NAME(STRING):
     """
     Name of an individual entry in a Directory, without path.
     Names that end with '/' indicate directories and must link to items of Directory category.
     """
 
-class Entry(Link):
+class ENTRY(LINK):
     """
     Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
     indicating whether this item should be interpreted as-is or as a subfolder.
@@ -583,7 +584,7 @@ class Entry(Link):
 #####  COMPOUND schema types
 #####
 
-class List(Schema):
+class LIST(Schema):
     type = list
     schema = None       # schema of individual elements
     
@@ -598,7 +599,7 @@ class List(Schema):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         return self.type(self.schema.decode(e, registry) for e in encoded)
 
-class Tuple(Schema):
+class TUPLE(Schema):
     """
     If multiple `schemas` are given, each tuple must have this exact length and each element is encoded
     through a different schema, as provided. If there is one schema, this schema is used for
@@ -628,7 +629,7 @@ class Tuple(Schema):
         return tuple(schema.decode(e, registry) for e, schema in zip(encoded, self.schemas))
 
     
-class Dict(Schema):
+class DICT(Schema):
     """
     Accepts <dict> objects as data values, or objects of a given `type` which should be a subclass of <dict>.
     Outputs a dict with keys and values encoded through their own schema.
@@ -682,26 +683,26 @@ class Dict(Schema):
             
         return d
 
-class Catalog(Dict):
+class CATALOG(DICT):
     """
     Schema of a catalog of items.
-    Similar to Dict, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
+    Similar to DICT, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
     Provides tight integration with the UI: convenient layout for display of items,
     and access paths for locating form validation errors.
     Watch out the reversed ordering of arguments in __init__() !!
     """
     is_catalog   = True
-    keys_default = String()
+    keys_default = STRING()
     
     def __init__(self, values = None, keys = None, type = None):
         # if keys is None:
-        #     keys = String()
+        #     keys = STRING()
         # else:
-        #     assert isinstance(keys, String)             # `keys` may inherit from String, not necessarily be a String
+        #     assert isinstance(keys, STRING)             # `keys` may inherit from STRING, not necessarily be a STRING
         
-        if keys: assert isinstance(keys, String)        # `keys` may inherit from String, not necessarily be a String
+        if keys: assert isinstance(keys, STRING)        # `keys` may inherit from STRING, not necessarily be a STRING
         if type: assert issubclass(type, catalog)
-        super(Catalog, self).__init__(keys, values, type)
+        super(CATALOG, self).__init__(keys, values, type)
         
     # def display(self, values):
     #
@@ -717,7 +718,7 @@ class Catalog(Dict):
     #     return html(HyperHTML().render(view, catalog = values))
 
 
-class Select(Schema):
+class VARIANT(Schema):
     """
     Logical alternative of a number of distinct schemas: an app-layer object is serialized through
     the first matching sub-schema, and its name is stored in the output to allow deserialization
@@ -744,12 +745,12 @@ class Select(Schema):
             except EncodeError:
                 continue
                 
-        raise EncodeError(f"invalid value, no matching sub-schema in Select for: {value}")
+        raise EncodeError(f"invalid value, no matching sub-schema in VARIANT for: {value}")
         
     def _decode(self, encoded, registry):
         
         if not (isinstance(encoded, list) and len(encoded) == 2):
-            raise DecodeError(f"data corruption in Select, the encoded object should be a 2-element list, got {encoded} instead")
+            raise DecodeError(f"data corruption in VARIANT, the encoded object should be a 2-element list, got {encoded} instead")
         
         name, encoded = encoded
         schema = self.schemas[name]
@@ -761,7 +762,7 @@ class Select(Schema):
 #####  SPECIAL-PURPOSE SCHEMA
 #####
 
-class CODE(Text):
+class CODE(TEXT):
     
     def display(self, code):
         code_html = dedent(esc(code))
@@ -775,7 +776,7 @@ class CODE(Text):
 #####
 
 class Field:
-    """Specification of a field in a FIELDS/Struct catalog."""
+    """Specification of a field in a FIELDS/STRUCT catalog."""
     
     MISSING = object()      # token indicating that `default` value is missing; removed from output during serialization
     
@@ -968,7 +969,7 @@ class FIELDS(catalog, Schema):
 
 #####################################################################################################################################################
 
-class Struct(FIELDS):
+class STRUCT(FIELDS):
     """
     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
     Similar to FIELDS, but the app-representation is a regular python object matching the schema
@@ -983,9 +984,9 @@ class Struct(FIELDS):
         self.type = self.type or struct
         assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
         
-        super(Struct, self).__init__(**fields)
+        super(STRUCT, self).__init__(**fields)
         for name, field in self.items():
-            if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a Struct schema')
+            if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
     
     def _encode(self, obj, registry):
 
@@ -1015,7 +1016,7 @@ class Struct(FIELDS):
         # decode values of fields
         for name, value in encoded.items():
             
-            if name not in self: raise DecodeError(f'invalid field "{name}", not present in schema of a Struct')
+            if name not in self: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
             attrs[name] = self[name].decode_one(value, registry)
             
         if self.type is struct:
@@ -1024,9 +1025,9 @@ class Struct(FIELDS):
         return setstate(self.type, attrs)
     
 # def struct(typename, __type__ = object, **__fields__):
-#     """Dynamically create a subclass of Struct."""
+#     """Dynamically create a subclass of STRUCT."""
 #
-#     class _struct_(Struct):
+#     class _struct_(STRUCT):
 #         type = __type__
 #         fields = __fields__
 #
@@ -1039,15 +1040,15 @@ class Struct(FIELDS):
 #####  Special-purpose schema
 #####
 
-class FIELD(Struct):
+class FIELD(STRUCT):
     """Schema of a field specification in a category's list of fields."""
 
     type = Field
     fields = {
-        'schema':  Object(base = Schema),       # Select(Object(base=Schema), Link(schema-category))
-        'default': Object(),
-        'multi':   Boolean(),
-        'info':    String(),
+        'schema':  OBJECT(base = Schema),       # VARIANT(OBJECT(base=Schema), LINK(schema-category))
+        'default': OBJECT(),
+        'multi':   BOOLEAN(),
+        'info':    STRING(),
     }
 
     # def display(self, obj):
@@ -1065,15 +1066,15 @@ class FIELD(Struct):
 # INFO: it's possible to use field_schema and record_schema, as below,
 #       but the YAML output of the root category becomes more verbose then (multiple nesting levels)
 #
-# field_schema = Struct(Field,
-#                       schema    = Object(base = Schema),
-#                       default   = Object(),
-#                       multi     = Boolean(),
-#                       info      = String(),
+# field_schema = STRUCT(Field,
+#                       schema    = OBJECT(base = Schema),
+#                       default   = OBJECT(),
+#                       multi     = BOOLEAN(),
+#                       info      = STRING(),
 #                       )
 #
-# record_schema = Struct(FIELDS,
-#                        fields = Dict(String(), FIELD()),
-#                        strict = Boolean(),
+# record_schema = STRUCT(FIELDS,
+#                        fields = DICT(STRING(), FIELD()),
+#                        strict = BOOLEAN(),
 #                        )
     

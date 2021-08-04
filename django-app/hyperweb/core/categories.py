@@ -75,20 +75,20 @@ page_category = """
                                 | $iname (no public URL)
 """
 
-# text_schema = Struct(name = String(), lang = String(), markup = String(), text = Text())   # HumanLang() MarkupLang() Text()
-# code_schema = Struct(name = String(), lang = String(), code = Text())   # ProgramLang() Code()
-# method_schema = Struct(language = String(), code = Text())
-# class_schema = Select(native = Class(), inline = code_schema)       # reference = Link(_Code)
+# text_schema = STRUCT(name = STRING(), lang = STRING(), markup = STRING(), text = TEXT())   # HumanLang() MarkupLang() TEXT()
+# code_schema = STRUCT(name = STRING(), lang = STRING(), code = TEXT())   # ProgramLang() Code()
+# method_schema = STRUCT(language = STRING(), code = TEXT())
+# class_schema = VARIANT(native = CLASS(), inline = code_schema)       # reference = LINK(_Code)
 
 
 # fields of categories, including the root category
 root_fields = FIELDS(
-    name         = Field(String(), info = "human-readable title of the category"),
-    info         = Field(String()),
-    class_name   = Field(String(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
-    class_code   = Field(Text()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(Catalog(Text()), default = {"__view__": page_item}),
-    fields       = Field(Catalog(FIELD(), type = FIELDS)),
+    name         = Field(STRING(), info = "human-readable title of the category"),
+    info         = Field(STRING()),
+    class_name   = Field(STRING(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
+    class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
+    endpoints    = Field(CATALOG(TEXT()), default = {"__view__": page_item}),
+    fields       = Field(CATALOG(FIELD(), type = FIELDS)),
 )
 
 # category-level properties:
@@ -124,7 +124,7 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    fields      = FIELDS(items = Catalog(keys = EntryName(), values = Link()))     # file & directory names mapped to item IDs
+    fields      = FIELDS(items = CATALOG(keys = ENTRY_NAME(), values = LINK()))     # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -137,7 +137,7 @@ Directory_ = Category_(
 Space_ = Category_(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    fields      = FIELDS(name = String(), categories = Catalog(Link(Category_))),
+    fields      = FIELDS(name = STRING(), categories = CATALOG(LINK(Category_))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -165,27 +165,27 @@ Application_ = Category_(
     #         def get_space(self, name):
     #             return self['spaces'][name]
     # """,
-    fields      = FIELDS(name = String(), url_scheme = Enum('raw', 'spaces'), spaces = Catalog(Link(Space_))),
-    folder      = PathString(),         # path to a folder in the site's directory where this application was installed;
+    fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(LINK(Space_))),
+    folder      = PATH_STRING(),         # path to a folder in the site's directory where this application was installed;
                                         # if the app needs to store data items in the directory, it's recommended
                                         # to do this inside a .../data subfolder
 )
 
-# route_schema    = Struct(Route, base = String(), path = String(), app = Link(Application_))
+# route_schema    = STRUCT(Route, base = STRING(), path = STRING(), app = LINK(Application_))
 
 Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
-    fields      = FIELDS(name = String(), apps = Catalog(Link(Application_))),
-    directory   = Link(Directory_),     # root of the site-global hierarchical directory of items
+    fields      = FIELDS(name = STRING(), apps = CATALOG(LINK(Application_))),
+    directory   = LINK(Directory_),     # root of the site-global hierarchical directory of items
 )
 
 Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.item.Item',
-    fields      = FIELDS(name = String(), title = String()),            # multi = True
+    fields      = FIELDS(name = STRING(), title = STRING()),            # multi = True
 )
 
 
@@ -197,7 +197,7 @@ Code_ = Category_(
                 after compilation. Some uses may allow multiple names to be declared.
               """,
     fields  = FIELDS(
-        language = String(),    # ProgramLanguage()
+        language = STRING(),    # ProgramLanguage()
         source   = CODE(),
     ),
 )
@@ -205,17 +205,17 @@ Text_ = Category_(
     name    = "Text",
     info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
     fields  = FIELDS(
-        language = String(),    # HumanLanguage()
-        markup   = String(),    # MarkupLanguage()
-        text     = Text()
+        language = STRING(),    # HumanLanguage()
+        markup   = STRING(),    # MarkupLanguage()
+        text     = TEXT()
     ),
 )
 File_ = Category_(
     name    = "File",
     info    = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
     fields  = FIELDS(
-        format  = String(),
-        content = Select(bin = Bytes(), txt = Text()),
+        format  = STRING(),
+        content = VARIANT(bin = BYTES(), txt = TEXT()),
     ),
 )
 # File_ = Category_(
@@ -224,21 +224,21 @@ File_ = Category_(
 #                  accompanied with information about language and markup encoding (for text files).
 #     """,
 #     schema  = FIELDS(
-#         # lang = String(),
-#         # markup = String(),
-#         format = String(),      # file format: pdf, xlsx, ...
-#         content = Select(txt = Text(), bin = Bytes()),
+#         # lang = STRING(),
+#         # markup = STRING(),
+#         format = STRING(),      # file format: pdf, xlsx, ...
+#         content = VARIANT(txt = TEXT(), bin = BYTES()),
 #     ),   # HumanLang() MarkupLang()
 # )
 
 
-# Import_     = Struct(name = String(), code = Link(_Code))      # an object imported from a Code item
+# Import_     = STRUCT(name = STRING(), code = LINK(_Code))      # an object imported from a Code item
 # SchemaType_ = Category_(
 #     name        = "SchemaType",
 #     schema      = '???',
 # )
 # Struct_ = SchemaType_(
-#     name = 'Struct',
-#     schema = FIELDS(name = String(), type = Class(), fields = Catalog(Object(Schema))),
+#     name = 'STRUCT',
+#     schema = FIELDS(name = STRING(), type = CLASS(), fields = CATALOG(OBJECT(Schema))),
 # )
 

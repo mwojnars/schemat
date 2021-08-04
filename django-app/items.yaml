@@ -17,25 +17,25 @@
       \   | $iname (no public URL)\n"}
   fields:
     name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       info: human-readable title of the category
       '@': hyperweb.schema.Field
     info:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     class_name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       default: hyperweb.item.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
       '@': hyperweb.schema.Field
     class_code:
-      schema: {'@': hyperweb.schema.Text}
+      schema: {'@': hyperweb.schema.TEXT}
       '@': hyperweb.schema.Field
     endpoints:
       schema:
-        values: {'@': hyperweb.schema.Text}
-        '@': hyperweb.schema.Catalog
+        values: {'@': hyperweb.schema.TEXT}
+        '@': hyperweb.schema.CATALOG
       default: {__view__: "\n    context $item, $category as cat, $app, $directory\
           \ as dir\n\n    style / $dir.open('base.css')['source']\n\n    % print_headline\n\
           \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
@@ -57,7 +57,7 @@
           type: {'=': hyperweb.schema.Field, '@': builtins.type}
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
-        '@': hyperweb.schema.Catalog
+        '@': hyperweb.schema.CATALOG
       '@': hyperweb.schema.Field
 - id: [0, 1]
   name: Directory
@@ -67,16 +67,16 @@
   fields:
     items:
       schema:
-        keys: {'@': hyperweb.schema.EntryName}
-        values: {'@': hyperweb.schema.Link}
-        '@': hyperweb.schema.Catalog
+        keys: {'@': hyperweb.schema.ENTRY_NAME}
+        values: {'@': hyperweb.schema.LINK}
+        '@': hyperweb.schema.CATALOG
       '@': hyperweb.schema.Field
 - id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
   fields:
     name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     categories:
       schema:
@@ -84,8 +84,8 @@
           category:
             '=': [0, 0]
             '@': null
-          '@': hyperweb.schema.Link
-        '@': hyperweb.schema.Catalog
+          '@': hyperweb.schema.LINK
+        '@': hyperweb.schema.CATALOG
       '@': hyperweb.schema.Field
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
@@ -98,13 +98,13 @@
   class_name: hyperweb.item.Application
   fields:
     name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     url_scheme:
       schema:
         values: [raw, spaces]
         indices: false
-        '@': hyperweb.schema.Enum
+        '@': hyperweb.schema.ENUM
       '@': hyperweb.schema.Field
     spaces:
       schema:
@@ -112,10 +112,10 @@
           category:
             '=': [0, 2]
             '@': null
-          '@': hyperweb.schema.Link
-        '@': hyperweb.schema.Catalog
+          '@': hyperweb.schema.LINK
+        '@': hyperweb.schema.CATALOG
       '@': hyperweb.schema.Field
-  folder: {'@': hyperweb.schema.PathString}
+  folder: {'@': hyperweb.schema.PATH_STRING}
 - id: [0, 4]
   name: Site
   info: Category of site records. A site contains information about applications,
@@ -123,7 +123,7 @@
   class_name: hyperweb.item.Site
   fields:
     name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     apps:
       schema:
@@ -131,24 +131,24 @@
           category:
             '=': [0, 3]
             '@': null
-          '@': hyperweb.schema.Link
-        '@': hyperweb.schema.Catalog
+          '@': hyperweb.schema.LINK
+        '@': hyperweb.schema.CATALOG
       '@': hyperweb.schema.Field
   directory:
     category:
       '=': [0, 1]
       '@': null
-    '@': hyperweb.schema.Link
+    '@': hyperweb.schema.LINK
 - id: [0, 5]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
   fields:
     name:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     title:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
 - id: [0, 6]
   name: Code
@@ -159,7 +159,7 @@
     \ Some uses may allow multiple names to be declared.\n              "
   fields:
     language:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     source:
       schema: {'@': hyperweb.schema.CODE}
@@ -170,13 +170,13 @@
     and/or markup.
   fields:
     language:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     markup:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     text:
-      schema: {'@': hyperweb.schema.Text}
+      schema: {'@': hyperweb.schema.TEXT}
       '@': hyperweb.schema.Field
 - id: [0, 8]
   name: File
@@ -184,14 +184,14 @@
     pdf, jpg, zip, ...'
   fields:
     format:
-      schema: {'@': hyperweb.schema.String}
+      schema: {'@': hyperweb.schema.STRING}
       '@': hyperweb.schema.Field
     content:
       schema:
         schemas:
-          bin: {'@': hyperweb.schema.Bytes}
-          txt: {'@': hyperweb.schema.Text}
-        '@': hyperweb.schema.Select
+          bin: {'@': hyperweb.schema.BYTES}
+          txt: {'@': hyperweb.schema.TEXT}
+        '@': hyperweb.schema.VARIANT
       '@': hyperweb.schema.Field
 - id: [6, 1]
   language: css

@@ -48,7 +48,7 @@ class catalog(dict):
     """
     Base class for any special-purpose dictionary that provides custom functionality
     and assumes that keys are strings.
-    Subclasses can be used as `type` inside Catalog schema.
+    Subclasses can be used as `type` inside CATALOG schema.
     """
 
 class struct(catalog):
