@@ -22,12 +22,12 @@ Dict / Mapping
 import json, base64
 from hypertag.std.html import html_escape as esc
 
-from .utils import hypertag, dedent
+from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
 from .item import Item
-from .types import text, html, struct, catalog
+from .types import text, html, hypertag, struct, catalog
 
 
 #####################################################################################################################################################
@@ -706,7 +706,6 @@ class CATALOG(DICT):
         
     # def display(self, values):
     #
-    #     from hypertag import HyperHTML                  # TODO: refactor to avoid import
     #     view = """
     #         context $catalog
     #         ol
@@ -715,7 +714,7 @@ class CATALOG(DICT):
     #                     i  | $key
     #                     ...| : $value
     #     """
-    #     return html(HyperHTML().render(view, catalog = values))
+    #     return html(hypertag(view).render(catalog = values))
 
 
 class VARIANT(Schema):
@@ -772,7 +771,7 @@ class CODE(TEXT):
 
 #####################################################################################################################################################
 #####
-#####  FIELD & RECORD & STRUCT
+#####  FIELD, RECORD, STRUCT
 #####
 
 class Field:
@@ -818,7 +817,7 @@ class Field:
                     # smaller dot: &middot;
                     # larger dot: •
         """
-        return hypertag(view, field = self)
+        return hypertag(view).render(field = self)
     
         # multi = '*' if self.multi else ''
         # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"

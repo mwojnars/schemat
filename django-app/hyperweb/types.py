@@ -2,10 +2,12 @@
 Custom Python types for storing elementary values of item properties.
 """
 
+from hypertag import HyperHTML
+
 
 #####################################################################################################################################################
 #####
-#####  Python types
+#####  RICH TEXT
 #####
 
 class text(str):
@@ -42,7 +44,26 @@ class code(text):
         """Returns HTML of the code after syntax highlighting."""
     
 
+class hypertag:
+    """Thin wrapper around a Hypertag script. Allows its translation and rendering through a preconfigured runtime."""
+    
+    runtime = HyperHTML()           # standard default class-global Hypertag runtime
+
+    def __init__(self, script, runtime = None):
+        self.script = script
+        if runtime: self.runtime = runtime
+
+    def translate(self, *args, **context):
+        return self.runtime.translate(self.script, *args, **context)
+
+    def render(self, *args, **context):
+        return self.runtime.render(self.script, *args, **context)
+
+
 #####################################################################################################################################################
+#####
+#####  CATALOG & STRUCT
+#####
 
 class catalog(dict):
     """
