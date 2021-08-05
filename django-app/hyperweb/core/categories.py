@@ -10,47 +10,48 @@ from hyperweb.schema import *
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
     context $item, $category as cat, $app, $directory as dir
-
-    style / $dir.open('base.css')['source']
+    from base import %assets_external, %properties
 
     % print_headline
             p .catlink
             a href=$app.url(cat) | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
+    doctype_html
     html
         $name = item['name']? or str(item)
         head
             title | {name}
-        body .page
+            assets_external
+            style / $dir.open('base.css')['source']
+
+        # body .container : div .row
+        #   div .col-1
+        #   div .col-10
+        body
             h1  | {name}
             print_headline
             
-            # $item.print_data x1 x2 x3
-            # @(item.dom_properties())     -- item's method returns a DOM tree for embedding into a document
-            # %(item.print_data) x1 x2     -- item's attr is a Hypertag that can be used as a tag in a document
-            
-            # from APP/base import %print_data
-            # from /apps/APP/base import %print_data
-            from base import %print_data
-
             h2 | Properties
-            print_data $item
+            properties $item
             # print_catalog1 $item
+          
 """
 
 # template that displays a category page
 page_category = """
     context $item as cat, $app, $directory as dir
+    from base import %assets_external, %properties
 
-    style / $dir.open('base.css')['source']
-
+    doctype_html
     html
         $name = cat['name']? or str(cat)
         head
             title | {name ' -' }? category #{cat.iid}
+            assets_external
+            style / $dir.open('base.css')['source']
 
-        body .page
+        body
             h1
                 try
                     i | $name
@@ -59,8 +60,7 @@ page_category = """
 
             h2 | Properties
 
-            from base import %print_data
-            print_data $cat
+            properties $cat
 
             h2 | Items
             table

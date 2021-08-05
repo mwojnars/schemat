@@ -146,7 +146,10 @@ class Schema:
         name = self.name or self.__class__.__name__
         return name
 
-    #############################################
+    
+    #######################################
+    ##  display & edit
+    ##
     
     def is_lengthy(self, value):
         """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
@@ -160,8 +163,11 @@ class Schema:
         fun = getattr(value, '__html__', None)
         if fun and callable(fun):
             return html(fun())
-
+        
         return text(value)
+      
+    def edit(self):
+        """Return an HTML widget that will handle editing of this schema's value."""
         
 
 #####################################################################################################################################################
@@ -683,6 +689,13 @@ class DICT(Schema):
             
         return d
 
+    def __str__(self):
+        name   = self.name or self.__class__.__name__
+        keys   = self.keys or self.keys_default
+        values = self.values or self.values_default
+        return f"{name}({keys}, {values})"
+
+
 class CATALOG(DICT):
     """
     Schema of a catalog of items.
@@ -704,6 +717,15 @@ class CATALOG(DICT):
         if type: assert issubclass(type, catalog)
         super(CATALOG, self).__init__(keys, values, type)
         
+    def __str__(self):
+        name   = self.name or self.__class__.__name__
+        keys   = self.keys or self.keys_default
+        values = self.values or self.values_default
+        if type(keys) is STRING:
+            return f"{name}({values})"
+        else:
+            return f"{name}({keys}, {values})"
+
     # def display(self, values):
     #
     #     view = """

@@ -10,123 +10,107 @@ base_css = Code_(
     language = 'css',
     source = """
         /*** GENERAL STYLES */
+        # html {
+        #   font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+        #   font-size: 16px;
+        #   color: #333;
+        # }
+
         body {
-          font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
-          font-size: 16px;
-          color: #333;
-        }
-        .page {
           width: 980px;
           margin: 0 auto;
         }
-        h1 { font-size: 26px; line-height: 34px; margin-top: 30px }
+        
+        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
+        
         a { color: #006ecc }
         a:visited { color: #00427a }
         .catlink { font-size: 14px; margin-top: -20px }
         
         /*** UTILITIES */
-        /*** SITEWIDE */
         
         .scroll { overflow: scroll; }
+        .scroll pre { overflow: visible; }
         
+        /*** SITEWIDE */
         /*** ITEM PAGE */
 
-        .item-data {
-          /*font-family: "Times New Roman", Times, serif;*/
-          text-align: left;
-          border-collapse: collapse;
-        }
-        .item-data tr:not(:last-child) {
-          border-bottom: 1px solid #fff;
-        }
-        .item-data td {
-          /*border-right: none;*/
-          padding: 14px 35px 11px;
-          line-height: 20px;
-        }
-        .item-data td.key  {
-          border-right: 1px solid #fff;
-          padding-right: 25px;
-        }
-        .item-data td.value {
-          font-size: 13px;
-          font-family: monospace;     /* courier */
-        }
+        .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
+        .ct-color1                      { background: #f6f6f6; }
 
-        /* .item-data tr:nth-child(odd) { background: #e2eef9; } */  /* #D0E4F5 */
-        /* .item-data tfoot td { font-size: 14px; } */
+        .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px; /*border-right: none;*/ }
+        .ct-nested                      { padding-right: 0px; padding-bottom: 0px; }
 
-        .item-data tr.color0 { background: #e2eef9; }   /* #D0E4F5 */
-        .item-data tr.color1 { background: #f6f6f6; }
+        .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
+        .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
+        .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
 
-        .item-data td.nested { padding-right: 0px; padding-bottom: 0px; }
+        .catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
+        .catalog-1 th                   { width: 250px; min-width: 250px; max-width: 250px; }
 
-        .item-data.depth1 tr     { border-top: 1px solid #fff; }
-        .item-data.depth1        { width: 980px; }
-        .item-data.depth1 td.key { width: 200px; }
-        .item-data.depth1 td.key {
-          font-size:   15px;
-          font-weight: bold;
-        }
-        /* widths below should be equal to depth1's only decreased by "padding-left" and "border" size of a td */
-        .item-data.depth2 tr     { border-top: none; }
-        .item-data.depth2        { width: 925px; margin-left: 20px; }
-        .item-data.depth2 td.key { width: 165px; }
-        .item-data.depth2 td.key {
-          font-size:    15px;
-          font-style:   italic;
-          font-weight:  normal;
-          padding-left: 15px;
-        }
+        /* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
+        .catalog-2                  { width: 100%; }
+        .catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }
         
-        .value .field .default     { color: #888; }
-        .value .field .info        { font-style: italic; }
-        .value pre                 { line-height: 10px; }
-        .value .scroll             { max-height: 150px; }
+        .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
+        .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
+        
+        .ct-value                   { font-size: 14px; font-family: monospace; /* courier */ }
+        .ct-value .field .default   { color: #888; }
+        .ct-value .field .info      { font-style: italic; }
+        .ct-value pre               { font-size: 13px; padding-bottom: 0px; margin-bottom: 0px; }
+        .ct-value .scroll           { max-height: 150px; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
     """,
 )
 
 # box model of an item data table:
 """
-    table .item-data .depth1
-        tr .colorX                              # X = 0 or 1
+    table .catalog-1
+        tr .ct-colorX                              # X = 0 or 1
             # field with an atomic value:
-            td .key
-            td .value : div .atomic [.scroll]
-
+            th .ct-field
+            td .ct-value : div [.scroll]
+        tr .ct-colorX
             # field with a catalog of sub-fields:
-            td .key .nested colspan=2
-            table .item-data .depth2
-                tr .colorX
-                    td .key
-                    td .value : div .atomic [.scroll]
+            td .ct-nested colspan=2
+                div .ct-field
+                div padding-left : table .catalog-2
+                    tr .ct-colorX
+                        th .ct-field
+                        td .ct-value : div [.scroll]
 """
 
 base_hy = Code_(
     language = 'hypertag',
     source = """
-        %atomic_row key value schema
+        %assets_external
+            # jQuery 3.6.0
+            script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"
+            # Bootstrap 5.0.2
+            link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"
+            script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
+    
+        %catalog_row key value schema
+            # a row containing an atomic value of a data field (not a subcatalog)
             $text = schema.display(value)
-            td .key   | $key
-            td .value
-                $class = "atomic"
-                if schema.is_lengthy(value):
-                    $class += " scroll"
+            th .ct-field | $key
+            td .ct-value
+                $class = "scroll" if schema.is_lengthy(value) else ""
                 div class=$class
                     if (text.markup=='HTML') / $text
                     else                     | $text
     
-        %print_catalog data schema start_color=0
+        %catalog_2 data schema start_color=0
             $c = start_color
-            table .item-data .depth2
+            div style="padding-left:20px" : table .catalog-2
                 for name, value in data.items()
-                    tr class="color{c}"
-                        atomic_row $name $value $schema
+                    tr class="ct-color{c}"
+                        catalog_row $name $value $schema
                     # $c = 1 - c
         
-        %print_data item
+        %properties item
             $c = 0          # alternating color of rows: 0 or 1
-            table .item-data .depth1
+            table .catalog-1
                 for name, value in item.data.items()
                     $schema = item.get_schema(name)
 
@@ -134,35 +118,18 @@ base_hy = Code_(
                     # if isinstance(html, DOM):
                     #     html = html.render()
                     
-                    tr class="color{c}"
+                    tr class="ct-color{c}"
                         if schema.is_catalog
-                            td .key .nested colspan=2
-                                | {name}
-                                print_catalog $value $schema.values $c
+                            td .ct-nested colspan=2
+                                div .ct-field | {name}
+                                catalog_2 $value $schema.values $c
                         else
-                            atomic_row $name $value $schema
+                            catalog_row $name $value $schema
                             
                     $c = 1 - c
     """,
 )
 
-"""
-%flexi_table start_color=0 depth=1
-
-%print_catalog2 data schema
-    table .item-data
-        for field, value in data.items()
-            tr
-                schemas = item.category.get_schema()          # = item.category.get('schema') or object_schema
-                value_schema = schemas.fields.get(field).schema    # category.get_field(field) ... category.get_schema(field)
-                if value_schema.is_catalog:
-                    td .key colspan=2 | {field}
-                    print_catalog1 value value_schema
-                else
-                    td .key  | {field}
-                    td .value | {schema.render(value)}
-                    
-"""
 
 directory = Directory_(
     items = {
