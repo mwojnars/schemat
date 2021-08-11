@@ -71,6 +71,12 @@ class catalog(dict):
     and assumes that keys are strings.
     Subclasses can be used as `type` inside CATALOG schema.
     """
+    
+class rich_catalog(list):
+    """
+    A mapping of (string) keys to values that additionally allows:
+    - multiple values for
+    """
 
 class struct(catalog):
     """

@@ -20,19 +20,15 @@
     name:
       schema: {'@': hyperweb.schema.STRING}
       info: human-readable title of the category
-      '@': hyperweb.schema.Field
     info:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     class_name:
       schema: {'@': hyperweb.schema.STRING}
       default: hyperweb.item.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
-      '@': hyperweb.schema.Field
     class_code:
       schema: {'@': hyperweb.schema.TEXT}
-      '@': hyperweb.schema.Field
     endpoints:
       schema:
         values: {'@': hyperweb.schema.TEXT}
@@ -48,7 +44,6 @@
           \     h1  | {name}\n            print_headline\n            \n         \
           \   h2 | Properties\n            properties $item\n            # print_catalog1\
           \ $item\n          \n"}
-      '@': hyperweb.schema.Field
     fields:
       schema:
         values:
@@ -56,7 +51,6 @@
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.CATALOG
-      '@': hyperweb.schema.Field
 - id: [0, 1]
   name: Directory
   info: A directory of items, each item has a unique name (path). May contain nested
@@ -68,14 +62,12 @@
         keys: {'@': hyperweb.schema.ENTRY_NAME}
         values: {'@': hyperweb.schema.LINK}
         '@': hyperweb.schema.CATALOG
-      '@': hyperweb.schema.Field
 - id: [0, 2]
   name: Space
   info: Category of items that represent item spaces.
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     categories:
       schema:
         values:
@@ -84,7 +76,6 @@
             '@': null
           '@': hyperweb.schema.LINK
         '@': hyperweb.schema.CATALOG
-      '@': hyperweb.schema.Field
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
     \            def get_category(self, name):\n                return self['categories'][name]\n\
@@ -97,13 +88,11 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     url_scheme:
       schema:
         values: [raw, spaces]
         indices: false
         '@': hyperweb.schema.ENUM
-      '@': hyperweb.schema.Field
     spaces:
       schema:
         values:
@@ -112,7 +101,6 @@
             '@': null
           '@': hyperweb.schema.LINK
         '@': hyperweb.schema.CATALOG
-      '@': hyperweb.schema.Field
   folder: {'@': hyperweb.schema.PATH_STRING}
 - id: [0, 4]
   name: Site
@@ -122,7 +110,6 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     apps:
       schema:
         values:
@@ -131,7 +118,6 @@
             '@': null
           '@': hyperweb.schema.LINK
         '@': hyperweb.schema.CATALOG
-      '@': hyperweb.schema.Field
   directory:
     category:
       '=': [0, 1]
@@ -144,10 +130,8 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     title:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
 - id: [0, 6]
   name: Code
   info: "Source code. May keep information about programming language.\n         \
@@ -158,10 +142,8 @@
   fields:
     language:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     source:
       schema: {'@': hyperweb.schema.CODE}
-      '@': hyperweb.schema.Field
 - id: [0, 7]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
@@ -169,13 +151,10 @@
   fields:
     language:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     markup:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     text:
       schema: {'@': hyperweb.schema.TEXT}
-      '@': hyperweb.schema.Field
 - id: [0, 8]
   name: File
   info: 'Binary or text file that can be accompanied with information about its format:
@@ -183,14 +162,12 @@
   fields:
     format:
       schema: {'@': hyperweb.schema.STRING}
-      '@': hyperweb.schema.Field
     content:
       schema:
         schemas:
           bin: {'@': hyperweb.schema.BYTES}
           txt: {'@': hyperweb.schema.TEXT}
         '@': hyperweb.schema.VARIANT
-      '@': hyperweb.schema.Field
 - id: [6, 1]
   language: css
   source: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
@@ -205,7 +182,7 @@
     \        .ct-color0                      { background: #e2eef9; }   /* #D0E4F5\
     \ */\n        .ct-color1                      { background: #f6f6f6; }\n\n   \
     \     .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px; /*border-right:\
-    \ none;*/ }\n        .ct-nested                      { padding-right: 0px; padding-bottom:\
+    \ none;*/ }\n        td.ct-nested                    { padding-right: 0px; padding-bottom:\
     \ 0px; }\n\n        .catalog-1, .catalog-2          { border-collapse: collapse;\
     \ table-layout: fixed; }\n        .catalog-1 th, .catalog-2 th    { border-right:\
     \ 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)  { border-bottom:\
@@ -243,12 +220,11 @@
     \ containing an atomic value of a data field (not a subcatalog)\n            $text\
     \ = schema.display(value)\n            th .ct-field | $key\n            td .ct-value\n\
     \                $class = \"scroll\" if schema.is_lengthy(value) else \"\"\n \
-    \               div class=$class / $text\n                # if (text.markup=='html')\
-    \ / $text\n                # else                     | $text\n    \n        %catalog_2\
-    \ data schema start_color=0\n            $c = start_color\n            div style=\"\
-    padding-left:20px\" : table .catalog-2\n                for name, value in data.items()\n\
-    \                    tr class=\"ct-color{c}\"\n                        catalog_row\
-    \ $name $value $schema\n                    # $c = 1 - c\n        \n        %properties\
+    \               div class=$class / $text\n    \n        %catalog_2 data schema\
+    \ start_color=0\n            $c = start_color\n            div style=\"padding-left:20px\"\
+    \ : table .catalog-2\n                for name, value in data.items()\n      \
+    \              tr class=\"ct-color{c}\"\n                        catalog_row $name\
+    \ $value $schema\n                    # $c = 1 - c\n        \n        %properties\
     \ item\n            $c = 0          # alternating color of rows: 0 or 1\n    \
     \        table .catalog-1\n                for name, value in item.data.items()\n\
     \                    $schema = item.get_schema(name)\n\n                    #\

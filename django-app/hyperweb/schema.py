@@ -162,23 +162,23 @@ class Schema:
         """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
         return True
 
-    def display(self, value):  # inline = False, target = "HTML"
+    def display(self, value):  # layout (line/block), style (basic/fine or F/T), editable (F/T/restricted-after-login)
         """
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
         fun = getattr(value, '__html__', None)
         if fun and callable(fun):
-            return html(fun())
+            return fun()
         
-        return html(esc(str(value)))
+        return esc(str(value))
       
     def form(self, value):
         """
         Return an HTML form (top-level #form element) for inputing values of a given schema.
-        The form should be accompanied by a static non-editable presentation (#show element)
+        The form should be accompanied by a static non-editable presentation (#preview element)
         of the current form value. The #form should be initially hidden.
-        Only when a user double-clicks on #show, the #show will hide and the #form will be displayed.
+        Only when a user double-clicks on #preview, the #show will hide and the #form will be displayed.
         
         The #form should contain an initial value json-serialized in its "initial-value" attribute.
         On the first #form activation, this initial value gets decoded into values and states
@@ -220,7 +220,7 @@ class Schema:
           onload? ondblclick? ...
         
         Return an HTML code with two top-level elements:
-        1) #show: static non-editable display of a current value of a (sub)field
+        1) #preview: static non-editable display of a current value of a (sub)field
         2) #form: input field or a modal window with a form for changing / setting the value
         The elements should come with or allow for instrumentation:
         - on("dblclick", #show): a function will be attached to #show that will hide the #show element on double click
@@ -233,6 +233,7 @@ class Schema:
         - "error" flag: attributes in #show and/or #form that inform about errors in a given field
         The code may rely on JS scripts or React classes that need to be loaded separately.
         """
+        return self.display(value)
         
 
 #####################################################################################################################################################
@@ -801,7 +802,7 @@ class CATALOG(DICT):
     #                     i  | $key
     #                     ...| : $value
     #     """
-    #     return html(hypertag(view).render(catalog = values))
+    #     return hypertag(view).render(catalog = values)
 
 
 class VARIANT(Schema):
@@ -853,7 +854,7 @@ class CODE(TEXT):
     def display(self, code):
         code_html = dedent(esc(code))
         code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
-        return html(f"<pre>{code_html}</pre>")
+        return f"<pre>{code_html}</pre>"
     
 
 #####################################################################################################################################################
@@ -889,25 +890,22 @@ class Field:
             
         return state
     
-    def __html__(self):
-        view = """
-            context $field as f
-            span .field
-                | $f.schema
-                ...if f.multi | *
-                if f.default <> f.MISSING
-                    $default = str(f.default)
-                    span .default title="default value: {default:crop(1000)}"
-                        | [{default : crop(100)}]
-                if f.info
-                    span .info | • $f.info
-                    # smaller dot: &middot;
-                    # larger dot: •
-        """
-        return hypertag(view).render(field = self)
-    
-        # multi = '*' if self.multi else ''
-        # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
+    # def __html__(self):
+    #     view = """
+    #         context $field as f
+    #         span .field
+    #             | $f.schema
+    #             ...if f.multi | *
+    #             if f.default <> f.MISSING
+    #                 $default = str(f.default)
+    #                 span .default title="default value: {default:crop(1000)}"
+    #                     | [{default : crop(100)}]
+    #             if f.info
+    #                 span .info | • $f.info
+    #                 # smaller dot: &middot;
+    #                 # larger dot: •
+    #     """
+    #     return hypertag(view).render(field = self)
     
     def encode_one(self, value, registry):
         return self.schema.encode(value, registry)
@@ -1064,11 +1062,14 @@ class STRUCT(FIELDS):
     with the latter being automatically converted to a <struct> during decoding (!).
     """
     
-    type = None         # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
+    type   = None       # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
+    fields = None       # optional dict of {field: schema} that can be defined by subclasses as an initial dict of `self` fields
     
     def __init__(self, **fields):
         self.type = self.type or struct
         assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
+        if self.fields:
+            fields = {**self.fields, **fields}
         
         super(STRUCT, self).__init__(**fields)
         for name, field in self.items():
@@ -1109,6 +1110,23 @@ class STRUCT(FIELDS):
             return struct(attrs)
         
         return setstate(self.type, attrs)
+
+    def __str__(self):
+        name = self.name or self.__class__.__name__
+        if name != 'STRUCT': return name
+        fields = ','.join(self.keys())
+        return f"{name}({fields})"
+
+    # def display(self, obj):
+    #
+    #     parts = []
+    #     for name, field in self.items():
+    #         v = getattr(obj, name, 'MISSING')
+    #         s = field.schema.display(v)
+    #         parts.append(f"{name}:{esc(s)}")
+    #
+    #     return ' '.join(parts)
+    
     
 # def struct(typename, __type__ = object, **__fields__):
 #     """Dynamically create a subclass of STRUCT."""
@@ -1136,18 +1154,25 @@ class FIELD(STRUCT):
         'multi':   BOOLEAN(),
         'info':    STRING(),
     }
-
-    # def display(self, obj):
-    #
-    #     parts = []
-    #     for name, schema in self.fields.items():
-    #         v = getattr(obj, name, 'MISSING')
-    #         s, t = schema.display(v)
-    #         if t == 'plaintext': s = esc(s)
-    #         parts.append(f"{name}:{s}")
-    #
-    #     return html(' '.join(parts))
-        
+    
+    def display(self, field):
+        view = """
+            context $field as f
+            span .field
+                | $f.schema
+                ...if f.multi | *
+                if f.default <> f.MISSING
+                    $default = str(f.default)
+                    span .default title="default value: {default:crop(1000)}"
+                        | [{default : crop(100)}]
+                if f.info
+                    span .info | • $f.info
+                    # smaller dot: &middot;
+                    # larger dot: •
+        """
+        # multi = '*' if self.multi else ''
+        # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
+        return hypertag(view).render(field = field)
 
 # INFO: it's possible to use field_schema and record_schema, as below,
 #       but the YAML output of the root category becomes more verbose then (multiple nesting levels)

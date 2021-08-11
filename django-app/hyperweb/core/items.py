@@ -39,7 +39,7 @@ base_css = Code_(
         .ct-color1                      { background: #f6f6f6; }
 
         .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px; /*border-right: none;*/ }
-        .ct-nested                      { padding-right: 0px; padding-bottom: 0px; }
+        td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
 
         .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
         .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
@@ -106,8 +106,6 @@ base_hy = Code_(
             td .ct-value
                 $class = "scroll" if schema.is_lengthy(value) else ""
                 div class=$class / $text
-                # if (text.markup=='html') / $text
-                # else                     | $text
     
         %catalog_2 data schema start_color=0
             $c = start_color
