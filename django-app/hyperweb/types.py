@@ -16,7 +16,7 @@ class text(str):
     encoding: markup language, wiki language etc. Both can be missing (None), in such case the `text`
     instance is equivalent to a plain string <str>.
     """
-    markup   = None         # markup language of the text: HTML, plaintext, ...
+    markup   = None         # markup language of the text: plaintext, html, ...
     language = None         # human language of the text: pl, en, de, ...
     
     def __new__(cls, *args, **kwargs):
@@ -35,7 +35,7 @@ class text(str):
     #     if language: self.language = language
     
 class html(text):
-    markup = "HTML"
+    markup = "html"
 
 class code(text):
     """"""

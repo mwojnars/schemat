@@ -225,6 +225,9 @@
     \ border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1);\
     \ }\n    "
 - id: [6, 2]
+  language: javascript
+  source: "\n        \"use strict\";\n    "
+- id: [6, 3]
   language: hypertag
   source: "\n        %assets_external\n            # jQuery 3.6.0\n            script\
     \ src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"\
@@ -233,30 +236,33 @@
     \ rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\"\
     \ crossorigin=\"anonymous\"\n            script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js\"\
     \ integrity=\"sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM\"\
-    \ crossorigin=\"anonymous\"\n    \n        %catalog_row key value schema\n   \
-    \         # a row containing an atomic value of a data field (not a subcatalog)\n\
-    \            $text = schema.display(value)\n            th .ct-field | $key\n\
-    \            td .ct-value\n                $class = \"scroll\" if schema.is_lengthy(value)\
-    \ else \"\"\n                div class=$class\n                    if (text.markup=='HTML')\
-    \ / $text\n                    else                     | $text\n    \n      \
-    \  %catalog_2 data schema start_color=0\n            $c = start_color\n      \
-    \      div style=\"padding-left:20px\" : table .catalog-2\n                for\
-    \ name, value in data.items()\n                    tr class=\"ct-color{c}\"\n\
-    \                        catalog_row $name $value $schema\n                  \
-    \  # $c = 1 - c\n        \n        %properties item\n            $c = 0      \
-    \    # alternating color of rows: 0 or 1\n            table .catalog-1\n     \
-    \           for name, value in item.data.items()\n                    $schema\
-    \ = item.get_schema(name)\n\n                    # from hypertag.core.dom import\
-    \ $DOM\n                    # if isinstance(html, DOM):\n                    #\
-    \     html = html.render()\n                    \n                    tr class=\"\
-    ct-color{c}\"\n                        if schema.is_catalog\n                \
-    \            td .ct-nested colspan=2\n                                div .ct-field\
-    \ | {name}\n                                catalog_2 $value $schema.values $c\n\
-    \                        else\n                            catalog_row $name $value\
-    \ $schema\n                            \n                    $c = 1 - c\n    "
+    \ crossorigin=\"anonymous\"\n            # # Lodash 4.17.21 (https://lodash.com/)\n\
+    \            # script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
+    \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
+    anonymous\"\n    \n        %catalog_row key value schema\n            # a row\
+    \ containing an atomic value of a data field (not a subcatalog)\n            $text\
+    \ = schema.display(value)\n            th .ct-field | $key\n            td .ct-value\n\
+    \                $class = \"scroll\" if schema.is_lengthy(value) else \"\"\n \
+    \               div class=$class / $text\n                # if (text.markup=='html')\
+    \ / $text\n                # else                     | $text\n    \n        %catalog_2\
+    \ data schema start_color=0\n            $c = start_color\n            div style=\"\
+    padding-left:20px\" : table .catalog-2\n                for name, value in data.items()\n\
+    \                    tr class=\"ct-color{c}\"\n                        catalog_row\
+    \ $name $value $schema\n                    # $c = 1 - c\n        \n        %properties\
+    \ item\n            $c = 0          # alternating color of rows: 0 or 1\n    \
+    \        table .catalog-1\n                for name, value in item.data.items()\n\
+    \                    $schema = item.get_schema(name)\n\n                    #\
+    \ from hypertag.core.dom import $DOM\n                    # if isinstance(html,\
+    \ DOM):\n                    #     html = html.render()\n                    \n\
+    \                    tr class=\"ct-color{c}\"\n                        if schema.is_catalog\n\
+    \                            td .ct-nested colspan=2\n                       \
+    \         div .ct-field | {name}\n                                catalog_2 $value\
+    \ $schema.values $c\n                        else\n                          \
+    \  catalog_row $name $value $schema\n                            \n          \
+    \          $c = 1 - c\n    "
 - id: [1, 1]
   items:
-    base.hy: [6, 2]
+    base.hy: [6, 3]
     base.css: [6, 1]
 - id: [2, 1]
   name: Meta

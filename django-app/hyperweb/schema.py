@@ -57,6 +57,13 @@ class Schema:
                sanitize >                encode >
        FORM       ---         DATA         ---      STATE
                 < form                  < decode
+                
+         
+       PREVIEW
+        ^^
+       FORM (fields)   <--->   VALUE (object)   <--->   DB (json)
+       
+       
 
     Exceptions:
     - ValidationError in sanitize() -- invalid value submitted from a form
@@ -164,10 +171,68 @@ class Schema:
         if fun and callable(fun):
             return html(fun())
         
-        return text(value)
+        return html(esc(str(value)))
       
-    def edit(self):
-        """Return an HTML widget that will handle editing of this schema's value."""
+    def form(self, value):
+        """
+        Return an HTML form (top-level #form element) for inputing values of a given schema.
+        The form should be accompanied by a static non-editable presentation (#show element)
+        of the current form value. The #form should be initially hidden.
+        Only when a user double-clicks on #show, the #show will hide and the #form will be displayed.
+        
+        The #form should contain an initial value json-serialized in its "initial-value" attribute.
+        On the first #form activation, this initial value gets decoded into values and states
+        of #form fields, through the call to a JS function stored in "value_decode" attribute.
+        
+        Initialization (on server):
+        - values of form fields (the state); "modified" flag; visibility of #form and #preview
+        
+        Utility methods:
+        - form_encode(attr_name):
+          - collect current form state, JSON.stringify it and save into a given attribute
+          - return current state as an object
+        - set_preview(state):
+          - compute a preview value based on a given state and save it into the #preview element
+        
+        Actions:
+        - form_show:
+          - hide the preview, show the form ... form.setAttribute('class', 'active'); preview.setAttribute('class', 'inactive');
+          - form_encode("initial-state") - keep initial state for calculation of the "modified" flag (only if no initial-state yet)
+        - form_accept:
+          - state = form_encode("current-state")
+          - form_hide(state)
+        - form_hide()
+          - if state: set_preview(state)
+          - hide the form, show the preview
+          
+        load --> form_show ---> form_accept
+                           `--> form_hide
+        
+        #form-widget > #form, #preview
+        .schema-XXX (schema-integer, schema-list etc.) - for attaching js event handlers
+        
+        Submit:
+        - when the top-level form is to be submitted, all individual #form widgets are scanned, their
+          "current-state"s collected (but only if present and != initial-state) and sent.
+        
+        Events:
+        - mapping page events to form methods:
+          onload? ondblclick? ...
+        
+        Return an HTML code with two top-level elements:
+        1) #show: static non-editable display of a current value of a (sub)field
+        2) #form: input field or a modal window with a form for changing / setting the value
+        The elements should come with or allow for instrumentation:
+        - on("dblclick", #show): a function will be attached to #show that will hide the #show element on double click
+          and show the #edit element instead
+        - save(): js function that takes a form value, converts it to a display value, and saves in #show;
+          this function may use ajax calls to the server to convert form values to display values,
+          perform validation and assign errors in #show and #edit,
+          and to compare new values with initial ones to set the "modified" flag;
+        - "modified" flag: attr of #show indicating that the current #show value differs from the initial one
+        - "error" flag: attributes in #show and/or #form that inform about errors in a given field
+        The code may rely on JS scripts or React classes that need to be loaded separately.
+        """
         
 
 #####################################################################################################################################################

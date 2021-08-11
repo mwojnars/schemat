@@ -80,6 +80,13 @@ base_css = Code_(
                         td .ct-value : div [.scroll]
 """
 
+base_js = Code_(
+    language = 'javascript',
+    source = """
+        "use strict";
+    """,
+)
+
 base_hy = Code_(
     language = 'hypertag',
     source = """
@@ -89,6 +96,8 @@ base_hy = Code_(
             # Bootstrap 5.0.2
             link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"
             script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
+            # # Lodash 4.17.21 (https://lodash.com/)
+            # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
     
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
@@ -96,9 +105,9 @@ base_hy = Code_(
             th .ct-field | $key
             td .ct-value
                 $class = "scroll" if schema.is_lengthy(value) else ""
-                div class=$class
-                    if (text.markup=='HTML') / $text
-                    else                     | $text
+                div class=$class / $text
+                # if (text.markup=='html') / $text
+                # else                     | $text
     
         %catalog_2 data schema start_color=0
             $c = start_color
