@@ -217,25 +217,24 @@
     \            # script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
     \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
     anonymous\"\n    \n        %catalog_row key value schema\n            # a row\
-    \ containing an atomic value of a data field (not a subcatalog)\n            $text\
-    \ = schema.display(value)\n            th .ct-field | $key\n            td .ct-value\n\
-    \                $class = \"scroll\" if schema.is_lengthy(value) else \"\"\n \
-    \               div class=$class / $text\n    \n        %catalog_2 data schema\
-    \ start_color=0\n            $c = start_color\n            div style=\"padding-left:20px\"\
-    \ : table .catalog-2\n                for name, value in data.items()\n      \
-    \              tr class=\"ct-color{c}\"\n                        catalog_row $name\
-    \ $value $schema\n                    # $c = 1 - c\n        \n        %properties\
-    \ item\n            $c = 0          # alternating color of rows: 0 or 1\n    \
-    \        table .catalog-1\n                for name, value in item.data.items()\n\
-    \                    $schema = item.get_schema(name)\n\n                    #\
-    \ from hypertag.core.dom import $DOM\n                    # if isinstance(html,\
-    \ DOM):\n                    #     html = html.render()\n                    \n\
-    \                    tr class=\"ct-color{c}\"\n                        if schema.is_catalog\n\
-    \                            td .ct-nested colspan=2\n                       \
-    \         div .ct-field | {name}\n                                catalog_2 $value\
-    \ $schema.values $c\n                        else\n                          \
-    \  catalog_row $name $value $schema\n                            \n          \
-    \          $c = 1 - c\n    "
+    \ containing an atomic value of a data field (not a subcatalog)\n            th\
+    \ .ct-field | $key\n            td .ct-value\n                $class = \"scroll\"\
+    \ if schema.is_lengthy(value) else \"\"\n                div class=$class / $schema.display(value)\n\
+    \    \n        %catalog_2 data schema start_color=0\n            $c = start_color\n\
+    \            div style=\"padding-left:20px\" : table .catalog-2\n            \
+    \    for name, value in data.items()\n                    tr class=\"ct-color{c}\"\
+    \n                        catalog_row $name $value $schema\n                 \
+    \   # $c = 1 - c\n        \n        %properties item\n            $c = 0     \
+    \     # alternating color of rows: 0 or 1\n            table .catalog-1\n    \
+    \            for name, value in item.data.items()\n                    $schema\
+    \ = item.get_schema(name)\n\n                    # from hypertag.core.dom import\
+    \ $DOM\n                    # if isinstance(html, DOM):\n                    #\
+    \     html = html.render()\n                    \n                    tr class=\"\
+    ct-color{c}\"\n                        if schema.is_catalog\n                \
+    \            td .ct-nested colspan=2\n                                div .ct-field\
+    \ | {name}\n                                catalog_2 $value $schema.values $c\n\
+    \                        else\n                            catalog_row $name $value\
+    \ $schema\n                            \n                    $c = 1 - c\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 3]

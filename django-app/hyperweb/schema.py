@@ -167,9 +167,9 @@ class Schema:
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
-        fun = getattr(value, '__html__', None)
-        if fun and callable(fun):
-            return fun()
+        # fun = getattr(value, '__html__', None)
+        # if fun and callable(fun):
+        #     return fun()
         
         return esc(str(value))
       
@@ -218,6 +218,21 @@ class Schema:
         Events:
         - mapping page events to form methods:
           onload? ondblclick? ...
+        
+        Document:
+        - Hypertag: value-integer / value-string / value-field / ...
+          - value-integer
+              div protocol=ValueInteger         role/act/proto/protocol/prototype/behavior/js-class/mixin
+                div #view .view-long/.view-short
+                div #form
+          
+        - JS:
+          class ValueInteger
+            constructor() { ..(attach event handlers to all elements marked with ValueInteger protocol).. }
+            ondblclick(e) { ... }
+            view_ondblclick(e) { ... }
+            form_buttonok_onclick(e)
+            
         
         Return an HTML code with two top-level elements:
         1) #preview: static non-editable display of a current value of a (sub)field

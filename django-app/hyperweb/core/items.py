@@ -101,11 +101,10 @@ base_hy = Code_(
     
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
-            $text = schema.display(value)
             th .ct-field | $key
             td .ct-value
                 $class = "scroll" if schema.is_lengthy(value) else ""
-                div class=$class / $text
+                div class=$class / $schema.display(value)
     
         %catalog_2 data schema start_color=0
             $c = start_color
