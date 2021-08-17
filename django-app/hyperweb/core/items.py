@@ -104,11 +104,15 @@ base_hy = Code_(
             # # Lodash 4.17.21 (https://lodash.com/)
             # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
 
-        %assets_internal
+        %init_protocols
             script !
                 "use strict";
-                $("document").ready(function() {
-                    document.querySelectorAll("[protocol='STRING']").forEach(function (widget) {
+                $(function() {
+                    $("[protocol='STRING']").each(function () {
+                        let widget = this;
+                        //let view  = $('#view', this); //widget.find("#view");
+                        //let edit  = $('#edit', this); //widget.find("#edit");
+                        //let focus = $('.focus', edit); //edit.find(".focus");
                         let view  = widget.querySelector("#view");
                         let edit  = widget.querySelector("#edit");
                         let focus = edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
@@ -121,17 +125,22 @@ base_hy = Code_(
                         }
                 
                         function hide_edit() {
-                            //console.log('in hide_edit()');
+                            //widget.set_preview();
                             edit.style.display = 'none';
                             view.style.display = 'block';
                         }
                 
+                        //view.on('dblclick', show_edit);
+                        //edit.on('focusout', hide_edit);
                         view.addEventListener('dblclick', show_edit);
                         edit.addEventListener('focusout', hide_edit);
                         
                         //edit.querySelectorAll('*').forEach(node => node.addEventListener('blur', hide_edit));
                     });
                 });
+
+        %assets_internal
+            init_protocols
     
         %assets
             assets_external
