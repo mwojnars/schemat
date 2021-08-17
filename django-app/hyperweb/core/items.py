@@ -90,6 +90,11 @@ base_js = Code_(
 base_hy = Code_(
     language = 'hypertag',
     source = """
+    
+        %page @body
+            doctype_html
+            ...html @body
+        
         %assets_external
             # jQuery 3.6.0
             script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"
@@ -98,7 +103,40 @@ base_hy = Code_(
             script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
             # # Lodash 4.17.21 (https://lodash.com/)
             # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
+
+        %assets_internal
+            script !
+                "use strict";
+                $("document").ready(function() {
+                    document.querySelectorAll("[protocol='STRING']").forEach(function (widget) {
+                        let view  = widget.querySelector("#view");
+                        let edit  = widget.querySelector("#edit");
+                        let focus = edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
+                
+                        function show_edit() {
+                            //console.log('in show_edit()');
+                            view.style.display = 'none';
+                            edit.style.display = 'block';
+                            if (focus) { focus.focus(); }
+                        }
+                
+                        function hide_edit() {
+                            //console.log('in hide_edit()');
+                            edit.style.display = 'none';
+                            view.style.display = 'block';
+                        }
+                
+                        view.addEventListener('dblclick', show_edit);
+                        edit.addEventListener('focusout', hide_edit);
+                        
+                        //edit.querySelectorAll('*').forEach(node => node.addEventListener('blur', hide_edit));
+                    });
+                });
     
+        %assets
+            assets_external
+            assets_internal
+        
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
             th .ct-field | $key

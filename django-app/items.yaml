@@ -2,20 +2,19 @@
   name: Category
   info: Category of items that represent categories
   class_name: hyperweb.item.Category
-  endpoints: {__view__: "\n    context $item as cat, $app, $directory as dir\n   \
-      \ from base import %assets_external, %properties\n\n    doctype_html\n    html\n\
-      \        $name = cat['name']? or str(cat)\n        head\n            title |\
-      \ {name ' -' }? category #{cat.iid}\n            assets_external\n         \
-      \   style / $dir.open('base.css')['source']\n\n        body\n            h1\n\
-      \                try\n                    i | $name\n                    . |\
-      \ -\n                | category #{cat.iid}\n\n            h2 | Properties\n\n\
-      \            properties $cat\n\n            h2 | Items\n            table\n\
-      \                for item in list(cat.registry.load_items(cat))\n          \
-      \          tr\n                        td / #{item.iid} &nbsp;\n           \
-      \             td\n                            $ iname = item['name']? or item\n\
-      \                            try\n                                a href=app.url(item)\
-      \ | $iname\n                            else\n                             \
-      \   | $iname (no public URL)\n"}
+  endpoints: {__view__: "\ncontext $item as cat, $app, $directory as dir\nfrom base\
+      \ import %page, %assets, %properties\n\n. #dedent\n    < page\n        $name\
+      \ = cat['name']? or str(cat)\n        head\n            title | {name ' -' }?\
+      \ category #{cat.iid}\n            assets\n            style / $dir.open('base.css')['source']\n\
+      \n        body\n            h1\n                try\n                    i |\
+      \ $name\n                    . | -\n                | category #{cat.iid}\n\n\
+      \            h2 | Properties\n\n            properties $cat\n\n            h2\
+      \ | Items\n            table\n                for item in list(cat.registry.load_items(cat))\n\
+      \                    tr\n                        td / #{item.iid} &nbsp;\n \
+      \                       td\n                            $ iname = item['name']?\
+      \ or item\n                            try\n                               \
+      \ a href=app.url(item) | $iname\n                            else\n        \
+      \                        | $iname (no public URL)\n"}
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
@@ -33,17 +32,16 @@
       schema:
         values: {'@': hyperweb.schema.TEXT}
         '@': hyperweb.schema.CATALOG
-      default: {__view__: "\n    context $item, $category as cat, $app, $directory\
-          \ as dir\n    from base import %assets_external, %properties\n\n    % print_headline\n\
-          \            p .catlink\n            a href=$app.url(cat) | {cat['name']?\
-          \ or cat}\n            | ($item.cid,$item.iid)\n\n    doctype_html\n   \
-          \ html\n        $name = item['name']? or str(item)\n        head\n     \
-          \       title | {name}\n            assets_external\n            style /\
-          \ $dir.open('base.css')['source']\n\n        # body .container : div .row\n\
-          \        #   div .col-1\n        #   div .col-10\n        body\n       \
-          \     h1  | {name}\n            print_headline\n            \n         \
-          \   h2 | Properties\n            properties $item\n            # print_catalog1\
-          \ $item\n          \n"}
+      default: {__view__: "\ncontext $item, $category as cat, $app, $directory as\
+          \ dir\nfrom base import %page, %assets, %properties\n\n. #dedent\n    %\
+          \ print_headline\n            p .catlink\n            a href=$app.url(cat)\
+          \ | {cat['name']? or cat}\n            | ($item.cid,$item.iid)\n\n    <\
+          \ page\n        $name = item['name']? or str(item)\n        head\n     \
+          \       title | {name}\n            assets\n            style / $dir.open('base.css')['source']\n\
+          \n        # body .container : div .row\n        #   div .col-1\n       \
+          \ #   div .col-10\n        body\n            h1  | {name}\n            print_headline\n\
+          \            \n            h2 | Properties\n            properties $item\n\
+          \            # print_catalog1 $item\n          \n"}
     fields:
       schema:
         values:
@@ -206,35 +204,56 @@
   source: "\n        \"use strict\";\n    "
 - id: [6, 3]
   language: hypertag
-  source: "\n        %assets_external\n            # jQuery 3.6.0\n            script\
-    \ src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"\
-    sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\" crossorigin=\"anonymous\"\
-    \n            # Bootstrap 5.0.2\n            link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
+  source: "\n    \n        %page @body\n            doctype_html\n            ...html\
+    \ @body\n        \n        %assets_external\n            # jQuery 3.6.0\n    \
+    \        script src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\"\
+    \ integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\" crossorigin=\"\
+    anonymous\"\n            # Bootstrap 5.0.2\n            link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
     \ rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\"\
     \ crossorigin=\"anonymous\"\n            script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js\"\
     \ integrity=\"sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM\"\
     \ crossorigin=\"anonymous\"\n            # # Lodash 4.17.21 (https://lodash.com/)\n\
     \            # script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
     \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
-    anonymous\"\n    \n        %catalog_row key value schema\n            # a row\
-    \ containing an atomic value of a data field (not a subcatalog)\n            th\
-    \ .ct-field | $key\n            td .ct-value\n                $class = \"scroll\"\
-    \ if schema.is_lengthy(value) else \"\"\n                div class=$class / $schema.display(value)\n\
-    \    \n        %catalog_2 data schema start_color=0\n            $c = start_color\n\
-    \            div style=\"padding-left:20px\" : table .catalog-2\n            \
-    \    for name, value in data.items()\n                    tr class=\"ct-color{c}\"\
-    \n                        catalog_row $name $value $schema\n                 \
-    \   # $c = 1 - c\n        \n        %properties item\n            $c = 0     \
-    \     # alternating color of rows: 0 or 1\n            table .catalog-1\n    \
-    \            for name, value in item.data.items()\n                    $schema\
-    \ = item.get_schema(name)\n\n                    # from hypertag.core.dom import\
-    \ $DOM\n                    # if isinstance(html, DOM):\n                    #\
-    \     html = html.render()\n                    \n                    tr class=\"\
-    ct-color{c}\"\n                        if schema.is_catalog\n                \
-    \            td .ct-nested colspan=2\n                                div .ct-field\
-    \ | {name}\n                                catalog_2 $value $schema.values $c\n\
-    \                        else\n                            catalog_row $name $value\
-    \ $schema\n                            \n                    $c = 1 - c\n    "
+    anonymous\"\n\n        %assets_internal\n            script !\n              \
+    \  \"use strict\";\n                $(\"document\").ready(function() {\n     \
+    \               document.querySelectorAll(\"[protocol='STRING']\").forEach(function\
+    \ (widget) {\n                        let view  = widget.querySelector(\"#view\"\
+    );\n                        let edit  = widget.querySelector(\"#edit\");\n   \
+    \                     let focus = edit.querySelector(\".focus\");       // the\
+    \ element that should receive focus after form activation; can be missing\n  \
+    \              \n                        function show_edit() {\n            \
+    \                //console.log('in show_edit()');\n                          \
+    \  view.style.display = 'none';\n                            edit.style.display\
+    \ = 'block';\n                            if (focus) { focus.focus(); }\n    \
+    \                    }\n                \n                        function hide_edit()\
+    \ {\n                            //console.log('in hide_edit()');\n          \
+    \                  edit.style.display = 'none';\n                            view.style.display\
+    \ = 'block';\n                        }\n                \n                  \
+    \      view.addEventListener('dblclick', show_edit);\n                       \
+    \ edit.addEventListener('focusout', hide_edit);\n                        \n  \
+    \                      //edit.querySelectorAll('*').forEach(node => node.addEventListener('blur',\
+    \ hide_edit));\n                    });\n                });\n    \n        %assets\n\
+    \            assets_external\n            assets_internal\n        \n        %catalog_row\
+    \ key value schema\n            # a row containing an atomic value of a data field\
+    \ (not a subcatalog)\n            th .ct-field | $key\n            td .ct-value\n\
+    \                $class = \"scroll\" if schema.is_lengthy(value) else \"\"\n \
+    \               div class=$class / $schema.display(value)\n    \n        %catalog_2\
+    \ data schema start_color=0\n            $c = start_color\n            div style=\"\
+    padding-left:20px\" : table .catalog-2\n                for name, value in data.items()\n\
+    \                    tr class=\"ct-color{c}\"\n                        catalog_row\
+    \ $name $value $schema\n                    # $c = 1 - c\n        \n        %properties\
+    \ item\n            $c = 0          # alternating color of rows: 0 or 1\n    \
+    \        table .catalog-1\n                for name, value in item.data.items()\n\
+    \                    $schema = item.get_schema(name)\n\n                    #\
+    \ from hypertag.core.dom import $DOM\n                    # if isinstance(html,\
+    \ DOM):\n                    #     html = html.render()\n                    \n\
+    \                    tr class=\"ct-color{c}\"\n                        if schema.is_catalog\n\
+    \                            td .ct-nested colspan=2\n                       \
+    \         div .ct-field | {name}\n                                catalog_2 $value\
+    \ $schema.values $c\n                        else\n                          \
+    \  catalog_row $name $value $schema\n                            \n          \
+    \          $c = 1 - c\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 3]

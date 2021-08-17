@@ -9,20 +9,20 @@ from hyperweb.schema import *
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-    context $item, $category as cat, $app, $directory as dir
-    from base import %assets_external, %properties
+context $item, $category as cat, $app, $directory as dir
+from base import %page, %assets, %properties
 
+. #dedent
     % print_headline
             p .catlink
             a href=$app.url(cat) | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
-    doctype_html
-    html
+    < page
         $name = item['name']? or str(item)
         head
             title | {name}
-            assets_external
+            assets
             style / $dir.open('base.css')['source']
 
         # body .container : div .row
@@ -40,15 +40,15 @@ page_item = """
 
 # template that displays a category page
 page_category = """
-    context $item as cat, $app, $directory as dir
-    from base import %assets_external, %properties
+context $item as cat, $app, $directory as dir
+from base import %page, %assets, %properties
 
-    doctype_html
-    html
+. #dedent
+    < page
         $name = cat['name']? or str(cat)
         head
             title | {name ' -' }? category #{cat.iid}
-            assets_external
+            assets
             style / $dir.open('base.css')['source']
 
         body

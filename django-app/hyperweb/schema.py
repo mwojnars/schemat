@@ -167,12 +167,13 @@ class Schema:
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
-        # fun = getattr(value, '__html__', None)
-        # if fun and callable(fun):
-        #     return fun()
+        if self.__widget__:
+            return hypertag(self.__widget__).render(value = value, empty = False)
         
         return esc(str(value))
-      
+    
+    __widget__ = None
+    
     def form(self, value):
         """
         Return an HTML form (top-level #form element) for inputing values of a given schema.
@@ -221,10 +222,14 @@ class Schema:
         
         Document:
         - Hypertag: value-integer / value-string / value-field / ...
-          - value-integer
-              div protocol=ValueInteger         role/act/proto/protocol/prototype/behavior/js-class/mixin
+          - value-integer value=None empty=False
+              protocol ValueInteger         role/act/proto/protocol/prototype/behavior/js-class/mixin
                 div #view .view-long/.view-short
                 div #form
+          - %protocol @body js_class
+              asset ".../protocols.js"
+              div protocol=js_class
+                @body
           
         - JS:
           class ValueInteger
@@ -233,7 +238,14 @@ class Schema:
             view_ondblclick(e) { ... }
             form_buttonok_onclick(e)
             
+        ----
+        WIDGET (js)
+        - new(state)
+        - set_state(state) -- state represented by a JS object
+        - get_state()
+        - render()
         
+        ----
         Return an HTML code with two top-level elements:
         1) #preview: static non-editable display of a current value of a (sub)field
         2) #form: input field or a modal window with a form for changing / setting the value
@@ -248,7 +260,7 @@ class Schema:
         - "error" flag: attributes in #show and/or #form that inform about errors in a given field
         The code may rely on JS scripts or React classes that need to be loaded separately.
         """
-        return self.display(value)
+        pass
         
 
 #####################################################################################################################################################
@@ -504,6 +516,22 @@ class FLOAT(Primitive):
 
 class STRING(Primitive):
     type = str
+    
+    __widget__ = \
+    """
+        context $value, $empty
+
+        %protocol @body classname
+            # asset ".../protocols.js"
+            div .widget protocol=classname
+                @body
+    
+        protocol 'STRING'
+            div #view | $value
+            div #edit style='display:none'
+                textarea .focus rows=1
+    """
+
     
 class TEXT(Primitive):
     """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
