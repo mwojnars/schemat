@@ -21,6 +21,7 @@ Dict / Mapping
 
 import json, base64
 from hypertag.std.html import html_escape as esc
+from hypertag import HyperHTML
 
 from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
@@ -168,7 +169,8 @@ class Schema:
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
         if self.__widget__:
-            return hypertag(self.__widget__).render(value = value, empty = False)
+            runtime = HyperHTML()  #Item.Hypertag
+            return hypertag(self.__widget__, runtime).render(value = value, empty = False)
         
         return esc(str(value))
     
@@ -520,12 +522,13 @@ class STRING(Primitive):
     __widget__ = \
     """
         context $value, $empty
+        # from base import %protocol
 
         %protocol @body classname
             # asset ".../protocols.js"
             div .widget protocol=classname
                 @body
-    
+
         protocol 'STRING'
             div #view | $value
             div #edit style='display:none'
@@ -677,7 +680,7 @@ class LINK(Schema):
         
 #####################################################################################################################################################
 
-class PATH_STRING(STRING):
+class PATH(STRING):
     """Path to an item in a Directory."""
     
 class ENTRY_NAME(STRING):

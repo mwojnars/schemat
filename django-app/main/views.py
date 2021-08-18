@@ -33,8 +33,10 @@ def item_view(request, path):    # descriptor, endpoint = ""):
     """
     
     site = request.site = get_registry().get_site()
-    text = site.handle(request)
-    return HttpResponse(text)
+    response = site.handle(request)
+    if isinstance(response, str):
+        return HttpResponse(response)
+    return response
     
     # item = site.resolve(descriptor)
     # doc  = item.serve(request, endpoint)

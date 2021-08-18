@@ -126,6 +126,11 @@ Directory_ = Category_(
     class_name  = 'hyperweb.item.Directory',
     fields      = FIELDS(items = CATALOG(keys = ENTRY_NAME(), values = LINK()))     # file & directory names mapped to item IDs
 )
+# Filesystem_ = Category_(
+#     name        = "File system",
+#     fields      = FIELDS(root = PATH()),
+# )
+
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
 #  /items/CAT/* (auto) -- items in a category, CAT, listed by *IID* ... /item/Category/* lists categories by IID
@@ -166,9 +171,9 @@ Application_ = Category_(
     #             return self['spaces'][name]
     # """,
     fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(LINK(Space_))),
-    folder      = PATH_STRING(),         # path to a folder in the site's directory where this application was installed;
-                                        # if the app needs to store data items in the directory, it's recommended
-                                        # to do this inside a .../data subfolder
+    folder      = PATH(),           # path to a folder in the site's directory where this application was installed;
+                                    # if the app needs to store data items in the directory, it's recommended
+                                    # to do this inside a .../data subfolder
 )
 
 # route_schema    = STRUCT(Route, base = STRING(), path = STRING(), app = LINK(Application_))

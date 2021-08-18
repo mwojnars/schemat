@@ -401,34 +401,17 @@ class Item(object, metaclass = MetaItem):
         if handler: return handler(self, request)
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
-    
-    # def get_handler(self, endpoint, default_endpoint = '__view__'):
-    #
-    #     # search for a handler function/template in category's endpoints
-    #     endpoints = self.category.get('endpoints', {})
-    #     handler = endpoints.get(endpoint or default_endpoint)
-    #     if not handler: raise Exception("page not found")
-    #
-    #     # handler is a Hypertag script that has to be rendered through Item.render() ?
-    #     if isinstance(handler, str):
-    #         def render(request):
-    #             template = handler
-    #             return self.render(template, request)
-    #         return render
-    #
-    #     # handler is a regular (bound) python method of the item? return unchanged; it should accept `request` as its only arg
-    #     if isinstance(handler, types.MethodType):
-    #         return handler
-    
-    def render(self, template, request):
+        
+    @staticmethod
+    def render(template, request):
         """Render a given template script as a response to a given request."""
         
         app  = request.app
         site = request.site
+        item = request.item
         directory = site['directory']
-        assert request.item is self
 
-        context = dict(item = request.item, data = View(self), category = self.category, request = request,
+        context = dict(item = item, data = View(item), category = item.category, request = request,
                        app = app, directory = directory)
         
         loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
@@ -744,9 +727,6 @@ class Application(Item):
         path, request.endpoint = self._split_endpoint(request.ipath)
         cid, iid = map(int, path.split(','))
         item = self.registry.get_item((cid, iid))
-        
-        # handler = item.get_handler(endpoint)     # translate `endpoint` to a function that will actually process the request
-        # return handler(request)
         return item.serve(request)
         
     def _handle_spaces(self, request):
@@ -769,9 +749,7 @@ class Application(Item):
         space    = self['spaces'][space_name]
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
-        
-        # handler = item.get_handler(endpoint)     # translate `endpoint` to a function that will actually process the request
-        # return handler(request)
+
         return item.serve(request)
 
     def _url_raw(self, __item__, __endpoint__ = None, **args):
@@ -930,7 +908,7 @@ class Directory(Item):
         Load an item identified by a given `path`.
         The search is performed recursively in this directory and subdirectories (TODO).
         """
-        return self.data['items'][path]
+        return self.data['items'][path]     # returns an Item instance, not just raw contents
 
 class File(Item):
 
@@ -960,6 +938,10 @@ class File(Item):
 
         if encoding:
             response.headers["Content-Encoding"] = encoding
+            
+        # TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
+        # https://github.com/django/django/blob/main/django/views/static.py
+        
         return response
 
         

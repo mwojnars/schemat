@@ -99,7 +99,7 @@
             '@': null
           '@': hyperweb.schema.LINK
         '@': hyperweb.schema.CATALOG
-  folder: {'@': hyperweb.schema.PATH_STRING}
+  folder: {'@': hyperweb.schema.PATH}
 - id: [0, 4]
   name: Site
   info: Category of site records. A site contains information about applications,
@@ -218,33 +218,13 @@
     \ crossorigin=\"anonymous\"\n            # # Lodash 4.17.21 (https://lodash.com/)\n\
     \            # script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
     \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
-    anonymous\"\n\n        %init_protocols\n            script !\n               \
-    \ \"use strict\";\n                $(function() {\n                    $(\"[protocol='STRING']\"\
-    ).each(function (i, widget) {\n                        //let view  = $('#view',\
-    \ this); //widget.find(\"#view\");\n                        //let edit  = $('#edit',\
-    \ this); //widget.find(\"#edit\");\n                        //let focus = $('.focus',\
-    \ edit); //edit.find(\".focus\");\n                        let view  = widget.querySelector(\"\
-    #view\");\n                        let edit  = widget.querySelector(\"#edit\"\
-    );\n                        let focus = edit.querySelector(\".focus\");      \
-    \ // the element that should receive focus after form activation; can be missing\n\
-    \                \n                        function show_edit() {\n          \
-    \                  //console.log('in show_edit()');\n                        \
-    \    view.style.display = 'none';\n                            edit.style.display\
-    \ = 'block';\n                            if (focus) { focus.focus(); }\n    \
-    \                    }\n                \n                        function hide_edit()\
-    \ {\n                            //widget.pro.set_preview();\n               \
-    \             edit.style.display = 'none';\n                            view.style.display\
-    \ = 'block';\n                        }\n                \n                  \
-    \      //view.on('dblclick', show_edit);\n                        //edit.on('focusout',\
-    \ hide_edit);\n                        view.addEventListener('dblclick', show_edit);\n\
-    \                        edit.addEventListener('focusout', hide_edit);\n     \
-    \                   \n                        //edit.querySelectorAll('*').forEach(node\
-    \ => node.addEventListener('blur', hide_edit));\n                    });\n   \
-    \             });\n\n        %assets_internal\n            init_protocols\n  \
-    \  \n        %assets\n            assets_external\n            assets_internal\n\
-    \        \n        %catalog_row key value schema\n            # a row containing\
-    \ an atomic value of a data field (not a subcatalog)\n            th .ct-field\
-    \ | $key\n            td .ct-value\n                $class = \"scroll\" if schema.is_lengthy(value)\
+    anonymous\"\n\n        %assets_internal\n            script src=\"/sys.file:1/get\"\
+    \n    \n        %assets\n            assets_external\n            assets_internal\n\
+    \        \n        %protocol @body classname\n            # asset \".../protocols.js\"\
+    \n            div .widget protocol=classname\n                @body\n    \n  \
+    \      %catalog_row key value schema\n            # a row containing an atomic\
+    \ value of a data field (not a subcatalog)\n            th .ct-field | $key\n\
+    \            td .ct-value\n                $class = \"scroll\" if schema.is_lengthy(value)\
     \ else \"\"\n                div class=$class / $schema.display(value)\n    \n\
     \        %catalog_2 data schema start_color=0\n            $c = start_color\n\
     \            div style=\"padding-left:20px\" : table .catalog-2\n            \

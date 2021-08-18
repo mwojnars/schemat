@@ -39,6 +39,14 @@ class Registry:
     
     site_id = None
     
+    # properties for accessing core items: root, site, ...
+    # these items are not stored as attributes to avoid issues with caching (when an item is reloaded)
+    @property
+    def root(self): return self.get_item((ROOT_CID, ROOT_CID))
+    @property
+    def site(self): return self.get_item(self.site_id)
+    
+    
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
     

@@ -105,47 +105,18 @@ base_hy = Code_(
             # # Lodash 4.17.21 (https://lodash.com/)
             # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
 
-        %init_protocols
-            script !
-                "use strict";
-                $(function() {
-                    $("[protocol='STRING']").each(function (i, widget) {
-                        //let view  = $('#view', this); //widget.find("#view");
-                        //let edit  = $('#edit', this); //widget.find("#edit");
-                        //let focus = $('.focus', edit); //edit.find(".focus");
-                        let view  = widget.querySelector("#view");
-                        let edit  = widget.querySelector("#edit");
-                        let focus = edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
-                
-                        function show_edit() {
-                            //console.log('in show_edit()');
-                            view.style.display = 'none';
-                            edit.style.display = 'block';
-                            if (focus) { focus.focus(); }
-                        }
-                
-                        function hide_edit() {
-                            //widget.pro.set_preview();
-                            edit.style.display = 'none';
-                            view.style.display = 'block';
-                        }
-                
-                        //view.on('dblclick', show_edit);
-                        //edit.on('focusout', hide_edit);
-                        view.addEventListener('dblclick', show_edit);
-                        edit.addEventListener('focusout', hide_edit);
-                        
-                        //edit.querySelectorAll('*').forEach(node => node.addEventListener('blur', hide_edit));
-                    });
-                });
-
         %assets_internal
-            init_protocols
+            script src="/sys.file:1/get"
     
         %assets
             assets_external
             assets_internal
         
+        %protocol @body classname
+            # asset ".../protocols.js"
+            div .widget protocol=classname
+                @body
+    
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
             th .ct-field | $key
