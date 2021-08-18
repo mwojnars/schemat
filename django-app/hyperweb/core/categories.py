@@ -9,7 +9,7 @@ from hyperweb.schema import *
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-context $item, $category as cat, $app, $directory as dir
+context $item, $category as cat, $app, $files
 from base import %page, %assets, %properties
 
 . #dedent
@@ -23,7 +23,7 @@ from base import %page, %assets, %properties
         head
             title | {name}
             assets
-            style / $dir.open('base.css')['source']
+            style / $files.open('base.css')['source']
 
         # body .container : div .row
         #   div .col-1
@@ -40,7 +40,7 @@ from base import %page, %assets, %properties
 
 # template that displays a category page
 page_category = """
-context $item as cat, $app, $directory as dir
+context $item as cat, $app, $files
 from base import %page, %assets, %properties
 
 . #dedent
@@ -49,7 +49,7 @@ from base import %page, %assets, %properties
         head
             title | {name ' -' }? category #{cat.iid}
             assets
-            style / $dir.open('base.css')['source']
+            style / $files.open('base.css')['source']
 
         body
             h1

@@ -72,7 +72,72 @@ class cached:
             
         return wrapper
 
+#####################################################################################################################################################
+
+class HyItemLoader(HyLoader):
+    """
+    Loader of Hypertag scripts that searches the site's directory instead of local disk. Used by Site class.
+    Supported import paths:
+    - .folder.module
+    - ...folder.module
+    - folder.module -- folder is searched for starting from "search paths" (/system /apps/APP)
+      or from the "anchor folder" of the referrer (parent folder of the top-level package)
+    - from /apps/XYZ/src/pkg1.pkg2.module import ...  -- the last "/" indicates the anchor folder
+      from ../../dir/pkg1.pkg2.module import ...
+    """
+    PATH_SYSTEM = '/system'
     
+    def __init__(self, filesystem):
+        super(HyItemLoader, self).__init__()
+        self.filesystem = filesystem            # currently, a Directory item
+        
+    def load(self, path, referrer, runtime):
+        """`referrer` is a Module that should have been loaded by this loader."""
+        
+        item, location = self._find_item(path, referrer)
+        if item is None: return None
+
+        assert 'source' in item
+        assert item.category.get('name') == 'Code'
+        
+        script = item['source']
+        # print('script loaded:\n', script)
+        
+        # # relative import path is always resolved relative to the referrer's location
+        # if path[:1] == '.':
+        #     location = join_path(referrer.location, path)
+        #
+        # # absolute import path is resolved relative to search paths
+        # else:
+        #     search_paths = [
+        #         self.app['folder'],
+        #         self.PATH_SYSTEM,
+        #     ]
+
+        module = self.cache[location] = runtime.translate(script, location)
+        module.location = location
+
+        return module
+        
+    def _find_item(self, path, referrer):
+        
+        # try the original `path` as location
+        try:
+            item = self.filesystem.open(path)
+            return item, path
+        except Exception: pass
+        
+        # try appending .hy extension to `path`
+        if not path.lower().endswith(self.SCRIPT_EXTENSION):
+            location = path + self.SCRIPT_EXTENSION
+            try:
+                item = self.filesystem.open(location)
+                return item, location
+            except Exception: pass
+            
+        return None, None
+    
+
 #####################################################################################################################################################
 #####
 #####  ITEM
@@ -406,19 +471,15 @@ class Item(object, metaclass = MetaItem):
     def render(template, request):
         """Render a given template script as a response to a given request."""
         
-        app  = request.app
-        site = request.site
-        item = request.item
-        directory = site['directory']
+        app   = request.app
+        site  = request.site
+        item  = request.item
+        files = site.get('directory')
 
         context = dict(item = item, data = View(item), category = item.category, request = request,
-                       app = app, directory = directory)
+                       site = site, app = app, files = files)
         
-        loaders  = [HyItemLoader(app, directory), PyLoader]     # PyLoader is needed to load Python built-ins
-        hypertag = HyperHTML(loaders)
-        # TODO: revise how cache inside loaders is used; check if `hypertag` can be reused across requests?
-
-        return hypertag.render(template, **context)
+        return site.hypertag.render(template, **context)
         
     def __getstate__(self):
         raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
@@ -443,73 +504,6 @@ class Item(object, metaclass = MetaItem):
 
 ItemDoesNotExist.item_class = Item
 
-
-class HyItemLoader(HyLoader):
-    """
-    Loader of Hypertag scripts that searches the site's directory instead of local disk.
-    Supported import paths:
-    
-    - .folder.module
-    - ...folder.module
-    - folder.module -- folder is searched for starting from "search paths" (/system /apps/APP)
-      or from the "anchor folder" of the referrer (parent folder of the top-level package)
-    - from /apps/XYZ/src/pkg1.pkg2.module import ...  -- the last "/" indicates the anchor folder
-      from ../../dir/pkg1.pkg2.module import ...
-    """
-    
-    PATH_SYSTEM = '/system'
-    
-    def __init__(self, app, directory):
-        super(HyItemLoader, self).__init__()
-        self.app = app
-        self.directory = directory
-        
-    def load(self, path, referrer, runtime):
-        """`referrer` is a Module that should have been loaded by this loader."""
-        
-        item, location = self._find_item(path, referrer)
-        if item is None: return None
-
-        assert 'source' in item
-        assert item.category.get('name') == 'Code'
-        
-        script = item['source']
-        # print('script loaded:\n', script)
-        
-        # # relative import path is always resolved relative to the referrer's location
-        # if path[:1] == '.':
-        #     location = join_path(referrer.location, path)
-        #
-        # # absolute import path is resolved relative to search paths
-        # else:
-        #     search_paths = [
-        #         self.app['folder'],
-        #         self.PATH_SYSTEM,
-        #     ]
-
-        module = self.cache[location] = runtime.translate(script, location)
-        module.location = location
-
-        return module
-        
-    def _find_item(self, path, referrer):
-        
-        # try the original `path` as location
-        try:
-            item = self.directory.open(path)
-            return item, path
-        except Exception: pass
-        
-        # try appending .hy extension to `path`
-        if not path.lower().endswith(self.SCRIPT_EXTENSION):
-            location = path + self.SCRIPT_EXTENSION
-            try:
-                item = self.directory.open(location)
-                return item, location
-            except Exception: pass
-            
-        return None, None
-    
 
 #####################################################################################################################################################
 #####
@@ -803,10 +797,14 @@ class Site(Item):
     - routing of all URLs
     """
 
-    # _qualifiers = None      # bidirectional mapping (bidict) of app-space-category qualifiers to CID values,
-    #                         # for URL routing and URL generation; some categories may be excluded from routing
-    #                         # (no public visibility), yet they're still accessible through get_category()
-
+    @property
+    @cached(ttl = 60)
+    def hypertag(self):
+        """Return a HyperHTML runtime with customized loaders to search through an internal filesystem of items."""
+        filesystem = self.get('directory')
+        loaders = [HyItemLoader(filesystem), PyLoader]     # PyLoader is needed to load Python built-ins
+        return HyperHTML(loaders)
+        
     # def _post_decode(self):
     #
     #     # print('Site.routes:', self['routes'])

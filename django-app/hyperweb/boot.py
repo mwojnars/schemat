@@ -1,3 +1,5 @@
+### UNUSED...
+
 from django.http import HttpRequest, HttpResponse
 from django.core.signals import request_finished
 from django.dispatch import receiver
@@ -13,7 +15,7 @@ from .core import core_items
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
-    site = registry.get_site()
+    site = get_registry().get_site()
     site.after_request(sender, **kwargs)
     # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
@@ -24,9 +26,9 @@ def after_request(sender, **kwargs):
 
 #####################################################################################################################################################
 
-registry = Registry()
-registry.seed(core_items)
-# registry.boot()
+# registry = Registry()
+# registry.seed(core_items)
+# # registry.boot()
 
 # print('root:', root)
 # print('root.schema:', root.schema.fields)
@@ -36,4 +38,16 @@ registry.seed(core_items)
 #
 # print("Category.schema: ", root.schema.to_json())
 # print("Site.schema:     ", Field._json.dumps(site.category.schema))
+
+#####################################################################################################################################################
+
+registry = None         # will be initialized on the first web request thru get_registry() below
+
+def get_registry():
+    global registry
+    if registry is None:
+        registry = Registry()
+        registry.seed(core_items)
+        # registry.boot()
+    return registry
 

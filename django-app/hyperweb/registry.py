@@ -39,7 +39,7 @@ class Registry:
     
     site_id = None
     
-    # properties for accessing core items: root, site, ...
+    # below are properties for accessing core items: root, site, ...
     # these items are not stored as attributes to avoid issues with caching (when an item is reloaded)
     @property
     def root(self): return self.get_item((ROOT_CID, ROOT_CID))

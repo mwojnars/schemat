@@ -2,20 +2,9 @@ from django.http import HttpRequest, HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-# from hyperweb.site import registry
-from hyperweb.registry import Registry
-from hyperweb.core import core_items
+from hyperweb.boot import get_registry
 
-registry = None         # registry is initialized on the first web request
-
-def get_registry():
-    global registry
-    if registry is None:
-        registry = Registry()
-        registry.seed(core_items)
-        # registry.boot()
-    return registry
-
+#####################################################################################################################################################
 
 def item_view(request, path):    # descriptor, endpoint = ""):
     """
