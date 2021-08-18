@@ -531,7 +531,7 @@ class STRING(Primitive):
         protocol 'STRING'
             div #view | $value
             div #edit style='display:none'
-                textarea .focus rows=1
+                textarea .focus .input rows=1
     """
 
     
