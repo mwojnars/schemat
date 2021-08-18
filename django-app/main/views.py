@@ -21,7 +21,7 @@ def item_view(request, path):    # descriptor, endpoint = ""):
     - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
     """
     
-    site = request.site = get_registry().get_site()
+    site = request.site = get_registry().site
     response = site.handle(request)
     if isinstance(response, str):
         return HttpResponse(response)

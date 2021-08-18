@@ -168,11 +168,15 @@ class Schema:
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
         """
-        if self.__widget__:
-            runtime = HyperHTML()  #Item.Hypertag
-            return hypertag(self.__widget__, runtime).render(value = value, empty = False)
+        if not self.__widget__:
+            return esc(str(value))
+
+        from hyperweb.boot import get_registry      # TODO: replace with self.registry when Schema becomes an Item subclass
+        hypertag = get_registry().site.hypertag
+        return hypertag.render(self.__widget__, value = value, empty = False)
+        # runtime = HyperHTML()  #Item.Hypertag
+        # return hypertag(self.__widget__, runtime).render(value = value, empty = False)
         
-        return esc(str(value))
     
     __widget__ = None
     
@@ -522,12 +526,7 @@ class STRING(Primitive):
     __widget__ = \
     """
         context $value, $empty
-        # from base import %protocol
-
-        %protocol @body classname
-            # asset ".../protocols.js"
-            div .widget protocol=classname
-                @body
+        from base import %protocol
 
         protocol 'STRING'
             div #view | $value

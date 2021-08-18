@@ -88,7 +88,7 @@ def test_Item():
 
     # a sample item to refer to during serialization; it must actually exist in DB,
     # otherwise the deserialization will raise an exception
-    site = registry.get_site()
+    site = registry.site
     
     run(OBJECT(base = Item), site, True)
     run(OBJECT(Site), site, True)

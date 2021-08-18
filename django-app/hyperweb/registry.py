@@ -133,10 +133,10 @@ class Registry:
         assert isinstance(cat, Category)
         return cat
     
-    def get_site(self):
-        site = self.get_item(self.site_id)
-        assert isinstance(site, Site), f'incorrect class of a site item ({type(site)}), possibly wrong site_id ({self.site_id})'
-        return site
+    # def get_site(self):
+    #     site = self.get_item(self.site_id)
+    #     assert isinstance(site, Site), f'incorrect class of a site item ({type(site)}), possibly wrong site_id ({self.site_id})'
+    #     return site
     
     def decode_items(self, records, category):
         """

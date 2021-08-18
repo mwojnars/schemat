@@ -15,7 +15,7 @@ from .core import core_items
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
-    site = get_registry().get_site()
+    site = get_registry().site
     site.after_request(sender, **kwargs)
     # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
@@ -30,12 +30,8 @@ def after_request(sender, **kwargs):
 # registry.seed(core_items)
 # # registry.boot()
 
-# print('root:', root)
-# print('root.schema:', root.schema.fields)
-
 # root = registry.get_item((0,0))
 # site = registry.get_site()
-#
 # print("Category.schema: ", root.schema.to_json())
 # print("Site.schema:     ", Field._json.dumps(site.category.schema))
 
