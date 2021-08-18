@@ -211,25 +211,16 @@ Text_ = Category_(
     ),
 )
 File_ = Category_(
-    name    = "File",
-    info    = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
-    fields  = FIELDS(
-        format  = STRING(),
+    name        = "File",
+    info        = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
+    class_name  = 'hyperweb.item.File',
+    fields      = FIELDS(
+        path    = STRING(),     # path to a local file on disk
+        format  = STRING(),     # file format: pdf, xlsx, ...
         content = VARIANT(bin = BYTES(), txt = TEXT()),
     ),
+    # endpoints   = {"__view__": page_item, "get": File_get},
 )
-# File_ = Category_(
-#     name    = "File",
-#     info    = """Equivalent of a plain disk file. Text or binary content can be
-#                  accompanied with information about language and markup encoding (for text files).
-#     """,
-#     schema  = FIELDS(
-#         # lang = STRING(),
-#         # markup = STRING(),
-#         format = STRING(),      # file format: pdf, xlsx, ...
-#         content = VARIANT(txt = TEXT(), bin = BYTES()),
-#     ),   # HumanLang() MarkupLang()
-# )
 
 
 # Import_     = STRUCT(name = STRING(), code = LINK(_Code))      # an object imported from a Code item

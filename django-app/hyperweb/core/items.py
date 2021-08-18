@@ -19,6 +19,7 @@ base_css = Code_(
         body {
           width: 980px;
           margin: 0 auto;
+          padding-bottom: 50px;
         }
         
         h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
@@ -108,8 +109,7 @@ base_hy = Code_(
             script !
                 "use strict";
                 $(function() {
-                    $("[protocol='STRING']").each(function () {
-                        let widget = this;
+                    $("[protocol='STRING']").each(function (i, widget) {
                         //let view  = $('#view', this); //widget.find("#view");
                         //let edit  = $('#edit', this); //widget.find("#edit");
                         //let focus = $('.focus', edit); //edit.find(".focus");
@@ -125,7 +125,7 @@ base_hy = Code_(
                         }
                 
                         function hide_edit() {
-                            //widget.set_preview();
+                            //widget.pro.set_preview();
                             edit.style.display = 'none';
                             view.style.display = 'block';
                         }
@@ -193,6 +193,9 @@ directory = Directory_(
     },
 )
 
+file_protocols = File_(path = '/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
+
+
 #####################################################################################################################################################
 
 space_meta = Space_(
@@ -201,7 +204,7 @@ space_meta = Space_(
 )
 space_sys = Space_(
     name        = "System",
-    categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_}
+    categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': File_}
 )
 
 app_items = Application_(
@@ -232,3 +235,4 @@ item_002 = Varia_(title ="ąłęÓŁŻŹŚ")
 item_002.add('name', "test_item")  #, "duplicate")
 
 
+### All the items defined above are automatically included in an initial DB

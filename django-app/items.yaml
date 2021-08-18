@@ -157,7 +157,10 @@
   name: File
   info: 'Binary or text file that can be accompanied with information about its format:
     pdf, jpg, zip, ...'
+  class_name: hyperweb.item.File
   fields:
+    path:
+      schema: {'@': hyperweb.schema.STRING}
     format:
       schema: {'@': hyperweb.schema.STRING}
     content:
@@ -171,19 +174,19 @@
   source: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
     \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
     \     #   font-size: 16px;\n        #   color: #333;\n        # }\n\n        body\
-    \ {\n          width: 980px;\n          margin: 0 auto;\n        }\n        \n\
-    \        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }\n        \n \
-    \       a { color: #006ecc }\n        a:visited { color: #00427a }\n        .catlink\
-    \ { font-size: 14px; margin-top: -20px }\n        \n        /*** UTILITIES */\n\
-    \        \n        .scroll { overflow: scroll; }\n        .scroll pre { overflow:\
-    \ visible; }\n        \n        /*** SITEWIDE */\n        /*** ITEM PAGE */\n\n\
-    \        .ct-color0                      { background: #e2eef9; }   /* #D0E4F5\
-    \ */\n        .ct-color1                      { background: #f6f6f6; }\n\n   \
-    \     .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px; /*border-right:\
-    \ none;*/ }\n        td.ct-nested                    { padding-right: 0px; padding-bottom:\
-    \ 0px; }\n\n        .catalog-1, .catalog-2          { border-collapse: collapse;\
-    \ table-layout: fixed; }\n        .catalog-1 th, .catalog-2 th    { border-right:\
-    \ 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)  { border-bottom:\
+    \ {\n          width: 980px;\n          margin: 0 auto;\n          padding-bottom:\
+    \ 50px;\n        }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom:\
+    \ 0.6em; }\n        \n        a { color: #006ecc }\n        a:visited { color:\
+    \ #00427a }\n        .catlink { font-size: 14px; margin-top: -20px }\n       \
+    \ \n        /*** UTILITIES */\n        \n        .scroll { overflow: scroll; }\n\
+    \        .scroll pre { overflow: visible; }\n        \n        /*** SITEWIDE */\n\
+    \        /*** ITEM PAGE */\n\n        .ct-color0                      { background:\
+    \ #e2eef9; }   /* #D0E4F5 */\n        .ct-color1                      { background:\
+    \ #f6f6f6; }\n\n        .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px;\
+    \ /*border-right: none;*/ }\n        td.ct-nested                    { padding-right:\
+    \ 0px; padding-bottom: 0px; }\n\n        .catalog-1, .catalog-2          { border-collapse:\
+    \ collapse; table-layout: fixed; }\n        .catalog-1 th, .catalog-2 th    {\
+    \ border-right: 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)  { border-bottom:\
     \ 1px solid #fff; }\n\n        .catalog-1                      { width: 100%;\
     \ min-width: 100%; max-width: 100%; }\n        .catalog-1 th                 \
     \  { width: 250px; min-width: 250px; max-width: 250px; }\n\n        /* th widths\
@@ -217,26 +220,25 @@
     \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
     anonymous\"\n\n        %init_protocols\n            script !\n               \
     \ \"use strict\";\n                $(function() {\n                    $(\"[protocol='STRING']\"\
-    ).each(function () {\n                        let widget = this;\n           \
-    \             //let view  = $('#view', this); //widget.find(\"#view\");\n    \
-    \                    //let edit  = $('#edit', this); //widget.find(\"#edit\");\n\
-    \                        //let focus = $('.focus', edit); //edit.find(\".focus\"\
-    );\n                        let view  = widget.querySelector(\"#view\");\n   \
-    \                     let edit  = widget.querySelector(\"#edit\");\n         \
-    \               let focus = edit.querySelector(\".focus\");       // the element\
-    \ that should receive focus after form activation; can be missing\n          \
-    \      \n                        function show_edit() {\n                    \
-    \        //console.log('in show_edit()');\n                            view.style.display\
-    \ = 'none';\n                            edit.style.display = 'block';\n     \
-    \                       if (focus) { focus.focus(); }\n                      \
-    \  }\n                \n                        function hide_edit() {\n     \
-    \                       //widget.set_preview();\n                            edit.style.display\
-    \ = 'none';\n                            view.style.display = 'block';\n     \
-    \                   }\n                \n                        //view.on('dblclick',\
-    \ show_edit);\n                        //edit.on('focusout', hide_edit);\n   \
-    \                     view.addEventListener('dblclick', show_edit);\n        \
-    \                edit.addEventListener('focusout', hide_edit);\n             \
-    \           \n                        //edit.querySelectorAll('*').forEach(node\
+    ).each(function (i, widget) {\n                        //let view  = $('#view',\
+    \ this); //widget.find(\"#view\");\n                        //let edit  = $('#edit',\
+    \ this); //widget.find(\"#edit\");\n                        //let focus = $('.focus',\
+    \ edit); //edit.find(\".focus\");\n                        let view  = widget.querySelector(\"\
+    #view\");\n                        let edit  = widget.querySelector(\"#edit\"\
+    );\n                        let focus = edit.querySelector(\".focus\");      \
+    \ // the element that should receive focus after form activation; can be missing\n\
+    \                \n                        function show_edit() {\n          \
+    \                  //console.log('in show_edit()');\n                        \
+    \    view.style.display = 'none';\n                            edit.style.display\
+    \ = 'block';\n                            if (focus) { focus.focus(); }\n    \
+    \                    }\n                \n                        function hide_edit()\
+    \ {\n                            //widget.pro.set_preview();\n               \
+    \             edit.style.display = 'none';\n                            view.style.display\
+    \ = 'block';\n                        }\n                \n                  \
+    \      //view.on('dblclick', show_edit);\n                        //edit.on('focusout',\
+    \ hide_edit);\n                        view.addEventListener('dblclick', show_edit);\n\
+    \                        edit.addEventListener('focusout', hide_edit);\n     \
+    \                   \n                        //edit.querySelectorAll('*').forEach(node\
     \ => node.addEventListener('blur', hide_edit));\n                    });\n   \
     \             });\n\n        %assets_internal\n            init_protocols\n  \
     \  \n        %assets\n            assets_external\n            assets_internal\n\
@@ -263,12 +265,14 @@
   items:
     base.hy: [6, 3]
     base.css: [6, 1]
+- id: [8, 1]
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
 - id: [2, 1]
   name: Meta
   categories: {category: 0, item: 5}
 - id: [2, 2]
   name: System
-  categories: {space: 2, app: 3, site: 4, dir: 1}
+  categories: {space: 2, app: 3, site: 4, dir: 1, file: 8}
 - id: [3, 1]
   name: Items
   base_url: http://localhost:8001/admin/item/
