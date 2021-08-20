@@ -529,9 +529,11 @@ class STRING(Primitive):
         from base import %protocol
 
         protocol 'STRING'
-            div #view | $value
+            div #view
             div #edit style='display:none'
-                textarea .focus .input rows=1
+                textarea .focus .input rows=1 autocomplete='off' | $value
+                # input .focus .input type='text' value=$value
+                # autocomplete='off' prevents the browser overriding $value with a cached value inserted previously by a user
     """
 
     
