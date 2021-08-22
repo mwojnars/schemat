@@ -7,8 +7,13 @@ class ValueInteger extends Widget {
 }
 
 class generic_protocol {
-    constructor(enter_accepts = false) {
+    // Watch out: a single protocol instance can be bind to multiple times to distinct elements,
+    // therefore all inner elements #view, #edit etc. must be *local* to a binding method
+    // rather than assigned to `this`.
+
+    constructor(enter_accepts = false, esc_accepts = true) {
         this._enter_accepts = enter_accepts;
+        this._esc_accepts = esc_accepts;
     }
 
     bind(widget) {
@@ -17,8 +22,11 @@ class generic_protocol {
         view.addEventListener('dblclick', () => this.show(view, edit));
         edit.addEventListener('focusout', () => this.hide(view, edit));
 
-        if (this._enter_accepts) {
-            edit.addEventListener("keyup", ({key}) => {if (key === "Enter") { this.hide(view, edit) }});
+        if (this._enter_accepts || this._esc_accepts) {
+            let keys = [];
+            if (this._enter_accepts) { keys.push("Enter"); }
+            if (this._esc_accepts)   { keys.push("Escape"); }
+            edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide(view, edit) }});
         }
         this.set_preview(view, edit);
     }
@@ -46,7 +54,7 @@ class popup_protocol extends generic_protocol {
 
 let protocols = {
     STRING: new generic_protocol(true),
-    TEXT: new generic_protocol(),
+    TEXT:   new generic_protocol(),
 }
 
 function bind_all() {
