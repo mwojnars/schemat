@@ -159,14 +159,18 @@ class Schema:
     ##  display & edit
     ##
     
-    def is_lengthy(self, value):
-        """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
-        return True
+    # def is_lengthy(self, value):
+    #     """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
+    #     return True
 
     def display(self, value):  # layout (line/block), style (basic/fine or F/T), editable (F/T/restricted-after-login)
         """
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
         In the future, this method may return a Hypertag's DOM representation to allow better customization.
+        
+        Predefined utilities that can be used inside widgets:
+        - %protocol hypertag (after import)
+        - .scroll (css class) - for elements that should be assigned standard max-height with a scroll box around
         """
         if not self.__widget__:
             return esc(str(value))
@@ -508,8 +512,8 @@ class Primitive(Schema):
         if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
-    def is_lengthy(self, value):
-        return False
+    # def is_lengthy(self, value):
+    #     return False
 
 class BOOLEAN(Primitive):
     type = bool
@@ -523,16 +527,14 @@ class FLOAT(Primitive):
 class STRING(Primitive):
     type = str
     
-    __widget__ = \
-    """
+    __widget__ = """
         context $value, $empty
         from base import %protocol
 
         protocol 'STRING'
             div #view
             div #edit style='display:none'
-                textarea .focus .input rows=1 autocomplete='off' | $value
-                # input .focus .input type='text' value=$value
+                input .focus .input type='text' autocomplete='off' style='width:100%' value=$value
                 # autocomplete='off' prevents the browser overriding $value with a cached value inserted previously by a user
     """
 
@@ -541,8 +543,19 @@ class TEXT(Primitive):
     """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
     type = str
 
-    def is_lengthy(self, value):
-        return len(value) > 200 #or value.count('\n') > 3
+    
+    __widget__ = """
+        context $value, $empty
+        from base import %protocol
+
+        protocol 'TEXT'
+            div #view .scroll
+            div #edit style='display:none'
+                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em' | $value
+    """
+
+    # def is_lengthy(self, value):
+    #     return len(value) > 200 #or value.count('\n') > 3
         
 class BYTES(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
@@ -903,6 +916,15 @@ class CODE(TEXT):
         code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
         return f"<pre>{code_html}</pre>"
     
+    __widget__ = """
+        context $value, $empty
+        from base import %protocol
+
+        protocol 'CODE'
+            div #view .scroll
+            div #edit style='display:none'
+                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
+    """
 
 #####################################################################################################################################################
 #####
@@ -1095,8 +1117,8 @@ class FIELDS(catalog, Schema):
     def __str__(self):
         return str(dict(self))
     
-    def is_lengthy(self, value):
-        return False
+    # def is_lengthy(self, value):
+    #     return False
 
 #####################################################################################################################################################
 

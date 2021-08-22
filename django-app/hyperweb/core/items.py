@@ -60,7 +60,7 @@ base_css = Code_(
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
         .ct-value pre               { font-size: 13px; padding-bottom: 0px; margin-bottom: 0px; }
-        .ct-value .scroll           { max-height: 150px; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
+        .ct-value .scroll           { max-height: 10em; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
     """,
 )
 
@@ -120,9 +120,9 @@ base_hy = Code_(
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
             th .ct-field | $key
-            td .ct-value
-                $class = "scroll" if schema.is_lengthy(value) else ""
-                div class=$class / $schema.display(value)
+            td .ct-value / $schema.display(value)
+            # $class = "scroll" if schema.is_lengthy(value) else ""
+            # div class=$class / $schema.display(value)
     
         %catalog_2 data schema start_color=0
             $c = start_color
