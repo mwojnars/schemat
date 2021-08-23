@@ -1202,17 +1202,6 @@ class STRUCT(FIELDS):
     #     return ' '.join(parts)
     
     
-# def struct(typename, __type__ = object, **__fields__):
-#     """Dynamically create a subclass of STRUCT."""
-#
-#     class _struct_(STRUCT):
-#         type = __type__
-#         fields = __fields__
-#
-#     _struct_.__name__ = typename
-#     return _struct_
-
-    
 #####################################################################################################################################################
 #####
 #####  Special-purpose schema
@@ -1229,24 +1218,50 @@ class FIELD(STRUCT):
         'info':    STRING(),
     }
     
-    def display(self, field):
-        view = """
-            context $field as f
-            span .field
-                | $f.schema
-                ...if f.multi | *
-                if f.default <> f.MISSING
-                    $default = str(f.default)
-                    span .default title="default value: {default:crop(1000)}"
-                        | [{default : crop(100)}]
-                if f.info
-                    span .info | • $f.info
-                    # smaller dot: &middot;
-                    # larger dot: •
-        """
-        # multi = '*' if self.multi else ''
-        # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
-        return hypertag(view).render(field = field)
+    __widget__ = """
+        context $value as f
+        span .field
+            | $f.schema
+            ...if f.multi | *
+            if f.default <> f.MISSING
+                $default = str(f.default)
+                span .default title="default value: {default:crop(1000)}"
+                    | [{default : crop(100)}]
+            if f.info
+                span .info | • $f.info
+                # smaller dot: &middot;
+                # larger dot: •
+    """
+    
+    # def display(self, field):
+    #     view = """
+    #         context $field as f
+    #         span .field
+    #             | $f.schema
+    #             ...if f.multi | *
+    #             if f.default <> f.MISSING
+    #                 $default = str(f.default)
+    #                 span .default title="default value: {default:crop(1000)}"
+    #                     | [{default : crop(100)}]
+    #             if f.info
+    #                 span .info | • $f.info
+    #                 # smaller dot: &middot;
+    #                 # larger dot: •
+    #     """
+    #     # multi = '*' if self.multi else ''
+    #     # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
+    #     return hypertag(view).render(field = field)
+
+
+# def struct(typename, __type__ = object, **__fields__):
+#     """Dynamically create a subclass of STRUCT."""
+#
+#     class _struct_(STRUCT):
+#         type = __type__
+#         fields = __fields__
+#
+#     _struct_.__name__ = typename
+#     return _struct_
 
 # INFO: it's possible to use field_schema and record_schema, as below,
 #       but the YAML output of the root category becomes more verbose then (multiple nesting levels)
