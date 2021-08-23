@@ -124,11 +124,11 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    fields      = FIELDS(items = CATALOG(keys = ENTRY_NAME(), values = LINK()))     # file & directory names mapped to item IDs
+    fields      = FIELDS(items = CATALOG(keys = FILENAME(), values = FILE()))     # file & directory names mapped to item IDs
 )
 # Filesystem_ = Category_(
 #     name        = "File system",
-#     fields      = FIELDS(root = PATH()),
+#     fields      = FIELDS(root = FILEPATH()),
 # )
 
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
@@ -171,7 +171,7 @@ Application_ = Category_(
     #             return self['spaces'][name]
     # """,
     fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(LINK(Space_))),
-    folder      = PATH(),           # path to a folder in the site's directory where this application was installed;
+    folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )

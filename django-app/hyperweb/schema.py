@@ -694,19 +694,20 @@ class LINK(Schema):
         
 #####################################################################################################################################################
 
-class PATH(STRING):
+class FILEPATH(STRING):
     """Path to an item in a Directory."""
     
-class ENTRY_NAME(STRING):
+class FILENAME(STRING):
     """
     Name of an individual entry in a Directory, without path.
     Names that end with '/' indicate directories and must link to items of Directory category.
     """
 
-class ENTRY(LINK):
+class FILE(LINK):
     """
     Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
     indicating whether this item should be interpreted as-is or as a subfolder.
+    TODO: make this class a structure with fields: ref (LINK to an item), content (plain TEXT/BYTES), ..., modified (DATETIME)
     """
     
     
