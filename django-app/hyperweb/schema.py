@@ -542,7 +542,7 @@ class STRING(Primitive):
 class TEXT(Primitive):
     """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
     type = str
-    html_element = 'hw-schema-text'
+    html_element = 'hw-value-text'
     
     __widget__ = """
         context $value, $empty
@@ -911,19 +911,24 @@ class VARIANT(Schema):
 
 class CODE(TEXT):
     
-    def display(self, code):
-        code_html = dedent(esc(code))
-        code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
-        return f"<pre>{code_html}</pre>"
+    # def display(self, code):
+    #     code_html = esc(dedent(code))
+    #     code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
+    #     return f"<div class='scroll'><pre>{code_html}</pre></div>"
     
-    __widget__ = """
+    __widget__ = r"""
         context $value, $empty
         from base import %protocol
+        
+        $code = dedent(value, False)
+        div .scroll
+            for line in code.split('\n')
+                pre | $line
 
-        protocol 'CODE'
-            div #view .scroll
-            div #edit style='display:none'
-                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
+        # protocol 'CODE'
+        #     div #view .scroll
+        #     div #edit style='display:none'
+        #         textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
     """
 
 #####################################################################################################################################################

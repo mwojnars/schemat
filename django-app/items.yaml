@@ -30,7 +30,7 @@
       schema: {'@': hyperweb.schema.TEXT}
     endpoints:
       schema:
-        values: {'@': hyperweb.schema.TEXT}
+        values: {'@': hyperweb.schema.CODE}
         '@': hyperweb.schema.CATALOG
       default: {__view__: "\ncontext $item, $category as cat, $app, $files\nfrom base\
           \ import %page, %assets, %properties\n\n. #dedent\n    % print_headline\n\
@@ -174,8 +174,8 @@
   source: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
     \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
     \     #   font-size: 16px;\n        #   color: #333;\n        # }\n\n        html\
-    \ {\n          --ct-cell-pad: 35px;          /* left-right padding of text inside\
-    \ table cells */\n          --ct-nested-offset: 50px;     /* distance between\
+    \ {\n          --ct-cell-pad: 35px;          /* default left & right padding of\
+    \ all table cells */\n          --ct-nested-offset: 50px;     /* distance between\
     \ left edges of a nested catalog and its container catalog */\n          --ct-th1-width:\
     \ 250px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
     \        }\n        body {\n          width: 980px;\n          margin: 0 auto;\n\

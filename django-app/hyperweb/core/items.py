@@ -17,7 +17,7 @@ base_css = Code_(
         # }
 
         html {
-          --ct-cell-pad: 35px;          /* left-right padding of text inside table cells */
+          --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
           --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
           --ct-th1-width: 250px;
           --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));

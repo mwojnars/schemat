@@ -87,7 +87,7 @@ root_fields = FIELDS(
     info         = Field(STRING()),
     class_name   = Field(STRING(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(CATALOG(TEXT()), default = {"__view__": page_item}),
+    endpoints    = Field(CATALOG(CODE()), default = {"__view__": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
 )
 
