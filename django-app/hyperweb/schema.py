@@ -542,7 +542,7 @@ class STRING(Primitive):
 class TEXT(Primitive):
     """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
     type = str
-
+    html_element = 'hw-schema-text'
     
     __widget__ = """
         context $value, $empty
@@ -551,7 +551,7 @@ class TEXT(Primitive):
         protocol 'TEXT'
             div #view .scroll
             div #edit style='display:none'
-                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em' | $value
+                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em' wrap='off' | $value
     """
 
     # def is_lengthy(self, value):

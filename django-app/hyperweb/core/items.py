@@ -16,6 +16,12 @@ base_css = Code_(
         #   color: #333;
         # }
 
+        html {
+          --ct-cell-pad: 35px;          /* left-right padding of text inside table cells */
+          --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
+          --ct-th1-width: 250px;
+          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+        }
         body {
           width: 980px;
           margin: 0 auto;
@@ -39,19 +45,21 @@ base_css = Code_(
         .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
         .ct-color1                      { background: #f6f6f6; }
 
-        .catalog-1 th, .catalog-1 td    { padding: 14px 35px 11px; /*border-right: none;*/ }
+        .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
         td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
+        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
 
         .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
         .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
         .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
 
         .catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
-        .catalog-1 th                   { width: 250px; min-width: 250px; max-width: 250px; }
+        .catalog-1 th                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
 
         /* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
         .catalog-2                  { width: 100%; }
-        .catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }
+        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+        /*.catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
         
         .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
         .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
@@ -60,7 +68,7 @@ base_css = Code_(
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
         .ct-value pre               { font-size: 13px; padding-bottom: 0px; margin-bottom: 0px; }
-        .ct-value .scroll           { max-height: 10em; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
+        .ct-value .scroll           { max-height: 10rem; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
     """,
 )
 
@@ -104,6 +112,17 @@ base_hy = Code_(
             script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
             # # Lodash 4.17.21 (https://lodash.com/)
             # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
+            
+            # ACE (code editor)
+            # keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
+            # existing highlighters: https://github.com/ajaxorg/ace/tree/master/lib/ace/mode
+            # default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands
+            #   editor.commands.addCommand(), editor.commands.removeCommand()
+            script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" integrity="sha512-GoORoNnxst42zE3rYPj4bNBm0Q6ZRXKNH2D9nEmNvVF/z24ywVnijAWVi/09iBiVDQVf3UlZHpzhAJIdd9BXqw==" crossorigin="anonymous" referrerpolicy="no-referrer"
+            #script src="https://pagecdn.io/lib/ace/1.4.12/ace.min.js" crossorigin="anonymous" integrity="sha256-T5QdmsCQO5z8tBAXMrCZ4f3RX8wVdiA0Fu17FGnU1vU="
+            
+            # CodeMirror (code editor)
+            script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
 
         %assets_internal
             script src="/sys.file:1/get"
@@ -126,7 +145,7 @@ base_hy = Code_(
     
         %catalog_2 data schema start_color=0
             $c = start_color
-            div style="padding-left:20px" : table .catalog-2
+            div .wrap-offset : table .catalog-2
                 for name, value in data.items()
                     tr class="ct-color{c}"
                         catalog_row $name $value $schema
