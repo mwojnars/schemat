@@ -476,7 +476,7 @@ class Item(object, metaclass = MetaItem):
         item  = request.item
         files = site.get('directory')
 
-        context = dict(item = item, data = View(item), category = item.category, request = request,
+        context = dict(item = item, category = item.category, request = request, #data = View(item),
                        site = site, app = app, files = files)
         
         return site.hypertag.render(template, **context)
@@ -946,60 +946,52 @@ class File(Item):
 
 #####################################################################################################################################################
 #####
-#####  ITEM VIEW
+#####  DATA VIEW
 #####
 
-class View:  # Snap / Snapshot / Data
-    """
-    View of an item's data that provides convenient read access to particular fields
-    using dot notation instead of array indexing.
-    """
-    
-    # modes of value access in Item.data, and suffixes appended to attribute names to indicate
-    # which (multiple) values of a given attribute to retrieve
-    _GET_MODES    = ('uniq', 'first', 'last', 'list')
-    
-    # configuration parameters
-    _mode_separator = '__'
-    _default_mode   = 'first'
-    _default_miss   = Item.RAISE
-    
-    # internal structures
-    _item       = None          # the underlying Item instance; enables access to methods and full data[]
-    _user       = None          # user profile / identification
-    # _route      = None          # the site's Route that this request came from
-    # _request    = None          # web request object
-    
-    def __init__(self, item):
-        self._item = item
-    
-    def __getattr__(self, name):
-        """
-        Call __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
-        or does it contain a suffix indicating the mode of access (uniq, first, last, list).
-        """
-        field = name
-        mode  = self._default_mode
-        
-        sep = self._mode_separator
-        if sep and sep in name:
-            field, mode = name.rsplit(sep, 1)
-            if mode not in self._GET_MODES:
-                field = name
-                mode  = self._default_mode
-        
-        return self._item.get(field, self._default_miss, mode = mode)
-
-    def _uniq(self, field):
-        return self._item.get(field, self._default_miss, mode ='uniq')
-
-    # def url(self, __target_item__ = None, __endpoint__ = None, **params):
-    #     """
-    #     Generate URL of a target_item when accessed through self._app application;
-    #     or URL of self._item if target_item=None.
-    #     """
-    #     if __target_item__ is None: __target_item__ = self._item
-    #     return self._route.url(__target_item__, __endpoint__, **params)
+# class View:  # Snap / Snapshot / Data
+#     """
+#     View of an item's data that provides convenient read access to particular fields
+#     using dot notation instead of array indexing.
+#     """
+#
+#     # modes of value access in Item.data, and suffixes appended to attribute names to indicate
+#     # which (multiple) values of a given attribute to retrieve
+#     _GET_MODES    = ('uniq', 'first', 'last', 'list')
+#
+#     # configuration parameters
+#     _mode_separator = '__'
+#     _default_mode   = 'first'
+#     _default_miss   = Item.RAISE
+#
+#     # internal structures
+#     _item       = None          # the underlying Item instance; enables access to methods and full data[]
+#     _user       = None          # user profile / identification
+#     # _route      = None          # the site's Route that this request came from
+#     # _request    = None          # web request object
+#
+#     def __init__(self, item):
+#         self._item = item
+#
+#     def __getattr__(self, name):
+#         """
+#         Call __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
+#         or does it contain a suffix indicating the mode of access (uniq, first, last, list).
+#         """
+#         field = name
+#         mode  = self._default_mode
+#
+#         sep = self._mode_separator
+#         if sep and sep in name:
+#             field, mode = name.rsplit(sep, 1)
+#             if mode not in self._GET_MODES:
+#                 field = name
+#                 mode  = self._default_mode
+#
+#         return self._item.get(field, self._default_miss, mode = mode)
+#
+#     def _uniq(self, field):
+#         return self._item.get(field, self._default_miss, mode ='uniq')
 
     
 #####################################################################################################################################################
