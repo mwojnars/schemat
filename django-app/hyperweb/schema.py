@@ -150,6 +150,20 @@ class Schema:
         """
         return value
 
+    def form_encode(self, value):
+        """
+        Return a JSON representation of `value` that can be passed to an HTML widget of this schema.
+        The JSON string will be printed out to a `data-state` attribute of the widget,
+        for subsequent decoding by the widget's Javascript class.
+        """
+        
+    def form_decode(self, state):
+        """
+        Decode a JSON string containing a UI-layer representation of a value back into
+        an application-layer representation. Perform validation with respect to the schema.
+        If validation fails, a list of errors is returned together with the value.
+        """
+
     def __str__(self):
         name = self.name or self.__class__.__name__
         return name
@@ -159,10 +173,6 @@ class Schema:
     ##  display & edit
     ##
     
-    # def is_lengthy(self, value):
-    #     """True if display() may potentially produce a long multiline output which needs a scrollable box around."""
-    #     return True
-
     def display(self, value):  # layout (line/block), style (basic/fine or F/T), editable (F/T/restricted-after-login)
         """
         Default (rich-)text representation of `value` for display in a response document, typically as HTML code.
@@ -270,7 +280,6 @@ class Schema:
         - "error" flag: attributes in #show and/or #form that inform about errors in a given field
         The code may rely on JS scripts or React classes that need to be loaded separately.
         """
-        pass
         
 
 #####################################################################################################################################################
@@ -512,9 +521,6 @@ class Primitive(Schema):
         if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
-    # def is_lengthy(self, value):
-    #     return False
-
 class BOOLEAN(Primitive):
     type = bool
 
@@ -560,7 +566,7 @@ class TEXT(Primitive):
 
     # def is_lengthy(self, value):
     #     return len(value) > 200 #or value.count('\n') > 3
-        
+    
 class BYTES(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
     type = bytes
@@ -689,12 +695,13 @@ class ITEM(Schema):
         
         if cid is None:
             cid = ref_cid
-
+            
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
         # from .site import registry
         # print(f'registry loaded by ITEM in thread {threading.get_ident()}', flush = True)
-
-        return registry.get_item((cid, iid))
+        from .boot import get_registry
+        
+        return get_registry().get_item((cid, iid))
         
     
 #####################################################################################################################################################
@@ -902,9 +909,33 @@ class CODE(TEXT):
         from base import %protocol
         
         $code = dedent(value, False)
-        div .scroll
-            for line in code.split('\n')
-                pre | $line
+        
+        style !
+            #ace-editor { height:12rem; width:100%; font-size:13px; font-family:var(--bs-font-monospace); line-height:1.4; background-color:rgba(0,0,0,0.01); }
+            .ace_cursor { display: none !important; }
+        
+        div #view
+            div #ace-editor | $code
+            # div .scroll
+            #     for line in code.split('\n')
+            #         pre | $line
+
+        # div #edit style='display:none'
+        #     div #ace-editor | $code
+        
+        script !
+            let options = {
+                mode:           "ace/mode/haml",
+                readOnly:               true,
+                showGutter:             false,
+                displayIndentGuides:    false,
+                showPrintMargin:        false,
+                highlightActiveLine:    false,
+            };
+            let editor = ace.edit("ace-editor", options);
+            //editor.setOption('showGutter', false);
+            //editor.session.setMode("ace/mode/haml");
+            //editor.setTheme("ace/theme/monokai");
 
         # protocol 'CODE'
         #     div #view .scroll
@@ -1125,9 +1156,6 @@ class FIELDS(catalog, Schema):
 
     def __str__(self):
         return str(dict(self))
-    
-    # def is_lengthy(self, value):
-    #     return False
 
 #####################################################################################################################################################
 

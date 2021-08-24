@@ -28,7 +28,8 @@ class generic_protocol {
             if (this._esc_accepts)   { keys.push("Escape"); }
             edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide(view, edit) }});
         }
-        this.set_preview(view, edit);
+        this.hide(view, edit);
+        // this.set_preview(view, edit);
     }
     show(view, edit) {
         //console.log('in show_edit()');

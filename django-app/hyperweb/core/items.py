@@ -118,8 +118,7 @@ base_hy = Code_(
             # existing highlighters: https://github.com/ajaxorg/ace/tree/master/lib/ace/mode
             # default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands
             #   editor.commands.addCommand(), editor.commands.removeCommand()
-            script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" integrity="sha512-GoORoNnxst42zE3rYPj4bNBm0Q6ZRXKNH2D9nEmNvVF/z24ywVnijAWVi/09iBiVDQVf3UlZHpzhAJIdd9BXqw==" crossorigin="anonymous" referrerpolicy="no-referrer"
-            #script src="https://pagecdn.io/lib/ace/1.4.12/ace.min.js" crossorigin="anonymous" integrity="sha256-T5QdmsCQO5z8tBAXMrCZ4f3RX8wVdiA0Fu17FGnU1vU="
+            script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"
             
             # CodeMirror (code editor)
             script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
