@@ -72,7 +72,7 @@
           category:
             '=': [0, 0]
             '@': null
-          '@': hyperweb.schema.LINK
+          '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
   class_name: Space
   class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
@@ -97,7 +97,7 @@
           category:
             '=': [0, 2]
             '@': null
-          '@': hyperweb.schema.LINK
+          '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
   folder: {'@': hyperweb.schema.FILEPATH}
 - id: [0, 4]
@@ -114,13 +114,13 @@
           category:
             '=': [0, 3]
             '@': null
-          '@': hyperweb.schema.LINK
+          '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
   directory:
     category:
       '=': [0, 1]
       '@': null
-    '@': hyperweb.schema.LINK
+    '@': hyperweb.schema.ITEM
 - id: [0, 5]
   name: Varia
   info: Category of items that do not belong to any specific category

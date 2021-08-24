@@ -23,7 +23,7 @@ import json, base64
 from hypertag.std.html import html_escape as esc
 from hypertag import HyperHTML
 
-from .utils import dedent
+# from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate
 from .multidict import MultiDict
@@ -544,6 +544,10 @@ class TEXT(Primitive):
     type = str
     html_element = 'hw-value-text'
     
+    """
+    <hw-schema-TEXT>
+    """
+    
     __widget__ = """
         context $value, $empty
         from base import %protocol
@@ -621,10 +625,10 @@ class ENUM(Schema):
         return value
     
     
-class LINK(Schema):
+class ITEM(Schema):
     """
-    Encodes an Item into its ID=(CID,IID), or just IID if `category` or `cid` was provided.
-    LINK without parameters is equivalent to OBJECT(Item), however, LINK can also be parameterized,
+    Reference to an Item, encoded as ID=(CID,IID), or just IID if `category` or `cid` was provided.
+    ITEM without parameters is equivalent to OBJECT(Item), however, ITEM can also be parameterized,
     which is not possible using an OBJECT.
     """
     
@@ -636,7 +640,7 @@ class LINK(Schema):
         if cid is not None: self.cid = cid
         if category is not None: self.category = category
             # if category.iid is None:
-            #     print(f"WARNING: category {category} has empty ID in LINK.__init__()")
+            #     print(f"WARNING: category {category} has empty ID in ITEM.__init__()")
             #     self.category = category
             # self.cid = category.iid
     
@@ -688,29 +692,10 @@ class LINK(Schema):
 
         # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
         # from .site import registry
-        # print(f'registry loaded by LINK in thread {threading.get_ident()}', flush = True)
+        # print(f'registry loaded by ITEM in thread {threading.get_ident()}', flush = True)
 
         return registry.get_item((cid, iid))
         
-#####################################################################################################################################################
-
-class FILEPATH(STRING):
-    """Path to an item in a Directory."""
-    
-class FILENAME(STRING):
-    """
-    Name of an individual entry in a Directory, without path.
-    Names that end with '/' indicate directories and must link to items of Directory category.
-    """
-
-class FILE(LINK):
-    """
-    Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
-    indicating whether this item should be interpreted as-is or as a subfolder.
-    TODO: make this class a structure with fields: ref (LINK to an item), content (plain TEXT/BYTES), ..., modified (DATETIME)
-    """
-    
-    
     
 #####################################################################################################################################################
 #####
@@ -912,11 +897,6 @@ class VARIANT(Schema):
 
 class CODE(TEXT):
     
-    # def display(self, code):
-    #     code_html = esc(dedent(code))
-    #     code_html = code_html.replace('\n', '</pre>\n<pre>')        # this prevents global html indentation (after embedding in Hypertag) from being treated as a part of code
-    #     return f"<div class='scroll'><pre>{code_html}</pre></div>"
-    
     __widget__ = r"""
         context $value, $empty
         from base import %protocol
@@ -932,6 +912,29 @@ class CODE(TEXT):
         #         textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
     """
 
+#####################################################################################################################################################
+
+class FILEPATH(STRING):
+    """Path to an item in a Directory."""
+    
+class FILENAME(STRING):
+    """
+    Name of an individual entry in a Directory, without path.
+    Names that end with '/' indicate directories and must link to items of Directory category.
+    """
+
+class FILE(ITEM):
+    """
+    Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
+    indicating whether this item should be interpreted as-is or as a subfolder.
+    TODO: make this class a structure with fields:
+    - item (ITEM) - if a reference to an item in DB
+    - localpath (STRING) - if this is a regular file stored on local disk
+    - content (plain TEXT/BYTES) - if the contents should be served from here
+    - modified (DATETIME) ??
+    """
+    
+    
 #####################################################################################################################################################
 #####
 #####  FIELD, RECORD, STRUCT
@@ -1213,7 +1216,7 @@ class FIELD(STRUCT):
 
     type = Field
     fields = {
-        'schema':  OBJECT(base = Schema),       # VARIANT(OBJECT(base=Schema), LINK(schema-category))
+        'schema':  OBJECT(base = Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
         'default': OBJECT(),
         'multi':   BOOLEAN(),
         'info':    STRING(),

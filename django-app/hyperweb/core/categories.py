@@ -78,7 +78,7 @@ from base import %page, %assets, %properties
 # text_schema = STRUCT(name = STRING(), lang = STRING(), markup = STRING(), text = TEXT())   # HumanLang() MarkupLang() TEXT()
 # code_schema = STRUCT(name = STRING(), lang = STRING(), code = TEXT())   # ProgramLang() Code()
 # method_schema = STRUCT(language = STRING(), code = TEXT())
-# class_schema = VARIANT(native = CLASS(), inline = code_schema)       # reference = LINK(_Code)
+# class_schema = VARIANT(native = CLASS(), inline = code_schema)       # reference = ITEM(_Code)
 
 
 # fields of categories, including the root category
@@ -142,7 +142,7 @@ Directory_ = Category_(
 Space_ = Category_(
     name        = "Space",
     info        = "Category of items that represent item spaces.",
-    fields      = FIELDS(name = STRING(), categories = CATALOG(LINK(Category_))),
+    fields      = FIELDS(name = STRING(), categories = CATALOG(ITEM(Category_))),
     # class_name  = 'hyperweb.item.Space',
     class_name  = "Space",
     class_code  =
@@ -170,20 +170,20 @@ Application_ = Category_(
     #         def get_space(self, name):
     #             return self['spaces'][name]
     # """,
-    fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(LINK(Space_))),
+    fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(ITEM(Space_))),
     folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )
 
-# route_schema    = STRUCT(Route, base = STRING(), path = STRING(), app = LINK(Application_))
+# route_schema    = STRUCT(Route, base = STRING(), path = STRING(), app = ITEM(Application_))
 
 Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
-    fields      = FIELDS(name = STRING(), apps = CATALOG(LINK(Application_))),
-    directory   = LINK(Directory_),     # root of the site-global hierarchical directory of items
+    fields      = FIELDS(name = STRING(), apps = CATALOG(ITEM(Application_))),
+    directory   = ITEM(Directory_),     # root of the site-global hierarchical directory of items
 )
 
 Varia_ = Category_(
@@ -228,7 +228,7 @@ File_ = Category_(
 )
 
 
-# Import_     = STRUCT(name = STRING(), code = LINK(_Code))      # an object imported from a Code item
+# Import_     = STRUCT(name = STRING(), code = ITEM(_Code))      # an object imported from a Code item
 # SchemaType_ = Category_(
 #     name        = "SchemaType",
 #     schema      = '???',
