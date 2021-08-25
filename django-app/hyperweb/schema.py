@@ -920,8 +920,9 @@ class CODE(TEXT):
                 background-color: var(--bk-color);
                 border-left: 8px solid var(--bk-color);
                 margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+                resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
             }
-            .ace_cursor { display: none !important; }
+            /*.ace_cursor { display: none !important; }*/
         
         div #view
             div #ace-editor data-state=$state
@@ -938,16 +939,19 @@ class CODE(TEXT):
                 showPrintMargin:        false,
                 highlightActiveLine:    false,
             };
-            let editor = document.querySelector("#ace-editor");
-            let state  = editor.getAttribute('data-state');
+            let editor_box = document.querySelector("#ace-editor");
+            let state  = editor_box.getAttribute('data-state');
             //state = JSON.parse(state);
 
-            editor = ace.edit(editor, options);
+            let editor = ace.edit(editor_box, options);
             editor.session.setValue(state);
             //editor.clearSelection();
-            //editor.setOption('showGutter', false);
             //editor.session.setMode("ace/mode/haml");
             //editor.setTheme("ace/theme/monokai");
+            //editor.setOption('showGutter', false);
+            editor.renderer.$cursorLayer.element.style.display = "none";
+            
+            new ResizeObserver(() => { editor.resize(); }).observe(editor_box);
 
         # div .scroll
         #     for line in code.split('\n')
