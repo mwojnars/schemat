@@ -906,19 +906,25 @@ class CODE(TEXT):
     
     __widget__ = r"""
         context $value, $empty
+        from json import $dumps
         from base import %protocol
         
-        $code = dedent(value, False)
+        $code  = dedent(value, False)
+        $state = code   #dumps(code)
         
         style !
-            #ace-editor { height:12rem; width:100%; font-size:13px; font-family:var(--bs-font-monospace); line-height:1.4; background-color:rgba(0,0,0,0.01); }
+            #ace-editor {
+                --bk-color: rgba(255,255,255,0.25);
+                height:10rem; width:100%;
+                font-size:13px; font-family:var(--bs-font-monospace); line-height:1.4;
+                background-color: var(--bk-color);
+                border-left: 8px solid var(--bk-color);
+                margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+            }
             .ace_cursor { display: none !important; }
         
         div #view
-            div #ace-editor | $code
-            # div .scroll
-            #     for line in code.split('\n')
-            #         pre | $line
+            div #ace-editor data-state=$state
 
         # div #edit style='display:none'
         #     div #ace-editor | $code
@@ -932,11 +938,20 @@ class CODE(TEXT):
                 showPrintMargin:        false,
                 highlightActiveLine:    false,
             };
-            let editor = ace.edit("ace-editor", options);
+            let editor = document.querySelector("#ace-editor");
+            let state  = editor.getAttribute('data-state');
+            //state = JSON.parse(state);
+
+            editor = ace.edit(editor, options);
+            editor.session.setValue(state);
+            //editor.clearSelection();
             //editor.setOption('showGutter', false);
             //editor.session.setMode("ace/mode/haml");
             //editor.setTheme("ace/theme/monokai");
 
+        # div .scroll
+        #     for line in code.split('\n')
+        #         pre | $line
         # protocol 'CODE'
         #     div #view .scroll
         #     div #edit style='display:none'
