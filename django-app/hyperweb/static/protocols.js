@@ -35,8 +35,13 @@ class Schema extends HTMLElement {
         // console.log("in Schema.connectedCallback()");
         if (typeof this._template !== 'undefined') {                    // insert _template into the document
             this.insertAdjacentHTML('beforeend', this._template);
+            this.bind();
         }
-        setTimeout(() => this.bind());      // binding must be delayed until the light DOM (children) is initialized
+        else {
+            // without _template, binding must be delayed until the light DOM (children) is initialized,
+            // which usually happens AFTER connectedCallback()
+            setTimeout(() => this.bind());
+        }
     }
     bind() {
         let view = this._view = this.querySelector("#view");
@@ -98,9 +103,10 @@ class STRING extends Schema {
     _template = `
         <div id="view"></div>
         <div id="edit" style="display:none">
-            <input class="focus input" type="text" autocomplete="off" style="width:100%" />
+            <input class="focus input" type="text" style="width:100%" />
         </div>
     `
+    // "display:none" prevents a flash of uninitialized javascript content for #edit
     // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
 }
 
@@ -108,7 +114,7 @@ class TEXT extends Schema {
     _template = `
         <div id="view" class="scroll"></div>
         <div id="edit" style="display:none">
-            <textarea class="focus input" rows="1" autocomplete="off" style="width:100%;height:10em" wrap="off" />
+            <textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" />
         </div>
     `
 }
