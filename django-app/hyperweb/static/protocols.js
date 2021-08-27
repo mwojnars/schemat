@@ -20,6 +20,7 @@ class Schema_ extends HTMLElement {
 /*************************************************************************************************/
 
 class Schema extends HTMLElement {
+    _template      = undefined;
     _enter_accepts = false;
     _esc_accepts   = true;
 
@@ -32,6 +33,9 @@ class Schema extends HTMLElement {
 
     connectedCallback() {
         // console.log("in Schema.connectedCallback()");
+        if (typeof this._template !== 'undefined') {                    // insert _template into the document
+            this.insertAdjacentHTML('beforeend', this._template);
+        }
         setTimeout(() => this.bind());      // binding must be delayed until the light DOM (children) is initialized
     }
     bind() {
@@ -54,7 +58,6 @@ class Schema extends HTMLElement {
             edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide() }});
         }
         this.hide();
-        // this.set_preview(view, edit);
     }
     show() {
         /* show the edit form, hide the preview */
@@ -90,8 +93,25 @@ class Schema extends HTMLElement {
     }
 }
 
-class STRING    extends Schema { _enter_accepts = true }
-class TEXT      extends Schema {}
+class STRING extends Schema {
+    _enter_accepts = true;
+    _template = `
+        <div id="view"></div>
+        <div id="edit" style="display:none">
+            <input class="focus input" type="text" autocomplete="off" style="width:100%" />
+        </div>
+    `
+    // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
+}
+
+class TEXT extends Schema {
+    _template = `
+        <div id="view" class="scroll"></div>
+        <div id="edit" style="display:none">
+            <textarea class="focus input" rows="1" autocomplete="off" style="width:100%;height:10em" wrap="off" />
+        </div>
+    `
+}
 
 
 window.customElements.define('hw-schema-string', STRING);
