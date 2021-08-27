@@ -536,13 +536,11 @@ class STRING(Primitive):
     
     __widget__ = """
         context $value
-        # from base import %protocol
-        # protocol 'STRING'
-        # custom "hw-schema-string" value=$value
-        custom "hw-schema-string"
-            div #view slot='view'
-            div #edit slot='edit' style='display:none'
-                input .focus .input type='text' autocomplete='off' style='width:100%' value=$value
+        # custom "hw-schema-string" data-value=$value editable=true
+        custom "hw-schema-string" data-value=$value
+            div #view
+            div #edit style='display:none'
+                input .focus .input type='text' autocomplete='off' style='width:100%'
                 # autocomplete='off' prevents the browser overriding $value with a cached value inserted previously by a user
     """
 
@@ -553,12 +551,10 @@ class TEXT(Primitive):
     
     __widget__ = """
         context $value
-        # from base import %protocol
-        # protocol 'TEXT'
-        custom "hw-schema-text"
+        custom "hw-schema-text" data-value=$value
             div #view .scroll
             div #edit style='display:none'
-                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em' wrap='off' | $value
+                textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em' wrap='off'
     """
 
     # def is_lengthy(self, value):

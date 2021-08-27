@@ -23,18 +23,29 @@ class Schema extends HTMLElement {
     _enter_accepts = false;
     _esc_accepts   = true;
 
+    _view = null;           // <div> containing a preview sub-widget
+    _edit = null;           // <div> containing an edit form
+
+    _current_value = undefined;         // most recent value accepted by user after edit
+    _initial_value = undefined;         // for change detection
+    _editing       = false;             // current state of the widget: previewing (false) / editing (true)
+
     connectedCallback() {
         // console.log("in Schema.connectedCallback()");
         setTimeout(() => this.bind());      // binding must be delayed until the light DOM (children) is initialized
     }
     bind() {
-        let view = this.querySelector("#view");
-        let edit = this.querySelector("#edit");
-        this._view = view;
-        this._edit = edit;
+        let view = this._view = this.querySelector("#view");
+        let edit = this._edit = this.querySelector("#edit");
 
         view.addEventListener('dblclick', () => this.show());
         edit.addEventListener('focusout', () => this.hide());
+
+        let value = this._initial_value = this.getAttribute('data-value');
+
+        if (typeof value !== 'undefined') {
+            this.set_form(value);
+        }
 
         if (this._enter_accepts || this._esc_accepts) {
             let keys = [];
@@ -46,22 +57,39 @@ class Schema extends HTMLElement {
         // this.set_preview(view, edit);
     }
     show() {
-        //console.log('in show_edit()');
+        /* show the edit form, hide the preview */
+        this._editing = true;
         this._view.style.display = 'none';
         this._edit.style.display = 'block';
         let focus = this._edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
         if (focus) { focus.focus(); }
     }
-    hide() {
+    hide(accept = true) {
+        /* hide the edit form, show the preview */
+        if (accept) { this.update_value(); }
         this.set_preview();
         this._edit.style.display = 'none';
         this._view.style.display = 'block';
+        this._editing = false;
     }
-    set_preview() {
-        let input = this._edit.querySelector(".input");       // the (unique) element that contains a form value inserted by user
-        this._view.textContent = input.value;
+    is_editing()    { return this._editing }
+
+    get_value()     { return this._current_value }      // should only be used if value_changed() is true
+    value_changed() { return (typeof this._current_value !== 'undefined') && (this._current_value !== this._initial_value) }
+    update_value()  { this._current_value = this.get_form() }
+    set_preview()   { this._view.textContent = this._current_value }
+
+    set_form(value) {
+        /* write `value` into the elements of the edit form; by default, assume there's exactly one
+         * form element, that's identified by .input css class */
+        this._edit.querySelector(".input").value = value;
+    }
+    get_form() {
+        /* collect values of individual form elements and combine into a single value object */
+        return this._edit.querySelector(".input").value;
     }
 }
+
 class STRING    extends Schema { _enter_accepts = true }
 class TEXT      extends Schema {}
 
