@@ -153,7 +153,7 @@ class Schema:
     def form_encode(self, value):
         """
         Return a JSON representation of `value` that can be passed to an HTML widget of this schema.
-        The JSON string will be printed out to a `data-state` attribute of the widget,
+        The JSON string will be printed out to a `data-value` attribute of the widget,
         for subsequent decoding by the widget's Javascript class.
         """
         
@@ -532,14 +532,17 @@ class FLOAT(Primitive):
 
 class STRING(Primitive):
     type = str
+    # html_element = 'hw-schema-string'
     
     __widget__ = """
         context $value, $empty
         from base import %protocol
 
-        protocol 'STRING'
-            div #view
-            div #edit style='display:none'
+        # protocol 'STRING'
+        # custom "hw-schema-string" value=$value
+        custom "hw-schema-string"
+            div #views slot='view'
+            div #edits slot='edit' style='display:none'
                 input .focus .input type='text' autocomplete='off' style='width:100%' value=$value
                 # autocomplete='off' prevents the browser overriding $value with a cached value inserted previously by a user
     """
@@ -548,11 +551,6 @@ class STRING(Primitive):
 class TEXT(Primitive):
     """Similar to STRING, but differs in how the content is displayed: as a block rather than inline."""
     type = str
-    html_element = 'hw-value-text'
-    
-    """
-    <hw-schema-TEXT>
-    """
     
     __widget__ = """
         context $value, $empty
@@ -913,34 +911,38 @@ class CODE(TEXT):
         $state = code   #dumps(code)
         
         style !
-            #ace-editor {
-                --bk-color: rgba(255,255,255,0.25);
-                height:10rem; width:100%;
-                font-size:13px; font-family:var(--bs-font-monospace); line-height:1.4;
+            .ace-editor {
+                --bk-color: rgba(255,255,255,0.3);
                 background-color: var(--bk-color);
                 border-left: 8px solid var(--bk-color);
+                height: 10rem;
+                width: 100%;
+                line-height: 1.4;
+                font-family: var(--bs-font-monospace);
+                font-size: 13px;
                 margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
                 resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
             }
             /*.ace_cursor { display: none !important; }*/
         
         div #view
-            div #ace-editor data-state=$state
+            div .ace-editor data-value=$state
 
         # div #edit style='display:none'
-        #     div #ace-editor | $code
+        #     div .ace-editor | $code
         
         script !
             let options = {
                 mode:           "ace/mode/haml",
+                theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
                 readOnly:               true,
                 showGutter:             false,
                 displayIndentGuides:    false,
                 showPrintMargin:        false,
                 highlightActiveLine:    false,
             };
-            let editor_box = document.querySelector("#ace-editor");
-            let state  = editor_box.getAttribute('data-state');
+            let editor_box = document.querySelector(".ace-editor");
+            let state = editor_box.getAttribute('data-value');
             //state = JSON.parse(state);
 
             let editor = ace.edit(editor_box, options);

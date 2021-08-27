@@ -1,13 +1,54 @@
 "use strict";
 
-class Widget {}
+class Schema extends HTMLElement {
+    _enter_accepts = false;
+    _esc_accepts   = true;
 
-class ValueInteger extends Widget {
+    connectedCallback() {
+        console.log("in Schema.connectedCallback()");
+        let widget = this;
+        let view = widget.querySelector("#view");
+        let edit = widget.querySelector("#edit");
+        this._view = view;
+        this._edit = edit;
 
+        view.addEventListener('dblclick', () => this.show());
+        edit.addEventListener('focusout', () => this.hide());
+
+        if (this._enter_accepts || this._esc_accepts) {
+            let keys = [];
+            if (this._enter_accepts) { keys.push("Enter"); }
+            if (this._esc_accepts)   { keys.push("Escape"); }
+            edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide() }});
+        }
+        this.hide();
+        // this.set_preview(view, edit);
+    }
+    show() {
+        //console.log('in show_edit()');
+        this._view.style.display = 'none';
+        this._edit.style.display = 'block';
+        let focus = this._edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
+        if (focus) { focus.focus(); }
+    }
+    hide() {
+        this.set_preview();
+        this._edit.style.display = 'none';
+        this._view.style.display = 'block';
+    }
+    set_preview() {
+        let input = this._edit.querySelector(".input");       // the (unique) element that contains a form value inserted by user
+        this._view.textContent = input.value;
+    }
 }
+class STRING extends Schema {
+    _enter_accepts = true;
+}
+window.customElements.define('hw-schema-string', STRING);
+
 
 class generic_protocol {
-    // Watch out: a single protocol instance can be bind to multiple times to distinct elements,
+    // Watch out: a single protocol instance can be bind to multiple distinct elements,
     // therefore all inner elements #view, #edit etc. must be *local* to a binding method
     // rather than assigned to `this`.
 
@@ -49,8 +90,8 @@ class generic_protocol {
     }
 }
 
-// a protocol that displays a modal pop-up window for editing
-class popup_protocol extends generic_protocol {
+// a protocol that displays a modal dialog window for editing
+class dialog_protocol extends generic_protocol {
 }
 
 let protocols = {
@@ -76,3 +117,7 @@ $(function() {
 });
 // $("document").ready(function() {
 //     document.querySelectorAll("[protocol='STRING']").forEach(function (widget) {
+
+
+/*************************************************************************************************/
+

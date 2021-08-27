@@ -177,8 +177,8 @@
     \ {\n          --ct-cell-pad: 35px;          /* default left & right padding of\
     \ all table cells */\n          --ct-nested-offset: 50px;     /* distance between\
     \ left edges of a nested catalog and its container catalog */\n          --ct-th1-width:\
-    \ 250px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
-    \        }\n        body {\n          width: 980px;\n          margin: 0 auto;\n\
+    \ 300px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
+    \        }\n        body {\n          width: 1120px;\n          margin: 0 auto;\n\
     \          padding-bottom: 50px;\n        }\n        \n        h1, h2, h3 { margin-top:\
     \ 0.8em; margin-bottom: 0.6em; }\n        \n        a { color: #006ecc }\n   \
     \     a:visited { color: #00427a }\n        .catlink { font-size: 14px; margin-top:\
