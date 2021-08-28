@@ -536,11 +536,8 @@ class STRING(Primitive):
     
     __widget__ = """
         context $value
-        custom "hw-schema-string" data-value=$value    # editable=true
-            # div #view
-            # div #edit style='display:none'
-            #     input .focus .input type='text' autocomplete='off' style='width:100%'
-            #     # autocomplete='off' prevents the browser overriding $value with a cached value inserted previously by a user
+        custom "hw-widget-string" data-value=$value
+        #custom "hw-widget-string" : inline | $value
     """
 
     
@@ -550,7 +547,7 @@ class TEXT(Primitive):
     
     __widget__ = """
         context $value
-        custom "hw-schema-text" data-value=$value
+        custom "hw-widget-text" data-value=$value
     """
 
     # def is_lengthy(self, value):
@@ -892,69 +889,58 @@ class VARIANT(Schema):
 #####
 
 class CODE(TEXT):
-    
+
     __widget__ = r"""
-        context $value, $empty
-        from json import $dumps
-        
-        $code  = dedent(value, False)
-        $state = code   #dumps(code)
-        
-        style !
-            .ace-editor {
-                --bk-color: rgba(255,255,255,0.3);
-                background-color: var(--bk-color);
-                border-left: 8px solid var(--bk-color);
-                height: 10rem;
-                width: 100%;
-                line-height: 1.4;
-                font-family: var(--bs-font-monospace);
-                font-size: 13px;
-                margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
-                resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
-            }
-            /*.ace_cursor { display: none !important; }*/
-        
-        div #view
-            div .ace-editor data-value=$state
-
-        # div #edit style='display:none'
-        #     div .ace-editor | $code
-        
-        script !
-            let options = {
-                mode:           "ace/mode/haml",
-                theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
-                readOnly:               true,
-                showGutter:             false,
-                displayIndentGuides:    false,
-                showPrintMargin:        false,
-                highlightActiveLine:    false,
-            };
-            let editor_box = document.querySelector(".ace-editor");
-            let state = editor_box.getAttribute('data-value');
-            //state = JSON.parse(state);
-
-            let editor = ace.edit(editor_box, options);
-            editor.session.setValue(state);
-            //editor.clearSelection();
-            //editor.session.setMode("ace/mode/haml");
-            //editor.setTheme("ace/theme/monokai");
-            //editor.setOption('showGutter', false);
-            editor.renderer.$cursorLayer.element.style.display = "none";
-            
-            new ResizeObserver(() => { editor.resize(); }).observe(editor_box);
-
-        # div .scroll
-        #     for line in code.split('\n')
-        #         pre | $line
-        #
-        # from base import %protocol
-        # protocol 'CODE'
-        #     div #view .scroll
-        #     div #edit style='display:none'
-        #         textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
+        context $value
+        custom "hw-widget-code" data-value=$dedent(value, False)
     """
+    
+    # __widget__ = r"""
+    #     context $value
+    #
+    #     # from json import $dumps
+    #     # $state = dumps(code)
+    #     # $code  = dedent(value, False)
+    #     # $state = code
+    #
+    #     div #view .ace-editor data-value=$dedent(value, False)
+    #
+    #     # div #edit style='display:none' .ace-editor | $code
+    #
+    #     script !
+    #         let options = {
+    #             mode:           "ace/mode/haml",
+    #             theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+    #             readOnly:               true,
+    #             showGutter:             false,
+    #             displayIndentGuides:    false,
+    #             showPrintMargin:        false,
+    #             highlightActiveLine:    false,
+    #         };
+    #         let editor_box = document.querySelector(".ace-editor");
+    #         let state = editor_box.getAttribute('data-value');
+    #         //state = JSON.parse(state);
+    #
+    #         let editor = ace.edit(editor_box, options);
+    #         editor.session.setValue(state);
+    #         //editor.clearSelection();
+    #         //editor.session.setMode("ace/mode/haml");
+    #         //editor.setTheme("ace/theme/monokai");
+    #         //editor.setOption('showGutter', false);
+    #         editor.renderer.$cursorLayer.element.style.display = "none";
+    #
+    #         new ResizeObserver(() => { editor.resize(); }).observe(editor_box);
+    #
+    #     # div .scroll
+    #     #     for line in code.split('\n')
+    #     #         pre | $line
+    #     #
+    #     # from base import %protocol
+    #     # protocol 'CODE'
+    #     #     div #view .scroll
+    #     #     div #edit style='display:none'
+    #     #         textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
+    # """
 
 #####################################################################################################################################################
 

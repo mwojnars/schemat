@@ -19,22 +19,31 @@ class Schema_ extends HTMLElement {
 
 /*************************************************************************************************/
 
-class Schema extends HTMLElement {
+class Widget extends HTMLElement {
     _template      = undefined;
+    _editing       = false;             // current state of the widget: previewing (false) / editing (true)
+    _current_value = undefined;         // most recent value accepted by user after edit
+    _initial_value = undefined;         // for change detection
+
+}
+
+class SimpleWidget extends Widget {
+    /* Base class for schema widgets containing separate #view/#edit sub-widgets
+     * and a unique input element inside the edit form. */
+
+    // static View = class { constructor() {} };
+
     _enter_accepts = false;
     _esc_accepts   = true;
 
     _view = null;           // <div> containing a preview sub-widget
     _edit = null;           // <div> containing an edit form
 
-    _current_value = undefined;         // most recent value accepted by user after edit
-    _initial_value = undefined;         // for change detection
-    _editing       = false;             // current state of the widget: previewing (false) / editing (true)
-
     connectedCallback() {
-        // console.log("in Schema.connectedCallback()");
+        // console.log("in Widget.connectedCallback()");
         if (typeof this._template !== 'undefined') {                    // insert _template into the document
-            this.insertAdjacentHTML('beforeend', this._template);
+            // this.insertAdjacentHTML('beforeend', this._template);
+            this.innerHTML = this._template;        // insertAdjacentHTML() can't be used bcs connectedCallback() can be invoked multiple times
             this.bind();
         }
         else {
@@ -51,6 +60,7 @@ class Schema extends HTMLElement {
         edit.addEventListener('focusout', () => this.hide());
 
         let value = this._initial_value = this.getAttribute('data-value');
+        // let value = this._initial_value = this.textContent;
 
         if (typeof value !== 'undefined') {
             this.set_form(value);
@@ -88,8 +98,8 @@ class Schema extends HTMLElement {
     set_preview()   { this._view.textContent = this._current_value }
 
     set_form(value) {
-        /* write `value` into the elements of the edit form; by default, assume there's exactly one
-         * form element, that's identified by .input css class */
+        /* write `value` into elements of the edit form; by default, assume there's exactly one
+         * form element and it's identified by ".input" css class */
         this._edit.querySelector(".input").value = value;
     }
     get_form() {
@@ -97,8 +107,10 @@ class Schema extends HTMLElement {
         return this._edit.querySelector(".input").value;
     }
 }
+// console.log(new SimpleWidget.View());
 
-class STRING extends Schema {
+
+class STRING extends SimpleWidget {
     _enter_accepts = true;
     _template = `
         <div id="view"></div>
@@ -106,22 +118,70 @@ class STRING extends Schema {
             <input class="focus input" type="text" style="width:100%" />
         </div>
     `
-    // "display:none" prevents a flash of uninitialized javascript content for #edit
+    // "display:none" prevents a flash of unstyled content (FOUC) for #edit
     // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
 }
 
-class TEXT extends Schema {
+class TEXT extends SimpleWidget {
     _template = `
-        <div id="view" class="scroll"></div>
+        <pre><div id="view" class="scroll"></div></pre>
         <div id="edit" style="display:none">
-            <textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" />
+            <pre><textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" /></pre>
         </div>
     `
 }
 
+class CODE extends SimpleWidget {
+    _template = `
+        <!--<div id="view"><div class="ace-editor"></div></div>-->
+        <pre><div id="view" class="scroll"></div></pre>
+        <div id="edit" style="display:none">
+            <div class="ace-editor"></div>
+        </div>
+    `;
+    view_options = {
+        mode:           "ace/mode/haml",
+        theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+        readOnly:               true,
+        showGutter:             false,
+        displayIndentGuides:    false,
+        showPrintMargin:        false,
+        highlightActiveLine:    false,
+    };
+    edit_options = {
+        mode:           "ace/mode/haml",
+        theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+        showGutter:             true,
+        displayIndentGuides:    true,
+        showPrintMargin:        true,
+        highlightActiveLine:    true,
+    };
 
-window.customElements.define('hw-schema-string', STRING);
-window.customElements.define('hw-schema-text', TEXT);
+    view_editor = null;
+    edit_editor = null;
+
+    bind() {
+        this.edit_editor = this.create_editor("#edit", this.edit_options);
+        // this.view_editor = this.create_editor("#view", this.view_options);
+        // this.view_editor.renderer.$cursorLayer.element.style.display = "none";      // no cursor in preview editor
+        super.bind();
+    }
+    create_editor(path, options) {
+        let editor_div = this.querySelector(path + " .ace-editor");
+        let editor = ace.edit(editor_div, options);
+        new ResizeObserver(() => { editor.resize(); }).observe(editor_div);     // allow resizing of the editor box by a user; must update the Ace widget then
+        return editor;
+    }
+
+    // set_preview()   { this.view_editor.session.setValue(this._current_value); }
+    set_form(value) { this.edit_editor.session.setValue(value); }
+    get_form()      { return this.edit_editor.session.getValue(); }
+}
+
+
+window.customElements.define('hw-widget-string', STRING);
+window.customElements.define('hw-widget-text', TEXT);
+window.customElements.define('hw-widget-code', CODE);
 
 
 /*************************************************************************************************/

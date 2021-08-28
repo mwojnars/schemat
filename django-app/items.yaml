@@ -178,27 +178,37 @@
     \ all table cells */\n          --ct-nested-offset: 50px;     /* distance between\
     \ left edges of a nested catalog and its container catalog */\n          --ct-th1-width:\
     \ 300px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
-    \        }\n        body {\n          width: 1120px;\n          margin: 0 auto;\n\
-    \          padding-bottom: 50px;\n        }\n        \n        h1, h2, h3 { margin-top:\
-    \ 0.8em; margin-bottom: 0.6em; }\n        \n        a { color: #006ecc }\n   \
-    \     a:visited { color: #00427a }\n        .catlink { font-size: 14px; margin-top:\
-    \ -20px }\n        \n        /*** UTILITIES */\n        \n        .scroll { overflow:\
-    \ scroll; }\n        .scroll pre { overflow: visible; }\n        \n        /***\
-    \ SITEWIDE */\n        /*** ITEM PAGE */\n\n        .ct-color0               \
-    \       { background: #e2eef9; }   /* #D0E4F5 */\n        .ct-color1         \
-    \             { background: #f6f6f6; }\n\n        .catalog-1 th, .catalog-1 td\
-    \    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }\n    \
-    \    td.ct-nested                    { padding-right: 0px; padding-bottom: 0px;\
-    \ }\n        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset)\
-    \ - var(--ct-cell-pad)); }\n\n        .catalog-1, .catalog-2          { border-collapse:\
-    \ collapse; table-layout: fixed; }\n        .catalog-1 th, .catalog-2 th    {\
-    \ border-right: 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)  { border-bottom:\
-    \ 1px solid #fff; }\n\n        .catalog-1                      { width: 100%;\
-    \ min-width: 100%; max-width: 100%; }\n        .catalog-1 th                 \
-    \  { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width);\
-    \ }\n\n        /* th widths get reduced by 55px when nesting a subcatalog to account\
-    \ for paddings of outer td + div */\n        .catalog-2                  { width:\
-    \ 100%; }\n        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width);\
+    \          \n          --textarea-height: 15rem;\n        }\n        body {\n\
+    \          width: 1120px;\n          margin: 0 auto;\n          padding-bottom:\
+    \ 50px;\n        }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom:\
+    \ 0.6em; }\n        \n        a { color: #006ecc }\n        a:visited { color:\
+    \ #00427a }\n        .catlink { font-size: 14px; margin-top: -20px }\n       \
+    \ \n        /*** UTILITIES */\n        \n        .scroll { overflow: scroll; }\n\
+    \        .scroll pre { overflow: visible; }\n        \n        /*** SITEWIDE */\n\
+    \        \n        /*** WIDGETS */\n        \n        .ace-editor {\n        \
+    \    --bk-color: rgba(255,255,255,0.3);\n            background-color: var(--bk-color);\n\
+    \            border-left: 8px solid var(--bk-color);\n            height: var(--textarea-height);\n\
+    \            width: 100%;\n            line-height: 1.4;\n            font-family:\
+    \ var(--bs-font-monospace);\n            font-size: 13px;\n            resize:\
+    \ vertical;        /* editor box resizing requires editor.resize() to be invoked\
+    \ by ResizeObserver */\n            /*margin-left: -10px;      /* shift the editor\
+    \ to better align inner text with text of surrounding rows in a catalog */\n \
+    \       }\n        /*.ace_cursor { display: none !important; }*/\n\n        /***\
+    \ ITEM PAGE */\n\n        .ct-color0                      { background: #e2eef9;\
+    \ }   /* #D0E4F5 */\n        .ct-color1                      { background: #f6f6f6;\
+    \ }\n\n        .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad)\
+    \ 11px; /*border-right: none;*/ }\n        td.ct-nested                    { padding-right:\
+    \ 0px; padding-bottom: 0px; }\n        .wrap-offset                    { padding-left:\
+    \ calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }\n\n        .catalog-1,\
+    \ .catalog-2          { border-collapse: collapse; table-layout: fixed; }\n  \
+    \      .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }\n   \
+    \     .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }\n\n \
+    \       .catalog-1                      { width: 100%; min-width: 100%; max-width:\
+    \ 100%; }\n        .catalog-1 th                   { width: var(--ct-th1-width);\
+    \ min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }\n\n      \
+    \  /* th widths get reduced by 55px when nesting a subcatalog to account for paddings\
+    \ of outer td + div */\n        .catalog-2                  { width: 100%; }\n\
+    \        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width);\
     \ min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }\n        /*.catalog-2\
     \ th               { width: 195px; min-width: 195px; max-width: 195px; padding-left:\
     \ 15px; }*/\n        \n        .catalog-1 .ct-field        { font-weight: bold;\
@@ -207,19 +217,19 @@
     \ 14px; font-family: monospace; /* courier */ }\n        .ct-value .field .default\
     \   { color: #888; }\n        .ct-value .field .info      { font-style: italic;\
     \ }\n        .ct-value pre               { font-size: 13px; padding-bottom: 0px;\
-    \ margin-bottom: 0px; }\n        .ct-value .scroll           { max-height: 10rem;\
+    \ margin-bottom: 0px; }\n        .ct-value .scroll           { max-height: var(--textarea-height);\
     \ border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1);\
-    \ }\n    "
+    \ resize: vertical; }\n    "
 - id: [6, 2]
   language: javascript
   source: "\n        \"use strict\";\n    "
 - id: [6, 3]
   language: hypertag
-  source: "\n    \n        %page @body\n            doctype_html\n            ...html\
-    \ @body\n        \n        %assets_external\n            # jQuery 3.6.0\n    \
-    \        script src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\"\
-    \ integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\" crossorigin=\"\
-    anonymous\"\n            # Bootstrap 5.0.2\n            link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
+  source: "\n    \n        %page @body\n            doctype\n            ...html @body\n\
+    \        \n        %assets_external\n            # jQuery 3.6.0\n            script\
+    \ src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"\
+    sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\" crossorigin=\"anonymous\"\
+    \n            # Bootstrap 5.0.2\n            link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
     \ rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\"\
     \ crossorigin=\"anonymous\"\n            script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js\"\
     \ integrity=\"sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM\"\

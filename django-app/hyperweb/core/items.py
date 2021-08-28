@@ -21,6 +21,8 @@ base_css = Code_(
           --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
           --ct-th1-width: 300px;
           --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+          
+          --textarea-height: 15rem;
         }
         body {
           width: 1120px;
@@ -40,6 +42,23 @@ base_css = Code_(
         .scroll pre { overflow: visible; }
         
         /*** SITEWIDE */
+        
+        /*** WIDGETS */
+        
+        .ace-editor {
+            --bk-color: rgba(255,255,255,0.3);
+            background-color: var(--bk-color);
+            border-left: 8px solid var(--bk-color);
+            height: var(--textarea-height);
+            width: 100%;
+            line-height: 1.4;
+            font-family: var(--bs-font-monospace);
+            font-size: 13px;
+            resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
+            /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+        }
+        /*.ace_cursor { display: none !important; }*/
+
         /*** ITEM PAGE */
 
         .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
@@ -68,7 +87,7 @@ base_css = Code_(
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
         .ct-value pre               { font-size: 13px; padding-bottom: 0px; margin-bottom: 0px; }
-        .ct-value .scroll           { max-height: 10rem; border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); }
+        .ct-value .scroll           { max-height: var(--textarea-height); border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); resize: vertical; }
     """,
 )
 
@@ -101,7 +120,7 @@ base_hy = Code_(
     source = """
     
         %page @body
-            doctype_html
+            doctype
             ...html @body
         
         %assets_external
