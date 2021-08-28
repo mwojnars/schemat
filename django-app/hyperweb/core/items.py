@@ -21,7 +21,6 @@ base_css = Code_(
           --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
           --ct-th1-width: 300px;
           --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
-          
           --textarea-height: 15rem;
         }
         body {
@@ -38,8 +37,16 @@ base_css = Code_(
         
         /*** UTILITIES */
         
-        .scroll { overflow: scroll; }
-        .scroll pre { overflow: visible; }
+        .scroll {
+            overflow: scroll;
+            max-height: var(--textarea-height);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-right:  1px solid rgba(0,0,0,0.1);
+            resize: vertical;
+        }
+        .scroll[style*="height"] {
+            max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+        }
         
         /*** SITEWIDE */
         
@@ -48,7 +55,6 @@ base_css = Code_(
         .ace-editor {
             --bk-color: rgba(255,255,255,0.3);
             background-color: var(--bk-color);
-            border-left: 8px solid var(--bk-color);
             height: var(--textarea-height);
             width: 100%;
             line-height: 1.4;
@@ -56,8 +62,8 @@ base_css = Code_(
             font-size: 13px;
             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
             /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+            /*border-left: 8px solid var(--bk-color);*/
         }
-        /*.ace_cursor { display: none !important; }*/
 
         /*** ITEM PAGE */
 
@@ -83,11 +89,10 @@ base_css = Code_(
         .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
         .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
         
-        .ct-value                   { font-size: 14px; font-family: monospace; /* courier */ }
+        .ct-value *                 { font-size: 14px; font-family: monospace; /* courier */ }
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
-        .ct-value pre               { font-size: 13px; padding-bottom: 0px; margin-bottom: 0px; }
-        .ct-value .scroll           { max-height: var(--textarea-height); border-bottom: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); resize: vertical; }
+        .ct-value pre               { margin-bottom: 0px; }
     """,
 )
 
