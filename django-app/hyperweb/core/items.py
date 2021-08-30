@@ -21,7 +21,7 @@ base_css = Code_(
           --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
           --ct-th1-width: 300px;
           --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
-          --textarea-height: 15rem;
+          --textarea-height: 12rem;
         }
         body {
           width: 1120px;
@@ -35,6 +35,16 @@ base_css = Code_(
         a:visited { color: #00427a }
         .catlink { font-size: 14px; margin-top: -20px }
         
+        /*** SITEWIDE */
+        
+        .btn {
+            border: none;
+            border-radius: 0;
+        }
+        .btn-primary, .btn-primary.disabled, .btn-primary:disabled {
+            background-color: #5b8fdd;
+        }
+        
         /*** UTILITIES */
         
         .scroll {
@@ -47,8 +57,6 @@ base_css = Code_(
         .scroll[style*="height"] {
             max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
         }
-        
-        /*** SITEWIDE */
         
         /*** WIDGETS */
         
@@ -89,28 +97,29 @@ base_css = Code_(
         .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
         .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
         
-        .ct-value *                 { font-size: 14px; font-family: monospace; /* courier */ }
+        .ct-value > *               { font-size: 14px; font-family: monospace; /* courier */ }
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
-        .ct-value pre               { margin-bottom: 0px; }
+        .ct-value pre               { margin-bottom: 0px; font-size: 13px; }
     """,
 )
 
-# box model of an item data table:
+# box model of a catalog of item properties:
 """
-    table .catalog-1
-        tr .ct-colorX                              # X = 0 or 1
-            # field with an atomic value:
-            th .ct-field
-            td .ct-value : div [.scroll]
-        tr .ct-colorX
-            # field with a catalog of sub-fields:
-            td .ct-nested colspan=2
-                div .ct-field
-                div padding-left : table .catalog-2
-                    tr .ct-colorX
-                        th .ct-field
-                        td .ct-value : div [.scroll]
+    hw-item-properties
+        table .catalog-1
+            tr .ct-colorX                              # X = 0 or 1
+                # field with an atomic value:
+                th .ct-field
+                td .ct-value
+            tr .ct-colorX
+                # field with a catalog of sub-fields:
+                td .ct-nested colspan=2
+                    div .ct-field
+                    div .wrap-offset : table .catalog-2
+                        tr .ct-colorX
+                            th .ct-field
+                            td .ct-value
 """
 
 base_js = Code_(
@@ -163,8 +172,6 @@ base_hy = Code_(
             # a row containing an atomic value of a data field (not a subcatalog)
             th .ct-field | $key
             td .ct-value / $schema.display(value)
-            # $class = "scroll" if schema.is_lengthy(value) else ""
-            # div class=$class / $schema.display(value)
     
         %catalog_2 data schema start_color=0
             $c = start_color
@@ -174,16 +181,11 @@ base_hy = Code_(
                         catalog_row $name $value $schema
                     # $c = 1 - c
         
-        %properties item
+        %catalog_1 item
             $c = 0          # alternating color of rows: 0 or 1
             table .catalog-1
                 for name, value in item.data.items()
                     $schema = item.get_schema(name)
-
-                    # from hypertag.core.dom import $DOM
-                    # if isinstance(html, DOM):
-                    #     html = html.render()
-                    
                     tr class="ct-color{c}"
                         if schema.is_catalog
                             td .ct-nested colspan=2
@@ -191,8 +193,14 @@ base_hy = Code_(
                                 catalog_2 $value $schema.values $c
                         else
                             catalog_row $name $value $schema
-                            
                     $c = 1 - c
+                    
+        %properties item
+            custom "hw-item-properties"
+                < catalog_1 $item
+                div style="text-align:right; padding-top:20px"
+                    button #cancel-changes .btn .btn-primary disabled=True | Cancel
+                    button #save-changes   .btn .btn-primary disabled=True | Save
     """,
 )
 

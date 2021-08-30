@@ -139,15 +139,15 @@ class CODE extends SimpleWidget {
             <div class="ace-editor"></div>
         </div>
     `;
-    view_options = {
-        mode:           "ace/mode/haml",
-        theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
-        readOnly:               true,
-        showGutter:             false,
-        displayIndentGuides:    false,
-        showPrintMargin:        false,
-        highlightActiveLine:    false,
-    };
+    // view_options = {
+    //     mode:           "ace/mode/haml",
+    //     theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+    //     readOnly:               true,
+    //     showGutter:             false,
+    //     displayIndentGuides:    false,
+    //     showPrintMargin:        false,
+    //     highlightActiveLine:    false,
+    // };
     edit_options = {
         mode:           "ace/mode/haml",
         theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
@@ -157,11 +157,11 @@ class CODE extends SimpleWidget {
         highlightActiveLine:    true,
     };
 
-    view_editor = null;
-    edit_editor = null;
+    #view_editor = null;
+    editor = null;
 
     bind() {
-        this.edit_editor = this.create_editor("#edit", this.edit_options);
+        this.editor = this.create_editor("#edit", this.edit_options);
         // this.view_editor = this.create_editor("#view", this.view_options);
         // this.view_editor.renderer.$cursorLayer.element.style.display = "none";      // no cursor in preview editor
         super.bind();
@@ -172,10 +172,13 @@ class CODE extends SimpleWidget {
         new ResizeObserver(() => { editor.resize(); }).observe(editor_div);     // allow resizing of the editor box by a user; must update the Ace widget then
         return editor;
     }
-
+    show() {
+        super.show();
+        this.editor.focus();
+    }
     // set_preview()   { this.view_editor.session.setValue(this._current_value); }
-    set_form(value) { this.edit_editor.session.setValue(value); }
-    get_form()      { return this.edit_editor.session.getValue(); }
+    set_form(value) { this.editor.session.setValue(value); }
+    get_form()      { return this.editor.session.getValue(); }
 }
 
 
@@ -183,6 +186,17 @@ window.customElements.define('hw-widget-string', STRING);
 window.customElements.define('hw-widget-text', TEXT);
 window.customElements.define('hw-widget-code', CODE);
 
+
+/*************************************************************************************************/
+
+class ItemProperties extends HTMLElement {
+    connectedCallback() { setTimeout(() => this.init()); }
+    init() {
+
+    }
+}
+
+window.customElements.define('hw-item-properties', ItemProperties);
 
 /*************************************************************************************************/
 

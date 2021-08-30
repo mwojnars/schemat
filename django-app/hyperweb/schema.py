@@ -894,53 +894,6 @@ class CODE(TEXT):
         context $value
         custom "hw-widget-code" data-value=$dedent(value, False)
     """
-    
-    # __widget__ = r"""
-    #     context $value
-    #
-    #     # from json import $dumps
-    #     # $state = dumps(code)
-    #     # $code  = dedent(value, False)
-    #     # $state = code
-    #
-    #     div #view .ace-editor data-value=$dedent(value, False)
-    #
-    #     # div #edit style='display:none' .ace-editor | $code
-    #
-    #     script !
-    #         let options = {
-    #             mode:           "ace/mode/haml",
-    #             theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
-    #             readOnly:               true,
-    #             showGutter:             false,
-    #             displayIndentGuides:    false,
-    #             showPrintMargin:        false,
-    #             highlightActiveLine:    false,
-    #         };
-    #         let editor_box = document.querySelector(".ace-editor");
-    #         let state = editor_box.getAttribute('data-value');
-    #         //state = JSON.parse(state);
-    #
-    #         let editor = ace.edit(editor_box, options);
-    #         editor.session.setValue(state);
-    #         //editor.clearSelection();
-    #         //editor.session.setMode("ace/mode/haml");
-    #         //editor.setTheme("ace/theme/monokai");
-    #         //editor.setOption('showGutter', false);
-    #         editor.renderer.$cursorLayer.element.style.display = "none";
-    #
-    #         new ResizeObserver(() => { editor.resize(); }).observe(editor_box);
-    #
-    #     # div .scroll
-    #     #     for line in code.split('\n')
-    #     #         pre | $line
-    #     #
-    #     # from base import %protocol
-    #     # protocol 'CODE'
-    #     #     div #view .scroll
-    #     #     div #edit style='display:none'
-    #     #         textarea .focus .input rows=1 autocomplete='off' style='width:100%;height:10em;resize:vertical;' spellcheck='false' | $value
-    # """
 
 #####################################################################################################################################################
 

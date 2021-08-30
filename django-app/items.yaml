@@ -178,49 +178,52 @@
     \ all table cells */\n          --ct-nested-offset: 50px;     /* distance between\
     \ left edges of a nested catalog and its container catalog */\n          --ct-th1-width:\
     \ 300px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
-    \          --textarea-height: 15rem;\n        }\n        body {\n          width:\
+    \          --textarea-height: 12rem;\n        }\n        body {\n          width:\
     \ 1120px;\n          margin: 0 auto;\n          padding-bottom: 50px;\n      \
     \  }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em;\
     \ }\n        \n        a { color: #006ecc }\n        a:visited { color: #00427a\
     \ }\n        .catlink { font-size: 14px; margin-top: -20px }\n        \n     \
-    \   /*** UTILITIES */\n        \n        .scroll {\n            overflow: scroll;\n\
-    \            max-height: var(--textarea-height);\n            border-bottom: 1px\
-    \ solid rgba(0,0,0,0.1);\n            border-right:  1px solid rgba(0,0,0,0.1);\n\
-    \            resize: vertical;\n        }\n        .scroll[style*=\"height\"]\
-    \ {\n            max-height: unset;              /* this allows manual resizing\
-    \ (resize:vertical) to exceed predefined max-height */\n        }\n        \n\
-    \        /*** SITEWIDE */\n        \n        /*** WIDGETS */\n        \n     \
-    \   .ace-editor {\n            --bk-color: rgba(255,255,255,0.3);\n          \
-    \  background-color: var(--bk-color);\n            height: var(--textarea-height);\n\
-    \            width: 100%;\n            line-height: 1.4;\n            font-family:\
-    \ var(--bs-font-monospace);\n            font-size: 13px;\n            resize:\
-    \ vertical;        /* editor box resizing requires editor.resize() to be invoked\
-    \ by ResizeObserver */\n            /*margin-left: -10px;      /* shift the editor\
-    \ to better align inner text with text of surrounding rows in a catalog */\n \
-    \           /*border-left: 8px solid var(--bk-color);*/\n        }\n\n       \
-    \ /*** ITEM PAGE */\n\n        .ct-color0                      { background: #e2eef9;\
-    \ }   /* #D0E4F5 */\n        .ct-color1                      { background: #f6f6f6;\
-    \ }\n\n        .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad)\
-    \ 11px; /*border-right: none;*/ }\n        td.ct-nested                    { padding-right:\
-    \ 0px; padding-bottom: 0px; }\n        .wrap-offset                    { padding-left:\
-    \ calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }\n\n        .catalog-1,\
-    \ .catalog-2          { border-collapse: collapse; table-layout: fixed; }\n  \
-    \      .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }\n   \
-    \     .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }\n\n \
-    \       .catalog-1                      { width: 100%; min-width: 100%; max-width:\
-    \ 100%; }\n        .catalog-1 th                   { width: var(--ct-th1-width);\
-    \ min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }\n\n      \
-    \  /* th widths get reduced by 55px when nesting a subcatalog to account for paddings\
-    \ of outer td + div */\n        .catalog-2                  { width: 100%; }\n\
-    \        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width);\
+    \   /*** SITEWIDE */\n        \n        .btn {\n            border: none;\n  \
+    \          border-radius: 0;\n        }\n        .btn-primary, .btn-primary.disabled,\
+    \ .btn-primary:disabled {\n            background-color: #5b8fdd;\n        }\n\
+    \        \n        /*** UTILITIES */\n        \n        .scroll {\n          \
+    \  overflow: scroll;\n            max-height: var(--textarea-height);\n      \
+    \      border-bottom: 1px solid rgba(0,0,0,0.1);\n            border-right:  1px\
+    \ solid rgba(0,0,0,0.1);\n            resize: vertical;\n        }\n        .scroll[style*=\"\
+    height\"] {\n            max-height: unset;              /* this allows manual\
+    \ resizing (resize:vertical) to exceed predefined max-height */\n        }\n \
+    \       \n        /*** WIDGETS */\n        \n        .ace-editor {\n         \
+    \   --bk-color: rgba(255,255,255,0.3);\n            background-color: var(--bk-color);\n\
+    \            height: var(--textarea-height);\n            width: 100%;\n     \
+    \       line-height: 1.4;\n            font-family: var(--bs-font-monospace);\n\
+    \            font-size: 13px;\n            resize: vertical;        /* editor\
+    \ box resizing requires editor.resize() to be invoked by ResizeObserver */\n \
+    \           /*margin-left: -10px;      /* shift the editor to better align inner\
+    \ text with text of surrounding rows in a catalog */\n            /*border-left:\
+    \ 8px solid var(--bk-color);*/\n        }\n\n        /*** ITEM PAGE */\n\n   \
+    \     .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */\n\
+    \        .ct-color1                      { background: #f6f6f6; }\n\n        .catalog-1\
+    \ th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right:\
+    \ none;*/ }\n        td.ct-nested                    { padding-right: 0px; padding-bottom:\
+    \ 0px; }\n        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset)\
+    \ - var(--ct-cell-pad)); }\n\n        .catalog-1, .catalog-2          { border-collapse:\
+    \ collapse; table-layout: fixed; }\n        .catalog-1 th, .catalog-2 th    {\
+    \ border-right: 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)  { border-bottom:\
+    \ 1px solid #fff; }\n\n        .catalog-1                      { width: 100%;\
+    \ min-width: 100%; max-width: 100%; }\n        .catalog-1 th                 \
+    \  { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width);\
+    \ }\n\n        /* th widths get reduced by 55px when nesting a subcatalog to account\
+    \ for paddings of outer td + div */\n        .catalog-2                  { width:\
+    \ 100%; }\n        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width);\
     \ min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }\n        /*.catalog-2\
     \ th               { width: 195px; min-width: 195px; max-width: 195px; padding-left:\
     \ 15px; }*/\n        \n        .catalog-1 .ct-field        { font-weight: bold;\
     \   font-size: 15px; }\n        .catalog-2 .ct-field        { font-weight: normal;\
-    \ font-style: italic; }\n        \n        .ct-value *                 { font-size:\
+    \ font-style: italic; }\n        \n        .ct-value > *               { font-size:\
     \ 14px; font-family: monospace; /* courier */ }\n        .ct-value .field .default\
     \   { color: #888; }\n        .ct-value .field .info      { font-style: italic;\
-    \ }\n        .ct-value pre               { margin-bottom: 0px; }\n    "
+    \ }\n        .ct-value pre               { margin-bottom: 0px; font-size: 13px;\
+    \ }\n    "
 - id: [6, 2]
   language: javascript
   source: "\n        \"use strict\";\n    "
@@ -252,23 +255,24 @@
     \n            div .widget protocol=classname\n                @body\n    \n  \
     \      %catalog_row key value schema\n            # a row containing an atomic\
     \ value of a data field (not a subcatalog)\n            th .ct-field | $key\n\
-    \            td .ct-value / $schema.display(value)\n            # $class = \"\
-    scroll\" if schema.is_lengthy(value) else \"\"\n            # div class=$class\
-    \ / $schema.display(value)\n    \n        %catalog_2 data schema start_color=0\n\
-    \            $c = start_color\n            div .wrap-offset : table .catalog-2\n\
-    \                for name, value in data.items()\n                    tr class=\"\
-    ct-color{c}\"\n                        catalog_row $name $value $schema\n    \
-    \                # $c = 1 - c\n        \n        %properties item\n          \
-    \  $c = 0          # alternating color of rows: 0 or 1\n            table .catalog-1\n\
-    \                for name, value in item.data.items()\n                    $schema\
-    \ = item.get_schema(name)\n\n                    # from hypertag.core.dom import\
-    \ $DOM\n                    # if isinstance(html, DOM):\n                    #\
-    \     html = html.render()\n                    \n                    tr class=\"\
+    \            td .ct-value / $schema.display(value)\n    \n        %catalog_2 data\
+    \ schema start_color=0\n            $c = start_color\n            div .wrap-offset\
+    \ : table .catalog-2\n                for name, value in data.items()\n      \
+    \              tr class=\"ct-color{c}\"\n                        catalog_row $name\
+    \ $value $schema\n                    # $c = 1 - c\n        \n        %catalog_1\
+    \ item\n            $c = 0          # alternating color of rows: 0 or 1\n    \
+    \        table .catalog-1\n                for name, value in item.data.items()\n\
+    \                    $schema = item.get_schema(name)\n                    tr class=\"\
     ct-color{c}\"\n                        if schema.is_catalog\n                \
     \            td .ct-nested colspan=2\n                                div .ct-field\
     \ | {name}\n                                catalog_2 $value $schema.values $c\n\
     \                        else\n                            catalog_row $name $value\
-    \ $schema\n                            \n                    $c = 1 - c\n    "
+    \ $schema\n                    $c = 1 - c\n                    \n        %properties\
+    \ item\n            custom \"hw-item-properties\"\n                < catalog_1\
+    \ $item\n                div style=\"text-align:right; padding-top:20px\"\n  \
+    \                  button #cancel-changes .btn .btn-primary disabled=True | Cancel\n\
+    \                    button #save-changes   .btn .btn-primary disabled=True |\
+    \ Save\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 3]
