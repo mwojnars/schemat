@@ -1,31 +1,100 @@
 "use strict";
 
+//import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
+
 /*************************************************************************************************/
+/* UTILITIES
+ */
 
-class Schema_ extends HTMLElement {
-    connectedCallback() {
-        let shadow = this.attachShadow({mode: 'open'});
-        let view = this._view = document.createElement('div');
-        let edit = this._edit = document.createElement('div');
-        this.shadowRoot.append(view, edit);
+const htmlEscapes = {
+    '&': '&amp',
+    '<': '&lt',
+    '>': '&gt',
+    //'"': '&quot',
+    //"'": '&#39'
+}
+const reUnescapedHtml = /[&<>]/g
 
-        let value_json = this.getAttribute('data-value');
-        let value = JSON.parse(value_json);
-        this.set_value(value);
-    }
-    set_value(value) {}
-    get_value() { return null; }
+function escape(string) {
+    // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
+    return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
 /*************************************************************************************************/
 
-class Widget extends HTMLElement {
-    _template      = undefined;
-    _editing       = false;             // current state of the widget: previewing (false) / editing (true)
+// class Schema_ extends HTMLElement {
+//     connectedCallback() {
+//         let shadow = this.attachShadow({mode: 'open'});
+//         let view = this._view = document.createElement('div');
+//         let edit = this._edit = document.createElement('div');
+//         this.shadowRoot.append(view, edit);
+//
+//         let value_json = this.getAttribute('data-value');
+//         let value = JSON.parse(value_json);
+//         this.set_value(value);
+//     }
+//     set_value(value) {}
+//     get_value() { return null; }
+// }
+
+class Element extends HTMLElement {
+
+    // default values for `this.props`; must be declared as static in subclasses
+    static props = { useShadowDOM: false };
+    static state = {};
+
+    props = null;
+    state = null;
+
+    constructor(props = {}) {
+        super();
+
+        let base_props = [];
+        let proto = this;
+        while (proto && proto !== Element.prototype) {
+            proto = Object.getPrototypeOf(proto);
+            let p = proto.constructor.props;
+            if (p) base_props.push(p);
+        }
+        // combine `properties` of all base classes into `this.props`, with instance `props` appended at the end
+        this.props = Object.assign({}, ...base_props.reverse(), props);
+        this.state = {};
+    }
+
+    connectedCallback() {
+        const { useShadowDOM } = this.props;
+        let initDone = false;
+        let template = this.render();
+
+        if (typeof template !== 'undefined')                // insert widget's template into the document
+            if (useShadowDOM) {
+                this.attachShadow({mode: 'open'});
+                this.shadowRoot.innerHTML = template;
+            } else {
+                // this.insertAdjacentHTML('beforeend', template);
+                this.innerHTML = template;                  // insertAdjacentHTML() can't be used bcs connectedCallback() can be invoked multiple times
+                this.init();
+                initDone = true;
+            }
+        if (!initDone)
+            // without a template, when child nodes are defined inside an HTML occurrence of this element,
+            // init() must be delayed until the light DOM (children) is initialized, which usually happens AFTER connectedCallback()
+            setTimeout(() => this.init());
+    }
+    init()      {}
+    render()    {}
+}
+
+class Widget extends Element {
+    static state = {
+        editing: false,                 // true if the edit form is active, false otherwise (preview is active)
+    };
+
     _current_value = undefined;         // most recent value accepted by user after edit
     _initial_value = undefined;         // for change detection
-
 }
+
+/*************************************************************************************************/
 
 class SimpleWidget extends Widget {
     /* Base class for schema widgets containing separate #view/#edit sub-widgets
@@ -33,26 +102,18 @@ class SimpleWidget extends Widget {
 
     // static View = class { constructor() {} };
 
-    _enter_accepts = false;
-    _esc_accepts   = true;
+    static props = {
+        enter_accepts:  false,
+        esc_accepts:    true,
+    }
+
+    // _enter_accepts = false;
+    // _esc_accepts   = true;
 
     _view = null;           // <div> containing a preview sub-widget
     _edit = null;           // <div> containing an edit form
 
-    connectedCallback() {
-        // console.log("in Widget.connectedCallback()");
-        if (typeof this._template !== 'undefined') {                    // insert _template into the document
-            // this.insertAdjacentHTML('beforeend', this._template);
-            this.innerHTML = this._template;        // insertAdjacentHTML() can't be used bcs connectedCallback() can be invoked multiple times
-            this.bind();
-        }
-        else {
-            // without _template, binding must be delayed until the light DOM (children) is initialized,
-            // which usually happens AFTER connectedCallback()
-            setTimeout(() => this.bind());
-        }
-    }
-    bind() {
+    init() {
         let view = this._view = this.querySelector("#view");
         let edit = this._edit = this.querySelector("#edit");
 
@@ -62,40 +123,38 @@ class SimpleWidget extends Widget {
         let value = this._initial_value = this.getAttribute('data-value');
         // let value = this._initial_value = this.textContent;
 
-        if (typeof value !== 'undefined') {
-            this.set_form(value);
-        }
+        if (typeof value !== 'undefined') this.set_form(value);
 
-        if (this._enter_accepts || this._esc_accepts) {
+        if (this.props.enter_accepts || this.props.esc_accepts) {
             let keys = [];
-            if (this._enter_accepts) { keys.push("Enter"); }
-            if (this._esc_accepts)   { keys.push("Escape"); }
-            edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide() }});
+            if (this.props.enter_accepts) { keys.push("Enter"); }
+            if (this.props.esc_accepts)   { keys.push("Escape"); }
+            edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) this.hide() });
         }
         this.hide();
     }
     show() {
         /* show the edit form, hide the preview */
-        this._editing = true;
+        this.state.editing = true;
         this._view.style.display = 'none';
         this._edit.style.display = 'block';
         let focus = this._edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
-        if (focus) { focus.focus(); }
+        if (focus) focus.focus();
     }
     hide(accept = true) {
         /* hide the edit form, show the preview */
         if (accept) { this.update_value(); }
-        this.set_preview();
+        this.update_view();
         this._edit.style.display = 'none';
         this._view.style.display = 'block';
-        this._editing = false;
+        this.state.editing = false;
     }
-    is_editing()    { return this._editing }
+    // is_editing()    { return this.state.editing }
 
     get_value()     { return this._current_value }      // should only be used if value_changed() is true
     value_changed() { return (typeof this._current_value !== 'undefined') && (this._current_value !== this._initial_value) }
     update_value()  { this._current_value = this.get_form() }
-    set_preview()   { this._view.textContent = this._current_value }
+    update_view()   { this._view.textContent = this._current_value }
 
     set_form(value) {
         /* write `value` into elements of the edit form; by default, assume there's exactly one
@@ -111,28 +170,29 @@ class SimpleWidget extends Widget {
 
 
 class STRING extends SimpleWidget {
-    _enter_accepts = true;
-    _template = `
+    // _enter_accepts = true;
+    static props = { enter_accepts: true }
+    render = () => `
         <div id="view"></div>
         <div id="edit" style="display:none">
             <input class="focus input" type="text" style="width:100%" />
         </div>
-    `
+    `;
     // "display:none" prevents a flash of unstyled content (FOUC) for #edit
     // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
 }
 
 class TEXT extends SimpleWidget {
-    _template = `
+    render = () => `
         <pre><div id="view" class="scroll"></div></pre>
         <div id="edit" style="display:none">
             <pre><textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" /></pre>
         </div>
-    `
+    `;
 }
 
 class CODE extends SimpleWidget {
-    _template = `
+    render = () => `
         <!--<div id="view"><div class="ace-editor"></div></div>-->
         <pre><div id="view" class="scroll"></div></pre>
         <div id="edit" style="display:none">
@@ -160,23 +220,23 @@ class CODE extends SimpleWidget {
     #view_editor = null;
     editor = null;
 
-    bind() {
+    init() {
         this.editor = this.create_editor("#edit", this.edit_options);
         // this.view_editor = this.create_editor("#view", this.view_options);
         // this.view_editor.renderer.$cursorLayer.element.style.display = "none";      // no cursor in preview editor
-        super.bind();
+        super.init();
     }
     create_editor(path, options) {
         let editor_div = this.querySelector(path + " .ace-editor");
         let editor = ace.edit(editor_div, options);
-        new ResizeObserver(() => { editor.resize(); }).observe(editor_div);     // allow resizing of the editor box by a user; must update the Ace widget then
+        new ResizeObserver(() => editor.resize()).observe(editor_div);     // allow resizing of the editor box by a user; must update the Ace widget then
         return editor;
     }
     show() {
         super.show();
         this.editor.focus();
     }
-    // set_preview()   { this.view_editor.session.setValue(this._current_value); }
+    // update_view()   { this.view_editor.session.setValue(this._current_value); }
     set_form(value) { this.editor.session.setValue(value); }
     get_form()      { return this.editor.session.getValue(); }
 }
@@ -189,14 +249,35 @@ window.customElements.define('hw-widget-code', CODE);
 
 /*************************************************************************************************/
 
-class ItemProperties extends HTMLElement {
-    connectedCallback() { setTimeout(() => this.init()); }
-    init() {
+class CatalogAtomicEntry extends LitElement {
+    /* A row containing an atomic value of a data field (not a subcatalog) */
 
+    static get properties() { return {
+        key:    { type: String },
+        value:  { type: Object },
+        schema: { type: Object },
+    }}
+    render() {
+        return html`
+            <th class="ct-field">${escape(this.key)}</th>
+            <td class="ct-value">${this.schema.display(this.value)}</td>
+        `;
+    }
+}
+class Catalog extends HTMLElement {
+
+}
+
+class Item {
+    static Properties = class extends Catalog {
+        connectedCallback() { setTimeout(() => this.init()); }
+        init() {
+            let data = this._data = this.getAttribute('data-item');
+        }
     }
 }
 
-window.customElements.define('hw-item-properties', ItemProperties);
+window.customElements.define('hw-item-properties', Item.Properties);
 
 /*************************************************************************************************/
 

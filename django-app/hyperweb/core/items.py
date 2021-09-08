@@ -37,13 +37,10 @@ base_css = Code_(
         
         /*** SITEWIDE */
         
-        .btn {
-            border: none;
-            border-radius: 0;
-        }
-        .btn-primary, .btn-primary.disabled, .btn-primary:disabled {
-            background-color: #5b8fdd;
-        }
+        .btn { border: none; border-radius: 0; }
+        .btn-primary, .btn-primary.disabled, .btn-primary:disabled       { background-color: #5b8fdd; }
+        .btn-primary:hover                                               { background-color: #4b78bb; }
+        .btn-secondary, .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993; }
         
         /*** UTILITIES */
         
@@ -79,8 +76,9 @@ base_css = Code_(
         .ct-color1                      { background: #f6f6f6; }
 
         .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-        td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
         .wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+        td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
+        td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }
 
         .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
         .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
@@ -143,21 +141,37 @@ base_hy = Code_(
             # Bootstrap 5.0.2
             link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"
             script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
-            # # Lodash 4.17.21 (https://lodash.com/)
-            # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
+            # Lodash 4.17.21 (https://lodash.com/)
+            script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
+
+            # # React
+            # # Uwaga: podczas wdrażania aplikacji do środowiska produkcyjnego, zamień "development.js" na "production.min.js"
+            # script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin=True
+            # script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin=True
             
+            # # Lit
+            # script type="module" !
+            #     import {LitElement, html, css} from 'https://unpkg.com/lit-element/lit-element.js?module';
+            #     window.LitElement = LitElement;
+            #
+            #     class MyElement extends LitElement {
+            #         static get properties() { return { mood: {type: String} } }
+            #         static get styles() { return css`.mood { color: green; }`; }
+            #         render() { return html`Web Components are <span class="mood">${this.mood}</span>!`; }
+            #     }
+            #     customElements.define('my-element', MyElement);
+  
             # ACE (code editor)
             # keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
             # existing highlighters: https://github.com/ajaxorg/ace/tree/master/lib/ace/mode
-            # default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands
-            #   editor.commands.addCommand(), editor.commands.removeCommand()
+            # default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands (-> editor.commands.addCommand() ..removeCommand())
             script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"
             
-            # CodeMirror (code editor)
-            script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
+            # # CodeMirror (code editor)
+            # script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
 
         %assets_internal
-            script src="/sys.file:1/get"
+            script type="module" src="/sys.file:1/get"
     
         %assets
             assets_external
@@ -171,6 +185,7 @@ base_hy = Code_(
         %catalog_row key value schema
             # a row containing an atomic value of a data field (not a subcatalog)
             th .ct-field | $key
+            # td .ct-flags | *
             td .ct-value / $schema.display(value)
     
         %catalog_2 data schema start_color=0
@@ -196,11 +211,14 @@ base_hy = Code_(
                     $c = 1 - c
                     
         %properties item
-            custom "hw-item-properties"
+            # custom "my-element" mood="great"
+            # custom "my-element" mood="fine"
+            
+            custom "hw-item-properties" data-item=$item
                 < catalog_1 $item
                 div style="text-align:right; padding-top:20px"
-                    button #cancel-changes .btn .btn-primary disabled=True | Cancel
-                    button #save-changes   .btn .btn-primary disabled=True | Save
+                    button #cancel-changes .btn .btn-secondary disabled=False | Cancel
+                    button #save-changes   .btn .btn-primary   disabled=False | Save
     """,
 )
 
