@@ -37,7 +37,13 @@ function escape(string) {
 //     get_value() { return null; }
 // }
 
-class Element extends HTMLElement {
+class CustomElement extends HTMLElement {
+    /* Base class for custom HTML elements derived from HTMLElement. 
+       Implements connectedCallback() to insert and initialize the element's HTML contents
+       as either a light DOM or shadow DOM.
+       Provides basic representation for properties (with class-level defaults) and state variables.
+       Each subclass must be manually declared (!) as a custom element before use: window.customElements.define(...).
+     */
 
     // default values for `this.props`; must be declared as static in subclasses
     static props = { useShadowDOM: false };
@@ -51,13 +57,14 @@ class Element extends HTMLElement {
 
         let base_props = [];
         let proto = this;
-        while (proto && proto !== Element.prototype) {
+        while (proto && proto !== CustomElement.prototype) {
             proto = Object.getPrototypeOf(proto);
             let p = proto.constructor.props;
             if (p) base_props.push(p);
         }
-        // combine `properties` of all base classes into `this.props`, with instance `props` appended at the end
-        this.props = Object.assign({}, ...base_props.reverse(), props);
+        // combine `properties` of all base classes into `this.props`;
+        // append instance's and constructor's `props` at the end
+        this.props = Object.assign({}, ...base_props.reverse(), this.props, props);
         this.state = {};
     }
 
@@ -85,30 +92,23 @@ class Element extends HTMLElement {
     render()    {}
 }
 
-class Widget extends Element {
-    static state = {
-        editing: false,                 // true if the edit form is active, false otherwise (preview is active)
-    };
-
-    _current_value = undefined;         // most recent value accepted by user after edit
-    _initial_value = undefined;         // for change detection
-}
-
 /*************************************************************************************************/
 
-class SimpleWidget extends Widget {
-    /* Base class for schema widgets containing separate #view/#edit sub-widgets
-     * and a unique input element inside the edit form. */
-
+class EditableElement extends CustomElement {
+    /* Base class for schema-based editable-value widgets. Provides a default implementation 
+       for two separate subwidgets (#view, #edit) with a unique input element inside the edit form.
+     */
     // static View = class { constructor() {} };
 
     static props = {
         enter_accepts:  false,
         esc_accepts:    true,
     }
-
-    // _enter_accepts = false;
-    // _esc_accepts   = true;
+    static state = {
+        editing:        false,              // true if the edit form is active, false otherwise (preview is active)
+        initial_value:  undefined,
+        current_value:  undefined,
+    }
 
     _view = null;           // <div> containing a preview sub-widget
     _edit = null;           // <div> containing an edit form
@@ -120,8 +120,8 @@ class SimpleWidget extends Widget {
         view.addEventListener('dblclick', () => this.show());
         edit.addEventListener('focusout', () => this.hide());
 
-        let value = this._initial_value = this.getAttribute('data-value');
-        // let value = this._initial_value = this.textContent;
+        let value = this.state.initial_value = this.getAttribute('data-value');
+        // let value = this.state.initial_value = this.textContent;
 
         if (typeof value !== 'undefined') this.set_form(value);
 
@@ -149,12 +149,11 @@ class SimpleWidget extends Widget {
         this._view.style.display = 'block';
         this.state.editing = false;
     }
-    // is_editing()    { return this.state.editing }
 
-    get_value()     { return this._current_value }      // should only be used if value_changed() is true
-    value_changed() { return (typeof this._current_value !== 'undefined') && (this._current_value !== this._initial_value) }
-    update_value()  { this._current_value = this.get_form() }
-    update_view()   { this._view.textContent = this._current_value }
+    get_value()     { return this.state.current_value }      // should only be used if value_changed() is true
+    value_changed() { return (typeof this.state.current_value !== 'undefined') && (this.state.current_value !== this.state.initial_value) }
+    update_value()  { this.state.current_value = this.get_form() }
+    update_view()   { this._view.textContent = this.state.current_value }
 
     set_form(value) {
         /* write `value` into elements of the edit form; by default, assume there's exactly one
@@ -166,11 +165,10 @@ class SimpleWidget extends Widget {
         return this._edit.querySelector(".input").value;
     }
 }
-// console.log(new SimpleWidget.View());
+// console.log(new EditableElement.View());
 
 
-class STRING extends SimpleWidget {
-    // _enter_accepts = true;
+class STRING extends EditableElement {
     static props = { enter_accepts: true }
     render = () => `
         <div id="view"></div>
@@ -182,7 +180,7 @@ class STRING extends SimpleWidget {
     // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
 }
 
-class TEXT extends SimpleWidget {
+class TEXT extends EditableElement {
     render = () => `
         <pre><div id="view" class="scroll"></div></pre>
         <div id="edit" style="display:none">
@@ -191,7 +189,7 @@ class TEXT extends SimpleWidget {
     `;
 }
 
-class CODE extends SimpleWidget {
+class CODE extends EditableElement {
     render = () => `
         <!--<div id="view"><div class="ace-editor"></div></div>-->
         <pre><div id="view" class="scroll"></div></pre>
@@ -217,7 +215,7 @@ class CODE extends SimpleWidget {
         highlightActiveLine:    true,
     };
 
-    #view_editor = null;
+    // view_editor = null;
     editor = null;
 
     init() {
@@ -236,7 +234,7 @@ class CODE extends SimpleWidget {
         super.show();
         this.editor.focus();
     }
-    // update_view()   { this.view_editor.session.setValue(this._current_value); }
+    // update_view()   { this.view_editor.session.setValue(this.state.current_value); }
     set_form(value) { this.editor.session.setValue(value); }
     get_form()      { return this.editor.session.getValue(); }
 }
@@ -249,28 +247,27 @@ window.customElements.define('hw-widget-code', CODE);
 
 /*************************************************************************************************/
 
-class CatalogAtomicEntry extends LitElement {
-    /* A row containing an atomic value of a data field (not a subcatalog) */
-
-    static get properties() { return {
-        key:    { type: String },
-        value:  { type: Object },
-        schema: { type: Object },
-    }}
-    render() {
-        return html`
-            <th class="ct-field">${escape(this.key)}</th>
-            <td class="ct-value">${this.schema.display(this.value)}</td>
-        `;
-    }
-}
-class Catalog extends HTMLElement {
+// class CatalogAtomicEntry extends LitElement {
+//     /* A row containing an atomic value of a data field (not a subcatalog) */
+//
+//     static get properties() { return {
+//         key:    { type: String },
+//         value:  { type: Object },
+//         schema: { type: Object },
+//     }}
+//     render() {
+//         return html`
+//             <th class="ct-field">${escape(this.key)}</th>
+//             <td class="ct-value">${this.schema.display(this.value)}</td>
+//         `;
+//     }
+// }
+class Catalog extends CustomElement {
 
 }
 
 class Item {
     static Properties = class extends Catalog {
-        connectedCallback() { setTimeout(() => this.init()); }
         init() {
             let data = this._data = this.getAttribute('data-item');
         }
