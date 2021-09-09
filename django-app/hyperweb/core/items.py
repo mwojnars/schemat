@@ -213,8 +213,8 @@ base_hy = Code_(
         %properties item
             # for field, value in item.data.items()
             #     $schema = $item.get_schema(field)
-            #     $schema_json = object_schema.to_json(schema, item.registry)
-            #     $entry = (schema_json, $item.to_json())
+            #     $schema_json = object_schema.dump_json(schema, item.registry)
+            #     $entry = (schema_json, $item.dump_json())
             #     $entries.append(entry)
             
             custom "hw-item-properties" data-item=$item

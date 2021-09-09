@@ -82,7 +82,7 @@ class Schema:
     
     is_catalog = False      # True only in CATALOG and subclasses
     
-    def to_json(self, value, registry, **params):
+    def dump_json(self, value, registry, **params):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
@@ -94,7 +94,7 @@ class Schema:
         return json.dumps(flat, ensure_ascii = False, **params)
         # return jsonp.dumps(flat, **params)
 
-    def from_json(self, dump, registry):
+    def load_json(self, dump, registry):
 
         flat = json.loads(dump)
         return self.decode(flat, registry)

@@ -16,7 +16,7 @@ Representation of attribute values of an item (item data).
 #     """
 #
 #     @classmethod
-#     def from_json(cls, dump, schema = None):
+#     def load_json(cls, dump, schema = None):
 #
 #         data = jsonp.loads(dump)
 #
@@ -26,7 +26,7 @@ Representation of attribute values of an item (item data).
 #         assert isinstance(data, Data)
 #         return data
 #
-#     def to_json(self, schema = None):
+#     def dump_json(self, schema = None):
 #
 #         # getstate = getattr(self, '__getstate__', None)
 #         # print("getstate:", getstate)
