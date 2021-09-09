@@ -87,7 +87,7 @@ class Schema:
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
            type information that's available; the flat object may still contain nested non-primitive objects;
-        2) encoding of the `flat` object through JsonPickle; external type information is no longer used.
+        2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
         """
         
         flat = self.encode(value, registry)

@@ -412,6 +412,7 @@ class Item(object, metaclass = MetaItem):
     #     """Post-processing performed right after new values of `fields` have been written to `data`."""
     
     def to_json(self):
+        """Dump self.data to a JSON string using schema-based encoding of nested values."""
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
         return fields.to_json(self.data, self.registry)
         
@@ -488,11 +489,11 @@ class Item(object, metaclass = MetaItem):
         """
         Look up this item's category definition to retrieve a schema of a given field.
         When called on a category object, this method returns a schema pulled from the ROOT category,
-        not from this one (!).
+        rather than itself (!).
         """
         schema = None
         fields = self.category.get('fields', {})
-
+        
         if field_name in fields:
             schema = fields[field_name].schema
         if schema is None:

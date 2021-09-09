@@ -211,8 +211,11 @@ base_hy = Code_(
                     $c = 1 - c
                     
         %properties item
-            # custom "my-element" mood="great"
-            # custom "my-element" mood="fine"
+            # for field, value in item.data.items()
+            #     $schema = $item.get_schema(field)
+            #     $schema_json = object_schema.to_json(schema, item.registry)
+            #     $entry = (schema_json, $item.to_json())
+            #     $entries.append(entry)
             
             custom "hw-item-properties" data-item=$item
                 < catalog_1 $item

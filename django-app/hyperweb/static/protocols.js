@@ -39,15 +39,18 @@ function escape(string) {
 
 class CustomElement extends HTMLElement {
     /* Base class for custom HTML elements derived from HTMLElement. 
-       Implements connectedCallback() to insert and initialize the element's HTML contents
-       as either a light DOM or shadow DOM.
+       Implements connectedCallback() to render and initialize the element's HTML contents
+       as either light or shadow DOM. Method render() is called before init() to create the DOM.
+       If render's result is undefined, the original light DOM as in HTML source is kept.
        Provides basic representation for properties (with class-level defaults) and state variables.
        Each subclass must be manually declared (!) as a custom element before use: window.customElements.define(...).
      */
 
     // default values for `this.props`; must be declared as static in subclasses
-    static props = { useShadowDOM: false };
-    static state = {};
+    static props = {
+        useShadowDOM: false,        // if true, result of render() is pasted into a shadow DOM; to the light DOM otherwise (default)
+    }
+    static state = {}
 
     props = null;
     state = null;
@@ -69,12 +72,11 @@ class CustomElement extends HTMLElement {
     }
 
     connectedCallback() {
-        const { useShadowDOM } = this.props;
-        let initDone = false;
         let template = this.render();
+        let initDone = false;
 
         if (typeof template !== 'undefined')                // insert widget's template into the document
-            if (useShadowDOM) {
+            if (this.props.useShadowDOM) {
                 this.attachShadow({mode: 'open'});
                 this.shadowRoot.innerHTML = template;
             } else {
@@ -88,8 +90,8 @@ class CustomElement extends HTMLElement {
             // init() must be delayed until the light DOM (children) is initialized, which usually happens AFTER connectedCallback()
             setTimeout(() => this.init());
     }
-    init()      {}
     render()    {}
+    init()      {}
 }
 
 /*************************************************************************************************/
@@ -263,18 +265,26 @@ window.customElements.define('hw-widget-code', CODE);
 //     }
 // }
 class Catalog extends CustomElement {
-
-}
-
-class Item {
-    static Properties = class extends Catalog {
-        init() {
-            let data = this._data = this.getAttribute('data-item');
+    // render = () => `
+    //     <th class="ct-field">${escape(this.props.key)}</th>
+    //     <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
+    // `
+    render_() {
+        const { data } = this.props;
+        for ([key, value] of Object.entries(data)) {
+            console.log(key, value);
         }
     }
 }
 
-window.customElements.define('hw-item-properties', Item.Properties);
+class ItemProperties extends Catalog {
+    init() {
+        let data = this._data = this.getAttribute('data-item');
+    }
+}
+
+window.customElements.define('hw-item-properties', ItemProperties);
+
 
 /*************************************************************************************************/
 
