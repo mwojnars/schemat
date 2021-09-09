@@ -100,7 +100,7 @@ class Schema:
         return self.decode(flat, registry)
     
     
-    def encode(self, value, registry):
+    def encode(self, value, registry):   # reduce()
         if value is None:
             if self.blank: return None
             raise EncodeError("missing value (None) not permitted")
@@ -114,7 +114,7 @@ class Schema:
 
         return state
         
-    def decode(self, state, registry):
+    def decode(self, state, registry):    # restore()
         if self.blank and state is None:
             return None
         
@@ -860,7 +860,7 @@ class VARIANT(Schema):
         #     self.schemas = dict(enumerate(schema_list))
         # else:
         self.schemas = schemas
-            
+        
     def _encode(self, value, registry):
         
         for name, schema in self.schemas:

@@ -34,6 +34,9 @@ class Registry:
     the last request before item refresh operates on an already-expired item.
     """
     
+    # classpath = None          # mapping of dotted class paths @x.y.z, as used in JSON dumps, to real python modules and packages;
+                                # predefined standard global modules: (global), (schema), ...
+    
     store = YamlStore()         # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     

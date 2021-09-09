@@ -362,3 +362,8 @@ window.customElements.define('hw-item-properties', ItemProperties);
 
 /*************************************************************************************************/
 
+class Registry {
+    get_item(id) {}
+}
+
+let registry = new Registry();
