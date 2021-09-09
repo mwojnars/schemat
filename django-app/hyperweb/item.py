@@ -397,7 +397,7 @@ class Item(object, metaclass = MetaItem):
         # convert data from JSON string to a struct
         if data:
             fields = self.category.get('fields')        # specification of fields {field_name: schema}
-            data   = fields.load_json(data, self.registry)
+            data   = fields.load_json(data)
             self.data.update(data)
         
     #     self._post_decode()
@@ -414,7 +414,7 @@ class Item(object, metaclass = MetaItem):
     def dump_json(self):
         """Dump self.data to a JSON string using schema-based encoding of nested values."""
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        return fields.dump_json(self.data, self.registry)
+        return fields.dump_json(self.data)
         
     def insert(self):
         """

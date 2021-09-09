@@ -213,7 +213,7 @@ base_hy = Code_(
         %properties item
             # for field, value in item.data.items()
             #     $schema = $item.get_schema(field)
-            #     $schema_json = object_schema.dump_json(schema, item.registry)
+            #     $schema_json = object_schema.dump_json(schema)
             #     $entry = (schema_json, $item.dump_json())
             #     $entries.append(entry)
             

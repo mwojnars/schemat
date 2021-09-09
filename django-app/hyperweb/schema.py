@@ -78,11 +78,10 @@ class Schema:
     blank = True            # if True, None is a valid input value and is encoded as None;
                             # no other valid value can produce None as its serializable state
     required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
-    # registry = None
     
     is_catalog = False      # True only in CATALOG and subclasses
     
-    def dump_json(self, value, registry, **params):
+    def dump_json(self, value, **params):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
@@ -90,43 +89,37 @@ class Schema:
         2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
         """
         
-        flat = self.encode(value, registry)
+        flat = self.encode(value)
         return json.dumps(flat, ensure_ascii = False, **params)
         # return jsonp.dumps(flat, **params)
 
-    def load_json(self, dump, registry):
+    def load_json(self, dump):
 
         flat = json.loads(dump)
-        return self.decode(flat, registry)
+        return self.decode(flat)
     
     
-    def encode(self, value, registry):   # reduce()
+    def encode(self, value):   # reduce()
         if value is None:
             if self.blank: return None
             raise EncodeError("missing value (None) not permitted")
         
-        # self.registry = object_schema.registry = registry or self.registry
-        # assert self.registry
-
-        state = self._encode(value, registry)
+        state = self._encode(value)
         if self.blank:
             if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
 
         return state
         
-    def decode(self, state, registry):    # restore()
+    def decode(self, state):    # restore()
         if self.blank and state is None:
             return None
         
-        # self.registry = object_schema.registry = registry or self.registry
-        # assert self.registry
-        
-        value = self._decode(state, registry)
+        value = self._decode(state)
         assert value is not None
         return value
 
         
-    def _encode(self, value, registry):
+    def _encode(self, value):
         """
         Override in subclasses to encode and compactify `value` into serializable python types (a "flat" structure).
         This is similar to value.__getstate__(), but depends and relies on schema definition,
@@ -143,7 +136,7 @@ class Schema:
         """
         return value
 
-    def _decode(self, value, registry):
+    def _decode(self, value):
         """
         Override in subclasses to decode a "flat" value returned by _encode()
         back into custom python types.
@@ -335,7 +328,7 @@ class OBJECT(Schema):
     def _unique_type(self):
         return len(self.type) == 1 and not self.base
 
-    def _encode(self, obj, registry):
+    def _encode(self, obj):
         
         if not self._valid_type(obj):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
@@ -346,9 +339,9 @@ class OBJECT(Schema):
         if t in self.PRIMITIVES:
             return obj
         if t is list:
-            return self._encode_list(obj, registry)                           # return a list, but first encode recursively all its elements
+            return self._encode_list(obj)                           # return a list, but first encode recursively all its elements
         if t is dict:
-            obj = self._encode_dict(obj, registry)
+            obj = self._encode_dict(obj)
             return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
             # an "escape" wrapper must be added around a dict that contains the reserved key "@"
         if issubclass(t, Item):
@@ -361,14 +354,14 @@ class OBJECT(Schema):
             state = classname(cls = obj)
             # state = {self.STATE_ATTR: classname(cls = obj)}
         elif t in (set, tuple):
-            state = self._encode_list(obj, registry)                          # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+            state = self._encode_list(obj)                          # warning: ordering of elements of a set in `state` is undefined and may differ between calls
             # state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         # elif issubclass(t, Item):
         #     if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
         #     state = list(obj.id)
         else:
             state = getstate(obj)
-            state = self._encode_dict(state, registry)                        # recursively encode all non-standard objects inside `state`
+            state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
             #TODO: allow non-dict state from getstate()
         
             assert isinstance(state, dict)
@@ -387,9 +380,9 @@ class OBJECT(Schema):
         
         return state
     
-    def _decode(self, state, registry):
+    def _decode(self, state):
         
-        obj = self._decode_object(state, registry)
+        obj = self._decode_object(state)
         if not self._valid_type(obj):
             raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
         # if isinstance(obj, Item):
@@ -397,7 +390,7 @@ class OBJECT(Schema):
         #     obj = registry.get_item(obj.id)         # replace the decoded item with an object from the Registry
         return obj
 
-    def _decode_object(self, state, registry, _name_dict = classname(cls = dict)):
+    def _decode_object(self, state, _name_dict = classname(cls = dict)):
 
         t = type(state)
         
@@ -405,7 +398,7 @@ class OBJECT(Schema):
         if t is dict and state.get(self.CLASS_ATTR, None) == _name_dict:
             if self.STATE_ATTR in state:
                 state = state[self.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
-            return self._decode_dict(state, registry)
+            return self._decode_dict(state)
         
         # determine the expected type `class_` of the output object
         if self._unique_type():
@@ -427,49 +420,51 @@ class OBJECT(Schema):
                 state = state_attr
 
             if fullname == self.ITEM_FLAG:                  # decoding a reference to an Item?
-                return registry.get_item(state)        # ...get it from the Registry
+                from .boot import get_registry
+                return get_registry().get_item(state)       # ...get it from the Registry
             class_ = import_(fullname)
             
         # instantiate the output object; special handling for standard python types and Item
         if class_ in self.PRIMITIVES:
             return state
         if class_ is list:
-            return self._decode_list(state, registry)
+            return self._decode_list(state)
         if class_ is dict:
-            return self._decode_dict(state, registry)
+            return self._decode_dict(state)
         if class_ in (set, tuple):
             values = state
             return class_(values)
         if isinstance(class_, type):
             if issubclass(class_, Item):
-                return registry.get_item(state)                 # get the referenced item from the Registry
+                from .boot import get_registry
+                return get_registry().get_item(state)       # get the referenced item from the Registry
             if issubclass(class_, type):
                 typename = state
                 return import_(typename)
 
         # default object decoding via setstate()
-        state = self._decode_dict(state, registry)
+        state = self._decode_dict(state)
         return setstate(class_, state)
         
         
     @staticmethod
-    def _encode_list(values, registry):
+    def _encode_list(values):
         """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
-        return [object_schema._encode(v, registry) for v in values]
+        return [object_schema._encode(v) for v in values]
         
     @staticmethod
-    def _decode_list(state, registry):
+    def _decode_list(state):
         """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
-        return [object_schema._decode(v, registry) for v in state]
+        return [object_schema._decode(v) for v in state]
         
     @staticmethod
-    def _encode_dict(state, registry):
+    def _encode_dict(state):
         """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
         # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
         for key in state:
             if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
 
-        return {k: object_schema._encode(v, registry) for k, v in state.items()}
+        return {k: object_schema._encode(v) for k, v in state.items()}
 
         # encode = object_schema._encode
         # for key, value in state.items():
@@ -480,9 +475,9 @@ class OBJECT(Schema):
         # return state
     
     @staticmethod
-    def _decode_dict(state, registry):
+    def _decode_dict(state):
         """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
-        return {k: object_schema._decode(v, registry) for k, v in state.items()}
+        return {k: object_schema._decode(v) for k, v in state.items()}
 
 
 # the most generic schema for encoding/decoding any types of objects; used internally in OBJECT()
@@ -494,11 +489,11 @@ class CLASS(Schema):
     """
     Accepts any global python type and encodes as a string containing its full package-module name.
     """
-    def _encode(self, value, registry):
+    def _encode(self, value):
         if value is None: return None
         return classname(cls = value)
     
-    def _decode(self, value, registry):
+    def _decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return import_(value)
         
@@ -513,11 +508,11 @@ class Primitive(Schema):
         assert type in (bool, int, float, str)
         self.type = type
     
-    def _encode(self, value, registry):
+    def _encode(self, value):
         if not isinstance(value, self.type): raise EncodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
-    def _decode(self, value, registry):
+    def _decode(self, value):
         if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
@@ -557,11 +552,11 @@ class BYTES(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
     type = bytes
     
-    def _encode(self, value, registry):
+    def _encode(self, value):
         if not isinstance(value, bytes): raise EncodeError(f"expected an instance of {bytes}, got {type(value)}: {value}")
         return base64.b64encode(value).decode('ascii')
 
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
         if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
         return base64.b64decode(encoded)
     
@@ -598,21 +593,21 @@ class ENUM(Schema):
         if self.indices:
             self.indices = {v: idx for idx, v in enumerate(self.values)}
 
-    def _encode(self, value, registry):
+    def _encode(self, value):
         if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
         if self.indices:
             return self.indices[value]
         else:
-            return self.schema.encode(value, registry)
+            return self.schema.encode(value)
     
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
         # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         
         if self.indices:
             if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
             return self.values[encoded]
         
-        value = self.schema.decode(encoded, registry)
+        value = self.schema.decode(encoded)
         if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
         return value
     
@@ -641,7 +636,7 @@ class ITEM(Schema):
         if self.category: return self.category.iid
         return None
     
-    def _encode(self, item, registry):
+    def _encode(self, item):
         
         # if not isinstance(item, Item): pass
         if None in item.id:
@@ -654,7 +649,7 @@ class ITEM(Schema):
         
         return item.id
 
-    def _decode(self, value, registry):
+    def _decode(self, value):
         
         cid = None
         ref_cid = self._get_cid()
@@ -682,11 +677,7 @@ class ITEM(Schema):
         if cid is None:
             cid = ref_cid
             
-        # from .core import site              # importing an application-global object !!! TODO: pass `registry` as argument to decode() to replace this import
-        # from .site import registry
-        # print(f'registry loaded by ITEM in thread {threading.get_ident()}', flush = True)
         from .boot import get_registry
-        
         return get_registry().get_item((cid, iid))
         
     
@@ -702,13 +693,13 @@ class LIST(Schema):
     def __init__(self, schema):
         self.schema = schema
         
-    def _encode(self, values, registry):
+    def _encode(self, values):
         if not isinstance(values, self.type): raise EncodeError(f"expected a {self.type}, got {values}")
-        return [self.schema.encode(v, registry) for v in values]
+        return [self.schema.encode(v) for v in values]
 
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
-        return self.type(self.schema.decode(e, registry) for e in encoded)
+        return self.type(self.schema.decode(e) for e in encoded)
 
 class TUPLE(Schema):
     """
@@ -723,21 +714,21 @@ class TUPLE(Schema):
     def __init__(self, *schemas):
         self.schemas = list(schemas)
         
-    def _encode(self, values, registry):
+    def _encode(self, values):
         if not isinstance(values, tuple): raise EncodeError(f"expected a tuple, got {values}")
         if len(self.schemas) <= 1:
             schema = self.schemas[0] if self.schemas else object_schema
-            return [schema.encode(v, registry) for v in values]
+            return [schema.encode(v) for v in values]
         if len(values) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple, got {len(values)}")
-        return [schema.encode(v, registry) for v, schema in zip(values, self.schemas)]
+        return [schema.encode(v) for v, schema in zip(values, self.schemas)]
 
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         if len(self.schemas) <= 1:
             schema = self.schemas[0] if self.schemas else object_schema
-            return [schema.decode(e, registry) for e in encoded]
+            return [schema.decode(e) for e in encoded]
         if len(encoded) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple to be decoded, got {len(encoded)}")
-        return tuple(schema.decode(e, registry) for e, schema in zip(encoded, self.schemas))
+        return tuple(schema.decode(e) for e, schema in zip(encoded, self.schemas))
 
     
 class DICT(Schema):
@@ -762,7 +753,7 @@ class DICT(Schema):
         if values is not None: self.values = values
         if type is not None: self.type = type
         
-    def _encode(self, d, registry):
+    def _encode(self, d):
         
         if not isinstance(d, self.type or dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
         state = {}
@@ -772,13 +763,13 @@ class DICT(Schema):
         
         # encode keys & values through predefined field types
         for key, value in d.items():
-            k = schema_keys.encode(key, registry)
+            k = schema_keys.encode(key)
             if k in state: raise EncodeError(f"duplicate state ({k}) returned by field's {self.keys} encode() for 2 different values, one of them: {key}")
-            state[k] = schema_values.encode(value, registry)
+            state[k] = schema_values.encode(value)
         
         return state
         
-    def _decode(self, state, registry):
+    def _decode(self, state):
         
         if not isinstance(state, dict): raise DecodeError(f"expected a <dict>, not {state}")
         d = (self.type or dict)()
@@ -788,9 +779,9 @@ class DICT(Schema):
         
         # decode keys & values through predefined field types
         for key, value in state.items():
-            k = schema_keys.decode(key, registry)
+            k = schema_keys.decode(key)
             if k in d: raise DecodeError(f"duplicate key ({k}) returned by field's {schema_keys} decode() for 2 different states, one of them: {key}")
-            d[k] = schema_values.decode(value, registry)
+            d[k] = schema_values.decode(value)
             
         return d
 
@@ -861,11 +852,11 @@ class VARIANT(Schema):
         # else:
         self.schemas = schemas
         
-    def _encode(self, value, registry):
+    def _encode(self, value):
         
         for name, schema in self.schemas:
             try:
-                encoded = schema.encode(value, registry)
+                encoded = schema.encode(value)
                 return [name, encoded]
                 
             except EncodeError:
@@ -873,14 +864,14 @@ class VARIANT(Schema):
                 
         raise EncodeError(f"invalid value, no matching sub-schema in VARIANT for: {value}")
         
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
         
         if not (isinstance(encoded, list) and len(encoded) == 2):
             raise DecodeError(f"data corruption in VARIANT, the encoded object should be a 2-element list, got {encoded} instead")
         
         name, encoded = encoded
         schema = self.schemas[name]
-        return schema.decode(encoded, registry)
+        return schema.decode(encoded)
         
 
 #####################################################################################################################################################
@@ -968,18 +959,17 @@ class Field:
     #     """
     #     return hypertag(view).render(field = self)
     
-    def encode_one(self, value, registry):
-        return self.schema.encode(value, registry)
+    def encode_one(self, value):
+        return self.schema.encode(value)
     
-    def decode_one(self, encoded, registry):
-        return self.schema.decode(encoded, registry)
+    def decode_one(self, encoded):
+        return self.schema.decode(encoded)
     
-    def encode_many(self, values, registry):
+    def encode_many(self, values):
         """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
         if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
-        encoded = [self.schema.encode(v, registry) for v in values]
-        # self.schema.registry = registry
-        # encoded = list(map(self.schema.encode, values))
+        # encoded = [self.schema.encode(v) for v in values]
+        encoded = list(map(self.schema.encode, values))
 
         # compactify singleton lists
         if not self.multi or (len(encoded) == 1 and not isinstance(encoded[0], list)):
@@ -987,7 +977,7 @@ class Field:
             
         return encoded
         
-    def decode_many(self, encoded, registry):
+    def decode_many(self, encoded):
         """Returns a list of value(s)."""
         
         # de-compactification of singleton lists
@@ -995,9 +985,8 @@ class Field:
             encoded = [encoded]
     
         # schema-based decoding
-        return [self.schema.decode(e, registry) for e in encoded]
-        # self.schema.registry = registry
-        # return list(map(self.schema.decode, encoded))
+        # return [self.schema.decode(e) for e in encoded]
+        return list(map(self.schema.decode, encoded))
         
         
 #####################################################################################################################################################
@@ -1045,7 +1034,7 @@ class FIELDS(catalog, Schema):
             self[name] = Field(schema = field)
         
     
-    def _encode(self, data, registry):
+    def _encode(self, data):
         """
         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
         while schema-encoding each field value beforehand.
@@ -1064,9 +1053,9 @@ class FIELDS(catalog, Schema):
             # schema-aware encoding
             field = self.get(name)
             if field:
-                encoded[name] = field.encode_many(values, registry)
+                encoded[name] = field.encode_many(values)
             else:
-                encoded[name] = self.default_field.encode_many(values, registry)
+                encoded[name] = self.default_field.encode_many(values)
             # TODO: catch atype.encode() exceptions and append to `errors`
             
         if errors:
@@ -1075,7 +1064,7 @@ class FIELDS(catalog, Schema):
         return encoded
         
         
-    def _decode(self, data, registry):
+    def _decode(self, data):
         """
         Decode a dict of {attr: value(s)} back to a MultiDict.
         Perform recursive top-down schema-based decoding of field values.
@@ -1091,9 +1080,9 @@ class FIELDS(catalog, Schema):
             # schema-based decoding
             field = self.get(name)
             if field:
-                data[name] = field.decode_many(values, registry)
+                data[name] = field.decode_many(values)
             else:
-                data[name] = self.default_field.decode_many(values, registry)
+                data[name] = self.default_field.decode_many(values)
                 
         return MultiDict(multiple = data)
     
@@ -1133,7 +1122,7 @@ class STRUCT(FIELDS):
         for name, field in self.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
     
-    def _encode(self, obj, registry):
+    def _encode(self, obj):
 
         if self.type is struct:
             assert isinstance(obj, dict), f'not a dict or struct: {obj}'
@@ -1149,11 +1138,11 @@ class STRUCT(FIELDS):
         for name, value in attrs.items():
             
             if name not in self: raise EncodeError(f'unknown field "{name}", expected one of {list(self.keys())}')
-            encoded[name] = self[name].encode_one(value, registry)
+            encoded[name] = self[name].encode_one(value)
             
         return encoded
         
-    def _decode(self, encoded, registry):
+    def _decode(self, encoded):
 
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
         attrs = {}
@@ -1162,7 +1151,7 @@ class STRUCT(FIELDS):
         for name, value in encoded.items():
             
             if name not in self: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
-            attrs[name] = self[name].decode_one(value, registry)
+            attrs[name] = self[name].decode_one(value)
             
         if self.type is struct:
             return struct(attrs)

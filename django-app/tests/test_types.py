@@ -16,9 +16,9 @@ registry = get_registry()
 def run(schema, obj, verbose = False):
     """Run encoding+decoding of `obj` through `schema` and check if the result is the same as `obj`."""
     if verbose: print('\nobject: ', obj, getattr(obj, '__dict__', 'no __dict__'))
-    flat = schema.encode(obj, registry)
+    flat = schema.encode(obj)
     if verbose: print('encoded:', flat)
-    obj2 = schema.decode(flat, registry)
+    obj2 = schema.decode(flat)
     if verbose: print('decoded:', obj2, getattr(obj2, '__dict__', 'no __dict__'))
     assert obj == obj2 or pickle.dumps(obj) == pickle.dumps(obj2)
 
