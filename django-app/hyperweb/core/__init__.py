@@ -14,7 +14,7 @@ Namespace: bidirectional mapping name <-> item
 
 from hyperweb.core.categories import *
 from hyperweb.core.items import *
-
+from hyperweb.item import Item
 
 #####################################################################################################################################################
 #####

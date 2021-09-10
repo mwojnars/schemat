@@ -27,7 +27,6 @@ from hypertag import HyperHTML
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import classname, import_, getstate, setstate, JSON
 from .multidict import MultiDict
-from .item import Item
 from .types import text, html, hypertag, struct, catalog
 
 
@@ -298,10 +297,11 @@ class OBJECT(Schema):
     from serializated output and is implied automatically during deserialization.
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     """
-    ITEM_FLAG  = None   # special value of CLASS_ATTR that denotes a reference to an Item
-    CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
-    STATE_ATTR = "="    # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
-    PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are returned unchanged during encoding
+
+    # ITEM_FLAG  = None   # special value of CLASS_ATTR that denotes a reference to an Item
+    # CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
+    # STATE_ATTR = "="    # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    # PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are returned unchanged during encoding
     
     type = None         # python type(s) for exact type checks: type(obj)==T
     base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
@@ -334,15 +334,18 @@ class OBJECT(Schema):
         if any(isinstance(obj, base) for base in self.base): return True
         return False
 
-    def _unique_type(self):
-        return len(self.type) == 1 and not self.base
+    def _get_unique_type(self):
+        return self.type[0] if len(self.type) == 1 and not self.base else None
+        
+    # def _unique_type(self):
+    #     return len(self.type) == 1 and not self.base
 
     def _encode(self, obj):
         
         if not self._valid_type(obj):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
         
-        return JSON.encode(obj, self.type[0] if self._unique_type() else None)
+        return JSON.encode(obj, self._get_unique_type())
         
         # t = type(obj)
         #
@@ -394,7 +397,7 @@ class OBJECT(Schema):
     def _decode(self, state):
         
         # obj = self._decode_object(state)
-        obj = JSON.decode(state, self.type[0] if self._unique_type() else None)
+        obj = JSON.decode(state, self._get_unique_type())
 
         if not self._valid_type(obj):
             raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
@@ -458,31 +461,30 @@ class OBJECT(Schema):
     #     # default object decoding via setstate()
     #     state = self._decode_dict(state)
     #     return setstate(class_, state)
-        
-        
-    @staticmethod
-    def _encode_list(values):
-        """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
-        return [object_schema._encode(v) for v in values]
-        
-    @staticmethod
-    def _decode_list(state):
-        """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
-        return [object_schema._decode(v) for v in state]
-        
-    @staticmethod
-    def _encode_dict(state):
-        """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
-        for key in state:
-            if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
-            # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
-
-        return {k: object_schema._encode(v) for k, v in state.items()}
-
-    @staticmethod
-    def _decode_dict(state):
-        """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
-        return {k: object_schema._decode(v) for k, v in state.items()}
+    
+    # @staticmethod
+    # def _encode_list(values):
+    #     """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
+    #     return [object_schema._encode(v) for v in values]
+    #
+    # @staticmethod
+    # def _decode_list(state):
+    #     """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
+    #     return [object_schema._decode(v) for v in state]
+    #
+    # @staticmethod
+    # def _encode_dict(state):
+    #     """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
+    #     for key in state:
+    #         if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
+    #         # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
+    #
+    #     return {k: object_schema._encode(v) for k, v in state.items()}
+    #
+    # @staticmethod
+    # def _decode_dict(state):
+    #     """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
+    #     return {k: object_schema._decode(v) for k, v in state.items()}
 
 
 # the most generic schema for encoding/decoding any types of objects; used internally in OBJECT()
