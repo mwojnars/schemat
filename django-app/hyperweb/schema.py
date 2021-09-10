@@ -75,9 +75,9 @@ class Schema:
     name  = None            # name of this schema instance for messaging purposes
     
     # instance-level settings
-    blank = True            # if True, None is a valid input value and is encoded as None;
-                            # no other valid value can produce None as its serializable state
-    required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
+    # blank = True            # if True, None is a valid input value and is encoded as None;
+    #                         # no other valid value can produce None as its serializable state
+    # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
     is_catalog = False      # True only in CATALOG and subclasses
     
@@ -99,24 +99,34 @@ class Schema:
         return self.decode(flat)
     
     
-    def encode(self, value):   # reduce()
-        if value is None:
-            if self.blank: return None
-            raise EncodeError("missing value (None) not permitted")
+    def encode(self, value):   # reduce() deflate()
+        """
+        Convert `value` - a possibly composite object matching the current schema (self) -
+        to a JSON-serializable "state" that does not contain non-standard nested objects anymore.
+        Nested objects of custom classes are typically converted to dicts that store object's attributes,
+        with a special attribute "@" added to hold the class name - see OBJECT implementation for details.
+        """
+        return self._encode(value)
         
-        state = self._encode(value)
-        if self.blank:
-            if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
-
-        return state
+        # if value is None:
+        #     if self.blank: return None
+        #     raise EncodeError("missing value (None) not permitted")
+        #
+        # state = self._encode(value)
+        # if self.blank:
+        #     if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
+        #
+        # return state
         
-    def decode(self, state):    # restore()
-        if self.blank and state is None:
-            return None
+    def decode(self, state):    # restore() inflate()
+        return self._decode(state)
         
-        value = self._decode(state)
-        assert value is not None
-        return value
+        # if self.blank and state is None:
+        #     return None
+        #
+        # value = self._decode(state)
+        # assert value is not None
+        # return value
 
         
     def _encode(self, value):
@@ -1007,9 +1017,9 @@ class FIELDS(catalog, Schema):
     # default field specification to be used for fields not present in `fields`
     default_field = Field(schema = object_schema, multi = True)
     
-    # fields   = None     # dict of field names & their Field() schema descriptors
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
-    blank    = False
+    # fields   = None     # dict of field names & their Field() schema descriptors
+    # blank    = False
     
     def __init__(self, **fields):
         # if __strict__ is not None: self.strict = __strict__

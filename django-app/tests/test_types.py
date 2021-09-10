@@ -46,11 +46,11 @@ class C:
 
 def test_Object():
     
-    run(INTEGER(), None)
+    # run(INTEGER(), None)
     with pytest.raises(Exception, match = 'expected an instance'):
         run(INTEGER(), 10.5)       # hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
     
-    run(OBJECT(CLASS), None)
+    # run(OBJECT(CLASS), None)
     run(OBJECT(CLASS), CLASS())
 
     run(OBJECT(CLASS), CLASS())

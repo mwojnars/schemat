@@ -217,7 +217,9 @@ base_hy = Code_(
             #     $entry = (schema_json, $item.dump_json())
             #     $entries.append(entry)
             
-            custom "hw-item-properties" data-item=$item
+            custom "hw-item-page"
+                p style="display:none" type="json" #item     | $item.dump_json()
+                p style="display:none" type="json" #category | $item.category.dump_json()
                 < catalog_1 $item
                 div style="text-align:right; padding-top:20px"
                     button #cancel-changes .btn .btn-secondary disabled=False | Cancel

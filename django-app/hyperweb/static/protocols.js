@@ -90,8 +90,23 @@ class CustomElement extends HTMLElement {
             // init() must be delayed until the light DOM (children) is initialized, which usually happens AFTER connectedCallback()
             setTimeout(() => this.init());
     }
-    render()    {}
-    init()      {}
+    render()    {}          // override in subclasses
+    init()      {}          // override in subclasses
+
+    read_data(selector) {
+        /* Utility method that extracts text contents of a descendant element pointed to by a given selector.
+           Typically called from render(), before the DOM is overriden with the output of render().
+           If the element has "type" attribute set to "json", the extracted string is decoded as JSON object.
+         */
+        let node = this.querySelector(selector);
+        if (node === undefined) return undefined;
+        let value = node.textContent;
+        let type  = node.getAttribute('type');
+
+        // decode `value` depending on the `type`
+        if (type === "json") return JSON.parse(value);
+        return value;
+    }
 }
 
 /*************************************************************************************************/
@@ -269,7 +284,7 @@ class Catalog extends CustomElement {
     //     <th class="ct-field">${escape(this.props.key)}</th>
     //     <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
     // `
-    render_() {
+    __render() {
         const { data } = this.props;
         for ([key, value] of Object.entries(data)) {
             console.log(key, value);
@@ -277,13 +292,34 @@ class Catalog extends CustomElement {
     }
 }
 
-class ItemProperties extends Catalog {
+class ItemPage extends CustomElement {
     init() {
-        let data = this._data = this.getAttribute('data-item');
+        let category = this._category = new Item(this.read_data('p#category'));
+        let item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+    }
+
+    static Properties = class extends Catalog {}
+}
+
+window.customElements.define('hw-item-page', ItemPage);
+
+
+/*************************************************************************************************/
+
+class Item {
+    constructor(data, category) {
+        this.category = category;
+        console.log('Item() data:', data);
     }
 }
 
-window.customElements.define('hw-item-properties', ItemProperties);
+/*************************************************************************************************/
+
+class Registry {
+    get_item(id) {}
+}
+
+let registry = window.registry = new Registry();
 
 
 /*************************************************************************************************/
@@ -360,10 +396,3 @@ window.customElements.define('hw-item-properties', ItemProperties);
 // //     document.querySelectorAll("[protocol='STRING']").forEach(function (widget) {
 
 
-/*************************************************************************************************/
-
-class Registry {
-    get_item(id) {}
-}
-
-let registry = new Registry();
