@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # serialize items to YAML
     for item in core_items:
         
-        raw  = item.dump_json()
+        raw  = item.dump_data()
         flat = {'id': list(item.id)}
         flat.update(json.loads(raw))
         flats.append(flat)

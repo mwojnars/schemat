@@ -110,7 +110,7 @@ class SimpleStore(DataStore):
         
         record = {'cid':   cid,
                   'iid':   iid,
-                  'data':  item.dump_json(),
+                  'data':  item.dump_data(),
                   }
         self.db.insert_dict('hyper_items', record)
         
@@ -235,7 +235,7 @@ class YamlStore(FileStore):
         assert item.id not in self.items
         # print("store:", list(item.data.lists()))
         
-        self.items[item.id] = item.dump_json()
+        self.items[item.id] = item.dump_data()
 
         if flush: self.flush()
     

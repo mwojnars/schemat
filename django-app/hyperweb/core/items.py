@@ -214,14 +214,14 @@ base_hy = Code_(
             # for field, value in item.data.items()
             #     $schema = $item.get_schema(field)
             #     $schema_json = generic_schema.dump_json(schema)
-            #     $entry = (schema_json, $item.dump_json())
+            #     $entry = (schema_json, $item.dump_data())
             #     $entries.append(entry)
             from hyperweb.serialize import $JSON
             
             custom "hw-item-page"
-                # p style="display:none" type="json" #item     | $item.dump_json()
+                # p style="display:none" type="json" #item     | $item.dump_data()
                 p style="display:none" type="json" #item     | $JSON.dump(item.data)
-                p style="display:none" type="json" #category | $item.category.dump_json()
+                p style="display:none" type="json" #category | $item.category.dump_data()
                 < catalog_1 $item
                 div style="text-align:right; padding-top:20px"
                     button #cancel-changes .btn .btn-secondary disabled=False | Cancel

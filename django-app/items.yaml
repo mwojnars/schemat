@@ -302,11 +302,11 @@
     \            \n        %properties item\n            # for field, value in item.data.items()\n\
     \            #     $schema = $item.get_schema(field)\n            #     $schema_json\
     \ = generic_schema.dump_json(schema)\n            #     $entry = (schema_json,\
-    \ $item.dump_json())\n            #     $entries.append(entry)\n            from\
+    \ $item.dump_data())\n            #     $entries.append(entry)\n            from\
     \ hyperweb.serialize import $JSON\n            \n            custom \"hw-item-page\"\
-    \n                # p style=\"display:none\" type=\"json\" #item     | $item.dump_json()\n\
+    \n                # p style=\"display:none\" type=\"json\" #item     | $item.dump_data()\n\
     \                p style=\"display:none\" type=\"json\" #item     | $JSON.dump(item.data)\n\
-    \                p style=\"display:none\" type=\"json\" #category | $item.category.dump_json()\n\
+    \                p style=\"display:none\" type=\"json\" #category | $item.category.dump_data()\n\
     \                < catalog_1 $item\n                div style=\"text-align:right;\
     \ padding-top:20px\"\n                    button #cancel-changes .btn .btn-secondary\
     \ disabled=False | Cancel\n                    button #save-changes   .btn .btn-primary\

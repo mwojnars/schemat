@@ -411,7 +411,7 @@ class Item(object, metaclass = MetaItem):
     # def on_change(self, fields):
     #     """Post-processing performed right after new values of `fields` have been written to `data`."""
     
-    def dump_json(self):
+    def dump_data(self):
         """Dump self.data to a JSON string using schema-based encoding of nested values."""
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
         return fields.dump_json(self.data)
