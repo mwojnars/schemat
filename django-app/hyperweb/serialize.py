@@ -119,6 +119,8 @@ class JSON:
         """
         Return a `state` that carries all the information needed for reconstruction of `obj` with decode(),
         yet it contains only JSON-compatible values and collections (possibly nested).
+        Objects of custom classes are converted to dicts that store object's attributes,
+        with a special attribute "@" added to hold the class name. Nested objects are encoded recursively.
         """
         t = type(obj)
         

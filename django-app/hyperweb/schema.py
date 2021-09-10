@@ -80,90 +80,67 @@ class Schema:
     
     is_catalog = False      # True only in CATALOG and subclasses
     
-    def dump_json(self, value, **params):
+    def dump_json(self, value, **json_format):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
            type information that's available; the flat object may still contain nested non-primitive objects;
         2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
         """
-        
-        flat = self.encode(value)
-        return json.dumps(flat, ensure_ascii = False, **params)
-        # return jsonp.dumps(flat, **params)
+        state = self.encode(value)
+        return json.dumps(state, ensure_ascii = False, **json_format)
 
     def load_json(self, dump):
 
-        flat = json.loads(dump)
-        return self.decode(flat)
+        state = json.loads(dump)
+        return self.decode(state)
     
-    def encode(self, value):   # reduce() deflate() getstate()
+    def encode(self, value):
         """
         Convert `value` - a possibly composite object matching the current schema (self) -
         to a JSON-serializable "state" that does not contain non-standard nested objects anymore.
-        Nested objects of custom classes are typically converted to dicts that store object's attributes,
-        with a special attribute "@" added to hold the class name - see OBJECT implementation for details.
+        By default, generic object encoding (JSON.encode()) is performed.
+        Subclasses may override this method to perform more compact, schema-aware encoding.
         """
-        return self._encode(value)
+        return JSON.encode(value)
         
-        # if value is None:
-        #     if self.blank: return None
-        #     raise EncodeError("missing value (None) not permitted")
-        #
-        # state = self._encode(value)
-        # if self.blank:
-        #     if state is None: raise EncodeError(f"internal error in class {self.__class__}, encoded state of {value} is None, which is not permitted with blank=true")
-        #
-        # return state
+    def decode(self, state):
+        """Convert a serializable "state" as returned by encode() back to an original custom object."""
+        return JSON.decode(state)
         
-    def decode(self, state):    # restore() inflate() setstate()
-        return self._decode(state)
-        
-        # if self.blank and state is None:
-        #     return None
-        #
-        # value = self._decode(state)
-        # assert value is not None
-        # return value
+    # def encode(self, value):
+    #     """
+    #     Override in subclasses to encode and compactify `value` into serializable python types (a "flat" structure).
+    #     This is similar to value.__getstate__(), but depends and relies on schema definition,
+    #     which may contain additional type constraints and therefore be used to reduce
+    #     the amount of information generated during serialization and subsequently stored in DB.
+    #     It is guaranteed that the same - or more specific - schema will be used for decode(),
+    #     so that deserialization has all the same - or more - information about type constraints
+    #     as serialization did.
+    #     If, for any reason, a less specific schema is used for decode(), the client must ensure that
+    #     the default rules of imputation during data decoding will correctly make up for the missing
+    #     values originally defined by the schema.
+    #     The returned flat structure may still contain instances of non-standard types (!),
+    #     in such case a generic object notation is used to json-pickle the instances.
+    #     """
+    #     return JSON.encode(value)
+    #
+    # def decode(self, value):
+    #     return JSON.decode(value)
 
-        
-    def _encode(self, value):
-        """
-        Override in subclasses to encode and compactify `value` into serializable python types (a "flat" structure).
-        This is similar to value.__getstate__(), but depends and relies on schema definition,
-        which may contain additional type constraints and therefore be used to reduce
-        the amount of information generated during serialization and subsequently stored in DB.
-        It is guaranteed that the same - or more specific - schema will be used for decode(),
-        so that deserialization has all the same - or more - information about type constraints
-        as serialization did.
-        If, for any reason, a less specific schema is used for decode(), the client must ensure that
-        the default rules of imputation during data decoding will correctly make up for the missing
-        values originally defined by the schema.
-        The returned flat structure may still contain instances of non-standard types (!),
-        in such case a generic object notation is used to json-pickle the instances.
-        """
-        return value
-
-    def _decode(self, value):
-        """
-        Override in subclasses to decode a "flat" value returned by _encode()
-        back into custom python types.
-        """
-        return value
-
-    def form_encode(self, value):
-        """
-        Return a JSON representation of `value` that can be passed to an HTML widget of this schema.
-        The JSON string will be printed out to a `data-value` attribute of the widget,
-        for subsequent decoding by the widget's Javascript class.
-        """
-        
-    def form_decode(self, state):
-        """
-        Decode a JSON string containing a UI-layer representation of a value back into
-        an application-layer representation. Perform validation with respect to the schema.
-        If validation fails, a list of errors is returned together with the value.
-        """
+    # def form_encode(self, value):
+    #     """
+    #     Return a JSON representation of `value` that can be passed to an HTML widget of this schema.
+    #     The JSON string will be printed out to a `data-value` attribute of the widget,
+    #     for subsequent decoding by the widget's Javascript class.
+    #     """
+    #
+    # def form_decode(self, state):
+    #     """
+    #     Decode a JSON string containing a UI-layer representation of a value back into
+    #     an application-layer representation. Perform validation with respect to the schema.
+    #     If validation fails, a list of errors is returned together with the value.
+    #     """
 
     def __str__(self):
         name = self.name or self.__class__.__name__
@@ -331,13 +308,13 @@ class OBJECT(Schema):
     def _get_unique_type(self):
         return self.type[0] if len(self.type) == 1 and not self.base else None
 
-    def _encode(self, obj):
+    def encode(self, obj):
         
         if not self._valid_type(obj):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
         return JSON.encode(obj, self._get_unique_type())
 
-    def _decode(self, state):
+    def decode(self, state):
         
         obj = JSON.decode(state, self._get_unique_type())
         if not self._valid_type(obj):
@@ -353,11 +330,11 @@ class CLASS(Schema):
     """
     Accepts any global python type and encodes as a string containing its full package-module name.
     """
-    def _encode(self, value):
+    def encode(self, value):
         if value is None: return None
         return classname(cls = value)
     
-    def _decode(self, value):
+    def decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return import_(value)
         
@@ -372,11 +349,11 @@ class Primitive(Schema):
         assert type in (bool, int, float, str)
         self.type = type
     
-    def _encode(self, value):
+    def encode(self, value):
         if not isinstance(value, self.type): raise EncodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
-    def _decode(self, value):
+    def decode(self, value):
         if not isinstance(value, self.type): raise DecodeError(f"expected an instance of {self.type}, got {type(value)}: {value}")
         return value
 
@@ -416,11 +393,11 @@ class BYTES(Primitive):
     """Encodes a <bytes> object as a string using Base64 encoding."""
     type = bytes
     
-    def _encode(self, value):
+    def encode(self, value):
         if not isinstance(value, bytes): raise EncodeError(f"expected an instance of {bytes}, got {type(value)}: {value}")
         return base64.b64encode(value).decode('ascii')
 
-    def _decode(self, encoded):
+    def decode(self, encoded):
         if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
         return base64.b64decode(encoded)
     
@@ -457,14 +434,14 @@ class ENUM(Schema):
         if self.indices:
             self.indices = {v: idx for idx, v in enumerate(self.values)}
 
-    def _encode(self, value):
+    def encode(self, value):
         if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
         if self.indices:
             return self.indices[value]
         else:
             return self.schema.encode(value)
     
-    def _decode(self, encoded):
+    def decode(self, encoded):
         # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         
         if self.indices:
@@ -500,7 +477,7 @@ class ITEM(Schema):
         if self.category: return self.category.iid
         return None
     
-    def _encode(self, item):
+    def encode(self, item):
         
         # if not isinstance(item, Item): pass
         if None in item.id:
@@ -513,7 +490,7 @@ class ITEM(Schema):
         
         return item.id
 
-    def _decode(self, value):
+    def decode(self, value):
         
         cid = None
         ref_cid = self._get_cid()
@@ -557,11 +534,11 @@ class LIST(Schema):
     def __init__(self, schema):
         self.schema = schema
         
-    def _encode(self, values):
+    def encode(self, values):
         if not isinstance(values, self.type): raise EncodeError(f"expected a {self.type}, got {values}")
         return [self.schema.encode(v) for v in values]
 
-    def _decode(self, encoded):
+    def decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         return self.type(self.schema.decode(e) for e in encoded)
 
@@ -578,7 +555,7 @@ class TUPLE(Schema):
     def __init__(self, *schemas):
         self.schemas = list(schemas)
         
-    def _encode(self, values):
+    def encode(self, values):
         if not isinstance(values, tuple): raise EncodeError(f"expected a tuple, got {values}")
         if len(self.schemas) <= 1:
             schema = self.schemas[0] if self.schemas else generic_schema
@@ -586,7 +563,7 @@ class TUPLE(Schema):
         if len(values) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple, got {len(values)}")
         return [schema.encode(v) for v, schema in zip(values, self.schemas)]
 
-    def _decode(self, encoded):
+    def decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         if len(self.schemas) <= 1:
             schema = self.schemas[0] if self.schemas else generic_schema
@@ -617,7 +594,7 @@ class DICT(Schema):
         if values is not None: self.values = values
         if type is not None: self.type = type
         
-    def _encode(self, d):
+    def encode(self, d):
         
         if not isinstance(d, self.type or dict): raise EncodeError(f"expected a <dict>, got {type(d)}: {d}")
         state = {}
@@ -633,7 +610,7 @@ class DICT(Schema):
         
         return state
         
-    def _decode(self, state):
+    def decode(self, state):
         
         if not isinstance(state, dict): raise DecodeError(f"expected a <dict>, not {state}")
         d = (self.type or dict)()
@@ -716,7 +693,7 @@ class VARIANT(Schema):
         # else:
         self.schemas = schemas
         
-    def _encode(self, value):
+    def encode(self, value):
         
         for name, schema in self.schemas:
             try:
@@ -728,7 +705,7 @@ class VARIANT(Schema):
                 
         raise EncodeError(f"invalid value, no matching sub-schema in VARIANT for: {value}")
         
-    def _decode(self, encoded):
+    def decode(self, encoded):
         
         if not (isinstance(encoded, list) and len(encoded) == 2):
             raise DecodeError(f"data corruption in VARIANT, the encoded object should be a 2-element list, got {encoded} instead")
@@ -901,7 +878,7 @@ class FIELDS(catalog, Schema):
             self[name] = Field(schema = field)
         
     
-    def _encode(self, data):
+    def encode(self, data):
         """
         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
         while schema-encoding each field value beforehand.
@@ -931,7 +908,7 @@ class FIELDS(catalog, Schema):
         return encoded
         
         
-    def _decode(self, data):
+    def decode(self, data):
         """
         Decode a dict of {attr: value(s)} back to a MultiDict.
         Perform recursive top-down schema-based decoding of field values.
@@ -989,7 +966,7 @@ class STRUCT(FIELDS):
         for name, field in self.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
     
-    def _encode(self, obj):
+    def encode(self, obj):
 
         if self.type is struct:
             assert isinstance(obj, dict), f'not a dict or struct: {obj}'
@@ -1009,7 +986,7 @@ class STRUCT(FIELDS):
             
         return encoded
         
-    def _decode(self, encoded):
+    def decode(self, encoded):
 
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
         attrs = {}
