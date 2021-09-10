@@ -45,7 +45,24 @@
     fields:
       schema:
         values:
-          type: {'=': hyperweb.schema.Field, '@': builtins.type}
+          schema:
+            schema:
+              type: []
+              base: {'=': hyperweb.schema.Schema, '@': builtins.type}
+              '@': hyperweb.schema.OBJECT
+            '@': hyperweb.schema.Field
+          default:
+            schema:
+              type: []
+              base: []
+              '@': hyperweb.schema.OBJECT
+            '@': hyperweb.schema.Field
+          multi:
+            schema: {'@': hyperweb.schema.BOOLEAN}
+            '@': hyperweb.schema.Field
+          info:
+            schema: {'@': hyperweb.schema.STRING}
+            '@': hyperweb.schema.Field
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.CATALOG
@@ -285,14 +302,15 @@
     \            \n        %properties item\n            # for field, value in item.data.items()\n\
     \            #     $schema = $item.get_schema(field)\n            #     $schema_json\
     \ = object_schema.dump_json(schema)\n            #     $entry = (schema_json,\
-    \ $item.dump_json())\n            #     $entries.append(entry)\n            \n\
-    \            custom \"hw-item-page\"\n                p style=\"display:none\"\
-    \ type=\"json\" #item     | $item.dump_json()\n                p style=\"display:none\"\
-    \ type=\"json\" #category | $item.category.dump_json()\n                < catalog_1\
-    \ $item\n                div style=\"text-align:right; padding-top:20px\"\n  \
-    \                  button #cancel-changes .btn .btn-secondary disabled=False |\
-    \ Cancel\n                    button #save-changes   .btn .btn-primary   disabled=False\
-    \ | Save\n    "
+    \ $item.dump_json())\n            #     $entries.append(entry)\n            from\
+    \ hyperweb.schema import $object_schema\n            \n            custom \"hw-item-page\"\
+    \n                # p style=\"display:none\" type=\"json\" #item     | $item.dump_json()\n\
+    \                p style=\"display:none\" type=\"json\" #item     | $object_schema.dump_json(item.data.asdict_first())\n\
+    \                p style=\"display:none\" type=\"json\" #category | $item.category.dump_json()\n\
+    \                < catalog_1 $item\n                div style=\"text-align:right;\
+    \ padding-top:20px\"\n                    button #cancel-changes .btn .btn-secondary\
+    \ disabled=False | Cancel\n                    button #save-changes   .btn .btn-primary\
+    \   disabled=False | Save\n    "
 - id: [1, 1]
   items:
     base.hy: [6, 3]

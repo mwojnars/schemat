@@ -25,7 +25,7 @@ from hypertag import HyperHTML
 
 # from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .serialize import classname, import_, getstate, setstate
+from .serialize import classname, import_, getstate, setstate, JSON
 from .multidict import MultiDict
 from .item import Item
 from .types import text, html, hypertag, struct, catalog
@@ -98,8 +98,7 @@ class Schema:
         flat = json.loads(dump)
         return self.decode(flat)
     
-    
-    def encode(self, value):   # reduce() deflate()
+    def encode(self, value):   # reduce() deflate() getstate()
         """
         Convert `value` - a possibly composite object matching the current schema (self) -
         to a JSON-serializable "state" that does not contain non-standard nested objects anymore.
@@ -118,7 +117,7 @@ class Schema:
         #
         # return state
         
-    def decode(self, state):    # restore() inflate()
+    def decode(self, state):    # restore() inflate() setstate()
         return self._decode(state)
         
         # if self.blank and state is None:
@@ -343,56 +342,60 @@ class OBJECT(Schema):
         if not self._valid_type(obj):
             raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
         
-        t = type(obj)
+        return JSON.encode(obj, self.type[0] if self._unique_type() else None)
         
-        # retrieve object's state while checking against standard python types that need special handling
-        if t in self.PRIMITIVES:
-            return obj
-        if t is list:
-            return self._encode_list(obj)                           # return a list, but first encode recursively all its elements
-        if t is dict:
-            obj = self._encode_dict(obj)
-            return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
-            # an "escape" wrapper must be added around a dict that contains the reserved key "@"
-        if issubclass(t, Item):
-            if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
-            id = list(obj.id)
-            if self._unique_type(): return id
-            return {self.STATE_ATTR: id, self.CLASS_ATTR: self.ITEM_FLAG}
-        
-        if isinstance(obj, type):
-            state = classname(cls = obj)
-            # state = {self.STATE_ATTR: classname(cls = obj)}
-        elif t in (set, tuple):
-            state = self._encode_list(obj)                          # warning: ordering of elements of a set in `state` is undefined and may differ between calls
-            # state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
-        # elif issubclass(t, Item):
+        # t = type(obj)
+        #
+        # # retrieve object's state while checking against standard python types that need special handling
+        # if t in self.PRIMITIVES:
+        #     return obj
+        # if t is list:
+        #     return self._encode_list(obj)                           # return a list, but first encode recursively all its elements
+        # if t is dict:
+        #     obj = self._encode_dict(obj)
+        #     return {self.STATE_ATTR: obj, self.CLASS_ATTR: classname(obj)} if self.CLASS_ATTR in obj else obj
+        #     # an "escape" wrapper must be added around a dict that contains the reserved key "@"
+        # if issubclass(t, Item):
         #     if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
-        #     state = list(obj.id)
-        else:
-            state = getstate(obj)
-            state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
-            #TODO: allow non-dict state from getstate()
-        
-            assert isinstance(state, dict)
-            
-            if self.CLASS_ATTR in state:
-                raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
-            
-        # if the exact class is known upfront, let's output compact state without adding "@" for class designation
-        if self._unique_type():
-            return state
-        
-        # wrap up in a dict and append class designator
-        if not isinstance(state, dict):
-            state = {self.STATE_ATTR: state}
-        state[self.CLASS_ATTR] = classname(obj)
-        
-        return state
+        #     id = list(obj.id)
+        #     if self._unique_type(): return id
+        #     return {self.STATE_ATTR: id, self.CLASS_ATTR: self.ITEM_FLAG}
+        #
+        # if isinstance(obj, type):
+        #     state = classname(cls = obj)
+        #     # state = {self.STATE_ATTR: classname(cls = obj)}
+        # elif t in (set, tuple):
+        #     state = self._encode_list(obj)                          # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+        #     # state = {self.STATE_ATTR: self._encode_list(obj)}       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
+        # # elif issubclass(t, Item):
+        # #     if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
+        # #     state = list(obj.id)
+        # else:
+        #     state = getstate(obj)
+        #     state = self._encode_dict(state)                        # recursively encode all non-standard objects inside `state`
+        #     #TODO: allow non-dict state from getstate()
+        #
+        #     assert isinstance(state, dict)
+        #
+        #     if self.CLASS_ATTR in state:
+        #         raise EncodeError(f'non-serializable object state, a reserved character "{self.CLASS_ATTR}" occurs as a key in the state dictionary')
+        #
+        # # if the exact class is known upfront, let's output compact state without adding "@" for class designation
+        # if self._unique_type():
+        #     return state
+        #
+        # # wrap up in a dict and append class designator
+        # if not isinstance(state, dict):
+        #     state = {self.STATE_ATTR: state}
+        # state[self.CLASS_ATTR] = classname(obj)
+        #
+        # return state
     
     def _decode(self, state):
         
-        obj = self._decode_object(state)
+        # obj = self._decode_object(state)
+        obj = JSON.decode(state, self.type[0] if self._unique_type() else None)
+
         if not self._valid_type(obj):
             raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
         # if isinstance(obj, Item):
@@ -400,61 +403,61 @@ class OBJECT(Schema):
         #     obj = registry.get_item(obj.id)         # replace the decoded item with an object from the Registry
         return obj
 
-    def _decode_object(self, state, _name_dict = classname(cls = dict)):
-
-        t = type(state)
-        
-        # decoding of a standard python dict when a wrapper was added
-        if t is dict and state.get(self.CLASS_ATTR, None) == _name_dict:
-            if self.STATE_ATTR in state:
-                state = state[self.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
-            return self._decode_dict(state)
-        
-        # determine the expected type `class_` of the output object
-        if self._unique_type():
-            if t is dict and self.CLASS_ATTR in state and self.STATE_ATTR not in state:
-                raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is not needed but present: {state}')
-            class_ = self.type[0]
-
-        elif t is not dict:
-            class_ = t              # an object of a standard python type must have been encoded (non-unique type, but not a dict either)
-
-        elif self.CLASS_ATTR not in state:
-            class_ = dict
-            # raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
-        else:
-            fullname = state.pop(self.CLASS_ATTR)
-            if self.STATE_ATTR in state:
-                state_attr = state.pop(self.STATE_ATTR)
-                if state: raise DecodeError(f'invalid serialized state, expected only {self.CLASS_ATTR} and {self.STATE_ATTR} special keys but got others: {state}')
-                state = state_attr
-
-            if fullname == self.ITEM_FLAG:                  # decoding a reference to an Item?
-                from .boot import get_registry
-                return get_registry().get_item(state)       # ...get it from the Registry
-            class_ = import_(fullname)
-            
-        # instantiate the output object; special handling for standard python types and Item
-        if class_ in self.PRIMITIVES:
-            return state
-        if class_ is list:
-            return self._decode_list(state)
-        if class_ is dict:
-            return self._decode_dict(state)
-        if class_ in (set, tuple):
-            values = state
-            return class_(values)
-        if isinstance(class_, type):
-            if issubclass(class_, Item):
-                from .boot import get_registry
-                return get_registry().get_item(state)       # get the referenced item from the Registry
-            if issubclass(class_, type):
-                typename = state
-                return import_(typename)
-
-        # default object decoding via setstate()
-        state = self._decode_dict(state)
-        return setstate(class_, state)
+    # def _decode_object(self, state, _name_dict = classname(cls = dict)):
+    #
+    #     t = type(state)
+    #
+    #     # decoding of a standard python dict when a wrapper was added
+    #     if t is dict and state.get(self.CLASS_ATTR, None) == _name_dict:
+    #         if self.STATE_ATTR in state:
+    #             state = state[self.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
+    #         return self._decode_dict(state)
+    #
+    #     # determine the expected type `class_` of the output object
+    #     if self._unique_type():
+    #         if t is dict and self.CLASS_ATTR in state and self.STATE_ATTR not in state:
+    #             raise DecodeError(f'ambiguous object state during decoding, the special key "{self.CLASS_ATTR}" is not needed but present: {state}')
+    #         class_ = self.type[0]
+    #
+    #     elif t is not dict:
+    #         class_ = t              # an object of a standard python type must have been encoded (non-unique type, but not a dict either)
+    #
+    #     elif self.CLASS_ATTR not in state:
+    #         class_ = dict
+    #         # raise DecodeError(f'corrupted object state during decoding, missing "{self.CLASS_ATTR}" key with object type designator: {state}')
+    #     else:
+    #         fullname = state.pop(self.CLASS_ATTR)
+    #         if self.STATE_ATTR in state:
+    #             state_attr = state.pop(self.STATE_ATTR)
+    #             if state: raise DecodeError(f'invalid serialized state, expected only {self.CLASS_ATTR} and {self.STATE_ATTR} special keys but got others: {state}')
+    #             state = state_attr
+    #
+    #         if fullname == self.ITEM_FLAG:                  # decoding a reference to an Item?
+    #             from .boot import get_registry
+    #             return get_registry().get_item(state)       # ...get it from the Registry
+    #         class_ = import_(fullname)
+    #
+    #     # instantiate the output object; special handling for standard python types and Item
+    #     if class_ in self.PRIMITIVES:
+    #         return state
+    #     if class_ is list:
+    #         return self._decode_list(state)
+    #     if class_ is dict:
+    #         return self._decode_dict(state)
+    #     if class_ in (set, tuple):
+    #         values = state
+    #         return class_(values)
+    #     if isinstance(class_, type):
+    #         if issubclass(class_, Item):
+    #             from .boot import get_registry
+    #             return get_registry().get_item(state)       # get the referenced item from the Registry
+    #         if issubclass(class_, type):
+    #             typename = state
+    #             return import_(typename)
+    #
+    #     # default object decoding via setstate()
+    #     state = self._decode_dict(state)
+    #     return setstate(class_, state)
         
         
     @staticmethod
@@ -470,20 +473,12 @@ class OBJECT(Schema):
     @staticmethod
     def _encode_dict(state):
         """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
-        # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
         for key in state:
             if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
+            # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
 
         return {k: object_schema._encode(v) for k, v in state.items()}
 
-        # encode = object_schema._encode
-        # for key, value in state.items():
-        #     # JSON only allows <str> as a type of dictionary keys
-        #     if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
-        #     if type(value) not in self.PRIMITIVES:
-        #         state[key] = encode(value)
-        # return state
-    
     @staticmethod
     def _decode_dict(state):
         """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
@@ -1028,6 +1023,9 @@ class FIELDS(catalog, Schema):
         self.update(fields)
         self._init_fields()
     
+    def __getstate__(self):
+        return self
+        
     def __setstate__(self, state):
         # self.__dict__ = dict(state)
         self.clear()
