@@ -201,17 +201,17 @@ class JSON:
         
     @staticmethod
     def encode_list(values):
-        """Encode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
+        """Encode recursively all non-primitive objects inside a list."""
         return [JSON.encode(v) for v in values]
         
     @staticmethod
     def decode_list(state):
-        """Decode recursively all non-primitive objects inside a list of values using the generic object_schema = OBJECT()."""
+        """Decode recursively all non-primitive objects inside a list."""
         return [JSON.decode(v) for v in state]
         
     @staticmethod
     def encode_dict(state):
-        """Encode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
+        """Encode recursively all non-primitive objects inside `state` dictionary."""
         for key in state:
             if type(key) is not str: raise EncodeError(f'non-serializable object state, contains a non-string key: {key}')
             # TODO: if there are any non-string keys in `state`, the entire dict must be converted to a list representation
@@ -220,7 +220,7 @@ class JSON:
 
     @staticmethod
     def decode_dict(state):
-        """Decode recursively all non-primitive objects inside `state` using the generic object_schema = OBJECT()."""
+        """Decode recursively all non-primitive objects inside `state` dictionary."""
         return {k: JSON.decode(v) for k, v in state.items()}
 
     

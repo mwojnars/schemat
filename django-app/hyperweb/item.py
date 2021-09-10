@@ -1,4 +1,4 @@
-import re, threading, types, json, mimetypes
+import re, threading, mimetypes
 from textwrap import dedent
 from urllib.parse import urlencode
 from django.http import FileResponse, HttpResponse, Http404
@@ -13,6 +13,7 @@ from .errors import *
 from .multidict import MultiDict
 from .cache import LRUCache
 from .serialize import import_
+from .schema import object_schema, Field
 
 Data = MultiDict        # Data is just an alias for MultiDict class
 
@@ -280,9 +281,8 @@ class Item(object, metaclass = MetaItem):
             return self.data.get(field, mode = mode)
         
         if category_default:
-            from .schema import Field                       # TODO: refactor Field.MISSING -> Item.MISSING
             cat_default = self.category.get_default(field)
-            if cat_default is not Field.MISSING:
+            if cat_default is not Field.MISSING:            # TODO: refactor Field.MISSING -> Item.MISSING
                 return cat_default
             
             # TODO: check category-level field of the same name (another way to define a default value)
@@ -497,7 +497,6 @@ class Item(object, metaclass = MetaItem):
         if field_name in fields:
             schema = fields[field_name].schema
         if schema is None:
-            from hyperweb.schema import object_schema               # TODO: refactor to remove a local import
             schema = object_schema
         
         return schema
@@ -560,9 +559,8 @@ class Category(Item):
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
         # return self['schema'].get_default(field)
-        from .schema import Field                       # TODO: refactor, use Item.MISSING instead of Field.MISSING
         field = self['fields'].get(field)
-        return field.default if field else Field.MISSING
+        return field.default if field else Field.MISSING        # TODO: use Item.MISSING instead of Field.MISSING
 
     #####  Handlers & templates  #####
 
