@@ -63,7 +63,6 @@ class Schema:
         ^^
        FORM (fields)   <--->   VALUE (object)   <--->   DB (json)
        
-       
 
     Exceptions:
     - ValidationError in sanitize() -- invalid value submitted from a form
@@ -73,7 +72,7 @@ class Schema:
     
     name  = None            # name of this schema instance for messaging purposes
     
-    # instance-level settings
+    # # instance-level settings
     # blank = True            # if True, None is a valid input value and is encoded as None;
     #                         # no other valid value can produce None as its serializable state
     # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
@@ -108,40 +107,6 @@ class Schema:
         """Convert a serializable "state" as returned by encode() back to an original custom object."""
         return JSON.decode(state)
         
-    # def encode(self, value):
-    #     """
-    #     Override in subclasses to encode and compactify `value` into serializable python types (a "flat" structure).
-    #     This is similar to value.__getstate__(), but depends and relies on schema definition,
-    #     which may contain additional type constraints and therefore be used to reduce
-    #     the amount of information generated during serialization and subsequently stored in DB.
-    #     It is guaranteed that the same - or more specific - schema will be used for decode(),
-    #     so that deserialization has all the same - or more - information about type constraints
-    #     as serialization did.
-    #     If, for any reason, a less specific schema is used for decode(), the client must ensure that
-    #     the default rules of imputation during data decoding will correctly make up for the missing
-    #     values originally defined by the schema.
-    #     The returned flat structure may still contain instances of non-standard types (!),
-    #     in such case a generic object notation is used to json-pickle the instances.
-    #     """
-    #     return JSON.encode(value)
-    #
-    # def decode(self, value):
-    #     return JSON.decode(value)
-
-    # def form_encode(self, value):
-    #     """
-    #     Return a JSON representation of `value` that can be passed to an HTML widget of this schema.
-    #     The JSON string will be printed out to a `data-value` attribute of the widget,
-    #     for subsequent decoding by the widget's Javascript class.
-    #     """
-    #
-    # def form_decode(self, state):
-    #     """
-    #     Decode a JSON string containing a UI-layer representation of a value back into
-    #     an application-layer representation. Perform validation with respect to the schema.
-    #     If validation fails, a list of errors is returned together with the value.
-    #     """
-
     def __str__(self):
         name = self.name or self.__class__.__name__
         return name
@@ -280,6 +245,12 @@ class OBJECT(Schema):
     def __init__(self, type = None, base = None):
         self.__setstate__({'type': type, 'base': base})
         
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if len(self.type) == 1: state['type'] = self.type[0]
+        if len(self.base) == 1: state['base'] = self.base[0]
+        return state
+    
     def __setstate__(self, state):
         """Custom __setstate__/__getstate__() is needed to allow compact encoding of 1-element lists in `type` and `base`."""
         self.type = self._prepare_types(state['type']) if 'type' in state else []
@@ -292,12 +263,6 @@ class OBJECT(Schema):
         assert all(isinstance(t, type) for t in types)
         return types
         
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        if len(self.type) == 1: state['type'] = self.type[0]
-        if len(self.base) == 1: state['base'] = self.base[0]
-        return state
-    
     def _valid_type(self, obj):
         if not (self.type or self.base): return True        # all objects are valid when no reference types configured
         t = type(obj)
@@ -322,7 +287,7 @@ class OBJECT(Schema):
         return obj
 
 
-# the most generic schema for encoding/decoding objects of any types
+# the most generic schema for encoding/decoding of objects of any types
 generic_schema = OBJECT()
 
 
