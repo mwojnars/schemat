@@ -5,6 +5,7 @@ TODO: the functions below could be implemented as methods of Registry to allow c
 
 """
 
+import json
 from importlib import import_module
 from .errors import EncodeError, DecodeError
 
@@ -83,16 +84,35 @@ def setstate(cls, state):
 
 #####################################################################################################################################################
 #####
-#####  ENCODE & DECODE of arbitrary objects to/from JSON-compatible types
+#####  JSON for arbitrary objects
 #####
 
+class Classpath:
+    """
+    Two-way registry of classes and their full dotted names for serialization
+    of their instances through the JSON class below.
+    """
+
 class JSON:
-    """"""
+    """
+    Dump & load arbitrary objects to/from JSON strings.
+    Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
+    """
     
     ITEM_FLAG  = None   # special value of CLASS_ATTR that denotes a reference to an Item
     CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
     STATE_ATTR = "="    # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
-    PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are returned unchanged during encoding
+    PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
+    
+    @staticmethod
+    def dump(obj, type_ = None, **json_format):
+        state = JSON.encode(obj, type_)
+        return json.dumps(state, ensure_ascii = False, **json_format)
+    
+    @staticmethod
+    def load(dump, type_ = None):
+        state = json.loads(dump)
+        return JSON.decode(state, type_)
     
     @staticmethod
     def encode(obj, type_ = None):

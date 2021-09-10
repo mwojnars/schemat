@@ -13,7 +13,7 @@ from .errors import *
 from .multidict import MultiDict
 from .cache import LRUCache
 from .serialize import import_
-from .schema import object_schema, Field
+from .schema import generic_schema, Field
 
 Data = MultiDict        # Data is just an alias for MultiDict class
 
@@ -497,7 +497,7 @@ class Item(object, metaclass = MetaItem):
         if field_name in fields:
             schema = fields[field_name].schema
         if schema is None:
-            schema = object_schema
+            schema = generic_schema
         
         return schema
 

@@ -345,8 +345,8 @@ class OBJECT(Schema):
         return obj
 
 
-# the most generic schema for encoding/decoding any types of objects
-object_schema = OBJECT()
+# the most generic schema for encoding/decoding objects of any types
+generic_schema = OBJECT()
 
 
 class CLASS(Schema):
@@ -570,7 +570,7 @@ class TUPLE(Schema):
     If multiple `schemas` are given, each tuple must have this exact length and each element is encoded
     through a different schema, as provided. If there is one schema, this schema is used for
     all elements and the length of an input tuple can differ. If no schema is provided, the effect
-    is the same as providing a single `object_schema`.
+    is the same as providing a single `generic_schema`.
     """
     type = tuple
     schemas = None      # list of schemas of individual elements
@@ -581,7 +581,7 @@ class TUPLE(Schema):
     def _encode(self, values):
         if not isinstance(values, tuple): raise EncodeError(f"expected a tuple, got {values}")
         if len(self.schemas) <= 1:
-            schema = self.schemas[0] if self.schemas else object_schema
+            schema = self.schemas[0] if self.schemas else generic_schema
             return [schema.encode(v) for v in values]
         if len(values) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple, got {len(values)}")
         return [schema.encode(v) for v, schema in zip(values, self.schemas)]
@@ -589,7 +589,7 @@ class TUPLE(Schema):
     def _decode(self, encoded):
         if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         if len(self.schemas) <= 1:
-            schema = self.schemas[0] if self.schemas else object_schema
+            schema = self.schemas[0] if self.schemas else generic_schema
             return [schema.decode(e) for e in encoded]
         if len(encoded) != len(self.schemas): raise EncodeError(f"expected {len(self.schemas)} elements in a tuple to be decoded, got {len(encoded)}")
         return tuple(schema.decode(e) for e, schema in zip(encoded, self.schemas))
@@ -599,7 +599,7 @@ class DICT(Schema):
     """
     Accepts <dict> objects as data values, or objects of a given `type` which should be a subclass of <dict>.
     Outputs a dict with keys and values encoded through their own schema.
-    If no schema is provided, `object_schema` is used as a default.
+    If no schema is provided, `generic_schema` is used as a default.
     """
     
     # schema of keys and values of app-layer dicts
@@ -608,8 +608,8 @@ class DICT(Schema):
     type   = None           # optional subtype of <dict>; if present, only objects of this type are accepted for encoding
 
     # the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
-    keys_default   = object_schema
-    values_default = object_schema
+    keys_default   = generic_schema
+    values_default = generic_schema
     
     def __init__(self, keys = None, values = None, type = None):
         
@@ -869,7 +869,7 @@ class FIELDS(catalog, Schema):
     """
     
     # default field specification to be used for fields not present in `fields`
-    default_field = Field(schema = object_schema, multi = True)
+    default_field = Field(schema = generic_schema, multi = True)
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     # fields   = None     # dict of field names & their Field() schema descriptors

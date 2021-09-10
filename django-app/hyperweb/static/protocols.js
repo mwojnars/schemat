@@ -319,6 +319,14 @@ class Item {
 
 /*************************************************************************************************/
 
+class Classpath {
+    // m = new Map()
+    // m.set(C, path_C)
+    // c.constructor == C
+    // Array.from(m.keys())                 -- array of all keys
+    // for (k of m.keys()) console.log(k)   -- iterating over keys
+}
+
 class Registry {
     get_item(id) {}
 }
