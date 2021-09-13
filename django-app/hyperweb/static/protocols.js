@@ -294,11 +294,10 @@ class Catalog extends CustomElement {
 
 class ItemPage extends CustomElement {
     init() {
-        let category = this._category = new Item(this.read_data('p#category'));
-        let item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+        let g = globalThis;
+        g.category = this._category = new Item(this.read_data('p#category'));
+        g.item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
 
-        window.item = item;
-        window.category = category;
     }
 
     static Properties = class extends Catalog {}

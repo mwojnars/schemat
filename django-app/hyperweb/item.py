@@ -15,8 +15,6 @@ from .cache import LRUCache
 from .serialize import import_
 from .schema import generic_schema, Field
 
-Data = MultiDict        # Data is just an alias for MultiDict class
-
 
 #####################################################################################################################################################
 
@@ -240,7 +238,7 @@ class Item(object, metaclass = MetaItem):
         Create a new item that's not yet in DB (no IID).
         Assign `fields` into self.data. The item is assumed to be "loaded".
         """
-        self.data = Data()
+        self.data = MultiDict()
         self.loaded = __loaded__
         
         if __category__ is not None:
@@ -397,6 +395,7 @@ class Item(object, metaclass = MetaItem):
         # convert data from JSON string to a struct
         if data:
             fields = self.category.get('fields')        # specification of fields {field_name: schema}
+            # data   = generic_schema.load_json(data)
             data   = fields.load_json(data)
             self.data.update(data)
         
@@ -414,6 +413,7 @@ class Item(object, metaclass = MetaItem):
     def dump_data(self):
         """Dump self.data to a JSON string using schema-based encoding of nested values."""
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
+        # return generic_schema.dump_json(self.data)
         return fields.dump_json(self.data)
         
     def insert(self):
@@ -683,7 +683,10 @@ class Category(Item):
 #         return self['categories'][name]
 
 class Application(Item):
-    """An application implements a mapping of URL paths to item methods, and the way back."""
+    """
+    An application implements a mapping of URL paths to item methods, and the way back.
+    INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
+    """
 
     def get_space(self, name):
         return self['spaces'][name]

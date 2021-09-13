@@ -99,9 +99,9 @@ class JSON:
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     """
     
-    ITEM_FLAG  = None   # special value of CLASS_ATTR that denotes a reference to an Item
-    CLASS_ATTR = "@"    # special attribute appended to object state to store a class name (with package) of the object being encoded
-    STATE_ATTR = "="    # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    ITEM_FLAG  = "(item)"   # special value of CLASS_ATTR that denotes a reference to an Item
+    CLASS_ATTR = "@"        # special attribute appended to object state to store a class name (with package) of the object being encoded
+    STATE_ATTR = "="        # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
