@@ -1,8 +1,7 @@
 import pickle, pytest
 
 from hyperweb.item import Item, Site
-from hyperweb.boot import get_registry
-# from hyperweb.site import registry      # this import is necessary to ensure proper order of module initialization under circular imports of `registry` in types.py
+from hyperweb.boot import registry
 from hyperweb.schema import Schema, OBJECT, INTEGER, CLASS
 
 
@@ -94,5 +93,4 @@ def test_Item():
 
 #####################################################################################################################################################
 
-registry = get_registry()
 registry.classpath.add('test', T, float_, C)

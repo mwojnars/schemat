@@ -14,8 +14,7 @@ from .registry import Registry
 
 @receiver(request_finished)
 def after_request(sender, **kwargs):
-    site = get_registry().site
-    site.after_request(sender, **kwargs)
+    registry.site.after_request(sender, **kwargs)
     # print(f'after_request() in thread {threading.get_ident()} start...')
     # sleep(5)
     # print(f'after_request() in thread {threading.get_ident()} ...stop')
@@ -36,13 +35,13 @@ def after_request(sender, **kwargs):
 
 #####################################################################################################################################################
 
-def get_registry():
-    # global registry
-    # if registry is None:
-    #     registry = Registry()
-    #     registry.seed(core_items)
-    #     # registry.boot()
-    return registry
+# def get_registry():
+#     global registry
+#     if registry is None:
+#         registry = Registry()
+#         registry.seed(core_items)
+#         # registry.boot()
+#     return registry
 
 registry = Registry()
 
