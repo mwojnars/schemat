@@ -2,7 +2,7 @@ from django.http import HttpRequest, HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-from hyperweb.boot import get_registry
+# from hyperweb.boot import get_registry
 
 #####################################################################################################################################################
 
@@ -20,8 +20,9 @@ def item_view(request, path):    # descriptor, endpoint = ""):
     - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
     - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
     """
-    
-    site = request.site = get_registry().site
+    from hyperweb.boot import registry
+
+    site = request.site = registry.site
     response = site.handle(request)
     if isinstance(response, str):
         return HttpResponse(response)

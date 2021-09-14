@@ -37,13 +37,18 @@ def after_request(sender, **kwargs):
 
 #####################################################################################################################################################
 
-registry = None         # will be initialized on the first web request thru get_registry() below
+# registry = None         # will be initialized on the first web request thru get_registry() below
+
 
 def get_registry():
-    global registry
-    if registry is None:
-        registry = Registry()
-        registry.seed(core_items)
-        # registry.boot()
+    # global registry
+    # if registry is None:
+    #     registry = Registry()
+    #     registry.seed(core_items)
+    #     # registry.boot()
     return registry
+
+registry = Registry()
+registry.seed(core_items)
+# registry.boot()
 
