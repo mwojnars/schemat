@@ -1,11 +1,16 @@
-import threading
+import builtins, threading
+from types import FunctionType, BuiltinFunctionType
 from collections import defaultdict
 
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
 from .item import Category, Site
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-from .serialize import classname, import_
+# from .serialize import classname, import_
+
+import hyperweb.schema
+import hyperweb.item
+
 
 #####################################################################################################################################################
 #####
@@ -14,50 +19,84 @@ from .serialize import classname, import_
 
 class Classpath:
     """
-    Two-way registry of global python objects and their dotted module paths for use inside
-    JSON dumps and in-item source code. Provides two mappings:
+    Two-way registry of global python objects and their dotted module paths x.y.z
+    for use inside JSON dumps and in-item source code. "Virtual packages".
+    Provides two mappings:
     
-    1) path -> object (forward mapping), for loading and importing objects; available for all types of objects;
-    2) object -> path (inverse mapping), for serialization; only available for classes and functions.
-    
-    Mapping of dotted paths @x.y.z, as used in JSON dumps, to actual python objects and classes.
-    Can be viewed as a collection of "virtual packages" with python objects inside;
-    each object must be explicitly added to a virtual package.
+    1) path -> object (forward mapping), for loading and importing objects; holds all types of objects;
+    2) object -> path (inverse mapping), for serialization; only holds classes and functions.
     """
 
-    # symbols = None      # bidict mapping of dotted paths to python classes and functions, and the way back
-    
-    objects = None      # dict of objects indexed by paths: (path -> object)
+    forward = None          # dict of objects indexed by paths: (path -> object)
+    inverse = None          # dict of paths indexed by objects: (object -> path)
     
     def __init__(self):
-        pass
+        self.forward = {}
+        self.inverse = {}
     
     def __getitem__(self, path):
         """Return an object pointed to by a given path."""
-        return import_(path)
-        # return self.objects[path]
+        return self.forward[path]
+        # return import_(path)
         
     def __setitem__(self, path, obj):
-        """Assign `obj` to a given path. Override an existing object if present."""
-    
-    def add(self, path, *unnamed, **named):
         """
-        Add objects to a given package `path`, with their original names (__name__) preserved.
+        Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
+        Override an existing object if already present.
         """
-       
-    def add_module(self, module, path = None):
-        """
-        Add all classes and functions from `module` to a given package `path` (module's python path if None).
-        Any class/function imported by `module` from another module is ignored (!).
-        """
-        
+        self.forward[path] = obj
+        if self._is_class_func(obj):
+            self.inverse[obj] = path            # create inverse mapping for classes and functions
+
     def get_path(self, obj):
         """
         Return canonical path of a given class or function, `obj`.
         If `obj` was added multiple times under different names (paths),
         the most recently assigned path is returned.
         """
-        return classname(cls = obj)       # TODO: use self
+        return self.inverse[obj]
+        # return classname(cls = obj)
+        
+    def add(self, path, *unnamed, **named):
+        """
+        Add objects to a given package `path` under provided names if in `named`,
+        or under their original names (obj.__name__) if in `unnamed`.
+        """
+        for obj in unnamed:
+            name = obj.__name__
+            if not name: raise Exception(f"missing __name__ of an unnamed object being added to Classpath at path '{path}': {obj}")
+            self[f'{path}.{name}'] = obj
+        for name, obj in named.items():
+            self[f'{path}.{name}'] = obj
+       
+    def add_module(self, module, path = None, symbols = None, exclude_private = True, exclude_variables = True, exclude_imported = True):
+        """
+        Add symbols from `module` to a given package `path` (module's python path if None).
+        If `symbols` is None, all symbols found in the module are added, excluding:
+        1) symbols whose name starts with underscore "_", if exclude_private=True;
+        2) variables (i.e., not classes, not functions), if exclude_variables=True;
+        3) classes/functions imported from other modules as determined by their __module__, if exclude_imported=True.
+        """
+        modname = module.__name__
+        if not path: path = modname
+        if isinstance(symbols, str): symbols = symbols.split()
+        elif symbols is None:
+            def imported(_name):
+                _obj = getattr(module, _name)
+                return self._is_class_func(_name) and getattr(_name, '__module__', None) != modname
+            
+            symbols = dir(module)
+            if exclude_private:   symbols = [s for s in symbols if s[:1] != '_']
+            if exclude_variables: symbols = [s for s in symbols if self._is_class_func(getattr(module, s))]
+            if exclude_imported:  symbols = [s for s in symbols if not imported(s)]
+            
+        for name in symbols:
+            obj = getattr(module, name)
+            self[f'{path}.{name}'] = obj
+        
+    @staticmethod
+    def _is_class_func(obj):
+        return isinstance(obj, (type, FunctionType, BuiltinFunctionType))
         
 
 #####################################################################################################################################################
@@ -103,8 +142,11 @@ class Registry:
     
     
     def __init__(self):
-        self.classpath = Classpath()
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        self.classpath = Classpath()
+        self.classpath.add_module(builtins)
+        self.classpath.add_module(hyperweb.schema)  # schemma.type
+        self.classpath.add_module(hyperweb.item)    # schemma.item
     
     def boot(self, core_items = None):
         self.store.load()
@@ -256,7 +298,7 @@ class Registry:
         
     def get_path(self, cls):
         """
-        Return a dotted module path of a given class as retrieved from the global Classpath configuration.
+        Return a dotted module path of a given class or function as stored in a global Classpath.
         In the future, each application may have its own distinct Classpath.
         """
         return self.classpath.get_path(cls)

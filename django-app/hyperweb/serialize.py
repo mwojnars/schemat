@@ -127,7 +127,6 @@ class JSON:
         if t is dict:
             obj = JSON.encode_dict(obj)                                 # encode_dict() always returns a dict
             if JSON.CLASS_ATTR not in obj: return obj
-            # path = classname(obj)
             return {JSON.STATE_ATTR: obj, JSON.CLASS_ATTR: JSON.DICT_FLAG}      # an "escape" wrapper is added around a dict that contains the reserved key "@"
 
         from hyperweb.item import Item
@@ -138,11 +137,9 @@ class JSON:
             return {JSON.STATE_ATTR: id, JSON.CLASS_ATTR: JSON.ITEM_FLAG}
         
         from hyperweb.boot import registry
-        # registry = get_registry()
 
         if isinstance(obj, type):
             state = registry.get_path(obj)
-            # state = classname(cls = obj)
         elif t in (set, tuple):
             state = JSON.encode_list(obj)                       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         else:
@@ -159,7 +156,7 @@ class JSON:
         # wrap up in a dict and append class designator
         if not isinstance(state, dict):
             state = {JSON.STATE_ATTR: state}
-        state[JSON.CLASS_ATTR] = registry.get_path(obj.__class__)         #classname(obj)
+        state[JSON.CLASS_ATTR] = registry.get_path(obj.__class__)
         
         return state
     
@@ -199,7 +196,6 @@ class JSON:
             if fullname == JSON.ITEM_FLAG:                  # decoding a reference to an Item?
                 return registry.get_item(state)             # ...get it from the Registry
             class_ = registry.get_class(fullname)
-            # class_ = import_(fullname)
             
         # instantiate the output object; special handling for standard python types and Item
         if class_ in JSON.PRIMITIVES:
@@ -218,7 +214,6 @@ class JSON:
             if issubclass(class_, type):
                 typename = state
                 return registry.get_class(typename)
-                # return import_(typename)
 
         # default object decoding via setstate()
         state = JSON.decode_dict(state)

@@ -5,8 +5,6 @@ from hyperweb.boot import get_registry
 # from hyperweb.site import registry      # this import is necessary to ensure proper order of module initialization under circular imports of `registry` in types.py
 from hyperweb.schema import Schema, OBJECT, INTEGER, CLASS
 
-registry = get_registry()
-
 
 #####################################################################################################################################################
 #####
@@ -24,7 +22,7 @@ def run(schema, obj, verbose = False):
 
 #####################################################################################################################################################
 
-class _T:
+class T:
     def __init__(self, x = None): self.x = x
     def __eq__(self, other): return self.__dict__ == other.__dict__
 class float_(float):
@@ -54,8 +52,8 @@ def test_Object():
     run(OBJECT(CLASS), CLASS())
 
     run(OBJECT(CLASS), CLASS())
-    run(OBJECT(_T), _T(x=10))
-    run(OBJECT(base = _T), _T(x=10))
+    run(OBJECT(T), T(x=10))
+    run(OBJECT(base = T), T(x=10))
     run(OBJECT(str), 'kot')
     run(OBJECT(type = (int, float)), 5.5)
     run(OBJECT(base = (int, float)), float_(5.5))
@@ -67,7 +65,7 @@ def test_Object():
     run(OBJECT(base = Schema), INTEGER())
     run(OBJECT(type = INTEGER), INTEGER())
     run(OBJECT(base = Schema), OBJECT(dict))
-    run(OBJECT(base = Schema), OBJECT((list, dict, str, _T)))
+    run(OBJECT(base = Schema), OBJECT((list, dict, str, T)))
 
     c = C()
     c.d = C()
@@ -93,4 +91,8 @@ def test_Item():
     run(OBJECT(base = Item), site, True)
     run(OBJECT(Site), site, True)
     
-    
+
+#####################################################################################################################################################
+
+registry = get_registry()
+registry.classpath.add('test', T, float_, C)

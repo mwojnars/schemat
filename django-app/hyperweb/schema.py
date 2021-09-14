@@ -302,12 +302,10 @@ class CLASS(Schema):
     def encode(self, value):
         if value is None: return None
         return self.get_registry().get_path(value)
-        # return classname(cls = value)
     
     def decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
         return self.get_registry().get_class(value)
-        # return import_(value)
         
         
 class Primitive(Schema):

@@ -50,19 +50,19 @@
               type: []
               base: {'=': hyperweb.schema.Schema, '@': builtins.type}
               '@': hyperweb.schema.OBJECT
-            '@': hyperweb.schema.Field
+            '@': hyperweb.item.Field
           default:
             schema:
               type: []
               base: []
               '@': hyperweb.schema.OBJECT
-            '@': hyperweb.schema.Field
+            '@': hyperweb.item.Field
           multi:
             schema: {'@': hyperweb.schema.BOOLEAN}
-            '@': hyperweb.schema.Field
+            '@': hyperweb.item.Field
           info:
             schema: {'@': hyperweb.schema.STRING}
-            '@': hyperweb.schema.Field
+            '@': hyperweb.item.Field
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.CATALOG
