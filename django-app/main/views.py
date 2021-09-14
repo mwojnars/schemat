@@ -2,8 +2,6 @@ from django.http import HttpRequest, HttpResponse
 from django.template import loader
 from django.shortcuts import render
 
-# from hyperweb.boot import get_registry
-
 #####################################################################################################################################################
 
 def item_view(request, path):    # descriptor, endpoint = ""):
@@ -21,6 +19,10 @@ def item_view(request, path):    # descriptor, endpoint = ""):
     - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
     """
     from hyperweb.boot import registry
+    
+    # if not registry.booted:
+    #     from hyperweb.core import core_items
+    #     registry.seed(core_items)
 
     site = request.site = registry.site
     response = site.handle(request)

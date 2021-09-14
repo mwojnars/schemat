@@ -12,7 +12,6 @@ from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
 from .cache import LRUCache
-from .serialize import import_
 from .schema import generic_schema, Field
 
 
@@ -512,10 +511,9 @@ ItemDoesNotExist.item_class = Item
 
 class Category(Item):
     """
-    A category serves as a class for items: defines their schema and functionality; but also as a manager that controls access to
-    and creation of new items within category.
+    A category is an item that describes other items: their schema and functionality;
+    also acts as a manager that controls access to and creation of new items within category.
     """
-    
     def new(self, __loaded__ = True, **fields):
         """Create a new raw item of this category, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get_class()
@@ -547,7 +545,10 @@ class Category(Item):
             return symbols[name]
         
         assert name, f'no class_name defined for category {self}: {name}'
-        return import_(name)
+        
+        from hyperweb.boot import registry      # self.registry may be still uninitialized here, e.g., when creating core items
+        return registry.get_class(name)
+        # return import_(name)
         
     def get_item(self, iid):
         """

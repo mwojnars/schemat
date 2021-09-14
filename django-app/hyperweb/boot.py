@@ -5,7 +5,6 @@ from django.core.signals import request_finished
 from django.dispatch import receiver
 
 from .registry import Registry
-from .core import core_items
 
 
 #####################################################################################################################################################
@@ -37,9 +36,6 @@ def after_request(sender, **kwargs):
 
 #####################################################################################################################################################
 
-# registry = None         # will be initialized on the first web request thru get_registry() below
-
-
 def get_registry():
     # global registry
     # if registry is None:
@@ -49,6 +45,8 @@ def get_registry():
     return registry
 
 registry = Registry()
+
+from .core import core_items
 registry.seed(core_items)
 # registry.boot()
 

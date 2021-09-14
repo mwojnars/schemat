@@ -5,7 +5,60 @@ from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
 from .item import Category, Site
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
+from .serialize import classname, import_
 
+#####################################################################################################################################################
+#####
+#####  CLASSPATH
+#####
+
+class Classpath:
+    """
+    Two-way registry of global python objects and their dotted module paths for use inside
+    JSON dumps and in-item source code. Provides two mappings:
+    
+    1) path -> object (forward mapping), for loading and importing objects; available for all types of objects;
+    2) object -> path (inverse mapping), for serialization; only available for classes and functions.
+    
+    Mapping of dotted paths @x.y.z, as used in JSON dumps, to actual python objects and classes.
+    Can be viewed as a collection of "virtual packages" with python objects inside;
+    each object must be explicitly added to a virtual package.
+    """
+
+    # symbols = None      # bidict mapping of dotted paths to python classes and functions, and the way back
+    
+    objects = None      # dict of objects indexed by paths: (path -> object)
+    
+    def __init__(self):
+        pass
+    
+    def __getitem__(self, path):
+        """Return an object pointed to by a given path."""
+        return import_(path)
+        # return self.objects[path]
+        
+    def __setitem__(self, path, obj):
+        """Assign `obj` to a given path. Override an existing object if present."""
+    
+    def add(self, path, *unnamed, **named):
+        """
+        Add objects to a given package `path`, with their original names (__name__) preserved.
+        """
+       
+    def add_module(self, module, path = None):
+        """
+        Add all classes and functions from `module` to a given package `path` (module's python path if None).
+        Any class/function imported by `module` from another module is ignored (!).
+        """
+        
+    def get_path(self, obj):
+        """
+        Return canonical path of a given class or function, `obj`.
+        If `obj` was added multiple times under different names (paths),
+        the most recently assigned path is returned.
+        """
+        return classname(cls = obj)       # TODO: use self
+        
 
 #####################################################################################################################################################
 #####
@@ -34,8 +87,7 @@ class Registry:
     the last request before item refresh operates on an already-expired item.
     """
     
-    # classpath = None          # mapping of dotted class paths @x.y.z, as used in JSON dumps, to real python modules and packages;
-                                # predefined standard global modules: (global), (schema), ...
+    classpath = None            # mapping of dotted class paths @x.y.z, as used in JSON dumps, to real python modules and packages
     
     store = YamlStore()         # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
@@ -51,6 +103,7 @@ class Registry:
     
     
     def __init__(self):
+        self.classpath = Classpath()
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
     
     def boot(self, core_items = None):
@@ -87,7 +140,7 @@ class Registry:
 
         assert site is not None, "Site item not found among core items"
         self.site_id = site.id
-        
+
 
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
@@ -201,4 +254,13 @@ class Registry:
         """Cleanup and maintenance after a response has been sent, in the same thread."""
         self.cache.evict()
         
-
+    def get_path(self, cls):
+        """
+        Return a dotted module path of a given class as retrieved from the global Classpath configuration.
+        In the future, each application may have its own distinct Classpath.
+        """
+        return self.classpath.get_path(cls)
+        
+    def get_class(self, path):
+        return self.classpath[path]
+    

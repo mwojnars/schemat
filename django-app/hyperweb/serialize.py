@@ -87,12 +87,6 @@ def setstate(cls, state):
 #####  JSON for arbitrary objects
 #####
 
-class Classpath:
-    """
-    Two-way registry of classes and their full dotted names for serialization
-    of their instances through the JSON class below.
-    """
-
 class JSON:
     """
     Dump & load arbitrary objects to/from JSON strings.
@@ -100,8 +94,10 @@ class JSON:
     """
     
     ITEM_FLAG  = "(item)"   # special value of CLASS_ATTR that denotes a reference to an Item
+    DICT_FLAG  = "(dict)"   # special value of CLASS_ATTR that denotes a dict wrapper for another dict containing the reserved "@" key
     CLASS_ATTR = "@"        # special attribute appended to object state to store a class name (with package) of the object being encoded
     STATE_ATTR = "="        # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    DICT_PATH  = "builtins.dict"                            # virtual classpath of standard <dict> class; must be compatible with global Classpath registry configuration
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
@@ -127,20 +123,26 @@ class JSON:
         # retrieve object's state while checking against standard python types that need special handling
         if t in JSON.PRIMITIVES:    return obj
         if t is list:               return JSON.encode_list(obj)        # return a list, but first encode recursively all its elements
-        if t is dict:
-            obj = JSON.encode_dict(obj)
-            return {JSON.STATE_ATTR: obj, JSON.CLASS_ATTR: classname(obj)} if JSON.CLASS_ATTR in obj else obj
-            # an "escape" wrapper must be added around a dict that contains the reserved key "@"
 
-        from .item import Item
+        if t is dict:
+            obj = JSON.encode_dict(obj)                                 # encode_dict() always returns a dict
+            if JSON.CLASS_ATTR not in obj: return obj
+            # path = classname(obj)
+            return {JSON.STATE_ATTR: obj, JSON.CLASS_ATTR: JSON.DICT_FLAG}      # an "escape" wrapper is added around a dict that contains the reserved key "@"
+
+        from hyperweb.item import Item
         if issubclass(t, Item):
             if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
             id = list(obj.id)
             if t is type_: return id
             return {JSON.STATE_ATTR: id, JSON.CLASS_ATTR: JSON.ITEM_FLAG}
         
+        from hyperweb.boot import registry
+        # registry = get_registry()
+
         if isinstance(obj, type):
-            state = classname(cls = obj)
+            state = registry.get_path(obj)
+            # state = classname(cls = obj)
         elif t in (set, tuple):
             state = JSON.encode_list(obj)                       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         else:
@@ -157,22 +159,24 @@ class JSON:
         # wrap up in a dict and append class designator
         if not isinstance(state, dict):
             state = {JSON.STATE_ATTR: state}
-        state[JSON.CLASS_ATTR] = classname(obj)
+        state[JSON.CLASS_ATTR] = registry.get_path(obj.__class__)         #classname(obj)
         
         return state
     
     @staticmethod
-    def decode(state, type_ = None, _name_dict = classname(cls = dict)):
+    def decode(state, type_ = None):
         """Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object."""
 
         t = type(state)
         
-        # decoding of a standard python dict when a wrapper was added
-        if t is dict and state.get(JSON.CLASS_ATTR, None) == _name_dict:
+        # decoding of a wrapped-up dict that contained a pre-existing '@' key
+        if t is dict and state.get(JSON.CLASS_ATTR, None) == JSON.DICT_FLAG:
             if JSON.STATE_ATTR in state:
-                state = state[JSON.STATE_ATTR]          # `state` is a wrapper around an actual dict, created to "escape" the special "@" character
+                state = state[JSON.STATE_ATTR]                      # `state` was a dict-wrapper around an actual dict
             return JSON.decode_dict(state)
-        
+
+        from hyperweb.boot import registry
+
         # determine the expected type `class_` of the output object
         if type_:
             if t is dict and JSON.CLASS_ATTR in state and JSON.STATE_ATTR not in state:
@@ -193,9 +197,9 @@ class JSON:
                 state = state_attr
 
             if fullname == JSON.ITEM_FLAG:                  # decoding a reference to an Item?
-                from .boot import get_registry
-                return get_registry().get_item(state)       # ...get it from the Registry
-            class_ = import_(fullname)
+                return registry.get_item(state)             # ...get it from the Registry
+            class_ = registry.get_class(fullname)
+            # class_ = import_(fullname)
             
         # instantiate the output object; special handling for standard python types and Item
         if class_ in JSON.PRIMITIVES:
@@ -210,11 +214,11 @@ class JSON:
         if isinstance(class_, type):
             from .item import Item
             if issubclass(class_, Item):
-                from .boot import get_registry
-                return get_registry().get_item(state)       # get the referenced item from the Registry
+                return registry.get_item(state)       # get the referenced item from the Registry
             if issubclass(class_, type):
                 typename = state
-                return import_(typename)
+                return registry.get_class(typename)
+                # return import_(typename)
 
         # default object decoding via setstate()
         state = JSON.decode_dict(state)

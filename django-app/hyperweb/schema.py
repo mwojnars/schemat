@@ -25,7 +25,7 @@ from hypertag import HyperHTML
 
 # from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .serialize import classname, import_, getstate, setstate, JSON
+from .serialize import getstate, setstate, JSON    #classname, import_,
 from .multidict import MultiDict
 from .types import text, html, hypertag, struct, catalog
 
@@ -70,7 +70,8 @@ class Schema:
     - DataError in decode() -- inconsistent data in DB
     """
     
-    name  = None            # name of this schema instance for messaging purposes
+    name  = None            # name of this schema instance for messaging purposes (not used currently)
+    registry = None         # (TODO) global registry instance, like Item.registry (not used currently)
     
     # # instance-level settings
     # blank = True            # if True, None is a valid input value and is encoded as None;
@@ -111,7 +112,12 @@ class Schema:
         name = self.name or self.__class__.__name__
         return name
 
-    
+    def get_registry(self):
+        if self.registry: return self.registry
+        from hyperweb.boot import registry          # TODO: replace with self.registry when Schema becomes an Item subclass
+        return registry
+
+
     #######################################
     ##  display & edit
     ##
@@ -128,8 +134,7 @@ class Schema:
         if not self.__widget__:
             return esc(str(value))
 
-        from hyperweb.boot import get_registry      # TODO: replace with self.registry when Schema becomes an Item subclass
-        hypertag = get_registry().site.hypertag
+        hypertag = self.get_registry().site.hypertag
         return hypertag.render(self.__widget__, value = value, empty = False)
         # runtime = HyperHTML()  #Item.Hypertag
         # return hypertag(self.__widget__, runtime).render(value = value, empty = False)
@@ -256,10 +261,9 @@ class OBJECT(Schema):
         self.type = self._prepare_types(state['type']) if 'type' in state else []
         self.base = self._prepare_types(state['base']) if 'base' in state else []
         
-    @staticmethod
-    def _prepare_types(types):
+    def _prepare_types(self, types):
         types = list(types) if isinstance(types, (list, tuple)) else [types] if types else []
-        types = [import_(t) if isinstance(t, str) else t for t in types]
+        types = [self.get_registry().get_class(t) if isinstance(t, str) else t for t in types]
         assert all(isinstance(t, type) for t in types)
         return types
         
@@ -297,11 +301,13 @@ class CLASS(Schema):
     """
     def encode(self, value):
         if value is None: return None
-        return classname(cls = value)
+        return self.get_registry().get_path(value)
+        # return classname(cls = value)
     
     def decode(self, value):
         if not isinstance(value, str): raise DecodeError(f"expected a <str>, not {value}")
-        return import_(value)
+        return self.get_registry().get_class(value)
+        # return import_(value)
         
         
 class Primitive(Schema):
@@ -483,8 +489,7 @@ class ITEM(Schema):
         if cid is None:
             cid = ref_cid
             
-        from .boot import get_registry
-        return get_registry().get_item((cid, iid))
+        return self.get_registry().get_item((cid, iid))
         
     
 #####################################################################################################################################################
