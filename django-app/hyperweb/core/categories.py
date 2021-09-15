@@ -15,7 +15,7 @@ from base import %page, %assets, %properties
 . #dedent
     % print_headline
             p .catlink
-            a href=$app.url(cat) | {cat['name']? or cat}
+            a href=$cat.url() | {cat['name']? or cat}
             | ($item.cid,$item.iid)
 
     < page
@@ -70,7 +70,7 @@ from base import %page, %assets, %properties
                         td
                             $ iname = item['name']? or item
                             try
-                                a href=app.url(item) | $iname
+                                a href=$item.url() | $iname
                             else
                                 | $iname (no public URL)
 """

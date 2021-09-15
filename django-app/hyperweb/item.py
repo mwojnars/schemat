@@ -499,6 +499,15 @@ class Item(object, metaclass = MetaItem):
         
         return schema
 
+    def url(self, *args, **kwargs):
+        """
+        Return URL of this item as assigned by the current Application, that is, the on that's processing
+        the current web request. Only available during request processing.
+        """
+        request = self.registry.request
+        if not request: return None
+        return request.app.url_of(self, *args, **kwargs)
+
 
 ItemDoesNotExist.item_class = Item
 
@@ -702,7 +711,7 @@ class Application(Item):
             resolve = self._handle_spaces
         return resolve(request)
 
-    def url(self, __item__, __endpoint__ = None, **args):
+    def url_of(self, __item__, __endpoint__ = None, **args):
         """
         Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
         endpoint designation and/or arguments to be passed to a handler function or a template.
