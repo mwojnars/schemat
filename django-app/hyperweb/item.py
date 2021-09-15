@@ -467,16 +467,15 @@ class Item(object, metaclass = MetaItem):
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    @staticmethod
-    def render(template, request):
+    def render(self, template, request):
         """Render a given template script as a response to a given request."""
         
         app   = request.app
         site  = request.site
         item  = request.item
         files = site.get('directory')
-
-        context = dict(item = item, category = item.category, request = request, #data = View(item),
+        
+        context = dict(item = item, category = item.category, request = request, registry = self.registry, #data = View(item),
                        site = site, app = app, files = files)
         
         return site.hypertag.render(template, **context)
@@ -548,7 +547,6 @@ class Category(Item):
         
         from hyperweb.boot import registry      # self.registry may be still uninitialized here, e.g., when creating core items
         return registry.get_class(name)
-        # return import_(name)
         
     def get_item(self, iid):
         """
@@ -804,8 +802,8 @@ class Site(Item):
     @cached(ttl = 60)
     def hypertag(self):
         """Return a HyperHTML runtime with customized loaders to search through an internal filesystem of items."""
-        filesystem = self.get('directory')
-        loaders = [HyItemLoader(filesystem), PyLoader]     # PyLoader is needed to load Python built-ins
+        files = self.get('directory')
+        loaders = [HyItemLoader(files), PyLoader]       # PyLoader is needed to load Python built-ins
         return HyperHTML(loaders)
         
     # def _post_decode(self):
@@ -889,14 +887,7 @@ class Site(Item):
     #
     #     iid = category.decode_url(iid_str)
     #     return reg.get_item((cid, iid))
-
-    def after_request(self, sender, **kwargs):
-        """Cleanup and maintenance after a response has been sent, in the same thread."""
-
-        print(f'after_request() in thread {threading.get_ident()}...', flush = True)
-        self.registry.after_request(sender, **kwargs)
-        # sleep(5)
-        
+    
 
 class Directory(Item):
     """"""

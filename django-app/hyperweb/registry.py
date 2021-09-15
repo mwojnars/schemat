@@ -1,12 +1,10 @@
 import builtins, threading
 from types import FunctionType, BuiltinFunctionType
-from collections import defaultdict
 
 from .config import ROOT_CID, SITE_ID
 from .cache import LRUCache
 from .item import Category, Site
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-# from .serialize import classname, import_
 
 import hyperweb.schema
 import hyperweb.item
@@ -37,7 +35,6 @@ class Classpath:
     def __getitem__(self, path):
         """Return an object pointed to by a given path."""
         return self.forward[path]
-        # return import_(path)
         
     def __setitem__(self, path, obj):
         """
@@ -55,7 +52,6 @@ class Classpath:
         the most recently assigned path is returned.
         """
         return self.inverse[obj]
-        # return classname(cls = obj)
         
     def add(self, path, *unnamed, **named):
         """
@@ -116,7 +112,7 @@ class Registry:
     so that the item is checked in the Registry and taken from there if it already exists.
     De-duplication improves performance thanks to avoiding repeated json-decoding of the same item records.
     This is particularly important for Category items which are typically accessed multiple times during a single web request.
-    WARNING: some duplicate items can still exist and be hanging around as references from other items - due to cache flushing,
+    WARNING: some duplicate items can still exist and be hanging around as references from other items - due to cache refresh,
     which removes items from the Registry but does NOT remove/update references from other items that are still kept in cache.
     Hence, you shall NEVER assume that two items of the same IID - even if both retrieved through the Registry -
     are the same objects or are identical. This also applies to Category objects referrenced by items through item.category.
@@ -133,16 +129,21 @@ class Registry:
     
     site_id = None
     
-    # below are properties for accessing core items: root, site, ...
+    # properties for accessing core global items: root, site, ...
     # these items are not stored as attributes to avoid issues with caching (when an item is reloaded)
     @property
     def root(self): return self.get_item((ROOT_CID, ROOT_CID))
     @property
     def site(self): return self.get_item(self.site_id)
+    @property
+    def files(self): return self.site['directory']
     
+    # global property set at the beginning of request processing and cleared at the end
+    request = None
     
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        
         self.classpath = Classpath()
         self.classpath.add_module(builtins)
         self.classpath.add_module(hyperweb.schema)  # schemma.type
@@ -292,10 +293,6 @@ class Registry:
         print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
         self.cache.set(item.id, item, ttl, protect)
 
-    def after_request(self, sender, **kwargs):
-        """Cleanup and maintenance after a response has been sent, in the same thread."""
-        self.cache.evict()
-        
     def get_path(self, cls):
         """
         Return a dotted module path of a given class or function as stored in a global Classpath.
@@ -304,5 +301,26 @@ class Registry:
         return self.classpath.get_path(cls)
         
     def get_class(self, path):
+        """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
         return self.classpath[path]
     
+
+    ### Request handling ###
+    
+    def start_request(self, request):
+        assert self.request is None, 'trying to start a new request when another one is still open'
+        self.request = request
+        
+    def after_request(self, sender, **kwargs):
+        """
+        Cleanup and maintenance after a response has been sent, in the same thread.
+        The `request` property is still available, but no additional response can be produced.
+        """
+        # print(f'after_request() in thread {threading.get_ident()}...', flush = True)
+        self.cache.evict()
+        # sleep(5)
+
+    def stop_request(self):
+        assert self.request is not None, 'trying to stop a request when none was started'
+        self.request = None
+

@@ -24,6 +24,8 @@ def item_view(request, path):    # descriptor, endpoint = ""):
     #     from hyperweb.core import core_items
     #     registry.seed(core_items)
 
+    registry.start_request(request)
+    
     site = request.site = registry.site
     response = site.handle(request)
     if isinstance(response, str):

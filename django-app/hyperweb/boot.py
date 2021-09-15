@@ -9,43 +9,17 @@ from .registry import Registry
 
 #####################################################################################################################################################
 #####
-#####  GLOBALS
+#####  GLOBAL REGISTRY
 #####
-
-@receiver(request_finished)
-def after_request(sender, **kwargs):
-    registry.site.after_request(sender, **kwargs)
-    # print(f'after_request() in thread {threading.get_ident()} start...')
-    # sleep(5)
-    # print(f'after_request() in thread {threading.get_ident()} ...stop')
-
-# print(f'main thread {threading.get_ident()}')
-
-
-#####################################################################################################################################################
-
-# registry = Registry()
-# registry.seed(core_items)
-# # registry.boot()
-
-# root = registry.get_item((0,0))
-# site = registry.get_site()
-# print("Category.schema: ", root.schema.dump_json())
-# print("Site.schema:     ", Field._json.dumps(site.category.schema))
-
-#####################################################################################################################################################
-
-# def get_registry():
-#     global registry
-#     if registry is None:
-#         registry = Registry()
-#         registry.seed(core_items)
-#         # registry.boot()
-#     return registry
 
 registry = Registry()
 
+# create or load core items
 from .core import core_items
-registry.seed(core_items)
-# registry.boot()
+registry.seed(core_items)     #registry.boot()
 
+# connect the after_request() method of `registry` with Django
+@receiver(request_finished)
+def after_request(sender, **kwargs):
+    registry.after_request(sender, **kwargs)
+    registry.stop_request()

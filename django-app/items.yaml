@@ -240,7 +240,7 @@
     \ 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/\n       \
     \ \n        .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px;\
     \ }\n        .catalog-2 .ct-field        { font-weight: normal; font-style: italic;\
-    \ }\n        \n        .ct-value > *               { font-size: 14px; font-family:\
+    \ }\n        \n        .ct-value, .ct-value > *    { font-size: 14px; font-family:\
     \ monospace; /* courier */ }\n        .ct-value .field .default   { color: #888;\
     \ }\n        .ct-value .field .info      { font-style: italic; }\n        .ct-value\
     \ pre               { margin-bottom: 0px; font-size: 13px; }\n    "

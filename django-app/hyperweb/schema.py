@@ -25,7 +25,7 @@ from hypertag import HyperHTML
 
 # from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
-from .serialize import getstate, setstate, JSON    #classname, import_,
+from .serialize import getstate, setstate, JSON
 from .multidict import MultiDict
 from .types import text, html, hypertag, struct, catalog
 
@@ -134,7 +134,8 @@ class Schema:
         if not self.__widget__:
             return esc(str(value))
 
-        hypertag = self.get_registry().site.hypertag
+        registry = self.get_registry()
+        hypertag = registry.site.hypertag
         return hypertag.render(self.__widget__, value = value, empty = False)
         # runtime = HyperHTML()  #Item.Hypertag
         # return hypertag(self.__widget__, runtime).render(value = value, empty = False)
@@ -489,6 +490,10 @@ class ITEM(Schema):
             
         return self.get_registry().get_item((cid, iid))
         
+    __widget__ = """
+        context $value as item
+        a | $item
+    """
     
 #####################################################################################################################################################
 #####

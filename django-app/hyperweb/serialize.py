@@ -126,6 +126,7 @@ class JSON:
 
         if t is dict:
             obj = JSON.encode_dict(obj)                                 # encode_dict() always returns a dict
+            #assert isinstance(obj, dict)
             if JSON.CLASS_ATTR not in obj: return obj
             return {JSON.STATE_ATTR: obj, JSON.CLASS_ATTR: JSON.DICT_FLAG}      # an "escape" wrapper is added around a dict that contains the reserved key "@"
 
@@ -143,10 +144,9 @@ class JSON:
         elif t in (set, tuple):
             state = JSON.encode_list(obj)                       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         else:
-            state = getstate(obj)
+            state = getstate(obj)                               # TODO: allow non-dict state from getstate()
             state = JSON.encode_dict(state)                     # recursively encode all non-standard objects inside `state`
-            assert isinstance(state, dict)                      # TODO: allow non-dict state from getstate()
-
+            #assert isinstance(state, dict)
             if JSON.CLASS_ATTR in state:
                 raise EncodeError(f'non-serializable object state, a reserved character "{JSON.CLASS_ATTR}" occurs as a key in the state dictionary')
             

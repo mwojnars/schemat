@@ -95,7 +95,7 @@ base_css = Code_(
         .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
         .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
         
-        .ct-value > *               { font-size: 14px; font-family: monospace; /* courier */ }
+        .ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
         .ct-value .field .default   { color: #888; }
         .ct-value .field .info      { font-style: italic; }
         .ct-value pre               { margin-bottom: 0px; font-size: 13px; }
