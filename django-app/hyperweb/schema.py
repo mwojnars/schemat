@@ -494,10 +494,11 @@ class ITEM(Schema):
             
         return self.get_registry().get_item((cid, iid))
         
-    __widget__ = """
-        context $value as item
-        a href=$item.url() | $item
-    """
+    # __widget__ = """
+    #     context $value as item
+    #     a href=$item.url() | $item
+    # """
+    
     
 #####################################################################################################################################################
 #####
@@ -1020,7 +1021,7 @@ class FIELD(STRUCT):
             if f.default <> f.MISSING
                 $default = str(f.default)
                 span .default title="default value: {default:crop(1000)}"
-                    | [{default : crop(100)}]
+                    | ({default : crop(100)})
             if f.info
                 span .info | • $f.info
                 # smaller dot: &middot;

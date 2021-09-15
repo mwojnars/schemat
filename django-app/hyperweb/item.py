@@ -343,21 +343,18 @@ class Item(object, metaclass = MetaItem):
         
     def __repr__(self, max_len = 30):
         
-        category = self.category.get('name', f'CID({self.cid})')
-        name     = self.get('name', '')
-        # cat = self.category
-        # category = f'{cat.name}' if cat and hasattr(cat,'name') and cat.name else f'CID({self.cid})'
-        # name     = f' {self.name}' if hasattr(self,'name') and self.name is not None else ''
-        if len(name) > max_len:
-            name = name[:max_len - 3] + '...'
-        if name: name = ' ' + name
+        category = self.category.get('name', self.cid)
+        return f'[{category}:{self.iid}]'
         
-        return f'<{category}:{self.iid}{name}>'
-    
     def __html__(self):
-        url = self.url()
-        txt = esc(str(self))
-        return f"<a href={url}>{txt}</a>" if url else txt
+        url  = self.url()
+        id   = esc(repr(self))
+        name = esc(self.get('name', ''))
+        # if len(name) > max_len: name = name[:max_len - 3] + '...'
+        # if name: name += ' '
+        
+        if name: return f"<a href={url}>{name}</a> {id}"
+        else:    return f"<a href={url}>{id}</a>"
     
     # def current(self):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
