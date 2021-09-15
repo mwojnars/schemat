@@ -1,6 +1,6 @@
 from django.http import HttpRequest, HttpResponse
-from django.template import loader
-from django.shortcuts import render
+# from django.template import loader
+# from django.shortcuts import render
 
 #####################################################################################################################################################
 

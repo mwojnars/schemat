@@ -501,11 +501,11 @@ class Item(object, metaclass = MetaItem):
 
     def url(self, *args, **kwargs):
         """
-        Return URL of this item as assigned by the current Application, that is, the on that's processing
-        the current web request. Only available during request processing.
+        Return URL of this item as assigned by the current Application, that is, the one that's
+        processing the current web request. Only available during request processing.
         """
         request = self.registry.request
-        if not request: return None
+        assert request is not None
         return request.app.url_of(self, *args, **kwargs)
 
 

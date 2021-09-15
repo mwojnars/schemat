@@ -102,6 +102,8 @@ class Classpath:
 
 class Registry:
     """
+    Central registry of items AND a global runtime environment for request processing.
+    
     A registry of Item instances recently created or loaded from DB during current web request or previous ones.
     Managing the pool of items through the entire execution of an application:
       - transfering items to/from DB storage(s) and through the cache
@@ -122,8 +124,6 @@ class Registry:
     the last request before item refresh operates on an already-expired item.
     """
     
-    classpath = None            # mapping of dotted class paths @x.y.z, as used in JSON dumps, to real python modules and packages
-    
     store = YamlStore()         # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
@@ -137,8 +137,11 @@ class Registry:
     def site(self): return self.get_item(self.site_id)
     @property
     def files(self): return self.site['directory']
+
+    # collection of globally available python objects and classes for serialization and in-item dependencies; Classpath instance
+    classpath = None
     
-    # global property set at the beginning of request processing and cleared at the end
+    # the currently processed web request; set at the beginning of request processing and cleared at the end
     request = None
     
     def __init__(self):
