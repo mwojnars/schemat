@@ -5,37 +5,19 @@ from django.shortcuts import render
 #####################################################################################################################################################
 
 def item_view(request, path):    # descriptor, endpoint = ""):
-    """
-    During request processing, Hyperweb assigns in `request` additional non-standard attributes
-    that carry Hyperweb-specific information for use in downstream processing functions.
-    These attributes may include:
-    - request.site  = Site item that received the request (this overrides the Django's meaning of this attribute)
-    - request.app   = Application item this request is addressed to
-    - request.item  = target item that's responsible for actual handling of this request
-    - request.route = name of the route of the `site` object where the application `app` was found to match the requested URL
-    - request.ipath = part of the URL after an application prefix and excluding the query string; identifies an item
-                      and its endpoint within a scope of a given application
-    - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
-    - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
-    """
     from hyperweb.boot import registry
     
     # if not registry.booted:
     #     from hyperweb.core import core_items
     #     registry.seed(core_items)
 
-    registry.start_request(request)
-    
-    site = request.site = registry.site
-    response = site.handle(request)
+    response = registry.handle_request(request)
+
     if isinstance(response, str):
         return HttpResponse(response)
     return response
-    
-    # item = site.resolve(descriptor)
-    # doc  = item.serve(request, endpoint)
-    # return HttpResponse(doc)
 
+    
     # if isinstance(doc, str):
     #     return HttpResponse(doc)
     # else:

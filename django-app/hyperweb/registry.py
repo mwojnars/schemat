@@ -307,13 +307,32 @@ class Registry:
 
     ### Request handling ###
     
+    def handle_request(self, request):
+        """
+        During request processing, some additional non-standard attributes are assigned in `request`
+        to carry Hyperweb-specific information for downstream processing functions:
+        - request.site  = Site item that received the request (this overrides the Django's meaning of this attribute)
+        - request.app   = Application item this request is addressed to
+        - request.item  = target item that's responsible for actual handling of this request
+        - request.route = name of the route of the `site` object where the application `app` was found to match the requested URL
+        - request.ipath = part of the URL after an application prefix and excluding the query string; identifies an item
+                          and its endpoint within a scope of a given application
+        - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
+        - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
+        """
+        request.site = site = self.site
+        self.start_request(request)
+        return site.handle(request)
+        # after "return", self.after_request() and self.stop_request() are executed
+        # in an action fired on Django's <request_finished> signal, see boot.py for details
+    
     def start_request(self, request):
         assert self.request is None, 'trying to start a new request when another one is still open'
         self.request = request
         
     def after_request(self, sender, **kwargs):
         """
-        Cleanup and maintenance after a response has been sent, in the same thread.
+        Cleanup, maintenance, and long-running post-request tasks after a response has been sent, in the same thread.
         The `request` property is still available, but no additional response can be produced.
         """
         # print(f'after_request() in thread {threading.get_ident()}...', flush = True)
