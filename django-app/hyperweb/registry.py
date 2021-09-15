@@ -102,7 +102,7 @@ class Classpath:
 
 class Registry:
     """
-    Central registry of items AND a global runtime environment for request processing.
+    Hyperweb's runtime environment: global objects; request processing; access to and caching of items.
     
     A registry of Item instances recently created or loaded from DB during current web request or previous ones.
     Managing the pool of items through the entire execution of an application:
@@ -141,8 +141,14 @@ class Registry:
     # collection of globally available python objects and classes for serialization and in-item dependencies; Classpath instance
     classpath = None
     
-    # the currently processed web request; set at the beginning of request processing and cleared at the end
-    request = None
+    # the currently processed web request; set at the beginning of request processing; cleared at the end
+    current_request = None
+    
+    @property
+    def current_app(self):                  # returns Application that's a target of current request; None if no current_request
+        req = self.current_request
+        return req.app if req is not None else None
+    
     
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
@@ -330,8 +336,8 @@ class Registry:
         # in an action fired on Django's <request_finished> signal, see boot.py for details
     
     def start_request(self, request):
-        assert self.request is None, 'trying to start a new request when another one is still open'
-        self.request = request
+        assert self.current_request is None, 'trying to start a new request when another one is still open'
+        self.current_request = request
         
     def after_request(self, sender, **kwargs):
         """
@@ -343,6 +349,6 @@ class Registry:
         # sleep(5)
 
     def stop_request(self):
-        assert self.request is not None, 'trying to stop a request when none was started'
-        self.request = None
+        assert self.current_request is not None, 'trying to stop a request when none was started'
+        self.current_request = None
 

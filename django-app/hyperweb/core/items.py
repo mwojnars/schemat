@@ -199,7 +199,7 @@ base_hy = Code_(
         %catalog_1 item
             $c = 0          # alternating color of rows: 0 or 1
             table .catalog-1
-                for name, value in item.data.items()
+                for name, value in item.get_entries()
                     $schema = item.get_schema(name)
                     tr class="ct-color{c}"
                         if schema.is_catalog

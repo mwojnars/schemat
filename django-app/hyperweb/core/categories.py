@@ -182,8 +182,11 @@ Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.item.Site',
-    fields      = FIELDS(name = STRING(), apps = CATALOG(ITEM(Application_))),
-    directory   = ITEM(Directory_),     # root of the site-global hierarchical directory of items
+    fields      = FIELDS(
+        name        = STRING(),
+        directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
+        apps        = CATALOG(ITEM(Application_)),
+    ),
 )
 
 Varia_ = Category_(

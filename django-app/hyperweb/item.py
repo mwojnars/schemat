@@ -5,6 +5,7 @@ from django.http import FileResponse, HttpResponse, Http404
 
 from nifty.text import html_escape
 
+from hypertag.std.html import html_escape as esc
 from hypertag.core.runtime import HyLoader, PyLoader, join_path
 from hypertag import HyperHTML
 
@@ -353,6 +354,11 @@ class Item(object, metaclass = MetaItem):
         
         return f'<{category}:{self.iid}{name}>'
     
+    def __html__(self):
+        url = self.url()
+        txt = esc(str(self))
+        return f"<a href={url}>{txt}</a>" if url else txt
+    
     # def current(self):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
     #     return self.registry.get_item(self.id)
@@ -499,14 +505,33 @@ class Item(object, metaclass = MetaItem):
         
         return schema
 
+    def get_entries(self, order = 'schema'):
+        """Retrieve a list of entries in self.data ordered appropriately."""
+        # return self.data.items()
+        
+        entries = []
+        fields  = self.category.get('fields', {})
+        
+        # retrieve entries by their order in category's schema (fields)
+        for f in fields:
+            entries += [(f, v) for v in self.data.get_list(f)]
+            
+        # add out-of-schema entries, in their natural order (of insertion)
+        for key, values in self.data.items_lists():
+            if key in fields: continue
+            entries += [(key, v) for v in values]
+            
+        return entries
+        
+
     def url(self, *args, **kwargs):
         """
         Return URL of this item as assigned by the current Application, that is, the one that's
-        processing the current web request. Only available during request processing.
+        processing the current web request. Only available during request processing, None is returned otherwise.
         """
-        request = self.registry.request
-        assert request is not None
-        return request.app.url_of(self, *args, **kwargs)
+        app = self.registry.current_app
+        if not app: return None
+        return app.url_of(self, *args, **kwargs)
 
 
 ItemDoesNotExist.item_class = Item
@@ -711,11 +736,12 @@ class Application(Item):
             resolve = self._handle_spaces
         return resolve(request)
 
-    def url_of(self, __item__, __endpoint__ = None, **args):
+    def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
         """
         Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
         endpoint designation and/or arguments to be passed to a handler function or a template.
         """
+        # TODO: return absolute URLs (__relative__=False); currently they are always relative
         if self.get('url_scheme') == 'raw':
             f = self._url_raw
         else:

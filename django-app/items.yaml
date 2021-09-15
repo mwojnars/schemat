@@ -125,6 +125,12 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
+    directory:
+      schema:
+        category:
+          '=': [0, 1]
+          '@': (item)
+        '@': hyperweb.schema.ITEM
     apps:
       schema:
         values:
@@ -133,11 +139,6 @@
             '@': (item)
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-  directory:
-    category:
-      '=': [0, 1]
-      '@': (item)
-    '@': hyperweb.schema.ITEM
 - id: [0, 5]
   name: Varia
   info: Category of items that do not belong to any specific category
@@ -293,7 +294,7 @@
     \            catalog_row $name $value $schema\n                    # $c = 1 -\
     \ c\n        \n        %catalog_1 item\n            $c = 0          # alternating\
     \ color of rows: 0 or 1\n            table .catalog-1\n                for name,\
-    \ value in item.data.items()\n                    $schema = item.get_schema(name)\n\
+    \ value in item.get_entries()\n                    $schema = item.get_schema(name)\n\
     \                    tr class=\"ct-color{c}\"\n                        if schema.is_catalog\n\
     \                            td .ct-nested colspan=2\n                       \
     \         div .ct-field | {name}\n                                catalog_2 $value\
@@ -333,9 +334,7 @@
   spaces: {meta: 1, sys: 2}
 - id: [4, 1]
   name: catalog.wiki
-  directory:
-    '=': [1, 1]
-    '@': (item)
+  directory: 1
   apps: {items: 1, catalog: 2}
 - id: [5, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.

@@ -131,16 +131,20 @@ class Schema:
         - %protocol hypertag (after import)
         - .scroll (css class) - for elements that should be assigned standard max-height with a scroll box around
         """
-        if not self.__widget__:
-            return esc(str(value))
-
-        registry = self.get_registry()
-        hypertag = registry.site.hypertag
-        return hypertag.render(self.__widget__, value = value, empty = False)
-        # runtime = HyperHTML()  #Item.Hypertag
-        # return hypertag(self.__widget__, runtime).render(value = value, empty = False)
+        if self.__widget__:
+            registry = self.get_registry()
+            hypertag = registry.site.hypertag
+            return hypertag.render(self.__widget__, value = value, empty = False)
+            # runtime = HyperHTML()  #Item.Hypertag
+            # return hypertag(self.__widget__, runtime).render(value = value, empty = False)
         
-    
+        try:
+            return value.__html__()
+        except Exception as ex:
+            pass
+        
+        return esc(str(value))
+
     __widget__ = None
     
     def form(self, value):
