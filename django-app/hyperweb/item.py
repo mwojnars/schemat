@@ -356,6 +356,24 @@ class Item(object, metaclass = MetaItem):
         if name: return f"<a href={url}>{name}</a> {id}"
         else:    return f"<a href={url}>{id}</a>"
     
+    def ciid(self, html = True, link = True, brackets = True, max_len = None):
+        """
+        "Category-Item ID" (CIID) string (stamp, emblem) having the form:
+        - [CATEGORY-NAME:IID], if the category of self has a "name" property; or
+        - [CID:IID] otherwise.
+        If link=True, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page.
+        If html=True, the CATEGORY-NAME is HTML-escaped. If max_len is not None,
+        CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
+        """
+        cat = self.category.get('name', str(self.cid))
+        if html: cat = esc(cat)
+        if link:
+            url = self.category.url()
+            if url: cat = f"<a href={url}>{cat}</a>"
+        stamp = f"{cat}:{self.iid}"
+        if brackets: stamp = f"[{stamp}]"
+        return stamp
+
     # def current(self):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
     #     return self.registry.get_item(self.id)

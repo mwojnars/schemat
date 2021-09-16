@@ -13,10 +13,10 @@ context $item, $category as cat, $app, $files
 from base import %page, %assets, %properties
 
 . #dedent
-    % print_headline
-            p .catlink
-            a href=$cat.url() | {cat['name']? or cat}
-            | ($item.cid,$item.iid)
+    # % print_headline
+    #     p .catlink
+    #     a href=$cat.url() | {cat['name']? or 'unnamed'}
+    #     | [$item.cid:$item.iid]
 
     < page
         $name = item['name']? or str(item)
@@ -29,8 +29,9 @@ from base import %page, %assets, %properties
         #   div .col-1
         #   div .col-10
         body
-            h1  | {name}
-            print_headline
+            h1
+                | {name}
+                span style="font-size:40%; font-weight:normal" / $item.ciid()
             
             h2 | Properties
             properties $item
@@ -59,7 +60,6 @@ from base import %page, %assets, %properties
                 | category #{cat.iid}
 
             h2 | Properties
-
             properties $cat
 
             h2 | Items

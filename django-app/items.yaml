@@ -8,7 +8,7 @@
       \            assets\n            style / $files.open('base.css')['source']\n\
       \n        body\n            h1\n                try\n                    i |\
       \ $name\n                    . | -\n                | category #{cat.iid}\n\n\
-      \            h2 | Properties\n\n            properties $cat\n\n            h2\
+      \            h2 | Properties\n            properties $cat\n\n            h2\
       \ | Items\n            table\n                for item in list(cat.registry.load_items(cat))\n\
       \                    tr\n                        td / #{item.iid} &nbsp;\n \
       \                       td\n                            $ iname = item['name']?\
@@ -33,14 +33,15 @@
         values: {'@': hyperweb.schema.CODE}
         '@': hyperweb.schema.CATALOG
       default: {__view__: "\ncontext $item, $category as cat, $app, $files\nfrom base\
-          \ import %page, %assets, %properties\n\n. #dedent\n    % print_headline\n\
-          \            p .catlink\n            a href=$cat.url() | {cat['name']? or\
-          \ cat}\n            | ($item.cid,$item.iid)\n\n    < page\n        $name\
-          \ = item['name']? or str(item)\n        head\n            title | {name}\n\
-          \            assets\n            style / $files.open('base.css')['source']\n\
-          \n        # body .container : div .row\n        #   div .col-1\n       \
-          \ #   div .col-10\n        body\n            h1  | {name}\n            print_headline\n\
-          \            \n            h2 | Properties\n            properties $item\n\
+          \ import %page, %assets, %properties\n\n. #dedent\n    # % print_headline\n\
+          \    #     p .catlink\n    #     a href=$cat.url() | {cat['name']? or 'unnamed'}\n\
+          \    #     | [$item.cid:$item.iid]\n\n    < page\n        $name = item['name']?\
+          \ or str(item)\n        head\n            title | {name}\n            assets\n\
+          \            style / $files.open('base.css')['source']\n\n        # body\
+          \ .container : div .row\n        #   div .col-1\n        #   div .col-10\n\
+          \        body\n            h1\n                | {name}\n              \
+          \  span style=\"font-size:40%; font-weight:normal\" / $item.ciid()\n   \
+          \         \n            h2 | Properties\n            properties $item\n\
           \            # print_catalog1 $item\n          \n"}
     fields:
       schema:
@@ -198,31 +199,32 @@
     \ 300px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
     \          --textarea-height: 12rem;\n        }\n        body {\n          width:\
     \ 1120px;\n          margin: 0 auto;\n          padding-bottom: 50px;\n      \
-    \  }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em;\
+    \    font-family: 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n\
+    \        }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em;\
     \ }\n        \n        a { color: #006ecc }\n        a:visited { color: #00427a\
-    \ }\n        .catlink { font-size: 14px; margin-top: -20px }\n        \n     \
-    \   /*** SITEWIDE */\n        \n        .btn { border: none; border-radius: 0;\
-    \ }\n        .btn-primary, .btn-primary.disabled, .btn-primary:disabled      \
-    \ { background-color: #5b8fdd; }\n        .btn-primary:hover                 \
-    \                              { background-color: #4b78bb; }\n        .btn-secondary,\
-    \ .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993;\
-    \ }\n        \n        /*** UTILITIES */\n        \n        .scroll {\n      \
-    \      overflow: scroll;\n            max-height: var(--textarea-height);\n  \
-    \          border-bottom: 1px solid rgba(0,0,0,0.1);\n            border-right:\
-    \  1px solid rgba(0,0,0,0.1);\n            resize: vertical;\n        }\n    \
-    \    .scroll[style*=\"height\"] {\n            max-height: unset;            \
-    \  /* this allows manual resizing (resize:vertical) to exceed predefined max-height\
-    \ */\n        }\n        \n        /*** WIDGETS */\n        \n        .ace-editor\
-    \ {\n            --bk-color: rgba(255,255,255,0.3);\n            background-color:\
-    \ var(--bk-color);\n            height: var(--textarea-height);\n            width:\
-    \ 100%;\n            line-height: 1.4;\n            font-family: var(--bs-font-monospace);\n\
-    \            font-size: 13px;\n            resize: vertical;        /* editor\
-    \ box resizing requires editor.resize() to be invoked by ResizeObserver */\n \
-    \           /*margin-left: -10px;      /* shift the editor to better align inner\
-    \ text with text of surrounding rows in a catalog */\n            /*border-left:\
-    \ 8px solid var(--bk-color);*/\n        }\n\n        /*** ITEM PAGE */\n\n   \
-    \     .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */\n\
-    \        .ct-color1                      { background: #f6f6f6; }\n\n        .catalog-1\
+    \ }\n        .catlink { font-size: 0.5rem }\n        \n        /*** SITEWIDE */\n\
+    \        \n        .btn { border: none; border-radius: 0; }\n        .btn-primary,\
+    \ .btn-primary.disabled, .btn-primary:disabled       { background-color: #5b8fdd;\
+    \ }\n        .btn-primary:hover                                              \
+    \ { background-color: #4b78bb; }\n        .btn-secondary, .btn-secondary.disabled,\
+    \ .btn-secondary:disabled { background-color: #7e8993; }\n        \n        /***\
+    \ UTILITIES */\n        \n        .scroll {\n            overflow: scroll;\n \
+    \           max-height: var(--textarea-height);\n            border-bottom: 1px\
+    \ solid rgba(0,0,0,0.1);\n            border-right:  1px solid rgba(0,0,0,0.1);\n\
+    \            resize: vertical;\n        }\n        .scroll[style*=\"height\"]\
+    \ {\n            max-height: unset;              /* this allows manual resizing\
+    \ (resize:vertical) to exceed predefined max-height */\n        }\n        \n\
+    \        /*** WIDGETS */\n        \n        .ace-editor {\n            --bk-color:\
+    \ rgba(255,255,255,0.3);\n            background-color: var(--bk-color);\n   \
+    \         height: var(--textarea-height);\n            width: 100%;\n        \
+    \    line-height: 1.4;\n            font-family: var(--bs-font-monospace);\n \
+    \           font-size: 13px;\n            resize: vertical;        /* editor box\
+    \ resizing requires editor.resize() to be invoked by ResizeObserver */\n     \
+    \       /*margin-left: -10px;      /* shift the editor to better align inner text\
+    \ with text of surrounding rows in a catalog */\n            /*border-left: 8px\
+    \ solid var(--bk-color);*/\n        }\n\n        /*** ITEM PAGE */\n\n       \
+    \ .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */\n \
+    \       .ct-color1                      { background: #f6f6f6; }\n\n        .catalog-1\
     \ th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right:\
     \ none;*/ }\n        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset)\
     \ - var(--ct-cell-pad)); }\n        td.ct-nested                    { padding-right:\

@@ -27,13 +27,14 @@ base_css = Code_(
           width: 1120px;
           margin: 0 auto;
           padding-bottom: 50px;
+          font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
         
         h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
         
         a { color: #006ecc }
         a:visited { color: #00427a }
-        .catlink { font-size: 14px; margin-top: -20px }
+        .catlink { font-size: 0.5rem }
         
         /*** SITEWIDE */
         
