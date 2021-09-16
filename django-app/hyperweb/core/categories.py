@@ -9,73 +9,71 @@ from hyperweb.schema import *
 
 # default template that displays a generic item page if a category-specific template is missing
 page_item = """
-context $item, $category as cat, $app, $files
-from base import %page, %assets, %properties
+context $item
+from base import %page_item
+page_item $item
 
-. #dedent
-    # % print_headline
-    #     p .catlink
-    #     a href=$cat.url() | {cat['name']? or 'unnamed'}
-    #     | [$item.cid:$item.iid]
-
-    < page
-        # $name = item['name']? or str(item)
-        head
-            title | $item['name']? $item.ciid(False)
-            assets
-            style / $files.open('base.css')['source']
-
-        # body .container : div .row
-        #   div .col-1
-        #   div .col-10
-        body
-            h1
-                $ciid = item.ciid()
-                try
-                    | $item['name']
-                    span style="font-size:40%; font-weight:normal" / $ciid
-                else / $ciid
-            
-            h2 | Properties
-            properties $item
-            # print_catalog1 $item
+# from base import %page, %assets, %properties
+# . #dedent
+#     < page
+#         head
+#             title | $item['name']? $item.ciid(False)
+#             assets
+#             style / $files.open('base.css')['source']
+#
+#         # body .container : div .row
+#         #   div .col-1
+#         #   div .col-10
+#         body
+#             h1
+#                 $ciid = item.ciid()
+#                 try
+#                     | $item['name']
+#                     span style="font-size:40%; font-weight:normal" / $ciid
+#                 else / $ciid
+#
+#             h2 | Properties
+#             properties $item
+#             # print_catalog1 $item
           
 """
 
 # template that displays a category page
 page_category = """
-context $item as cat, $app, $files
-from base import %page, %assets, %properties
+context $item as cat, $files
+from base import %page_category
+page_category cat
 
-. #dedent
-    < page
-        $name = cat['name']? or str(cat)
-        head
-            title | {name ' -' }? category #{cat.iid}
-            assets
-            style / $files.open('base.css')['source']
-
-        body
-            h1
-                try
-                    i | $name
-                    . | -
-                | category #{cat.iid}
-
-            h2 | Properties
-            properties $cat
-
-            h2 | Items
-            table
-                for item in list(cat.registry.load_items(cat))
-                    tr
-                        td / #{item.iid} &nbsp;
-                        td
-                            $ iname = item['name']? or item
-                            try
-                                a href=$item.url() | $iname
-                            else
-                                | $iname (no public URL)
+# from base import %page, %assets, %properties
+# . #dedent
+#     < page
+#         $name = cat['name']? or str(cat)
+#         head
+#             title | {name ' -' }? category #{cat.iid}
+#             assets
+#             style / $files.open('base.css')['source']
+#
+#         body
+#             h1
+#                 try
+#                     i | $name
+#                     . | -
+#                 | category #{cat.iid}
+#
+#             h2 | Properties
+#             properties $cat
+#
+#             h2 | Items
+#             table
+#                 for item in list(cat.registry.load_items(cat))
+#                     tr
+#                         td / #{item.iid} &nbsp;
+#                         td
+#                             $ iname = item['name']? or item
+#                             try
+#                                 a href=$item.url() | $iname
+#                             else
+#                                 | $iname (no public URL)
 """
 
 # text_schema = STRUCT(name = STRING(), lang = STRING(), markup = STRING(), text = TEXT())   # HumanLang() MarkupLang() TEXT()
