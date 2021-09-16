@@ -342,37 +342,34 @@ class Item(object, metaclass = MetaItem):
         return attrs
         
     def __repr__(self, max_len = 30):
-        
-        category = self.category.get('name', self.cid)
-        return f'[{category}:{self.iid}]'
+        return self.ciid(html = False)
         
     def __html__(self):
         url  = self.url()
-        id   = esc(repr(self))
+        ciid = esc(repr(self))
         name = esc(self.get('name', ''))
-        # if len(name) > max_len: name = name[:max_len - 3] + '...'
-        # if name: name += ' '
         
-        if name: return f"<a href={url}>{name}</a> {id}"
-        else:    return f"<a href={url}>{id}</a>"
+        if name: return f"<a href={url}>{name}</a> {ciid}"
+        else:    return f"<a href={url}>{ciid}</a>"
     
-    def ciid(self, html = True, link = True, brackets = True, max_len = None):
+    def ciid(self, html = True, brackets = True, max_len = None, ellipsis = '...'):
         """
         "Category-Item ID" (CIID) string (stamp, emblem) having the form:
         - [CATEGORY-NAME:IID], if the category of self has a "name" property; or
         - [CID:IID] otherwise.
-        If link=True, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page.
-        If html=True, the CATEGORY-NAME is HTML-escaped. If max_len is not None,
+        If html=True, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page
+        (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not None,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         """
         cat = self.category.get('name', str(self.cid))
-        if html: cat = esc(cat)
-        if link:
+        if max_len and len(cat) > max_len: cat = cat[:max_len - 3] + ellipsis
+        if html:
+            cat = esc(cat)
             url = self.category.url()
             if url: cat = f"<a href={url}>{cat}</a>"
         stamp = f"{cat}:{self.iid}"
-        if brackets: stamp = f"[{stamp}]"
-        return stamp
+        if not brackets: return stamp
+        return f"[{stamp}]"
 
     # def current(self):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""

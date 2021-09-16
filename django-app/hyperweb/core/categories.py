@@ -19,9 +19,9 @@ from base import %page, %assets, %properties
     #     | [$item.cid:$item.iid]
 
     < page
-        $name = item['name']? or str(item)
+        # $name = item['name']? or str(item)
         head
-            title | {name}
+            title | $item['name']? $item.ciid(False)
             assets
             style / $files.open('base.css')['source']
 
@@ -30,8 +30,11 @@ from base import %page, %assets, %properties
         #   div .col-10
         body
             h1
-                | {name}
-                span style="font-size:40%; font-weight:normal" / $item.ciid()
+                $ciid = item.ciid()
+                try
+                    | $item['name']
+                    span style="font-size:40%; font-weight:normal" / $ciid
+                else / $ciid
             
             h2 | Properties
             properties $item
