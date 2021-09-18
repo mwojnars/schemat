@@ -97,7 +97,7 @@ class HyItemLoader(HyLoader):
         if item is None: return None
 
         assert 'source' in item
-        assert item.category.get('name') == 'Code'
+        assert item.category.get('name') == 'File'
         
         script = item['source']
         # print('script loaded:\n', script)
@@ -268,10 +268,11 @@ class Item(object, metaclass = MetaItem):
     def __setitem__(self, field, value):
         return self.data.set(field, value)
         
-    def get(self, field, default = None, category_default = True, mode = 'first'):
+    def get(self, field, default = None, category_default = True, impute = True, mode = 'first'):
         """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
            if category_default=True. If the field is missing and has no default, `default` is returned,
            or KeyError is raised if default=RAISE.
+           `impute`: if True, value imputation will be attempted if `field` is a derived property (TODO)
         """
         self.prepare(field)
         
@@ -346,11 +347,20 @@ class Item(object, metaclass = MetaItem):
         
     def __html__(self):
         url  = self.url()
-        ciid = esc(repr(self))
-        name = esc(self.get('name', ''))
+        # name = self.get('name', str(self.iid))
+        # cat  = self.category.get('name', str(self.cid))
+        # return f"<span style='font-size:75%;padding-right:3px'>{esc(cat)}:</span><a href={url}>{esc(name)}</a>"
         
-        if name: return f"<a href={url}>{name}</a> {ciid}"
-        else:    return f"<a href={url}>{ciid}</a>"
+        name = esc(self.get('name', ''))
+        note = self.category.get('name', None) or self.ciid(False, False)
+        if name:
+            return f"<a href={url}>{name}</a><span style='font-size:80%;padding-left:3px'>[{esc(note)}]</span>"
+        else:
+            return f"<a href={url}>{esc(repr(self))}</a>"
+
+        # ciid = esc(repr(self))
+        # if name: return f"<a href={url}>{name}</a> <span style='font-size:80%'>{ciid}</span>"
+        # else:    return f"<a href={url}>{ciid}</a>"
     
     def ciid(self, html = True, brackets = True, max_len = None, ellipsis = '...'):
         """
@@ -732,6 +742,7 @@ class Application(Item):
     An application implements a mapping of URL paths to item methods, and the way back.
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     """
+    DELIM_ENDPOINT = '@'
 
     def get_space(self, name):
         return self['spaces'][name]
@@ -748,18 +759,6 @@ class Application(Item):
             resolve = self._handle_spaces
         return resolve(request)
 
-    def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
-        """
-        Get the URL of `__item__` as assigned by this application, possibly extended with a non-default
-        endpoint designation and/or arguments to be passed to a handler function or a template.
-        """
-        # TODO: return absolute URLs (__relative__=False); currently they are always relative
-        if self.get('url_scheme') == 'raw':
-            f = self._url_raw
-        else:
-            f = self._url_spaces
-        return f(__item__, __endpoint__, **args)
-        
     def _handle_raw(self, request):
         """
         The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
@@ -767,7 +766,7 @@ class Application(Item):
         `path` should have a form of: CID,IID
         """
         path, request.endpoint = self._split_endpoint(request.ipath)
-        cid, iid = map(int, path.split(','))
+        cid, iid = map(int, path.split(':'))
         item = self.registry.get_item((cid, iid))
         return item.serve(request)
         
@@ -794,11 +793,23 @@ class Application(Item):
 
         return item.serve(request)
 
+    def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
+        """
+        Generate URL for `__item__`, possibly extended with a non-default endpoint
+        designation and/or arguments to be passed to a handler function or a template.
+        """
+        # TODO: return absolute URLs (__relative__=False); currently they are always relative
+        if self.get('url_scheme') == 'raw':
+            f = self._url_raw
+        else:
+            f = self._url_spaces
+        return f(__item__, __endpoint__, **args)
+        
     def _url_raw(self, __item__, __endpoint__ = None, **args):
         
         assert __item__.has_id()
         cid, iid = __item__.id
-        url = f'{cid},{iid}'
+        url = f'{cid}:{iid}'
         return self._set_endpoint(url, __endpoint__, args)
         
     def _url_spaces(self, __item__, __endpoint__ = None, **args):
@@ -825,14 +836,14 @@ class Application(Item):
         endpoint = ""
         if '?' in path:
             path, args = path.split('?', 1)
-        if '/' in path:
-            path, endpoint = path.rsplit('/', 1)
+        if self.DELIM_ENDPOINT in path:
+            path, endpoint = path.rsplit(self.DELIM_ENDPOINT, 1)
         
         return path, endpoint
     
     def _set_endpoint(self, url, endpoint, args):
         
-        if endpoint: url += f'/{endpoint}'
+        if endpoint: url += f'{self.DELIM_ENDPOINT}{endpoint}'
         if args: url += f'?{urlencode(args)}'
         return url
     
@@ -947,7 +958,7 @@ class Directory(Item):
         Load an item identified by a given `path`.
         The search is performed recursively in this directory and subdirectories (TODO).
         """
-        return self.data['items'][path]     # returns an Item instance, not just raw contents
+        return self.data['files'][path]     # returns an Item instance, not just raw contents
 
 class File(Item):
 

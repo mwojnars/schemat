@@ -7,73 +7,19 @@ from hyperweb.schema import *
 #####  ELEMENTS of items
 #####
 
-# default template that displays a generic item page if a category-specific template is missing
+# default template to display a generic item page if a category-specific template is missing
 page_item = """
 context $item
 from base import %page_item
 page_item $item
-
-# from base import %page, %assets, %properties
-# . #dedent
-#     < page
-#         head
-#             title | $item['name']? $item.ciid(False)
-#             assets
-#             style / $files.open('base.css')['source']
-#
-#         # body .container : div .row
-#         #   div .col-1
-#         #   div .col-10
-#         body
-#             h1
-#                 $ciid = item.ciid()
-#                 try
-#                     | $item['name']
-#                     span style="font-size:40%; font-weight:normal" / $ciid
-#                 else / $ciid
-#
-#             h2 | Properties
-#             properties $item
-#             # print_catalog1 $item
-          
+# dedent : page_item $item
 """
 
-# template that displays a category page
+# template to display a category page
 page_category = """
-context $item as cat, $files
+context $item
 from base import %page_category
-page_category cat
-
-# from base import %page, %assets, %properties
-# . #dedent
-#     < page
-#         $name = cat['name']? or str(cat)
-#         head
-#             title | {name ' -' }? category #{cat.iid}
-#             assets
-#             style / $files.open('base.css')['source']
-#
-#         body
-#             h1
-#                 try
-#                     i | $name
-#                     . | -
-#                 | category #{cat.iid}
-#
-#             h2 | Properties
-#             properties $cat
-#
-#             h2 | Items
-#             table
-#                 for item in list(cat.registry.load_items(cat))
-#                     tr
-#                         td / #{item.iid} &nbsp;
-#                         td
-#                             $ iname = item['name']? or item
-#                             try
-#                                 a href=$item.url() | $iname
-#                             else
-#                                 | $iname (no public URL)
+page_category item
 """
 
 # text_schema = STRUCT(name = STRING(), lang = STRING(), markup = STRING(), text = TEXT())   # HumanLang() MarkupLang() TEXT()
@@ -125,7 +71,7 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
     class_name  = 'hyperweb.item.Directory',
-    fields      = FIELDS(items = CATALOG(keys = FILENAME(), values = FILE()))     # file & directory names mapped to item IDs
+    fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = FILE()))     # file & directory names mapped to item IDs
 )
 # Filesystem_ = Category_(
 #     name        = "File system",
@@ -177,8 +123,6 @@ Application_ = Category_(
                                     # to do this inside a .../data subfolder
 )
 
-# route_schema    = STRUCT(Route, base = STRING(), path = STRING(), app = ITEM(Application_))
-
 Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
@@ -198,16 +142,19 @@ Varia_ = Category_(
 )
 
 
-Code_ = Category_(
-    name    = "Code",
-    info    = """Source code. May keep information about programming language.
-                If Code item is used in a context where a single object (a class, a function) is expected,
-                the `name` property must be set and equal to the name of the object that should be imported
-                after compilation. Some uses may allow multiple names to be declared.
-              """,
+File_ = Category_(
+    name    = "File",
+    info    = """Web file with text or binary content. Accessible through the web filesystem.""",
+    # info    = """Source code. May keep information about programming language.
+    #             If Code item is used in a context where a single object (a class, a function) is expected,
+    #             the `name` property must be set and equal to the name of the object that should be imported
+    #             after compilation. Some uses may allow multiple names to be declared.
+    #           """,
     fields  = FIELDS(
-        language = STRING(),    # ProgramLanguage()
+        language = STRING(),  # ProgrammingLanguage()
+        # content  = VARIANT(bin = BYTES(), txt = TEXT()),
         source   = CODE(),
+        local_file = STRING(),        # path to a local file on disk
     ),
 )
 Text_ = Category_(
@@ -216,17 +163,16 @@ Text_ = Category_(
     fields  = FIELDS(
         language = STRING(),    # HumanLanguage()
         markup   = STRING(),    # MarkupLanguage()
-        text     = TEXT()
+        text     = TEXT(),
     ),
 )
-File_ = Category_(
-    name        = "File",
+LocalFile_ = Category_(
+    name        = "LocalFile",
     info        = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
     class_name  = 'hyperweb.item.File',
     fields      = FIELDS(
         path    = STRING(),     # path to a local file on disk
         format  = STRING(),     # file format: pdf, xlsx, ...
-        content = VARIANT(bin = BYTES(), txt = TEXT()),
     ),
     # endpoints   = {"__view__": page_item, "get": File_get},
 )

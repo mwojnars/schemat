@@ -6,7 +6,7 @@ from hyperweb.core.categories import *
 #####  ITEMS
 #####
 
-base_css = Code_(
+base_css = File_(
     language = 'css',
     source = """
         /*** GENERAL STYLES */
@@ -120,14 +120,12 @@ base_css = Code_(
                             td .ct-value
 """
 
-base_js = Code_(
+base_js = File_(
     language = 'javascript',
-    source = """
-        "use strict";
-    """,
+    local_path = "/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js",
 )
 
-base_hy = Code_(
+base_hy = File_(
     language = 'hypertag',
     source = """
     %assets_external
@@ -166,7 +164,7 @@ base_hy = Code_(
         # script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
 
     %assets_internal
-        script type="module" src="/sys.file:1/get"
+        script type="module" src="/sys.file:1@get"
 
     %assets
         assets_external
@@ -261,14 +259,14 @@ base_hy = Code_(
                             try
                                 a href=$item.url() | $iname
                             else
-                                | $iname (no public URL)
+                                | $iname (no URL)
     
     """,
 )
 
 
 directory = Directory_(
-    items = {
+    files = {
         'base.hy':      base_hy,            # reusable components for use in pages
         'base.css':     base_css,           # global styles for use in pages
         # 'item.hy':      page_item,          # generic page of an item
@@ -276,7 +274,7 @@ directory = Directory_(
     },
 )
 
-file_protocols = File_(path = '/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
+file_protocols = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
 
 
 #####################################################################################################################################################
@@ -287,7 +285,7 @@ space_meta = Space_(
 )
 space_sys = Space_(
     name        = "System",
-    categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': File_}
+    categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
 )
 
 app_items = Application_(
