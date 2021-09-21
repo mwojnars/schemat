@@ -7,8 +7,8 @@ from hyperweb.core.categories import *
 #####
 
 base_css = File_(
-    language = 'css',
-    source = """
+    format  = 'css',
+    content = """
         /*** GENERAL STYLES */
         # html {
         #   font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -121,13 +121,13 @@ base_css = File_(
 """
 
 base_js = File_(
-    language = 'javascript',
+    format = 'javascript',
     local_path = "/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js",
 )
 
 base_hy = File_(
-    language = 'hypertag',
-    source = """
+    format  = 'hypertag',
+    content = """
     %assets_external
         # jQuery 3.6.0
         script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"
@@ -165,6 +165,7 @@ base_hy = File_(
 
     %assets_internal
         script type="module" src="/sys.file:1@get"
+        # script type="module" src="/files/protocols.js"
 
     %assets
         assets_external
@@ -229,7 +230,7 @@ base_hy = File_(
             head
                 title | $item['name']? $item.ciid(False)
                 assets
-                style / $item.registry.files.open('base.css')['source']
+                style / $item.registry.files.open('base.css')['content']
     
             # body .container : div .row
             #   div .col-1
@@ -288,24 +289,28 @@ space_sys = Space_(
     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
 )
 
-app_items = Application_(
-    name        = "Items",
-    base_url    = "http://localhost:8001/admin/item/",
-    url_scheme  = "raw",
+app_admin = AdminApp_(
+    name        = "Admin",
+    # base_url    = "http://localhost:8001/admin/",       # TODO: drop base_url field entirely
+    # routing     = "raw",
 )
+# app_files = FilesApp_(
+#     name        = "Files",
+# )
 app_catalog = Application_(
     name        = "Catalog",
     base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
     spaces      = {'meta': space_meta, 'sys': space_sys},
+    routing     = "spaces",
 )
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",
-    # routes      = {'default': Route(base = "http://localhost:8001", path = "/", app = app_catalog)},
+    base_url    = "http://localhost:8001/",
     directory   = directory,
     apps        = {
-        'items':        app_items,
-        'catalog':      app_catalog,
+        'admin':    app_admin,
+        '':         app_catalog,        # default route
     },
 )
 

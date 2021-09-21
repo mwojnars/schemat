@@ -109,18 +109,20 @@ Application_ = Category_(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     class_name  = 'hyperweb.item.Application',
-    # class_name  = "Application",
-    # class_code  =
-    # """
-    #     from hyperweb.item import Item
-    #     class Application(Item):
-    #         def get_space(self, name):
-    #             return self['spaces'][name]
-    # """,
-    fields      = FIELDS(name = STRING(), url_scheme = ENUM('raw', 'spaces'), spaces = CATALOG(ITEM(Space_))),
+    fields      = FIELDS(name = STRING(), routing = ENUM('raw', 'spaces'), spaces = CATALOG(ITEM(Space_))),
     folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
+)
+AdminApp_ = Category_(
+    name        = "Admin Application",
+    class_name  = 'hyperweb.item.AdminApp',
+    fields      = FIELDS(name = STRING()),
+)
+FilesApp_ = Category_(
+    name        = "Files Application",
+    class_name  = 'hyperweb.item.FilesApp',
+    fields      = FIELDS(name = STRING()),
 )
 
 Site_ = Category_(
@@ -129,6 +131,7 @@ Site_ = Category_(
     class_name  = 'hyperweb.item.Site',
     fields      = FIELDS(
         name        = STRING(),
+        base_url    = STRING(),                 # all URLs in this Site will have base_url as their prefix
         directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
         apps        = CATALOG(ITEM(Application_)),
     ),
@@ -144,17 +147,16 @@ Varia_ = Category_(
 
 File_ = Category_(
     name    = "File",
-    info    = """Web file with text or binary content. Accessible through the web filesystem.""",
+    info    = """File with a text content. Accessible through the web filesystem.""",
     # info    = """Source code. May keep information about programming language.
     #             If Code item is used in a context where a single object (a class, a function) is expected,
     #             the `name` property must be set and equal to the name of the object that should be imported
     #             after compilation. Some uses may allow multiple names to be declared.
     #           """,
-    fields  = FIELDS(
-        language = STRING(),  # ProgrammingLanguage()
-        # content  = VARIANT(bin = BYTES(), txt = TEXT()),
-        source   = CODE(),
-        local_file = STRING(),        # path to a local file on disk
+    class_name  = 'hyperweb.item.File',
+    fields      = FIELDS(
+        format  = STRING(),    # ProgrammingLanguage()
+        content = CODE(),      # VARIANT(bin = BYTES(), txt = TEXT()),
     ),
 )
 Text_ = Category_(
@@ -168,11 +170,11 @@ Text_ = Category_(
 )
 LocalFile_ = Category_(
     name        = "LocalFile",
-    info        = """Binary or text file that can be accompanied with information about its format: pdf, jpg, zip, ...""",
-    class_name  = 'hyperweb.item.File',
+    info        = """File located on a local disk, identified by its local file path.""",
+    class_name  = 'hyperweb.item.LocalFile',
     fields      = FIELDS(
         path    = STRING(),     # path to a local file on disk
-        format  = STRING(),     # file format: pdf, xlsx, ...
+        # format  = STRING(),     # file format: pdf, xlsx, ...
     ),
     # endpoints   = {"__view__": page_item, "get": File_get},
 )

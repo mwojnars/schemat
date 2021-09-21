@@ -23,16 +23,14 @@ class handler:
     Decorator of Item methods that marks a given method as a handler of web requests: wsgi, asgi...
     Only the methods decorated with @handler can be assigned to URLs and called by the view processing function.
     If name=None, the name of handler is the same as method's.
-    Special method __view__ is mapped to handler's name=None.
     """
     def __init__(self, name = None):
         if callable(name): raise Exception("Incorrect use of @handler: missing ()")
         self.name = name
         
     def __call__(self, method):
+        if not self.name: self.name = method.__name__
         method.handler = self
-        if method.__name__ != '__view__':
-            self.name = self.name or method.__name__
         return method
 
 class cached:
@@ -95,11 +93,9 @@ class HyItemLoader(HyLoader):
         
         item, location = self._find_item(path, referrer)
         if item is None: return None
-
-        assert 'source' in item
-        assert item.category.get('name') == 'File'
+        assert 'File' in item.category.get('name')
         
-        script = item['source']
+        script = item.read()    #item['content']
         # print('script loaded:\n', script)
         
         # # relative import path is always resolved relative to the referrer's location
@@ -154,7 +150,7 @@ class MetaItem(type):
         
         # fill out the dict of handlers
         cls.handlers = handlers = {}
-        for attr in dir(cls):
+        for attr in dir(cls):                   # this iterates over ALL methods including base classes
             method = getattr(cls, attr)
             if not callable(method): continue
             try:
@@ -659,7 +655,7 @@ class Category(Item):
 
 #####################################################################################################################################################
 #####
-#####  SITE
+#####  APPLICATION
 #####
 
 # class Route:
@@ -744,31 +740,28 @@ class Application(Item):
     """
     DELIM_ENDPOINT = '@'
 
-    def get_space(self, name):
-        return self['spaces'][name]
-
     def handle(self, request):
         """
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
         """
         # choose the right URL scheme resolver to use
-        if self.get('url_scheme') == 'raw':
+        if self.get('routing') == 'raw':
             resolve = self._handle_raw
         else:
             resolve = self._handle_spaces
         return resolve(request)
 
-    def _handle_raw(self, request):
-        """
-        The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
-        only be used for an Admin application.
-        `path` should have a form of: CID,IID
-        """
-        path, request.endpoint = self._split_endpoint(request.ipath)
-        cid, iid = map(int, path.split(':'))
-        item = self.registry.get_item((cid, iid))
-        return item.serve(request)
+    # def _handle_raw(self, request):
+    #     """
+    #     The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
+    #     only be used for an Admin application.
+    #     `path` should have a form of: CID,IID
+    #     """
+    #     path, request.endpoint = self._split_endpoint(request.ipath)
+    #     cid, iid = map(int, path.split(':'))
+    #     item = self.registry.get_item((cid, iid))
+    #     return item.serve(request)
         
     def _handle_spaces(self, request):
         """
@@ -781,13 +774,11 @@ class Application(Item):
         try:
             space_category, item_id = path.split(':')
             space_name, category_name = space_category.split('.')
+            space = self['spaces'][space_name]
         except Exception as ex:
-            print(ex)
-            print('incorrect URL path:', path)
-            raise
+            raise Exception(f'page not found: {path}')
             
         # map space-category names and the iid to items
-        space    = self['spaces'][space_name]
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
 
@@ -799,25 +790,28 @@ class Application(Item):
         designation and/or arguments to be passed to a handler function or a template.
         """
         # TODO: return absolute URLs (__relative__=False); currently they are always relative
-        if self.get('url_scheme') == 'raw':
+        if self.get('routing') == 'raw':
             f = self._url_raw
         else:
             f = self._url_spaces
         return f(__item__, __endpoint__, **args)
         
-    def _url_raw(self, __item__, __endpoint__ = None, **args):
-        
-        assert __item__.has_id()
-        cid, iid = __item__.id
-        url = f'{cid}:{iid}'
-        return self._set_endpoint(url, __endpoint__, args)
+    # def _url_raw(self, __item__, __endpoint__ = None, **args):
+    #
+    #     assert __item__.has_id()
+    #     cid, iid = __item__.id
+    #     url = f'{cid}:{iid}'
+    #     return self._set_endpoint(url, __endpoint__, args)
         
     def _url_spaces(self, __item__, __endpoint__ = None, **args):
         category = __item__.category
         path = self._qualifier(category)
-        base = self['base_url']
+        # base = self['base_url']
+        # base = self.registry.site['base_url']
+        route = self.registry.site.get_route(self)
+        
         iid  = category.encode_url(__item__.iid)
-        url  = f'{base}/{path}:{iid}'
+        url  = f'{route}{path}:{iid}'
         return self._set_endpoint(url, __endpoint__, args)
     
     @cached(ttl = 10)
@@ -847,6 +841,33 @@ class Application(Item):
         if args: url += f'?{urlencode(args)}'
         return url
     
+    
+class AdminApp(Application):
+    """Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID """
+    
+    def handle(self, request):
+        path, request.endpoint = self._split_endpoint(request.ipath)
+        cid, iid = map(int, path.split(':'))
+        item = self.registry.get_item((cid, iid))
+        return item.serve(request)
+        
+    def url_of(self, __item__, __endpoint__ = None, **args):
+        assert __item__.has_id()
+        cid, iid = __item__.id
+        url = f'{cid}:{iid}'
+        return self._set_endpoint(url, __endpoint__, args)
+        
+class FilesApp(Application):
+    """
+    Filesystem interface. Folders and files are accessible through the hierarchical
+    "file path" routing pattern: .../dir1/dir2/file.txt
+    """
+
+
+#####################################################################################################################################################
+#####
+#####  SITE
+#####
 
 class Site(Item):
     """
@@ -899,16 +920,42 @@ class Site(Item):
         return app.handle(request)
     
     def find_app(self, request):
-        """Find the first application in data['apps'] that matches the URL `path`."""
+        """Find an application in self['apps'] that matches the requested URL."""
+
+        apps = self['apps']
+        base = self['base_url']
+        url  = request.build_absolute_uri()
+        if not url.startswith(base): raise Exception(f'page not found: {url}')
         
-        url = request.build_absolute_uri()
-        for route, app in self['apps'].items():
-            base = app['base_url']
-            if url.startswith(base):
-                path = url[len(base):]
-                return route, path, app
+        path  = url[len(base):]
+        route = path.split('/', 1)[0]
+        app   = apps.get(route, None)
         
-        raise Exception(f'page not found: {url}')
+        if app and route:                       # non-default (named) route
+            route += '/'
+        elif '' in apps:                        # default (unnamed) route - special handling
+            route = ''
+            app   = apps[route]
+        else:
+            raise Exception(f'page not found: {url}')
+
+        return route, path[len(route):], app
+
+        # for name, app in self['apps'].items():
+        #     base = app['base_url']
+        #     if url.startswith(base):
+        #         path = url[len(base):]
+        #         return name, path, app
+        # raise Exception(f'page not found: {url}')
+
+    def get_route(self, app):
+        """Return route (URL prefix) of a given Application, `app`."""
+        base = self['base_url']
+        for route, app_ref in self['apps'].items():
+            if app.id != app_ref.id: continue
+            if route: return f"{base}{route}/"      # non-default (named) route
+            else: return base                       # default (unnamed) route
+        raise Exception(f'unknown route for application {app} ID {app.id}')
 
     # def handle_(self, request, path):
     #     route = self.find_route(request, path)
@@ -961,15 +1008,29 @@ class Directory(Item):
         return self.data['files'][path]     # returns an Item instance, not just raw contents
 
 class File(Item):
+    """"""
+    def read(self):
+        """Return full content of this file, either as <str> or a Response object."""
+        return self.get('content')
 
-    # def read(self):
-    #     content = self.get('content', None)
-    #     if isinstance(content, str): return content
-    #
-    #     path = self.get('path', None)
-    #     if not path: return None
-    #
-    #     return open(path, 'rb').read()
+    @handler('download')
+    def download(self, request):
+        return self.read()
+
+class LocalFile(File):
+
+    def read(self):
+        content = self.get('content', None)
+        if isinstance(content, str): return content
+
+        path = self.get('path', None)
+        if not path: return None
+
+        return open(path, 'rb').read()
+
+    @handler('download')
+    def download(self, request):
+        return self._handler_get(request)
 
     @handler('get')
     def _handler_get(self, request):

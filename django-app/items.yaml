@@ -100,7 +100,7 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-    url_scheme:
+    routing:
       schema:
         values: [raw, spaces]
         indices: false
@@ -115,12 +115,26 @@
         '@': hyperweb.schema.CATALOG
   folder: {'@': hyperweb.schema.FILEPATH}
 - id: [0, 4]
+  name: Admin Application
+  class_name: hyperweb.item.AdminApp
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.STRING}
+- id: [0, 5]
+  name: Files Application
+  class_name: hyperweb.item.FilesApp
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.STRING}
+- id: [0, 6]
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
   class_name: hyperweb.item.Site
   fields:
     name:
+      schema: {'@': hyperweb.schema.STRING}
+    base_url:
       schema: {'@': hyperweb.schema.STRING}
     directory:
       schema:
@@ -136,7 +150,7 @@
             '@': (item)
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-- id: [0, 5]
+- id: [0, 7]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
@@ -145,17 +159,16 @@
       schema: {'@': hyperweb.schema.STRING}
     title:
       schema: {'@': hyperweb.schema.STRING}
-- id: [0, 6]
+- id: [0, 8]
   name: File
-  info: Web file with text or binary content. Accessible through the web filesystem.
+  info: File with a text content. Accessible through the web filesystem.
+  class_name: hyperweb.item.File
   fields:
-    language:
+    format:
       schema: {'@': hyperweb.schema.STRING}
-    source:
+    content:
       schema: {'@': hyperweb.schema.CODE}
-    local_file:
-      schema: {'@': hyperweb.schema.STRING}
-- id: [0, 7]
+- id: [0, 9]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
     and/or markup.
@@ -166,19 +179,16 @@
       schema: {'@': hyperweb.schema.STRING}
     text:
       schema: {'@': hyperweb.schema.TEXT}
-- id: [0, 8]
+- id: [0, 10]
   name: LocalFile
-  info: 'Binary or text file that can be accompanied with information about its format:
-    pdf, jpg, zip, ...'
-  class_name: hyperweb.item.File
+  info: File located on a local disk, identified by its local file path.
+  class_name: hyperweb.item.LocalFile
   fields:
     path:
       schema: {'@': hyperweb.schema.STRING}
-    format:
-      schema: {'@': hyperweb.schema.STRING}
-- id: [6, 1]
-  language: css
-  source: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
+- id: [8, 1]
+  format: css
+  content: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
     \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
     \     #   font-size: 16px;\n        #   color: #333;\n        # }\n\n        html\
     \ {\n          --ct-cell-pad: 35px;          /* default left & right padding of\
@@ -235,14 +245,14 @@
     \ }\n        .ct-value .field .info      { font-style: italic; }\n        .ct-value\
     \ pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace;\
     \ }\n    "
-- id: [6, 2]
-  language: javascript
+- id: [8, 2]
+  format: javascript
   local_path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
-- id: [6, 3]
-  language: hypertag
-  source: "\n    %assets_external\n        # jQuery 3.6.0\n        script src=\"https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\"\
-    \ integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\" crossorigin=\"\
-    anonymous\"\n        # Bootstrap 5.0.2\n        link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
+- id: [8, 3]
+  format: hypertag
+  content: "\n    %assets_external\n        # jQuery 3.6.0\n        script src=\"\
+    https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\"\
+    \ crossorigin=\"anonymous\"\n        # Bootstrap 5.0.2\n        link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\"\
     \ rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\"\
     \ crossorigin=\"anonymous\"\n        script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js\"\
     \ integrity=\"sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM\"\
@@ -269,8 +279,9 @@
     \ crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\"\n        \n       \
     \ # # CodeMirror (code editor)\n        # script src=\"https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js\"\
     \n\n    %assets_internal\n        script type=\"module\" src=\"/sys.file:1@get\"\
-    \n\n    %assets\n        assets_external\n        assets_internal\n    \n    %protocol\
-    \ @body classname\n        # asset \".../protocols.js\"\n        div .widget protocol=classname\n\
+    \n        # script type=\"module\" src=\"/files/protocols.js\"\n\n    %assets\n\
+    \        assets_external\n        assets_internal\n    \n    %protocol @body classname\n\
+    \        # asset \".../protocols.js\"\n        div .widget protocol=classname\n\
     \            @body\n\n    %catalog_row key value schema\n        # a row containing\
     \ an atomic value of a data field (not a subcatalog)\n        th .ct-field | $key\n\
     \        # td .ct-flags | *\n        td .ct-value / $schema.display(value)\n\n\
@@ -298,7 +309,7 @@
     \                button #save-changes   .btn .btn-primary   disabled=False | Save\n\
     \n    %page @body\n        doctype\n        ...html @body\n    \n    %page_item\
     \ @extra item\n        page\n            head\n                title | $item['name']?\
-    \ $item.ciid(False)\n                assets\n                style / $item.registry.files.open('base.css')['source']\n\
+    \ $item.ciid(False)\n                assets\n                style / $item.registry.files.open('base.css')['content']\n\
     \    \n            # body .container : div .row\n            #   div .col-1\n\
     \            #   div .col-10\n            body\n                h1\n         \
     \           $ciid = item.ciid()\n                    try\n                   \
@@ -315,30 +326,33 @@
     \ URL)\n    \n    "
 - id: [1, 1]
   files:
-    base.hy: [6, 3]
-    base.css: [6, 1]
-- id: [8, 1]
+    base.hy: [8, 3]
+    base.css: [8, 1]
+- id: [10, 1]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
 - id: [2, 1]
   name: Meta
-  categories: {category: 0, item: 5}
+  categories: {category: 0, item: 7}
 - id: [2, 2]
   name: System
-  categories: {space: 2, app: 3, site: 4, dir: 1, file: 8}
+  categories: {space: 2, app: 3, site: 6, dir: 1, file: 10}
+- id: [4, 1]
+  name: Admin
 - id: [3, 1]
-  name: Items
-  base_url: http://localhost:8001/admin/item/
-  url_scheme: raw
-- id: [3, 2]
   name: Catalog
   base_url: http://localhost:8001/
   spaces: {meta: 1, sys: 2}
-- id: [4, 1]
+  routing: spaces
+- id: [6, 1]
   name: catalog.wiki
+  base_url: http://localhost:8001/
   directory: 1
-  apps: {items: 1, catalog: 2}
-- id: [5, 1]
+  apps:
+    admin: [4, 1]
+    ? ''
+    : 1
+- id: [7, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-- id: [5, 2]
+- id: [7, 2]
   title: ąłęÓŁŻŹŚ
   name: test_item

@@ -113,6 +113,7 @@ class Schema:
         return name
 
     def get_registry(self):
+        """Get global Registry. For internal use."""
         if self.registry: return self.registry
         from hyperweb.boot import registry          # TODO: replace with self.registry when Schema becomes an Item subclass
         return registry
@@ -232,6 +233,12 @@ class Schema:
         - "modified" flag: attr of #show indicating that the current #show value differs from the initial one
         - "error" flag: attributes in #show and/or #form that inform about errors in a given field
         The code may rely on JS scripts or React classes that need to be loaded separately.
+        """
+
+    def validate(self, value):
+        """
+        Check if `value` is correct under this schema, optionally make any necessary corrections.
+        Return corrected value (None if incorrect), and a Validation result with an error/warning message.
         """
         
 
