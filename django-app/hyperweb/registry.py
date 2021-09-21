@@ -320,12 +320,9 @@ class Registry:
         """
         During request processing, some additional non-standard attributes are assigned in `request`
         to carry Hyperweb-specific information for downstream processing functions:
-        - request.site  = Site item that received the request (this overrides the Django's meaning of this attribute)
-        - request.app   = Application item this request is addressed to
+        - request.site  = Site that received the request (this overrides the Django's meaning of this attribute)
+        - request.app   = leaf Application object this request is addressed to
         - request.item  = target item that's responsible for actual handling of this request
-        - request.route = name of the route of the `site` object where the application `app` was found to match the requested URL
-        - request.ipath = part of the URL after an application prefix and excluding the query string; identifies an item
-                          and its endpoint within a scope of a given application
         - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
         - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
         """

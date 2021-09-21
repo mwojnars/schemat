@@ -289,16 +289,25 @@ space_sys = Space_(
     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
 )
 
+# app_root = Application_
+
 app_admin = AdminApp_(
     name        = "Admin",
 )
-# app_files = FilesApp_(
-#     name        = "Files",
-# )
+app_files = FilesApp_(
+    name        = "Files",
+)
 
 app_catalog = SpacesApp_(
     name        = "Catalog",
     spaces      = {'meta': space_meta, 'sys': space_sys},
+    spaces__    = {
+        'meta.category':    Category_,
+        'meta.item':        Varia_,
+        'sys.site':         Site_,
+        'sys.dir':          Directory_,
+        'sys.file':         LocalFile_,
+    },
 )
 # app_catalog = Application_(
 #     name        = "Catalog",
@@ -311,6 +320,7 @@ catalog_wiki = Site_(
     directory   = directory,
     apps        = {
         'admin':    app_admin,
+        'files':    app_files,
         '':         app_catalog,        # default route
     },
 )

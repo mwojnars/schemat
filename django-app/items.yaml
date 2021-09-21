@@ -355,15 +355,34 @@
   categories: {space: 2, app: 3, site: 7, dir: 1, file: 11}
 - id: [4, 1]
   name: Admin
+- id: [5, 1]
+  name: Files
 - id: [6, 1]
   name: Catalog
   spaces: {meta: 1, sys: 2}
+  spaces__:
+    meta.category:
+      '=': [0, 0]
+      '@': (item)
+    meta.item:
+      '=': [0, 8]
+      '@': (item)
+    sys.site:
+      '=': [0, 7]
+      '@': (item)
+    sys.dir:
+      '=': [0, 1]
+      '@': (item)
+    sys.file:
+      '=': [0, 11]
+      '@': (item)
 - id: [7, 1]
   name: catalog.wiki
   base_url: http://localhost:8001/
   directory: 1
   apps:
     admin: [4, 1]
+    files: [5, 1]
     ? ''
     : [6, 1]
 - id: [8, 1]

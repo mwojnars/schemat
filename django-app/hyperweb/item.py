@@ -664,10 +664,12 @@ class Application(Item):
     """
     DELIM_ENDPOINT = '@'
 
-    def handle(self, request):
+    def handle(self, request, path):
         """
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
+        `path` is a part of the URL after application's base URL (may include query string);
+        it identifies an item and its endpoint within a given application.
         """
         raise NotImplementedError()
 
@@ -699,8 +701,8 @@ class Application(Item):
 class AdminApp(Application):
     """Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID """
     
-    def handle(self, request):
-        path, request.endpoint = self._split_endpoint(request.ipath)
+    def handle(self, request, path):
+        path, request.endpoint = self._split_endpoint(path)
         cid, iid = map(int, path.split(':'))
         item = self.registry.get_item((cid, iid))
         return item.serve(request)
@@ -716,6 +718,12 @@ class FilesApp(Application):
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     """
+    def handle(self, request, path):
+        path, request.endpoint = self._split_endpoint(path)
+        cid, iid = map(int, path.split(':'))
+        item = self.registry.get_item((cid, iid))
+        return item.serve(request)
+        
 
 class SpacesApp(Application):
     """
@@ -723,12 +731,12 @@ class SpacesApp(Application):
     where SPACE and CATEGORY are textual identifiers configured in `spaces` property.
     """
     
-    def handle(self, request):
+    def handle(self, request, path):
         """
         Handle requests identified by standard URL paths of the form:
           <space_name>.<category_name>:<item_iid>/endpoint
         """
-        path, request.endpoint = self._split_endpoint(request.ipath)
+        path, request.endpoint = self._split_endpoint(path)
 
         # decode names of space and category
         try:
@@ -806,21 +814,13 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    def handle(self, request):
-        """
-        The site extends the `request` here in handle() with `route`, `app`, and `path` attributes,
-        for the use in downstream processing functions.
-        """
-        route, ipath, app = self.find_app(request)
-        
-        request.route = route
-        request.ipath = ipath
-        request.app   = app
-        
-        return app.handle(request)
+    # def handle(self, request):
+    #     route, path, app = self.find_app(request)
+    #     request.app = app
+    #     return app.handle(request, path)
     
-    def find_app(self, request):
-        """Find an application in self['apps'] that matches the requested URL."""
+    def handle(self, request):
+        """Find an application in self['apps'] that matches the requested URL and call its handle()."""
 
         apps = self['apps']
         base = self['base_url']
@@ -839,7 +839,11 @@ class Site(Item):
         else:
             raise Exception(f'page not found: {url}')
 
-        return route, path[len(route):], app
+        path = path[len(route):]
+        # return route, path, app
+
+        request.app = app
+        return app.handle(request, path)
 
         # for name, app in self['apps'].items():
         #     base = app['base_url']
