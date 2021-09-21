@@ -106,7 +106,6 @@ Space_ = Category_(
 )
 
 Application_ = Category_(
-    # root application: a collection of sub-applications and their prefixes
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     class_name  = 'hyperweb.item.Application',
@@ -115,6 +114,9 @@ Application_ = Category_(
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )
+# RootApp_  = Category_()         # root application: a collection of sub-applications and their prefixes
+# MainApp_
+
 AdminApp_ = Category_(
     name        = "Admin Application",
     class_name  = 'hyperweb.item.AdminApp',

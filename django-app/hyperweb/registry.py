@@ -148,8 +148,11 @@ class Registry:
     def current_app(self):                  # returns Application that's a target of current request; None if no current_request
         req = self.current_request
         return req.app if req is not None else None
-    
-    
+    @property
+    def current_base_url(self):
+        req = self.current_request
+        return req.base_url if req is not None else None
+
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         
@@ -323,6 +326,7 @@ class Registry:
         - request.site  = Site that received the request (this overrides the Django's meaning of this attribute)
         - request.app   = leaf Application object this request is addressed to
         - request.item  = target item that's responsible for actual handling of this request
+        - request.base_url = URL prefix that preceeds descriptor of the target item, used during URL generation
         - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
         - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
         """

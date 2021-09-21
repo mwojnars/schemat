@@ -466,13 +466,14 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def serve(self, request, default_endpoint = '__view__'):
+    def serve(self, request, app, default_endpoint = '__view__'):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.
         Handler functions are stored in a parent category object.
         URL query parameters are passed inside request.GET, e.g., q=request.GET.get('q','')
         """
+        request.app  = app
         request.item = self
         endpoint = request.endpoint or default_endpoint
 
@@ -541,14 +542,16 @@ class Item(object, metaclass = MetaItem):
         return entries
         
 
-    def url(self, *args, **kwargs):
+    def url(self, *args, __relative__ = False, **kwargs):
         """
-        Return URL of this item as assigned by the current Application, that is, the one that's
+        Return URL of this item as assigned by the current Application, that is, by the one that's
         processing the current web request. Only available during request processing, None is returned otherwise.
         """
         app = self.registry.current_app
         if not app: return None
-        return app.url_of(self, *args, **kwargs)
+        #route = self.registry.site.find_route(self.id)
+        path = app.url_path(self, *args, **kwargs)
+        return self.registry.current_base_url + path
 
 
 ItemDoesNotExist.item_class = Item
@@ -660,6 +663,7 @@ class Category(Item):
 class Application(Item):
     """
     An application implements a mapping of URL paths to item methods, and the way back.
+    Some application classes may allow for nested applications.
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     """
     DELIM_ENDPOINT = '@'
@@ -673,9 +677,9 @@ class Application(Item):
         """
         raise NotImplementedError()
 
-    def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
+    def url_path(self, __item__, __endpoint__ = None, **args):
         """
-        Generate URL for `__item__`, possibly extended with a non-default endpoint
+        Generate URL path (URL route excluded) for `__item__`, possibly extended with a non-default endpoint
         designation and/or arguments to be passed to a handler function or a template.
         """
         raise NotImplementedError()
@@ -705,9 +709,9 @@ class AdminApp(Application):
         path, request.endpoint = self._split_endpoint(path)
         cid, iid = map(int, path.split(':'))
         item = self.registry.get_item((cid, iid))
-        return item.serve(request)
+        return item.serve(request, self)
         
-    def url_of(self, __item__, __endpoint__ = None, **args):
+    def url_path(self, __item__, __endpoint__ = None, **args):
         assert __item__.has_id()
         cid, iid = __item__.id
         url = f'{cid}:{iid}'
@@ -722,7 +726,7 @@ class FilesApp(Application):
         path, request.endpoint = self._split_endpoint(path)
         cid, iid = map(int, path.split(':'))
         item = self.registry.get_item((cid, iid))
-        return item.serve(request)
+        return item.serve(request, self)
         
 
 class SpacesApp(Application):
@@ -750,26 +754,27 @@ class SpacesApp(Application):
         category = space.get_category(category_name)
         item     = category.get_item(int(item_id))
 
-        return item.serve(request)
+        return item.serve(request, self)
 
-    def url_of(self, __item__, __endpoint__ = None, **args):
-        category = __item__.category
-        route = self.registry.site.find_route(self.id)
-        path  = self._qualifier(category)
+    def url_path(self, __item__, __endpoint__ = None, **args):
+        category  = __item__.category
+        qualifier = self._qualifier(category)
+        #route = self.registry.site.find_route(self.id)
         
-        iid  = category.encode_url(__item__.iid)
-        url  = f'{route}{path}:{iid}'
+        iid = category.encode_url(__item__.iid)
+        url = f'{qualifier}:{iid}'
+        #url = f'{route}{path}:{iid}'
         return self._set_endpoint(url, __endpoint__, args)
 
     @cached(ttl = 10)
     def _qualifier(self, category):
-        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+        """Get a space-category qualifer of `category` for use inside URL paths."""
         for space_name, space in self['spaces'].items():
             for category_name, cat in space['categories'].items():
                 if cat.id != category.id: continue
                 return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
         
-        raise Exception(f"no URL pattern exists for the requested category: {category}")
+        raise Exception(f"no URL pattern exists for category {category}")
     
 
 #####################################################################################################################################################
@@ -814,14 +819,8 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
-    # def handle(self, request):
-    #     route, path, app = self.find_app(request)
-    #     request.app = app
-    #     return app.handle(request, path)
-    
     def handle(self, request):
         """Find an application in self['apps'] that matches the requested URL and call its handle()."""
-
         apps = self['apps']
         base = self['base_url']
         url  = request.build_absolute_uri()
@@ -839,18 +838,12 @@ class Site(Item):
         else:
             raise Exception(f'page not found: {url}')
 
-        path = path[len(route):]
-        # return route, path, app
-
-        request.app = app
-        return app.handle(request, path)
-
-        # for name, app in self['apps'].items():
-        #     base = app['base_url']
-        #     if url.startswith(base):
-        #         path = url[len(base):]
-        #         return name, path, app
-        # raise Exception(f'page not found: {url}')
+        # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
+        # request.route = lambda path_: f"{base}{route}/{path_}"
+        # request.route.append(route)
+        request.base_url = base + route
+        
+        return app.handle(request, path[len(route):])
 
     @cached(ttl = 10)
     def find_route(self, app_id):

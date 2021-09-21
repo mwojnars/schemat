@@ -289,7 +289,7 @@ space_sys = Space_(
     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
 )
 
-# app_root = Application_
+# app_root = RootApp_
 
 app_admin = AdminApp_(
     name        = "Admin",
