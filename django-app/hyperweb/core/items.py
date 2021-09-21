@@ -297,12 +297,17 @@ app_admin = AdminApp_(
 # app_files = FilesApp_(
 #     name        = "Files",
 # )
-app_catalog = Application_(
+
+app_catalog = SpacesApp_(
     name        = "Catalog",
-    base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
     spaces      = {'meta': space_meta, 'sys': space_sys},
-    routing     = "spaces",
 )
+# app_catalog = Application_(
+#     name        = "Catalog",
+#     # base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
+#     spaces      = {'meta': space_meta, 'sys': space_sys},
+#     # routing     = "spaces",
+# )
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",

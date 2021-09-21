@@ -124,6 +124,12 @@ FilesApp_ = Category_(
     class_name  = 'hyperweb.item.FilesApp',
     fields      = FIELDS(name = STRING()),
 )
+SpacesApp_ = Category_(
+    name        = "Spaces Application",
+    info        = "Application for accessing public data through verbose paths of the form: .../SPACE.CATEGORY:IID, where SPACE and CATEGORY are textual identifiers configured in `spaces` property.",
+    class_name  = 'hyperweb.item.SpacesApp',
+    fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Space_))),
+)
 
 Site_ = Category_(
     name        = "Site",

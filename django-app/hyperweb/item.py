@@ -399,6 +399,7 @@ class Item(object, metaclass = MetaItem):
         if record is None:
             record = self.registry.load_data(self.id)
         self._decode(record)
+        self.bind()
         return self
     
     def _decode(self, record):
@@ -421,17 +422,15 @@ class Item(object, metaclass = MetaItem):
             # data   = generic_schema.load_json(data)
             data   = fields.load_json(data)
             self.data.update(data)
-        
-    #     self._post_decode()
-    #
-    # def _post_decode(self):
-    #     """Override this method in subclasses to provide additional initialization/decoding when an item is retrieved from DB."""
-        
-    # def on_load(self, fields):
-    #     """Post-processing performed right after raw data have been loaded from DB, decoded from JSON, and saved to self.data."""
-    #
-    # def on_change(self, fields):
-    #     """Post-processing performed right after new values of `fields` have been written to `data`."""
+
+    def bind(self):
+        """
+        Override this method in subclasses to provide initialization after this item is retrieved from DB.
+        Typically, this method initializes transient properties and performs cross-item initialization.
+        Only after bind(), the item is a fully functional element of a graph of interconnected items.
+        When creating new items, bind() should be called manually, typically after all related items
+        have been created and connected.
+        """
     
     def dump_data(self):
         """Dump self.data to a JSON string using schema-based encoding of nested values."""
@@ -745,12 +744,14 @@ class Application(Item):
         Find an item pointed to by a given request and call its serve() method to render response.
         Raise an exception if item not found or the path not recognized.
         """
-        # choose the right URL scheme resolver to use
-        if self.get('routing') == 'raw':
-            resolve = self._handle_raw
-        else:
-            resolve = self._handle_spaces
-        return resolve(request)
+        raise NotImplementedError()
+        
+        # # choose the right URL scheme resolver to use
+        # if self.get('routing') == 'raw':
+        #     resolve = self._handle_raw
+        # else:
+        #     resolve = self._handle_spaces
+        # return resolve(request)
 
     # def _handle_raw(self, request):
     #     """
@@ -763,38 +764,40 @@ class Application(Item):
     #     item = self.registry.get_item((cid, iid))
     #     return item.serve(request)
         
-    def _handle_spaces(self, request):
-        """
-        Handle requests identified by standard URL paths of the form:
-          <space_name>.<category_name>:<item_iid>/endpoint
-        """
-        path, request.endpoint = self._split_endpoint(request.ipath)
-
-        # decode names of space and category
-        try:
-            space_category, item_id = path.split(':')
-            space_name, category_name = space_category.split('.')
-            space = self['spaces'][space_name]
-        except Exception as ex:
-            raise Exception(f'page not found: {path}')
-            
-        # map space-category names and the iid to items
-        category = space.get_category(category_name)
-        item     = category.get_item(int(item_id))
-
-        return item.serve(request)
+    # def _handle_spaces(self, request):
+    #     """
+    #     Handle requests identified by standard URL paths of the form:
+    #       <space_name>.<category_name>:<item_iid>/endpoint
+    #     """
+    #     path, request.endpoint = self._split_endpoint(request.ipath)
+    #
+    #     # decode names of space and category
+    #     try:
+    #         space_category, item_id = path.split(':')
+    #         space_name, category_name = space_category.split('.')
+    #         space = self['spaces'][space_name]
+    #     except Exception as ex:
+    #         raise Exception(f'page not found: {path}')
+    #
+    #     # map space-category names and the iid to items
+    #     category = space.get_category(category_name)
+    #     item     = category.get_item(int(item_id))
+    #
+    #     return item.serve(request)
 
     def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
         """
         Generate URL for `__item__`, possibly extended with a non-default endpoint
         designation and/or arguments to be passed to a handler function or a template.
         """
-        # TODO: return absolute URLs (__relative__=False); currently they are always relative
-        if self.get('routing') == 'raw':
-            f = self._url_raw
-        else:
-            f = self._url_spaces
-        return f(__item__, __endpoint__, **args)
+        raise NotImplementedError()
+
+        # # TODO: return absolute URLs (__relative__=False); currently they are always relative
+        # if self.get('routing') == 'raw':
+        #     f = self._url_raw
+        # else:
+        #     f = self._url_spaces
+        # return f(__item__, __endpoint__, **args)
         
     # def _url_raw(self, __item__, __endpoint__ = None, **args):
     #
@@ -803,26 +806,14 @@ class Application(Item):
     #     url = f'{cid}:{iid}'
     #     return self._set_endpoint(url, __endpoint__, args)
         
-    def _url_spaces(self, __item__, __endpoint__ = None, **args):
-        category = __item__.category
-        path = self._qualifier(category)
-        # base = self['base_url']
-        # base = self.registry.site['base_url']
-        route = self.registry.site.get_route(self)
-        
-        iid  = category.encode_url(__item__.iid)
-        url  = f'{route}{path}:{iid}'
-        return self._set_endpoint(url, __endpoint__, args)
-    
-    @cached(ttl = 10)
-    def _qualifier(self, category):
-        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-        for space_name, space in self['spaces'].items():
-            for category_name, cat in space['categories'].items():
-                if cat.id != category.id: continue
-                return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-        
-        raise Exception(f"no URL pattern exists for the requested category: {category}")
+    # def _url_spaces(self, __item__, __endpoint__ = None, **args):
+    #     category = __item__.category
+    #     route = self.registry.site.find_route(self.id)
+    #     path  = self._qualifier(category)
+    #
+    #     iid  = category.encode_url(__item__.iid)
+    #     url  = f'{route}{path}:{iid}'
+    #     return self._set_endpoint(url, __endpoint__, args)
     
     def _split_endpoint(self, path):
         """Decode /endpoint from the URL path."""
@@ -859,10 +850,56 @@ class AdminApp(Application):
         
 class FilesApp(Application):
     """
-    Filesystem interface. Folders and files are accessible through the hierarchical
+    Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     """
 
+class SpacesApp(Application):
+    """
+    Application for accessing public data through verbose paths of the form: .../SPACE.CATEGORY:IID,
+    where SPACE and CATEGORY are textual identifiers configured in `spaces` property.
+    """
+    
+    def handle(self, request):
+        """
+        Handle requests identified by standard URL paths of the form:
+          <space_name>.<category_name>:<item_iid>/endpoint
+        """
+        path, request.endpoint = self._split_endpoint(request.ipath)
+
+        # decode names of space and category
+        try:
+            space_category, item_id = path.split(':')
+            space_name, category_name = space_category.split('.')
+            space = self['spaces'][space_name]
+        except Exception as ex:
+            raise Exception(f'page not found: {path}')
+            
+        # map space-category names and the iid to items
+        category = space.get_category(category_name)
+        item     = category.get_item(int(item_id))
+
+        return item.serve(request)
+
+    def url_of(self, __item__, __endpoint__ = None, **args):
+        category = __item__.category
+        route = self.registry.site.find_route(self.id)
+        path  = self._qualifier(category)
+        
+        iid  = category.encode_url(__item__.iid)
+        url  = f'{route}{path}:{iid}'
+        return self._set_endpoint(url, __endpoint__, args)
+
+    @cached(ttl = 10)
+    def _qualifier(self, category):
+        """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
+        for space_name, space in self['spaces'].items():
+            for category_name, cat in space['categories'].items():
+                if cat.id != category.id: continue
+                return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+        
+        raise Exception(f"no URL pattern exists for the requested category: {category}")
+    
 
 #####################################################################################################################################################
 #####
@@ -885,7 +922,7 @@ class Site(Item):
         loaders = [HyItemLoader(files), PyLoader]       # PyLoader is needed to load Python built-ins
         return HyperHTML(loaders)
         
-    # def _post_decode(self):
+    # def bind(self):
     #
     #     # print('Site.routes:', self['routes'])
     #
@@ -931,9 +968,9 @@ class Site(Item):
         route = path.split('/', 1)[0]
         app   = apps.get(route, None)
         
-        if app and route:                       # non-default (named) route
+        if app and route:                       # non-default (named) route is /-terminated
             route += '/'
-        elif '' in apps:                        # default (unnamed) route - special handling
+        elif '' in apps:                        # default (unnamed) route - special format
             route = ''
             app   = apps[route]
         else:
@@ -948,14 +985,19 @@ class Site(Item):
         #         return name, path, app
         # raise Exception(f'page not found: {url}')
 
-    def get_route(self, app):
-        """Return route (URL prefix) of a given Application, `app`."""
+    @cached(ttl = 10)
+    def find_route(self, app_id):
+        """Return the route (URL prefix) for a given application."""
+        # TODO: allow chains of nested Apps instead of a flat list
+        # TODO: replace this method with a derived transient property "routing_table", with lazy calculation;
+        #       the routing_table should only contain info local to this item; nested applications should retrieve
+        #       downstream route from their parents, so that routing_table is checked against direct children only
         base = self['base_url']
-        for route, app_ref in self['apps'].items():
-            if app.id != app_ref.id: continue
-            if route: return f"{base}{route}/"      # non-default (named) route
-            else: return base                       # default (unnamed) route
-        raise Exception(f'unknown route for application {app} ID {app.id}')
+        for route, app in self['apps'].items():
+            if app.id != app_id: continue
+            if route: return f"{base}{route}/"      # non-default (named) route is /-terminated
+            else: return base                       # default (unnamed) route - special format
+        raise Exception(f'unknown route for application ID {app_id}')
 
     # def handle_(self, request, path):
     #     route = self.find_route(request, path)

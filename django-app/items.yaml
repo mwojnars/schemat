@@ -127,6 +127,23 @@
     name:
       schema: {'@': hyperweb.schema.STRING}
 - id: [0, 6]
+  name: Spaces Application
+  info: 'Application for accessing public data through verbose paths of the form:
+    .../SPACE.CATEGORY:IID, where SPACE and CATEGORY are textual identifiers configured
+    in `spaces` property.'
+  class_name: hyperweb.item.SpacesApp
+  fields:
+    name:
+      schema: {'@': hyperweb.schema.STRING}
+    spaces:
+      schema:
+        values:
+          category:
+            '=': [0, 2]
+            '@': (item)
+          '@': hyperweb.schema.ITEM
+        '@': hyperweb.schema.CATALOG
+- id: [0, 7]
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -150,7 +167,7 @@
             '@': (item)
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-- id: [0, 7]
+- id: [0, 8]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
@@ -159,7 +176,7 @@
       schema: {'@': hyperweb.schema.STRING}
     title:
       schema: {'@': hyperweb.schema.STRING}
-- id: [0, 8]
+- id: [0, 9]
   name: File
   info: File with a text content. Accessible through the web filesystem.
   class_name: hyperweb.item.File
@@ -168,7 +185,7 @@
       schema: {'@': hyperweb.schema.STRING}
     content:
       schema: {'@': hyperweb.schema.CODE}
-- id: [0, 9]
+- id: [0, 10]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
     and/or markup.
@@ -179,14 +196,14 @@
       schema: {'@': hyperweb.schema.STRING}
     text:
       schema: {'@': hyperweb.schema.TEXT}
-- id: [0, 10]
+- id: [0, 11]
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
   class_name: hyperweb.item.LocalFile
   fields:
     path:
       schema: {'@': hyperweb.schema.STRING}
-- id: [8, 1]
+- id: [9, 1]
   format: css
   content: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
     \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
@@ -245,10 +262,10 @@
     \ }\n        .ct-value .field .info      { font-style: italic; }\n        .ct-value\
     \ pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace;\
     \ }\n    "
-- id: [8, 2]
+- id: [9, 2]
   format: javascript
   local_path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
-- id: [8, 3]
+- id: [9, 3]
   format: hypertag
   content: "\n    %assets_external\n        # jQuery 3.6.0\n        script src=\"\
     https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\"\
@@ -326,33 +343,31 @@
     \ URL)\n    \n    "
 - id: [1, 1]
   files:
-    base.hy: [8, 3]
-    base.css: [8, 1]
-- id: [10, 1]
+    base.hy: [9, 3]
+    base.css: [9, 1]
+- id: [11, 1]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
 - id: [2, 1]
   name: Meta
-  categories: {category: 0, item: 7}
+  categories: {category: 0, item: 8}
 - id: [2, 2]
   name: System
-  categories: {space: 2, app: 3, site: 6, dir: 1, file: 10}
+  categories: {space: 2, app: 3, site: 7, dir: 1, file: 11}
 - id: [4, 1]
   name: Admin
-- id: [3, 1]
-  name: Catalog
-  base_url: http://localhost:8001/
-  spaces: {meta: 1, sys: 2}
-  routing: spaces
 - id: [6, 1]
+  name: Catalog
+  spaces: {meta: 1, sys: 2}
+- id: [7, 1]
   name: catalog.wiki
   base_url: http://localhost:8001/
   directory: 1
   apps:
     admin: [4, 1]
     ? ''
-    : 1
-- id: [7, 1]
+    : [6, 1]
+- id: [8, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-- id: [7, 2]
+- id: [8, 2]
   title: ąłęÓŁŻŹŚ
   name: test_item
