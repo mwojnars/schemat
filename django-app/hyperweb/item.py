@@ -657,81 +657,6 @@ class Category(Item):
 #####  APPLICATION
 #####
 
-# class Route:
-#     """
-#     Specification of a URL route: its base URL (protocol+domain), regex pattern for URL path matching,
-#     and a target application object.
-#     """
-#     base = None         # base URL: scheme (protocol) + domain, without trailing '/'
-#     path = None         # fixed prefix of URL paths after the domain part; should start with '/'
-#     app  = None         # Application that interprets the dynamic part of a URL and maps it bidirectionally to an item
-#
-#     def __init__(self, **attrs):
-#         self.__dict__.update(attrs)
-    
-    # def match(self, url):
-    #     """Check if this route matches a given URL."""
-    #     return url.startswith(self.base + self.path)
-    #
-    # def find(self, path, registry):
-    #     """
-    #     Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments).
-    #     Raise an exception if item not found or the path not recognized.
-    #     Return (item, endpoint, args) tuple.
-    #     """
-    #     endpoint = args = ""
-    #
-    #     if '?' in path:
-    #         path, args = path.split('?', 1)
-    #
-    #     if '/' in path:
-    #         path, endpoint = path.rsplit('/', 1)
-    #
-    #     try:
-    #         space_category, item_id = path.split(':')
-    #         space_name, category_name = space_category.split('.')
-    #     except Exception as ex:
-    #         print(ex)
-    #         print('incorrect URL path:', path)
-    #         raise
-    #
-    #     space    = self.app.get_space(space_name)
-    #     category = space.get_category(category_name)
-    #     item     = category.get_item(int(item_id))
-    #
-    #     return item, endpoint, args
-    #
-    # def url(self, __item__, __endpoint__ = None, **params):
-    #     """
-    #     Get URL of `item` when accessed through this URL route, possibly extended with a non-default
-    #     endpoint designation and/or arguments to be passed to a handler function or a template.
-    #     """
-    #     category = __item__.category
-    #     path = self._qualifier(category)
-    #     iid  = category.encode_url(__item__.iid)
-    #     url  = f'{self.base}/{path}:{iid}'
-    #     if __endpoint__: url += f'/{__endpoint__}'
-    #     return url
-    #
-    # # route(item) is equivalent to route.url(item):
-    # __call__ = url
-    #
-    # @cached(ttl = 10)
-    # def _qualifier(self, category):
-    #     """Get a qualifer (URL path) of a given category that should be put in URL to access this category's items by IID."""
-    #     for space_name, space in self.app['spaces'].items():
-    #         for category_name, cat in space['categories'].items():
-    #             if cat.id != category.id: continue
-    #             return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-    #
-    #     raise Exception(f"no URL pattern exists for the requested category: {category}")
-    
-
-# class Space(Item):
-#
-#     def get_category(self, name):
-#         return self['categories'][name]
-
 class Application(Item):
     """
     An application implements a mapping of URL paths to item methods, and the way back.
@@ -745,45 +670,6 @@ class Application(Item):
         Raise an exception if item not found or the path not recognized.
         """
         raise NotImplementedError()
-        
-        # # choose the right URL scheme resolver to use
-        # if self.get('routing') == 'raw':
-        #     resolve = self._handle_raw
-        # else:
-        #     resolve = self._handle_spaces
-        # return resolve(request)
-
-    # def _handle_raw(self, request):
-    #     """
-    #     The 'raw' scheme of parsing URLs. Provides URLs for *all* items in the system, hence it should
-    #     only be used for an Admin application.
-    #     `path` should have a form of: CID,IID
-    #     """
-    #     path, request.endpoint = self._split_endpoint(request.ipath)
-    #     cid, iid = map(int, path.split(':'))
-    #     item = self.registry.get_item((cid, iid))
-    #     return item.serve(request)
-        
-    # def _handle_spaces(self, request):
-    #     """
-    #     Handle requests identified by standard URL paths of the form:
-    #       <space_name>.<category_name>:<item_iid>/endpoint
-    #     """
-    #     path, request.endpoint = self._split_endpoint(request.ipath)
-    #
-    #     # decode names of space and category
-    #     try:
-    #         space_category, item_id = path.split(':')
-    #         space_name, category_name = space_category.split('.')
-    #         space = self['spaces'][space_name]
-    #     except Exception as ex:
-    #         raise Exception(f'page not found: {path}')
-    #
-    #     # map space-category names and the iid to items
-    #     category = space.get_category(category_name)
-    #     item     = category.get_item(int(item_id))
-    #
-    #     return item.serve(request)
 
     def url_of(self, __item__, __endpoint__ = None, __relative__ = True, **args):
         """
@@ -791,29 +677,6 @@ class Application(Item):
         designation and/or arguments to be passed to a handler function or a template.
         """
         raise NotImplementedError()
-
-        # # TODO: return absolute URLs (__relative__=False); currently they are always relative
-        # if self.get('routing') == 'raw':
-        #     f = self._url_raw
-        # else:
-        #     f = self._url_spaces
-        # return f(__item__, __endpoint__, **args)
-        
-    # def _url_raw(self, __item__, __endpoint__ = None, **args):
-    #
-    #     assert __item__.has_id()
-    #     cid, iid = __item__.id
-    #     url = f'{cid}:{iid}'
-    #     return self._set_endpoint(url, __endpoint__, args)
-        
-    # def _url_spaces(self, __item__, __endpoint__ = None, **args):
-    #     category = __item__.category
-    #     route = self.registry.site.find_route(self.id)
-    #     path  = self._qualifier(category)
-    #
-    #     iid  = category.encode_url(__item__.iid)
-    #     url  = f'{route}{path}:{iid}'
-    #     return self._set_endpoint(url, __endpoint__, args)
     
     def _split_endpoint(self, path):
         """Decode /endpoint from the URL path."""

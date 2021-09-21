@@ -291,8 +291,6 @@ space_sys = Space_(
 
 app_admin = AdminApp_(
     name        = "Admin",
-    # base_url    = "http://localhost:8001/admin/",       # TODO: drop base_url field entirely
-    # routing     = "raw",
 )
 # app_files = FilesApp_(
 #     name        = "Files",
@@ -304,9 +302,7 @@ app_catalog = SpacesApp_(
 )
 # app_catalog = Application_(
 #     name        = "Catalog",
-#     # base_url    = "http://localhost:8001/",     # prefix of all URLs produced and parsed by this application
 #     spaces      = {'meta': space_meta, 'sys': space_sys},
-#     # routing     = "spaces",
 # )
 
 catalog_wiki = Site_(
