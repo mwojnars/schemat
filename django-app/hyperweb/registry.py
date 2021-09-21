@@ -316,13 +316,15 @@ class Registry:
         """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
         return self.classpath[path]
     
-
-    ### Request handling ###
+    ###
+    ###  Request handling  ###
+    ###
     
     def handle_request(self, request):
         """
         During request processing, some additional non-standard attributes are assigned in `request`
         to carry Hyperweb-specific information for downstream processing functions:
+        - request.url   = original absolute URL of the request
         - request.site  = Site that received the request (this overrides the Django's meaning of this attribute)
         - request.app   = leaf Application object this request is addressed to
         - request.item  = target item that's responsible for actual handling of this request
@@ -330,11 +332,13 @@ class Registry:
         - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
         - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
         """
+        request.url  = request.build_absolute_uri()
         request.site = site = self.site
         self.start_request(request)
-        return site.handle(request)
-        # after "return", self.after_request() and self.stop_request() are executed
+
+        # after "return" below, self.after_request() and self.stop_request() are executed
         # in an action fired on Django's <request_finished> signal, see boot.py for details
+        return site.handle(request)
     
     def start_request(self, request):
         assert self.current_request is None, 'trying to start a new request when another one is still open'

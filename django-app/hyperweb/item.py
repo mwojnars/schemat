@@ -549,9 +549,9 @@ class Item(object, metaclass = MetaItem):
         """
         app = self.registry.current_app
         if not app: return None
-        #route = self.registry.site.find_route(self.id)
         path = app.url_path(self, *args, **kwargs)
         return self.registry.current_base_url + path
+        # TODO: truncate the URL when __relative__=True
 
 
 ItemDoesNotExist.item_class = Item
@@ -759,11 +759,8 @@ class SpacesApp(Application):
     def url_path(self, __item__, __endpoint__ = None, **args):
         category  = __item__.category
         qualifier = self._qualifier(category)
-        #route = self.registry.site.find_route(self.id)
-        
         iid = category.encode_url(__item__.iid)
         url = f'{qualifier}:{iid}'
-        #url = f'{route}{path}:{iid}'
         return self._set_endpoint(url, __endpoint__, args)
 
     @cached(ttl = 10)
@@ -821,9 +818,9 @@ class Site(Item):
         
     def handle(self, request):
         """Find an application in self['apps'] that matches the requested URL and call its handle()."""
+        url  = request.url
         apps = self['apps']
         base = self['base_url']
-        url  = request.build_absolute_uri()
         if not url.startswith(base): raise Exception(f'page not found: {url}')
         
         path  = url[len(base):]
@@ -845,56 +842,20 @@ class Site(Item):
         
         return app.handle(request, path[len(route):])
 
-    @cached(ttl = 10)
-    def find_route(self, app_id):
-        """Return the route (URL prefix) for a given application."""
-        # TODO: allow chains of nested Apps instead of a flat list
-        # TODO: replace this method with a derived transient property "routing_table", with lazy calculation;
-        #       the routing_table should only contain info local to this item; nested applications should retrieve
-        #       downstream route from their parents, so that routing_table is checked against direct children only
-        base = self['base_url']
-        for route, app in self['apps'].items():
-            if app.id != app_id: continue
-            if route: return f"{base}{route}/"      # non-default (named) route is /-terminated
-            else: return base                       # default (unnamed) route - special format
-        raise Exception(f'unknown route for application ID {app_id}')
+    # @cached(ttl = 10)
+    # def find_route(self, app_id):
+    #     """Return the route (URL prefix) for a given application."""
+    #     # TODO: allow chains of nested Apps instead of a flat list
+    #     # TODO: replace this method with a derived transient property "routing_table", with lazy calculation;
+    #     #       the routing_table should only contain info local to this item; nested applications should retrieve
+    #     #       downstream route from their parents, so that routing_table is checked against direct children only
+    #     base = self['base_url']
+    #     for route, app in self['apps'].items():
+    #         if app.id != app_id: continue
+    #         if route: return f"{base}{route}/"      # non-default (named) route is /-terminated
+    #         else: return base                       # default (unnamed) route - special format
+    #     raise Exception(f'unknown route for application ID {app_id}')
 
-    # def handle_(self, request, path):
-    #     route = self.find_route(request, path)
-    #     item, endpoint, args = route.find(path, self.registry)
-    #     return item.serve(route, request, endpoint, args)
-    #
-    # def find_route(self, request, path):
-    #     """Find the first route that matches the URL `path`."""
-    #
-    #     url = request.build_absolute_uri()
-    #     for route in self['routes'].values():
-    #         if route.match(url): return route
-    #
-    #     raise Exception(f'route not found for "{path}" path')
-
-    # def resolve(self, path):
-    #     """Find an item pointed to by a given URL path (no domain name, no endpoint, no GET arguments)."""
-    #
-    #     # print(f'handler thread {threading.get_ident()}')
-    #
-    #     # below, `iid` can be a number, but this is NOT a strict requirement; interpretation of URL's IID part
-    #     # is category-dependent and can be customized by Category subclasses
-    #     try:
-    #         qualifier, iid_str = path.split(':', 1)
-    #     except Exception as ex:
-    #         print(ex)
-    #         print('incorrect URL path:', path)
-    #         raise
-    #
-    #     reg = self.registry
-    #
-    #     cid = self._qualifiers[qualifier]
-    #     category = reg.get_category(cid)
-    #
-    #     iid = category.decode_url(iid_str)
-    #     return reg.get_item((cid, iid))
-    
 
 class Directory(Item):
     """"""
