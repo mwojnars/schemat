@@ -142,7 +142,7 @@ Site_ = Category_(
         name        = STRING(),
         base_url    = STRING(),                 # all URLs in this Site will have base_url as their prefix
         directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
-        app         = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
+        application = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
         # apps        = CATALOG(ITEM()),
     ),
 )

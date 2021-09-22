@@ -141,7 +141,7 @@
           '=': [0, 1]
           '@': (item)
         '@': hyperweb.schema.ITEM
-    app:
+    application:
       schema: {'@': hyperweb.schema.ITEM}
 - id: [0, 8]
   name: Varia
@@ -331,7 +331,7 @@
   name: Catalog
   spaces: {meta.category: 0, meta.item: 8, sys.site: 7, sys.dir: 1, sys.file: 11}
 - id: [3, 1]
-  name: Root
+  name: Applications
   apps:
     admin: [4, 1]
     files: [5, 1]
@@ -341,7 +341,7 @@
   name: catalog.wiki
   base_url: http://localhost:8001/
   directory: 1
-  app: [3, 1]
+  application: [3, 1]
 - id: [8, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - id: [8, 2]

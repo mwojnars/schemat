@@ -294,7 +294,7 @@ app_catalog = SpacesApp_(
     },
 )
 app_root = RootApp_ (
-    name        = "Root",
+    name        = "Applications",
     apps        = {
         'admin':    app_admin,
         'files':    app_files,
@@ -306,12 +306,7 @@ catalog_wiki = Site_(
     name        = "catalog.wiki",
     base_url    = "http://localhost:8001/",
     directory   = directory,
-    app         = app_root,
-    # apps        = {
-    #     'admin':    app_admin,
-    #     'files':    app_files,
-    #     '':         app_catalog,        # default route
-    # },
+    application = app_root,
 )
 
 #####################################################################################################################################################
