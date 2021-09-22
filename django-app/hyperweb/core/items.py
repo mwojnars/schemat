@@ -280,27 +280,11 @@ file_protocols = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/djang
 
 #####################################################################################################################################################
 
-# space_meta = Space_(
-#     name        = "Meta",
-#     categories  = {'category': Category_, 'item': Varia_}
-# )
-# space_sys = Space_(
-#     name        = "System",
-#     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
-# )
-
-# app_root = RootApp_
-
-app_admin = AdminApp_(
-    name        = "Admin",
-)
-app_files = FilesApp_(
-    name        = "Files",
-)
+app_admin = AdminApp_(name = "Admin",)
+app_files = FilesApp_(name = "Files",)
 
 app_catalog = SpacesApp_(
     name        = "Catalog",
-    #spaces      = {'meta': space_meta, 'sys': space_sys},
     spaces      = {
         'meta.category':    Category_,
         'meta.item':        Varia_,
@@ -309,16 +293,25 @@ app_catalog = SpacesApp_(
         'sys.file':         LocalFile_,
     },
 )
-
-catalog_wiki = Site_(
-    name        = "catalog.wiki",
-    base_url    = "http://localhost:8001/",
-    directory   = directory,
+app_root = RootApp_ (
+    name        = "Root",
     apps        = {
         'admin':    app_admin,
         'files':    app_files,
         '':         app_catalog,        # default route
     },
+)
+
+catalog_wiki = Site_(
+    name        = "catalog.wiki",
+    base_url    = "http://localhost:8001/",
+    directory   = directory,
+    app         = app_root,
+    # apps        = {
+    #     'admin':    app_admin,
+    #     'files':    app_files,
+    #     '':         app_catalog,        # default route
+    # },
 )
 
 #####################################################################################################################################################

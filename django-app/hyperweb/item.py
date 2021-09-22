@@ -702,6 +702,40 @@ class Application(Item):
         return url
     
     
+class RootApp(Application):
+    """A set of sub-applications, each bound to a different URL prefix."""
+    
+    def handle(self, request, path):
+        """Find an application in self['apps'] that matches the requested URL and call its handle()."""
+        
+        # url  = request.url
+        # base = self['base_url']
+        # if not path.startswith(base): raise Exception(f'path not found: {path}')
+        # path  = url[len(base):]
+
+        apps  = self['apps']
+        route = path.split('/', 1)[0]
+        app   = apps.get(route, None)
+        
+        if app and route:                       # non-default (named) route is /-terminated
+            route += '/'
+        elif '' in apps:                        # default (unnamed) route - special format
+            route = ''
+            app   = apps[route]
+        else:
+            raise Exception(f'path not found: {path}')
+
+        # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
+        # request.route = lambda path_: f"{base}{route}/{path_}"
+        # request.route.append(route)
+        request.base_url += route
+        
+        return app.handle(request, path[len(route):])
+    
+    def url_path(self, __item__, __endpoint__ = None, **args):
+        raise Exception(f"trying to get item's URL path from a non-terminal application {self}")
+    
+        
 class AdminApp(Application):
     """Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID """
     
@@ -736,7 +770,6 @@ class SpacesApp(Application):
     """
     def handle(self, request, path):
         path, request.endpoint = self._split_endpoint(path)
-
         try:
             space, item_id = path.split(':')        # decode space identifier and convert to a category object
             category = self['spaces'][space]
@@ -758,42 +791,7 @@ class SpacesApp(Application):
         for space, cat in self['spaces'].items():
             if cat.id == category.id: return space
         raise Exception(f'URL path not found for items of category {category}')
-        
 
-    # def handle(self, request, path):
-    #     path, request.endpoint = self._split_endpoint(path)
-    #
-    #     # decode names of space and category
-    #     try:
-    #         space_category, item_id = path.split(':')
-    #         space_name, category_name = space_category.split('.')
-    #         space = self['spaces'][space_name]
-    #     except Exception as ex:
-    #         raise Exception(f'page not found: {path}')
-    #
-    #     # map space-category names and the iid to items
-    #     category = space.get_category(category_name)
-    #     item     = category.get_item(int(item_id))
-    #
-    #     return item.serve(request, self)
-    #
-    # def url_path(self, __item__, __endpoint__ = None, **args):
-    #     category  = __item__.category
-    #     qualifier = self._qualifier(category)
-    #     iid = category.encode_url(__item__.iid)
-    #     url = f'{qualifier}:{iid}'
-    #     return self._set_endpoint(url, __endpoint__, args)
-    #
-    # @cached(ttl = 10)
-    # def _qualifier(self, category):
-    #     """Get a space-category qualifer of `category` for use inside URL paths."""
-    #     for space_name, space in self['spaces'].items():
-    #         for category_name, cat in space['categories'].items():
-    #             if cat.id != category.id: continue
-    #             return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-    #
-    #     raise Exception(f"no URL pattern exists for category {category}")
-    
 
 #####################################################################################################################################################
 #####
@@ -838,44 +836,42 @@ class Site(Item):
         return self.registry.get_item(*args, **kwargs)
         
     def handle(self, request):
-        """Find an application in self['apps'] that matches the requested URL and call its handle()."""
+        """Forward the request to a root application configured in the `app` property."""
         url  = request.url
-        apps = self['apps']
+        app  = self['app']
         base = self['base_url']
+        path = url[len(base):]
+
         if not url.startswith(base): raise Exception(f'page not found: {url}')
-        
-        path  = url[len(base):]
-        route = path.split('/', 1)[0]
-        app   = apps.get(route, None)
-        
-        if app and route:                       # non-default (named) route is /-terminated
-            route += '/'
-        elif '' in apps:                        # default (unnamed) route - special format
-            route = ''
-            app   = apps[route]
-        else:
-            raise Exception(f'page not found: {url}')
 
-        # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
-        # request.route = lambda path_: f"{base}{route}/{path_}"
-        # request.route.append(route)
-        request.base_url = base + route
-        
-        return app.handle(request, path[len(route):])
+        request.base_url = base
+        return app.handle(request, path)
 
-    # @cached(ttl = 10)
-    # def find_route(self, app_id):
-    #     """Return the route (URL prefix) for a given application."""
-    #     # TODO: allow chains of nested Apps instead of a flat list
-    #     # TODO: replace this method with a derived transient property "routing_table", with lazy calculation;
-    #     #       the routing_table should only contain info local to this item; nested applications should retrieve
-    #     #       downstream route from their parents, so that routing_table is checked against direct children only
+    # def handle(self, request):
+    #     """Find an application in self['apps'] that matches the requested URL and call its handle()."""
+    #     url  = request.url
+    #     apps = self['apps']
     #     base = self['base_url']
-    #     for route, app in self['apps'].items():
-    #         if app.id != app_id: continue
-    #         if route: return f"{base}{route}/"      # non-default (named) route is /-terminated
-    #         else: return base                       # default (unnamed) route - special format
-    #     raise Exception(f'unknown route for application ID {app_id}')
+    #     if not url.startswith(base): raise Exception(f'page not found: {url}')
+    #
+    #     path  = url[len(base):]
+    #     route = path.split('/', 1)[0]
+    #     app   = apps.get(route, None)
+    #
+    #     if app and route:                       # non-default (named) route is /-terminated
+    #         route += '/'
+    #     elif '' in apps:                        # default (unnamed) route - special format
+    #         route = ''
+    #         app   = apps[route]
+    #     else:
+    #         raise Exception(f'page not found: {url}')
+    #
+    #     # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
+    #     # request.route = lambda path_: f"{base}{route}/{path_}"
+    #     # request.route.append(route)
+    #     request.base_url = base + route
+    #
+    #     return app.handle(request, path[len(route):])
 
 
 class Directory(Item):

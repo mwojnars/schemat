@@ -109,24 +109,26 @@ Application_ = Category_(
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )
-# RootApp_  = Category_(
-#     name        = "Root Application",
-#     info        = "A collection of sub-applications, each bound to a different URL prefix.",
-#     prototype   = Application_,     # TODO: add support for category inheritance (prototypes)
-# )
+RootApp_  = Category_(
+    name        = "Root App",
+    info        = "A set of sub-applications, each bound to a different URL prefix.",
+    class_name  = 'hyperweb.item.RootApp',
+    prototype   = Application_,     # TODO: add support for category inheritance (prototypes)
+    fields      = FIELDS(name = STRING(), apps = CATALOG(ITEM())),  # TODO: restrict apps to sub-categories of Application_ (?)
+)
 
 AdminApp_ = Category_(
-    name        = "Admin Application",
+    name        = "Admin App",
     class_name  = 'hyperweb.item.AdminApp',
     fields      = FIELDS(name = STRING()),
 )
 FilesApp_ = Category_(
-    name        = "Files Application",
+    name        = "Files App",
     class_name  = 'hyperweb.item.FilesApp',
     fields      = FIELDS(name = STRING()),
 )
 SpacesApp_ = Category_(
-    name        = "Spaces Application",
+    name        = "Spaces App",
     info        = "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
     class_name  = 'hyperweb.item.SpacesApp',
     fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Category_))),
@@ -140,7 +142,8 @@ Site_ = Category_(
         name        = STRING(),
         base_url    = STRING(),                 # all URLs in this Site will have base_url as their prefix
         directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
-        apps        = CATALOG(ITEM()),          # here, we could restrict items to sub-categories of Application_ (?)
+        app         = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
+        # apps        = CATALOG(ITEM()),
     ),
 )
 
