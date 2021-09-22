@@ -125,7 +125,7 @@ AdminApp_ = Category_(
 FilesApp_ = Category_(
     name        = "Files App",
     class_name  = 'hyperweb.item.FilesApp',
-    fields      = FIELDS(name = STRING()),
+    fields      = FIELDS(name = STRING(), root_folder = ITEM(Directory_)),    # if root_folder is missing, Site's main folder is used
 )
 SpacesApp_ = Category_(
     name        = "Spaces App",
@@ -140,10 +140,10 @@ Site_ = Category_(
     class_name  = 'hyperweb.item.Site',
     fields      = FIELDS(
         name        = STRING(),
-        base_url    = STRING(),                 # all URLs in this Site will have base_url as their prefix
-        directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
+        base_url    = STRING(),                 # the base URL at which the `application` is served, /-terminated
+        directory   = ITEM(Directory_),         # root of the site-global file system
+        #filesystem  = None,
         application = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
-        # apps        = CATALOG(ITEM()),
     ),
 )
 

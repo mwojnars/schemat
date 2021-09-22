@@ -706,7 +706,7 @@ class RootApp(Application):
     """A set of sub-applications, each bound to a different URL prefix."""
     
     def handle(self, request, path):
-        """Find an application in self['apps'] that matches the requested URL and call its handle()."""
+        """Find an application in self['apps'] that matches the requested URL path and call its handle()."""
         
         apps  = self['apps']
         route = path.split('/', 1)[0]
@@ -714,11 +714,11 @@ class RootApp(Application):
         
         if app and route:                       # non-default (named) route is /-terminated
             route += '/'
-        elif '' in apps:                        # default (unnamed) route - special format
+        elif '' in apps:                        # default (unnamed) route has special format: no "/"
             route = ''
             app   = apps[route]
         else:
-            raise Exception(f'path not found: {path}')
+            raise Exception(f'URL path not found: {path}')
 
         # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
         # request.route = lambda path_: f"{base}{route}/{path_}"
@@ -752,9 +752,11 @@ class FilesApp(Application):
     "file path" routing pattern: .../dir1/dir2/file.txt
     """
     def handle(self, request, path):
+        
+        # TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
         path, request.endpoint = self._split_endpoint(path)
-        cid, iid = map(int, path.split(':'))
-        item = self.registry.get_item((cid, iid))
+        folder = self.get('root_folder') or self.registry.files
+        item = folder.open(path)
         return item.serve(request, self)
         
 
@@ -769,7 +771,7 @@ class SpacesApp(Application):
             space, item_id = path.split(':')        # decode space identifier and convert to a category object
             category = self['spaces'][space]
         except Exception as ex:
-            raise Exception(f'page not found: {path}')
+            raise Exception(f'URL path not found: {path}')
             
         item = category.get_item(int(item_id))
         return item.serve(request, self)
@@ -795,11 +797,9 @@ class SpacesApp(Application):
 
 class Site(Item):
     """
-    Site represents the entire website as seen by clients:
-    - all (sub)domains
-    - all (sub)applications
-    - routing of all URLs
+    Global configuration of all applications that comprise this website, with URL routing etc.
     """
+    
     @property
     @cached(ttl = 60)
     def hypertag(self):

@@ -41,4 +41,7 @@ def test_basic():
     assert200("meta.category:0")
     assert200("meta.category:4")
     assert200("meta.item:1")
+    assert200("sys.site:1")
+    assert200("admin/0:1")
+    assert200("admin/1:1")
     

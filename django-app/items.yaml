@@ -108,6 +108,12 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
+    root_folder:
+      schema:
+        category:
+          '=': [0, 1]
+          '@': (item)
+        '@': hyperweb.schema.ITEM
 - id: [0, 6]
   name: Spaces App
   info: 'Application for accessing public data through verbose paths of the form:
