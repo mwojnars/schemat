@@ -69,15 +69,10 @@ Category_.category = Category_
 
 Directory_ = Category_(
     name        = "Directory",
-    info        = "A directory of items, each item has a unique name (path). May contain nested subdirectories. Similar to a file system.",
+    info        = "A directory of files, each file has a unique name (path). May contain nested directories.",
     class_name  = 'hyperweb.item.Directory',
     fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = FILE()))     # file & directory names mapped to item IDs
 )
-# Filesystem_ = Category_(
-#     name        = "File system",
-#     fields      = FIELDS(root = FILEPATH()),
-# )
-
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
 #  /items/CAT/* (auto) -- items in a category, CAT, listed by *IID* ... /item/Category/* lists categories by IID
@@ -86,36 +81,39 @@ Directory_ = Category_(
 #  /data/APP/* -- working directory of an application, APP, where app-specific data items can be created and modified
 #  /site -- the global Site item that's booted upon startup (?)
 
-Space_ = Category_(
-    name        = "Space",
-    info        = "Category of items that represent item spaces.",
-    fields      = FIELDS(name = STRING(), categories = CATALOG(ITEM(Category_))),
-    # class_name  = 'hyperweb.item.Space',
-    class_name  = "Space",
-    class_code  =
-    """
-        from hyperweb.item import Item
-        class Space(Item):
-            def get_category(self, name):
-                return self['categories'][name]
-    """,
-    # get_category = Method("""
-    #     def get_category(self, name):
-    #         return self['categories'][name]
-    # """),
-)
+# Space_ = Category_(
+#     name        = "Space",
+#     info        = "Category of items that represent item spaces.",
+#     fields      = FIELDS(name = STRING(), categories = CATALOG(ITEM(Category_))),
+#     # class_name  = 'hyperweb.item.Space',
+#     class_name  = "Space",
+#     class_code  =
+#     """
+#         from hyperweb.item import Item
+#         class Space(Item):
+#             def get_category(self, name):
+#                 return self['categories'][name]
+#     """,
+#     # get_category = Method("""
+#     #     def get_category(self, name):
+#     #         return self['categories'][name]
+#     # """),
+# )
 
 Application_ = Category_(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     class_name  = 'hyperweb.item.Application',
-    fields      = FIELDS(name = STRING(), routing = ENUM('raw', 'spaces'), spaces = CATALOG(ITEM(Space_))),
-    folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
+    fields      = FIELDS(name = STRING()),
+    # folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )
-# RootApp_  = Category_()         # root application: a collection of sub-applications and their prefixes
-# MainApp_
+# RootApp_  = Category_(
+#     name        = "Root Application",
+#     info        = "A collection of sub-applications, each bound to a different URL prefix.",
+#     prototype   = Application_,     # TODO: add support for category inheritance (prototypes)
+# )
 
 AdminApp_ = Category_(
     name        = "Admin Application",
@@ -129,9 +127,9 @@ FilesApp_ = Category_(
 )
 SpacesApp_ = Category_(
     name        = "Spaces Application",
-    info        = "Application for accessing public data through verbose paths of the form: .../SPACE.CATEGORY:IID, where SPACE and CATEGORY are textual identifiers configured in `spaces` property.",
+    info        = "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
     class_name  = 'hyperweb.item.SpacesApp',
-    fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Space_))),
+    fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Category_))),
 )
 
 Site_ = Category_(
@@ -142,7 +140,7 @@ Site_ = Category_(
         name        = STRING(),
         base_url    = STRING(),                 # all URLs in this Site will have base_url as their prefix
         directory   = ITEM(Directory_),         # root of the site-global hierarchical directory of items
-        apps        = CATALOG(ITEM(Application_)),
+        apps        = CATALOG(ITEM()),          # here, we could restrict items to sub-categories of Application_ (?)
     ),
 )
 

@@ -280,14 +280,14 @@ file_protocols = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/djang
 
 #####################################################################################################################################################
 
-space_meta = Space_(
-    name        = "Meta",
-    categories  = {'category': Category_, 'item': Varia_}
-)
-space_sys = Space_(
-    name        = "System",
-    categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
-)
+# space_meta = Space_(
+#     name        = "Meta",
+#     categories  = {'category': Category_, 'item': Varia_}
+# )
+# space_sys = Space_(
+#     name        = "System",
+#     categories  = {'space': Space_, 'app': Application_, 'site': Site_, 'dir': Directory_, 'file': LocalFile_}
+# )
 
 # app_root = RootApp_
 
@@ -300,8 +300,8 @@ app_files = FilesApp_(
 
 app_catalog = SpacesApp_(
     name        = "Catalog",
-    spaces      = {'meta': space_meta, 'sys': space_sys},
-    spaces__    = {
+    #spaces      = {'meta': space_meta, 'sys': space_sys},
+    spaces      = {
         'meta.category':    Category_,
         'meta.item':        Varia_,
         'sys.site':         Site_,
@@ -309,10 +309,6 @@ app_catalog = SpacesApp_(
         'sys.file':         LocalFile_,
     },
 )
-# app_catalog = Application_(
-#     name        = "Catalog",
-#     spaces      = {'meta': space_meta, 'sys': space_sys},
-# )
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",

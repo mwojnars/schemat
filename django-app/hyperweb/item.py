@@ -679,8 +679,8 @@ class Application(Item):
 
     def url_path(self, __item__, __endpoint__ = None, **args):
         """
-        Generate URL path (URL route excluded) for `__item__`, possibly extended with a non-default endpoint
-        designation and/or arguments to be passed to a handler function or a template.
+        Generate URL path (URL fragment after route) for `__item__`, possibly extended with a non-default
+        endpoint designation and/or arguments to be passed to a handler function or a template.
         """
         raise NotImplementedError()
     
@@ -731,47 +731,68 @@ class FilesApp(Application):
 
 class SpacesApp(Application):
     """
-    Application for accessing public data through verbose paths of the form: .../SPACE.CATEGORY:IID,
-    where SPACE and CATEGORY are textual identifiers configured in `spaces` property.
+    Application for accessing public data through verbose paths of the form: .../SPACE:IID,
+    where SPACE is a text identifier assigned to a category in `spaces` property.
     """
-    
     def handle(self, request, path):
-        """
-        Handle requests identified by standard URL paths of the form:
-          <space_name>.<category_name>:<item_iid>/endpoint
-        """
         path, request.endpoint = self._split_endpoint(path)
 
-        # decode names of space and category
         try:
-            space_category, item_id = path.split(':')
-            space_name, category_name = space_category.split('.')
-            space = self['spaces'][space_name]
+            space, item_id = path.split(':')        # decode space identifier and convert to a category object
+            category = self['spaces'][space]
         except Exception as ex:
             raise Exception(f'page not found: {path}')
             
-        # map space-category names and the iid to items
-        category = space.get_category(category_name)
-        item     = category.get_item(int(item_id))
-
+        item = category.get_item(int(item_id))
         return item.serve(request, self)
 
     def url_path(self, __item__, __endpoint__ = None, **args):
         category  = __item__.category
-        qualifier = self._qualifier(category)
-        iid = category.encode_url(__item__.iid)
-        url = f'{qualifier}:{iid}'
+        space = self._find_space(category)
+        iid   = category.encode_url(__item__.iid)
+        url   = f'{space}:{iid}'
         return self._set_endpoint(url, __endpoint__, args)
 
     @cached(ttl = 10)
-    def _qualifier(self, category):
-        """Get a space-category qualifer of `category` for use inside URL paths."""
-        for space_name, space in self['spaces'].items():
-            for category_name, cat in space['categories'].items():
-                if cat.id != category.id: continue
-                return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    def _find_space(self, category):
+        for space, cat in self['spaces'].items():
+            if cat.id == category.id: return space
+        raise Exception(f'URL path not found for items of category {category}')
         
-        raise Exception(f"no URL pattern exists for category {category}")
+
+    # def handle(self, request, path):
+    #     path, request.endpoint = self._split_endpoint(path)
+    #
+    #     # decode names of space and category
+    #     try:
+    #         space_category, item_id = path.split(':')
+    #         space_name, category_name = space_category.split('.')
+    #         space = self['spaces'][space_name]
+    #     except Exception as ex:
+    #         raise Exception(f'page not found: {path}')
+    #
+    #     # map space-category names and the iid to items
+    #     category = space.get_category(category_name)
+    #     item     = category.get_item(int(item_id))
+    #
+    #     return item.serve(request, self)
+    #
+    # def url_path(self, __item__, __endpoint__ = None, **args):
+    #     category  = __item__.category
+    #     qualifier = self._qualifier(category)
+    #     iid = category.encode_url(__item__.iid)
+    #     url = f'{qualifier}:{iid}'
+    #     return self._set_endpoint(url, __endpoint__, args)
+    #
+    # @cached(ttl = 10)
+    # def _qualifier(self, category):
+    #     """Get a space-category qualifer of `category` for use inside URL paths."""
+    #     for space_name, space in self['spaces'].items():
+    #         for category_name, cat in space['categories'].items():
+    #             if cat.id != category.id: continue
+    #             return f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    #
+    #     raise Exception(f"no URL pattern exists for category {category}")
     
 
 #####################################################################################################################################################

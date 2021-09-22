@@ -65,8 +65,8 @@
         '@': hyperweb.schema.CATALOG
 - id: [0, 1]
   name: Directory
-  info: A directory of items, each item has a unique name (path). May contain nested
-    subdirectories. Similar to a file system.
+  info: A directory of files, each file has a unique name (path). May contain nested
+    directories.
   class_name: hyperweb.item.Directory
   fields:
     files:
@@ -75,24 +75,6 @@
         values: {'@': hyperweb.schema.FILE}
         '@': hyperweb.schema.CATALOG
 - id: [0, 2]
-  name: Space
-  info: Category of items that represent item spaces.
-  fields:
-    name:
-      schema: {'@': hyperweb.schema.STRING}
-    categories:
-      schema:
-        values:
-          category:
-            '=': [0, 0]
-            '@': (item)
-          '@': hyperweb.schema.ITEM
-        '@': hyperweb.schema.CATALOG
-  class_name: Space
-  class_code: "\n        from hyperweb.item import Item\n        class Space(Item):\n\
-    \            def get_category(self, name):\n                return self['categories'][name]\n\
-    \    "
-- id: [0, 3]
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
@@ -100,37 +82,23 @@
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-    routing:
-      schema:
-        values: [raw, spaces]
-        indices: false
-        '@': hyperweb.schema.ENUM
-    spaces:
-      schema:
-        values:
-          category:
-            '=': [0, 2]
-            '@': (item)
-          '@': hyperweb.schema.ITEM
-        '@': hyperweb.schema.CATALOG
-  folder: {'@': hyperweb.schema.FILEPATH}
-- id: [0, 4]
+- id: [0, 3]
   name: Admin Application
   class_name: hyperweb.item.AdminApp
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-- id: [0, 5]
+- id: [0, 4]
   name: Files Application
   class_name: hyperweb.item.FilesApp
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
-- id: [0, 6]
+- id: [0, 5]
   name: Spaces Application
   info: 'Application for accessing public data through verbose paths of the form:
-    .../SPACE.CATEGORY:IID, where SPACE and CATEGORY are textual identifiers configured
-    in `spaces` property.'
+    .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces`
+    property.'
   class_name: hyperweb.item.SpacesApp
   fields:
     name:
@@ -139,11 +107,11 @@
       schema:
         values:
           category:
-            '=': [0, 2]
+            '=': [0, 0]
             '@': (item)
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-- id: [0, 7]
+- id: [0, 6]
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -161,13 +129,9 @@
         '@': hyperweb.schema.ITEM
     apps:
       schema:
-        values:
-          category:
-            '=': [0, 3]
-            '@': (item)
-          '@': hyperweb.schema.ITEM
+        values: {'@': hyperweb.schema.ITEM}
         '@': hyperweb.schema.CATALOG
-- id: [0, 8]
+- id: [0, 7]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.item.Item
@@ -176,7 +140,7 @@
       schema: {'@': hyperweb.schema.STRING}
     title:
       schema: {'@': hyperweb.schema.STRING}
-- id: [0, 9]
+- id: [0, 8]
   name: File
   info: File with a text content. Accessible through the web filesystem.
   class_name: hyperweb.item.File
@@ -185,7 +149,7 @@
       schema: {'@': hyperweb.schema.STRING}
     content:
       schema: {'@': hyperweb.schema.CODE}
-- id: [0, 10]
+- id: [0, 9]
   name: Text
   info: Plain or rich text for human consumption. May keep information about language
     and/or markup.
@@ -196,14 +160,14 @@
       schema: {'@': hyperweb.schema.STRING}
     text:
       schema: {'@': hyperweb.schema.TEXT}
-- id: [0, 11]
+- id: [0, 10]
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
   class_name: hyperweb.item.LocalFile
   fields:
     path:
       schema: {'@': hyperweb.schema.STRING}
-- id: [9, 1]
+- id: [8, 1]
   format: css
   content: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
     \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
@@ -262,10 +226,10 @@
     \ }\n        .ct-value .field .info      { font-style: italic; }\n        .ct-value\
     \ pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace;\
     \ }\n    "
-- id: [9, 2]
+- id: [8, 2]
   format: javascript
   local_path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
-- id: [9, 3]
+- id: [8, 3]
   format: hypertag
   content: "\n    %assets_external\n        # jQuery 3.6.0\n        script src=\"\
     https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\"\
@@ -343,50 +307,28 @@
     \ URL)\n    \n    "
 - id: [1, 1]
   files:
-    base.hy: [9, 3]
-    base.css: [9, 1]
-- id: [11, 1]
+    base.hy: [8, 3]
+    base.css: [8, 1]
+- id: [10, 1]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
-- id: [2, 1]
-  name: Meta
-  categories: {category: 0, item: 8}
-- id: [2, 2]
-  name: System
-  categories: {space: 2, app: 3, site: 7, dir: 1, file: 11}
-- id: [4, 1]
+- id: [3, 1]
   name: Admin
-- id: [5, 1]
+- id: [4, 1]
   name: Files
-- id: [6, 1]
+- id: [5, 1]
   name: Catalog
-  spaces: {meta: 1, sys: 2}
-  spaces__:
-    meta.category:
-      '=': [0, 0]
-      '@': (item)
-    meta.item:
-      '=': [0, 8]
-      '@': (item)
-    sys.site:
-      '=': [0, 7]
-      '@': (item)
-    sys.dir:
-      '=': [0, 1]
-      '@': (item)
-    sys.file:
-      '=': [0, 11]
-      '@': (item)
-- id: [7, 1]
+  spaces: {meta.category: 0, meta.item: 7, sys.site: 6, sys.dir: 1, sys.file: 10}
+- id: [6, 1]
   name: catalog.wiki
   base_url: http://localhost:8001/
   directory: 1
   apps:
-    admin: [4, 1]
-    files: [5, 1]
+    admin: [3, 1]
+    files: [4, 1]
     ? ''
-    : [6, 1]
-- id: [8, 1]
+    : [5, 1]
+- id: [7, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-- id: [8, 2]
+- id: [7, 2]
   title: ąłęÓŁŻŹŚ
   name: test_item

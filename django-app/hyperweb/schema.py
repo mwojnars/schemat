@@ -466,8 +466,9 @@ class ITEM(Schema):
             
         cid = self._get_cid()
         
-        if None != cid == item.cid:
-            return item.iid
+        if None != cid:
+            if cid == item.cid: return item.iid
+            raise EncodeError(f"incorrect CID={item.cid} of an item {item}, expected CID={cid}")
         
         return item.id
 
