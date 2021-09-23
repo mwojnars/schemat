@@ -542,16 +542,23 @@ class Item(object, metaclass = MetaItem):
         return entries
         
 
-    def url(self, *args, __relative__ = False, **kwargs):
+    def url(self, __route__ = None, **kwargs):
         """
-        Return URL of this item as assigned by the current Application, that is, by the one that's
-        processing the current web request. Only available during request processing, None is returned otherwise.
+        Return URL of this item as assigned by the current Application (if __route__=None),
+        that is, by the one that's processing the current web request; or by an application
+        anchored at a given __route__. __route__=None should only be used during request processing,
+        otherwise no current app is defined.
+        None is returned if the target app can't be found, or when it can't produce a desired URL. (?)
         """
+        if __route__:
+            return self.registry.site.get_url(self, __route__, **kwargs)
+        
         app = self.registry.current_app
-        if not app: return None
-        path = app.url_path(self, *args, **kwargs)
-        return self.registry.current_base_url + path
-        # TODO: truncate the URL when __relative__=True
+        # if not app: return None
+        return './' + app.url_path(self, **kwargs)
+        # if path is None: return None
+        # return self.registry.current_base_url + path
+        # TODO: truncate the URL to make it relative when __route__=None
 
 
 ItemDoesNotExist.item_class = Item
@@ -677,7 +684,7 @@ class Application(Item):
         """
         raise NotImplementedError()
 
-    def url_path(self, __item__, __endpoint__ = None, **args):
+    def url_path(self, __item__, __route__ = '', __endpoint__ = None, **params):
         """
         Generate URL path (URL fragment after route) for `__item__`, possibly extended with a non-default
         endpoint designation and/or arguments to be passed to a handler function or a template.
@@ -695,40 +702,49 @@ class Application(Item):
         
         return path, endpoint
     
-    def _set_endpoint(self, url, endpoint, args):
+    def _set_endpoint(self, url, endpoint, params):
         
         if endpoint: url += f'{self.DELIM_ENDPOINT}{endpoint}'
-        if args: url += f'?{urlencode(args)}'
+        if params: url += f'?{urlencode(params)}'
         return url
     
     
 class RootApp(Application):
     """A set of sub-applications, each bound to a different URL prefix."""
     
-    def handle(self, request, path):
-        """Find an application in self['apps'] that matches the requested URL path and call its handle()."""
-        
+    def _route(self, path):
+        """
+        Make one step forward along a URL `path`. Return the extracted route segment,
+        the associated application object, and the remaining path.
+        """
         apps  = self['apps']
         route = path.split('/', 1)[0]
         app   = apps.get(route, None)
         
         if app and route:                       # non-default (named) route is /-terminated
-            route += '/'
-        elif '' in apps:                        # default (unnamed) route has special format: no "/"
-            route = ''
-            app   = apps[route]
-        else:
-            raise Exception(f'URL path not found: {path}')
-
+            return route + '/', app, path[len(route)+1:]
+        
+        if '' in apps:                          # default (unnamed) route has special format, no "/"
+            return '', apps[''], path
+        
+        raise Exception(f'URL path not found: {path}')
+    
+    def handle(self, request, path):
+        """Find an application in self['apps'] that matches the requested URL path and call its handle()."""
+        
+        route, app, path = self._route(path)
+        
         # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
         # request.route = lambda path_: f"{base}{route}/{path_}"
         # request.route.append(route)
         request.base_url += route
         
-        return app.handle(request, path[len(route):])
+        return app.handle(request, path)
     
-    def url_path(self, __item__, __endpoint__ = None, **args):
-        raise Exception(f"trying to generate an item's URL path from a non-terminal application {self}")
+    def url_path(self, __item__, __route__ = '', __endpoint__ = None, **params):
+        
+        _, app, path = self._route(__route__)
+        return app.url_path(__item__, path)
     
         
 class AdminApp(Application):
@@ -740,11 +756,12 @@ class AdminApp(Application):
         item = self.registry.get_item((cid, iid))
         return item.serve(request, self)
         
-    def url_path(self, __item__, __endpoint__ = None, **args):
+    def url_path(self, __item__, __route__ = '', __endpoint__ = None, **params):
+        assert not __route__
         assert __item__.has_id()
         cid, iid = __item__.id
         url = f'{cid}:{iid}'
-        return self._set_endpoint(url, __endpoint__, args)
+        return self._set_endpoint(url, __endpoint__, params)
         
 class FilesApp(Application):
     """
@@ -776,12 +793,13 @@ class SpacesApp(Application):
         item = category.get_item(int(item_id))
         return item.serve(request, self)
 
-    def url_path(self, __item__, __endpoint__ = None, **args):
+    def url_path(self, __item__, __route__ = '', __endpoint__ = None, **params):
+        assert not __route__
         category  = __item__.category
         space = self._find_space(category)
         iid   = category.encode_url(__item__.iid)
         url   = f'{space}:{iid}'
-        return self._set_endpoint(url, __endpoint__, args)
+        return self._set_endpoint(url, __endpoint__, params)
 
     @cached(ttl = 10)
     def _find_space(self, category):
@@ -824,6 +842,12 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
+    def get_url(self, __item__, __route__ = '', **params):
+        """Return absolute URL of a given item, as assigned by an application anchored at `route`."""
+        app  = self['application']
+        base = self['base_url']
+        return base + app.url_path(__item__, __route__, **params)
+    
     def handle(self, request):
         """Forward the request to a root application configured in the `app` property."""
         url  = request.url

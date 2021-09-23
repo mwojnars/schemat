@@ -316,8 +316,8 @@ catalog_wiki = Site_(
 
 #####################################################################################################################################################
 
-item_001 = Varia_(title ="Ala ma kota Sierściucha i psa Kłapoucha.")
-item_002 = Varia_(title ="ąłęÓŁŻŹŚ")
+item_001 = Varia_(title = "Ala ma kota Sierściucha i psa Kłapoucha.")
+item_002 = Varia_(title = "ąłęÓŁŻŹŚ")
 item_002.add('name', "test_item")  #, "duplicate")
 
 
