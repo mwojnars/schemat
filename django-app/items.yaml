@@ -1,7 +1,7 @@
 - id: [0, 0]
   name: Category
   info: Category of items that represent categories
-  class_name: hyperweb.item.Category
+  class_name: hyperweb.core.Category
   endpoints: {view: '
 
       context $item
@@ -19,7 +19,7 @@
       schema: {'@': hyperweb.schema.STRING}
     class_name:
       schema: {'@': hyperweb.schema.STRING}
-      default: hyperweb.item.Item
+      default: hyperweb.core.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
     class_code:
@@ -47,19 +47,19 @@
               type: []
               base: {'=': hyperweb.schema.Schema, '@': builtins.type}
               '@': hyperweb.schema.OBJECT
-            '@': hyperweb.item.Field
+            '@': hyperweb.schema.Field
           default:
             schema:
               type: []
               base: []
               '@': hyperweb.schema.OBJECT
-            '@': hyperweb.item.Field
+            '@': hyperweb.schema.Field
           multi:
             schema: {'@': hyperweb.schema.BOOLEAN}
-            '@': hyperweb.item.Field
+            '@': hyperweb.schema.Field
           info:
             schema: {'@': hyperweb.schema.STRING}
-            '@': hyperweb.item.Field
+            '@': hyperweb.schema.Field
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.CATALOG
@@ -152,7 +152,7 @@
 - id: [0, 8]
   name: Varia
   info: Category of items that do not belong to any specific category
-  class_name: hyperweb.item.Item
+  class_name: hyperweb.core.Item
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}

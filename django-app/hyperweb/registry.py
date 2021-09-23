@@ -3,7 +3,7 @@ from types import FunctionType, BuiltinFunctionType
 
 from .config import ROOT_CID
 from .cache import LRUCache
-from .item import Item, Category
+from .item import Category
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 
@@ -78,7 +78,7 @@ class Classpath:
         elif symbols is None:
             def imported(_name):
                 _obj = getattr(module, _name)
-                return self._is_class_func(_name) and getattr(_name, '__module__', None) != modname
+                return self._is_class_func(_obj) and getattr(_obj, '__module__', None) != modname
             
             symbols = dir(module)
             if exclude_private:   symbols = [s for s in symbols if s[:1] != '_']
@@ -158,25 +158,27 @@ class Registry:
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         
     def init_classpath(self):
-        # the instructions below create items and categories in the background, which must be done
-        # in a strictly defined order; for this reason, their ordering cannot be changed
+        def issubtype(basetype):
+            return lambda obj: isinstance(obj, type) and issubclass(obj, basetype)
+
+        # the instructions below create items and categories in the background; this must be done
+        # in a strictly defined order, and for this reason, the ordering of instructions cannot be changed
         
+        PATH_CORE = "hyperweb.core"
         self.classpath = Classpath()
         self.classpath.add_module(builtins)
 
+        import hyperweb.multidict
+        self.classpath.add_module(hyperweb.multidict, symbols = "MultiDict")
+        
         import hyperweb.schema
-        self.classpath.add_module(hyperweb.schema)      # schemma.type
+        self.classpath.add_module(hyperweb.schema)                  # schemma.type ?
 
         import hyperweb.item
-        self.classpath.add_module(hyperweb.item)        # schemma.item
+        self.classpath.add_module(hyperweb.item, PATH_CORE)         # schemma.item ?
 
-        def is_item_class(obj):
-            return isinstance(obj, type) and issubclass(obj, Item)
-
-        import hyperweb.core.classes as classes
-        self.classpath.add_module(classes, "hyperweb.core", accept = is_item_class, exclude_imported = False)
-        
-        pass
+        import hyperweb.core.classes
+        self.classpath.add_module(hyperweb.core.classes, PATH_CORE, accept = issubtype(hyperweb.item.Item))
     
     def boot(self, core_items = None):
         self.store.load()
