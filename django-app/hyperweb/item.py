@@ -466,7 +466,7 @@ class Item(object, metaclass = MetaItem):
         else:
             self.update()
 
-    def serve(self, request, app, default_endpoint = '__view__'):
+    def serve(self, request, app, default_endpoint = 'view'):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
         Endpoint can be implemented as a handler function/method, or a template.

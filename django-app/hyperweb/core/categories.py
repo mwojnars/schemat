@@ -34,7 +34,7 @@ root_fields = FIELDS(
     info         = Field(STRING()),
     class_name   = Field(STRING(), default = 'hyperweb.item.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(CATALOG(CODE()), default = {"__view__": page_item}),
+    endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
 )
 
@@ -58,7 +58,7 @@ Category_ = Category(
     name        = "Category",
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.item.Category',
-    endpoints   = {"__view__": page_category},
+    endpoints   = {"view": page_category},
     fields      = root_fields,
     # page_category = Template(page_category),
     # page_item     = Template(page_item),
@@ -186,7 +186,7 @@ LocalFile_ = Category_(
         path    = STRING(),     # path to a local file on disk
         # format  = STRING(),     # file format: pdf, xlsx, ...
     ),
-    # endpoints   = {"__view__": page_item, "get": File_get},
+    # endpoints   = {"view": page_item, "get": File_get},
 )
 
 
