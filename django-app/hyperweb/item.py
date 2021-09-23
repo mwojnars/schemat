@@ -342,7 +342,7 @@ class Item(object, metaclass = MetaItem):
         return self.ciid(html = False)
         
     def __html__(self):
-        url  = self.url()
+        url  = self.url(__raise__ = False)
         # name = self.get('name', str(self.iid))
         # cat  = self.category.get('name', str(self.cid))
         # return f"<span style='font-size:75%;padding-right:3px'>{esc(cat)}:</span><a href={url}>{esc(name)}</a>"
@@ -371,7 +371,7 @@ class Item(object, metaclass = MetaItem):
         if max_len and len(cat) > max_len: cat = cat[:max_len - 3] + ellipsis
         if html:
             cat = esc(cat)
-            url = self.category.url()
+            url = self.category.url('', __raise__ = False)
             if url: cat = f"<a href={url}>{cat}</a>"
         stamp = f"{cat}:{self.iid}"
         if not brackets: return stamp
@@ -542,18 +542,22 @@ class Item(object, metaclass = MetaItem):
         return entries
         
 
-    def url(self, __route__ = None, **kwargs):
+    def url(self, __route__ = None, __raise__ = True, **kwargs):
         """
         Return a *relative* URL of this item as assigned by the current Application (if __route__=None),
         that is, by the one that's processing the current web request; or an *absolute* URL
         assigned by an application anchored at a given __route__.
         __route__=None should only be used during request processing, when a current app is defined.
         """
-        if __route__:
+        try:
+            if __route__ is None:
+                app = self.registry.current_app
+                return './' + app.url_path(self, **kwargs)      # ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
             return self.registry.site.get_url(self, __route__, **kwargs)
-        app = self.registry.current_app
-        return './' + app.url_path(self, **kwargs)      # ./ informs the browser this is a relative path, even when it contains dots and ":" (similar to a domain name with http port)
-
+        
+        except Exception as ex:
+            if __raise__: raise
+            return ''
 
 ItemDoesNotExist.item_class = Item
 
@@ -768,7 +772,7 @@ class FilesApp(Application):
         path, request.endpoint = self._split_endpoint(path)
         folder = self.get('root_folder') or self.registry.files
         item = folder.open(path)
-        return item.serve(request, self)
+        return item.serve(request, self, 'download')
         
 
 class SpacesApp(Application):
