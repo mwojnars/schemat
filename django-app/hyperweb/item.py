@@ -544,21 +544,15 @@ class Item(object, metaclass = MetaItem):
 
     def url(self, __route__ = None, **kwargs):
         """
-        Return URL of this item as assigned by the current Application (if __route__=None),
-        that is, by the one that's processing the current web request; or by an application
-        anchored at a given __route__. __route__=None should only be used during request processing,
-        otherwise no current app is defined.
-        None is returned if the target app can't be found, or when it can't produce a desired URL. (?)
+        Return a *relative* URL of this item as assigned by the current Application (if __route__=None),
+        that is, by the one that's processing the current web request; or an *absolute* URL
+        assigned by an application anchored at a given __route__.
+        __route__=None should only be used during request processing, when a current app is defined.
         """
         if __route__:
             return self.registry.site.get_url(self, __route__, **kwargs)
-        
         app = self.registry.current_app
-        # if not app: return None
-        return './' + app.url_path(self, **kwargs)
-        # if path is None: return None
-        # return self.registry.current_base_url + path
-        # TODO: truncate the URL to make it relative when __route__=None
+        return './' + app.url_path(self, **kwargs)      # ./ informs the browser this is a relative path, even when it contains dots and ":" (similar to a domain name with http port)
 
 
 ItemDoesNotExist.item_class = Item
@@ -737,7 +731,7 @@ class RootApp(Application):
         # # request-dependent global function that converts leaf application's local URL path to an absolute URL by passing it up through the current route
         # request.route = lambda path_: f"{base}{route}/{path_}"
         # request.route.append(route)
-        request.base_url += route
+        # request.base_url += route
         
         return app.handle(request, path)
     
@@ -857,7 +851,7 @@ class Site(Item):
 
         if not url.startswith(base): raise Exception(f'page not found: {url}')
 
-        request.base_url = base
+        # request.base_url = base
         return app.handle(request, path)
 
 
