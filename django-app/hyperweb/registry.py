@@ -1,9 +1,9 @@
 import builtins, threading
 from types import FunctionType, BuiltinFunctionType
 
-from .config import ROOT_CID, SITE_ID
+from .config import ROOT_CID
 from .cache import LRUCache
-from .item import Category, Site
+from .item import Category
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 import hyperweb.schema
@@ -165,7 +165,9 @@ class Registry:
     def boot(self, core_items = None):
         self.store.load()
         self._load_root()
-        self.site_id = SITE_ID
+        assert False, "fix the initialization of site_id below, the value can be incorrect"
+        # TODO: save `site_id` automatically during Registry.seed()
+        self.site_id = (7,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
         
     def seed(self, core_items):
@@ -178,6 +180,9 @@ class Registry:
         CIDs are taken from each item's category, while IIDs are assigned using
         consecutive numbers within a category. The root category must be the first item on the list.
         """
+        from .item import Site
+        # from .core import categories
+
         site = None
         
         for i, item in enumerate(core_items):

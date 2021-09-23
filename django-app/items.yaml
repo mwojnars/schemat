@@ -72,7 +72,7 @@
     files:
       schema:
         keys: {'@': hyperweb.schema.FILENAME}
-        values: {'@': hyperweb.schema.FILE}
+        values: {'@': hyperweb.schema.ITEM}
         '@': hyperweb.schema.CATALOG
 - id: [0, 2]
   name: Application

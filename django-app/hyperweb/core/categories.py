@@ -51,7 +51,7 @@ root_fields = FIELDS(
 
 #####################################################################################################################################################
 #####
-#####  CATEGORIES... The underscore _ is appended to names to avoid name clash with schema classes
+#####  CATEGORIES... The underscore _ is appended to names to differentiate them from names of classes
 #####
 
 Category_ = Category(
@@ -71,7 +71,7 @@ Directory_ = Category_(
     name        = "Directory",
     info        = "A directory of files, each file has a unique name (path). May contain nested directories.",
     class_name  = 'hyperweb.item.Directory',
-    fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = FILE()))     # file & directory names mapped to item IDs
+    fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = ITEM()))     # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT

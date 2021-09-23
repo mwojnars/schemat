@@ -772,7 +772,10 @@ class FilesApp(Application):
         path, request.endpoint = self._split_endpoint(path)
         folder = self.get('root_folder') or self.registry.files
         item = folder.open(path)
-        return item.serve(request, self, 'download')
+        default_endpoint = 'download'
+        #if item.category == File_ else 'view'
+        #if item.isinstance(File_)
+        return item.serve(request, self, default_endpoint)
         
 
 class SpacesApp(Application):

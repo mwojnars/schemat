@@ -724,16 +724,16 @@ class FILENAME(STRING):
     Names that end with '/' indicate directories and must link to items of Directory category.
     """
 
-class FILE(ITEM):
-    """
-    Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
-    indicating whether this item should be interpreted as-is or as a subfolder.
-    TODO: make this class a structure with fields:
-    - item (ITEM) - if a reference to an item in DB
-    - localpath (STRING) - if this is a regular file stored on local disk
-    - content (plain TEXT/BYTES) - if the contents should be served from here
-    - modified (DATETIME) ??
-    """
+# class FILE(ITEM):
+#     """
+#     Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
+#     indicating whether this item should be interpreted as-is or as a subfolder.
+#     TODO: make this class a structure with fields:
+#     - item (ITEM) - if a reference to an item in DB
+#     - localpath (STRING) - if this is a regular file stored on local disk
+#     - content (plain TEXT/BYTES) - if the contents should be served from here
+#     - modified (DATETIME) ??
+#     """
     
     
 #####################################################################################################################################################
