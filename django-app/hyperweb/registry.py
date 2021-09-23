@@ -149,15 +149,17 @@ class Registry:
         req = self.current_request
         return req.app if req is not None else None
     
-    # @property
-    # def current_base_url(self):
-    #     req = self.current_request
-    #     return req.base_url if req is not None else None
 
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         
     def init_classpath(self):
+        """
+        Initialization of self.classpath.
+        To preserve a correct order of creation of core items,
+        this method must be separated out from __init__ and called explicitly
+        by client code (boot.py) after the global `registry` is created.
+        """
         def issubtype(basetype):
             return lambda obj: isinstance(obj, type) and issubclass(obj, basetype)
 

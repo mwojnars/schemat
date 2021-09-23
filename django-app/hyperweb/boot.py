@@ -1,6 +1,5 @@
 ### UNUSED...
 
-from django.http import HttpRequest, HttpResponse
 from django.core.signals import request_finished
 from django.dispatch import receiver
 
