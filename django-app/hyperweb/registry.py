@@ -3,11 +3,8 @@ from types import FunctionType, BuiltinFunctionType
 
 from .config import ROOT_CID
 from .cache import LRUCache
-from .item import Category
+from .item import Item, Category
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
-
-import hyperweb.schema
-import hyperweb.item
 
 
 #####################################################################################################################################################
@@ -65,13 +62,15 @@ class Classpath:
         for name, obj in named.items():
             self[f'{path}.{name}'] = obj
        
-    def add_module(self, module, path = None, symbols = None, exclude_private = True, exclude_variables = True, exclude_imported = True):
+    def add_module(self, module, path = None, symbols = None, accept = None,
+                   exclude_private = True, exclude_variables = True, exclude_imported = True):
         """
         Add symbols from `module` to a given package `path` (module's python path if None).
         If `symbols` is None, all symbols found in the module are added, excluding:
         1) symbols whose name starts with underscore "_", if exclude_private=True;
         2) variables (i.e., not classes, not functions), if exclude_variables=True;
-        3) classes/functions imported from other modules as determined by their __module__, if exclude_imported=True.
+        3) classes/functions imported from other modules as determined by their __module__, if exclude_imported=True;
+        4) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
         """
         modname = module.__name__
         if not path: path = modname
@@ -88,6 +87,7 @@ class Classpath:
             
         for name in symbols:
             obj = getattr(module, name)
+            if accept and not accept(obj): continue
             self[f'{path}.{name}'] = obj
         
     @staticmethod
@@ -157,15 +157,31 @@ class Registry:
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         
+    def init_classpath(self):
+        # the instructions below create items and categories in the background, which must be done
+        # in a strictly defined order; for this reason, their ordering cannot be changed
+        
         self.classpath = Classpath()
         self.classpath.add_module(builtins)
-        self.classpath.add_module(hyperweb.schema)  # schemma.type
-        self.classpath.add_module(hyperweb.item)    # schemma.item
+
+        import hyperweb.schema
+        self.classpath.add_module(hyperweb.schema)      # schemma.type
+
+        import hyperweb.item
+        self.classpath.add_module(hyperweb.item)        # schemma.item
+
+        def is_item_class(obj):
+            return isinstance(obj, type) and issubclass(obj, Item)
+
+        import hyperweb.core.classes as classes
+        self.classpath.add_module(classes, "hyperweb.core", accept = is_item_class, exclude_imported = False)
+        
+        pass
     
     def boot(self, core_items = None):
         self.store.load()
         self._load_root()
-        assert False, "fix the initialization of site_id below, the value can be incorrect"
+        assert False, "fix the initialization of site_id below, a constant value can be incorrect"
         # TODO: save `site_id` automatically during Registry.seed()
         self.site_id = (7,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
@@ -180,8 +196,8 @@ class Registry:
         CIDs are taken from each item's category, while IIDs are assigned using
         consecutive numbers within a category. The root category must be the first item on the list.
         """
-        from .item import Site
-        # from .core import categories
+        # from .item import Site
+        from .core.classes import Site
 
         site = None
         

@@ -1,6 +1,6 @@
 import pickle, pytest
 
-from hyperweb.item import Item, Site
+from hyperweb.item import Item
 from hyperweb.boot import registry
 from hyperweb.schema import Schema, OBJECT, INTEGER, CLASS
 
@@ -86,7 +86,8 @@ def test_Item():
     # a sample item to refer to during serialization; it must actually exist in DB,
     # otherwise the deserialization will raise an exception
     site = registry.site
-    
+    from hyperweb.core.classes import Site
+
     run(OBJECT(base = Item), site, True)
     run(OBJECT(Site), site, True)
     

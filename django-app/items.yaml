@@ -67,7 +67,7 @@
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain nested
     directories.
-  class_name: hyperweb.item.Directory
+  class_name: hyperweb.core.Directory
   fields:
     files:
       schema:
@@ -78,14 +78,14 @@
   name: Application
   info: Category of application records. An application groups all spaces & categories
     available in the system and provides system-level configuration.
-  class_name: hyperweb.item.Application
+  class_name: hyperweb.core.Application
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
 - id: [0, 3]
   name: Root App
   info: A set of sub-applications, each bound to a different URL prefix.
-  class_name: hyperweb.item.RootApp
+  class_name: hyperweb.core.RootApp
   prototype:
     '=': [0, 2]
     '@': (item)
@@ -98,13 +98,13 @@
         '@': hyperweb.schema.CATALOG
 - id: [0, 4]
   name: Admin App
-  class_name: hyperweb.item.AdminApp
+  class_name: hyperweb.core.AdminApp
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
 - id: [0, 5]
   name: Files App
-  class_name: hyperweb.item.FilesApp
+  class_name: hyperweb.core.FilesApp
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
@@ -119,7 +119,7 @@
   info: 'Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces`
     property.'
-  class_name: hyperweb.item.SpacesApp
+  class_name: hyperweb.core.SpacesApp
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
@@ -135,7 +135,7 @@
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
-  class_name: hyperweb.item.Site
+  class_name: hyperweb.core.Site
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
@@ -161,7 +161,7 @@
 - id: [0, 9]
   name: File
   info: File with a text content. Accessible through the web filesystem.
-  class_name: hyperweb.item.File
+  class_name: hyperweb.core.File
   fields:
     format:
       schema: {'@': hyperweb.schema.STRING}
@@ -181,7 +181,7 @@
 - id: [0, 11]
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
-  class_name: hyperweb.item.LocalFile
+  class_name: hyperweb.core.LocalFile
   fields:
     path:
       schema: {'@': hyperweb.schema.STRING}
