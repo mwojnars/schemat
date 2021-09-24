@@ -19,8 +19,8 @@
       schema: {'@': hyperweb.schema.STRING}
     prototype:
       schema: {'@': hyperweb.schema.ITEM}
-      info: Base category from which this one inherits fields, endpoints etc. Multiple
-        prototypes are allowed, the first ones override settings of subsequent ones.
+      info: Base category from which this one inherits. Multiple prototypes are allowed,
+        the first ones override settings of subsequent ones.
     class_name:
       schema: {'@': hyperweb.schema.STRING}
       default: hyperweb.core.Item
@@ -170,19 +170,9 @@
     content:
       schema: {'@': hyperweb.schema.CODE}
 - id: [0, 10]
-  name: Text
-  info: Plain or rich text for human consumption. May keep information about language
-    and/or markup.
-  fields:
-    language:
-      schema: {'@': hyperweb.schema.STRING}
-    markup:
-      schema: {'@': hyperweb.schema.STRING}
-    text:
-      schema: {'@': hyperweb.schema.TEXT}
-- id: [0, 11]
   name: LocalFile
   info: File located on a local disk, identified by its local file path.
+  prototype: [0, 9]
   class_name: hyperweb.core.LocalFile
   fields:
     path:
@@ -283,8 +273,8 @@
     data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA\"\
     \ rel=\"icon\" type=\"image/x-icon\"\n        # # favicon: thequiz (check mark)\n\
     \        # link href=\"data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==\"\
-    \ rel=\"icon\" type=\"image/x-icon\"\n        \n        script type=\"module\"\
-    \ src=\"/sys.file:1@get\"\n        # script type=\"module\" src=\"/files/protocols.js\"\
+    \ rel=\"icon\" type=\"image/x-icon\"\n        \n        # script type=\"module\"\
+    \ src=\"/sys.file:1@get\"\n        script type=\"module\" src=\"/files/protocols.js\"\
     \n\n    %assets\n        assets_external\n        assets_internal\n    \n    %protocol\
     \ @body classname\n        # asset \".../protocols.js\"\n        div .widget protocol=classname\n\
     \            @body\n\n    %catalog_row key value schema\n        # a row containing\
@@ -329,19 +319,20 @@
     \            try\n                                a href=$item.url() | $iname\n\
     \                            else\n                                | $iname (no\
     \ URL)\n    \n    "
+- id: [10, 1]
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
 - id: [1, 1]
   files:
     base.hy: [9, 3]
     base.css: [9, 1]
-- id: [11, 1]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
+    protocols.js: [10, 1]
 - id: [4, 1]
   name: Admin
 - id: [5, 1]
   name: Files
 - id: [6, 1]
   name: Catalog
-  spaces: {meta.category: 0, meta.item: 8, sys.site: 7, sys.dir: 1, sys.file: 11}
+  spaces: {meta.category: 0, meta.item: 8, sys.site: 7, sys.dir: 1, sys.file: 10}
 - id: [3, 1]
   name: Applications
   apps:

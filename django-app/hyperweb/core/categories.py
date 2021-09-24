@@ -32,7 +32,7 @@ page_category item
 root_fields = FIELDS(
     name         = Field(STRING(), info = "human-readable title of the category"),
     info         = Field(STRING()),
-    prototype    = Field(ITEM(), info = "Base category from which this one inherits fields, endpoints etc. Multiple prototypes are allowed, the first ones override settings of subsequent ones."),
+    prototype    = Field(ITEM(), info = "Base category from which this one inherits. Multiple prototypes are allowed, the first ones override settings of subsequent ones."),
     class_name   = Field(STRING(), default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
@@ -170,18 +170,10 @@ File_ = Category_(
         content = CODE(),      # VARIANT(bin = BYTES(), txt = TEXT()),
     ),
 )
-Text_ = Category_(
-    name    = "Text",
-    info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
-    fields  = FIELDS(
-        language = STRING(),    # HumanLanguage()
-        markup   = STRING(),    # MarkupLanguage()
-        text     = TEXT(),
-    ),
-)
 LocalFile_ = Category_(
     name        = "LocalFile",
     info        = """File located on a local disk, identified by its local file path.""",
+    prototype   = File_,
     class_name  = 'hyperweb.core.LocalFile',
     fields      = FIELDS(
         path    = STRING(),     # path to a local file on disk
@@ -190,6 +182,15 @@ LocalFile_ = Category_(
     # endpoints   = {"view": page_item, "get": File_get},
 )
 
+# Text_ = Category_(
+#     name    = "Text",
+#     info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
+#     fields  = FIELDS(
+#         language = STRING(),    # HumanLanguage()
+#         markup   = STRING(),    # MarkupLanguage()
+#         text     = TEXT(),
+#     ),
+# )
 
 # Import_     = STRUCT(name = STRING(), code = ITEM(_Code))      # an object imported from a Code item
 # SchemaType_ = Category_(
