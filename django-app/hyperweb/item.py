@@ -185,6 +185,13 @@ class Item(object, metaclass = MetaItem):
     #     item = cls(category)
     #     item.iid = iid
     #     return item
+
+    def isinstance(self, category):
+        """
+        Check whether this item belongs to a category that inherits from `category` via a prototype chain.
+        All comparisons along the way use item IDs, not python object identity.
+        """
+        return self.category.issubcat(category)
         
     def __contains__(self, field):
         return field in self.data
@@ -238,22 +245,20 @@ class Item(object, metaclass = MetaItem):
     #
     #     return default
 
-    def uniq(self, field, default = None, category_default = True):
+    def get_uniq(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'uniq')
         
-    def first(self, field, default = None, category_default = True):
+    def get_first(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'first')
         
-    def last(self, field, default = None, category_default = True):
+    def get_last(self, field, default = None, category_default = True):
         return self.get(field, default, category_default, 'last')
         
-    def list(self, field, copy_list = False):
+    def get_list(self, field, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
         self.prepare(field)
         return self.data.get_list(field, copy_list)
 
-    # get_list = list
-    
     def set(self, key, *values):
         """
         Assign `values` to a given key in data. This can be used instead of __setattr__ when the key looks
@@ -518,7 +523,17 @@ class Category(Item):
         item = self.new(__loaded__ = False)
         item.iid = iid
         return item
-        
+
+    def issubcat(self, category):
+        """
+        Return True if self is `category` or inherits from it, i.e.,
+        if ID of `category` is present on a prototype chain(s) of self.
+        """
+        if self.id == category.id: return True
+        for base in self.get_list('prototype'):
+            if base.issubcat(category): return True
+        return False
+
     @cached(ttl = 3600)
     def get_class(self):
 

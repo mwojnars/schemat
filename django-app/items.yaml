@@ -17,6 +17,10 @@
       info: human-readable title of the category
     info:
       schema: {'@': hyperweb.schema.STRING}
+    prototype:
+      schema: {'@': hyperweb.schema.ITEM}
+      info: Base category from which this one inherits fields, endpoints etc. Multiple
+        prototypes are allowed, the first ones override settings of subsequent ones.
     class_name:
       schema: {'@': hyperweb.schema.STRING}
       default: hyperweb.core.Item
@@ -86,9 +90,7 @@
   name: Root App
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: hyperweb.core.RootApp
-  prototype:
-    '=': [0, 2]
-    '@': (item)
+  prototype: [0, 2]
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
