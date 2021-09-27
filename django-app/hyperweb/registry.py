@@ -124,7 +124,7 @@ class Registry:
     the last request before item refresh operates on an already-expired item.
     """
     
-    store = YamlStore()         # DataStore where items are read from and saved to
+    store = None                # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
     site_id = None
@@ -152,6 +152,7 @@ class Registry:
 
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        self.store = YamlStore()
         
     def init_classpath(self):
         """
@@ -184,8 +185,9 @@ class Registry:
     
     def boot(self, core_items = None):
         self.store.load()
-        self._load_root()
-        assert False, "fix the initialization of site_id below, a constant value can be incorrect"
+        root = self.create_root()
+        root.load()                 # load root data from DB
+        # assert False, "fix the initialization of site_id below, a constant value can be incorrect"
         # TODO: save `site_id` automatically during Registry.seed()
         self.site_id = (7,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
@@ -286,18 +288,31 @@ class Registry:
             assert cid == category.iid
 
             if cid == iid == ROOT_CID:
-                yield self.cache.get((cid, iid)) or self._load_root(record)
+                yield self.cache.get((cid, iid)) or self.create_root(record)
             else:
                 item = category.stub(iid)
                 self._set(item)
                 item.load(record)
                 yield item
         
-    def _load_root(self, record = None):
+    def create_root(self, data = None):
         
-        root = Category.create_root(self)
+        # root = Category.create_root(self)
+        from .core.root import root_fields
+        
+        root = Category(__loaded__ = False)
+        root.registry = self
+        root.category = root                    # root category is a category for itself
+        root.cid = ROOT_CID
+        root.iid = ROOT_CID
+        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+
         self._set(root, ttl = 0, protect = True)
-        root.load(record)              # this loads the root data from DB if record=None
+        if data:
+            root._decode(data)
+            root.bind()
+        # root.load(record)              # this loads the root data from DB if record=None
+        
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
         

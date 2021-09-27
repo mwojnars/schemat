@@ -592,19 +592,19 @@ class Category(Item):
         """
         return str(iid)
     
-    @classmethod
-    def create_root(cls, registry):
-        """Create an instance of the root category item."""
-
-        from .core.categories import root_fields
-        
-        root = cls(__loaded__ = False)
-        root.registry = registry
-        root.category = root                    # root category is a category for itself
-        root.cid = ROOT_CID
-        root.iid = ROOT_CID
-        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-        return root
+    # @classmethod
+    # def create_root(cls, registry):
+    #     """Create an instance of the root category item."""
+    #
+    #     from .core.root import root_fields
+    #
+    #     root = cls(__loaded__ = False)
+    #     root.registry = registry
+    #     root.category = root                    # root category is a category for itself
+    #     root.cid = ROOT_CID
+    #     root.iid = ROOT_CID
+    #     root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+    #     return root
         
 
 #####################################################################################################################################################

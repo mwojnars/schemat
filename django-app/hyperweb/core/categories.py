@@ -3,22 +3,16 @@ Below, every newly defined category MUST be assigned to a top-level variable,
 otherwise it will NOT be found by boot.py and inserted to DB upon startup.
 """
 
-from hyperweb.item import Category
 from hyperweb.schema import *
+from hyperweb.item import Category
+from hyperweb.registry import Registry
+from hyperweb.core.root import root_fields
 
 
 #####################################################################################################################################################
 #####
 #####  ELEMENTS of items
 #####
-
-# default template to display a generic item page if a category-specific template is missing
-page_item = """
-context $item
-from base import %page_item
-page_item $item
-# dedent : page_item $item
-"""
 
 # template to display a category page
 page_category = """
@@ -31,18 +25,6 @@ page_category item
 # code_schema = STRUCT(name = STRING(), lang = STRING(), code = TEXT())   # ProgramLang() Code()
 # method_schema = STRUCT(language = STRING(), code = TEXT())
 # class_schema = VARIANT(native = CLASS(), inline = code_schema)       # reference = ITEM(_Code)
-
-
-# fields of categories, including the root category
-root_fields = FIELDS(
-    name         = Field(STRING(), info = "human-readable title of the category"),
-    info         = Field(STRING()),
-    prototype    = Field(ITEM(), info = "Base category from which this one inherits. Multiple prototypes are allowed, the first ones override settings of subsequent ones."),
-    class_name   = Field(STRING(), default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
-    class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
-    fields       = Field(CATALOG(FIELD(), type = FIELDS)),
-)
 
 # category-level properties:
 # - Method -> code + language + caching settings
@@ -59,6 +41,9 @@ root_fields = FIELDS(
 #####
 #####  CATEGORIES... The underscore _ is appended to names to differentiate them from names of classes
 #####
+
+# registry  = Registry()
+# Category_ = registry.create_root(root_data)
 
 Category_ = Category(
     name        = "Category",

@@ -67,6 +67,12 @@
           '@': hyperweb.schema.FIELD
         type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
         '@': hyperweb.schema.CATALOG
+    indexes:
+      schema:
+        values:
+          category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
+          '@': hyperweb.schema.ITEM
+        '@': hyperweb.schema.CATALOG
 - id: [0, 1]
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain nested
