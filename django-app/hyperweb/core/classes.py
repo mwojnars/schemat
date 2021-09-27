@@ -7,7 +7,6 @@ from hypertag.core.runtime import HyLoader, PyLoader
 from hypertag import HyperHTML
 
 from hyperweb.item import Item, handler, cached
-from hyperweb.core.categories import File_, Directory_
 
 
 #####################################################################################################################################################
@@ -223,6 +222,8 @@ class FilesApp(Application):
         # item = root.open(path)
         item, folder = self._search(filepath)
         default_endpoint = ()
+
+        from hyperweb.core.categories import File_, Directory_
 
         if item.isinstance(File_):
             default_endpoint = ('download',)

@@ -185,8 +185,7 @@ class Registry:
     
     def boot(self, core_items = None):
         self.store.load()
-        root = self.create_root()
-        root.load()                 # load root data from DB
+        self.load_root()
         # assert False, "fix the initialization of site_id below, a constant value can be incorrect"
         # TODO: save `site_id` automatically during Registry.seed()
         self.site_id = (7,1)
@@ -288,19 +287,35 @@ class Registry:
             assert cid == category.iid
 
             if cid == iid == ROOT_CID:
-                yield self.cache.get((cid, iid)) or self.create_root(record)
+                yield self.cache.get((cid, iid)) or self.load_root(record)
             else:
                 item = category.stub(iid)
                 self._set(item)
                 item.load(record)
                 yield item
         
+    def load_root(self, record = None):
+        """
+        Create and initialize the root category; load its data from DB (if record=None)
+        or from a preloaded db `record`.
+        """
+        root = self.create_root()
+        root.load(record)
+        return root
+        
     def create_root(self, data = None):
+        """
+        Create and initialize the root Category object (0,0).
+        If neither `data` nor `record` is provided, its properties (data) are loaded from DB.
+        """
         
         # root = Category.create_root(self)
         from .core.root import root_fields
         
-        root = Category(__loaded__ = False)
+        # load = (data is None and record is None)
+        loaded = (data is not None)
+        
+        root = Category(__loaded__ = loaded, **data)
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
@@ -308,17 +323,23 @@ class Registry:
         root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
 
         self._set(root, ttl = 0, protect = True)
-        if data:
-            root._decode(data)
-            root.bind()
-        # root.load(record)              # this loads the root data from DB if record=None
+        if loaded: root.bind()
+
+        # if load: root.load()
+        # else:
+        #     if record: root._decode(record)
+        #     # elif data:
+        #     #     root.loaded = True
+        #     #     root.data.update(data)
+        #     root.bind()
+        #root.load(record)
         
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
         
     def load_data(self, id):
-        """Load item data from DB and return as a record (dict)."""
-        print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
+        """Load item record from DB and return as a dict; contains cid, iid, data etc."""
+        # print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
         return self.store.select(id)
     
     def load_items(self, category):

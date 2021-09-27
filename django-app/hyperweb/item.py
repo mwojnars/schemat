@@ -166,16 +166,13 @@ class Item(object, metaclass = MetaItem):
         Create a new item that's not yet in DB (no IID).
         Assign `fields` into self.data. The item is assumed to be "loaded".
         """
-        self.data = MultiDict()
+        self.data = MultiDict(fields)
         self.loaded = __loaded__
         
         if __category__ is not None:
             self.category = __category__
             self.registry = __category__.registry           # this can be None
             self.cid      = __category__.iid
-        
-        for field, value in fields.items():
-            self.data[field] = value
 
     # @classmethod
     # def _stub(cls, category, iid):
@@ -335,13 +332,15 @@ class Item(object, metaclass = MetaItem):
         if self.loaded and not force and record is None: return self
         if record is None:
             record = self.registry.load_data(self.id)
+
+        self.loaded = True                      # this must be set already here to avoid infinite recursion
         self._decode(record)
         self.bind()
+
         return self
     
     def _decode(self, record):
         """Decode raw information from a DB `record` and store in `self`."""
-        self.loaded = True                      # this must be set already here to avoid infinite recursion
         
         data = record.pop('data')
         

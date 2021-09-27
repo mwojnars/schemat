@@ -42,21 +42,18 @@ page_category item
 #####  CATEGORIES... The underscore _ is appended to names to differentiate them from names of classes
 #####
 
-# registry  = Registry()
-# Category_ = registry.create_root(root_data)
-
-Category_ = Category(
+root_data = dict(
     name        = "Category",
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.core.Category',
     endpoints   = {"view": page_category},
     fields      = root_fields,
-    # page_category = Template(page_category),
-    # page_item     = Template(page_item),
-    # fun  = Method(...),
-    # new  = Handler(...),
 )
-Category_.category = Category_
+# Category_ = Category(**root_data)
+# Category_.category = Category_
+
+registry  = Registry()
+Category_ = registry.create_root(root_data)
 
 Directory_ = Category_(
     name        = "Directory",
