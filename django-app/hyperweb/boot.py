@@ -3,7 +3,7 @@
 from django.core.signals import request_finished
 from django.dispatch import receiver
 
-from .registry import Registry
+# from .registry import Registry
 
 
 #####################################################################################################################################################
@@ -11,11 +11,11 @@ from .registry import Registry
 #####  GLOBAL REGISTRY
 #####
 
-registry = Registry()
-registry.init_classpath()
+# registry = Registry()
+# registry.init_classpath()
 
 # create or load core items...
-from .core.boot import core_items
+from .core.boot import registry, core_items
 registry.seed(core_items)
 #registry.boot()
 

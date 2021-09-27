@@ -550,7 +550,8 @@ class Category(Item):
         
         assert name, f'no class_name defined for category {self}: {name}'
         
-        from hyperweb.boot import registry      # self.registry may be still uninitialized here, e.g., when creating core items
+        # from hyperweb.boot import registry      # self.registry may be still uninitialized here, e.g., when creating core items
+        from hyperweb.core.categories import registry
         return registry.get_class(name)
         
     def get_item(self, iid):

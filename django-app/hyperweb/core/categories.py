@@ -4,9 +4,7 @@ otherwise it will NOT be found by boot.py and inserted to DB upon startup.
 """
 
 from hyperweb.schema import *
-from hyperweb.item import Category
-from hyperweb.registry import Registry
-from hyperweb.core.root import root_fields
+from hyperweb.core.root import root_fields, registry
 
 
 #####################################################################################################################################################
@@ -52,7 +50,6 @@ root_data = dict(
 # Category_ = Category(**root_data)
 # Category_.category = Category_
 
-registry  = Registry()
 Category_ = registry.create_root(root_data)
 
 Directory_ = Category_(

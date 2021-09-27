@@ -207,7 +207,7 @@ class Registry:
         site = None
         
         for i, item in enumerate(core_items):
-            item.registry = self
+            # item.registry = self
             
             if i == 0:
                 assert isinstance(item, Category) and item.get('name') == 'Category', "root category must be the first item on the list"
@@ -294,25 +294,13 @@ class Registry:
                 item.load(record)
                 yield item
         
-    def load_root(self, record = None):
-        """
-        Create and initialize the root category; load its data from DB (if record=None)
-        or from a preloaded db `record`.
-        """
-        root = self.create_root()
-        root.load(record)
-        return root
-        
     def create_root(self, data = None):
         """
-        Create and initialize the root Category object (0,0).
-        If neither `data` nor `record` is provided, its properties (data) are loaded from DB.
+        Create the root Category object, ID=(0,0). If `data` is provided,
+        the properties are initialized from `data`, the object is bound through bind()
+        and marked as loaded. Otherwise, the object is left uninitialized.
         """
-        
-        # root = Category.create_root(self)
         from .core.root import root_fields
-        
-        # load = (data is None and record is None)
         loaded = (data is not None)
         
         root = Category(__loaded__ = loaded, **data)
@@ -325,16 +313,16 @@ class Registry:
         self._set(root, ttl = 0, protect = True)
         if loaded: root.bind()
 
-        # if load: root.load()
-        # else:
-        #     if record: root._decode(record)
-        #     # elif data:
-        #     #     root.loaded = True
-        #     #     root.data.update(data)
-        #     root.bind()
-        #root.load(record)
-        
         # print(f'Registry.get_item(): created root category - {id(root)}')
+        return root
+        
+    def load_root(self, record = None):
+        """
+        Create and initialize the root category; load its data from DB (if record=None)
+        or from a preloaded db `record`.
+        """
+        root = self.create_root()
+        root.load(record)
         return root
         
     def load_data(self, id):
@@ -364,7 +352,7 @@ class Registry:
 
     def _set(self, item, ttl = None, protect = False):
         """If ttl=None, default (positive) TTL of self.cache is used."""
-        print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
+        # print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
         self.cache.set(item.id, item, ttl, protect)
 
     def get_path(self, cls):

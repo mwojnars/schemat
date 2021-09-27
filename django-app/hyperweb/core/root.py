@@ -1,5 +1,6 @@
 from hyperweb.schema import *
 from hyperweb.item import Index
+from hyperweb.registry import Registry
 
 
 # default template to display a generic item page if a category-specific template is missing
@@ -9,7 +10,6 @@ from base import %page_item
 page_item $item
 # dedent : page_item $item
 """
-
 
 # fields of categories, including the root category
 root_fields = FIELDS(
@@ -23,3 +23,10 @@ root_fields = FIELDS(
     indexes      = Field(CATALOG(ITEM(Index))),
 )
 
+#####################################################################################################################################################
+#####
+#####  GLOBAL REGISTRY
+#####
+
+registry = Registry()
+registry.init_classpath()

@@ -328,7 +328,7 @@ class Cache:
         try:
             del self._cache[key]
             count = 1
-            print(f'cache: deleted key {key} in thread {threading.get_ident()}', flush = True)
+            # print(f'cache: deleted key {key} in thread {threading.get_ident()}', flush = True)
         except KeyError:
             pass
 
