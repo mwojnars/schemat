@@ -2,6 +2,7 @@ from hyperweb.schema import *
 from hyperweb.item import Index
 from hyperweb.registry import Registry
 
+#####################################################################################################################################################
 
 # default template to display a generic item page if a category-specific template is missing
 page_item = """

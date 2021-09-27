@@ -3,7 +3,7 @@
 from django.core.signals import request_finished
 from django.dispatch import receiver
 
-# from .registry import Registry
+from .core.root import registry
 
 
 #####################################################################################################################################################
@@ -11,13 +11,16 @@ from django.dispatch import receiver
 #####  GLOBAL REGISTRY
 #####
 
-# registry = Registry()
-# registry.init_classpath()
+seed_items = True
 
-# create or load core items...
-from .core.boot import registry, core_items
-registry.seed(core_items)
-#registry.boot()
+if seed_items:                                          # create core items and store in DB
+    from .core.boot import core_items
+    registry.seed(core_items)
+else:                                                   # load core items from DB
+    registry.boot()
+
+
+#####################################################################################################################################################
 
 # connect the after_request() method of `registry` with Django
 @receiver(request_finished)

@@ -301,9 +301,9 @@ class Registry:
         and marked as loaded. Otherwise, the object is left uninitialized.
         """
         from .core.root import root_fields
-        loaded = (data is not None)
+        # loaded = (data is not None)
         
-        root = Category(__loaded__ = loaded, **data)
+        root = Category(__loaded__ = False) #loaded, **(data or {}))
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
@@ -311,8 +311,11 @@ class Registry:
         root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
 
         self._set(root, ttl = 0, protect = True)
-        if loaded: root.bind()
-
+        # if loaded: root.bind()
+        
+        if data is not None:
+            root.seed(data)
+        
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
         

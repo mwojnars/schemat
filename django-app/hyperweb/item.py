@@ -174,6 +174,15 @@ class Item(object, metaclass = MetaItem):
             self.registry = __category__.registry           # this can be None
             self.cid      = __category__.iid
 
+    def seed(self, data, bind = True):
+        """
+        Initialize this (newly created) item with a given dict of property values, `data`.
+        Mark it as loaded. Then call bind(), if bind=True.
+        """
+        self.data.update(data)
+        self.loaded = True
+        if bind: self.bind()
+
     # @classmethod
     # def _stub(cls, category, iid):
     #     """
@@ -550,8 +559,7 @@ class Category(Item):
         
         assert name, f'no class_name defined for category {self}: {name}'
         
-        # from hyperweb.boot import registry      # self.registry may be still uninitialized here, e.g., when creating core items
-        from hyperweb.core.categories import registry
+        from hyperweb.core.root import registry
         return registry.get_class(name)
         
     def get_item(self, iid):
@@ -573,7 +581,7 @@ class Category(Item):
     def _handler_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
-        item = self()       #self.registry.create_item(self)
+        item = self()
         data = item.data
         
         # retrieve attribute values from GET/POST and assign to `item`
