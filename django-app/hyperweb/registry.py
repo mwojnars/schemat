@@ -356,6 +356,8 @@ class Registry:
         - request.item  = target item that's responsible for actual handling of this request
         - request.endpoint = name of endpoint (item's method or template) as extracted from the URL
         - request.user  = User item representing the current user who issued the request (overrides Django's value ??)
+        - request.state = app-specific temporary data that's written during routing (handle()) and can be used for
+                          response generation when a specific app's method is called, most typically url_path()
 
         X request.base_url = URL prefix that preceeds descriptor of the target item, used during URL generation
         """

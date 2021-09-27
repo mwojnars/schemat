@@ -1,3 +1,8 @@
+"""
+Below, every newly defined category MUST be assigned to a top-level variable,
+otherwise it will NOT be found by boot.py and inserted to DB upon startup.
+"""
+
 from hyperweb.item import Category
 from hyperweb.schema import *
 

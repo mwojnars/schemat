@@ -1,4 +1,5 @@
 from textwrap import dedent
+from xml.sax.saxutils import quoteattr
 
 from nifty.text import html_escape
 from hypertag.std.html import html_escape as esc
@@ -278,7 +279,7 @@ class Item(object, metaclass = MetaItem):
         return self.ciid(html = False)
         
     def __html__(self):
-        url  = self.url(__raise__ = False)
+        url = quoteattr(self.url())
         # name = self.get('name', str(self.iid))
         # cat  = self.category.get('name', str(self.cid))
         # return f"<span style='font-size:75%;padding-right:3px'>{esc(cat)}:</span><a href={url}>{esc(name)}</a>"
@@ -478,18 +479,18 @@ class Item(object, metaclass = MetaItem):
         return entries
         
 
-    def url(self, __route__ = None, __raise__ = True, **kwargs):
+    def url(self, __route__ = None, __raise__ = True, **params):
         """
         Return a *relative* URL of this item as assigned by the current Application (if __route__=None),
         that is, by the one that's processing the current web request; or an *absolute* URL
-        assigned by an application anchored at a given __route__.
+        assigned by an application anchored at a given route.
         __route__=None should only be used during request processing, when a current app is defined.
         """
         try:
             if __route__ is None:
                 app = self.registry.current_app
-                return './' + app.url_path(self, **kwargs)      # ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-            return self.registry.site.get_url(self, __route__, **kwargs)
+                return './' + app.url_path(self, params = params)      # ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+            return self.registry.site.get_url(self, __route__, params = params)
         
         except Exception as ex:
             if __raise__: raise
@@ -608,6 +609,19 @@ class Category(Item):
 
 #####################################################################################################################################################
 #####
+#####  INDEX
+#####
+
+class Index(Item):
+    """
+    Index of items of a specific category that allows fast item lookups and range scans
+    by a predefined key. The key is an item property or a combination of properties.
+    Each entry contains a value ("payload") consisting of a predefined subset of item properties.
+    """
+    
+
+#####################################################################################################################################################
+#####
 #####  DATA VIEW
 #####
 
@@ -637,7 +651,7 @@ class Category(Item):
 #
 #     def __getattr__(self, name):
 #         """
-#         Call __item__.get() with appropriate arguments depending on whether `name` is a plain field name,
+#         Call item.get() with appropriate arguments depending on whether `name` is a plain field name,
 #         or does it contain a suffix indicating the mode of access (uniq, first, last, list).
 #         """
 #         field = name

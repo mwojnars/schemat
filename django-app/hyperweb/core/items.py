@@ -1,3 +1,8 @@
+"""
+Below, every newly defined item MUST be assigned to a top-level variable,
+otherwise it will NOT be found by boot.py and inserted to DB upon startup.
+"""
+
 from hyperweb.core.categories import *
 
 
@@ -120,11 +125,6 @@ base_css = File_(
                             td .ct-value
 """
 
-base_js = File_(
-    format = 'javascript',
-    local_path = "/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js",
-)
-
 base_hy = File_(
     format  = 'hypertag',
     content = """
@@ -164,9 +164,9 @@ base_hy = File_(
         # script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.3/lib/codemirror.min.js"
 
     %assets_internal
-        # favicon: checkerboard
+        # favicon: checkerboard - https://www.favicon.cc/?action=icon&file_id=967487
         link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon"
-        # # favicon: thequiz (check mark)
+        # # favicon: thequiz (check mark) - https://www.favicon.cc/?action=icon&file_id=967133
         # link href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==" rel="icon" type="image/x-icon"
         
         # script type="module" src="/sys.file:1@get"
@@ -270,12 +270,14 @@ base_hy = File_(
     """,
 )
 
-
 protocols_js = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
 
+test_txt   = File_(content = "This is a test file.")
+folder_tmp = Directory_(files = {'test.txt': test_txt})
 
-directory = Directory_(
+filesystem = Directory_(
     files = {
+        'tmp':          folder_tmp,
         'base.hy':      base_hy,            # reusable components for use in pages
         'base.css':     base_css,           # global styles for use in pages
         'protocols.js': protocols_js,
@@ -311,7 +313,7 @@ app_root = RootApp_ (
 catalog_wiki = Site_(
     name        = "catalog.wiki",
     base_url    = "http://localhost:8001/",
-    directory   = directory,
+    directory   = filesystem,
     application = app_root,
 )
 
