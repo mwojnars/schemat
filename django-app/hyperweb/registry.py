@@ -149,10 +149,16 @@ class Registry:
         req = self.current_request
         return req.app if req is not None else None
     
-
+    staging = None          # list of newly created items; they will be inserted to DB and assigned item IDs
+                            # on next commit(); only the items created through category.new() or category()
+                            # are included; the items will be inserted to DB in the SAME order as in this list
+    
+    ################
+    
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         self.store = YamlStore()
+        self.staging = []
         
     def init_classpath(self):
         """
@@ -183,7 +189,7 @@ class Registry:
         import hyperweb.core.classes
         self.classpath.add_module(hyperweb.core.classes, PATH_CORE, accept = issubtype(hyperweb.item.Item))
     
-    def boot(self, core_items = None):
+    def boot(self):
         self.store.load()
         self.load_root()
         # assert False, "fix the initialization of site_id below, a constant value can be incorrect"
@@ -219,8 +225,15 @@ class Registry:
         self.store.insert_many(core_items)
         for item in core_items:
             self._set(item, ttl = 0, protect = True)
-
+            
         assert site is not None, "Site item not found among core items"
+        self.site_id = site.id
+
+    def set_site(self, site):
+        
+        from .core.classes import Site
+        assert site.has_id()
+        assert isinstance(site, Site)
         self.site_id = site.id
 
 
@@ -297,13 +310,12 @@ class Registry:
     def create_root(self, data = None):
         """
         Create the root Category object, ID=(0,0). If `data` is provided,
-        the properties are initialized from `data`, the object is bound through bind()
-        and marked as loaded. Otherwise, the object is left uninitialized.
+        the properties are initialized from `data`, the object is bound through bind(),
+        marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
         from .core.root import root_fields
-        # loaded = (data is not None)
         
-        root = Category(__loaded__ = False) #loaded, **(data or {}))
+        root = Category(__loaded__ = False)
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
@@ -311,10 +323,10 @@ class Registry:
         root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
 
         self._set(root, ttl = 0, protect = True)
-        # if loaded: root.bind()
         
         if data is not None:
             root.seed(data)
+            self.stage(root, True)          # the root is newly created here (not loaded), so it must be marked for insertion to DB
         
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
@@ -369,9 +381,9 @@ class Registry:
         """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
         return self.classpath[path]
     
-    ###
+    ###                    ###
     ###  Request handling  ###
-    ###
+    ###                    ###
     
     def handle_request(self, request):
         """
@@ -413,3 +425,21 @@ class Registry:
         assert self.current_request is not None, 'trying to stop a request when none was started'
         self.current_request = None
 
+    ###                     ###
+    ###  New item creation  ###
+    ###                     ###
+
+    def stage(self, item, force = False):
+        """Add a newly created `item` to the staging area."""
+        # force=True is only used when staging a root category
+        assert force or not item.has_id()
+        self.staging.append(item)
+
+    def commit(self, **kwargs):
+        """Insert staged items to DB and purge the staging area."""
+        self.store.insert_many(self.staging)
+        for item in self.staging:
+            # if item.has_id(): continue          # item got already inserted in the meantime
+            self._set(item, **kwargs)
+        self.staging = []
+        

@@ -37,12 +37,12 @@ if __name__ == "__main__":
     # for testing purposes only...
     
     import json, yaml
-    from hyperweb.registry import Registry
+    # from hyperweb.registry import Registry
 
     print()
     flats = []
 
-    registry = Registry()
+    # registry = Registry()
     registry.seed(core_items)
     
     # serialize items to YAML

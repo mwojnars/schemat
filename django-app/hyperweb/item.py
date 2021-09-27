@@ -156,10 +156,12 @@ class Item(object, metaclass = MetaItem):
     @property
     def id(self): return self.cid, self.iid
     
+    # is_newborn, is_fresh, is_mature
     def has_id(self): return self.cid is not None and self.iid is not None
     
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
+    
     
     def __init__(self, __category__ = None, __loaded__ = True, **fields):
         """
@@ -182,16 +184,6 @@ class Item(object, metaclass = MetaItem):
         self.data.update(data)
         self.loaded = True
         if bind: self.bind()
-
-    # @classmethod
-    # def _stub(cls, category, iid):
-    #     """
-    #     Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-    #     but data fields are not loaded yet. Should only be called by Registry.
-    #     """
-    #     item = cls(category)
-    #     item.iid = iid
-    #     return item
 
     def isinstance(self, category):
         """
@@ -520,7 +512,9 @@ class Category(Item):
     def new(self, __loaded__ = True, **fields):
         """Create a new raw item of this category, not yet in Registry and without self.registry explicitly set."""
         itemclass = self.get_class()
-        return itemclass(self, __loaded__, **fields)
+        item = itemclass(self, __loaded__, **fields)
+        self.registry.stage(item)               # mark `item` for insertion on next commit()
+        return item
     
     __call__ = new
     
