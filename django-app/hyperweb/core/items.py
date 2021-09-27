@@ -273,11 +273,12 @@ base_hy = File_(
 protocols_js = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
 
 test_txt   = File_(content = "This is a test file.")
-folder_tmp = Directory_(files = {'test.txt': test_txt})
+dir_tmp1   = Directory_(files = {'test.txt': test_txt})
+dir_tmp2   = Directory_(files = {'tmp1': dir_tmp1})
 
 filesystem = Directory_(
     files = {
-        'tmp':          folder_tmp,
+        'tmp':          dir_tmp2,
         'base.hy':      base_hy,            # reusable components for use in pages
         'base.css':     base_css,           # global styles for use in pages
         'protocols.js': protocols_js,
