@@ -1,3 +1,5 @@
+# UNUSED...
+
 """
 Core system items defined as Python objects.
 
@@ -12,50 +14,50 @@ Directory: one-directional mapping name -> item
 Namespace: bidirectional mapping name <-> item
 """
 
-from hyperweb.core.categories import *
-from hyperweb.core.items import *
-from hyperweb.item import Item
-
-#####################################################################################################################################################
-#####
-#####  CORE ITEMS list
-#####
-
-core_items = {name: obj for name, obj in globals().items() if isinstance(obj, Item)}
-
-print('core items:')
-for name in core_items.keys(): print(name)
-print()
-
-core_items = list(core_items.values())
-
-
-#####################################################################################################################################################
-
-if __name__ == "__main__":
-    
-    # for testing purposes only...
-    
-    import json, yaml
-    # from hyperweb.registry import Registry
-
-    print()
-    flats = []
-
-    # registry = Registry()
-    registry.seed(core_items)
-    
-    # serialize items to YAML
-    for item in core_items:
-        
-        raw  = item.dump_data()
-        flat = {'id': list(item.id)}
-        flat.update(json.loads(raw))
-        flats.append(flat)
-        # print(yaml.dump(flat))
-        
-    print()
-    print("ITEMS:")
-    print()
-    print(yaml.dump(flats, default_flow_style = None, sort_keys = False, allow_unicode = True))
+# from hyperweb.core.categories import *
+# from hyperweb.core.items import *
+# from hyperweb.item import Item
+#
+# #####################################################################################################################################################
+# #####
+# #####  CORE ITEMS list
+# #####
+#
+# core_items = {name: obj for name, obj in globals().items() if isinstance(obj, Item)}
+#
+# print('core items:')
+# for name in core_items.keys(): print(name)
+# print()
+#
+# core_items = list(core_items.values())
+#
+#
+# #####################################################################################################################################################
+#
+# if __name__ == "__main__":
+#
+#     # for testing purposes only...
+#
+#     import json, yaml
+#     # from hyperweb.registry import Registry
+#
+#     print()
+#     flats = []
+#
+#     # registry = Registry()
+#     registry.seed(core_items)
+#
+#     # serialize items to YAML
+#     for item in core_items:
+#
+#         raw  = item.dump_data()
+#         flat = {'id': list(item.id)}
+#         flat.update(json.loads(raw))
+#         flats.append(flat)
+#         # print(yaml.dump(flat))
+#
+#     print()
+#     print("ITEMS:")
+#     print()
+#     print(yaml.dump(flats, default_flow_style = None, sort_keys = False, allow_unicode = True))
     

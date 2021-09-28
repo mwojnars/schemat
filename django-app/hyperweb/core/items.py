@@ -1,6 +1,7 @@
 """
-Below, every newly defined item MUST be assigned to a top-level variable,
-otherwise it will NOT be found by boot.py and inserted to DB upon startup.
+Core system items defined as Python objects.
+Every item created through category(...) call is automatically inserted to the registry's
+staging area and will be inserted to DB upon registry.commit() - see boot.py.
 """
 
 from hyperweb.core.categories import *

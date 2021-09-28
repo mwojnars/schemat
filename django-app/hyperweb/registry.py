@@ -149,9 +149,9 @@ class Registry:
         req = self.current_request
         return req.app if req is not None else None
     
-    staging = None          # list of newly created items; they will be inserted to DB and assigned item IDs
+    staging = None          # list of modified or newly created items that will be updated/inserted to DB
                             # on next commit(); only the items created through category.new() or category()
-                            # are included; the items will be inserted to DB in the SAME order as in this list
+                            # are included; the items will be commited to DB in the SAME order as in this list
     
     ################
     
@@ -197,43 +197,45 @@ class Registry:
         self.site_id = (7,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
         
-    def seed(self, core_items):
-        """
-        Seed the DB and this registry with a list of initial "core" items.
-        The items are treated as newly created ones and get inserted to DB as such,
-        where they get assigned IDs along the way.
-        
-        The items should have empty IDs, which will be assigned here by the registry:
-        CIDs are taken from each item's category, while IIDs are assigned using
-        consecutive numbers within a category. The root category must be the first item on the list.
-        """
-        # from .item import Site
-        from .core.classes import Site
-
-        site = None
-        
-        for i, item in enumerate(core_items):
-            # item.registry = self
-            
-            if i == 0:
-                assert isinstance(item, Category) and item.get('name') == 'Category', "root category must be the first item on the list"
-                assert ROOT_CID < 1
-                item.cid = item.iid = ROOT_CID
-            elif isinstance(item, Site):
-                site = item
-                
-        self.store.insert_many(core_items)
-        for item in core_items:
-            self._set(item, ttl = 0, protect = True)
-            
-        assert site is not None, "Site item not found among core items"
-        self.site_id = site.id
+    # def seed(self, core_items):
+    #     """
+    #     Seed the DB and this registry with a list of initial "core" items.
+    #     The items are treated as newly created ones and get inserted to DB as such,
+    #     where they get assigned IDs along the way.
+    #
+    #     The items should have empty IDs, which will be assigned here by the registry:
+    #     CIDs are taken from each item's category, while IIDs are assigned using
+    #     consecutive numbers within a category. The root category must be the first item on the list.
+    #     """
+    #     # from .item import Site
+    #     from .core.classes import Site
+    #
+    #     site = None
+    #
+    #     for i, item in enumerate(core_items):
+    #         # item.registry = self
+    #
+    #         if i == 0:
+    #             assert isinstance(item, Category) and item.get('name') == 'Category', "root category must be the first item on the list"
+    #             assert ROOT_CID < 1
+    #             item.cid = item.iid = ROOT_CID
+    #         elif isinstance(item, Site):
+    #             site = item
+    #
+    #     self.store.insert_many(core_items)
+    #     for item in core_items:
+    #         self._set(item, ttl = 0, protect = True)
+    #
+    #     assert site is not None, "Site item not found among core items"
+    #     self.site_id = site.id
 
     def set_site(self, site):
         
         from .core.classes import Site
+        from .core.categories import Site_
         assert site.has_id()
         assert isinstance(site, Site)
+        assert site.isinstance(Site_)
         self.site_id = site.id
 
 
@@ -283,11 +285,6 @@ class Registry:
         cat = self.get_item((ROOT_CID, cid))
         assert isinstance(cat, Category)
         return cat
-    
-    # def get_site(self):
-    #     site = self.get_item(self.site_id)
-    #     assert isinstance(site, Site), f'incorrect class of a site item ({type(site)}), possibly wrong site_id ({self.site_id})'
-    #     return site
     
     def decode_items(self, records, category):
         """
@@ -431,12 +428,13 @@ class Registry:
 
     def stage(self, item, force = False):
         """Add a newly created `item` to the staging area."""
-        # force=True is only used when staging a root category
         assert force or not item.has_id()
         self.staging.append(item)
 
     def commit(self, **kwargs):
         """Insert staged items to DB and purge the staging area."""
+        
+        # TODO: if ID is present for an item, make an update, not insert
         self.store.insert_many(self.staging)
         for item in self.staging:
             # if item.has_id(): continue          # item got already inserted in the meantime
