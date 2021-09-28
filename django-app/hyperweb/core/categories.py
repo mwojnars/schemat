@@ -1,6 +1,8 @@
 """
-Below, every newly defined category MUST be assigned to a top-level variable,
-otherwise it will NOT be found by boot.py and inserted to DB upon startup.
+Core system categories defined as Python objects.
+
+Every object created through Category_(...) call is automatically inserted to the registry's
+staging area and will be inserted to DB upon registry.commit() - see boot.py.
 """
 
 from hyperweb.schema import *
@@ -19,17 +21,11 @@ from base import %page_category
 page_category item
 """
 
-# text_schema = STRUCT(name = STRING(), lang = STRING(), markup = STRING(), text = TEXT())   # HumanLang() MarkupLang() TEXT()
-# code_schema = STRUCT(name = STRING(), lang = STRING(), code = TEXT())   # ProgramLang() Code()
-# method_schema = STRUCT(language = STRING(), code = TEXT())
-# class_schema = VARIANT(native = CLASS(), inline = code_schema)       # reference = ITEM(_Code)
-
 # category-level properties:
 # - Method -> code + language + caching settings
 # ? Handler -> code
 # - View / template -> Hypertag code (full script)
 # ? Hypertag / snippet -> Hypertag code (individual symbol)
-
 # item-level properties:
 # - Field -> schema + default
 # - Asset: style (css), javascript (js), image, ...
@@ -47,8 +43,6 @@ root_data = dict(
     endpoints   = {"view": page_category},
     fields      = root_fields,
 )
-# Category_ = Category(**root_data)
-# Category_.category = Category_
 
 Category_ = registry.create_root(root_data)
 

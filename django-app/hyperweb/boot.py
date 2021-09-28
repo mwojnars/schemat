@@ -16,9 +16,6 @@ if seed_items:
     from .core.items import *                       # this creates all items and puts them in the registry's staging area
     registry.commit(ttl = 0, protect = True)        # this inserts items to DB and assigns IDs
     registry.set_site(catalog_wiki)
-    
-    # from .core.boot import core_items
-    # registry.seed(core_items)
 
 else:
     # load core items from DB

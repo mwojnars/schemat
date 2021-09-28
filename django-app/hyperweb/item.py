@@ -332,7 +332,7 @@ class Item(object, metaclass = MetaItem):
         assert self.iid is not None, 'load() must not be called for a newly created item with no IID'
         if self.loaded and not force and record is None: return self
         if record is None:
-            record = self.registry.load_data(self.id)
+            record = self.registry.load_record(self.id)
 
         self.loaded = True                      # this must be set already here to avoid infinite recursion
         self._decode(record)

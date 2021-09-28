@@ -152,9 +152,12 @@ class Registry:
     staging = None          # list of modified or newly created items that will be updated/inserted to DB
                             # on next commit(); only the items created through category.new() or category()
                             # are included; the items will be commited to DB in the SAME order as in this list
-    
-    ################
-    
+
+    ####################################
+    ###
+    ###  Initialization & basic access
+    ###
+
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)
         self.store = YamlStore()
@@ -181,7 +184,7 @@ class Registry:
         self.classpath.add_module(hyperweb.multidict, symbols = "MultiDict")
         
         import hyperweb.schema
-        self.classpath.add_module(hyperweb.schema)                  # schemma.type ?
+        self.classpath.add_module(hyperweb.schema)                  # schemma.type ? schematt.type
 
         import hyperweb.item
         self.classpath.add_module(hyperweb.item, PATH_CORE)         # schemma.item ?
@@ -197,38 +200,39 @@ class Registry:
         self.site_id = (7,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
         
-    # def seed(self, core_items):
-    #     """
-    #     Seed the DB and this registry with a list of initial "core" items.
-    #     The items are treated as newly created ones and get inserted to DB as such,
-    #     where they get assigned IDs along the way.
-    #
-    #     The items should have empty IDs, which will be assigned here by the registry:
-    #     CIDs are taken from each item's category, while IIDs are assigned using
-    #     consecutive numbers within a category. The root category must be the first item on the list.
-    #     """
-    #     # from .item import Site
-    #     from .core.classes import Site
-    #
-    #     site = None
-    #
-    #     for i, item in enumerate(core_items):
-    #         # item.registry = self
-    #
-    #         if i == 0:
-    #             assert isinstance(item, Category) and item.get('name') == 'Category', "root category must be the first item on the list"
-    #             assert ROOT_CID < 1
-    #             item.cid = item.iid = ROOT_CID
-    #         elif isinstance(item, Site):
-    #             site = item
-    #
-    #     self.store.insert_many(core_items)
-    #     for item in core_items:
-    #         self._set(item, ttl = 0, protect = True)
-    #
-    #     assert site is not None, "Site item not found among core items"
-    #     self.site_id = site.id
+    def load_root(self, record = None):
+        """
+        Create and initialize the root category; load its data from DB (if record=None)
+        or from a preloaded db `record`.
+        """
+        root = self.create_root()
+        root.load(record)
+        return root
+        
+    def create_root(self, data = None):
+        """
+        Create the root Category object, ID=(0,0). If `data` is provided,
+        the properties are initialized from `data`, the object is bound through bind(),
+        marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
+        """
+        from .core.root import root_fields
+        
+        root = Category(__loaded__ = False)
+        root.registry = self
+        root.category = root                    # root category is a category for itself
+        root.cid = ROOT_CID
+        root.iid = ROOT_CID
+        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
 
+        self._set(root, ttl = 0, protect = True)
+        
+        if data is not None:
+            root.seed(data)
+            self.stage(root, True)          # the root is newly created here (not loaded), so it must be marked for insertion to DB
+        
+        # print(f'Registry.get_item(): created root category - {id(root)}')
+        return root
+        
     def set_site(self, site):
         
         from .core.classes import Site
@@ -238,7 +242,12 @@ class Registry:
         assert site.isinstance(Site_)
         self.site_id = site.id
 
-
+    def get_category(self, cid):
+        # assert cid is not None
+        cat = self.get_item((ROOT_CID, cid))
+        assert isinstance(cat, Category)
+        return cat
+    
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
         If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
@@ -280,12 +289,16 @@ class Registry:
         """Like get_item() but with load=False."""
         return self.get_item(*args, **kwargs, load = False)
     
-    def get_category(self, cid):
-        # assert cid is not None
-        cat = self.get_item((ROOT_CID, cid))
-        assert isinstance(cat, Category)
-        return cat
+    def load_record(self, id):
+        """Load item record from DB and return as a dict; contains cid, iid, data etc."""
+        # print(f'load_record: loading item {id} in thread {threading.get_ident()} ', flush = True)
+        return self.store.select(id)
     
+    def load_items(self, category):
+        """Load from DB all items of a given category, ordered by IID. A generator."""
+        records = self.store.select_all(category.iid)
+        return self.decode_items(records, category)
+        
     def decode_items(self, records, category):
         """
         Given a sequence of raw DB `records` decode each of them and yield as an item.
@@ -304,48 +317,43 @@ class Registry:
                 item.load(record)
                 yield item
         
-    def create_root(self, data = None):
-        """
-        Create the root Category object, ID=(0,0). If `data` is provided,
-        the properties are initialized from `data`, the object is bound through bind(),
-        marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
-        """
-        from .core.root import root_fields
-        
-        root = Category(__loaded__ = False)
-        root.registry = self
-        root.category = root                    # root category is a category for itself
-        root.cid = ROOT_CID
-        root.iid = ROOT_CID
-        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
+    def _set(self, item, ttl = None, protect = False):
+        """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
+        # print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
+        self.cache.set(item.id, item, ttl, protect)
 
-        self._set(root, ttl = 0, protect = True)
-        
-        if data is not None:
-            root.seed(data)
-            self.stage(root, True)          # the root is newly created here (not loaded), so it must be marked for insertion to DB
-        
-        # print(f'Registry.get_item(): created root category - {id(root)}')
-        return root
-        
-    def load_root(self, record = None):
+    def get_path(self, cls):
         """
-        Create and initialize the root category; load its data from DB (if record=None)
-        or from a preloaded db `record`.
+        Return a dotted module path of a given class or function as stored in a global Classpath.
+        In the future, each application may have its own distinct Classpath.
         """
-        root = self.create_root()
-        root.load(record)
-        return root
+        return self.classpath.get_path(cls)
         
-    def load_data(self, id):
-        """Load item record from DB and return as a dict; contains cid, iid, data etc."""
-        # print(f'load_data: loading item {id} in thread {threading.get_ident()} ', flush = True)
-        return self.store.select(id)
+    def get_class(self, path):
+        """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
+        return self.classpath[path]
     
-    def load_items(self, category):
-        """Load from DB all items of a given category, ordered by IID. A generator."""
-        records = self.store.select_all(category.iid)
-        return self.decode_items(records, category)
+    ####################################
+    ###
+    ###  Item creation & update
+    ###
+
+    def stage(self, item, force = False):
+        """Add a newly created `item` to the staging area."""
+        assert force or not item.has_id()
+        # if item.has_id():
+        #     check that this ID is not yet in staging; if present, check it's the same python object and skip
+        self.staging.append(item)
+
+    def commit(self, **kwargs):
+        """Insert staged items to DB and purge the staging area."""
+        
+        # TODO: if ID is present for an item, make an update, not insert
+        self.store.insert_many(self.staging)
+        for item in self.staging:
+            # if item.has_id(): continue          # item got already inserted in the meantime
+            self._set(item, **kwargs)
+        self.staging = []
         
     def insert_item(self, item):
         """
@@ -362,25 +370,10 @@ class Registry:
         self.store.update(item)
         self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
 
-    def _set(self, item, ttl = None, protect = False):
-        """If ttl=None, default (positive) TTL of self.cache is used."""
-        # print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
-        self.cache.set(item.id, item, ttl, protect)
-
-    def get_path(self, cls):
-        """
-        Return a dotted module path of a given class or function as stored in a global Classpath.
-        In the future, each application may have its own distinct Classpath.
-        """
-        return self.classpath.get_path(cls)
-        
-    def get_class(self, path):
-        """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
-        return self.classpath[path]
-    
-    ###                    ###
-    ###  Request handling  ###
-    ###                    ###
+    ####################################
+    ###
+    ###  Request handling
+    ###
     
     def handle_request(self, request):
         """
@@ -422,22 +415,3 @@ class Registry:
         assert self.current_request is not None, 'trying to stop a request when none was started'
         self.current_request = None
 
-    ###                     ###
-    ###  New item creation  ###
-    ###                     ###
-
-    def stage(self, item, force = False):
-        """Add a newly created `item` to the staging area."""
-        assert force or not item.has_id()
-        self.staging.append(item)
-
-    def commit(self, **kwargs):
-        """Insert staged items to DB and purge the staging area."""
-        
-        # TODO: if ID is present for an item, make an update, not insert
-        self.store.insert_many(self.staging)
-        for item in self.staging:
-            # if item.has_id(): continue          # item got already inserted in the meantime
-            self._set(item, **kwargs)
-        self.staging = []
-        
