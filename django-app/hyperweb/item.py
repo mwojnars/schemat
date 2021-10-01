@@ -146,7 +146,6 @@ class Item(object, metaclass = MetaItem):
     
     category = None         # parent category of this item, as an instance of Category
     registry = None         # Registry that manages access to this item
-    # _loaded  = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
     handlers = None         # dict {handler_name: method} of all handlers (= public web methods)
                             # exposed by items of the current Item subclass
@@ -524,10 +523,11 @@ class Category(Item):
     """
     def new(self, **props):
         """
-        Create a new item of this category; connect it with self.registry.
+        Create a newborn item of this category (not yet in DB); connect it with self.registry;
+        mark it as pending for insertion to DB.
         """
         itemclass = self.get_class()
-        item = itemclass(self, data = props)
+        item = itemclass(category = self, data = props)
         self.registry.stage(item)                       # mark `item` for insertion on next commit()
         return item
     
@@ -536,9 +536,11 @@ class Category(Item):
     def stub(self, iid):
         """
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-        but data fields are not loaded yet. Should only be called by Registry.
+        but properties (item.data) are not loaded yet. Should only be called by Registry.
         """
-        item = self.new()
+        itemclass = self.get_class()
+        item = itemclass(category = self)
+        # item = self.new()
         item.iid = iid
         return item
 

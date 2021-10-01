@@ -218,17 +218,18 @@ class Registry:
         root.load(record)
         return root
         
-    def create_root(self, data = None):
+    def create_root(self):
         """
         Create the root Category object, ID=(0,0). If `data` is provided,
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
-        from .core.root import root_fields
+        # from .core.root import root_fields
+        from .core.root import root_data
 
         # root.data will ultimately be overwritten with data from DB, but is needed for the initial
         # call to root.load(), where it's accessible thx to circular dependency root.category==root
-        root = Category(data = {'fields': root_fields})
+        root = Category(data = root_data) #{'fields': root_fields})
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
@@ -236,9 +237,9 @@ class Registry:
         
         self._set(root, ttl = 0, protect = True)
         
-        if data is not None:
-            root.seed(data)
-            self.stage(root, True)          # the root is newly created here (not loaded), so it must be marked for insertion to DB
+        # if data is not None:
+        # root.seed(data)
+        root.bind()
         
         # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
@@ -255,7 +256,7 @@ class Registry:
     def get_category(self, cid):
         # assert cid is not None
         cat = self.get_item((ROOT_CID, cid))
-        assert isinstance(cat, Category)
+        assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
     
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
@@ -348,7 +349,7 @@ class Registry:
     ###  Item creation & update
     ###
 
-    def stage(self, item, force = False):
+    def stage(self, item):
         """
         Add an updated or newly created `item` to the staging area.
         For updates, this typically should be called BEFORE modifying an item,

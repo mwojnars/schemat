@@ -4,6 +4,13 @@ from hyperweb.registry import Registry
 
 #####################################################################################################################################################
 
+# template to display a category page
+page_category = """
+context $item
+from base import %page_category
+page_category item
+"""
+
 # default template to display a generic item page if a category-specific template is missing
 page_item = """
 context $item
@@ -11,6 +18,8 @@ from base import %page_item
 page_item $item
 # dedent : page_item $item
 """
+
+#####################################################################################################################################################
 
 # fields of categories, including the root category
 root_fields = FIELDS(
@@ -22,6 +31,14 @@ root_fields = FIELDS(
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
     indexes      = Field(CATALOG(ITEM(Index))),
+)
+
+root_data = dict(
+    name        = "Category",
+    info        = "Category of items that represent categories",
+    class_name  = 'hyperweb.core.Category',
+    endpoints   = {"view": page_category},
+    fields      = root_fields,
 )
 
 #####################################################################################################################################################

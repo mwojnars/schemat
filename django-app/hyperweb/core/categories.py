@@ -6,20 +6,13 @@ staging area and will be inserted to DB upon registry.commit() - see boot.py.
 """
 
 from hyperweb.schema import *
-from hyperweb.core.root import root_fields, registry
+from hyperweb.core.root import registry
 
 
 #####################################################################################################################################################
 #####
 #####  ELEMENTS of items
 #####
-
-# template to display a category page
-page_category = """
-context $item
-from base import %page_category
-page_category item
-"""
 
 # category-level properties:
 # - Method -> code + language + caching settings
@@ -36,15 +29,11 @@ page_category item
 #####  CATEGORIES... The underscore _ is appended to names to differentiate them from names of classes
 #####
 
-root_data = dict(
-    name        = "Category",
-    info        = "Category of items that represent categories",
-    class_name  = 'hyperweb.core.Category',
-    endpoints   = {"view": page_category},
-    fields      = root_fields,
-)
+Category_ = registry.create_root()
 
-Category_ = registry.create_root(root_data)
+# Category_ is newly created here (not loaded), so it must be marked for insertion to DB;
+# all subsequent items/categories are staged automatically
+registry.stage(Category_)
 
 Directory_ = Category_(
     name        = "Directory",
