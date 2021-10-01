@@ -1,4 +1,16 @@
 - id: [0, 0]
+  name: Category
+  info: Category of items that represent categories
+  class_name: hyperweb.core.Category
+  endpoints: {view: '
+
+      context $item
+
+      from base import %page_category
+
+      page_category item
+
+      '}
   fields:
     name:
       schema: {'@': hyperweb.schema.STRING}
@@ -61,18 +73,6 @@
           category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-  name: Category
-  info: Category of items that represent categories
-  class_name: hyperweb.core.Category
-  endpoints: {view: '
-
-      context $item
-
-      from base import %page_category
-
-      page_category item
-
-      '}
 - id: [0, 1]
   name: Directory
   info: A directory of files, each file has a unique name (path). May contain nested

@@ -96,6 +96,12 @@ class Classpath:
         
 
 #####################################################################################################################################################
+
+class StagingArea:
+    """"""
+    
+
+#####################################################################################################################################################
 #####
 #####  REGISTRY
 #####
@@ -138,21 +144,24 @@ class Registry:
     @property
     def files(self): return self.site['directory']
 
-    # collection of globally available python objects and classes for serialization and in-item dependencies; Classpath instance
-    classpath = None
+    classpath   = None          # collection (Classpath) of globally available python objects and classes
+                                # for serialization and in-item dependencies
+
+    staging     = None          # list of modified or newly created items that will be updated/inserted to DB
+                                # on next commit(); the items will be commited to DB in the SAME order as in this list;
+                                # if a staged item is already in cache, it can't be purged there until committed, TODO
     
-    # the currently processed web request; set at the beginning of request processing; cleared at the end
-    current_request = None
+    autocommit  = False          # if True, commit() is called before returning a reponse from handle_request()
+                                # and at the end of stop_request()
     
+    current_request = None      # the currently processed web request; is set at the beginning
+                                # of request processing and cleared at the end
+
     @property
     def current_app(self):                  # returns Application that's a target of current request; None if no current_request
         req = self.current_request
         return req.app if req is not None else None
     
-    staging = None          # list of modified or newly created items that will be updated/inserted to DB
-                            # on next commit(); only the items created through category.new() or category()
-                            # are included; the items will be commited to DB in the SAME order as in this list
-
     ####################################
     ###
     ###  Initialization & basic access
@@ -216,14 +225,15 @@ class Registry:
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
         from .core.root import root_fields
-        
-        root = Category(__loaded__ = False)
+
+        # root.data will ultimately be overwritten with data from DB, but is needed for the initial
+        # call to root.load(), where it's accessible thx to circular dependency root.category==root
+        root = Category(data = {'fields': root_fields})
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
         root.iid = ROOT_CID
-        root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-
+        
         self._set(root, ttl = 0, protect = True)
         
         if data is not None:
@@ -339,14 +349,19 @@ class Registry:
     ###
 
     def stage(self, item, force = False):
-        """Add a newly created `item` to the staging area."""
-        assert force or not item.has_id()
+        """
+        Add an updated or newly created `item` to the staging area.
+        For updates, this typically should be called BEFORE modifying an item,
+        so that its refresh in cache is prevented during modifications (TODO).
+        """
+        # assert force or not item.has_id()
         # if item.has_id():
         #     check that this ID is not yet in staging; if present, check it's the same python object and skip
         self.staging.append(item)
-
+        
     def commit(self, **kwargs):
         """Insert staged items to DB and purge the staging area."""
+        if not self.staging: return
         
         # TODO: if ID is present for an item, make an update, not insert
         self.store.insert_many(self.staging)
@@ -394,9 +409,12 @@ class Registry:
         request.site = site = self.site
         self.start_request(request)
 
+        response = site.handle(request)
+        if self.autocommit: self.commit()
+        
         # after "return" below, self.after_request() and self.stop_request() are executed
         # in an action fired on Django's <request_finished> signal, see boot.py for details
-        return site.handle(request)
+        return response
     
     def start_request(self, request):
         assert self.current_request is None, 'trying to start a new request when another one is still open'
@@ -413,5 +431,6 @@ class Registry:
 
     def stop_request(self):
         assert self.current_request is not None, 'trying to stop a request when none was started'
+        if self.autocommit: self.commit()
         self.current_request = None
-
+        

@@ -119,7 +119,7 @@ class Item(object, metaclass = MetaItem):
     - namespace -- the namespace this item was loaded through; should be used for
     
     Item's status -- temporary (in memory):
-    - draft: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB
+    - draft/newborn: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB
     - dirty: has local modifications that may deviate from the contents of the corresponding DB record
     - stub/dummy/short/frame: IID is present, but no data loaded yet (lazy loading)
     - loaded:
@@ -146,7 +146,7 @@ class Item(object, metaclass = MetaItem):
     
     category = None         # parent category of this item, as an instance of Category
     registry = None         # Registry that manages access to this item
-    loaded   = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
+    # _loaded  = False        # True if this item's data has been fully decoded from DB; for implementation of lazy loading of linked items
     
     handlers = None         # dict {handler_name: method} of all handlers (= public web methods)
                             # exposed by items of the current Item subclass
@@ -163,26 +163,26 @@ class Item(object, metaclass = MetaItem):
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
     
-    def __init__(self, __category__ = None, __loaded__ = True, **fields):
+    def __init__(self, category = None, data = None):
         """
-        Create a new item that's not yet in DB (no IID).
-        Assign `fields` into self.data. The item is assumed to be "loaded".
+        Create a new item instance. Assign category, registry, properties, CID (if possible).
+        self.loaded is left uninitialized (False).
         """
-        self.data = MultiDict(fields)
-        self.loaded = __loaded__
+        self.data = MultiDict(data) if data is not None else None       # unloaded item has self.data=None
         
-        if __category__ is not None:
-            self.category = __category__
-            self.registry = __category__.registry           # this can be None
-            self.cid      = __category__.iid
+        if category is not None:
+            self.category = category
+            self.registry = category.registry           # can be None
+            self.cid      = category.iid
 
     def seed(self, data, bind = True):
         """
         Initialize this (newly created) item with a given dict of property values, `data`.
         Mark it as loaded. Then call bind(), if bind=True.
         """
-        self.data.update(data)
-        self.loaded = True
+        # self.data.update(data)
+        # self._loaded = True
+        self.data = MultiDict(data)
         if bind: self.bind()
 
     def isinstance(self, category):
@@ -317,48 +317,61 @@ class Item(object, metaclass = MetaItem):
     #     return self.registry.get_item(self.id)
     
     def prepare(self, field):
-        """Make sure that a given `field` is present in self.data; load it from DB if not."""
-        if self.loaded or field in self.data: return
-        self.load()        # load the entire item data; this does NOT guarantee that `field` is loaded, bcs it may be missing in DB
+        """
+        If item data was not yet loaded from DB and `field` is not in self.data, load the entire item now.
+        This does NOT guarantee that `field` is actually loaded, bcs it may be missing in DB.
+        """
+        # if self._loaded or self.iid is None or field in self.data: return
+        if self.data is None: self.load()
     
-    def reload(self):
-        return self.load(force = True)
+    # def reload(self):
+    #     return self.load(force = True)
 
-    def load(self, record = None, force = False):
+    def load(self, record = None):
         """
-        Load (decode) and store into self the entire data of this item as stored in its item row in DB - IF NOT LOADED YET.
-        Setting force=True or passing a `record` enforces decoding even if `self` was already loaded.
+        Load properties of this item from a DB into self.data, IF NOT LOADED YET.
+        Only with a not-None `record`, (re)loading takes place even if `self` was already loaded,
+        the newly loaded `data` fully replaces the existing self.data in such case.
         """
-        assert self.iid is not None, 'load() must not be called for a newly created item with no IID'
-        if self.loaded and not force and record is None: return self
+        if self.iid is None: raise Exception(f'trying to load() a newborn item with no IID, {self}')
+        if self.data is not None and record is None: return self
         if record is None:
             record = self.registry.load_record(self.id)
 
-        self.loaded = True                      # this must be set already here to avoid infinite recursion
-        self._decode(record)
+        # self.data = MultiDict()                 # this must be set already here to avoid infinite recursion
+        # self._decode(record['data'])
+
+        fields = self.category.get('fields')        # specification of fields {field_name: schema}
+        data   = fields.load_json(record['data'])         #generic_schema.load_json(data)
+        self.data = MultiDict(data)
         self.bind()
 
         return self
     
-    def _decode(self, record):
-        """Decode raw information from a DB `record` and store in `self`."""
-        
-        data = record.pop('data')
-        
-        for field, value in record.items():
-            if value in (None, ''): continue
-            setattr(self, field, value)
-        
-        # impute category; note the special case: the root Category item is a category for itself!
-        cid, iid = self.id
-        self.category = self if (cid == iid == ROOT_CID) else self.registry.get_category(cid)
-
-        # convert data from JSON string to a struct
-        if data:
-            fields = self.category.get('fields')        # specification of fields {field_name: schema}
-            # data   = generic_schema.load_json(data)
-            data   = fields.load_json(data)
-            self.data.update(data)
+    # def _decode(self, data):
+    #     """Decode raw information from a DB `record` and store in `self`."""
+    #
+    #     # for field, value in record.items():
+    #     #     if value in (None, ''): continue
+    #     #     if field == 'data': continue
+    #     #     setattr(self, field, value)
+    #
+    #     # if not self.has_id():
+    #     #     self.cid = record['cid']
+    #     #     self.iid = record['iid']
+    #     # else:
+    #     #     assert self.cid == record['cid']
+    #     #     assert self.iid == record['iid']
+    #
+    #     # # impute category; note the special case: the root Category item is a category for itself!
+    #     # cid, iid = self.id
+    #     # self.category = self if (cid == iid == ROOT_CID) else self.registry.get_category(cid)
+    #
+    #     # convert data from JSON string to a struct
+    #     fields = self.category.get('fields')        # specification of fields {field_name: schema}
+    #     data = fields.load_json(data)       #generic_schema.load_json(data)
+    #     self.data = MultiDict(data)
+    #     #self.data.update(data)
 
     def bind(self):
         """
@@ -509,11 +522,13 @@ class Category(Item):
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     """
-    def new(self, __loaded__ = True, **fields):
-        """Create a new raw item of this category, not yet in Registry and without self.registry explicitly set."""
+    def new(self, **props):
+        """
+        Create a new item of this category; connect it with self.registry.
+        """
         itemclass = self.get_class()
-        item = itemclass(self, __loaded__, **fields)
-        self.registry.stage(item)               # mark `item` for insertion on next commit()
+        item = itemclass(self, data = props)
+        self.registry.stage(item)                       # mark `item` for insertion on next commit()
         return item
     
     __call__ = new
@@ -523,7 +538,7 @@ class Category(Item):
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
         but data fields are not loaded yet. Should only be called by Registry.
         """
-        item = self.new(__loaded__ = False)
+        item = self.new()
         item.iid = iid
         return item
 
@@ -594,20 +609,6 @@ class Category(Item):
         """
         return str(iid)
     
-    # @classmethod
-    # def create_root(cls, registry):
-    #     """Create an instance of the root category item."""
-    #
-    #     from .core.root import root_fields
-    #
-    #     root = cls(__loaded__ = False)
-    #     root.registry = registry
-    #     root.category = root                    # root category is a category for itself
-    #     root.cid = ROOT_CID
-    #     root.iid = ROOT_CID
-    #     root['fields'] = root_fields     # will ultimately be overwritten with fields loaded from DB, but is needed for the initial call to root.load(), where it's accessible thx to circular dependency root.category==root
-    #     return root
-        
 
 #####################################################################################################################################################
 #####
