@@ -272,21 +272,21 @@ base_hy = File_(
     """,
 )
 
-protocols_js = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
+protocols_js = FileLocal_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
 
-dir_system = Directory_(
+dir_system = Folder_(
     files = {
-        'Site':         Site_,
-        'File':         File_,
-        'Directory':    Directory_,
+        'Site':     Site_,
+        'File':     File_,
+        'Folder':   Folder_,
     },
 )
 
 test_txt   = File_(content = "This is a test file.")
-dir_tmp1   = Directory_(files = {'test.txt': test_txt})
-dir_tmp2   = Directory_(files = {'tmp1': dir_tmp1})
+dir_tmp1   = Folder_(files = {'test.txt': test_txt})
+dir_tmp2   = Folder_(files = {'tmp1': dir_tmp1})
 
-filesystem = Directory_(
+filesystem = Folder_(
     files = {
         'system':       dir_system,
         'tmp':          dir_tmp2,
@@ -300,20 +300,20 @@ filesystem = Directory_(
 
 #####################################################################################################################################################
 
-app_admin = AdminApp_(name = "Admin",)
-app_files = FilesApp_(name = "Files",)
+app_admin = AppAdmin_(name = "Admin",)
+app_files = AppFiles_(name = "Files",)
 
-app_catalog = SpacesApp_(
+app_catalog = AppSpaces_(
     name        = "Catalog",
     spaces      = {
         'meta.category':    Category_,
         'meta.item':        Varia_,
         'sys.site':         Site_,
-        'sys.dir':          Directory_,
-        'sys.file':         LocalFile_,
+        'sys.dir':          Folder_,
+        'sys.file':         FileLocal_,
     },
 )
-app_root = RootApp_ (
+app_root = AppRoot_ (
     name        = "Applications",
     apps        = {
         'admin':    app_admin,

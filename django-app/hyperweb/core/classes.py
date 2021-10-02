@@ -27,7 +27,7 @@ class HyItemLoader(HyLoader):
     
     def __init__(self, filesystem):
         super(HyItemLoader, self).__init__()
-        self.filesystem = filesystem            # currently, a Directory item
+        self.filesystem = filesystem            # currently, a Folder item
         
     def load(self, path, referrer, runtime):
         """`referrer` is a Module that should have been loaded by this loader."""
@@ -130,7 +130,7 @@ class Application(Item):
         return url
     
     
-class RootApp(Application):
+class AppRoot(Application):
     """A set of sub-applications, each bound to a different URL prefix."""
     
     def _route(self, path):
@@ -186,7 +186,7 @@ class RootApp(Application):
         
         
         
-class AdminApp(Application):
+class AppAdmin(Application):
     """Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID """
     
     def handle(self, request, path):
@@ -205,7 +205,7 @@ class AdminApp(Application):
         url = f'{cid}:{iid}'
         return self._set_endpoint(url, endpoint, params)
         
-class FilesApp(Application):
+class AppFiles(Application):
     """
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
@@ -222,12 +222,12 @@ class FilesApp(Application):
 
         files = self.registry.files
         File_ = files.search('system/File')
-        Directory_ = files.search('system/Directory')
+        Folder_ = files.search('system/Folder')
         
         default_endpoint = ()
         if item.isinstance(File_):
             default_endpoint = ('download',)
-        elif item.isinstance(Directory_):
+        elif item.isinstance(Folder_):
             if not path.endswith('/'): return redirect(request.url + '/')       # folder URLs must end with '/'
             request.state['folder'] = item          # leaf folder
             # default_endpoint = ('browse',)
@@ -252,7 +252,7 @@ class FilesApp(Application):
     #     return item, parent
         
 
-class SpacesApp(Application):
+class AppSpaces(Application):
     """
     Application for accessing public data through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
@@ -347,7 +347,7 @@ class Site(Item):
         return app.handle(request, path)
 
 
-class Directory(Item):
+class Folder(Item):
     """"""
     SEP_FOLDER = '/'          # separator of folders in a file path
 
@@ -368,7 +368,7 @@ class Directory(Item):
         return item
         
     def read(self, path):
-        """Search for a File/LocalFile pointed to by a given `path` and return its content."""
+        """Search for a File/FileLocal pointed to by a given `path` and return its content."""
         f = self.search(path)
         if isinstance(f, File): return f.read()
         raise Exception(f"not a file: {path}")
@@ -396,7 +396,7 @@ class File(Item):
     def download(self, request):
         return self.read()
 
-class LocalFile(File):
+class FileLocal(File):
 
     def read(self):
         path = self.get('path', None)

@@ -35,10 +35,38 @@ Category_ = registry.create_root()
 # all other items/categories are staged automatically
 registry.stage(Category_)
 
-Directory_ = Category_(
-    name        = "Directory",
+#####################################################################################################################################################
+
+File_ = Category_(
+    name    = "File",
+    info    = """File with a text content. Accessible through the web filesystem.""",
+    # info    = """Source code. May keep information about programming language.
+    #             If Code item is used in a context where a single object (a class, a function) is expected,
+    #             the `name` property must be set and equal to the name of the object that should be imported
+    #             after compilation. Some uses may allow multiple names to be declared.
+    #           """,
+    class_name  = 'hyperweb.core.File',
+    fields      = FIELDS(
+        format  = STRING(),    # ProgrammingLanguage()
+        content = CODE(),      # VARIANT(bin = BYTES(), txt = TEXT()),
+    ),
+)
+FileLocal_ = Category_(
+    name        = "FileLocal",
+    info        = """File located on a local disk, identified by its local file path.""",
+    prototype   = File_,
+    class_name  = 'hyperweb.core.FileLocal',
+    fields      = FIELDS(
+        path    = STRING(),     # path to a local file on disk
+        # format  = STRING(),     # file format: pdf, xlsx, ...
+    ),
+    # endpoints   = {"view": page_item, "get": File_get},
+)
+
+Folder_ = Category_(
+    name        = "Folder",
     info        = "A directory of files, each file has a unique name (path). May contain nested directories.",
-    class_name  = 'hyperweb.core.Directory',
+    class_name  = 'hyperweb.core.Folder',
     fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = ITEM()))     # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
@@ -68,6 +96,8 @@ Directory_ = Category_(
 #     # """),
 # )
 
+#####################################################################################################################################################
+
 Application_ = Category_(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
@@ -77,28 +107,28 @@ Application_ = Category_(
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
 )
-RootApp_  = Category_(
-    name        = "Root App",
+AppRoot_  = Category_(
+    name        = "AppRoot",
     info        = "A set of sub-applications, each bound to a different URL prefix.",
-    class_name  = 'hyperweb.core.RootApp',
+    class_name  = 'hyperweb.core.AppRoot',
     prototype   = Application_,     # TODO: add support for category inheritance (prototypes)
     fields      = FIELDS(name = STRING(), apps = CATALOG(ITEM())),  # TODO: restrict apps to sub-categories of Application_ (?)
 )
 
-AdminApp_ = Category_(
-    name        = "Admin App",
-    class_name  = 'hyperweb.core.AdminApp',
+AppAdmin_ = Category_(
+    name        = "AppAdmin",
+    class_name  = 'hyperweb.core.AppAdmin',
     fields      = FIELDS(name = STRING()),
 )
-FilesApp_ = Category_(
-    name        = "Files App",
-    class_name  = 'hyperweb.core.FilesApp',
-    fields      = FIELDS(name = STRING(), root_folder = ITEM(Directory_)),    # if root_folder is missing, Site's main folder is used
+AppFiles_ = Category_(
+    name        = "AppFiles",
+    class_name  = 'hyperweb.core.AppFiles',
+    fields      = FIELDS(name = STRING(), root_folder = ITEM(Folder_)),    # if root_folder is missing, Site's main folder is used
 )
-SpacesApp_ = Category_(
-    name        = "Spaces App",
+AppSpaces_ = Category_(
+    name        = "AppSpaces",
     info        = "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-    class_name  = 'hyperweb.core.SpacesApp',
+    class_name  = 'hyperweb.core.AppSpaces',
     fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Category_))),
 )
 
@@ -109,8 +139,8 @@ Site_ = Category_(
     fields      = FIELDS(
         name        = STRING(),
         base_url    = STRING(),                 # the base URL at which the `application` is served, /-terminated
-        filesystem  = ITEM(Directory_),         # root of the site-global file system
-        application = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
+        filesystem  = ITEM(Folder_),         # root of the site-global file system
+        application = ITEM(),                   # Application hosted on this site, typically an AppRoot with multiple subapplications
     ),
 )
 
@@ -121,32 +151,6 @@ Varia_ = Category_(
     fields      = FIELDS(name = STRING(), title = STRING()),            # multi = True
 )
 
-
-File_ = Category_(
-    name    = "File",
-    info    = """File with a text content. Accessible through the web filesystem.""",
-    # info    = """Source code. May keep information about programming language.
-    #             If Code item is used in a context where a single object (a class, a function) is expected,
-    #             the `name` property must be set and equal to the name of the object that should be imported
-    #             after compilation. Some uses may allow multiple names to be declared.
-    #           """,
-    class_name  = 'hyperweb.core.File',
-    fields      = FIELDS(
-        format  = STRING(),    # ProgrammingLanguage()
-        content = CODE(),      # VARIANT(bin = BYTES(), txt = TEXT()),
-    ),
-)
-LocalFile_ = Category_(
-    name        = "LocalFile",
-    info        = """File located on a local disk, identified by its local file path.""",
-    prototype   = File_,
-    class_name  = 'hyperweb.core.LocalFile',
-    fields      = FIELDS(
-        path    = STRING(),     # path to a local file on disk
-        # format  = STRING(),     # file format: pdf, xlsx, ...
-    ),
-    # endpoints   = {"view": page_item, "get": File_get},
-)
 
 # Text_ = Category_(
 #     name    = "Text",

@@ -716,17 +716,17 @@ class CODE(TEXT):
 #####################################################################################################################################################
 
 class FILEPATH(STRING):
-    """Path to an item in a Directory."""
+    """Path to an item in a Folder."""
     
 class FILENAME(STRING):
     """
-    Name of an individual entry in a Directory, without path.
-    Names that end with '/' indicate directories and must link to items of Directory category.
+    Name of an individual entry in a Folder, without path.
+    Names that end with '/' indicate directories and must link to items of Folder category.
     """
 
 # class FILE(ITEM):
 #     """
-#     Entry in a Directory: reference to an item, with an additional flag for sub-Directory items
+#     Entry in a Folder: reference to an item, with an additional flag for sub-Folder items
 #     indicating whether this item should be interpreted as-is or as a subfolder.
 #     TODO: make this class a structure with fields:
 #     - item (ITEM) - if a reference to an item in DB
