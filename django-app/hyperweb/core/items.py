@@ -237,7 +237,7 @@ base_hy = File_(
             head
                 title | $item['name']? $item.ciid(False)
                 assets
-                style / $item.registry.files.open('base.css')['content']
+                style / $item.registry.files.read('base.css')
     
             # body .container : div .row
             #   div .col-1

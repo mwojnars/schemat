@@ -308,7 +308,7 @@
     \                button #save-changes   .btn .btn-primary   disabled=False | Save\n\
     \n    %page @body\n        doctype\n        ...html @body\n    \n    %page_item\
     \ @extra item\n        page\n            head\n                title | $item['name']?\
-    \ $item.ciid(False)\n                assets\n                style / $item.registry.files.open('base.css')['content']\n\
+    \ $item.ciid(False)\n                assets\n                style / $item.registry.files.read('base.css')\n\
     \    \n            # body .container : div .row\n            #   div .col-1\n\
     \            #   div .col-10\n            body\n                h1\n         \
     \           $ciid = item.ciid()\n                    try\n                   \

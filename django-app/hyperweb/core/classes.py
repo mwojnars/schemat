@@ -59,7 +59,7 @@ class HyItemLoader(HyLoader):
         
         # try the original `path` as location
         try:
-            item = self.filesystem.open(path)
+            item = self.filesystem.search(path)
             return item, path
         except Exception: pass
         
@@ -67,7 +67,7 @@ class HyItemLoader(HyLoader):
         if not path.lower().endswith(self.SCRIPT_EXTENSION):
             location = path + self.SCRIPT_EXTENSION
             try:
-                item = self.filesystem.open(location)
+                item = self.filesystem.search(location)
                 return item, location
             except Exception: pass
             
@@ -219,9 +219,7 @@ class FilesApp(Application):
         
         root = self.get('root_folder') or self.registry.files
         item = root.search(path)
-        # item, folder = self._search(filepath)
 
-        # from hyperweb.core.categories import File_, Directory_
         files = self.registry.files
         File_ = files.search('system/File')
         Directory_ = files.search('system/Directory')
@@ -246,15 +244,12 @@ class FilesApp(Application):
     #     """Find an item (folder/file) pointed to by `path` and its direct parent folder. Return both."""
     #     parent = None
     #     item = self.get('root_folder') or self.registry.files
-    #
     #     while path:
     #         parent = item
     #         name = path.split(self.SEP_FOLDER, 1)[0]
     #         item = parent.data['files'][name]
     #         path = path[len(name)+1:]
-    #
     #     return item, parent
-        
         
 
 class SpacesApp(Application):
@@ -359,13 +354,13 @@ class Directory(Item):
     def exists(self, path):
         """Check whether a given path exists in this folder."""
     
-    def open(self, path):
-        """
-        Load an item identified by a given `path`.
-        The search is performed recursively in this directory and subdirectories (TODO).
-        """
-        if not path: return self            # empty path points to the folder itself
-        return self.data['files'][path]     # returns an Item instance, not just raw contents
+    # def open(self, path):
+    #     """
+    #     Load an item identified by a given `path`.
+    #     The search is performed recursively in this directory and subdirectories (TODO).
+    #     """
+    #     if not path: return self            # empty path points to the folder itself
+    #     return self.data['files'][path]     # returns an Item instance, not just raw contents
 
     def search(self, path):
         """
@@ -379,6 +374,11 @@ class Directory(Item):
             item = item.data['files'][name]
             path = path[len(name)+1:]
         return item
+        
+    def read(self, path):
+        """Search for a File/LocalFile pointed to by a given `path` and return its content."""
+        f = self.search(path)
+        return f.read()
         
     def get_name(self, item):
         """Return a name assigned to a given item. If the same item is assigned multiple names,
@@ -406,20 +406,14 @@ class File(Item):
 class LocalFile(File):
 
     def read(self):
-        content = self.get('content', None)
-        if isinstance(content, str): return content
-
+        # content = self.get('content', None)
+        # if isinstance(content, str): return content
         path = self.get('path', None)
-        if not path: return None
-
+        if path is None: return None
         return open(path, 'rb').read()
 
     @handler('download')
     def download(self, request):
-    #     return self._handler_get(request)
-    #
-    # @handler('get')
-    # def _handler_get(self, request):
         
         content = self.get('content', None)
         if isinstance(content, str): return FileResponse(content)
