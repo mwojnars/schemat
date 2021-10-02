@@ -345,6 +345,10 @@ class Registry:
         """Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path."""
         return self.classpath[path]
     
+    def read(self, path):
+        """Shortcut for registry.files.read(path)"""
+        return self.files.read(path)
+    
     ####################################
     ###
     ###  Item creation & update

@@ -354,14 +354,6 @@ class Directory(Item):
     def exists(self, path):
         """Check whether a given path exists in this folder."""
     
-    # def open(self, path):
-    #     """
-    #     Load an item identified by a given `path`.
-    #     The search is performed recursively in this directory and subdirectories (TODO).
-    #     """
-    #     if not path: return self            # empty path points to the folder itself
-    #     return self.data['files'][path]     # returns an Item instance, not just raw contents
-
     def search(self, path):
         """
         Find an item pointed to by a `path`. The path may start with '/', but this is not obligatory.
@@ -378,7 +370,8 @@ class Directory(Item):
     def read(self, path):
         """Search for a File/LocalFile pointed to by a given `path` and return its content."""
         f = self.search(path)
-        return f.read()
+        if isinstance(f, File): return f.read()
+        raise Exception(f"not a file: {path}")
         
     def get_name(self, item):
         """Return a name assigned to a given item. If the same item is assigned multiple names,
