@@ -399,8 +399,6 @@ class File(Item):
 class LocalFile(File):
 
     def read(self):
-        # content = self.get('content', None)
-        # if isinstance(content, str): return content
         path = self.get('path', None)
         if path is None: return None
         return open(path, 'rb').read()
