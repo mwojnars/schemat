@@ -32,7 +32,7 @@ from hyperweb.core.root import registry
 Category_ = registry.create_root()
 
 # Category_ is newly created here (not loaded), so it must be marked for insertion to DB;
-# all subsequent items/categories are staged automatically
+# all other items/categories are staged automatically
 registry.stage(Category_)
 
 Directory_ = Category_(
@@ -109,8 +109,7 @@ Site_ = Category_(
     fields      = FIELDS(
         name        = STRING(),
         base_url    = STRING(),                 # the base URL at which the `application` is served, /-terminated
-        directory   = ITEM(Directory_),         # root of the site-global file system
-        #filesystem  = None,
+        filesystem  = ITEM(Directory_),         # root of the site-global file system
         application = ITEM(),                   # Application hosted on this site, typically a RootApp with multiple subapplications
     ),
 )

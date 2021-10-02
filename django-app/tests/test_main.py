@@ -44,4 +44,6 @@ def test_basic():
     assert200("sys.site:1")
     assert200("admin/0:1")
     assert200("admin/1:1")
+    assert200("files/")
+    assert200("files/system/")
     

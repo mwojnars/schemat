@@ -446,7 +446,7 @@ class Item(object, metaclass = MetaItem):
         app   = request.app
         site  = request.site
         item  = request.item
-        files = site.get('directory')
+        files = site.get('filesystem')
         
         context = dict(item = item, category = item.category, request = request, registry = self.registry, #data = View(item),
                        site = site, app = app, files = files)

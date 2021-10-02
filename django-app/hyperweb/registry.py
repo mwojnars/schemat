@@ -142,7 +142,7 @@ class Registry:
     @property
     def site(self): return self.get_item(self.site_id)
     @property
-    def files(self): return self.site['directory']
+    def files(self): return self.site['filesystem']
 
     classpath   = None          # collection (Classpath) of globally available python objects and classes
                                 # for serialization and in-item dependencies
@@ -151,7 +151,7 @@ class Registry:
                                 # on next commit(); the items will be commited to DB in the SAME order as in this list;
                                 # if a staged item is already in cache, it can't be purged there until committed, TODO
     
-    autocommit  = False          # if True, commit() is called before returning a reponse from handle_request()
+    autocommit  = True          # if True, commit() is called before returning a reponse from handle_request()
                                 # and at the end of stop_request()
     
     current_request = None      # the currently processed web request; is set at the beginning
@@ -248,6 +248,7 @@ class Registry:
         
         from .core.classes import Site
         from .core.categories import Site_
+        # Site_ = site['filesystem'].search('system/Site')
         assert site.has_id()
         assert isinstance(site, Site)
         assert site.isinstance(Site_)

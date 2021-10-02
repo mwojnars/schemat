@@ -274,12 +274,21 @@ base_hy = File_(
 
 protocols_js = LocalFile_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
 
+dir_system = Directory_(
+    files = {
+        'Site':         Site_,
+        'File':         File_,
+        'Directory':    Directory_,
+    },
+)
+
 test_txt   = File_(content = "This is a test file.")
 dir_tmp1   = Directory_(files = {'test.txt': test_txt})
 dir_tmp2   = Directory_(files = {'tmp1': dir_tmp1})
 
 filesystem = Directory_(
     files = {
+        'system':       dir_system,
         'tmp':          dir_tmp2,
         'base.hy':      base_hy,            # reusable components for use in pages
         'base.css':     base_css,           # global styles for use in pages
@@ -316,9 +325,10 @@ app_root = RootApp_ (
 catalog_wiki = Site_(
     name        = "catalog.wiki",
     base_url    = "http://localhost:8001/",
-    directory   = filesystem,
+    filesystem  = filesystem,
     application = app_root,
 )
+
 
 #####################################################################################################################################################
 

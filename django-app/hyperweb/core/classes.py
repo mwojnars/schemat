@@ -210,22 +210,23 @@ class FilesApp(Application):
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     """
-    SEP_FOLDER = '/'          # separator of folders in a file path
-    
     def handle(self, request, path):
-        if not path.startswith('/'): raise Exception(f'URL path not found: {path}')
+        if not path.startswith('/'): return redirect(request.url + '/')
 
         # TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
         filepath, request.endpoint = self._split_endpoint(path[1:])
         request.state = {'filepath': filepath}
         
-        # root = self.get('root_folder') or self.registry.files
-        # item = root.open(path)
-        item, folder = self._search(filepath)
+        root = self.get('root_folder') or self.registry.files
+        item = root.search(path)
+        # item, folder = self._search(filepath)
+
+        # from hyperweb.core.categories import File_, Directory_
+        files = self.registry.files
+        File_ = files.search('system/File')
+        Directory_ = files.search('system/Directory')
+        
         default_endpoint = ()
-
-        from hyperweb.core.categories import File_, Directory_
-
         if item.isinstance(File_):
             default_endpoint = ('download',)
         elif item.isinstance(Directory_):
@@ -241,18 +242,18 @@ class FilesApp(Application):
         state = self.registry.current_request.state
         return state['folder'].get_name(item)
     
-    def _search(self, path):
-        """Find an item (folder/file) pointed to by `path` and its direct parent folder. Return both."""
-        parent = None
-        item = self.get('root_folder') or self.registry.files
-        
-        while path:
-            parent = item
-            name = path.split(self.SEP_FOLDER, 1)[0]
-            item = parent.data['files'][name]
-            path = path[len(name)+1:]
-            
-        return item, parent
+    # def _search(self, path):
+    #     """Find an item (folder/file) pointed to by `path` and its direct parent folder. Return both."""
+    #     parent = None
+    #     item = self.get('root_folder') or self.registry.files
+    #
+    #     while path:
+    #         parent = item
+    #         name = path.split(self.SEP_FOLDER, 1)[0]
+    #         item = parent.data['files'][name]
+    #         path = path[len(name)+1:]
+    #
+    #     return item, parent
         
         
 
@@ -300,7 +301,7 @@ class Site(Item):
     @cached(ttl = 60)
     def hypertag(self):
         """Return a HyperHTML runtime with customized loaders to search through an internal filesystem of items."""
-        files = self.get('directory')
+        files = self.get('filesystem')
         loaders = [HyItemLoader(files), PyLoader]       # PyLoader is needed to load Python built-ins
         return HyperHTML(loaders)
         
@@ -353,7 +354,8 @@ class Site(Item):
 
 class Directory(Item):
     """"""
-    
+    SEP_FOLDER = '/'          # separator of folders in a file path
+
     def exists(self, path):
         """Check whether a given path exists in this folder."""
     
@@ -365,6 +367,19 @@ class Directory(Item):
         if not path: return self            # empty path points to the folder itself
         return self.data['files'][path]     # returns an Item instance, not just raw contents
 
+    def search(self, path):
+        """
+        Find an item pointed to by a `path`. The path may start with '/', but this is not obligatory.
+        The search is performed recursively in subfolders.
+        """
+        if path.startswith(self.SEP_FOLDER): path = path[1:]
+        item = self
+        while path:
+            name = path.split(self.SEP_FOLDER, 1)[0]
+            item = item.data['files'][name]
+            path = path[len(name)+1:]
+        return item
+        
     def get_name(self, item):
         """Return a name assigned to a given item. If the same item is assigned multiple names,
         the last one is returned."""

@@ -149,7 +149,7 @@
       schema: {'@': hyperweb.schema.STRING}
     base_url:
       schema: {'@': hyperweb.schema.STRING}
-    directory:
+    filesystem:
       schema:
         category:
           '=': [0, 1]
@@ -325,17 +325,23 @@
     \ URL)\n    \n    "
 - id: [10, 1]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
-- id: [9, 3]
-  content: This is a test file.
 - id: [1, 1]
   files:
-    test.txt: [9, 3]
+    Site: [0, 7]
+    File: [0, 9]
+    Directory: [0, 1]
+- id: [9, 3]
+  content: This is a test file.
 - id: [1, 2]
   files:
-    tmp1: [1, 1]
+    test.txt: [9, 3]
 - id: [1, 3]
   files:
-    tmp: [1, 2]
+    tmp1: [1, 2]
+- id: [1, 4]
+  files:
+    system: [1, 1]
+    tmp: [1, 3]
     base.hy: [9, 2]
     base.css: [9, 1]
     protocols.js: [10, 1]
@@ -356,7 +362,7 @@
 - id: [7, 1]
   name: catalog.wiki
   base_url: http://localhost:8001/
-  directory: 3
+  filesystem: 4
   application: [3, 1]
 - id: [8, 1]
   title: Ala ma kota Sierściucha i psa Kłapoucha.
