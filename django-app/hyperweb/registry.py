@@ -229,24 +229,22 @@ class Registry:
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
-        from .core.root import root_data
-
-        # root.data will ultimately be overwritten with data from DB, but is needed for the initial
-        # call to root.load(), where it's accessible thx to circular dependency root.category==root
-        root = RootCategory(data = root_data)
-        root.registry = self
-        root.category = root                    # root category is a category for itself
-        root.cid = ROOT_CID
-        root.iid = ROOT_CID
-        # root.cache_ttl = 0
+        # from .core.root import root_data
+        #
+        # # root.data will ultimately be overwritten with data from DB, but is needed for the initial
+        # # call to root.load(), where it's accessible thx to circular dependency root.category==root
+        # root = RootCategory(data = root_data)
+        # root.registry = self
+        # root.category = root                    # root category is a category for itself
+        # root.cid = ROOT_CID
+        # root.iid = ROOT_CID
         
-        self.root = root
-        # self._set(root, ttl = 1)  #, protect = True)
+        # self.root = root
+        # # self._set(root, ttl = 1)  #, protect = True)
         
-        # if data is not None:
-        # root.seed(data)
-        root.bind()
-        return root
+        self.root = RootCategory(self)
+        self.root.bind()
+        return self.root
         
     def set_site(self, site):
         

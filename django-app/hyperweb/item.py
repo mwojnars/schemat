@@ -5,6 +5,7 @@ from nifty.text import html_escape
 from hypertag.std.html import html_escape as esc
 
 from .errors import *
+from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
 from .schema import generic_schema, Field
@@ -581,6 +582,21 @@ class Category(Item):
 
 class RootCategory(Category):
     """"""
+    cid = ROOT_CID
+    iid = ROOT_CID
+
+    def __init__(self, registry):
+
+        from .core.root import root_data
+
+        # self.data will ultimately be overwritten with data from DB, but is needed for the initial
+        # call to self.load(), where it's accessible thx to circular dependency self.category==self
+        super(RootCategory, self).__init__(data = root_data)
+
+        self.registry = registry
+        self.category = self                    # root category is a category for itself
+        # self.cache_ttl = 0
+
 
 #####################################################################################################################################################
 #####
