@@ -206,7 +206,7 @@ class Registry:
         self.load_root()
         # assert False, "fix the initialization of site_id below, a constant value can be incorrect"
         # TODO: save `site_id` automatically during Registry.seed()
-        self.site_id = (7,1)
+        self.site_id = (9,1)
         # print(f'Registry() booted in thread {threading.get_ident()}')
         
     def load_root(self, record = None):
@@ -253,6 +253,12 @@ class Registry:
         assert isinstance(site, Site)
         assert site.isinstance(Site_)
         self.site_id = site.id
+        
+        # self.root.set('startup_site', site)
+        # self.update_item(self.root)
+        
+        # self.stage(self.root)
+        # self.commit()
 
     def get_category(self, cid):
         # assert cid is not None

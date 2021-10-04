@@ -105,7 +105,7 @@ class SimpleStore(DataStore):
         iid = max_iid + 1
         item.iid = iid
         
-        assert item.data is not None
+        assert item.has_data()
         # print("store:", list(item.data.lists()))
         
         record = {'cid':   cid,
@@ -128,8 +128,9 @@ class SimpleStore(DataStore):
         #       FROM hyper_items WHERE cid = {cid}
         # """
 
-    def update(self, item):
+    def update(self, item, flush = True):
         """Update the contents of the item's row in DB."""
+        raise NotImplementedError()
 
     def flush(self):
         self.db.commit()
@@ -231,12 +232,19 @@ class YamlStore(FileStore):
         item.iid = iid = max_iid + 1
         self.max_iid[cid] = iid
         
-        assert item.data is not None
+        assert item.has_data()
         assert item.id not in self.items
         # print("store:", list(item.data.lists()))
         
         self.items[item.id] = item.dump_data()
 
+        if flush: self.flush()
+    
+    def update(self, item, flush = True):
+        
+        assert item.has_data()
+        assert item.has_id()
+        self.items[item.id] = item.dump_data()
         if flush: self.flush()
     
     def flush(self):

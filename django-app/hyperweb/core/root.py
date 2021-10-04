@@ -31,6 +31,7 @@ root_fields = FIELDS(
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
     indexes      = Field(CATALOG(ITEM(Index))),
+    startup_site = Field(ITEM()),
 )
 
 root_data = dict(

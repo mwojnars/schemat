@@ -156,7 +156,8 @@ class Item(object, metaclass = MetaItem):
     def id(self): return self.cid, self.iid
     
     # is_newborn, is_fresh, is_mature
-    def has_id(self): return self.cid is not None and self.iid is not None
+    def has_id(self):   return self.cid is not None and self.iid is not None
+    def has_data(self): return self.data is not None
     
     # # names that must not be used for attributes inside data
     # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
@@ -206,7 +207,7 @@ class Item(object, metaclass = MetaItem):
            or KeyError is raised if default=RAISE.
            `impute`: if True, value imputation will be attempted if `field` is a derived property (TODO)
         """
-        self.prepare(field)
+        self.load()
         
         if field in self.data:
             return self.data.get(field, mode = mode)
@@ -254,7 +255,7 @@ class Item(object, metaclass = MetaItem):
         
     def get_list(self, field, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
-        self.prepare(field)
+        self.load()
         return self.data.get_list(field, copy_list)
 
     def set(self, key, *values):
@@ -315,16 +316,10 @@ class Item(object, metaclass = MetaItem):
     #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
     #     return self.registry.get_item(self.id)
     
-    def prepare(self, field):
-        """
-        If item data was not yet loaded from DB and `field` is not in self.data, load the entire item now.
-        This does NOT guarantee that `field` is actually loaded, bcs it may be missing in DB.
-        """
-        # if self._loaded or self.iid is None or field in self.data: return
-        if self.data is None: self.load()
-    
-    # def reload(self):
-    #     return self.load(force = True)
+    # def prepare_data(self):
+    #     """If item data was not yet loaded from DB, load the entire item now."""
+    #     # if self._loaded or self.iid is None or field in self.data: return
+    #     if self.data is None: self.load()
 
     def load(self, record = None):
         """
@@ -332,8 +327,8 @@ class Item(object, metaclass = MetaItem):
         Only with a not-None `record`, (re)loading takes place even if `self` was already loaded,
         the newly loaded `data` fully replaces the existing self.data in such case.
         """
-        if self.iid is None: raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if self.data is not None and record is None: return self
+        if self.iid is None: raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if record is None:
             record = self.registry.load_record(self.id)
 

@@ -73,6 +73,8 @@
           category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
+    startup_site:
+      schema: {'@': hyperweb.schema.ITEM}
 - id: [0, 1]
   name: File
   info: File with a text content. Accessible through the web filesystem.
