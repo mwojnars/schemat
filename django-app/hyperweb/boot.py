@@ -14,7 +14,7 @@ def seed():
     """Create core items and store in DB. All existing items in DB are removed!!!"""
     print("Starting full RESET of items, core items will be created anew")
     from .core.items import catalog_wiki            # this creates all items and puts them in the registry's staging area
-    registry.commit(ttl = 0, protect = True)        # this inserts items to DB and assigns IDs
+    registry.commit(ttl = 1, protect = False)        # this inserts items to DB and assigns IDs
     registry.set_site(catalog_wiki)
 
 def boot():

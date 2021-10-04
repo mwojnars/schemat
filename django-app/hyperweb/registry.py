@@ -3,7 +3,7 @@ from types import FunctionType, BuiltinFunctionType
 
 from .config import ROOT_CID
 from .cache import LRUCache
-from .item import Category
+from .item import Category, RootCategory
 from .store import SimpleStore, CsvStore, JsonStore, YamlStore
 
 
@@ -129,17 +129,19 @@ class Registry:
     (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates, but means that
     the last request before item refresh operates on an already-expired item.
     """
-    STARTUP_SITE = 'startup_site'       # this property of the root category will be used to read/store the current site for startup
+    STARTUP_SITE = 'startup_site'       # this property of the root category will store the current site, for startup boot()
     
     store = None                # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
+    root    = None              # permanent reference to a singleton root Category object, kept here instead of cache
     site_id = None
     
     # properties for accessing core global items: root, site, ...
     # these items are not stored as attributes to avoid issues with caching (when an item is reloaded)
-    @property
-    def root(self): return self.get_item((ROOT_CID, ROOT_CID))
+    
+    # @property
+    # def root(self): return self.get_item((ROOT_CID, ROOT_CID))
     @property
     def site(self): return self.get_item(self.site_id)
     @property
@@ -169,7 +171,7 @@ class Registry:
     ###
 
     def __init__(self):
-        self.cache = LRUCache(maxsize = 1000, ttl = 3)
+        self.cache = LRUCache(maxsize = 1000, ttl = 3)      # TODO: remove support for protected items in cache, no longer needed
         self.store = YamlStore()
         self.staging = []
         
@@ -203,19 +205,23 @@ class Registry:
         self.classpath.add_module(hyperweb.core.classes, PATH_CORE, accept = issubtype(hyperweb.item.Item))
     
     def boot(self):
+        
         self.store.load()
-        root = self.load_root()
+        # root = self.load_root()
+        root = self.create_root()
+        root.load(force = True)
         site = root.get(self.STARTUP_SITE)
+        assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
         self.site_id = site.id
         
-    def load_root(self, record = None):
-        """
-        Create and initialize the root category; load its data from DB (if record=None)
-        or from a preloaded db `record`.
-        """
-        root = self.create_root()
-        root.load(record, force = True)
-        return root
+    # def load_root(self, record = None):
+    #     """
+    #     Create and initialize the root category; load its data from DB (if record=None)
+    #     or from a preloaded db `record`.
+    #     """
+    #     root = self.create_root()
+    #     root.load(record, force = True)
+    #     return root
         
     def create_root(self):
         """
@@ -223,24 +229,23 @@ class Registry:
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
-        # from .core.root import root_fields
         from .core.root import root_data
 
         # root.data will ultimately be overwritten with data from DB, but is needed for the initial
         # call to root.load(), where it's accessible thx to circular dependency root.category==root
-        root = Category(data = root_data) #{'fields': root_fields})
+        root = RootCategory(data = root_data)
         root.registry = self
         root.category = root                    # root category is a category for itself
         root.cid = ROOT_CID
         root.iid = ROOT_CID
+        # root.cache_ttl = 0
         
-        self._set(root, ttl = 0, protect = True)
+        self.root = root
+        # self._set(root, ttl = 1)  #, protect = True)
         
         # if data is not None:
         # root.seed(data)
         root.bind()
-        
-        # print(f'Registry.get_item(): created root category - {id(root)}')
         return root
         
     def set_site(self, site):
@@ -254,10 +259,10 @@ class Registry:
         self.site_id = site.id
         
         self.root.set(self.STARTUP_SITE, site)
-        self.update_item(self.root)
+        # self.stage(self.root)                       # changes in root category must be committed once again (after root creation)
         
-        # self.stage(self.root)
-        # self.commit()
+        self.update_item(self.root)
+        self.commit()
 
     def get_category(self, cid):
         # assert cid is not None
@@ -267,9 +272,9 @@ class Registry:
     
     def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
         """
-        If load=True, the returned item is in __loaded__ state - this does NOT mean reloading,
+        If load=True, the returned item's data (properties) are loaded - this does NOT mean reloading,
         as the item data may have been loaded earlier.
-        If load=False, the returned item usually contains only CID and IID (no data);
+        If load=False, the returned item is a "stub": only contains CID and IID (no data);
         this is not a strict rule, however, and if the item has been loaded or created before,
         by this or a previous request handler, the item can already be fully initialized.
         Hence, the caller should never assume that the returned item.data is missing.
@@ -283,13 +288,16 @@ class Registry:
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
         
+        if cid == iid == ROOT_CID:
+            return self.root
+
         # ID requested is already present in the registry? return the existing instance
         item = self.cache.get(id)
         if item:
             if load: item.load()
             return item
 
-        assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
+        # assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
 
         if not category:
             category = self.get_category(cid)
@@ -303,7 +311,7 @@ class Registry:
         return item
     
     def get_lazy(self, *args, **kwargs):
-        """Like get_item() but with load=False."""
+        """Call get_item() with load=False."""
         return self.get_item(*args, **kwargs, load = False)
     
     def load_record(self, id):
@@ -327,7 +335,8 @@ class Registry:
             assert cid == category.iid
 
             if cid == iid == ROOT_CID:
-                yield self.cache.get((cid, iid)) or self.load_root(record)
+                yield self.root
+                # yield self.cache.get((cid, iid)) or self.load_root(record)
             else:
                 item = category.stub(iid)
                 self._set(item)
@@ -337,6 +346,7 @@ class Registry:
     def _set(self, item, ttl = None, protect = False):
         """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
         # print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
+        assert item.id != (ROOT_CID, ROOT_CID)
         self.cache.set(item.id, item, ttl, protect)
 
     def get_path(self, cls):
@@ -368,6 +378,8 @@ class Registry:
         # assert force or not item.has_id()
         # if item.has_id():
         #     check that this ID is not yet in staging; if present, check it's the same python object and skip
+        
+        # assert not isinstance(item, RootCategory)
         self.staging.append(item)
         
     def commit(self, **kwargs):
@@ -378,7 +390,8 @@ class Registry:
         self.store.insert_many(self.staging)
         for item in self.staging:
             # if item.has_id(): continue          # item got already inserted in the meantime
-            self._set(item, **kwargs)
+            self._assert_cache_valid(item)
+            # self._set(item, **kwargs)
         self.staging = []
         
     def insert_item(self, item):
@@ -389,13 +402,30 @@ class Registry:
         assert item.iid is None
         self.store.insert(item)
         assert item.iid is not None
+        self._assert_cache_empty(item)
         self._set(item)
 
     def update_item(self, item):
         """Update the contents of the item's data in DB."""
         self.store.update(item)
-        self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
+        self._assert_cache_valid(item)
+        # self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
+        
+    def _assert_cache_valid(self, item):
+        """Check cache validity during item update: the item instance must not have been substituted in cache in the meantime."""
+        incache = self.cache.get(item.id)
+        assert not incache or item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
 
+    def _assert_cache_empty(self, item):
+        """
+        Check cache validity of item creation: the item must not have been in cache so far,
+        since IIDs are assigned incrementally without reuse, even after item delete.
+        """
+        incache = self.cache.get(item.id)
+        assert incache is None, f"new item created with the same IID={item.iid} as an existing one already in cache: {item} vs {incache}"
+
+
+        
     ####################################
     ###
     ###  Request handling

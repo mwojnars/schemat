@@ -225,7 +225,7 @@ class YamlStore(FileStore):
         cid = item.cid
         
         if cid == 0 and cid not in self.max_iid:
-            max_iid = -1
+            max_iid = -1   # use =0 if the root category is not getting an IID here
         else:
             max_iid  = self.max_iid.get(cid, 0)
             

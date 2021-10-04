@@ -278,7 +278,7 @@ class Cache:
         which means it would be evicted last when evict() is called in the future.
         
         Cache eviction is NOT performed here. It is possible that the cache grows LARGER than self.maxsize,
-        until evict() is called, which must be done manually.
+        until evict() is called, which is only done manually.
 
         Args:
             key: Cache key to set.
@@ -286,15 +286,13 @@ class Cache:
             ttl: TTL value. Defaults to ``None`` which uses :attr:`ttl`.
             protect: if True, the key will be protected against non-TTL removal.
         """
-        if ttl is None:
-            ttl = self.ttl
-
         # if key not in self._cache:
         #     self.evict()
-
+        
         self.delete(key)
         self._cache[key] = value
 
+        if ttl is None: ttl = self.ttl
         if ttl and ttl > 0:
             self._expire_times[key] = self.timer() + ttl
             

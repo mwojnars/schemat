@@ -4,7 +4,6 @@ from xml.sax.saxutils import quoteattr
 from nifty.text import html_escape
 from hypertag.std.html import html_escape as esc
 
-from .config import ROOT_CID
 from .errors import *
 from .multidict import MultiDict
 from .cache import LRUCache
@@ -334,9 +333,6 @@ class Item(object, metaclass = MetaItem):
         if record is None:
             record = self.registry.load_record(self.id)
 
-        # self.data = MultiDict()                 # this must be set already here to avoid infinite recursion
-        # self._decode(record['data'])
-
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
         data   = fields.load_json(record['data'])         #generic_schema.load_json(data)
         self.data = MultiDict(data)
@@ -344,31 +340,6 @@ class Item(object, metaclass = MetaItem):
 
         return self
     
-    # def _decode(self, data):
-    #     """Decode raw information from a DB `record` and store in `self`."""
-    #
-    #     # for field, value in record.items():
-    #     #     if value in (None, ''): continue
-    #     #     if field == 'data': continue
-    #     #     setattr(self, field, value)
-    #
-    #     # if not self.has_id():
-    #     #     self.cid = record['cid']
-    #     #     self.iid = record['iid']
-    #     # else:
-    #     #     assert self.cid == record['cid']
-    #     #     assert self.iid == record['iid']
-    #
-    #     # # impute category; note the special case: the root Category item is a category for itself!
-    #     # cid, iid = self.id
-    #     # self.category = self if (cid == iid == ROOT_CID) else self.registry.get_category(cid)
-    #
-    #     # convert data from JSON string to a struct
-    #     fields = self.category.get('fields')        # specification of fields {field_name: schema}
-    #     data = fields.load_json(data)       #generic_schema.load_json(data)
-    #     self.data = MultiDict(data)
-    #     #self.data.update(data)
-
     def bind(self):
         """
         Override this method in subclasses to provide initialization after this item is retrieved from DB.
@@ -607,6 +578,9 @@ class Category(Item):
         """
         return str(iid)
     
+
+class RootCategory(Category):
+    """"""
 
 #####################################################################################################################################################
 #####
