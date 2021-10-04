@@ -321,14 +321,16 @@ class Item(object, metaclass = MetaItem):
     #     # if self._loaded or self.iid is None or field in self.data: return
     #     if self.data is None: self.load()
 
-    def load(self, record = None):
+    def load(self, record = None, force = False):
         """
         Load properties of this item from a DB into self.data, IF NOT LOADED YET.
-        Only with a not-None `record`, (re)loading takes place even if `self` was already loaded,
-        the newly loaded `data` fully replaces the existing self.data in such case.
+        Only with a not-None `record`, or force=True, (re)loading takes place even if `self` was already loaded
+        - the newly loaded `data` fully replaces the existing self.data in such case.
         """
-        if self.data is not None and record is None: return self
-        if self.iid is None: raise Exception(f'trying to load() a newborn item with no IID, {self}')
+        if self.has_data() and record is None and not force:
+            return self
+        if self.iid is None:
+            raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if record is None:
             record = self.registry.load_record(self.id)
 

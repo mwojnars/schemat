@@ -17,6 +17,8 @@
       info: human-readable title of the category
     info:
       schema: {'@': hyperweb.schema.STRING}
+    startup_site:
+      schema: {'@': hyperweb.schema.ITEM}
     prototype:
       schema: {'@': hyperweb.schema.ITEM}
       info: Base category from which this one inherits. Multiple prototypes are allowed,
@@ -73,8 +75,7 @@
           category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
           '@': hyperweb.schema.ITEM
         '@': hyperweb.schema.CATALOG
-    startup_site:
-      schema: {'@': hyperweb.schema.ITEM}
+  startup_site: [9, 1]
 - id: [0, 1]
   name: File
   info: File with a text content. Accessible through the web filesystem.

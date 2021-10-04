@@ -25,13 +25,13 @@ page_item $item
 root_fields = FIELDS(
     name         = Field(STRING(), info = "human-readable title of the category"),
     info         = Field(STRING()),
+    startup_site = Field(ITEM()),
     prototype    = Field(ITEM(), info = "Base category from which this one inherits. Multiple prototypes are allowed, the first ones override settings of subsequent ones."),
     class_name   = Field(STRING(), default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
     indexes      = Field(CATALOG(ITEM(Index))),
-    startup_site = Field(ITEM()),
 )
 
 root_data = dict(

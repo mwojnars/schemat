@@ -129,6 +129,7 @@ class Registry:
     (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates, but means that
     the last request before item refresh operates on an already-expired item.
     """
+    STARTUP_SITE = 'startup_site'       # this property of the root category will be used to read/store the current site for startup
     
     store = None                # DataStore where items are read from and saved to
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
@@ -203,11 +204,9 @@ class Registry:
     
     def boot(self):
         self.store.load()
-        self.load_root()
-        # assert False, "fix the initialization of site_id below, a constant value can be incorrect"
-        # TODO: save `site_id` automatically during Registry.seed()
-        self.site_id = (9,1)
-        # print(f'Registry() booted in thread {threading.get_ident()}')
+        root = self.load_root()
+        site = root.get(self.STARTUP_SITE)
+        self.site_id = site.id
         
     def load_root(self, record = None):
         """
@@ -215,7 +214,7 @@ class Registry:
         or from a preloaded db `record`.
         """
         root = self.create_root()
-        root.load(record)
+        root.load(record, force = True)
         return root
         
     def create_root(self):
@@ -254,8 +253,8 @@ class Registry:
         assert site.isinstance(Site_)
         self.site_id = site.id
         
-        # self.root.set('startup_site', site)
-        # self.update_item(self.root)
+        self.root.set(self.STARTUP_SITE, site)
+        self.update_item(self.root)
         
         # self.stage(self.root)
         # self.commit()
