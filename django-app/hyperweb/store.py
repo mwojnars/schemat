@@ -3,9 +3,10 @@ DATA STORE -- an abstract DB storage layer for items. Handles sharding, replicat
 """
 
 import csv, json, yaml
-from pymysql.cursors import DictCursor
-#from django.db import connection as db
-from nifty.db import MySQL
+from itertools import groupby
+# from pymysql.cursors import DictCursor
+# from django.db import connection as db
+# from nifty.db import MySQL
 
 from main.settings import DATABASES
 
@@ -37,14 +38,38 @@ default_db = None
 class DataStore:
     """"""
 
-    def insert_many(self, items):
-        for item in items:
-            self.insert(item, flush = False)
-        self.flush()
-    
     def insert(self, item, flush = True):
         raise NotImplementedError
     
+    def insert_many(self, items, flush = True):
+        for item in items:
+            self.insert(item, flush = False)
+        if flush: self.flush()
+    
+    def update(self, item, flush = True):
+        raise NotImplementedError
+    
+    def update_many(self, items, flush = True):
+        for item in items:
+            self.update(item, flush = False)
+        if flush: self.flush()
+
+    def upsert(self, item, flush = True):
+        """UPSERT = UPDATE or INSERT, depending whether `item` has an IID already, or not."""
+        return self.insert(item, flush) if item.iid is None else self.update(item, flush)
+
+    def upsert_many(self, items, flush = True):
+        """
+        Like upsert() but for multiple items at once. Splits the list into INSERT-only and UPDATE-only
+        subgroups and applies insert_many() or update_many() to each of them.
+        This can be overriden in subclasses to provide a more efficient implementation.
+        """
+        for no_iid, group in groupby(items, lambda item: item.iid is None):
+            if no_iid: self.insert_many(group, False)
+            else:      self.update_many(group, False)
+        if flush: self.flush()
+        
+
     def flush(self):
         raise NotImplementedError
 
@@ -227,7 +252,7 @@ class YamlStore(FileStore):
         if cid == 0 and cid not in self.max_iid:
             max_iid = -1   # use =0 if the root category is not getting an IID here
         else:
-            max_iid  = self.max_iid.get(cid, 0)
+            max_iid = self.max_iid.get(cid, 0)
             
         item.iid = iid = max_iid + 1
         self.max_iid[cid] = iid

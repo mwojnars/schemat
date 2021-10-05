@@ -135,13 +135,8 @@ class Registry:
     cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
     
     root    = None              # permanent reference to a singleton root Category object, kept here instead of cache
-    site_id = None
+    site_id = None              # `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
     
-    # properties for accessing core global items: root, site, ...
-    # these items are not stored as attributes to avoid issues with caching (when an item is reloaded)
-    
-    # @property
-    # def root(self): return self.get_item((ROOT_CID, ROOT_CID))
     @property
     def site(self): return self.get_item(self.site_id)
     @property
@@ -152,7 +147,9 @@ class Registry:
 
     staging     = None          # list of modified or newly created items that will be updated/inserted to DB
                                 # on next commit(); the items will be commited to DB in the SAME order as in this list;
-                                # if a staged item is already in cache, it can't be purged there until committed, TODO
+                                # if a staged item is already in cache, it can't be purged there until committed (TODO)
+    staging_ids = None          # a set of non-empty item IDs that have already been added to `staging`,
+                                # to avoid repeated insertion of the same item (newborn items excluded)
     
     autocommit  = True          # if True, commit() is called before returning a reponse from handle_request()
                                 # and at the end of stop_request()
@@ -174,6 +171,7 @@ class Registry:
         self.cache = LRUCache(maxsize = 1000, ttl = 3)      # TODO: remove support for protected items in cache, no longer needed
         self.store = YamlStore()
         self.staging = []
+        self.staging_ids = set()
         
     def init_classpath(self):
         """
@@ -184,7 +182,7 @@ class Registry:
         """
         def issubtype(basetype):
             return lambda obj: isinstance(obj, type) and issubclass(obj, basetype)
-
+        
         # the instructions below create items and categories in the background; this must be done
         # in a strictly defined order, and for this reason, the ordering of instructions cannot be changed
         
@@ -207,43 +205,21 @@ class Registry:
     def boot(self):
         
         self.store.load()
-        # root = self.load_root()
         root = self.create_root()
         root.load(force = True)
         site = root.get(self.STARTUP_SITE)
         assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
         self.site_id = site.id
         
-    # def load_root(self, record = None):
-    #     """
-    #     Create and initialize the root category; load its data from DB (if record=None)
-    #     or from a preloaded db `record`.
-    #     """
-    #     root = self.create_root()
-    #     root.load(record, force = True)
-    #     return root
-        
-    def create_root(self):
+    def create_root(self, insert = False):
         """
-        Create the root Category object, ID=(0,0). If `data` is provided,
+        Create the RootCategory object, ID=(0,0). If `data` is provided,
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
-        # from .core.root import root_data
-        #
-        # # root.data will ultimately be overwritten with data from DB, but is needed for the initial
-        # # call to root.load(), where it's accessible thx to circular dependency root.category==root
-        # root = RootCategory(data = root_data)
-        # root.registry = self
-        # root.category = root                    # root category is a category for itself
-        # root.cid = ROOT_CID
-        # root.iid = ROOT_CID
-        
-        # self.root = root
-        # # self._set(root, ttl = 1)  #, protect = True)
-        
         self.root = RootCategory(self)
         self.root.bind()
+        if insert: self.store.insert(self.root)
         return self.root
         
     def set_site(self, site):
@@ -257,13 +233,9 @@ class Registry:
         self.site_id = site.id
         
         self.root.set(self.STARTUP_SITE, site)
-        # self.stage(self.root)                       # changes in root category must be committed once again (after root creation)
-        
         self.update_item(self.root)
-        self.commit()
 
     def get_category(self, cid):
-        # assert cid is not None
         cat = self.get_item((ROOT_CID, cid))
         assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
@@ -314,7 +286,6 @@ class Registry:
     
     def load_record(self, id):
         """Load item record from DB and return as a dict; contains cid, iid, data etc."""
-        # print(f'load_record: loading item {id} in thread {threading.get_ident()} ', flush = True)
         return self.store.select(id)
     
     def load_items(self, category):
@@ -341,11 +312,10 @@ class Registry:
                 item.load(record)
                 yield item
         
-    def _set(self, item, ttl = None, protect = False):
+    def _set(self, item, ttl = None):
         """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
-        # print(f'registry: creating item {item.id} in thread {threading.get_ident()} ', flush = True)
         assert item.id != (ROOT_CID, ROOT_CID)
-        self.cache.set(item.id, item, ttl, protect)
+        self.cache.set(item.id, item, ttl)
 
     def get_path(self, cls):
         """
@@ -373,23 +343,25 @@ class Registry:
         For updates, this typically should be called BEFORE modifying an item,
         so that its refresh in cache is prevented during modifications (TODO).
         """
-        # assert force or not item.has_id()
-        # if item.has_id():
-        #     check that this ID is not yet in staging; if present, check it's the same python object and skip
+        assert not isinstance(item, RootCategory)
         
-        # assert not isinstance(item, RootCategory)
+        has_id = item.has_id()
+        if has_id and item.id in self.staging_ids:
+            return                                           # do NOT insert the same item twice (NOT checked for newborn items)
+            # TODO: check the existing object is the same as `item` (must use a dict for this purpose)
+
+        # self.staging[item.id] = item
         self.staging.append(item)
+        if has_id: self.staging_ids.add(item.id)
         
-    def commit(self, **kwargs):
+    def commit(self):
         """Insert staged items to DB and purge the staging area."""
         if not self.staging: return
-        
-        # TODO: if ID is present for an item, make an update, not insert
-        self.store.insert_many(self.staging)
         for item in self.staging:
-            # if item.has_id(): continue          # item got already inserted in the meantime
             self._assert_cache_valid(item)
-            # self._set(item, **kwargs)
+
+        self.store.upsert_many(self.staging)
+        self.staging_ids = set()
         self.staging = []
         
     def insert_item(self, item):

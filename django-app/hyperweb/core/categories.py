@@ -29,11 +29,12 @@ from hyperweb.core.root import registry
 #####  CATEGORIES... The underscore _ is appended to names to differentiate them from names of classes
 #####
 
-Category_ = registry.create_root()
+# root Category_ is newly created here (not loaded), so it must be inserted to DB;
+# all other items/categories are staged for commit automatically
+Category_ = registry.create_root(insert = True)
 
-# Category_ is newly created here (not loaded), so it must be marked for insertion to DB;
-# all other items/categories are staged automatically
-registry.stage(Category_)
+# registry.stage(Category_)
+
 
 #####################################################################################################################################################
 
