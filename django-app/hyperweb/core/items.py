@@ -5,6 +5,7 @@ Every item created through category(...) call is automatically inserted to the r
 staging area and will be inserted to DB upon registry.commit() - see boot.py.
 """
 
+import os
 from hyperweb.core.categories import *
 
 
@@ -272,7 +273,9 @@ base_hy = File_(
     """,
 )
 
-protocols_js = FileLocal_(path ='/home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js')
+_path = os.path.dirname(os.path.abspath(__file__))
+
+protocols_js = FileLocal_(path = f'{_path}/protocols.js')
 
 dir_system = Folder_(
     files = {

@@ -34,8 +34,6 @@ from hyperweb.core.root import registry
 Category_ = registry.create_root(insert = True)
 
 
-#####################################################################################################################################################
-
 File_ = Category_(
     name    = "File",
     info    = """File with a text content. Accessible through the web filesystem.""",

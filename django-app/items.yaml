@@ -327,7 +327,7 @@
     \                            else\n                                | $iname (no\
     \ URL)\n    \n    "
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/static/protocols.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/core/protocols.js
 - id: [3, 1]
   files:
     Site: [0, 9]
@@ -372,6 +372,3 @@
 - id: [10, 2]
   title: ąłęÓŁŻŹŚ
   name: test_item
-- id: [10, 3]
-  name: text
-  value: '123'

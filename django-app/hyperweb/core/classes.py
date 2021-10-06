@@ -218,7 +218,7 @@ class AppFiles(Application):
         request.state = {'filepath': filepath}
         
         root = self.get('root_folder') or self.registry.files
-        item = root.search(path)
+        item = root.search(filepath)
 
         files = self.registry.files
         File_ = files.search('system/File')
@@ -228,8 +228,8 @@ class AppFiles(Application):
         if item.isinstance(File_):
             default_endpoint = ('download',)
         elif item.isinstance(Folder_):
-            if not path.endswith('/'): return redirect(request.url + '/')       # folder URLs must end with '/'
-            request.state['folder'] = item          # leaf folder
+            # if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.url + '/')       # folder URLs must end with '/'
+            request.state['folder'] = item          # leaf folder, for use when generating file URLs (url_path())
             # default_endpoint = ('browse',)
         
         return item.serve(request, self, *default_endpoint)
