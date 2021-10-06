@@ -354,7 +354,7 @@
   name: Files
 - id: [8, 1]
   name: Catalog
-  spaces: {meta.category: 0, meta.item: 10, sys.site: 9, sys.dir: 3, sys.file: 2}
+  spaces: {sys.category: 0, sys.item: 10, sys.site: 9, sys.dir: 3, sys.file: 2}
 - id: [5, 1]
   name: Applications
   apps:

@@ -151,8 +151,8 @@ class Registry:
     staging_ids = None          # dict of items with a non-empty ID that have already been added to `staging`,
                                 # to avoid repeated insertion of the same item twice and to verify its identity (newborn items excluded)
     
-    autocommit  = True          # if True, commit() is called before returning a reponse from handle_request()
-                                # and at the end of stop_request()
+    # autocommit  = True          # if True, commit() is called before returning a reponse from handle_request()
+    #                             # and at the end of stop_request()
     
     current_request = None      # the currently processed web request; is set at the beginning
                                 # of request processing and cleared at the end
@@ -207,7 +207,7 @@ class Registry:
         self.store.load()
         root = self.create_root()
         root.load(force = True)
-        site = root.get(self.STARTUP_SITE)
+        site = root[self.STARTUP_SITE]
         assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
         self.site_id = site.id
         
@@ -219,7 +219,8 @@ class Registry:
         """
         self.root = RootCategory(self)
         self.root.bind()
-        if insert: self.store.insert(self.root)
+        if insert:                              # here, self.store must be used directly (no stage/commit), because ...
+            self.store.insert(self.root)        # ...self.root already has an ID, so it would get "updated" rather than inserted!
         return self.root
         
     def set_site(self, site):
@@ -232,9 +233,11 @@ class Registry:
         assert site.isinstance(Site_)
         self.site_id = site.id
         
-        self.root.set(self.STARTUP_SITE, site)
-        self.update_item(self.root)
-
+        self.root[self.STARTUP_SITE] = site
+        self.commit(self.root)
+        # self.store.update(self.root)
+        # self.update_item(self.root)
+        
     def get_category(self, cid):
         cat = self.get_item((ROOT_CID, cid))
         assert isinstance(cat, Category), f"not a Category object: {cat}"
@@ -343,8 +346,6 @@ class Registry:
         For updates, this typically should be called BEFORE modifying an item,
         so that its refresh in cache is prevented during modifications (TODO).
         """
-        assert not isinstance(item, RootCategory)
-        
         has_id = item.has_id()
         if has_id and item.id in self.staging_ids:          # do NOT insert the same item twice (NOT checked for newborn items)
             assert item is self.staging_ids[item.id]        # make sure the identity of `item` hasn't changed - this should be ...
@@ -352,11 +353,12 @@ class Registry:
 
         self.staging.append(item)
         if has_id: self.staging_ids[item.id] = item
-        # if has_id: self.staging_ids.add(item.id)
-
-    def commit(self):
-        """Insert staged items to DB and purge the staging area."""
+        
+    def commit(self, *items):
+        """Insert/update all staged items (self.staging) in DB and purge the staging area. Append `items` before that."""
+        for item in items: self.stage(item)
         if not self.staging: return
+        
         for item in self.staging:
             self._assert_cache_valid(item)
 
@@ -364,23 +366,23 @@ class Registry:
         self.staging_ids = {}
         self.staging = []
         
-    def insert_item(self, item):
-        """
-        Insert `item` as a new entry in DB. Create a new IID and assign to `item.iid`,
-        which must have been None before insertion.
-        """
-        assert item.iid is None
-        self.store.insert(item)
-        assert item.iid is not None
-        self._assert_cache_empty(item)
-        self._set(item)
-
-    def update_item(self, item):
-        """Update the contents of the item's data in DB."""
-        self.store.update(item)
-        self._assert_cache_valid(item)
-        # self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
-        
+    # def insert_item(self, item):
+    #     """
+    #     Insert `item` as a new entry in DB. Create a new IID and assign to `item.iid`,
+    #     which must have been None before insertion.
+    #     """
+    #     assert item.iid is None
+    #     self.store.insert(item)
+    #     assert item.iid is not None
+    #     self._assert_cache_empty(item)
+    #     self._set(item)
+    #
+    # def update_item(self, item):
+    #     """Update the contents of the item's data in DB."""
+    #     self.store.update(item)
+    #     self._assert_cache_valid(item)
+    #     # self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
+    
     def _assert_cache_valid(self, item):
         """Check cache validity during item update: the item instance must not have been substituted in cache in the meantime."""
         incache = self.cache.get(item.id)
@@ -421,9 +423,9 @@ class Registry:
         self.start_request(request)
 
         response = site.handle(request)
-        if self.autocommit: self.commit()
+        self.commit()           # auto-commit is performed here, not in after_request(), to catch and display any possible DB failures
         
-        # after "return" below, self.after_request() and self.stop_request() are executed
+        # after "return" below, self.after_request(), and self.stop_request() are executed
         # in an action fired on Django's <request_finished> signal, see boot.py for details
         return response
     
@@ -436,12 +438,14 @@ class Registry:
         Cleanup, maintenance, and long-running post-request tasks after a response has been sent, in the same thread.
         The `request` property is still available, but no additional response can be produced.
         """
+
+    def stop_request(self):
         # print(f'after_request() in thread {threading.get_ident()}...', flush = True)
+        assert self.current_request is not None, 'trying to stop a request when none was started'
+
+        self.commit()
         self.cache.evict()
         # sleep(5)
 
-    def stop_request(self):
-        assert self.current_request is not None, 'trying to stop a request when none was started'
-        if self.autocommit: self.commit()
         self.current_request = None
         

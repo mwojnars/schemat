@@ -33,8 +33,6 @@ from hyperweb.core.root import registry
 # all other items/categories are staged for commit automatically
 Category_ = registry.create_root(insert = True)
 
-# registry.stage(Category_)
-
 
 #####################################################################################################################################################
 

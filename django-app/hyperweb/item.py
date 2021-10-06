@@ -168,7 +168,8 @@ class Item(object, metaclass = MetaItem):
         Create a new item instance. Assign category, registry, properties, CID (if possible).
         self.loaded is left uninitialized (False).
         """
-        self.data = MultiDict(data) if data is not None else None       # unloaded item has self.data=None
+        if data is not None:                            # not-loaded item has self.data=None
+            self.data = data if isinstance(data, MultiDict) else MultiDict(data)
         
         if category is not None:
             self.category = category
@@ -356,33 +357,26 @@ class Item(object, metaclass = MetaItem):
         # return generic_schema.dump_json(self.data)
         return fields.dump_json(self.data)
         
-    def insert(self):
-        """
-        Insert this item as a new row in DB. Assign a new IID (self.iid) and return it.
-        The item might have already been present in DB, but still a new copy is created.
-        """
-        self.registry.insert_item(self)
-        
-    def update(self, fields = None):
-        """Update the contents of this item's row in DB."""
-        # TODO: allow granular update of selected fields by making combined
-        #       SELECT (of newest revision) + UPDATE (of selected fields WHERE revision=last_seen_revision)
-        #  `fields` -- if None, all "dirty" fields are included
-        #  `base_revision` (optional)
-        #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
-        # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
-        
-        self.registry.update_item(self)
-
-    def save(self):
-        """
-        Save this item to DB. This means either an update of an existing DB row (if iid is already present),
-        or an insert of a new row (iid is assigned and can be retrieved from self.iid).
-        """
-        if self.iid is None:
-            self.insert()
-        else:
-            self.update()
+    # def insert(self):
+    #     """
+    #     Insert this item as a new row in DB. Assign a new IID (self.iid) and return it.
+    #     The item might have already been present in DB, but still a new copy is created.
+    #     """
+    #     self.registry.insert_item(self)
+    #
+    # def update(self, fields = None):
+    #     """Update the contents of this item's row in DB."""
+    #     self.registry.update_item(self)
+    #
+    # def save(self):
+    #     """
+    #     Save this item to DB. This means either an update of an existing DB row (if iid is already present),
+    #     or an insert of a new row (iid is assigned and can be retrieved from self.iid).
+    #     """
+    #     if self.iid is None:
+    #         self.insert()
+    #     else:
+    #         self.update()
 
     def serve(self, request, app, default_endpoint = 'view'):
         """
@@ -476,6 +470,18 @@ class Item(object, metaclass = MetaItem):
             if __raise__: raise
             return ''
 
+    def commit(self):
+        """Explicitly stage `self` for insert/update and commit all item modifications so far."""
+        self.registry.commit(self)
+        
+        # TODO: allow granular update of selected fields by making combined
+        #       SELECT (of newest revision) + UPDATE (of selected fields WHERE revision=last_seen_revision)
+        #  `fields` -- if None, all "dirty" fields are included
+        #  `base_revision` (optional)
+        #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
+        # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
+        
+
 ItemDoesNotExist.item_class = Item
 
 
@@ -489,14 +495,14 @@ class Category(Item):
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     """
-    def new(self, **props):
+    def new(self, __data__ = None, __stage__ = True, **props):
         """
         Create a newborn item of this category (not yet in DB); connect it with self.registry;
-        mark it as pending for insertion to DB.
+        mark it as pending for insertion to DB if __stage__=True (default).
         """
         itemclass = self.get_class()
-        item = itemclass(category = self, data = props)
-        self.registry.stage(item)                       # mark `item` for insertion on next commit()
+        item = itemclass(category = self, data = __data__ or props)
+        if __stage__: self.registry.stage(item)                         # mark `item` for insertion on the next commit()
         return item
     
     __call__ = new
@@ -504,7 +510,8 @@ class Category(Item):
     def stub(self, iid):
         """
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-        but properties (item.data) are not loaded yet. Should only be called by Registry.
+        but properties (item.data) are not loaded yet. Should only be called by Registry,
+        other clients should use registry.get_lazy((cid,iid)) instead.
         """
         itemclass = self.get_class()
         item = itemclass(category = self)
@@ -560,8 +567,9 @@ class Category(Item):
     def _handler_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
-        item = self()
-        data = item.data
+        # item = self.new()
+        # data = item.data
+        data = MultiDict()
         
         # retrieve attribute values from GET/POST and assign to `item`
         # POST & GET internally store multi-valued parameters (lists of values for each parameter)
@@ -569,8 +577,13 @@ class Category(Item):
             data.set(attr, *values)
         for attr, values in request.GET.lists():
             data.set(attr, *values)
-
-        item.save()
+            
+        # TODO: check schema constraints, fields allowed, and max lengths of fields and full data to prevent attacks
+        
+        item = self.new(__data__ = data)
+        item.commit()       # explicitly stage `item` for insert and commit all item modifications so far
+        # item.save()
+        
         return html_escape(f"Item created: {item}")
         
     def encode_url(self, iid):

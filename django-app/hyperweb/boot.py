@@ -24,7 +24,7 @@ def boot():
 #####################################################################################################################################################
 
 # db_reset = ('--db-reset' in sys.argv)
-db_reset = False
+db_reset = True
 
 if db_reset:    seed()
 else:           boot()
@@ -37,5 +37,6 @@ print("registry initialized:", registry, flush = True)
 # connect the after_request() method of `registry` with Django
 @receiver(request_finished)
 def after_request(sender, **kwargs):
+    # registry.commit()                           # save all changes so far, in case after_request() call below takes really long
     registry.after_request(sender, **kwargs)
     registry.stop_request()

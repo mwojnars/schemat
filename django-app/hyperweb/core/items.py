@@ -306,8 +306,8 @@ app_files = AppFiles_(name = "Files",)
 app_catalog = AppSpaces_(
     name        = "Catalog",
     spaces      = {
-        'meta.category':    Category_,
-        'meta.item':        Varia_,
+        'sys.category':     Category_,
+        'sys.item':         Varia_,
         'sys.site':         Site_,
         'sys.dir':          Folder_,
         'sys.file':         FileLocal_,

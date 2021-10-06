@@ -79,6 +79,8 @@ class Schema:
     # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
     is_catalog = False      # True only in CATALOG and subclasses
+    #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
+    
     
     def dump_json(self, value, **json_format):
         """
