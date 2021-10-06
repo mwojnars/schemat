@@ -465,7 +465,7 @@ class Category(Item):
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     """
-    def new(self, __data__ = None, __stage__ = True, **props):
+    def __call__(self, __data__ = None, __stage__ = True, **props):
         """
         Create a newborn item of this category (not yet in DB); connect it with self.registry;
         mark it as pending for insertion to DB if __stage__=True (default).
@@ -475,17 +475,14 @@ class Category(Item):
         if __stage__: self.registry.stage(item)                         # mark `item` for insertion on the next commit()
         return item
     
-    __call__ = new
-    
     def stub(self, iid):
         """
         Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-        but properties (item.data) are not loaded yet. Should only be called by Registry,
-        other clients should use registry.get_lazy((cid,iid)) instead.
+        but properties (item.data) are not loaded yet. Should only be called directly by Registry,
+        other clients should use registry.get_stub() instead.
         """
         itemclass = self.get_class()
         item = itemclass(category = self)
-        # item = self.new()
         item.iid = iid
         return item
 
@@ -534,7 +531,7 @@ class Category(Item):
     #####  Handlers & templates  #####
 
     @handler('new')
-    def _handler_new(self, request):
+    def new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
         data = MultiDict()
@@ -546,9 +543,9 @@ class Category(Item):
         for attr, values in request.GET.lists():
             data.set(attr, *values)
             
-        # TODO: check schema constraints, fields allowed, and max lengths of fields and full data to prevent attacks
+        # TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         
-        item = self.new(__data__ = data)
+        item = self(__data__ = data)
         item.commit()
         
         return html_escape(f"Item created: {item}")

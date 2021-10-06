@@ -281,7 +281,7 @@ class Registry:
         # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
     
-    def get_lazy(self, *args, **kwargs):
+    def get_stub(self, *args, **kwargs):
         """Call get_item() with load=False."""
         return self.get_item(*args, **kwargs, load = False)
     
@@ -335,7 +335,7 @@ class Registry:
     
     ####################################
     ###
-    ###  Item creation & update
+    ###  DB modifications
     ###
 
     def stage(self, item):
@@ -357,31 +357,16 @@ class Registry:
         for item in items: self.stage(item)
         if not self.staging: return
 
-        # assert cache validity: items to be updated must not have been substituted in cache in the meantime
+        # assert cache validity: the items to be updated must not have been substituted in cache in the meantime
         for item in self.staging:
             incache = self.cache.get(item.id)
             if not incache: continue
             assert item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
-            # self._assert_cache_valid(item)
 
         self.store.upsert_many(self.staging)
         self.staging_ids = {}
         self.staging = []
         
-    # def _assert_cache_valid(self, item):
-    #     """Check cache validity during item update: the item instance must not have been substituted in cache in the meantime."""
-    #     incache = self.cache.get(item.id)
-    #     assert not incache or item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
-    #
-    # def _assert_cache_empty(self, item):
-    #     """
-    #     Check cache validity of item creation: the item must not have been in cache so far,
-    #     since IIDs are assigned incrementally without reuse, even after item delete.
-    #     """
-    #     incache = self.cache.get(item.id)
-    #     assert incache is None, f"new item created with the same IID={item.iid} as an existing one already in cache: {item} vs {incache}"
-
-
         
     ####################################
     ###

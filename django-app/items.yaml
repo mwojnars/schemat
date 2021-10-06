@@ -372,3 +372,6 @@
 - id: [10, 2]
   title: ąłęÓŁŻŹŚ
   name: test_item
+- id: [10, 3]
+  name: text
+  value: '123'
