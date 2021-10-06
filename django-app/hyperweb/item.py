@@ -313,15 +313,6 @@ class Item(object, metaclass = MetaItem):
         if not brackets: return stamp
         return f"[{stamp}]"
 
-    # def current(self):
-    #     """Look this item's ID up in the Registry and return its most recent instance; load from DB if no longer in the Registry."""
-    #     return self.registry.get_item(self.id)
-    
-    # def prepare_data(self):
-    #     """If item data was not yet loaded from DB, load the entire item now."""
-    #     # if self._loaded or self.iid is None or field in self.data: return
-    #     if self.data is None: self.load()
-
     def load(self, record = None, force = False):
         """
         Load properties of this item from a DB into self.data, IF NOT LOADED YET.
@@ -357,27 +348,6 @@ class Item(object, metaclass = MetaItem):
         # return generic_schema.dump_json(self.data)
         return fields.dump_json(self.data)
         
-    # def insert(self):
-    #     """
-    #     Insert this item as a new row in DB. Assign a new IID (self.iid) and return it.
-    #     The item might have already been present in DB, but still a new copy is created.
-    #     """
-    #     self.registry.insert_item(self)
-    #
-    # def update(self, fields = None):
-    #     """Update the contents of this item's row in DB."""
-    #     self.registry.update_item(self)
-    #
-    # def save(self):
-    #     """
-    #     Save this item to DB. This means either an update of an existing DB row (if iid is already present),
-    #     or an insert of a new row (iid is assigned and can be retrieved from self.iid).
-    #     """
-    #     if self.iid is None:
-    #         self.insert()
-    #     else:
-    #         self.update()
-
     def serve(self, request, app, default_endpoint = 'view'):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
@@ -567,8 +537,6 @@ class Category(Item):
     def _handler_new(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
-        # item = self.new()
-        # data = item.data
         data = MultiDict()
         
         # retrieve attribute values from GET/POST and assign to `item`
@@ -581,8 +549,7 @@ class Category(Item):
         # TODO: check schema constraints, fields allowed, and max lengths of fields and full data to prevent attacks
         
         item = self.new(__data__ = data)
-        item.commit()       # explicitly stage `item` for insert and commit all item modifications so far
-        # item.save()
+        item.commit()
         
         return html_escape(f"Item created: {item}")
         
@@ -608,7 +575,6 @@ class RootCategory(Category):
 
         self.registry = registry
         self.category = self                    # root category is a category for itself
-        # self.cache_ttl = 0
 
 
 #####################################################################################################################################################

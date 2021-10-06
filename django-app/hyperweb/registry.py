@@ -235,8 +235,6 @@ class Registry:
         
         self.root[self.STARTUP_SITE] = site
         self.commit(self.root)
-        # self.store.update(self.root)
-        # self.update_item(self.root)
         
     def get_category(self, cid):
         cat = self.get_item((ROOT_CID, cid))
@@ -358,43 +356,30 @@ class Registry:
         """Insert/update all staged items (self.staging) in DB and purge the staging area. Append `items` before that."""
         for item in items: self.stage(item)
         if not self.staging: return
-        
+
+        # assert cache validity: items to be updated must not have been substituted in cache in the meantime
         for item in self.staging:
-            self._assert_cache_valid(item)
+            incache = self.cache.get(item.id)
+            if not incache: continue
+            assert item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
+            # self._assert_cache_valid(item)
 
         self.store.upsert_many(self.staging)
         self.staging_ids = {}
         self.staging = []
         
-    # def insert_item(self, item):
-    #     """
-    #     Insert `item` as a new entry in DB. Create a new IID and assign to `item.iid`,
-    #     which must have been None before insertion.
-    #     """
-    #     assert item.iid is None
-    #     self.store.insert(item)
-    #     assert item.iid is not None
-    #     self._assert_cache_empty(item)
-    #     self._set(item)
+    # def _assert_cache_valid(self, item):
+    #     """Check cache validity during item update: the item instance must not have been substituted in cache in the meantime."""
+    #     incache = self.cache.get(item.id)
+    #     assert not incache or item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
     #
-    # def update_item(self, item):
-    #     """Update the contents of the item's data in DB."""
-    #     self.store.update(item)
-    #     self._assert_cache_valid(item)
-    #     # self._set(item)             # only needed in a hypothetical case when `item` has been overriden in the registry by another version of the same item
-    
-    def _assert_cache_valid(self, item):
-        """Check cache validity during item update: the item instance must not have been substituted in cache in the meantime."""
-        incache = self.cache.get(item.id)
-        assert not incache or item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
-
-    def _assert_cache_empty(self, item):
-        """
-        Check cache validity of item creation: the item must not have been in cache so far,
-        since IIDs are assigned incrementally without reuse, even after item delete.
-        """
-        incache = self.cache.get(item.id)
-        assert incache is None, f"new item created with the same IID={item.iid} as an existing one already in cache: {item} vs {incache}"
+    # def _assert_cache_empty(self, item):
+    #     """
+    #     Check cache validity of item creation: the item must not have been in cache so far,
+    #     since IIDs are assigned incrementally without reuse, even after item delete.
+    #     """
+    #     incache = self.cache.get(item.id)
+    #     assert incache is None, f"new item created with the same IID={item.iid} as an existing one already in cache: {item} vs {incache}"
 
 
         
