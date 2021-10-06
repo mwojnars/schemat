@@ -148,8 +148,8 @@ class Registry:
     staging     = None          # list of modified or newly created items that will be updated/inserted to DB
                                 # on next commit(); the items will be commited to DB in the SAME order as in this list;
                                 # if a staged item is already in cache, it can't be purged there until committed (TODO)
-    staging_ids = None          # a set of non-empty item IDs that have already been added to `staging`,
-                                # to avoid repeated insertion of the same item (newborn items excluded)
+    staging_ids = None          # dict of items with a non-empty ID that have already been added to `staging`,
+                                # to avoid repeated insertion of the same item twice and to verify its identity (newborn items excluded)
     
     autocommit  = True          # if True, commit() is called before returning a reponse from handle_request()
                                 # and at the end of stop_request()
@@ -171,7 +171,7 @@ class Registry:
         self.cache = LRUCache(maxsize = 1000, ttl = 3)      # TODO: remove support for protected items in cache, no longer needed
         self.store = YamlStore()
         self.staging = []
-        self.staging_ids = set()
+        self.staging_ids = {}
         
     def init_classpath(self):
         """
@@ -346,14 +346,14 @@ class Registry:
         assert not isinstance(item, RootCategory)
         
         has_id = item.has_id()
-        if has_id and item.id in self.staging_ids:
-            return                                           # do NOT insert the same item twice (NOT checked for newborn items)
-            # TODO: check the existing object is the same as `item` (must use a dict for this purpose)
+        if has_id and item.id in self.staging_ids:          # do NOT insert the same item twice (NOT checked for newborn items)
+            assert item is self.staging_ids[item.id]        # make sure the identity of `item` hasn't changed - this should be ...
+            return                                          # guaranteed by the way how Cache and Registry work (single-threaded; cache eviction only after request)
 
-        # self.staging[item.id] = item
         self.staging.append(item)
-        if has_id: self.staging_ids.add(item.id)
-        
+        if has_id: self.staging_ids[item.id] = item
+        # if has_id: self.staging_ids.add(item.id)
+
     def commit(self):
         """Insert staged items to DB and purge the staging area."""
         if not self.staging: return
@@ -361,7 +361,7 @@ class Registry:
             self._assert_cache_valid(item)
 
         self.store.upsert_many(self.staging)
-        self.staging_ids = set()
+        self.staging_ids = {}
         self.staging = []
         
     def insert_item(self, item):

@@ -63,6 +63,7 @@ class DataStore:
         Like upsert() but for multiple items at once. Splits the list into INSERT-only and UPDATE-only
         subgroups and applies insert_many() or update_many() to each of them.
         This can be overriden in subclasses to provide a more efficient implementation.
+        The order of items is preserved, because it may be relevant for global data consistency in DB (?).
         """
         for no_iid, group in groupby(items, lambda item: item.iid is None):
             if no_iid: self.insert_many(group, False)
