@@ -27,7 +27,7 @@ from hypertag import HyperHTML
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import getstate, setstate, JSON
 from .multidict import MultiDict
-from .types import text, html, hypertag, struct, catalog
+from .types import struct, catalog
 
 
 #####################################################################################################################################################
@@ -1083,3 +1083,12 @@ class FIELD(STRUCT):
 #                        strict = BOOLEAN(),
 #                        )
     
+
+# # rules for detecting disallowed field names in category schema definitions
+# STOP_ATTR = {
+#     'special':      (lambda attr: attr[0] == '_'),
+#     'reserved':     (lambda attr: attr in 'load insert update save'),
+#     'multidict':    (lambda attr: attr.endswith(MULTI_SUFFIX)),
+# }
+# re_codename = re.compile(r'^[a-zA-Z][a-zA-Z0-9_-]*$')         # valid names of a space or category
+
