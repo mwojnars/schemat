@@ -27,7 +27,7 @@ from hypertag import HyperHTML
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import getstate, setstate, JSON
 from .multidict import MultiDict
-from .types import struct, catalog
+from .struct import struct, catalog
 
 
 #####################################################################################################################################################
