@@ -112,7 +112,7 @@ class CustomElement extends HTMLElement {
 /*************************************************************************************************/
 
 class EditableElement extends CustomElement {
-    /* Base class for schema-based editable-value widgets. Provides a default implementation 
+    /* Base class for schema-based editable value widgets. Provides a default implementation
        for two separate subwidgets (#view, #edit) with a unique input element inside the edit form.
      */
     // static View = class { constructor() {} };
@@ -180,6 +180,19 @@ class EditableElement extends CustomElement {
     get_form() {
         /* collect values of individual form elements and combine into a single value object */
         return this._edit.querySelector(".input").value;
+    }
+
+    submit() {
+        /* send current_value to the server via ajax call */
+        let url  = window.location.href;     // this.url({endpoint: 'submit'})
+        let data = undefined;
+
+        $.ajax({
+            method:         'POST',
+            url:            url + '@set',
+            data:           JSON.stringify(data),
+            contentType:    "application/json; charset=utf-8",
+        });
     }
 }
 // console.log(new EditableElement.View());
@@ -292,29 +305,30 @@ class Catalog extends CustomElement {
     }
 }
 
-class ItemPage extends CustomElement {
-    init() {
-        let g = globalThis;
-        g.category = this._category = new Item(this.read_data('p#category'));
-        g.item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+class Item {
 
+    constructor(data_flat, category) {
+        this.category = category;
+        this.data = this.load(data_flat);
+        console.log('Item() data_flat:', data_flat);
+    }
+    load(data_flat) {
+        return data_flat;
     }
 
+    static Page = class extends CustomElement {
+        init() {
+            let g = globalThis;
+            g.category = this._category = new Item(this.read_data('p#category'));
+            g.item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+
+        }
+    }
     static Properties = class extends Catalog {}
 }
 
-window.customElements.define('hw-item-page', ItemPage);
+window.customElements.define('hw-item', Item.Page);
 
-
-/*************************************************************************************************/
-
-class Item {
-    constructor(data, category) {
-        this.category = category;
-        this.data = data;
-        console.log('Item() data:', data);
-    }
-}
 
 /*************************************************************************************************/
 
@@ -331,79 +345,5 @@ class Registry {
 }
 
 let registry = window.registry = new Registry();
-
-
-/*************************************************************************************************/
-
-// class generic_protocol {
-//     // Watch out: a single protocol instance can be bind to multiple distinct elements,
-//     // therefore all inner elements #view, #edit etc. must be *local* to a binding method
-//     // rather than assigned to `this`.
-//
-//     constructor(enter_accepts = false, esc_accepts = true) {
-//         this._enter_accepts = enter_accepts;
-//         this._esc_accepts = esc_accepts;
-//     }
-//
-//     bind(widget) {
-//         let view = widget.querySelector("#view");
-//         let edit = widget.querySelector("#edit");
-//         view.addEventListener('dblclick', () => this.show(view, edit));
-//         edit.addEventListener('focusout', () => this.hide(view, edit));
-//
-//         if (this._enter_accepts || this._esc_accepts) {
-//             let keys = [];
-//             if (this._enter_accepts) { keys.push("Enter"); }
-//             if (this._esc_accepts)   { keys.push("Escape"); }
-//             edit.addEventListener("keyup", ({key}) => {if (keys.includes(key)) { this.hide(view, edit) }});
-//         }
-//         this.hide(view, edit);
-//         // this.set_preview(view, edit);
-//     }
-//     show(view, edit) {
-//         //console.log('in show_edit()');
-//         view.style.display = 'none';
-//         edit.style.display = 'block';
-//         let focus = edit.querySelector(".focus");       // the element that should receive focus after form activation; can be missing
-//         if (focus) { focus.focus(); }
-//     }
-//     hide(view, edit) {
-//         this.set_preview(view, edit);
-//         edit.style.display = 'none';
-//         view.style.display = 'block';
-//     }
-//     set_preview(view, edit) {
-//         let input = edit.querySelector(".input");       // the (unique) element that contains a form value inserted by user
-//         view.textContent = input.value;
-//     }
-// }
-//
-// // a protocol that displays a modal dialog window for editing
-// class dialog_protocol extends generic_protocol {
-// }
-//
-// let protocols = {
-//     STRING: new generic_protocol(true),
-//     TEXT:   new generic_protocol(),
-// }
-//
-// function bind_all() {
-//     // find all elements with a "protocol" defined and bind event handlers to each of them
-//     $("[protocol]").each(function (i, widget) {
-//         let name = widget.getAttribute('protocol');
-//         if (name in protocols) {
-//             protocols[name].bind(widget);
-//         } else {
-//             console.warn(`protocol '${name}' is undefined`);
-//         }
-//     });
-// }
-//
-// // document ready
-// $(function() {
-//     bind_all();
-// });
-// // $("document").ready(function() {
-// //     document.querySelectorAll("[protocol='STRING']").forEach(function (widget) {
 
 

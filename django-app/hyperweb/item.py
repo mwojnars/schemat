@@ -313,21 +313,21 @@ class Item(object, metaclass = MetaItem):
         if not brackets: return stamp
         return f"[{stamp}]"
 
-    def load(self, record = None, force = False):
+    def load(self, data_json = None, force = False):
         """
-        Load properties of this item from a DB into self.data, IF NOT LOADED YET.
-        Only with a not-None `record`, or force=True, (re)loading takes place even if `self` was already loaded
+        Load properties of this item from a DB or JSON string `data_json` into self.data, IF NOT LOADED YET.
+        Only with a not-None `data_json`, or force=True, (re)loading takes place even if `self` was already loaded
         - the newly loaded `data` fully replaces the existing self.data in such case.
         """
-        if self.has_data() and record is None and not force:
+        if self.has_data() and data_json is None and not force:
             return self
         if self.iid is None:
             raise Exception(f'trying to load() a newborn item with no IID, {self}')
-        if record is None:
-            record = self.registry.load_record(self.id)
+        if data_json is None:
+            data_json = self.registry.load_data(self.id)
 
         fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        data   = fields.load_json(record['data'])         #generic_schema.load_json(data)
+        data   = fields.load_json(data_json)        #generic_schema.load_json(data)
         self.data = MultiDict(data)
         self.bind()
 
@@ -451,7 +451,14 @@ class Item(object, metaclass = MetaItem):
         #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
-
+    @handler('set')
+    def _set_(self, request):
+        """
+        Ajax endpoint that modifies selected properties of this item and saves to DB.
+        None value for a property is interpreted as DELETE.
+        """
+    
+    
 ItemDoesNotExist.item_class = Item
 
 

@@ -302,7 +302,7 @@
     \        #     $schema = $item.get_schema(field)\n        #     $schema_json =\
     \ generic_schema.dump_json(schema)\n        #     $entry = (schema_json, $item.dump_data())\n\
     \        #     $entries.append(entry)\n        from hyperweb.serialize import\
-    \ $JSON\n        \n        custom \"hw-item-page\"\n            # p style=\"display:none\"\
+    \ $JSON\n        \n        custom \"hw-item\"\n            # p style=\"display:none\"\
     \ type=\"json\" #item     | $item.dump_data()\n            p style=\"display:none\"\
     \ type=\"json\" #item     | $JSON.dump(item.data)\n            p style=\"display:none\"\
     \ type=\"json\" #category | $item.category.dump_data()\n            < catalog_1\

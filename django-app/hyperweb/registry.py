@@ -285,9 +285,10 @@ class Registry:
         """Call get_item() with load=False."""
         return self.get_item(*args, **kwargs, load = False)
     
-    def load_record(self, id):
-        """Load item record from DB and return as a dict; contains cid, iid, data etc."""
-        return self.store.select(id)
+    def load_data(self, id):
+        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
+        # """Load item record from DB and return as a dict; contains cid, iid, data etc."""
+        return self.store.select(id)['data']
     
     def load_items(self, category):
         """Load from DB all items of a given category, ordered by IID. A generator."""
@@ -300,8 +301,8 @@ class Registry:
         The items are saved in the registry and so they may override existing items.
         """
         for record in records:
-            cid = record.pop('cid')
-            iid = record.pop('iid')
+            cid = record['cid']
+            iid = record['iid']
             assert cid == category.iid
 
             if cid == iid == ROOT_CID:
@@ -310,7 +311,7 @@ class Registry:
             else:
                 item = category.stub(iid)
                 self._set(item)
-                item.load(record)
+                item.load(record['data'])
                 yield item
         
     def _set(self, item, ttl = None):
