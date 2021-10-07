@@ -5,6 +5,27 @@ Custom data structures for use as values of item properties.
 
 #####################################################################################################################################################
 #####
+#####  CATALOG & STRUCT
+#####
+
+class catalog(dict):
+    """
+    Base class for any special-purpose dictionary that provides custom functionality
+    and assumes that keys are strings. Subclasses can be used as `type` inside CATALOG schema.
+    """
+
+struct = catalog        # for now, `struct` is just an alias for `catalog`; this can change in the future
+
+# class struct(dict):
+#     """Similar to a catalog, but may only contain keys from a fixed predefined set."""
+#
+# class rich_catalog(list):
+#     """A mapping of (string) keys to values that additionally allows repeated keys."""
+
+
+
+#####################################################################################################################################################
+#####
 #####  RICH TEXT
 #####
 
@@ -56,27 +77,5 @@ Custom data structures for use as values of item properties.
 #
 #     def render(self, *args, **context):
 #         return self.runtime.render(self.script, *args, **context)
-
-
-#####################################################################################################################################################
-#####
-#####  CATALOG & STRUCT
-#####
-
-class catalog(dict):
-    """
-    Base class for any special-purpose dictionary that provides custom functionality
-    and assumes that keys are strings.
-    Subclasses can be used as `type` inside CATALOG schema.
-    """
-
-struct = catalog        # for now, `struct` is just an alias for `catalog`; this can change in the future
-
-# class struct(dict):
-#     """Similar to a catalog, but may only contain keys from a fixed predefined set."""
-#
-# class rich_catalog(list):
-#     """A mapping of (string) keys to values that additionally allows repeated keys."""
-
 
 
