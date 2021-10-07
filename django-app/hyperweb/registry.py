@@ -175,10 +175,9 @@ class Registry:
         
     def init_classpath(self):
         """
-        Initialization of self.classpath.
-        To preserve a correct order of creation of core items,
-        this method must be separated out from __init__ and called explicitly
-        by client code (boot.py) after the global `registry` is created.
+        Initialize self.classpath.
+        To preserve a correct order of creation of core items, this method must called separately
+        from __init__() when creating the global `registry`.
         """
         def issubtype(basetype):
             return lambda obj: isinstance(obj, type) and issubclass(obj, basetype)
@@ -186,18 +185,20 @@ class Registry:
         # the instructions below create items and categories in the background; this must be done
         # in a strictly defined order, and for this reason, the ordering of instructions cannot be changed
         
-        PATH_CORE = "hyperweb.core"
+        PATH_CORE  = "hyperweb.core"
+        PATH_TYPES = "hyperweb.types"
+        
         self.classpath = Classpath()
         self.classpath.add_module(builtins)
         
         import hyperweb.multidict
-        self.classpath.add_module(hyperweb.multidict, symbols = "MultiDict")
+        self.classpath.add_module(hyperweb.multidict, PATH_CORE, symbols = "MultiDict")
         
         import hyperweb.schema
-        self.classpath.add_module(hyperweb.schema)                  # schemma.type ? schematt.type  schemat.type
+        self.classpath.add_module(hyperweb.schema, PATH_TYPES)          # schematt.types ?  schemat.types
         
         import hyperweb.item
-        self.classpath.add_module(hyperweb.item, PATH_CORE)         # schemma.item ?
+        self.classpath.add_module(hyperweb.item, PATH_CORE)             # schemma.item ?
 
         import hyperweb.core.classes
         self.classpath.add_module(hyperweb.core.classes, PATH_CORE, accept = issubtype(hyperweb.item.Item))

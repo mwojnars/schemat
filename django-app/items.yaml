@@ -13,27 +13,27 @@
       '}
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
       info: human-readable title of the category
     info:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     startup_site:
-      schema: {'@': hyperweb.schema.ITEM}
+      schema: {'@': hyperweb.types.ITEM}
     prototype:
-      schema: {'@': hyperweb.schema.ITEM}
+      schema: {'@': hyperweb.types.ITEM}
       info: Base category from which this one inherits. Multiple prototypes are allowed,
         the first ones override settings of subsequent ones.
     class_name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
       default: hyperweb.core.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
     class_code:
-      schema: {'@': hyperweb.schema.TEXT}
+      schema: {'@': hyperweb.types.TEXT}
     endpoints:
       schema:
-        values: {'@': hyperweb.schema.CODE}
-        '@': hyperweb.schema.CATALOG
+        values: {'@': hyperweb.types.CODE}
+        '@': hyperweb.types.CATALOG
       default: {view: '
 
           context $item
@@ -51,30 +51,30 @@
           schema:
             schema:
               type: []
-              base: {'=': hyperweb.schema.Schema, '@': builtins.type}
-              '@': hyperweb.schema.OBJECT
-            '@': hyperweb.schema.Field
+              base: {'=': hyperweb.types.Schema, '@': builtins.type}
+              '@': hyperweb.types.OBJECT
+            '@': hyperweb.types.Field
           default:
             schema:
               type: []
               base: []
-              '@': hyperweb.schema.OBJECT
-            '@': hyperweb.schema.Field
+              '@': hyperweb.types.OBJECT
+            '@': hyperweb.types.Field
           multi:
-            schema: {'@': hyperweb.schema.BOOLEAN}
-            '@': hyperweb.schema.Field
+            schema: {'@': hyperweb.types.BOOLEAN}
+            '@': hyperweb.types.Field
           info:
-            schema: {'@': hyperweb.schema.STRING}
-            '@': hyperweb.schema.Field
-          '@': hyperweb.schema.FIELD
-        type: {'=': hyperweb.schema.FIELDS, '@': builtins.type}
-        '@': hyperweb.schema.CATALOG
+            schema: {'@': hyperweb.types.STRING}
+            '@': hyperweb.types.Field
+          '@': hyperweb.types.FIELD
+        type: {'=': hyperweb.types.FIELDS, '@': builtins.type}
+        '@': hyperweb.types.CATALOG
     indexes:
       schema:
         values:
           category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
-          '@': hyperweb.schema.ITEM
-        '@': hyperweb.schema.CATALOG
+          '@': hyperweb.types.ITEM
+        '@': hyperweb.types.CATALOG
   startup_site: [9, 1]
 - id: [0, 1]
   name: File
@@ -82,9 +82,9 @@
   class_name: hyperweb.core.File
   fields:
     format:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     content:
-      schema: {'@': hyperweb.schema.CODE}
+      schema: {'@': hyperweb.types.CODE}
 - id: [0, 2]
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
@@ -92,7 +92,7 @@
   class_name: hyperweb.core.FileLocal
   fields:
     path:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
 - id: [0, 3]
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain nested
@@ -101,9 +101,9 @@
   fields:
     files:
       schema:
-        keys: {'@': hyperweb.schema.FILENAME}
-        values: {'@': hyperweb.schema.ITEM}
-        '@': hyperweb.schema.CATALOG
+        keys: {'@': hyperweb.types.FILENAME}
+        values: {'@': hyperweb.types.ITEM}
+        '@': hyperweb.types.CATALOG
 - id: [0, 4]
   name: Application
   info: Category of application records. An application groups all spaces & categories
@@ -111,7 +111,7 @@
   class_name: hyperweb.core.Application
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
 - id: [0, 5]
   name: AppRoot
   info: A set of sub-applications, each bound to a different URL prefix.
@@ -119,29 +119,29 @@
   prototype: [0, 4]
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     apps:
       schema:
-        values: {'@': hyperweb.schema.ITEM}
-        '@': hyperweb.schema.CATALOG
+        values: {'@': hyperweb.types.ITEM}
+        '@': hyperweb.types.CATALOG
 - id: [0, 6]
   name: AppAdmin
   class_name: hyperweb.core.AppAdmin
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
 - id: [0, 7]
   name: AppFiles
   class_name: hyperweb.core.AppFiles
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     root_folder:
       schema:
         category:
           '=': [0, 3]
           '@': (item)
-        '@': hyperweb.schema.ITEM
+        '@': hyperweb.types.ITEM
 - id: [0, 8]
   name: AppSpaces
   info: 'Application for accessing public data through verbose paths of the form:
@@ -150,15 +150,15 @@
   class_name: hyperweb.core.AppSpaces
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     spaces:
       schema:
         values:
           category:
             '=': [0, 0]
             '@': (item)
-          '@': hyperweb.schema.ITEM
-        '@': hyperweb.schema.CATALOG
+          '@': hyperweb.types.ITEM
+        '@': hyperweb.types.CATALOG
 - id: [0, 9]
   name: Site
   info: Category of site records. A site contains information about applications,
@@ -166,26 +166,26 @@
   class_name: hyperweb.core.Site
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     base_url:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     filesystem:
       schema:
         category:
           '=': [0, 3]
           '@': (item)
-        '@': hyperweb.schema.ITEM
+        '@': hyperweb.types.ITEM
     application:
-      schema: {'@': hyperweb.schema.ITEM}
+      schema: {'@': hyperweb.types.ITEM}
 - id: [0, 10]
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: hyperweb.core.Item
   fields:
     name:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
     title:
-      schema: {'@': hyperweb.schema.STRING}
+      schema: {'@': hyperweb.types.STRING}
 - id: [1, 1]
   format: css
   content: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
