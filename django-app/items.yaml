@@ -302,30 +302,30 @@
     \        #     $schema = $item.get_schema(field)\n        #     $schema_json =\
     \ generic_schema.dump_json(schema)\n        #     $entry = (schema_json, $item.dump_data())\n\
     \        #     $entries.append(entry)\n        from hyperweb.serialize import\
-    \ $JSON\n        \n        custom \"hw-item\"\n            # p style=\"display:none\"\
-    \ type=\"json\" #item     | $item.dump_data()\n            p style=\"display:none\"\
-    \ type=\"json\" #item     | $JSON.dump(item.data)\n            p style=\"display:none\"\
-    \ type=\"json\" #category | $item.category.dump_data()\n            < catalog_1\
-    \ $item\n            div style=\"text-align:right; padding-top:20px\"\n      \
-    \          button #cancel-changes .btn .btn-secondary disabled=False | Cancel\n\
-    \                button #save-changes   .btn .btn-primary   disabled=False | Save\n\
-    \n    %page @body\n        doctype\n        ...html @body\n    \n    %page_item\
-    \ @extra item\n        page\n            head\n                title | $item['name']?\
-    \ $item.ciid(False)\n                assets\n                style / $item.registry.read('base.css')\n\
-    \    \n            # body .container : div .row\n            #   div .col-1\n\
-    \            #   div .col-10\n            body\n                h1\n         \
-    \           $ciid = item.ciid()\n                    try\n                   \
-    \     | $item['name']\n                        span style=\"font-size:40%; font-weight:normal\"\
-    \ / $ciid\n                    else / $ciid\n                \n              \
-    \  h2 | Properties\n                properties $item\n                \n     \
-    \           @extra\n            \n    %page_category category\n        page_item\
-    \ category\n            h2 | Items\n            table\n                for item\
-    \ in list(category.registry.load_items(category))\n                    tr\n  \
-    \                      td / #{item.iid} &nbsp;\n                        td\n \
-    \                           $ iname = item['name']? or item\n                \
-    \            try\n                                a href=$item.url() | $iname\n\
-    \                            else\n                                | $iname (no\
-    \ URL)\n    \n    "
+    \ $JSON\n        \n        custom \"hw-item\"\n            p style=\"display:none\"\
+    \ type=\"json\" #category | $item.category.dump_data(schema = False)\n       \
+    \     p style=\"display:none\" type=\"json\" #item     | $item.dump_data(schema\
+    \ = False)\n            # p style=\"display:none\" type=\"json\" #item     | $JSON.dump(item.data)\n\
+    \            < catalog_1 $item\n            div style=\"text-align:right; padding-top:20px\"\
+    \n                button #cancel-changes .btn .btn-secondary disabled=False |\
+    \ Cancel\n                button #save-changes   .btn .btn-primary   disabled=False\
+    \ | Save\n\n    %page @body\n        doctype\n        ...html @body\n    \n  \
+    \  %page_item @extra item\n        page\n            head\n                title\
+    \ | $item['name']? $item.ciid(False)\n                assets\n               \
+    \ style / $item.registry.read('base.css')\n    \n            # body .container\
+    \ : div .row\n            #   div .col-1\n            #   div .col-10\n      \
+    \      body\n                h1\n                    $ciid = item.ciid()\n   \
+    \                 try\n                        | $item['name']\n             \
+    \           span style=\"font-size:40%; font-weight:normal\" / $ciid\n       \
+    \             else / $ciid\n                \n                h2 | Properties\n\
+    \                properties $item\n                \n                @extra\n\
+    \            \n    %page_category category\n        page_item category\n     \
+    \       h2 | Items\n            table\n                for item in list(category.registry.load_items(category))\n\
+    \                    tr\n                        td / #{item.iid} &nbsp;\n   \
+    \                     td\n                            $ iname = item['name']?\
+    \ or item\n                            try\n                                a\
+    \ href=$item.url() | $iname\n                            else\n              \
+    \                  | $iname (no URL)\n    \n    "
 - id: [2, 1]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/core/protocols.js
 - id: [3, 1]

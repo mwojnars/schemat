@@ -342,12 +342,15 @@ class Item(object, metaclass = MetaItem):
         have been created and connected.
         """
     
-    def dump_data(self):
+    def dump_data(self, schema = True, compact = True):
         """Dump self.data to a JSON string using schema-based encoding of nested values."""
-        fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        # return generic_schema.dump_json(self.data)
-        return fields.dump_json(self.data)
-        
+        json_format = dict(separators = (',', ':')) if compact else {}
+        if schema:
+            fields = self.category.get('fields')        # specification of fields {field_name: schema}
+            return fields.dump_json(self.data, **json_format)
+        else:
+            return generic_schema.dump_json(self.data, **json_format)
+
     def serve(self, request, app, default_endpoint = 'view'):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.

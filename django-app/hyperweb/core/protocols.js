@@ -307,13 +307,24 @@ class Catalog extends CustomElement {
 
 class Item {
 
+    cid = null;
+    iid = null;
+
     constructor(data_flat, category) {
         this.category = category;
-        this.data = this.load(data_flat);
+        this.data = data_flat; //this.load(data_flat);
         console.log('Item() data_flat:', data_flat);
     }
+
+    get(field) {
+        return this.data[field];                        // TODO: support repeated keys (MultiDict)
+    }
+
     load(data_flat) {
-        return data_flat;
+        // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
+        // return fields.load_json(data_json);
+        return generic_schema.decode(data_flat);
+        // return MultiDict(...);
     }
 
     static Page = class extends CustomElement {

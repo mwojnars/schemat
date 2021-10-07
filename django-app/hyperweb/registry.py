@@ -189,13 +189,13 @@ class Registry:
         PATH_CORE = "hyperweb.core"
         self.classpath = Classpath()
         self.classpath.add_module(builtins)
-
+        
         import hyperweb.multidict
         self.classpath.add_module(hyperweb.multidict, symbols = "MultiDict")
         
         import hyperweb.schema
-        self.classpath.add_module(hyperweb.schema)                  # schemma.type ? schematt.type
-
+        self.classpath.add_module(hyperweb.schema)                  # schemma.type ? schematt.type  schemat.type
+        
         import hyperweb.item
         self.classpath.add_module(hyperweb.item, PATH_CORE)         # schemma.item ?
 

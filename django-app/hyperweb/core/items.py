@@ -221,9 +221,9 @@ base_hy = File_(
         from hyperweb.serialize import $JSON
         
         custom "hw-item"
-            # p style="display:none" type="json" #item     | $item.dump_data()
-            p style="display:none" type="json" #item     | $JSON.dump(item.data)
-            p style="display:none" type="json" #category | $item.category.dump_data()
+            p style="display:none" type="json" #category | $item.category.dump_data(schema = False)
+            p style="display:none" type="json" #item     | $item.dump_data(schema = False)
+            # p style="display:none" type="json" #item     | $JSON.dump(item.data)
             < catalog_1 $item
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
