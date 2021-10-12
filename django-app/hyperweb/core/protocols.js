@@ -93,15 +93,16 @@ class CustomElement extends HTMLElement {
     render()    {}          // override in subclasses
     init()      {}          // override in subclasses
 
-    read_data(selector) {
-        /* Utility method that extracts text contents of a descendant element pointed to by a given selector.
+    read_data(selector, type) {
+        /* Extract text contents of a (sub)element pointed to by a given selector ('' denotes the current node).
            Typically called from render(), before the DOM is overriden with the output of render().
-           If the element has "type" attribute set to "json", the extracted string is decoded as JSON object.
+           If `type` is given, or the element has `type` attribute, and it's equal "json",
+           the extracted string is JSON-decoded to an object.
          */
-        let node = this.querySelector(selector);
+        let node = (selector ? this.querySelector(selector) : this);
         if (node === undefined) return undefined;
         let value = node.textContent;
-        let type  = node.getAttribute('type');
+        if (!type) type = node.getAttribute('type');
 
         // decode `value` depending on the `type`
         if (type === "json") return JSON.parse(value);
@@ -198,7 +199,7 @@ class EditableElement extends CustomElement {
 // console.log(new EditableElement.View());
 
 
-class STRING extends EditableElement {
+class STRING_ extends EditableElement {
     static props = { enter_accepts: true }
     render = () => `
         <div id="view"></div>
@@ -210,7 +211,7 @@ class STRING extends EditableElement {
     // autocomplete='off' prevents the browser overriding <input value=...> with a cached value inserted previously by a user
 }
 
-class TEXT extends EditableElement {
+class TEXT_ extends EditableElement {
     render = () => `
         <pre><div id="view" class="scroll"></div></pre>
         <div id="edit" style="display:none">
@@ -219,7 +220,7 @@ class TEXT extends EditableElement {
     `;
 }
 
-class CODE extends EditableElement {
+class CODE_ extends EditableElement {
     render = () => `
         <!--<div id="view"><div class="ace-editor"></div></div>-->
         <pre><div id="view" class="scroll"></div></pre>
@@ -270,11 +271,50 @@ class CODE extends EditableElement {
 }
 
 
-window.customElements.define('hw-widget-string', STRING);
-window.customElements.define('hw-widget-text', TEXT);
-window.customElements.define('hw-widget-code', CODE);
+window.customElements.define('hw-widget-string-', STRING_);
+window.customElements.define('hw-widget-text-', TEXT_);
+window.customElements.define('hw-widget-code-', CODE_);
 
 
+/*************************************************************************************************/
+
+class Item_ {
+
+    cid = null;
+    iid = null;
+
+    //loaded = null;    // a set of field names that have already been loaded
+
+    constructor(data_flat, category) {
+        this.category = category;
+        this.data = data_flat; //this.load(data_flat);
+        console.log('Item_() data_flat:', data_flat);
+    }
+
+    get(field) {
+        return this.data[field];                        // TODO: support repeated keys (MultiDict)
+    }
+
+    load(data_flat) {
+        // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
+        // return fields.load_json(data_json);
+        return generic_schema.decode(data_flat);
+        // return MultiDict(...);
+    }
+
+    static Page = class extends CustomElement {
+        init() {
+            let g = globalThis;
+            g.category = this._category = new Item_(this.read_data('p#category'));
+            g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+        }
+    }
+}
+
+window.customElements.define('hw-item-page-', Item_.Page);
+
+
+/*************************************************************************************************/
 /*************************************************************************************************/
 
 // class CatalogAtomicEntry extends LitElement {
@@ -293,10 +333,10 @@ window.customElements.define('hw-widget-code', CODE);
 //     }
 // }
 class Catalog extends CustomElement {
-    // render = () => `
-    //     <th class="ct-field">${escape(this.props.key)}</th>
-    //     <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
-    // `
+    render = () => `
+        <th class="ct-field">${escape(this.props.key)}</th>
+        <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
+    `
     __render() {
         const { data } = this.props;
         for ([key, value] of Object.entries(data)) {
@@ -309,17 +349,16 @@ class Item {
 
     cid = null;
     iid = null;
+    //loaded = null;    // names of fields that have been loaded so far
 
     constructor(data_flat, category) {
         this.category = category;
         this.data = data_flat; //this.load(data_flat);
-        console.log('Item() data_flat:', data_flat);
+        console.log('Item_() data_flat:', data_flat);
     }
-
     get(field) {
         return this.data[field];                        // TODO: support repeated keys (MultiDict)
     }
-
     load(data_flat) {
         // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
         // return fields.load_json(data_json);
@@ -327,19 +366,25 @@ class Item {
         // return MultiDict(...);
     }
 
-    static Page = class extends CustomElement {
-        init() {
-            let g = globalThis;
-            g.category = this._category = new Item(this.read_data('p#category'));
-            g.item     = this._item     = new Item(this.read_data('p#item'), category)        //this.getAttribute('data-item')
-
-        }
-    }
     static Properties = class extends Catalog {}
+
+    static Page = class extends CustomElement {
+        static props = {useShadowDOM: true,}
+        init() {
+            let data = this.read_data('', 'json');
+            console.log('Item.Page.init() data:', data)
+            // let g = globalThis;
+            // g.category = this._category = new Item_(this.read_data('p#category'));
+            // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+        }
+        render = () => `
+            <h2>Properties</h2>
+            <hw-item-properties></hw-item-properties>
+        `
+    }
 }
 
-window.customElements.define('hw-item', Item.Page);
-
+window.customElements.define('hw-item-page', Item.Page);
 
 /*************************************************************************************************/
 

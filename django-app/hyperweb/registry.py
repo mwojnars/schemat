@@ -312,7 +312,7 @@ class Registry:
             else:
                 item = category.stub(iid)
                 self._set(item)
-                item.load(record['data'])
+                item.load(data_json = record['data'])
                 yield item
         
     def _set(self, item, ttl = None):

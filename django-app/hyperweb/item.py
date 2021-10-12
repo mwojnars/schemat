@@ -114,10 +114,6 @@ class Item(object, metaclass = MetaItem):
     ? H is_honeypot -- artificial empty item for detection and tracking of automated access
     ? R is_removed -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
     
-    Item's metadata - derived (in memory):
-    - category, registry
-    - namespace -- the namespace this item was loaded through; should be used for
-    
     Item's status -- temporary (in memory):
     - draft/newborn: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB
     - dirty: has local modifications that may deviate from the contents of the corresponding DB record
@@ -130,9 +126,7 @@ class Item(object, metaclass = MetaItem):
     - itemview.FIELD__first, FIELD__last
     - itemview._first(FIELD), _last(), _list()
     
-    BaseItem,Core,Seed... -- when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
-    - method() --
-    - METHOD() -- calls METHOD of NAME_XXX
+    When loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
     """
     
     RAISE = MultiDict.RAISE
@@ -143,6 +137,13 @@ class Item(object, metaclass = MetaItem):
                             # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
     
     data     = None         # MultiDict with values of object attributes; an attribute can have multiple values
+    
+    #ver_cat = None         # version of the `category` that provides schema for this item's decoding
+    #version = None         # (int) version number of this item; incremented +1 after each successful modification of this item's properties in DB
+    #dirty   = False        # True if this item has uncommitted changes; set to False after successful write to DB with version update
+    
+    #loaded  = None         # a set of field names that have been loaded after a PARTIAL load (item loaded from INDEX not main table)
+    #timestamp = None       # server-side timestamp when this item was loaded from DB
     
     category = None         # parent category of this item, as an instance of Category
     registry = None         # Registry that manages access to this item
@@ -313,12 +314,14 @@ class Item(object, metaclass = MetaItem):
         if not brackets: return stamp
         return f"[{stamp}]"
 
-    def load(self, data_json = None, force = False):
+    def load(self, field = None, data_json = None, force = False):
         """
         Load properties of this item from a DB or JSON string `data_json` into self.data, IF NOT LOADED YET.
         Only with a not-None `data_json`, or force=True, (re)loading takes place even if `self` was already loaded
         - the newly loaded `data` fully replaces the existing self.data in such case.
         """
+        # if field and field in self.loaded: return      # this will be needed when partial loading from indexes is available
+        
         if self.has_data() and data_json is None and not force:
             return self
         if self.iid is None:
@@ -343,7 +346,7 @@ class Item(object, metaclass = MetaItem):
         """
     
     def dump_data(self, schema = True, compact = True):
-        """Dump self.data to a JSON string using schema-based encoding of nested values."""
+        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
         json_format = dict(separators = (',', ':')) if compact else {}
         if schema:
             fields = self.category.get('fields')        # specification of fields {field_name: schema}

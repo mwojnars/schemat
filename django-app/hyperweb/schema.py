@@ -355,8 +355,8 @@ class STRING(Primitive):
     
     __widget__ = """
         context $value
-        custom "hw-widget-string" data-value=$value
-        #custom "hw-widget-string" : inline | $value
+        custom "hw-widget-string-" data-value=$value
+        #custom "hw-widget-string-" : inline | $value
     """
 
     
@@ -366,7 +366,7 @@ class TEXT(Primitive):
     
     __widget__ = """
         context $value
-        custom "hw-widget-text" data-value=$value
+        custom "hw-widget-text-" data-value=$value
     """
 
     # def is_lengthy(self, value):
@@ -712,7 +712,7 @@ class CODE(TEXT):
 
     __widget__ = r"""
         context $value
-        custom "hw-widget-code" data-value=$dedent(value, False)
+        custom "hw-widget-code-" data-value=$dedent(value, False)
     """
 
 #####################################################################################################################################################

@@ -220,14 +220,21 @@ base_hy = File_(
         #     $entries.append(entry)
         from hyperweb.serialize import $JSON
         
-        custom "hw-item"
-            p style="display:none" type="json" #category | $item.category.dump_data(schema = False)
-            p style="display:none" type="json" #item     | $item.dump_data(schema = False)
-            # p style="display:none" type="json" #item     | $JSON.dump(item.data)
+        %jsondata @data id=None
+            p style="display:none" type="json" id=$id @ data
+        
+        custom "hw-item-page-"
+            jsondata #category | $item.category.dump_data(schema = False)
+            jsondata #item     | $item.dump_data(schema = False)
+            # jsondata #item   | $JSON.dump(item.data)
             < catalog_1 $item
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
                 button #save-changes   .btn .btn-primary   disabled=False | Save
+
+        custom "hw-item-page" | $item.dump_data(False)
+        # jsondata #category | $item.category.dump_data(False)
+        # jsondata #item     | $item.dump_data(False)
 
     %page @body
         doctype

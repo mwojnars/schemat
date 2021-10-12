@@ -32,6 +32,22 @@ root_fields = FIELDS(
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
     indexes      = Field(CATALOG(ITEM(Index))),
+    
+    #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
+                                # - these props are needed to generate "simple links" to this item on "edit" tabs of other items,
+                                # and generate "summary" of this item when referenced in other items' "view" tabs
+                                # without loading full item data from the main table (is it worth to keep an index for this??);
+                                # this index is used for *outgoing* references only; *incoming* references are loaded
+                                # through indexes of corresponding child relations
+    
+    #ttl_client  = INTEGER(),   # for how long to keep items of this category in cache, client side (in browser's localStorage)
+    #ttl_server  = INTEGER(),   # for how long to keep items of this category in cache, server side
+    
+    #push_item_updates = BOOLEAN(),     # if True, updates to items of this category are broadcasted to all servers in a cluster;
+                                        # should only be used for categories with few, rarely-updated items, like the root category
+    #inplace_upgrade_freq = FLOAT(),    # likelihood (0.0-1.0) that an edge server should write back an upgraded item
+                                        # that referred to an outdated revision of its category (esp. schema), instead of
+                                        # leaving this upgrade-write for a background process; typically ~0.01
 )
 
 root_data = dict(
