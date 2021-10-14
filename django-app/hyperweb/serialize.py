@@ -93,11 +93,11 @@ class JSON:
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     """
     
-    ITEM_FLAG  = "(item)"       # special value of CLASS_ATTR that denotes a reference to an Item
-    TYPE_FLAG  = "(type)"       # special value of CLASS_ATTR that informs the value is a class rather than an instance
-    DICT_FLAG  = "(dict)"       # special value of CLASS_ATTR that denotes a dict wrapper for another dict containing the reserved "@" key
-    CLASS_ATTR = "@"            # special attribute appended to object state to store a class name (with package) of the object being encoded
-    STATE_ATTR = "="            # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    FLAG_ITEM  = "(item)"       # special value of ATTR_CLASS that denotes a reference to an Item
+    FLAG_TYPE  = "(type)"       # special value of ATTR_CLASS that informs the value is a class rather than an instance
+    FLAG_DICT  = "(dict)"       # special value of ATTR_CLASS that denotes a dict wrapper for another dict containing the reserved "@" key
+    ATTR_CLASS = "@"            # special attribute appended to object state to store a class name (with package) of the object being encoded
+    ATTR_STATE = "="            # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
@@ -127,37 +127,37 @@ class JSON:
         if t is dict:
             obj = JSON.encode_dict(obj)                                 # encode_dict() always returns a dict
             #assert isinstance(obj, dict)
-            if JSON.CLASS_ATTR not in obj: return obj
-            return {JSON.STATE_ATTR: obj, JSON.CLASS_ATTR: JSON.DICT_FLAG}      # an "escape" wrapper is added around a dict that contains the reserved key "@"
+            if JSON.ATTR_CLASS not in obj: return obj
+            return {JSON.ATTR_STATE: obj, JSON.ATTR_CLASS: JSON.FLAG_DICT}      # an "escape" wrapper is added around a dict that contains the reserved key "@"
 
         from hyperweb.item import Item
         if issubclass(t, Item):
             if None in obj.id: raise EncodeError(f'non-serializable Item instance with missing or incomplete ID: {obj.id}')
             id = list(obj.id)
             if t is type_: return id
-            return {JSON.STATE_ATTR: id, JSON.CLASS_ATTR: JSON.ITEM_FLAG}
+            return {JSON.ATTR_STATE: id, JSON.ATTR_CLASS: JSON.FLAG_ITEM}
         
         from hyperweb.boot import registry
 
         if isinstance(obj, type):
             state = registry.get_path(obj)
-            return {JSON.STATE_ATTR: state, JSON.CLASS_ATTR: JSON.TYPE_FLAG}
+            return {JSON.ATTR_STATE: state, JSON.ATTR_CLASS: JSON.FLAG_TYPE}
         elif t in (set, tuple):
             state = JSON.encode_list(obj)                       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         else:
             state = getstate(obj)                               # TODO: allow non-dict state from getstate()
             state = JSON.encode_dict(state)                     # recursively encode all non-standard objects inside `state`
             #assert isinstance(state, dict)
-            if JSON.CLASS_ATTR in state:
-                raise EncodeError(f'non-serializable object state, a reserved character "{JSON.CLASS_ATTR}" occurs as a key in the state dictionary')
+            if JSON.ATTR_CLASS in state:
+                raise EncodeError(f'non-serializable object state, a reserved character "{JSON.ATTR_CLASS}" occurs as a key in the state dictionary')
             
         # if the exact class is known upfront, let's output compact state without adding "@" for class designation
         if t is type_: return state
         
         # wrap up in a dict and append class designator
         if not isinstance(state, dict):
-            state = {JSON.STATE_ATTR: state}
-        state[JSON.CLASS_ATTR] = registry.get_path(obj.__class__)
+            state = {JSON.ATTR_STATE: state}
+        state[JSON.ATTR_CLASS] = registry.get_path(obj.__class__)
         
         return state
     
@@ -168,35 +168,35 @@ class JSON:
         t = type(state)
         
         # decoding of a wrapped-up dict that contained a pre-existing '@' key
-        if t is dict and state.get(JSON.CLASS_ATTR, None) == JSON.DICT_FLAG:
-            if JSON.STATE_ATTR in state:
-                state = state[JSON.STATE_ATTR]                      # `state` was a dict-wrapper around an actual dict
+        if t is dict and state.get(JSON.ATTR_CLASS, None) == JSON.FLAG_DICT:
+            if JSON.ATTR_STATE in state:
+                state = state[JSON.ATTR_STATE]                      # `state` was a dict-wrapper around an actual dict
             return JSON.decode_dict(state)
 
         from hyperweb.boot import registry
 
         # determine the expected type `class_` of the output object
         if type_:
-            if t is dict and JSON.CLASS_ATTR in state and JSON.STATE_ATTR not in state:
-                raise DecodeError(f'ambiguous object state during decoding, the special key "{JSON.CLASS_ATTR}" is not needed but present: {state}')
+            if t is dict and JSON.ATTR_CLASS in state and JSON.ATTR_STATE not in state:
+                raise DecodeError(f'ambiguous object state during decoding, the special key "{JSON.ATTR_CLASS}" is not needed but present: {state}')
             class_ = type_
 
         elif t is not dict:
             class_ = t              # an object of a standard python type must have been encoded (non-unique type, but not a dict either)
 
-        elif JSON.CLASS_ATTR not in state:
+        elif JSON.ATTR_CLASS not in state:
             class_ = dict
-            # raise DecodeError(f'corrupted object state during decoding, missing "{JSON.CLASS_ATTR}" key with object type designator: {state}')
+            # raise DecodeError(f'corrupted object state during decoding, missing "{JSON.ATTR_CLASS}" key with object type designator: {state}')
         else:
-            classname = state.pop(JSON.CLASS_ATTR)
-            if JSON.STATE_ATTR in state:
-                state_attr = state.pop(JSON.STATE_ATTR)
-                if state: raise DecodeError(f'invalid serialized state, expected only {JSON.CLASS_ATTR} and {JSON.STATE_ATTR} special keys but got others: {state}')
+            classname = state.pop(JSON.ATTR_CLASS)
+            if JSON.ATTR_STATE in state:
+                state_attr = state.pop(JSON.ATTR_STATE)
+                if state: raise DecodeError(f'invalid serialized state, expected only {JSON.ATTR_CLASS} and {JSON.ATTR_STATE} special keys but got others: {state}')
                 state = state_attr
 
-            if classname == JSON.ITEM_FLAG:                 # decoding a reference to an Item?
+            if classname == JSON.FLAG_ITEM:                 # decoding a reference to an Item?
                 return registry.get_item(state)             # ...get it from the Registry
-            if classname == JSON.TYPE_FLAG:                 # decoding a type (an object that represents a class or type)?
+            if classname == JSON.FLAG_TYPE:                 # decoding a type (an object that represents a class or type)?
                 return registry.get_class(state)            # ...get it from the Classpath
 
             class_ = registry.get_class(classname)          # else, decoding an INSTANCE of a type - get this type from Classpath
