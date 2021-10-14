@@ -93,11 +93,12 @@ class JSON:
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     """
     
-    ITEM_FLAG  = "(item)"   # special value of CLASS_ATTR that denotes a reference to an Item
-    DICT_FLAG  = "(dict)"   # special value of CLASS_ATTR that denotes a dict wrapper for another dict containing the reserved "@" key
-    CLASS_ATTR = "@"        # special attribute appended to object state to store a class name (with package) of the object being encoded
-    STATE_ATTR = "="        # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
-    DICT_PATH  = "builtins.dict"                            # virtual classpath of standard <dict> class; must be compatible with global Classpath registry configuration
+    ITEM_FLAG  = "(item)"       # special value of CLASS_ATTR that denotes a reference to an Item
+    TYPE_FLAG  = "(type)"       # special value of CLASS_ATTR that informs the value is a class rather than an instance
+    DICT_FLAG  = "(dict)"       # special value of CLASS_ATTR that denotes a dict wrapper for another dict containing the reserved "@" key
+    CLASS_ATTR = "@"            # special attribute appended to object state to store a class name (with package) of the object being encoded
+    STATE_ATTR = "="            # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    #DICT_PATH = "builtins.dict"                            # virtual classpath of standard <dict> class; must be compatible with global Classpath registry configuration
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
@@ -141,6 +142,7 @@ class JSON:
 
         if isinstance(obj, type):
             state = registry.get_path(obj)
+            return {JSON.STATE_ATTR: state, JSON.CLASS_ATTR: JSON.TYPE_FLAG}
         elif t in (set, tuple):
             state = JSON.encode_list(obj)                       # warning: ordering of elements of a set in `state` is undefined and may differ between calls
         else:
@@ -187,15 +189,18 @@ class JSON:
             class_ = dict
             # raise DecodeError(f'corrupted object state during decoding, missing "{JSON.CLASS_ATTR}" key with object type designator: {state}')
         else:
-            fullname = state.pop(JSON.CLASS_ATTR)
+            classname = state.pop(JSON.CLASS_ATTR)
             if JSON.STATE_ATTR in state:
                 state_attr = state.pop(JSON.STATE_ATTR)
                 if state: raise DecodeError(f'invalid serialized state, expected only {JSON.CLASS_ATTR} and {JSON.STATE_ATTR} special keys but got others: {state}')
                 state = state_attr
 
-            if fullname == JSON.ITEM_FLAG:                  # decoding a reference to an Item?
+            if classname == JSON.ITEM_FLAG:                 # decoding a reference to an Item?
                 return registry.get_item(state)             # ...get it from the Registry
-            class_ = registry.get_class(fullname)
+            if classname == JSON.TYPE_FLAG:                 # decoding a type (an object that represents a class or type)?
+                return registry.get_class(state)            # ...get it from the Classpath
+
+            class_ = registry.get_class(classname)          # else, decoding an INSTANCE of a type - get this type from Classpath
             
         # instantiate the output object; special handling for standard python types and Item
         if class_ in JSON.PRIMITIVES:
@@ -205,15 +210,14 @@ class JSON:
         if class_ is dict:
             return JSON.decode_dict(state)
         if class_ in (set, tuple):
-            values = state
+            values = JSON.decode_list(state)
             return class_(values)
         if isinstance(class_, type):
             from .item import Item
             if issubclass(class_, Item):
-                return registry.get_item(state)       # get the referenced item from the Registry
-            if issubclass(class_, type):
-                typename = state
-                return registry.get_class(typename)
+                return registry.get_item(state)             # all Item instances must be created/loaded through the Registry
+            # if issubclass(class_, type):
+            #     return registry.get_class(state)
 
         # default object decoding via setstate()
         state = JSON.decode_dict(state)

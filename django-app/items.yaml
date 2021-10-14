@@ -51,7 +51,7 @@
           schema:
             schema:
               type: []
-              base: {'=': hyperweb.types.Schema, '@': builtins.type}
+              base: {'=': hyperweb.types.Schema, '@': (type)}
               '@': hyperweb.types.OBJECT
             '@': hyperweb.types.Field
           default:
@@ -67,12 +67,12 @@
             schema: {'@': hyperweb.types.STRING}
             '@': hyperweb.types.Field
           '@': hyperweb.types.FIELD
-        type: {'=': hyperweb.types.FIELDS, '@': builtins.type}
+        type: {'=': hyperweb.types.FIELDS, '@': (type)}
         '@': hyperweb.types.CATALOG
     indexes:
       schema:
         values:
-          category: {'=': hyperweb.core.Index, '@': hyperweb.core.MetaItem}
+          category: {'=': hyperweb.core.Index, '@': (type)}
           '@': hyperweb.types.ITEM
         '@': hyperweb.types.CATALOG
   startup_site: [9, 1]
