@@ -63,8 +63,9 @@ def test_Object():
     run(OBJECT(), INTEGER())
     run(OBJECT(base = Schema), INTEGER())
     run(OBJECT(type = INTEGER), INTEGER())
-    run(OBJECT(base = Schema), OBJECT(dict))
-    run(OBJECT(base = Schema), OBJECT((list, dict, str, T)))
+    # run(OBJECT(base = Schema), OBJECT(dict))
+    # run(OBJECT(base = Schema), OBJECT((list, dict, str, T)))
+    run(OBJECT(base = Schema), OBJECT((C, T)))
 
     c = C()
     c.d = C()

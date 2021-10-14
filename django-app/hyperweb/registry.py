@@ -189,7 +189,7 @@ class Registry:
         PATH_TYPES = "hyperweb.types"
         
         self.classpath = Classpath()
-        self.classpath.add_module(builtins)
+        # self.classpath.add_module(builtins)
         
         import hyperweb.multidict
         self.classpath.add_module(hyperweb.multidict, PATH_CORE, symbols = "MultiDict")

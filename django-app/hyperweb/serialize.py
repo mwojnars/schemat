@@ -98,7 +98,6 @@ class JSON:
     DICT_FLAG  = "(dict)"       # special value of CLASS_ATTR that denotes a dict wrapper for another dict containing the reserved "@" key
     CLASS_ATTR = "@"            # special attribute appended to object state to store a class name (with package) of the object being encoded
     STATE_ATTR = "="            # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
-    #DICT_PATH = "builtins.dict"                            # virtual classpath of standard <dict> class; must be compatible with global Classpath registry configuration
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
