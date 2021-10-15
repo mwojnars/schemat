@@ -242,6 +242,11 @@ class Registry:
         assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
     
+    def load_data(self, id):
+        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
+        # """Load item record from DB and return as a dict; contains cid, iid, data etc."""
+        return self.store.select(id)['data']
+    
     def get_item(self, id, load = True):
         """
         If load=True, the returned item's data (properties) are loaded - this does NOT mean reloading,
@@ -266,16 +271,16 @@ class Registry:
             if load: item.load()
             return item
 
-        # category = self.get_category(cid)
-        # item = category.stub(iid)
-
-        # create a stub of an item and insert to cache, then load item data - these two steps must be
+        # create a stub of an item and insert to cache, then load item data - these two steps are
         # separated to ensure proper handling of circular relationships between items
         item = self.create_stub(id)
         if load: item.load()
 
         # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
+        
+    # def get_essential(self, id):
+    #     """Get item by `id` and load only essential properties, for display in a list of items etc."""
     
     def create_stub(self, id, category = None):
         """Create a "stub" item (no data) with a given ID and insert to cache."""
@@ -286,15 +291,6 @@ class Registry:
         item.iid = iid
         self.cache.set(id, item)  # ttl = None
         return item
-        
-    # def get_stub(self, *args, **kwargs):
-    #     """Call get_item() with load=False."""
-    #     return self.get_item(*args, **kwargs, load = False)
-    
-    def load_data(self, id):
-        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
-        # """Load item record from DB and return as a dict; contains cid, iid, data etc."""
-        return self.store.select(id)['data']
     
     def load_items(self, category):
         """Load from DB all items of a given category, ordered by IID. A generator."""

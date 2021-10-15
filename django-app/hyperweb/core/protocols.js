@@ -396,15 +396,33 @@ window.customElements.define('hw-item-page', Item.Page);
 /*************************************************************************************************/
 
 class Classpath {
+    forward = new Map()         // dict of objects indexed by paths: (path -> object)
+    inverse = new Map()         // dict of paths indexed by objects: (object -> path)
+
     constructor() {
-        this.forward = new Map()
-        this.inverse = new Map()
         //this.forward.set(path_C, C)
         //this.inverse.set(C, path_C)
     }
     // c.constructor == C
     // Array.from(m.keys())                 -- array of all keys
     // for (k of m.keys()) console.log(k)   -- iterating over keys
+    
+    get(path) {
+        /* Return an object pointed to by a given path. */
+        return this.forward.get(path)
+    }
+    set(path, obj) {
+        /*
+        Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
+        Override an existing object if already present.
+        */
+        this.forward[path] = obj
+        if (this._is_class_func(obj))
+            this.inverse.set(obj, path)             // create inverse mapping for classes and functions
+    }
+    
+    get_class() {}
+
 }
 
 class Registry {
@@ -484,7 +502,7 @@ class JSONx {
 
         if (JSONx.isDict(obj)) {
             obj = JSONx.encode_dict(obj)
-            if (! JSONx.ATTR_CLASS in obj) return obj
+            if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
@@ -579,6 +597,9 @@ class JSONx {
         return Object.setPrototypeOf(obj, cls)
     }
 
+    static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
+    static decenc(state) { return JSONx.encode(JSONx.decode(state)) }       // for testing purposes
+
     static encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
         return values.map(JSONx.encode)
@@ -603,3 +624,5 @@ class JSONx {
         return Object.fromEntries(entries)
     }
 }
+
+export { JSONx }

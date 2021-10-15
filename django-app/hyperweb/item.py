@@ -488,17 +488,6 @@ class Category(Item):
         if __stage__: self.registry.stage(item)                         # mark `item` for insertion on the next commit()
         return item
     
-    # def stub(self, iid):
-    #     """
-    #     Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-    #     but properties (item.data) are not loaded yet. Should only be called directly by Registry,
-    #     other clients should use registry.get_stub() instead.
-    #     """
-    #     itemclass = self.get_class()
-    #     item = itemclass(category = self)
-    #     item.iid = iid
-    #     return item
-
     def issubcat(self, category):
         """
         Return True if self is `category` or inherits from it, i.e.,
