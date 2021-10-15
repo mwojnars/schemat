@@ -339,7 +339,7 @@ class Catalog extends CustomElement {
     `
     __render() {
         const { data } = this.props;
-        for ([key, value] of Object.entries(data)) {
+        for (let [key, value] of Object.entries(data)) {
             console.log(key, value);
         }
     }
@@ -388,7 +388,6 @@ class Item {
 }
 
 class Category extends Item {
-
 }
 
 window.customElements.define('hw-item-page', Item.Page);
@@ -403,31 +402,56 @@ class Classpath {
         //this.forward.set(path_C, C)
         //this.inverse.set(C, path_C)
     }
-    // c.constructor == C
-    // Array.from(m.keys())                 -- array of all keys
-    // for (k of m.keys()) console.log(k)   -- iterating over keys
-    
-    get(path) {
-        /* Return an object pointed to by a given path. */
-        return this.forward.get(path)
-    }
+
     set(path, obj) {
         /*
         Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
         Override an existing object if already present.
         */
-        this.forward[path] = obj
-        if (this._is_class_func(obj))
+        this.forward.set(path, obj)
+        if (typeof obj === "function")
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
     }
-    
-    get_class() {}
+    add(path, objects) {
+        /*
+        Add multiple objects to a given `path` under provided names if in objects['named'] dict,
+        or under their original names (obj.name) if in objects['unnamed'] array.
+        */
+        let {unnamed, named} = objects
+        for (let obj of (unnamed ?? [])) {
+            let name = obj.name
+            if (!name) throw `Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`
+            this.set(`${path}.${name}`, obj)
+        }
+        for (let [name, obj] of Object.entries(named ?? {}))
+            this.set(`${path}.${name}`, obj)
+    }
 
+    encode(obj) {
+        /*
+        Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
+        under different names (paths), the most recently assigned path is returned.
+        */
+        let path = this.inverse.get(obj)
+        if (path === undefined) throw `Not in classpath: ${obj.name ?? obj}`
+        return path
+    }
+    decode(path) {
+        /* Return object pointed to by a given path. */
+        let obj = this.forward.get(path)
+        if (obj === undefined) throw `Unknown class path: ${path}`
+        return obj
+    }
 }
 
 class Registry {
+
+    classpath = new Classpath()
+
     constructor() {
-        this.classpath = new Classpath();
+        let classpath = this.classpath
+        classpath.set("hyperweb.core.Item", Item)
+        classpath.set("hyperweb.core.Category", Category)
     }
 
     get_item(id) {
@@ -439,15 +463,16 @@ class Registry {
         Return a dotted module path of a given class or function as stored in a global Classpath.
         `cls` should be either a constructor function, or a prototype with .constructor property.
         */
-        if (typeof cls === "object")
+        if (typeof cls === "object")            // if `cls` is a class prototype, take its constructor instead
             cls = cls.constructor
+        if (!cls) throw `Argument is empty or not a class: ${cls}`
 
-        return this.classpath.get_path(cls)
+        return this.classpath.encode(cls)
     }
 
     get_class(path) {
-        /* Get a global object - class or function from a virtual package (Classpath) - pointed to by a given path. */
-        return this.classpath.get_class(path)
+        /* Get a global object - class or function from a virtual package (Classpath) - pointed to by `path`. */
+        return this.classpath.decode(path)
     }
 }
 
@@ -475,9 +500,9 @@ class JSONx {
         return JSONx.decode(state, type);
     }
 
-    static getPrototype   = (obj) => Object.getPrototypeOf(obj) ? obj !== null : null
-    static getClass       = (obj) => Object.getPrototypeOf(obj).constructor ? obj !== null : null      // reading constructor from prototype is slightly safer than directly from obj
-    static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null || obj === undefined
+    static getPrototype   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
+    static getClass       = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
+    static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)
@@ -497,6 +522,7 @@ class JSONx {
         let of_type = JSONx.ofType(obj, type)
         let state
 
+        if (obj === undefined)          throw "Can't encode an `undefined` value"
         if (JSONx.isPrimitiveObj(obj))  return obj
         if (JSONx.isArray(obj))         return JSONx.encode_list(obj)
 
@@ -508,7 +534,7 @@ class JSONx {
 
         let Item = registry.get_class("hyperweb.core.Item")
         if (obj instanceof Item) {
-            if (!obj.has_id()) throw `non-serializable Item instance with missing or incomplete ID: ${obj.id}`
+            if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
@@ -522,7 +548,7 @@ class JSONx {
             else {
                 state = JSONx.encode_dict(obj)
                 if (JSONx.ATTR_CLASS in state)
-                    throw `non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
+                    throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
             }
 
         // if the exact class is known upfront, let's output compact state without adding "@" for class designation
@@ -533,9 +559,9 @@ class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = JSONx.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = registry.get_path(t);
+        state[JSONx.ATTR_CLASS] = registry.get_path(t)
 
-        return state;
+        return state
     }
 
     static decode(state, type = null) {
@@ -557,7 +583,7 @@ class JSONx {
         // determine the expected class (constructor function) for the output object
         if (type) {
             if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
-                throw `ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`
+                throw `Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`
             cls = type;
         }
         else if (!isdict)                               // `state` encodes a primitive value, or a list, or null;
@@ -570,7 +596,7 @@ class JSONx {
             if (JSONx.ATTR_STATE in state) {
                 let state_attr = state[JSONx.ATTR_STATE]
                 if (state)
-                    throw `invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
+                    throw `Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
                 state = state_attr;
             }
             if (classname === JSONx.FLAG_ITEM)
@@ -610,9 +636,9 @@ class JSONx {
     }
     static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. */
-        for (const key of Object.getOwnPropertyNames(obj))
+        for (const key of Object.keys(obj))
             if (typeof key !== "string")
-                throw `non-serializable object state, contains a non-string key: ${key}`
+                throw `Non-serializable object state, contains a non-string key: ${key}`
 
         let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
         return Object.fromEntries(entries)
