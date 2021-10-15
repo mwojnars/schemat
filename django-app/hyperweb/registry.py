@@ -269,24 +269,22 @@ class Registry:
         # category = self.get_category(cid)
         # item = category.stub(iid)
 
-        # create an item stub and insert to cache, then load item data
-        item = self.get_stub(id)
-        self._set(item)                     # _set() is called before item.load() to properly handle circular relationships between items
+        # create a stub of an item and insert to cache, then load item data - these two steps must be
+        # separated to ensure proper handling of circular relationships between items
+        item = self.create_stub(id)
         if load: item.load()
 
         # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
     
-    def get_stub(self, id, category = None):
-        """
-        Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
-        but properties (item.data) are not loaded yet.
-        """
+    def create_stub(self, id, category = None):
+        """Create a "stub" item (no data) with a given ID and insert to cache."""
         cid, iid = id
         category = category or self.get_category(cid)
         itemclass = category.get_class()
         item = itemclass(category = category)
         item.iid = iid
+        self.cache.set(id, item)  # ttl = None
         return item
         
     # def get_stub(self, *args, **kwargs):
@@ -317,15 +315,14 @@ class Registry:
                 yield self.root
             else:
                 # item = category.stub(iid)
-                item = self.get_stub((cid, iid), category)
-                self._set(item)
+                item = self.create_stub((cid, iid), category)
                 item.load(data_json = record['data'])
                 yield item
         
-    def _set(self, item, ttl = None):
-        """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
-        assert item.id != (ROOT_CID, ROOT_CID)
-        self.cache.set(item.id, item, ttl)
+    # def _set(self, item, ttl = None):
+    #     """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
+    #     assert item.id != (ROOT_CID, ROOT_CID)
+    #     self.cache.set(item.id, item, ttl)
 
     def get_path(self, cls):
         """
