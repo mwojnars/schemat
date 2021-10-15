@@ -628,11 +628,11 @@ class JSONx {
 
     static encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
-        return values.map(JSONx.encode)
+        return values.map(v => JSONx.encode(v))
     }
     static decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return state.map(JSONx.decode)
+        return state.map(v => JSONx.decode(v))
     }
     static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. */
