@@ -252,40 +252,46 @@ class Registry:
         Hence, the caller should never assume that the returned item.data is missing.
         `id` should be a tuple (cid,iid).
         """
-        # if not id:
-        #     if category: cid = category.iid
-        #     id = (cid, iid)
-        # else:
         id = (cid, iid) = tuple(id)
-            
+        
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
         
         if cid == iid == ROOT_CID:
             return self.root
 
-        # ID requested is already present in the registry? return the existing instance
+        # ID requested is already present in cache? return the cached instance
         item = self.cache.get(id)
         if item:
             if load: item.load()
             return item
 
-        # assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
+        # category = self.get_category(cid)
+        # item = category.stub(iid)
 
-        # if not category:
-        category = self.get_category(cid)
-
-        # create a new stub in a given `category` and insert to cache; then load full item data
-        item = category.stub(iid)
+        # create an item stub and insert to cache, then load item data
+        item = self.get_stub(id)
         self._set(item)                     # _set() is called before item.load() to properly handle circular relationships between items
         if load: item.load()
 
         # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
     
-    def get_stub(self, *args, **kwargs):
-        """Call get_item() with load=False."""
-        return self.get_item(*args, **kwargs, load = False)
+    def get_stub(self, id, category = None):
+        """
+        Create a "stub" item that has IID already assigned and is (supposedly) present in DB,
+        but properties (item.data) are not loaded yet.
+        """
+        cid, iid = id
+        category = category or self.get_category(cid)
+        itemclass = category.get_class()
+        item = itemclass(category = category)
+        item.iid = iid
+        return item
+        
+    # def get_stub(self, *args, **kwargs):
+    #     """Call get_item() with load=False."""
+    #     return self.get_item(*args, **kwargs, load = False)
     
     def load_data(self, id):
         """Load item properties from DB and return as a schema-aware JSON-encoded string."""
@@ -297,7 +303,7 @@ class Registry:
         records = self.store.select_all(category.iid)
         return self.decode_items(records, category)
         
-    def decode_items(self, records, category):
+    def decode_items(self, records, category = None):
         """
         Given a sequence of raw DB `records` decode each of them and yield as an item.
         The items are saved in the registry and so they may override existing items.
@@ -305,13 +311,13 @@ class Registry:
         for record in records:
             cid = record['cid']
             iid = record['iid']
-            assert cid == category.iid
+            assert category is None or cid == category.iid
 
             if cid == iid == ROOT_CID:
                 yield self.root
-                # yield self.cache.get((cid, iid)) or self.load_root(record)
             else:
-                item = category.stub(iid)
+                # item = category.stub(iid)
+                item = self.get_stub((cid, iid), category)
                 self._set(item)
                 item.load(data_json = record['data'])
                 yield item
