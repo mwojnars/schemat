@@ -389,15 +389,33 @@ window.customElements.define('hw-item-page', Item.Page);
 /*************************************************************************************************/
 
 class Classpath {
-    // m = new Map()
-    // m.set(C, path_C)
+    constructor() {
+        this.forward = new Map()
+        this.inverse = new Map()
+        //this.forward.set(path_C, C)
+        //this.inverse.set(C, path_C)
+    }
     // c.constructor == C
     // Array.from(m.keys())                 -- array of all keys
     // for (k of m.keys()) console.log(k)   -- iterating over keys
 }
 
 class Registry {
+    constructor() {
+        this.classpath = new Classpath();
+    }
+
     get_item(id) {}
+    get_path(cls) {
+        /*
+        Return a dotted module path of a given class or function as stored in a global Classpath.
+        `cls` should be either a constructor function, or a prototype with .constructor property.
+        */
+        if (typeof cls === "object")
+            cls = cls.constructor
+
+        return this.classpath.get_path(cls)
+    }
 }
 
 let registry = window.registry = new Registry();
