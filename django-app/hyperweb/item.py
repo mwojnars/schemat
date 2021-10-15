@@ -533,7 +533,7 @@ class Category(Item):
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         """
-        return self.registry.get_item(iid = iid, category = self)
+        return self.registry.get_item((self.iid, iid))           #(iid = iid, category = self)
     
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""

@@ -242,7 +242,7 @@ class Registry:
         assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
     
-    def get_item(self, id = None, cid = None, iid = None, category = None, load = True):
+    def get_item(self, id, load = True):
         """
         If load=True, the returned item's data (properties) are loaded - this does NOT mean reloading,
         as the item data may have been loaded earlier.
@@ -250,12 +250,13 @@ class Registry:
         this is not a strict rule, however, and if the item has been loaded or created before,
         by this or a previous request handler, the item can already be fully initialized.
         Hence, the caller should never assume that the returned item.data is missing.
+        `id` should be a tuple (cid,iid).
         """
-        if not id:
-            if category: cid = category.iid
-            id = (cid, iid)
-        else:
-            id = (cid, iid) = tuple(id)
+        # if not id:
+        #     if category: cid = category.iid
+        #     id = (cid, iid)
+        # else:
+        id = (cid, iid) = tuple(id)
             
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
@@ -271,8 +272,8 @@ class Registry:
 
         # assert not cid == iid == ROOT_CID, 'root category should have been loaded during __init__() and be present in cache'
 
-        if not category:
-            category = self.get_category(cid)
+        # if not category:
+        category = self.get_category(cid)
 
         # create a new stub in a given `category` and insert to cache; then load full item data
         item = category.stub(iid)
