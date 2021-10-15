@@ -151,11 +151,9 @@ class JSONx {
         with a special attribute "@" added to hold the class name. Nested objects are encoded recursively.
         Optional `type` constraint is a class (constructor function).
         */
-        import {Item} from 'hyperweb/item';
-        import {registry} from 'hyperweb/boot';
-
-        let id, state
+        let registry = globalThis.registry
         let of_type = JSONx.ofType(obj, type)
+        let state
 
         if (JSONx.isPrimitiveObj(obj))  return obj
         if (JSONx.isArray(obj))         return JSONx.encode_list(obj)
@@ -165,10 +163,12 @@ class JSONx {
             if (! JSONx.ATTR_CLASS in obj) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
+
+        let Item = registry.get_class("hyperweb.core.Item")
         if (obj instanceof Item) {
-            if (obj.id.includes(null))  throw `non-serializable Item instance with missing or incomplete ID: ${obj.id}`
-            if (of_type) return id                      // `obj` is of `type_` exactly, no need to encode type info
-            return {[JSONx.ATTR_STATE]: id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
+            if (!obj.has_id()) throw `non-serializable Item instance with missing or incomplete ID: ${obj.id}`
+            if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
+            return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
         if (JSONx.isClass(obj)) {
             state = registry.get_path(obj)
@@ -176,7 +176,7 @@ class JSONx {
         }
         else
             if (obj instanceof Set)
-                state = JSONx.encode_list(obj)
+                state = JSONx.encode_list(Array.from(obj))
             else {
                 state = JSONx.encode_dict(obj)
                 if (JSONx.ATTR_CLASS in state)
@@ -201,8 +201,7 @@ class JSONx {
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
         */
-        import {registry} from 'hyperweb/boot';
-
+        let registry = globalThis.registry
         let isdict = JSONx.isDict(state)
         let cls
 
@@ -246,7 +245,7 @@ class JSONx {
         if (cls === Object)             return JSONx.decode_dict(state)
         if (cls === Set)                return new cls(JSONx.decode_list(state))
 
-        import {Item} from './item'
+        let Item = registry.get_class("hyperweb.core.Item")
         if (JSONx.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.get_item(state)
 
@@ -258,40 +257,25 @@ class JSONx {
 
     static encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
-        return function () {
-            let _pj_a = [], _pj_b = values;
-            for (let _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-                let v = _pj_b[_pj_c];
-                _pj_a.push(JSONx.encode(v));
-            }
-            return _pj_a;
-        }
-        .call(this);
+        return values.map(JSONx.encode)
     }
     static decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return function () {
-            let _pj_a = [], _pj_b = state;
-            for (let _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-                let v = _pj_b[_pj_c];
-                _pj_a.push(JSONx.decode(v));
-            }
-            return _pj_a;
-        }
-        .call(this);
+        return state.map(JSONx.decode)
     }
-    static encode_dict(state) {
+    static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. */
-        for (let key, _pj_c = 0, _pj_a = state, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            key = _pj_a[_pj_c];
-            if ((Object.getPrototypeOf(key) !== str)) {
-                throw new EncodeError(`non-serializable object state, contains a non-string key: ${key}`);
-            }
-        }
-        // TODO: return dict((k, JSON.encode(v)) for k, v in state.items())
+        for (const key of Object.getOwnPropertyNames(obj))
+            if (typeof key !== "string")
+                throw `non-serializable object state, contains a non-string key: ${key}`
+
+        let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
+        return Object.fromEntries(entries)
+
     }
     static decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        // TODO: return dict((k, JSON.decode(v)) for k, v in state.items())
+        let entries = Object.entries(state).map(([k, v]) => [k, JSONx.decode(v)])
+        return Object.fromEntries(entries)
     }
 }

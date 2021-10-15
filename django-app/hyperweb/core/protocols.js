@@ -351,6 +351,9 @@ class Item {
     iid = null;
     //loaded = null;    // names of fields that have been loaded so far
 
+    get id() { return [this.cid, this.iid] }
+    has_id() { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
+
     constructor(data_flat, category) {
         this.category = category;
         this.data = data_flat; //this.load(data_flat);
@@ -418,6 +421,7 @@ class Registry {
     }
 }
 
-let registry = window.registry = new Registry();
+let registry = globalThis.registry = new Registry();
 
+/*************************************************************************************************/
 
