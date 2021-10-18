@@ -283,9 +283,7 @@ base_hy = File_(
     """,
 )
 
-_path = os.path.dirname(os.path.abspath(__file__))
-
-protocols_js = FileLocal_(path = f'{_path}/protocols.js')
+_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 dir_system = Folder_(
     files = {
@@ -301,11 +299,14 @@ dir_tmp2   = Folder_(files = {'tmp1': dir_tmp1})
 
 filesystem = Folder_(
     files = {
-        'system':       dir_system,
-        'tmp':          dir_tmp2,
-        'base.hy':      base_hy,            # reusable components for use in pages
-        'base.css':     base_css,           # global styles for use in pages
-        'protocols.js': protocols_js,
+        'system':           dir_system,
+        'tmp':              dir_tmp2,
+        'base.hy':          base_hy,            # reusable components for use in pages
+        'base.css':         base_css,           # global styles for use in pages
+        
+        'protocols.js':     FileLocal_(path = f'{_path}/protocols.js'),
+        'types.js':         FileLocal_(path = f'{_path}/types.js'),
+        
         # 'item.hy':      page_item,          # generic page of an item
         # 'category.hy':  page_category,      # generic page of a category
     },

@@ -258,50 +258,56 @@ class OBJECT(Schema):
     from serializated output and is implied automatically during deserialization.
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     """
-    type = None         # python type(s) for exact type checks: type(obj)==T
-    base = None         # python base type(s) for inheritance checks: isinstance(obj,T)
+    # type = None         # python type(s) for exact type checks: type(obj)==T
+    types = None         # python base type(s) for inheritance checks: isinstance(obj,T)
+    #
+    # def __init__(self, type = None, base = None):
+    #     self.__setstate__({'type': type, 'base': base})
+    #
+    # def __getstate__(self):
+    #     state = self.__dict__.copy()
+    #     if len(self.type) == 1: state['type'] = self.type[0]
+    #     if len(self.base) == 1: state['base'] = self.base[0]
+    #     return state
+    #
+    # def __setstate__(self, state):
+    #     """Custom __setstate__/__getstate__() is needed to allow compact encoding of 1-element lists in `type` and `base`."""
+    #     self.type = self._prepare_types(state['type']) if 'type' in state else []
+    #     self.base = self._prepare_types(state['base']) if 'base' in state else []
+    #
+    # def _prepare_types(self, types):
+    #     types = list(types) if isinstance(types, (list, tuple)) else [types] if types else []
+    #     types = [self.get_registry().get_class(t) if isinstance(t, str) else t for t in types]
+    #     assert all(isinstance(t, type) for t in types)
+    #     return types
     
-    def __init__(self, type = None, base = None):
-        self.__setstate__({'type': type, 'base': base})
-        
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        if len(self.type) == 1: state['type'] = self.type[0]
-        if len(self.base) == 1: state['base'] = self.base[0]
-        return state
-    
-    def __setstate__(self, state):
-        """Custom __setstate__/__getstate__() is needed to allow compact encoding of 1-element lists in `type` and `base`."""
-        self.type = self._prepare_types(state['type']) if 'type' in state else []
-        self.base = self._prepare_types(state['base']) if 'base' in state else []
-        
-    def _prepare_types(self, types):
-        types = list(types) if isinstance(types, (list, tuple)) else [types] if types else []
-        types = [self.get_registry().get_class(t) if isinstance(t, str) else t for t in types]
-        assert all(isinstance(t, type) for t in types)
-        return types
+    def __init__(self, *types):
+        self.types = list(types)
         
     def _valid_type(self, obj):
-        if not (self.type or self.base): return True        # all objects are valid when no reference types configured
-        t = type(obj)
-        if t in self.type: return True
-        if any(isinstance(obj, base) for base in self.base): return True
-        return False
-
-    def _get_unique_type(self):
-        return self.type[0] if len(self.type) == 1 and not self.base else None
+        return isinstance(obj, tuple(self.types)) if self.types else True
+    
+    # def _valid_type(self, obj):
+    #     if not (self.type or self.base): return True        # all objects are valid when no reference types configured
+    #     t = type(obj)
+    #     if t in self.type: return True
+    #     if any(isinstance(obj, base) for base in self.base): return True
+    #     return False
+    #
+    # def _get_unique_type(self):
+    #     return self.type[0] if len(self.type) == 1 and not self.types else None
 
     def encode(self, obj):
         
         if not self._valid_type(obj):
-            raise EncodeError(f"invalid object type, expected one of {self.type + self.base}, but got {type(obj)}")
-        return JSON.encode(obj, self._get_unique_type())
+            raise EncodeError(f"invalid object type, expected one of {self.types}, but got {type(obj)}")
+        return JSON.encode(obj) #, self._get_unique_type())
 
     def decode(self, state):
         
-        obj = JSON.decode(state, self._get_unique_type())
+        obj = JSON.decode(state) #, self._get_unique_type())
         if not self._valid_type(obj):
-            raise DecodeError(f"invalid object type after decoding, expected one of {self.type + self.base}, but got {type(obj)}")
+            raise DecodeError(f"invalid object type after decoding, expected one of {self.types}, but got {type(obj)}")
         return obj
 
 
@@ -1017,7 +1023,7 @@ class FIELD(STRUCT):
 
     type = Field
     fields = {
-        'schema':  OBJECT(base = Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+        'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
         'default': OBJECT(),
         'multi':   BOOLEAN(),
         'info':    STRING(),

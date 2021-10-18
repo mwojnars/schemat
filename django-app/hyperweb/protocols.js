@@ -2,6 +2,13 @@
 
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
+import { Schema } from './types.js'
+// import * as mod_types from './types.js'
+
+// console.log("Schema:", Schema)
+// console.log("mod_types:", mod_types, typeof mod_types)
+
+
 /*************************************************************************************************/
 /* UTILITIES
  */
@@ -427,6 +434,41 @@ class Classpath {
             this.set(`${path}.${name}`, obj)
     }
 
+    async add_module(module_url, path, symbols) {
+
+        let module = await import(module_url);
+
+    }
+
+    // def add_module(self, module, path = None, symbols = None, accept = None,
+    //                exclude_private = True, exclude_variables = True, exclude_imported = True):
+    //     """
+    //     Add symbols from `module` to a given package `path` (module's python path if None).
+    //     If `symbols` is None, all symbols found in the module are added, excluding:
+    //     1) symbols whose name starts with underscore "_", if exclude_private=True;
+    //     2) variables (i.e., not classes, not functions), if exclude_variables=True;
+    //     3) classes/functions imported from other modules as determined by their __module__, if exclude_imported=True;
+    //     4) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
+    //     """
+    //     modname = module.__name__
+    //     if not path: path = modname
+    //     if isinstance(symbols, str): symbols = symbols.split()
+    //     elif symbols is None:
+    //         def imported(_name):
+    //             _obj = getattr(module, _name)
+    //             return self._is_class_func(_obj) and getattr(_obj, '__module__', None) != modname
+    //
+    //         symbols = dir(module)
+    //         if exclude_private:   symbols = [s for s in symbols if s[:1] != '_']
+    //         if exclude_variables: symbols = [s for s in symbols if self._is_class_func(getattr(module, s))]
+    //         if exclude_imported:  symbols = [s for s in symbols if not imported(s)]
+    //
+    //     for name in symbols:
+    //         obj = getattr(module, name)
+    //         if accept and not accept(obj): continue
+    //         self[f'{path}.{name}'] = obj
+
+
     encode(obj) {
         /*
         Return canonical path of a given class or function, `obj`. If `obj` was added multiple times
@@ -542,14 +584,14 @@ class JSONx {
             state = registry.get_path(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
-        else
-            if (obj instanceof Set)
-                state = JSONx.encode_list(Array.from(obj))
-            else {
-                state = JSONx.encode_dict(obj)
-                if (JSONx.ATTR_CLASS in state)
-                    throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
-            }
+        else if (obj instanceof Set)
+            state = JSONx.encode_list(Array.from(obj))
+        else {
+            state = JSONx.getState(obj)
+            state = JSONx.encode_dict(state)                // TODO: allow non-dict state from getstate()
+            if (JSONx.ATTR_CLASS in state)
+                throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
+        }
 
         // if the exact class is known upfront, let's output compact state without adding "@" for class designation
         if (of_type) return state
@@ -617,10 +659,26 @@ class JSONx {
         if (JSONx.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.get_item(state)
 
-        let obj = JSONx.decode_dict(state)
+        state = JSONx.decode_dict(state)
+        // let obj = JSONx.decode_dict(state)
+        // Object.setPrototypeOf(obj, cls)
+        // // let obj = Object.create(cls, obj)
 
-        // return Object.create(cls, obj)
-        return Object.setPrototypeOf(obj, cls)
+        return JSONx.setState(cls, state)
+    }
+
+    static getState(obj) {
+        return obj['__getstate__'] ? obj['__getstate__']() : obj
+    }
+
+    static setState(cls, state) {
+        /* Instantiate an object of class `cls` and call its __setstate__() if present, or assign `state` directly. */
+        let obj = new cls()
+        if (obj['__setstate__'])
+            obj['__setstate__'](state)
+        else
+            Object.assign(obj, state)
+        return obj
     }
 
     static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
@@ -642,7 +700,6 @@ class JSONx {
 
         let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
         return Object.fromEntries(entries)
-
     }
     static decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */

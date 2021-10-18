@@ -50,14 +50,13 @@
         values:
           schema:
             schema:
-              type: []
-              base: {'=': hyperweb.types.Schema, '@': (type)}
+              types:
+              - {'=': hyperweb.types.Schema, '@': (type)}
               '@': hyperweb.types.OBJECT
             '@': hyperweb.types.Field
           default:
             schema:
-              type: []
-              base: []
+              types: []
               '@': hyperweb.types.OBJECT
             '@': hyperweb.types.Field
           multi:
@@ -331,8 +330,6 @@
     \            try\n                                a href=$item.url() | $iname\n\
     \                            else\n                                | $iname (no\
     \ URL)\n    \n    "
-- id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/core/protocols.js
 - id: [3, 1]
   files:
     Site: [0, 9]
@@ -346,6 +343,10 @@
 - id: [3, 3]
   files:
     tmp1: [3, 2]
+- id: [2, 1]
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/protocols.js
+- id: [2, 2]
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/types.js
 - id: [3, 4]
   files:
     system: [3, 1]
@@ -353,6 +354,7 @@
     base.hy: [1, 2]
     base.css: [1, 1]
     protocols.js: [2, 1]
+    types.js: [2, 2]
 - id: [6, 1]
   name: Admin
 - id: [7, 1]

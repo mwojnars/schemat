@@ -52,20 +52,20 @@ def test_Object():
 
     run(OBJECT(CLASS), CLASS())
     run(OBJECT(T), T(x=10))
-    run(OBJECT(base = T), T(x=10))
+    # run(OBJECT(base = T), T(x=10))
     run(OBJECT(str), 'kot')
-    run(OBJECT(type = (int, float)), 5.5)
-    run(OBJECT(base = (int, float)), float_(5.5))
+    # run(OBJECT(type = (int, float)), 5.5)
+    # run(OBJECT(base = (int, float)), float_(5.5))
     run(OBJECT(dict), {'a': 1, 'b': 2})
     run(OBJECT(), {'a': 1, 'b': 2})
     run(OBJECT(), {'a': 1, 'b': 2, '@': 'ampersand'})
     run(OBJECT(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
     run(OBJECT(), INTEGER())
-    run(OBJECT(base = Schema), INTEGER())
-    run(OBJECT(type = INTEGER), INTEGER())
+    # run(OBJECT(base = Schema), INTEGER())
+    # run(OBJECT(type = INTEGER), INTEGER())
     # run(OBJECT(base = Schema), OBJECT(dict))
     # run(OBJECT(base = Schema), OBJECT((list, dict, str, T)))
-    run(OBJECT(base = Schema), OBJECT((C, T)))
+    # run(OBJECT(base = Schema), OBJECT((C, T)))
 
     c = C()
     c.d = C()
@@ -89,7 +89,7 @@ def test_Item():
     site = registry.site
     from hyperweb.core.classes import Site
 
-    run(OBJECT(base = Item), site, True)
+    # run(OBJECT(base = Item), site, True)
     run(OBJECT(Site), site, True)
     
 
