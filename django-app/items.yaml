@@ -55,9 +55,7 @@
               '@': hyperweb.types.OBJECT
             '@': hyperweb.types.Field
           default:
-            schema:
-              types: []
-              '@': hyperweb.types.OBJECT
+            schema: {'@': hyperweb.types.OBJECT}
             '@': hyperweb.types.Field
           multi:
             schema: {'@': hyperweb.types.BOOLEAN}

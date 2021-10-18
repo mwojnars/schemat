@@ -2,7 +2,7 @@
 
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-import { Schema } from './types.js'
+import { Schema, Types } from './types.js'
 // import * as mod_types from './types.js'
 
 // console.log("Schema:", Schema)
@@ -542,16 +542,6 @@ class JSONx {
         return JSONx.decode(state, type);
     }
 
-    static getPrototype   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
-    static getClass       = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
-    static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
-    static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
-    static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)
-    static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)      // test if x is an object of class T exactly (NOT of a subclass)
-    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined)    // test if C is a class (a constructor function with .prototype)
-    static isSubclass     = (C,B) => (C === B || C.prototype instanceof B)                     // test if C is subclass of B, including C===B
-
     static encode(obj, type = null) {
         /*
         Return a `state` that carries all the information needed for reconstruction of `obj` with decode(),
@@ -561,14 +551,14 @@ class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = globalThis.registry
-        let of_type = JSONx.ofType(obj, type)
+        let of_type = Types.ofType(obj, type)
         let state
 
         if (obj === undefined)          throw "Can't encode an `undefined` value"
-        if (JSONx.isPrimitiveObj(obj))  return obj
-        if (JSONx.isArray(obj))         return JSONx.encode_list(obj)
+        if (Types.isPrimitiveObj(obj))  return obj
+        if (Types.isArray(obj))         return JSONx.encode_list(obj)
 
-        if (JSONx.isDict(obj)) {
+        if (Types.isDict(obj)) {
             obj = JSONx.encode_dict(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
@@ -580,7 +570,7 @@ class JSONx {
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
-        if (JSONx.isClass(obj)) {
+        if (Types.isClass(obj)) {
             state = registry.get_path(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
@@ -597,10 +587,10 @@ class JSONx {
         if (of_type) return state
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (!JSONx.isDict(state))
+        if (!Types.isDict(state))
             state = {[JSONx.ATTR_STATE]: state}
 
-        let t = JSONx.getPrototype(obj)
+        let t = Types.getPrototype(obj)
         state[JSONx.ATTR_CLASS] = registry.get_path(t)
 
         return state
@@ -612,7 +602,7 @@ class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = globalThis.registry
-        let isdict = JSONx.isDict(state)
+        let isdict = Types.isDict(state)
         let cls
 
         // decoding of a wrapped-up dict that contained a pre-existing '@' key
@@ -628,8 +618,8 @@ class JSONx {
                 throw `Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`
             cls = type;
         }
-        else if (!isdict)                               // `state` encodes a primitive value, or a list, or null;
-            cls = JSONx.getClass(state)                 // cls=null denotes a class of null value
+        else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
+            cls = Types.getClass(state)             // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
             let classname = state[JSONx.ATTR_CLASS]
@@ -650,13 +640,13 @@ class JSONx {
         console.assert(cls !== undefined, {msg: "`cls` is undefined", state: state, type: type})
 
         // instantiate the output object; special handling for standard JSON types and Item
-        if (JSONx.isPrimitiveCls(cls))  return state
+        if (Types.isPrimitiveCls(cls))  return state
         if (cls === Array)              return JSONx.decode_list(state)
         if (cls === Object)             return JSONx.decode_dict(state)
         if (cls === Set)                return new cls(JSONx.decode_list(state))
 
         let Item = registry.get_class("hyperweb.core.Item")
-        if (JSONx.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
+        if (Types.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.get_item(state)
 
         state = JSONx.decode_dict(state)

@@ -282,7 +282,7 @@ class OBJECT(Schema):
     #     return types
     
     def __init__(self, *types):
-        self.types = list(types)
+        if types: self.types = list(types)
         
     def _valid_type(self, obj):
         return isinstance(obj, tuple(self.types)) if self.types else True
@@ -300,14 +300,14 @@ class OBJECT(Schema):
     def encode(self, obj):
         
         if not self._valid_type(obj):
-            raise EncodeError(f"invalid object type, expected one of {self.types}, but got {type(obj)}")
+            raise EncodeError(f"invalid object type, expected one of {self.types or []}, but got {type(obj)}")
         return JSON.encode(obj) #, self._get_unique_type())
 
     def decode(self, state):
         
         obj = JSON.decode(state) #, self._get_unique_type())
         if not self._valid_type(obj):
-            raise DecodeError(f"invalid object type after decoding, expected one of {self.types}, but got {type(obj)}")
+            raise DecodeError(f"invalid object type after decoding, expected one of {self.types or []}, but got {type(obj)}")
         return obj
 
 
@@ -390,58 +390,26 @@ class BYTES(Primitive):
         if not isinstance(encoded, str): raise DecodeError(f"expected a string to decode, got {type(encoded)}: {encoded}")
         return base64.b64decode(encoded)
     
-class ENUM(Schema):
-    """
-    Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
-    or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
-    of values in __init__() is meaningful for subsequent decoding.
-    """
-    schema   = STRING()
-    values   = None
-    valueset = None         # (temporary) set of permitted values
-    indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
-    
-    def __init__(self, *values, schema = None, indices = None):
-        self.values = list(values)
-        if schema is not None: self.schema = schema
-        if indices:
-            self.indices = indices
-        self._init()
-        
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['valueset']
-        state['indices'] = bool(self.indices)
-        return state
-    
-    def __setstate__(self, state):
-        self.__dict__ = state
-        self._init()
-        
-    def _init(self):
-        self.valueset = set(self.values)         # for fast lookups
-        if self.indices:
-            self.indices = {v: idx for idx, v in enumerate(self.values)}
+class CODE(TEXT):
 
-    def encode(self, value):
-        if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
-        if self.indices:
-            return self.indices[value]
-        else:
-            return self.schema.encode(value)
+    __widget__ = r"""
+        context $value
+        custom "hw-widget-code-" data-value=$dedent(value, False)
+    """
+
+#####################################################################################################################################################
+
+class FILEPATH(STRING):
+    """Path to an item in a Folder."""
     
-    def decode(self, encoded):
-        # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
-        
-        if self.indices:
-            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
-            return self.values[encoded]
-        
-        value = self.schema.decode(encoded)
-        if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
-        return value
-    
-    
+class FILENAME(STRING):
+    """
+    Name of an individual entry in a Folder, without path.
+    Names that end with '/' indicate directories and must link to items of Folder category.
+    """
+
+#####################################################################################################################################################
+
 class ITEM(Schema):
     """
     Reference to an Item, encoded as ID=(CID,IID), or just IID if `category` or `cid` was provided.
@@ -521,6 +489,58 @@ class ITEM(Schema):
 #####  COMPOUND schema types
 #####
 
+class ENUM(Schema):
+    """
+    Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
+    or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
+    of values in __init__() is meaningful for subsequent decoding.
+    """
+    schema   = STRING()
+    values   = None
+    valueset = None         # (temporary) set of permitted values
+    indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
+    
+    def __init__(self, *values, schema = None, indices = None):
+        self.values = list(values)
+        if schema is not None: self.schema = schema
+        if indices:
+            self.indices = indices
+        self._init()
+        
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['valueset']
+        state['indices'] = bool(self.indices)
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._init()
+        
+    def _init(self):
+        self.valueset = set(self.values)         # for fast lookups
+        if self.indices:
+            self.indices = {v: idx for idx, v in enumerate(self.values)}
+
+    def encode(self, value):
+        if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
+        if self.indices:
+            return self.indices[value]
+        else:
+            return self.schema.encode(value)
+    
+    def decode(self, encoded):
+        # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
+        
+        if self.indices:
+            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
+            return self.values[encoded]
+        
+        value = self.schema.decode(encoded)
+        if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
+        return value
+    
+    
 class LIST(Schema):
     type = list
     schema = None       # schema of individual elements
@@ -599,7 +619,7 @@ class DICT(Schema):
         # encode keys & values through predefined field types
         for key, value in d.items():
             k = schema_keys.encode(key)
-            if k in state: raise EncodeError(f"duplicate state ({k}) returned by field's {self.keys} encode() for 2 different values, one of them: {key}")
+            if k in state: raise EncodeError(f"two different keys encoded to the same state ({k}) in DICT, one of them: {key}")
             state[k] = schema_values.encode(value)
         
         return state
@@ -709,41 +729,6 @@ class VARIANT(Schema):
         return schema.decode(encoded)
         
 
-#####################################################################################################################################################
-#####
-#####  SPECIAL-PURPOSE SCHEMA
-#####
-
-class CODE(TEXT):
-
-    __widget__ = r"""
-        context $value
-        custom "hw-widget-code-" data-value=$dedent(value, False)
-    """
-
-#####################################################################################################################################################
-
-class FILEPATH(STRING):
-    """Path to an item in a Folder."""
-    
-class FILENAME(STRING):
-    """
-    Name of an individual entry in a Folder, without path.
-    Names that end with '/' indicate directories and must link to items of Folder category.
-    """
-
-# class FILE(ITEM):
-#     """
-#     Entry in a Folder: reference to an item, with an additional flag for sub-Folder items
-#     indicating whether this item should be interpreted as-is or as a subfolder.
-#     TODO: make this class a structure with fields:
-#     - item (ITEM) - if a reference to an item in DB
-#     - localpath (STRING) - if this is a regular file stored on local disk
-#     - content (plain TEXT/BYTES) - if the contents should be served from here
-#     - modified (DATETIME) ??
-#     """
-    
-    
 #####################################################################################################################################################
 #####
 #####  FIELD, RECORD, STRUCT
