@@ -1,18 +1,59 @@
+/**********************************************************************************************************************
+ **
+ **  UTILITIES
+ **
+ */
+
+export function assert(test, msg) {
+    if (test) return
+    throw `assertion failed: ${msg}`
+    // console.assert(test)
+}
 
 export class Types {
-    // below, <null> is treated as a correct argument, while <undefined> as incorrect, for all the functions;
+    /*
+    A set of utility functions for working with objects and classes.
+    Below, the term "dict" (dictionary) means an object of no specific class, i.e., an instance of Object;
+    such objects are typically used to carry data, like <dict> in python, rather than to provide functionality.
+    */
+
+    // below, `null` is an expected (correct) argument, while `undefined` as incorrect, for all the functions;
     // getClass(null) returns null, getClass(3) returns Number, etc.
 
+    static getOwnProperty = (obj,name) => obj.hasOwnProperty(name) ? obj[name] : undefined
     static getPrototype   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
     static getClass       = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
     static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)
-    static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)      // test if x is an object of class T exactly (NOT of a subclass)
-    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined)    // test if C is a class (a constructor function with .prototype)
-    static isSubclass     = (C,B) => (C === B || C.prototype instanceof B)                     // test if C is subclass of B, including C===B
+    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)   // test if obj is a pure object (dict), no class assigned
+    static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)   // test if x is an object of class T exactly (NOT of a subclass)
+    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined) // test if C is a class (a constructor function with .prototype)
+    static isSubclass     = (C,B) => (C === B || C.prototype instanceof B)                  // test if C is subclass of B, including C===B
+    static isMissing      = (obj) => (obj === null || obj === undefined)                    // test if obj is null or undefined (two cases of "missingness")
+
+    // create a new object (dict) by mapping items of `obj` to new [key,value] pairs;
+    // does NOT detect if two entries are mapped to the same key (!)
+    static mapDict        = (obj,fun)  => Object.fromEntries(Object.entries(obj).map(([k,v]) => fun(k,v)))
+
+    static getstate       = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
+    static setstate       = (cls,state) => {        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly
+        let obj = new cls()
+        if (obj['__setstate__']) obj['__setstate__'](state)
+        else Object.assign(obj, state)
+        return obj
+    }
 }
+export class T extends Types {}  // T is an alias for Types
+
+export class DataError extends Error {}
+
+
+/**********************************************************************************************************************
+ **
+ **  SCHEMA base class
+ **
+ */
 
 export class Schema {
 
@@ -51,6 +92,10 @@ export class Schema {
         return JSON.decode(state)
     }
 
+    toString() {
+        return this.constructor.name
+        // return JSON.stringify(this._fields).slice(0, 60)
+    }
 }
 
 /**********************************************************************************************************************
@@ -205,7 +250,7 @@ export class ITEM extends Schema {
 
 export class DICT extends Schema {
     /*
-    Accepts <dict> objects as data values, or objects of a given `type` which should be a subclass of <dict>.
+    Accepts dictionaries (pure Object instances) as data values, or objects of a given `type`.
     Outputs a dict with keys and values encoded through their own schema.
     If no schema is provided, `generic_schema` is used as a default.
     */
@@ -221,36 +266,35 @@ export class DICT extends Schema {
         if (type)   this.type = type            // optional subtype of <dict>; if present, only objects of this type are accepted for encoding
     }
     encode(d) {
-
         let type = this.type || Object
         if (!(d instanceof type)) throw `expected an object of type ${type}, got ${d} instead`
-        let state = {}
 
         let schema_keys   = this.keys || this.constructor.keys_default
         let schema_values = this.values || this.constructor.values_default
+        let state = {}
 
         // encode keys & values through predefined field types
-        Object.entries(d).forEach(([key, value]) => {
+        for (let [key, value] of Object.entries(d)) {
             let k = schema_keys.encode(key)
             if (k in state) throw `two different keys encoded to the same state (${k}) in DICT, one of them: ${key}`
             state[k] = schema_values.encode(value)
-        })
+        }
         return state
     }
     decode(state) {
 
         if (typeof state != "object") throw `expected an object as state for decoding, got ${state} instead`
-        let d = new (this.type || Object)()
 
         let schema_keys   = this.keys || this.constructor.keys_default
         let schema_values = this.values || this.constructor.values_default
+        let d = new (this.type || Object)()
 
         // decode keys & values through predefined field types
-        Object.entries(state).forEach(([key, value]) => {
+        for (let [key, value] of Object.entries(state)) {
             let k = schema_keys.decode(key)
             if (k in d) throw `two different keys of state decoded to the same key (${key}) of output object, one of them: ${k}`
             d[k] = schema_values.decode(value)
-        })
+        }
         return d
     }
     toString() {
@@ -276,7 +320,6 @@ export class CATALOG extends DICT {
         if (keys && !(keys instanceof STRING)) throw `schema of keys must be an instance of STRING or its subclass, not ${keys}`
         super(keys, values, type)
     }
-
     toString() {
         let name   = this.constructor.name
         let keys   = this.keys || this.constructor.keys_default
@@ -287,3 +330,218 @@ export class CATALOG extends DICT {
             return `${name}(${keys}, ${values})`
         }
 }
+
+
+/**********************************************************************************************************************
+ **
+ **  FIELD(S), RECORD, STRUCT
+ **
+ */
+
+export class Field {
+    /* Specification of a field in a FIELDS/STRUCT catalog. */
+    
+    // schema  = null          // instance of Schema
+    // default = undefined     // value assumed if this field is missing in an item; or MISSING if no default
+    // multi   = False         // whether this field can be repeated (take on multiple values)
+    // info    = null          // human-readable description of the field
+    
+    constructor(schema, params = {}) {
+        let {default_, info, multi} = params
+        if (schema) this.schema = schema
+        if (info)   this.info = info
+        if (multi !== undefined)    this.multi = multi
+        if (default_ !== undefined) this['default'] = default_
+        if ('default' in params)    this['default'] = params['default']
+        // the 'default' property must be accessed through [...] to avoid syntax errors: "default" is a JS keyword
+    }
+    
+    // __getstate__() {
+    //     if (Types.isMissing(this['default'])) {           // exclude explicit MISSING value from serialization
+    //         state = this.__dict__.copy()
+    //         del state['default']
+    //     } else
+    //         state = this.__dict__
+    //     return state
+    // }
+
+    encode_one(value) {
+        return this.schema.encode(value)
+    }
+    decode_one(state) {
+        return this.schema.decode(state)
+    }
+    
+    encode_many(values) {
+        /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
+        if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
+        let encoded = values.map((v) => this.schema.encode(v))
+
+        // compactify singleton lists
+        if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
+            encoded = encoded[0]
+            
+        return encoded
+    }
+    decode_many(encoded) {
+        /* Returns a list of value(s). */
+        
+        // de-compactify singleton lists
+        if (!this.multi || !(encoded instanceof Array))
+            encoded = [encoded]
+    
+        // schema-based decoding
+        return encoded.map((s) => this.schema.decode(s))
+    }
+}        
+        
+/**********************************************************************************************************************/
+
+export class STRUCT extends Schema {
+    /*
+    Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
+    - unlike in DICT, where all values share the same schema.
+    STRUCT does not encode keys, but passes them unmodified.
+
+    The `type` of value objects can optionally be declared, for validation and more compact output representation.
+    A MultiDict can be handled as a value type through its __getstate__ and __setstate__ methods.
+
+    Properties:
+    - fields -- dict of field names & their Field() schema descriptors
+    - strict -- if true, only the fields present in `fields` can occur in the data being encoded
+    - type   -- class of values (optional); if present, only instances of this exact type (not subclasses) are accepted,
+                and an object state is retrieved/stored through Types.getstate()/setstate()
+    */
+
+    get _fields() { return this.fields || this.constructor.fields }
+    get _strict() { return this.strict || this.constructor.strict }
+    get _type  () { return this.type   || this.constructor.type   }
+
+    static fields = {}
+    static strict = false
+    static type   = null
+
+    // default field specification to be used for fields not present in `fields` (if strict=false)
+    static default_field = new Field(generic_schema, {multi: true})
+
+    constructor(fields, {strict, type}) {
+        super()
+        if (fields) this.fields = STRUCT._init_fields(fields)
+        if (strict) this.strict = strict
+        if (type)   this.type   = type
+    }
+
+    static _init_fields(fields) {
+        /* Wrap up in Field all the values of `fields` that are plain Schema instances. */
+        for (let [name, field] of Object.entries(fields)) {
+            if (field instanceof Field) continue
+            if (field && !(field instanceof Schema)) throw `expected an instance of Field or Schema, got ${field}`
+            fields[name] = new Field(field)
+        }
+        return fields
+    }
+
+    encode(data) {
+        /* Encode & compactify values of fields through per-field schema definitions (schema-aware encoding).
+        `data` is an object or a multidict (?).
+        */
+        // if (!(data instanceof MultiDict)) throw `expected a MultiDict, got ${data}`
+        assert(T.isDict(data), 'expected a dict of item properties')
+        return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
+
+        // TODO: support MultiDict (?)
+        // TODO: catch exceptions and re-throw with the error location path extended
+    }
+    decode(data) {
+        /* Decode a dict of {attr: value(s)} back to a dict/MultiDict(?). Works recursively top-down. */
+        if (!T.isDict(data)) throw new Error(`expected a pure object (dict), not ${data}`)
+        return T.mapDict(data, (name, value) => [name, this._get_field(name).decode_one(value)])
+        // return MultiDict(multiple = data)
+    }
+
+    _get_field(name) {
+        let fields = this._fields
+        if (this._strict && !fields.hasOwnProperty(name))
+            throw DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
+        return T.getOwnProperty(fields, name) || this.constructor.default_field
+    }
+
+    get_default(name) {
+        /* Get the default value of a given item property as defined in this schema, or undefined. */
+        let fields = this._fields
+        if (fields.hasOwnProperty(name))
+            return fields[name]['default']
+    }
+}
+
+/**********************************************************************************************************************/
+
+// export class FIELDS extends STRUCT {
+//     /*
+//     Dict of item properties declared by a particular category, as field name -> Field object.
+//     Provides methods for schema-aware encoding and decoding of item's data,
+//     with every field value encoded through its dedicated field-specific schema.
+//
+//     Primarily used for schema definition inside categories.
+//     Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
+//     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
+//     to False in all fields.
+//     */
+//
+//     fields = null       // optional dict of {field: schema} that can be defined by subclasses as an initial dict of this fields
+//
+//     // constructor(fields) {
+//     //     this.type = this.type || struct
+//     //     assert isinstance(this.type, type), f'this.type is not a type: {this.type}'
+//     //     if this.fields:
+//     //         fields = {**this.fields, **fields}
+//     //
+//     //     super(fields)
+//     //     for name, field in this.items():
+//     //         if field.multi: throw Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
+//     // }
+//
+//     encode(data) {
+//
+//         let type = this.type || this.constructor.type
+//         if (type) {
+//             if (!T.ofType(data, type)) throw DataError(`expected an object of type ${type}, got ${data}`)
+//             data = T.getstate(data)
+//         }
+//         return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
+//     }
+//     decode(encoded) {
+//
+//         if !isinstance(encoded, dict): throw DataError(f"expected a <dict>, not {encoded}")
+//         attrs = {}
+//
+//         // decode values of fields
+//         for name, value in encoded.items():
+//
+//             if name not in this: throw DataError(f'invalid field "{name}", not present in schema of a STRUCT')
+//             attrs[name] = this[name].decode_one(value)
+//
+//         if this.type is struct:
+//             return struct(attrs)
+//
+//         return T.setstate(this.type, attrs)
+//     }
+//     toString() {
+//         name = this.name || this.__class__.__name__
+//         if name != 'STRUCT': return name
+//         fields = ','.join(this.keys())
+//         return f"{name}({fields})"
+//     }
+// }
+//
+// export class FIELD extends STRUCT {
+//     /* Schema of a field specification in a category's list of fields. */
+//
+//     static type = Field
+//     static fields = STRUCT._init_fields({
+//         'schema':  OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+//         'default': OBJECT(),
+//         'multi':   BOOLEAN(),
+//         'info':    STRING(),
+//     })
+// }

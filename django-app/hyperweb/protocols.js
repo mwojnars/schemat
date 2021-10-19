@@ -577,7 +577,7 @@ class JSONx {
         else if (obj instanceof Set)
             state = JSONx.encode_list(Array.from(obj))
         else {
-            state = JSONx.getState(obj)
+            state = Types.getstate(obj)
             state = JSONx.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
@@ -654,21 +654,7 @@ class JSONx {
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
 
-        return JSONx.setState(cls, state)
-    }
-
-    static getState(obj) {
-        return obj['__getstate__'] ? obj['__getstate__']() : obj
-    }
-
-    static setState(cls, state) {
-        /* Instantiate an object of class `cls` and call its __setstate__() if present, or assign `state` directly. */
-        let obj = new cls()
-        if (obj['__setstate__'])
-            obj['__setstate__'](state)
-        else
-            Object.assign(obj, state)
-        return obj
+        return Types.setstate(cls, state)
     }
 
     static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes

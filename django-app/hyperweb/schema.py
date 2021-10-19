@@ -731,7 +731,7 @@ class VARIANT(Schema):
 
 #####################################################################################################################################################
 #####
-#####  FIELD, RECORD, STRUCT
+#####  FIELD(S), RECORD, STRUCT
 #####
 
 class Field:
@@ -825,7 +825,7 @@ class FIELDS(catalog, Schema):
     """
     
     # default field specification to be used for fields not present in `fields`
-    default_field = Field(schema = generic_schema, multi = True)
+    default_field = Field(generic_schema, multi = True)
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     # fields   = None     # dict of field names & their Field() schema descriptors
@@ -854,7 +854,7 @@ class FIELDS(catalog, Schema):
             assert isinstance(name, str)
             if isinstance(field, Field): continue
             if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
-            self[name] = Field(schema = field)
+            self[name] = Field(field)
         
     
     def encode(self, data):
@@ -874,12 +874,9 @@ class FIELDS(catalog, Schema):
                 raise EncodeError(f'unknown field "{name}"')
             
             # schema-aware encoding
-            field = self.get(name)
-            if field:
-                encoded[name] = field.encode_many(values)
-            else:
-                encoded[name] = self.default_field.encode_many(values)
-            # TODO: catch atype.encode() exceptions and append to `errors`
+            field = self.get(name) or self.default_field
+            encoded[name] = field.encode_many(values)
+            # TODO: catch exceptions and append to `errors`
             
         if errors:
             raise EncodeErrors(errors)
@@ -901,20 +898,14 @@ class FIELDS(catalog, Schema):
                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
             
             # schema-based decoding
-            field = self.get(name)
-            if field:
-                data[name] = field.decode_many(values)
-            else:
-                data[name] = self.default_field.decode_many(values)
-                
+            field = self.get(name) or self.default_field
+            data[name] = field.decode_many(values)
+            
         return MultiDict(multiple = data)
     
     
     def get_default(self, name):
-        """
-        Get the default value of a given item attribute as defined in this schema.
-        Return a pair (value, found), where `found` is True (there is a default) or False (no default found).
-        """
+        """Get the default value of a given item property as defined in this schema, or Field.MISSING."""
         field = self.get(name)
         return field.default if field else Field.MISSING
 
@@ -928,7 +919,7 @@ class STRUCT(FIELDS):
     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
     Similar to FIELDS, but the app-representation is a regular python object matching the schema
     rather than a MultiDict; and multiple values are not allowed for a field.
-    When self.type is `struct`, both <struct> <dict> instances are accepted during encoding,
+    When self.type is `struct`, both <struct> and <dict> instances are accepted during encoding,
     with the latter being automatically converted to a <struct> during decoding (!).
     """
     
@@ -998,11 +989,6 @@ class STRUCT(FIELDS):
     #     return ' '.join(parts)
     
     
-#####################################################################################################################################################
-#####
-#####  Special-purpose schema
-#####
-
 class FIELD(STRUCT):
     """Schema of a field specification in a category's list of fields."""
 
