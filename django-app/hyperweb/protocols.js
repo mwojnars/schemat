@@ -419,55 +419,38 @@ class Classpath {
         if (typeof obj === "function")
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
     }
-    add(path, objects) {
-        /*
-        Add multiple objects to a given `path` under provided names if in objects['named'] dict,
-        or under their original names (obj.name) if in objects['unnamed'] array.
-        */
-        let {unnamed, named} = objects
-        for (let obj of (unnamed ?? [])) {
+    set_many(path, ...objects) {
+        /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
+        for (let obj of objects) {
             let name = obj.name
             if (!name) throw `Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`
             this.set(`${path}.${name}`, obj)
         }
-        for (let [name, obj] of Object.entries(named ?? {}))
+        // for (let [name, obj] of Object.entries(named ?? {}))
+        //     this.set(`${path}.${name}`, obj)
+    }
+
+    async set_module(path, module_url, {symbols, accept, exclude_variables = true} = {})
+        /*
+        Add symbols from `module` to a given package `path`.
+        If `symbols` is missing, all symbols found in the module are added, excluding:
+        1) variables (i.e., not classes, not functions), if exclude_variables=true;
+        2) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
+        */
+    {
+        // import(module_url).then(module => {console.log(module)})
+        let module = await import(module_url)
+        
+        if (typeof symbols === "string")    symbols = symbols.split()
+        else if (!symbols)                  symbols = Object.keys(module)
+        if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
+
+        for (let name of symbols) {
+            let obj = module[name]
+            if (accept && !accept(obj)) continue
             this.set(`${path}.${name}`, obj)
+        }
     }
-
-    async add_module(module_url, path, symbols) {
-
-        let module = await import(module_url);
-
-    }
-
-    // def add_module(self, module, path = None, symbols = None, accept = None,
-    //                exclude_private = True, exclude_variables = True, exclude_imported = True):
-    //     """
-    //     Add symbols from `module` to a given package `path` (module's python path if None).
-    //     If `symbols` is None, all symbols found in the module are added, excluding:
-    //     1) symbols whose name starts with underscore "_", if exclude_private=True;
-    //     2) variables (i.e., not classes, not functions), if exclude_variables=True;
-    //     3) classes/functions imported from other modules as determined by their __module__, if exclude_imported=True;
-    //     4) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
-    //     """
-    //     modname = module.__name__
-    //     if not path: path = modname
-    //     if isinstance(symbols, str): symbols = symbols.split()
-    //     elif symbols is None:
-    //         def imported(_name):
-    //             _obj = getattr(module, _name)
-    //             return self._is_class_func(_obj) and getattr(_obj, '__module__', None) != modname
-    //
-    //         symbols = dir(module)
-    //         if exclude_private:   symbols = [s for s in symbols if s[:1] != '_']
-    //         if exclude_variables: symbols = [s for s in symbols if self._is_class_func(getattr(module, s))]
-    //         if exclude_imported:  symbols = [s for s in symbols if not imported(s)]
-    //
-    //     for name in symbols:
-    //         obj = getattr(module, name)
-    //         if accept and not accept(obj): continue
-    //         self[f'{path}.{name}'] = obj
-
 
     encode(obj) {
         /*
@@ -488,12 +471,13 @@ class Classpath {
 
 class Registry {
 
-    classpath = new Classpath()
+    async init_classpath() {
+        let classpath = new Classpath
 
-    constructor() {
-        let classpath = this.classpath
-        classpath.set("hyperweb.core.Item", Item)
-        classpath.set("hyperweb.core.Category", Category)
+              classpath.set_many  ("hyperweb.core", Item, Category)
+        await classpath.set_module("hyperweb.types", "./types.js")
+
+        this.classpath = classpath
     }
 
     get_item(id) {
@@ -518,7 +502,9 @@ class Registry {
     }
 }
 
-let registry = globalThis.registry = new Registry();
+let registry = globalThis.registry = new Registry
+await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
+
 
 /*************************************************************************************************/
 
@@ -669,10 +655,12 @@ class JSONx {
         return state.map(v => JSONx.decode(v))
     }
     static encode_dict(obj) {
-        /* Encode recursively all non-primitive objects inside `state` dictionary. */
-        for (const key of Object.keys(obj))
+        /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
+        for (let [key, value] of Object.entries(obj))
             if (typeof key !== "string")
                 throw `Non-serializable object state, contains a non-string key: ${key}`
+            if (value === undefined)
+                delete obj[key]
 
         let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
         return Object.fromEntries(entries)

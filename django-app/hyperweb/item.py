@@ -106,9 +106,10 @@ class Item(object, metaclass = MetaItem):
     
     Item's metadata - in DB:
     - cid, iid
-    - revision -- current revision id 1,2,3,...; increased after each modification of the item
-    ? created_at, updated_at -- kept inside MySQL as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
-    - owner + permissions (?) -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
+    - version -- current version 1,2,3,...; increased +1 after each modification of the item; for data-consistent updates
+    - created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    - checksum -- to detect data corruption due to disk i/o errors etc.
+    ? owner + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
     ? D is_draft -- this item is under construction, not fully functional yet (app-level feature)
     ? M is_mock  -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
     ? H is_honeypot -- artificial empty item for detection and tracking of automated access

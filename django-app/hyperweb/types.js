@@ -287,7 +287,7 @@ export class DICT extends Schema {
 
         let schema_keys   = this.keys || this.constructor.keys_default
         let schema_values = this.values || this.constructor.values_default
-        let d = new (this.type || Object)()
+        let d = new (this.type || Object)
 
         // decode keys & values through predefined field types
         for (let [key, value] of Object.entries(state)) {
@@ -314,7 +314,7 @@ export class CATALOG extends DICT {
     Watch out the reversed ordering of arguments in constructor() !!
     */
     get is_catalog() { return true }
-    static keys_default = new STRING()
+    static keys_default = new STRING
 
     constructor(values, keys, type) {
         if (keys && !(keys instanceof STRING)) throw `schema of keys must be an instance of STRING or its subclass, not ${keys}`
@@ -405,21 +405,16 @@ export class STRUCT extends Schema {
 
     The `type` of value objects can optionally be declared, for validation and more compact output representation.
     A MultiDict can be handled as a value type through its __getstate__ and __setstate__ methods.
-
-    Properties:
-    - fields -- dict of field names & their Field() schema descriptors
-    - strict -- if true, only the fields present in `fields` can occur in the data being encoded
-    - type   -- class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
-                are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
     */
 
     get _fields() { return this.fields || this.constructor.fields }
     get _strict() { return this.strict || this.constructor.strict }
     get _type  () { return this.type   || this.constructor.type   }
 
-    static fields = {}
-    static strict = false
-    static type   = null
+    static fields = {}          // dict of field names & their Field() schema descriptors
+    static strict = false       // if true, only the fields present in `fields` can occur in the data being encoded
+    static type   = null        // class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
+                                // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
 
     // default field specification to be used for fields not present in `fields` (if strict=false)
     static default_field = new Field(generic_schema, {multi: true})
@@ -508,8 +503,8 @@ export class FIELD extends STRUCT {
     // static type = Field
     static fields = STRUCT._init_fields({
         'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-        'default': new OBJECT(),
-        'multi':   new BOOLEAN(),
-        'info':    new STRING(),
+        'default': new OBJECT,
+        'multi':   new BOOLEAN,
+        'info':    new STRING,
     })
 }
