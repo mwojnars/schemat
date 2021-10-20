@@ -334,7 +334,7 @@ export class CATALOG extends DICT {
 
 /**********************************************************************************************************************
  **
- **  FIELD(S), RECORD, STRUCT
+ **  FIELD(S), STRUCT
  **
  */
 
@@ -409,8 +409,8 @@ export class STRUCT extends Schema {
     Properties:
     - fields -- dict of field names & their Field() schema descriptors
     - strict -- if true, only the fields present in `fields` can occur in the data being encoded
-    - type   -- class of values (optional); if present, only instances of this exact type (not subclasses) are accepted,
-                and an object state is retrieved/stored through Types.getstate()/setstate()
+    - type   -- class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
+                are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
     */
 
     get _fields() { return this.fields || this.constructor.fields }
@@ -446,23 +446,34 @@ export class STRUCT extends Schema {
         `data` is an object or a multidict (?).
         */
         // if (!(data instanceof MultiDict)) throw `expected a MultiDict, got ${data}`
-        assert(T.isDict(data), 'expected a dict of item properties')
+
+        let type = this._type
+        if (type) {
+            if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
+            data = T.getstate(data)
+        }
+        else if (!T.isDict(data)) throw new DataError(`expected a plain Object for encoding, got ${T.getClass(data)}`)
+
         return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
 
         // TODO: support MultiDict (?)
         // TODO: catch exceptions and re-throw with the error location path extended
     }
-    decode(data) {
-        /* Decode a dict of {attr: value(s)} back to a dict/MultiDict(?). Works recursively top-down. */
-        if (!T.isDict(data)) throw new Error(`expected a pure object (dict), not ${data}`)
-        return T.mapDict(data, (name, value) => [name, this._get_field(name).decode_one(value)])
+    decode(state) {
+
+        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClass(state)}`)
+        let data = T.mapDict(state, (name, value) => [name, this._get_field(name).decode_one(value)])
         // return MultiDict(multiple = data)
+
+        let type = this._type
+        if (type) return T.setstate(type, data)
+        return data
     }
 
     _get_field(name) {
         let fields = this._fields
         if (this._strict && !fields.hasOwnProperty(name))
-            throw DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
+            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
         return T.getOwnProperty(fields, name) || this.constructor.default_field
     }
 
@@ -476,72 +487,29 @@ export class STRUCT extends Schema {
 
 /**********************************************************************************************************************/
 
-// export class FIELDS extends STRUCT {
-//     /*
-//     Dict of item properties declared by a particular category, as field name -> Field object.
-//     Provides methods for schema-aware encoding and decoding of item's data,
-//     with every field value encoded through its dedicated field-specific schema.
-//
-//     Primarily used for schema definition inside categories.
-//     Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
-//     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
-//     to False in all fields.
-//     */
-//
-//     fields = null       // optional dict of {field: schema} that can be defined by subclasses as an initial dict of this fields
-//
-//     // constructor(fields) {
-//     //     this.type = this.type || struct
-//     //     assert isinstance(this.type, type), f'this.type is not a type: {this.type}'
-//     //     if this.fields:
-//     //         fields = {**this.fields, **fields}
-//     //
-//     //     super(fields)
-//     //     for name, field in this.items():
-//     //         if field.multi: throw Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
-//     // }
-//
-//     encode(data) {
-//
-//         let type = this.type || this.constructor.type
-//         if (type) {
-//             if (!T.ofType(data, type)) throw DataError(`expected an object of type ${type}, got ${data}`)
-//             data = T.getstate(data)
-//         }
-//         return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
-//     }
-//     decode(encoded) {
-//
-//         if !isinstance(encoded, dict): throw DataError(f"expected a <dict>, not {encoded}")
-//         attrs = {}
-//
-//         // decode values of fields
-//         for name, value in encoded.items():
-//
-//             if name not in this: throw DataError(f'invalid field "{name}", not present in schema of a STRUCT')
-//             attrs[name] = this[name].decode_one(value)
-//
-//         if this.type is struct:
-//             return struct(attrs)
-//
-//         return T.setstate(this.type, attrs)
-//     }
-//     toString() {
-//         name = this.name || this.__class__.__name__
-//         if name != 'STRUCT': return name
-//         fields = ','.join(this.keys())
-//         return f"{name}({fields})"
-//     }
-// }
-//
-// export class FIELD extends STRUCT {
-//     /* Schema of a field specification in a category's list of fields. */
-//
-//     static type = Field
-//     static fields = STRUCT._init_fields({
-//         'schema':  OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-//         'default': OBJECT(),
-//         'multi':   BOOLEAN(),
-//         'info':    STRING(),
-//     })
-// }
+export class FIELDS extends STRUCT {
+    /*
+    Dict of item properties declared by a particular category, as field name -> Field object.
+    Provides methods for schema-aware encoding and decoding of item's data,
+    with every field value encoded through its dedicated field-specific schema.
+
+    Primarily used for schema definition inside categories.
+    Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
+    are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
+    to False in all fields.
+    */
+
+    // static multi = True   -- TODO
+}
+
+export class FIELD extends STRUCT {
+    /* Schema of a field specification in a category's list of fields. */
+
+    // static type = Field
+    static fields = STRUCT._init_fields({
+        'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+        'default': new OBJECT(),
+        'multi':   new BOOLEAN(),
+        'info':    new STRING(),
+    })
+}

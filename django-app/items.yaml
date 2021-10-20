@@ -49,20 +49,12 @@
       schema:
         values:
           schema:
-            schema:
-              types:
-              - {'=': hyperweb.types.Schema, '@': (type)}
-              '@': hyperweb.types.OBJECT
-            '@': hyperweb.types.Field
-          default:
-            schema: {'@': hyperweb.types.OBJECT}
-            '@': hyperweb.types.Field
-          multi:
-            schema: {'@': hyperweb.types.BOOLEAN}
-            '@': hyperweb.types.Field
-          info:
-            schema: {'@': hyperweb.types.STRING}
-            '@': hyperweb.types.Field
+            types:
+            - {'=': hyperweb.types.Schema, '@': (type)}
+            '@': hyperweb.types.OBJECT
+          default: {'@': hyperweb.types.OBJECT}
+          multi: {'@': hyperweb.types.BOOLEAN}
+          info: {'@': hyperweb.types.STRING}
           '@': hyperweb.types.FIELD
         type: {'=': hyperweb.types.FIELDS, '@': (type)}
         '@': hyperweb.types.CATALOG

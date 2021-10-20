@@ -835,27 +835,36 @@ class FIELDS(catalog, Schema):
         # if __strict__ is not None: self.strict = __strict__
         # if fields: self.fields = fields
         super(FIELDS, self).__init__(fields)
-        self.update(fields)
-        self._init_fields()
+        # self.update(fields)
+        self._init_fields(self)
     
     def __getstate__(self):
-        return self
+        return self._reduce_fields(dict(self))
         
     def __setstate__(self, state):
         # self.__dict__ = dict(state)
         self.clear()
         self.update(state)
-        self._init_fields()
+        self._init_fields(self)
 
-    def _init_fields(self):
+    @staticmethod
+    def _init_fields(fields):
         """Wrap up in Field all the fields whose values are plain Schema instances."""
         # if self.fields is None: self.fields = {}
-        for name, field in self.items():
+        for name, field in fields.items():
             assert isinstance(name, str)
             if isinstance(field, Field): continue
             if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
-            self[name] = Field(field)
-        
+            fields[name] = Field(field)
+        return fields
+    
+    @staticmethod
+    def _reduce_fields(fields):
+        """If a Field() only has a schema configured, replace it with the schema object."""
+        for name, field in fields.items():
+            if list(field.__dict__.keys()) == ['schema']:
+                fields[name] = field.schema
+        return fields
     
     def encode(self, data):
         """
@@ -945,27 +954,29 @@ class STRUCT(FIELDS):
             raise EncodeError(f"expected an object of type {self.type}, got {obj}")
         else:
             attrs = getstate(obj)
-        
+
+        fields  = {**self.fields, **self} if self.fields else self
         encoded = {}
         
         # encode values of fields through per-field schema definitions
         for name, value in attrs.items():
             
-            if name not in self: raise EncodeError(f'unknown field "{name}", expected one of {list(self.keys())}')
-            encoded[name] = self[name].encode_one(value)
+            if name not in fields: raise EncodeError(f'unknown field "{name}", expected one of {list(fields.keys())}')
+            encoded[name] = fields[name].encode_one(value)
             
         return encoded
         
     def decode(self, encoded):
 
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
-        attrs = {}
+        fields = {**self.fields, **self} if self.fields else self
+        attrs  = {}
         
         # decode values of fields
         for name, value in encoded.items():
             
-            if name not in self: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
-            attrs[name] = self[name].decode_one(value)
+            if name not in fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
+            attrs[name] = fields[name].decode_one(value)
             
         if self.type is struct:
             return struct(attrs)
@@ -991,14 +1002,14 @@ class STRUCT(FIELDS):
     
 class FIELD(STRUCT):
     """Schema of a field specification in a category's list of fields."""
-
+    
     type = Field
-    fields = {
+    fields = FIELDS._init_fields({
         'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
         'default': OBJECT(),
         'multi':   BOOLEAN(),
         'info':    STRING(),
-    }
+    })
     
     __widget__ = """
         context $value as f
