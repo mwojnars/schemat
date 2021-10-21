@@ -84,12 +84,12 @@ export class Schema {
         By default, generic object encoding (JSON.encode()) is performed.
         Subclasses may override this method to perform more compact, schema-aware encoding.
         */
-        return JSON.encode(value)
+        return JSONx.encode(value)
     }
 
     decode(state) {
         /* Convert a serializable "state" as returned by encode() back to an original custom object. */
-        return JSON.decode(state)
+        return JSONx.decode(state)
     }
 
     toString() {
@@ -123,10 +123,10 @@ export class OBJECT extends Schema {
     encode(obj) {
         if (!this.valid(obj))
             throw `invalid object type, expected one of ${this.types}, but got ${getClass(obj)}`
-        return JSON.encode(obj)
+        return JSONx.encode(obj)
     }
     decode(state) {
-        let obj = JSON.decode(state)
+        let obj = JSONx.decode(state)
         if (!this.valid(obj))
             throw `invalid object type after decoding, expected one of ${this.types}, but got ${getClass(obj)}`
         return obj

@@ -31,7 +31,7 @@ root_fields = FIELDS(
     class_code   = Field(TEXT()),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = Field(CATALOG(CODE()), default = {"view": page_item}),
     fields       = Field(CATALOG(FIELD(), type = FIELDS)),
-    indexes      = Field(CATALOG(ITEM(Index))),
+    #indexes      = Field(CATALOG(ITEM(Index))),
     
     #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
                                 # - these props are needed to generate "simple links" to this item on "edit" tabs of other items,

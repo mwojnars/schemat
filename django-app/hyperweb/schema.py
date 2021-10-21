@@ -82,7 +82,7 @@ class Schema:
     #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
     
     
-    def dump_json(self, value, **json_format):
+    def dump_json(self, value, compact = True, **json_format):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
@@ -446,7 +446,7 @@ class ITEM(Schema):
             if cid == item.cid: return item.iid
             raise EncodeError(f"incorrect CID={item.cid} of an item {item}, expected CID={cid}")
         
-        return item.id
+        return list(item.id)
 
     def decode(self, value):
         

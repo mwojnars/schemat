@@ -221,23 +221,26 @@ base_hy = File_(
         #     $schema_json = generic_schema.dump_json(schema)
         #     $entry = (schema_json, $item.dump_data())
         #     $entries.append(entry)
-        from hyperweb.serialize import $JSON
+        
+        from hyperweb.serialize import $JSON, $json
         
         %jsondata @data id=None
             p style="display:none" type="json" id=$id @ data
         
         custom "hw-item-page-"
-            jsondata #category | $item.category.dump_data(schema = False)
-            jsondata #item     | $item.dump_data(schema = False)
+            jsondata #category | $item.category.dump_data(use_schema = False)
+            jsondata #item     | $item.dump_data(use_schema = False)
             # jsondata #item   | $JSON.dump(item.data)
             < catalog_1 $item
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
                 button #save-changes   .btn .btn-primary   disabled=False | Save
 
-        custom "hw-item-page" | $item.dump_data(False)
-        # jsondata #category | $item.category.dump_data(False)
-        # jsondata #item     | $item.dump_data(False)
+        custom "hw-item-page"
+            # serialization must use `json` not `JSON` because the data is already JSON-encoded internally
+            #| $json.dumps(item.getstate())
+            jsondata #category | $item.category.dump_item()
+            jsondata #item     | $item.dump_item()
 
     %page @body
         doctype

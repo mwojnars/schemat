@@ -1,3 +1,4 @@
+import json
 from textwrap import dedent
 from xml.sax.saxutils import quoteattr
 
@@ -346,15 +347,6 @@ class Item(object, metaclass = MetaItem):
         have been created and connected.
         """
     
-    def dump_data(self, schema = True, compact = True):
-        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        json_format = dict(separators = (',', ':')) if compact else {}
-        if schema:
-            fields = self.category.get('fields')        # specification of fields {field_name: schema}
-            return fields.dump_json(self.data, **json_format)
-        else:
-            return generic_schema.dump_json(self.data, **json_format)
-
     def serve(self, request, app, default_endpoint = 'view'):
         """
         Process a web request submitted to a given endpoint of `self` and return a response document.
@@ -465,6 +457,36 @@ class Item(object, metaclass = MetaItem):
         None value for a property is interpreted as DELETE.
         """
     
+    def dump_data(self, use_schema = True, compact = True):
+        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
+        json_format = dict(separators = (',', ':')) if compact else {}
+        schema = self.category.get('fields') if use_schema else generic_schema      # specification of field schema {field_name: schema}
+        return schema.dump_json(self.data, **json_format)
+        # if schema:
+        #     fields = self.category.get('fields')        # specification of field schema {field_name: schema}
+        #     return fields.dump_json(self.data, **json_format)
+        # else:
+        #     return generic_schema.dump_json(self.data, **json_format)
+
+    def dump_item(self, use_schema = True):
+        """Dump all contents of this item (data & metadata) to JSON. The fields `registry` and `category` are excluded."""
+        #"""The state returned by this function should be serialized through the standard `json`, not our custom JSON."""
+        state = self.__dict__.copy()
+        state.pop('registry', None)                     # Registry is not serializable, must be removed now and imputed after deserialization
+        state.pop('category', None)
+        schema = self.category.get('fields') if use_schema else generic_schema
+        state['data'] = schema.encode(self.data)        # schema-aware encode (compactify) the `data`
+        return json.dumps(state)
+        # return state
+
+    # def setstate(self, state, category = None, registry = None, use_schema = True):
+    #     """Invert operation to dump_item()."""
+    #     self.__dict__.update(state)
+    #     schema = self.category.get('fields') if use_schema else generic_schema
+    #     self.data = schema.decode(state['data'])
+    #     if category: self.category = category
+    #     if registry: self.registry = registry
+
     
 ItemDoesNotExist.item_class = Item
 

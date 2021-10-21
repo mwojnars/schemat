@@ -2,7 +2,7 @@
 
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-import { Schema, Types } from './types.js'
+import { Schema, Types, generic_schema } from './types.js'
 // import * as mod_types from './types.js'
 
 // console.log("Schema:", Schema)
@@ -106,14 +106,14 @@ class CustomElement extends HTMLElement {
            If `type` is given, or the element has `type` attribute, and it's equal "json",
            the extracted string is JSON-decoded to an object.
          */
-        let node = (selector ? this.querySelector(selector) : this);
-        if (node === undefined) return undefined;
-        let value = node.textContent;
-        if (!type) type = node.getAttribute('type');
+        let node = (selector ? this.querySelector(selector) : this)
+        if (node === undefined) return undefined
+        let value = node.textContent
+        if (!type) type = node.getAttribute('type')
 
         // decode `value` depending on the `type`
-        if (type === "json") return JSON.parse(value);
-        return value;
+        if (type === "json") return JSON.parse(value)
+        return value
     }
 }
 
@@ -381,8 +381,10 @@ class Item {
     static Page = class extends CustomElement {
         static props = {useShadowDOM: true,}
         init() {
-            let data = this.read_data('', 'json');
-            console.log('Item.Page.init() data:', data)
+            let data_cate = this.read_data('p#category', 'json');
+            let data_item = this.read_data('p#item', 'json');
+            console.log('Item.Page.init() data_cate:', data_cate)
+            console.log('Item.Page.init() data_item:', data_item)
             // let g = globalThis;
             // g.category = this._category = new Item_(this.read_data('p#category'));
             // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')

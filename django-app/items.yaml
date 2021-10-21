@@ -58,12 +58,6 @@
           '@': hyperweb.types.FIELD
         type: {'=': hyperweb.types.FIELDS, '@': (type)}
         '@': hyperweb.types.CATALOG
-    indexes:
-      schema:
-        values:
-          category: {'=': hyperweb.core.Index, '@': (type)}
-          '@': hyperweb.types.ITEM
-        '@': hyperweb.types.CATALOG
   startup_site: [9, 1]
 - id: [0, 1]
   name: File
@@ -292,20 +286,22 @@
     \                \n    %properties item\n        # for field, value in item.data.items()\n\
     \        #     $schema = $item.get_schema(field)\n        #     $schema_json =\
     \ generic_schema.dump_json(schema)\n        #     $entry = (schema_json, $item.dump_data())\n\
-    \        #     $entries.append(entry)\n        from hyperweb.serialize import\
-    \ $JSON\n        \n        %jsondata @data id=None\n            p style=\"display:none\"\
-    \ type=\"json\" id=$id @ data\n        \n        custom \"hw-item-page-\"\n  \
-    \          jsondata #category | $item.category.dump_data(schema = False)\n   \
-    \         jsondata #item     | $item.dump_data(schema = False)\n            #\
-    \ jsondata #item   | $JSON.dump(item.data)\n            < catalog_1 $item\n  \
-    \          div style=\"text-align:right; padding-top:20px\"\n                button\
-    \ #cancel-changes .btn .btn-secondary disabled=False | Cancel\n              \
-    \  button #save-changes   .btn .btn-primary   disabled=False | Save\n\n      \
-    \  custom \"hw-item-page\" | $item.dump_data(False)\n        # jsondata #category\
-    \ | $item.category.dump_data(False)\n        # jsondata #item     | $item.dump_data(False)\n\
-    \n    %page @body\n        doctype\n        ...html @body\n    \n    %page_item\
-    \ @extra item\n        page\n            head\n                title | $item['name']?\
-    \ $item.ciid(False)\n                assets\n                style / $item.registry.read('base.css')\n\
+    \        #     $entries.append(entry)\n        \n        from hyperweb.serialize\
+    \ import $JSON, $json\n        \n        %jsondata @data id=None\n           \
+    \ p style=\"display:none\" type=\"json\" id=$id @ data\n        \n        custom\
+    \ \"hw-item-page-\"\n            jsondata #category | $item.category.dump_data(use_schema\
+    \ = False)\n            jsondata #item     | $item.dump_data(use_schema = False)\n\
+    \            # jsondata #item   | $JSON.dump(item.data)\n            < catalog_1\
+    \ $item\n            div style=\"text-align:right; padding-top:20px\"\n      \
+    \          button #cancel-changes .btn .btn-secondary disabled=False | Cancel\n\
+    \                button #save-changes   .btn .btn-primary   disabled=False | Save\n\
+    \n        custom \"hw-item-page\"\n            # serialization must use `json`\
+    \ not `JSON` because the data is already JSON-encoded internally\n           \
+    \ #| $json.dumps(item.getstate())\n            jsondata #category | $item.category.dump_item()\n\
+    \            jsondata #item     | $item.dump_item()\n\n    %page @body\n     \
+    \   doctype\n        ...html @body\n    \n    %page_item @extra item\n       \
+    \ page\n            head\n                title | $item['name']? $item.ciid(False)\n\
+    \                assets\n                style / $item.registry.read('base.css')\n\
     \    \n            # body .container : div .row\n            #   div .col-1\n\
     \            #   div .col-10\n            body\n                h1\n         \
     \           $ciid = item.ciid()\n                    try\n                   \

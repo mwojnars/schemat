@@ -88,6 +88,7 @@ class JSON:
     """
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
+    Class Item is handled in a special way: only its ID is sent to output, with "(item)" flag, content omitted.
     """
     
     FLAG_ITEM  = "(item)"       # special value of ATTR_CLASS that denotes a reference to an Item
@@ -98,7 +99,11 @@ class JSON:
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
-    def dump(obj, type_ = None, **json_format):
+    def dump(obj, type_ = None, compact = True, **json_format):
+
+        base_format = dict(separators = (',', ':')) if compact else {}
+        json_format = {**base_format, **json_format}            # manually configured format overrides the base_format defaults
+        
         state = JSON.encode(obj, type_)
         return json.dumps(state, ensure_ascii = False, **json_format)
     
