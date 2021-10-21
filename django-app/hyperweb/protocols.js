@@ -354,18 +354,42 @@ class Catalog extends CustomElement {
 
 class Item {
 
-    cid = null;
-    iid = null;
+    cid         // CID (Category ID) of this item
+    iid         // IID (Item ID within a category) of this item
+
+    data        // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
+
+    category        // parent category of this item, as an instance of Category
+    registry        // Registry that manages access to this item (should refer to the unique global registry)
+
     //loaded = null;    // names of fields that have been loaded so far
 
-    get id() { return [this.cid, this.iid] }
-    has_id() { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
+    get id()   { return [this.cid, this.iid] }
+    has_id()   { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
+    has_data() { return !!this.data }
 
-    constructor(data_flat, category) {
-        this.category = category;
-        this.data = data_flat; //this.load(data_flat);
-        console.log('Item_() data_flat:', data_flat);
+    constructor(category = null, data = null) {
+        if (data) this.data = data
+        if (category) {
+            this.category = category
+            this.registry = category.registry
+            this.cid      = category.iid
+        }
+        //this.load(data)
+        console.log('Item_() data_flat:', data)
     }
+
+    static from_dump(state, category, use_schema = true) {
+        /* Recreate an item that was serialized with Item.dump_item(), possibly at the server. */
+        let schema = use_schema ? category.get('fields') : generic_schema
+        let data = schema.decode(state['data'])
+        delete state['data']
+
+        let item = new Item(category, data)
+        Object.assign(item, state)                  // copy remaining metadata from `state` to `item`
+        return item
+    }
+
     get(field) {
         return this.data[field];                        // TODO: support repeated keys (MultiDict)
     }

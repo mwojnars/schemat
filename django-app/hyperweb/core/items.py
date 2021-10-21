@@ -196,32 +196,26 @@ base_hy = File_(
     %catalog_2 data schema start_color=0
         $c = start_color
         div .wrap-offset : table .catalog-2
-            for name, value in data.items()
+            for field, value in data.items()
                 tr class="ct-color{c}"
-                    catalog_row $name $value $schema
+                    catalog_row $field $value $schema
                 # $c = 1 - c
     
     %catalog_1 item
         $c = 0          # alternating color of rows: 0 or 1
         table .catalog-1
-            for name, value in item.get_entries()
-                $schema = item.get_schema(name)
+            for field, value in item.get_entries()
+                $schema = item.category.get_schema(field)
                 tr class="ct-color{c}"
                     if schema.is_catalog
                         td .ct-nested colspan=2
-                            div .ct-field | {name}
+                            div .ct-field | {field}
                             catalog_2 $value $schema.values $c
                     else
-                        catalog_row $name $value $schema
+                        catalog_row $field $value $schema
                 $c = 1 - c
                 
     %properties item
-        # for field, value in item.data.items()
-        #     $schema = $item.get_schema(field)
-        #     $schema_json = generic_schema.dump_json(schema)
-        #     $entry = (schema_json, $item.dump_data())
-        #     $entries.append(entry)
-        
         from hyperweb.serialize import $JSON, $json
         
         %jsondata @data id=None

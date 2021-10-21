@@ -387,22 +387,6 @@ class Item(object, metaclass = MetaItem):
     def __getstate__(self):
         raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
 
-    def get_schema(self, field_name):
-        """
-        Look up this item's category definition to retrieve a schema of a given field.
-        When called on a category object, this method returns a schema pulled from the ROOT category,
-        rather than itself (!).
-        """
-        schema = None
-        fields = self.category.get('fields', {})
-        
-        if field_name in fields:
-            schema = fields[field_name].schema
-        if schema is None:
-            schema = generic_schema
-        
-        return schema
-
     def get_entries(self, order = 'schema'):
         """Retrieve a list of entries in self.data ordered appropriately."""
         # return self.data.items()
@@ -460,7 +444,7 @@ class Item(object, metaclass = MetaItem):
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
         json_format = dict(separators = (',', ':')) if compact else {}
-        schema = self.category.get('fields') if use_schema else generic_schema      # specification of field schema {field_name: schema}
+        schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
         return schema.dump_json(self.data, **json_format)
         # if schema:
         #     fields = self.category.get('fields')        # specification of field schema {field_name: schema}
@@ -469,24 +453,23 @@ class Item(object, metaclass = MetaItem):
         #     return generic_schema.dump_json(self.data, **json_format)
 
     def dump_item(self, use_schema = True):
-        """Dump all contents of this item (data & metadata) to JSON. The fields `registry` and `category` are excluded."""
-        #"""The state returned by this function should be serialized through the standard `json`, not our custom JSON."""
+        """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
         state = self.__dict__.copy()
         state.pop('registry', None)                     # Registry is not serializable, must be removed now and imputed after deserialization
         state.pop('category', None)
-        schema = self.category.get('fields') if use_schema else generic_schema
+        schema = self.category.get_schema() if use_schema else generic_schema
         state['data'] = schema.encode(self.data)        # schema-aware encode (compactify) the `data`
         return json.dumps(state)
-        # return state
+        # return state              # state should be serialized through the standard `json`, not our custom object-encoding JSON
 
-    # def setstate(self, state, category = None, registry = None, use_schema = True):
-    #     """Invert operation to dump_item()."""
-    #     self.__dict__.update(state)
-    #     schema = self.category.get('fields') if use_schema else generic_schema
-    #     self.data = schema.decode(state['data'])
-    #     if category: self.category = category
-    #     if registry: self.registry = registry
-
+    @staticmethod
+    def from_dump(state, category = None, use_schema = True):
+        """Recreate an item that was serialized with dump_item()."""
+        schema = category.get_schema() if use_schema else generic_schema
+        data = schema.decode(state.pop('data'))
+        item = Item(category, data)
+        item.__dict__.update(state)
+        return item
     
 ItemDoesNotExist.item_class = Item
 
@@ -552,7 +535,18 @@ class Category(Item):
         # return self['schema'].get_default(field)
         field = self['fields'].get(field)
         return field.default if field else Field.MISSING        # TODO: use Item.MISSING instead of Field.MISSING
-
+    
+    # def get_field(self, name):
+    #     """Return specification of a given field, as a Field instance."""
+    
+    def get_schema(self, field = None):
+        """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""
+        self.load()
+        fields = self.get('fields')
+        if field is None: return fields
+        schema = fields[field].schema if field in fields else None
+        return schema or generic_schema
+    
     #####  Handlers & templates  #####
 
     @handler('new')

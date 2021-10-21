@@ -273,20 +273,17 @@
     \ of a data field (not a subcatalog)\n        th .ct-field | $key\n        # td\
     \ .ct-flags | *\n        td .ct-value / $schema.display(value)\n\n    %catalog_2\
     \ data schema start_color=0\n        $c = start_color\n        div .wrap-offset\
-    \ : table .catalog-2\n            for name, value in data.items()\n          \
-    \      tr class=\"ct-color{c}\"\n                    catalog_row $name $value\
+    \ : table .catalog-2\n            for field, value in data.items()\n         \
+    \       tr class=\"ct-color{c}\"\n                    catalog_row $field $value\
     \ $schema\n                # $c = 1 - c\n    \n    %catalog_1 item\n        $c\
     \ = 0          # alternating color of rows: 0 or 1\n        table .catalog-1\n\
-    \            for name, value in item.get_entries()\n                $schema =\
-    \ item.get_schema(name)\n                tr class=\"ct-color{c}\"\n          \
-    \          if schema.is_catalog\n                        td .ct-nested colspan=2\n\
-    \                            div .ct-field | {name}\n                        \
-    \    catalog_2 $value $schema.values $c\n                    else\n          \
-    \              catalog_row $name $value $schema\n                $c = 1 - c\n\
-    \                \n    %properties item\n        # for field, value in item.data.items()\n\
-    \        #     $schema = $item.get_schema(field)\n        #     $schema_json =\
-    \ generic_schema.dump_json(schema)\n        #     $entry = (schema_json, $item.dump_data())\n\
-    \        #     $entries.append(entry)\n        \n        from hyperweb.serialize\
+    \            for field, value in item.get_entries()\n                $schema =\
+    \ item.category.get_schema(field)\n                tr class=\"ct-color{c}\"\n\
+    \                    if schema.is_catalog\n                        td .ct-nested\
+    \ colspan=2\n                            div .ct-field | {field}\n           \
+    \                 catalog_2 $value $schema.values $c\n                    else\n\
+    \                        catalog_row $field $value $schema\n                $c\
+    \ = 1 - c\n                \n    %properties item\n        from hyperweb.serialize\
     \ import $JSON, $json\n        \n        %jsondata @data id=None\n           \
     \ p style=\"display:none\" type=\"json\" id=$id @ data\n        \n        custom\
     \ \"hw-item-page-\"\n            jsondata #category | $item.category.dump_data(use_schema\
