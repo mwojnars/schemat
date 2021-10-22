@@ -32,8 +32,34 @@ from .struct import struct, catalog
 
 #####################################################################################################################################################
 #####
-#####  TYPE
+#####  SCHEMA
 #####
+
+class multivalue:
+    """
+    Container for a list of values, possibly with labels, each value matching a common schema.
+    Values can be accessed by position (always), or label (if labels are allowed and present for a given entry).
+    Labels, if present, must be different between each other.
+    """
+    mode   = None       # whether labels are required/allowed: "yes", "no", "optional"
+    values = None       # list of (label, value) tuples; label=None if no label
+    labels = None       # dict of labels and their positions in `entries`: {label: index}
+    
+    def __init__(self, labels = "optional"):
+        self.mode   = str(labels).lower()
+        self.values = []
+        self.labels = {}
+        
+    def __getitem__(self, pos_or_label):
+        if isinstance(pos_or_label, str):
+            pos = self.labels[pos_or_label]
+        else:
+            pos = pos_or_label
+            
+        return self.values[pos][1]
+        
+
+#####################################################################################################################################################
 
 class Schema:
     """

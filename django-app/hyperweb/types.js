@@ -381,27 +381,27 @@ export class Field {
         return this.schema.decode(state)
     }
     
-    encode_many(values) {
-        /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
-        if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
-        let encoded = values.map((v) => this.schema.encode(v))
-
-        // compactify singleton lists
-        if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
-            encoded = encoded[0]
-            
-        return encoded
-    }
-    decode_many(encoded) {
-        /* Returns a list of value(s). */
-        
-        // de-compactify singleton lists
-        if (!this.multi || !(encoded instanceof Array))
-            encoded = [encoded]
-    
-        // schema-based decoding
-        return encoded.map((s) => this.schema.decode(s))
-    }
+    // encode_many(values) {
+    //     /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
+    //     if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
+    //     let encoded = values.map((v) => this.schema.encode(v))
+    //
+    //     // compactify singleton lists
+    //     if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
+    //         encoded = encoded[0]
+    //
+    //     return encoded
+    // }
+    // decode_many(encoded) {
+    //     /* Returns a list of value(s). */
+    //
+    //     // de-compactify singleton lists
+    //     if (!this.multi || !(encoded instanceof Array))
+    //         encoded = [encoded]
+    //
+    //     // schema-based decoding
+    //     return encoded.map((s) => this.schema.decode(s))
+    // }
 }        
         
 /**********************************************************************************************************************/
@@ -460,7 +460,6 @@ export class STRUCT extends Schema {
 
         return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
 
-        // TODO: support MultiDict (?)
         // TODO: catch exceptions and re-throw with the error location path extended
     }
     decode(state) {
