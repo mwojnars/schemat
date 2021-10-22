@@ -78,6 +78,11 @@ class Schema:
     #                         # no other valid value can produce None as its serializable state
     # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
+    multi = False           # if True, a value can be a <multi> collection of inner values, each one matching this schema
+                            # (multi_list, multi_dict, group, catalog, cluster, batch) -- TODO: replace MultiDict & catalog
+                            # the detection of a multi-value will be done by an outer container (STRUCT?)
+                            # which should call encode_multi() instead of encode() and append * to a field name in output state
+    
     is_catalog = False      # True only in CATALOG and subclasses
     #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
     
@@ -871,7 +876,6 @@ class FIELDS(catalog, Schema):
         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
         while schema-encoding each field value beforehand.
         """
-        
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
         errors = []
         
@@ -891,7 +895,6 @@ class FIELDS(catalog, Schema):
             raise EncodeErrors(errors)
             
         return encoded
-        
         
     def decode(self, data):
         """

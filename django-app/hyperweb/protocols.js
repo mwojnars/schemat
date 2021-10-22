@@ -2,12 +2,13 @@
 
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-import { Schema, Types, generic_schema } from './types.js'
+import { assert, T, Schema, generic_schema } from './types.js'
 // import * as mod_types from './types.js'
 
 // console.log("Schema:", Schema)
 // console.log("mod_types:", mod_types, typeof mod_types)
 
+const ROOT_CID = 0
 
 /*************************************************************************************************/
 /* UTILITIES
@@ -295,7 +296,7 @@ class Item_ {
     constructor(data_flat, category) {
         this.category = category;
         this.data = data_flat; //this.load(data_flat);
-        console.log('Item_() data_flat:', data_flat);
+        // console.log('Item_() data_flat:', data_flat);
     }
 
     get(field) {
@@ -354,10 +355,10 @@ class Catalog extends CustomElement {
 
 class Item {
 
-    cid         // CID (Category ID) of this item
-    iid         // IID (Item ID within a category) of this item
+    cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
+    iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
-    data        // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
+    data            // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
 
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item (should refer to the unique global registry)
@@ -365,7 +366,8 @@ class Item {
     //loaded = null;    // names of fields that have been loaded so far
 
     get id()   { return [this.cid, this.iid] }
-    has_id()   { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
+    has_id()   { return this.cid !== null && this.iid !== null }
+    // has_id()   { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
     has_data() { return !!this.data }
 
     constructor(category = null, data = null) {
@@ -376,12 +378,12 @@ class Item {
             this.cid      = category.iid
         }
         //this.load(data)
-        console.log('Item_() data_flat:', data)
+        // console.log('Item() data_flat:', data)
     }
 
-    static from_dump(state, category, use_schema = true) {
+    static from_dump(state, category = null, use_schema = true) {
         /* Recreate an item that was serialized with Item.dump_item(), possibly at the server. */
-        let schema = use_schema ? category.get('fields') : generic_schema
+        let schema = use_schema ? category.get_schema() : generic_schema
         let data = schema.decode(state['data'])
         delete state['data']
 
@@ -397,7 +399,6 @@ class Item {
         // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
         // return fields.load_json(data_json);
         return generic_schema.decode(data_flat);
-        // return MultiDict(...);
     }
 
     static Properties = class extends Catalog {}
@@ -405,11 +406,18 @@ class Item {
     static Page = class extends CustomElement {
         static props = {useShadowDOM: true,}
         init() {
-            let data_cate = this.read_data('p#category', 'json');
-            let data_item = this.read_data('p#item', 'json');
-            console.log('Item.Page.init() data_cate:', data_cate)
-            console.log('Item.Page.init() data_item:', data_item)
-            // let g = globalThis;
+            let g = globalThis
+
+            let dump_catg = this.read_data('p#category', 'json');
+            console.log('Item.Page.init() dump_catg:', dump_catg)
+            g.category = Item.from_dump(dump_catg, null, false)
+            console.log('Item.Page.init() category:', g.category)
+
+            // let dump_item = this.read_data('p#item', 'json');
+            // console.log('Item.Page.init() dump_item:', dump_item)
+            // g.item     = Item.from_dump(dump_item, g.category)
+            // console.log('Item.Page.init() item:', g.item)
+
             // g.category = this._category = new Item_(this.read_data('p#category'));
             // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
         }
@@ -421,11 +429,45 @@ class Item {
 }
 
 class Category extends Item {
+    get_schema(field = null) {
+        /* Return schema of a given field, or all fields (if field=null), in the latter case a FIELDS object is returned. */
+        // this.load()
+        let fields = this.get('fields')
+        if (!field) return fields
+        let schema = (field in fields) ? fields[field].schema : null
+        return schema || generic_schema
+    }
+}
+class RootCategory extends Category {
+    cid = ROOT_CID
+    iid = ROOT_CID
+
+    constructor(registry) {
+        // from .core.root import root_data
+
+        // this.data will ultimately be overwritten with data from DB, but is needed for the initial
+        // call to this.load(), where it's accessible thx to circular dependency this.category===this
+        super(null, root_data)
+
+        this.registry = registry
+        this.category = this                    // root category is a category for itself
+    }
 }
 
 window.customElements.define('hw-item-page', Item.Page);
 
 /*************************************************************************************************/
+
+class CacheOnClient {
+    /* Client-side item cache based on Web Storage (local storage or session storage). */
+    // TODO: implement
+
+    cache = new Map()
+
+    key(id)       { return `${id[0]}:${id[1]}` }            // item ID is an array that must be converted to a string for equality comparisons inside Map
+    set(id, item) { this.cache.set(this.key(id), item) }
+    get(id)       { return this.cache.get(this.key(id)) }
+}
 
 class Classpath {
     forward = new Map()         // dict of objects indexed by paths: (path -> object)
@@ -497,6 +539,12 @@ class Classpath {
 
 class Registry {
 
+    static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
+
+    cache   = null
+    root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
+    site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
+
     async init_classpath() {
         let classpath = new Classpath
 
@@ -506,8 +554,54 @@ class Registry {
         this.classpath = classpath
     }
 
-    get_item(id) {
-        throw "Not implemented"
+    boot() {
+        // this.store.load()
+        let root = this.create_root()
+        root.load() //force = true)
+        let site = root[Registry.STARTUP_SITE]
+        assert(site && site.has_id(), `missing startup site or its ID in the root category: ${site}`)
+        this.site_id = site.id
+    }        
+    create_root(insert = false) {
+        /*
+        Create the RootCategory object, ID=(0,0). If `data` is provided,
+        the properties are initialized from `data`, the object is bound through bind(),
+        marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
+        */
+        this.root = new RootCategory(this)
+        this.root.bind()
+        // if insert:                              # here, this.store must be used directly (no stage/commit), because ...
+        //     this.store.insert(this.root)        # ...this.root already has an ID, so it would get "updated" rather than inserted!
+        return this.root
+    }
+    
+    get_category(cid) { return this.get_item([ROOT_CID, cid]) }
+
+    get_item(id, load = true) {
+        let [cid, iid] = id
+        if (cid === null) throw new Error('missing CID')
+        if (iid === null) throw new Error('missing IID')
+        if (cid === ROOT_CID && iid === ROOT_CID) return this.root
+
+        // ID requested is already present in cache? return the cached instance
+        let item = this.cache.get(id)
+        if (!item)
+            // create a stub of an item and insert to cache, then load item data - these two steps are
+            // separated to ensure proper handling of circular relationships between items
+            item = this.create_stub(id)
+
+        if (load) item.load()
+        return item
+    }
+    create_stub(id, category = null) {
+        /* Create a "stub" item (no data) with a given ID and insert to cache. */
+        let [cid, iid] = id
+        category = category || this.get_category(cid)
+        let itemclass = Item // TODO: category.get_class()
+        let item = new itemclass(category)
+        item.iid = iid
+        this.cache.set(id, item)
+        return item
     }
 
     get_path(cls) {
@@ -527,9 +621,19 @@ class Registry {
         return this.classpath.decode(path)
     }
 }
+class RegistryOnClient extends Registry {
+    /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
+
+    constructor() {
+        super()
+        this.cache = new CacheOnClient()
+    }
+
+}
 
 let registry = globalThis.registry = new Registry
 await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
+await registry.boot()
 
 
 /*************************************************************************************************/
@@ -563,14 +667,14 @@ class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = globalThis.registry
-        let of_type = Types.ofType(obj, type)
+        let of_type = T.ofType(obj, type)
         let state
 
         if (obj === undefined)          throw "Can't encode an `undefined` value"
-        if (Types.isPrimitiveObj(obj))  return obj
-        if (Types.isArray(obj))         return JSONx.encode_list(obj)
+        if (T.isPrimitiveObj(obj))  return obj
+        if (T.isArray(obj))         return JSONx.encode_list(obj)
 
-        if (Types.isDict(obj)) {
+        if (T.isDict(obj)) {
             obj = JSONx.encode_dict(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
@@ -582,14 +686,14 @@ class JSONx {
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
-        if (Types.isClass(obj)) {
+        if (T.isClass(obj)) {
             state = registry.get_path(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
             state = JSONx.encode_list(Array.from(obj))
         else {
-            state = Types.getstate(obj)
+            state = T.getstate(obj)
             state = JSONx.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
@@ -599,10 +703,10 @@ class JSONx {
         if (of_type) return state
 
         // wrap up the state in a dict, if needed, and append class designator
-        if (!Types.isDict(state))
+        if (!T.isDict(state))
             state = {[JSONx.ATTR_STATE]: state}
 
-        let t = Types.getPrototype(obj)
+        let t = T.getPrototype(obj)
         state[JSONx.ATTR_CLASS] = registry.get_path(t)
 
         return state
@@ -614,7 +718,7 @@ class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = globalThis.registry
-        let isdict = Types.isDict(state)
+        let isdict = T.isDict(state)
         let cls
 
         // decoding of a wrapped-up dict that contained a pre-existing '@' key
@@ -631,15 +735,13 @@ class JSONx {
             cls = type;
         }
         else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
-            cls = Types.getClass(state)             // cls=null denotes a class of null value
+            cls = T.getClass(state)             // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
-            let classname = state[JSONx.ATTR_CLASS]
-            delete state[JSONx.ATTR_CLASS]
-
+            let classname = T.pop(state, JSONx.ATTR_CLASS)
             if (JSONx.ATTR_STATE in state) {
-                let state_attr = state[JSONx.ATTR_STATE]
-                if (state)
+                let state_attr = T.pop(state, JSONx.ATTR_STATE)
+                if (T.notEmpty(state))
                     throw `Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
                 state = state_attr;
             }
@@ -652,13 +754,13 @@ class JSONx {
         console.assert(cls !== undefined, {msg: "`cls` is undefined", state: state, type: type})
 
         // instantiate the output object; special handling for standard JSON types and Item
-        if (Types.isPrimitiveCls(cls))  return state
+        if (T.isPrimitiveCls(cls))  return state
         if (cls === Array)              return JSONx.decode_list(state)
         if (cls === Object)             return JSONx.decode_dict(state)
         if (cls === Set)                return new cls(JSONx.decode_list(state))
 
         let Item = registry.get_class("hyperweb.core.Item")
-        if (Types.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
+        if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.get_item(state)
 
         state = JSONx.decode_dict(state)
@@ -666,7 +768,7 @@ class JSONx {
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
 
-        return Types.setstate(cls, state)
+        return T.setstate(cls, state)
     }
 
     static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes

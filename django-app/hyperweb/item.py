@@ -316,7 +316,7 @@ class Item(object, metaclass = MetaItem):
         if not brackets: return stamp
         return f"[{stamp}]"
 
-    def load(self, field = None, data_json = None, force = False):
+    def load(self, field = None, data_json = None, force = False, use_schema = True):
         """
         Load properties of this item from a DB or JSON string `data_json` into self.data, IF NOT LOADED YET.
         Only with a not-None `data_json`, or force=True, (re)loading takes place even if `self` was already loaded
@@ -331,8 +331,8 @@ class Item(object, metaclass = MetaItem):
         if data_json is None:
             data_json = self.registry.load_data(self.id)
 
-        fields = self.category.get('fields')        # specification of fields {field_name: schema}
-        data   = fields.load_json(data_json)        #generic_schema.load_json(data)
+        schema = self.category.get_schema() if use_schema else generic_schema       # specification of field schema {field_name: schema}
+        data   = schema.load_json(data_json)
         self.data = MultiDict(data)
         self.bind()
 
@@ -392,7 +392,7 @@ class Item(object, metaclass = MetaItem):
         # return self.data.items()
         
         entries = []
-        fields  = self.category.get('fields', {})
+        fields  = self.category.get_schema()
         
         # retrieve entries by their order in category's schema (fields)
         for f in fields:
@@ -446,19 +446,15 @@ class Item(object, metaclass = MetaItem):
         json_format = dict(separators = (',', ':')) if compact else {}
         schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
         return schema.dump_json(self.data, **json_format)
-        # if schema:
-        #     fields = self.category.get('fields')        # specification of field schema {field_name: schema}
-        #     return fields.dump_json(self.data, **json_format)
-        # else:
-        #     return generic_schema.dump_json(self.data, **json_format)
 
     def dump_item(self, use_schema = True):
         """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
         state = self.__dict__.copy()
-        state.pop('registry', None)                     # Registry is not serializable, must be removed now and imputed after deserialization
+        state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
         state.pop('category', None)
         schema = self.category.get_schema() if use_schema else generic_schema
-        state['data'] = schema.encode(self.data)        # schema-aware encode (compactify) the `data`
+        data = self.data if use_schema else self.data.asdict_first()      # temporary code
+        state['data'] = schema.encode(data)      # schema-aware encode (compactify) the `data` as <dict> (TODO multidict)
         return json.dumps(state)
         # return state              # state should be serialized through the standard `json`, not our custom object-encoding JSON
 
@@ -532,12 +528,8 @@ class Category(Item):
     
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
-        # return self['schema'].get_default(field)
-        field = self['fields'].get(field)
+        field = self.get_schema().get(field)
         return field.default if field else Field.MISSING        # TODO: use Item.MISSING instead of Field.MISSING
-    
-    # def get_field(self, name):
-    #     """Return specification of a given field, as a Field instance."""
     
     def get_schema(self, field = None):
         """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""
@@ -587,11 +579,23 @@ class RootCategory(Category):
 
         # self.data will ultimately be overwritten with data from DB, but is needed for the initial
         # call to self.load(), where it's accessible thx to circular dependency self.category==self
-        super(RootCategory, self).__init__(data = root_data)
-
+        super(RootCategory, self).__init__() #data = root_data)
+        
         self.registry = registry
         self.category = self                    # root category is a category for itself
+        
+        # self.data = MultiDict(root_data)
+        # self.load()
+        
+    def dump_data(self, use_schema = False, compact = True):
+        """Same as Item.dump_data(), but use_schema is False by default to avoid circular dependency during deserialization."""
+        return super(RootCategory, self).dump_data(use_schema, compact)
 
+    def load(self, *args, **kwargs):
+        """Same as Item.load(), but use_schema is False by default to avoid circular dependency during deserialization."""
+        kwargs.setdefault('use_schema', False)
+        return super(RootCategory, self).load(*args, **kwargs)
+        
 
 #####################################################################################################################################################
 #####

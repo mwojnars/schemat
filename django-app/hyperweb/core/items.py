@@ -233,7 +233,8 @@ base_hy = File_(
         custom "hw-item-page"
             # serialization must use `json` not `JSON` because the data is already JSON-encoded internally
             #| $json.dumps(item.getstate())
-            jsondata #category | $item.category.dump_item()
+            #jsondata #root     | $item.category.category.dump_item(use_schema=False)
+            jsondata #category | $item.category.dump_item(use_schema=False)
             jsondata #item     | $item.dump_item()
 
     %page @body

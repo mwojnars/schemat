@@ -15,21 +15,21 @@
     name:
       schema: {'@': hyperweb.types.STRING}
       info: human-readable title of the category
-      '@': hyperweb.types.Field
-    info: {'@': hyperweb.types.STRING}
-    startup_site: {'@': hyperweb.types.OBJECT}
+    info:
+      schema: {'@': hyperweb.types.STRING}
+    startup_site:
+      schema: {'@': hyperweb.types.ITEM}
     prototype:
       schema: {'@': hyperweb.types.ITEM}
       info: Base category from which this one inherits. Multiple prototypes are allowed,
         the first ones override settings of subsequent ones.
-      '@': hyperweb.types.Field
     class_name:
       schema: {'@': hyperweb.types.STRING}
       default: hyperweb.core.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
-      '@': hyperweb.types.Field
-    class_code: {'@': hyperweb.types.TEXT}
+    class_code:
+      schema: {'@': hyperweb.types.TEXT}
     endpoints:
       schema:
         values: {'@': hyperweb.types.CODE}
@@ -45,23 +45,20 @@
           # dedent : page_item $item
 
           '}
-      '@': hyperweb.types.Field
     fields:
-      values:
-        schema:
-          types:
-          - {'=': hyperweb.types.Schema, '@': (type)}
-          '@': hyperweb.types.OBJECT
-        default: {'@': hyperweb.types.OBJECT}
-        multi: {'@': hyperweb.types.BOOLEAN}
-        info: {'@': hyperweb.types.STRING}
-        '@': hyperweb.types.FIELD
-      type: {'=': hyperweb.types.FIELDS, '@': (type)}
-      '@': hyperweb.types.CATALOG
-    '@': hyperweb.types.FIELDS
-  startup_site:
-  - [9, 1]
-  '@': hyperweb.core.MultiDict
+      schema:
+        values:
+          schema:
+            types:
+            - {'=': hyperweb.types.Schema, '@': (type)}
+            '@': hyperweb.types.OBJECT
+          default: {'@': hyperweb.types.OBJECT}
+          multi: {'@': hyperweb.types.BOOLEAN}
+          info: {'@': hyperweb.types.STRING}
+          '@': hyperweb.types.FIELD
+        type: {'=': hyperweb.types.FIELDS, '@': (type)}
+        '@': hyperweb.types.CATALOG
+  startup_site: [9, 1]
 - id: [0, 1]
   name: File
   info: File with a text content. Accessible through the web filesystem.

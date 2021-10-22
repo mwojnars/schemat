@@ -196,8 +196,8 @@ class JSON:
                 if state: raise DecodeError(f'invalid serialized state, expected only {JSON.ATTR_CLASS} and {JSON.ATTR_STATE} special keys but got others: {state}')
                 state = state_attr
 
-            if classname == JSON.FLAG_ITEM:                 # decoding a reference to an Item?
-                return registry.get_item(state)             # ...get it from the Registry
+            if classname == JSON.FLAG_ITEM:                 # decoding a reference to an Item? get a stub from the Registry
+                return registry.get_item(state, load = False)
             if classname == JSON.FLAG_TYPE:                 # decoding a type (an object that represents a class or type)?
                 return registry.get_class(state)            # ...get it from the Classpath
 
@@ -211,8 +211,8 @@ class JSON:
         
         # if isinstance(class_, type):
         from .item import Item
-        if issubclass(class_, Item):                # all Item instances must be created/loaded through the Registry
-            return registry.get_item(state)
+        if issubclass(class_, Item):                        # all Item instances (stubs) must be created through the Registry
+            return registry.get_item(state, load = False)
         # if issubclass(class_, type):
         #     return registry.get_class(state)
 

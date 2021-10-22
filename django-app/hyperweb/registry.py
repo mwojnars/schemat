@@ -129,13 +129,13 @@ class Registry:
     (via django.core.signals.request_finished), which alleviates the problem of indirect duplicates, but means that
     the last request before item refresh operates on an already-expired item.
     """
-    STARTUP_SITE = 'startup_site'       # this property of the root category will store the current site, for startup boot()
+    STARTUP_SITE = 'startup_site'       # this property of the root category stores the current site, for startup boot()
     
-    store = None                # DataStore where items are read from and saved to
-    cache = None                # cached pairs of {ID: item}, with TTL configured on per-item basis
+    store = None            # DataStore where items are read from and saved to
+    cache = None            # cached pairs of {ID: item}, with TTL configured on per-item basis
     
-    root    = None              # permanent reference to a singleton root Category object, kept here instead of cache
-    site_id = None              # `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
+    root    = None          # permanent reference to a singleton root Category object, kept here instead of cache
+    site_id = None          # `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
     
     @property
     def site(self): return self.get_item(self.site_id)
@@ -208,9 +208,10 @@ class Registry:
         self.store.load()
         root = self.create_root()
         root.load(force = True)
-        site = root[self.STARTUP_SITE]
-        assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
-        self.site_id = site.id
+        self.site_id = root[self.STARTUP_SITE]
+        # site = root[self.STARTUP_SITE]
+        # assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
+        # self.site_id = site.id
         
     def create_root(self, insert = False):
         """
@@ -219,6 +220,7 @@ class Registry:
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
         self.root = RootCategory(self)
+        self.root.load()
         self.root.bind()
         if insert:                              # here, self.store must be used directly (no stage/commit), because ...
             self.store.insert(self.root)        # ...self.root already has an ID, so it would get "updated" rather than inserted!
@@ -234,18 +236,19 @@ class Registry:
         assert site.isinstance(Site_)
         self.site_id = site.id
         
-        self.root[self.STARTUP_SITE] = site
+        # self.root[self.STARTUP_SITE] = site
+        self.root[self.STARTUP_SITE] = list(site.id)        # plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         self.commit(self.root)
         
+    def load_data(self, id):
+        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
+        # """Load item record from DB and return as a dict with cid, iid, data etc."""
+        return self.store.select(id)['data']
+    
     def get_category(self, cid):
         cat = self.get_item((ROOT_CID, cid))
         assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
-    
-    def load_data(self, id):
-        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
-        # """Load item record from DB and return as a dict; contains cid, iid, data etc."""
-        return self.store.select(id)['data']
     
     def get_item(self, id, load = True):
         """
@@ -261,22 +264,17 @@ class Registry:
         
         if cid is None: raise Exception('missing CID')
         if iid is None: raise Exception('missing IID')
-        
         if cid == iid == ROOT_CID:
             return self.root
 
         # ID requested is already present in cache? return the cached instance
         item = self.cache.get(id)
-        if item:
-            if load: item.load()
-            return item
+        if not item:
+            # create a stub of an item and insert to cache, then load item data - these two steps are
+            # separated to ensure proper handling of circular relationships between items
+            item = self.create_stub(id)
 
-        # create a stub of an item and insert to cache, then load item data - these two steps are
-        # separated to ensure proper handling of circular relationships between items
-        item = self.create_stub(id)
         if load: item.load()
-
-        # print(f'Registry.get_item(): created item {id_} - {id(item)}')
         return item
         
     # def get_essential(self, id):
