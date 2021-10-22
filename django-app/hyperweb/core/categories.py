@@ -31,7 +31,7 @@ from hyperweb.core.root import registry
 
 # root Category_ is newly created here (not loaded), so it must be inserted to DB;
 # all other items/categories are staged for commit automatically
-Category_ = registry.create_root(insert = True)
+Category_ = registry.create_root(load = False)
 
 
 File_ = Category_(

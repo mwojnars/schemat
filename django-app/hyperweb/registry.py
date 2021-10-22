@@ -206,25 +206,19 @@ class Registry:
     def boot(self):
         
         self.store.load()
-        root = self.create_root()
-        root.load(force = True)
-        self.site_id = root[self.STARTUP_SITE]
-        # site = root[self.STARTUP_SITE]
-        # assert site and site.has_id(), f"missing startup site or its ID in the root category: {site}"
-        # self.site_id = site.id
+        self.root = self.create_root()
+        self.site_id = self.root[self.STARTUP_SITE]
         
-    def create_root(self, insert = False):
+    def create_root(self, load = True):
         """
         Create the RootCategory object, ID=(0,0). If `data` is provided,
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
-        self.root = RootCategory(self)
-        self.root.load()
-        self.root.bind()
-        if insert:                              # here, self.store must be used directly (no stage/commit), because ...
-            self.store.insert(self.root)        # ...self.root already has an ID, so it would get "updated" rather than inserted!
-        return self.root
+        self.root = root = RootCategory(self, load)
+        if not load:                        # root created anew? self.store must be used directly (no stage/commit), because
+            self.store.insert(root)         # ...self.root already has an ID and it would get "updated" rather than inserted!
+        return root
         
     def set_site(self, site):
         
@@ -236,7 +230,6 @@ class Registry:
         assert site.isinstance(Site_)
         self.site_id = site.id
         
-        # self.root[self.STARTUP_SITE] = site
         self.root[self.STARTUP_SITE] = list(site.id)        # plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         self.commit(self.root)
         

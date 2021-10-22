@@ -316,16 +316,15 @@ class Item(object, metaclass = MetaItem):
         if not brackets: return stamp
         return f"[{stamp}]"
 
-    def load(self, field = None, data_json = None, force = False, use_schema = True):
+    def load(self, field = None, data_json = None, use_schema = True):
         """
         Load properties of this item from a DB or JSON string `data_json` into self.data, IF NOT LOADED YET.
-        Only with a not-None `data_json`, or force=True, (re)loading takes place even if `self` was already loaded
+        Only with a not-None `data_json`, (re)loading takes place even if `self` was already loaded
         - the newly loaded `data` fully replaces the existing self.data in such case.
         """
         # if field and field in self.loaded: return      # this will be needed when partial loading from indexes is available
         
-        if self.has_data() and data_json is None and not force:
-            return self
+        if self.has_data() and data_json is None: return self
         if self.iid is None:
             raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if data_json is None:
@@ -573,19 +572,18 @@ class RootCategory(Category):
     cid = ROOT_CID
     iid = ROOT_CID
 
-    def __init__(self, registry):
+    def __init__(self, registry, load):
 
-        from .core.root import root_data
-
-        # self.data will ultimately be overwritten with data from DB, but is needed for the initial
-        # call to self.load(), where it's accessible thx to circular dependency self.category==self
-        super(RootCategory, self).__init__() #data = root_data)
-        
+        super(RootCategory, self).__init__()
         self.registry = registry
         self.category = self                    # root category is a category for itself
         
-        # self.data = MultiDict(root_data)
-        # self.load()
+        if load: self.load()
+        else:                                   # data is set from scratch only when the root is created anew rather than loaded
+            from .core.root import root_data
+            self.data = MultiDict(root_data)
+            
+        self.bind()
         
     def dump_data(self, use_schema = False, compact = True):
         """Same as Item.dump_data(), but use_schema is False by default to avoid circular dependency during deserialization."""
