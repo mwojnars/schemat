@@ -9,7 +9,7 @@ from .errors import *
 from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
-from .schema import generic_schema, Field
+from .schema import generic_schema
 
 
 #####################################################################################################################################################
@@ -533,7 +533,6 @@ class Category(Item):
         fields = self.get('fields')
         if field is None: return fields
         schema = fields[field] if field in fields else None
-        if isinstance(schema, Field): schema = schema.schema        # TODO: refactor
         return schema or generic_schema
     
     #####  Handlers & templates  #####

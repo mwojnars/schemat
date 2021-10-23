@@ -827,83 +827,83 @@ class VARIANT(Schema):
 #####  FIELD(S), RECORD, STRUCT
 #####
 
-class Field:
-    """Specification of a field in a FIELDS/STRUCT catalog."""
-    
-    MISSING = None #object()      # token indicating that `default` value is missing; removed from output during serialization
-    
-    schema  = None          # instance of Schema
-    # default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
-    # multi   = False         # whether this field can be repeated (take on multiple values)
-    # info    = None          # human-readable description of the field
-    
-    @property
-    def default(self): return self.schema.default
-    @property
-    def multi(self): return self.schema.multi
-    @property
-    def info(self): return self.schema.info
-    
-    def __init__(self, schema = None): #, default = MISSING, info = None, multi = None):
-        if schema is not None:  self.schema = schema
-        # if default is not Field.MISSING: self.schema.default = default
-        # if multi is not None:   self.schema.multi = multi
-        # if info is not None:    self.schema.info = info
-    
-    # def __getstate__(self):
-    #     # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
-    #     #     return self.schema
-    #
-    #     if 'default' in self.__dict__ and self.default is Field.MISSING:           # exclude explicit MISSING value from serialization
-    #         state = self.__dict__.copy()
-    #         del state['default']
-    #     else:
-    #         state = self.__dict__
-    #
-    #     return state
-    
-    # def __html__(self):
-    #     view = """
-    #         context $field as f
-    #         span .field
-    #             | $f.schema
-    #             ...if f.multi | *
-    #             if f.default <> f.MISSING
-    #                 $default = str(f.default)
-    #                 span .default title="default value: {default:crop(1000)}"
-    #                     | [{default : crop(100)}]
-    #             if f.info
-    #                 span .info | • $f.info
-    #                 # smaller dot: &middot;
-    #                 # larger dot: •
-    #     """
-    #     return hypertag(view).render(field = self)
-    
-    def encode(self, value):    return self.schema.encode(value)
-    def decode(self, encoded):  return self.schema.decode(encoded)
-    
-    def encode_many(self, values):
-        """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
-        if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
-        # encoded = [self.schema.encode(v) for v in values]
-        encoded = list(map(self.schema.encode, values))
-
-        # compactify singleton lists
-        if not self.multi or (len(encoded) == 1 and not isinstance(encoded[0], list)):
-            encoded = encoded[0]
-            
-        return encoded
-        
-    def decode_many(self, encoded):
-        """Returns a list of value(s)."""
-        
-        # de-compactification of singleton lists
-        if not self.multi or not isinstance(encoded, list):
-            encoded = [encoded]
-    
-        # schema-based decoding
-        # return [self.schema.decode(e) for e in encoded]
-        return list(map(self.schema.decode, encoded))
+# class Field:
+#     """Specification of a field in a FIELDS/STRUCT catalog."""
+#
+#     MISSING = None #object()      # token indicating that `default` value is missing; removed from output during serialization
+#
+#     schema  = None          # instance of Schema
+#     # default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
+#     # multi   = False         # whether this field can be repeated (take on multiple values)
+#     # info    = None          # human-readable description of the field
+#
+#     @property
+#     def default(self): return self.schema.default
+#     @property
+#     def multi(self): return self.schema.multi
+#     @property
+#     def info(self): return self.schema.info
+#
+#     def __init__(self, schema = None): #, default = MISSING, info = None, multi = None):
+#         if schema is not None:  self.schema = schema
+#         # if default is not Field.MISSING: self.schema.default = default
+#         # if multi is not None:   self.schema.multi = multi
+#         # if info is not None:    self.schema.info = info
+#
+#     # def __getstate__(self):
+#     #     # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
+#     #     #     return self.schema
+#     #
+#     #     if 'default' in self.__dict__ and self.default is Field.MISSING:           # exclude explicit MISSING value from serialization
+#     #         state = self.__dict__.copy()
+#     #         del state['default']
+#     #     else:
+#     #         state = self.__dict__
+#     #
+#     #     return state
+#
+#     # def __html__(self):
+#     #     view = """
+#     #         context $field as f
+#     #         span .field
+#     #             | $f.schema
+#     #             ...if f.multi | *
+#     #             if f.default <> f.MISSING
+#     #                 $default = str(f.default)
+#     #                 span .default title="default value: {default:crop(1000)}"
+#     #                     | [{default : crop(100)}]
+#     #             if f.info
+#     #                 span .info | • $f.info
+#     #                 # smaller dot: &middot;
+#     #                 # larger dot: •
+#     #     """
+#     #     return hypertag(view).render(field = self)
+#
+#     def encode(self, value):    return self.schema.encode(value)
+#     def decode(self, encoded):  return self.schema.decode(encoded)
+#
+#     def encode_many(self, values):
+#         """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
+#         if len(values) >= 2 and not self.multi: raise Exception(f"multiple values not allowed by {self} schema")
+#         # encoded = [self.schema.encode(v) for v in values]
+#         encoded = list(map(self.schema.encode, values))
+#
+#         # compactify singleton lists
+#         if not self.multi or (len(encoded) == 1 and not isinstance(encoded[0], list)):
+#             encoded = encoded[0]
+#
+#         return encoded
+#
+#     def decode_many(self, encoded):
+#         """Returns a list of value(s)."""
+#
+#         # de-compactification of singleton lists
+#         if not self.multi or not isinstance(encoded, list):
+#             encoded = [encoded]
+#
+#         # schema-based decoding
+#         # return [self.schema.decode(e) for e in encoded]
+#         return list(map(self.schema.decode, encoded))
         
         
 #####################################################################################################################################################
@@ -926,7 +926,7 @@ class FIELDS(Schema):
     default_schema = OBJECT(multi = True)
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
-    # fields   = None     # dict of field names & their Field() schema descriptors
+    fields   = None     # dict of field names & their Field() schema descriptors
     # blank    = False
     
     def __init__(self, **fields):
@@ -1106,32 +1106,32 @@ class STRUCT(FIELDS):
     #     return ' '.join(parts)
     
     
-class FIELD(STRUCT):
-    """Schema of a field specification in a category's list of fields."""
-    
-    type = Field
-    fields = {'schema':  OBJECT(Schema)}
-    # fields = FIELDS._init_fields({
-    #     'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-    #     # 'default': OBJECT(),
-    #     # 'multi':   BOOLEAN(),
-    #     # 'info':    STRING(),
-    # })
-    
-    __widget__ = """
-        context $value as f
-        span .field
-            | $f.schema
-            ...if f.multi | *
-            if f.default <> f.MISSING
-                $default = str(f.default)
-                span .default title="default value: {default:crop(1000)}"
-                    | ({default : crop(100)})
-            if f.info
-                span .info | • $f.info
-                # smaller dot: &middot;
-                # larger dot: •
-    """
+# class FIELD(STRUCT):
+#     """Schema of a field specification in a category's list of fields."""
+#
+#     type = Field
+#     fields = {'schema':  OBJECT(Schema)}
+#     # fields = FIELDS._init_fields({
+#     #     'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+#     #     # 'default': OBJECT(),
+#     #     # 'multi':   BOOLEAN(),
+#     #     # 'info':    STRING(),
+#     # })
+#
+#     __widget__ = """
+#         context $value as f
+#         span .field
+#             | $f.schema
+#             ...if f.multi | *
+#             if f.default <> f.MISSING
+#                 $default = str(f.default)
+#                 span .default title="default value: {default:crop(1000)}"
+#                     | ({default : crop(100)})
+#             if f.info
+#                 span .info | • $f.info
+#                 # smaller dot: &middot;
+#                 # larger dot: •
+#     """
     
     # def display(self, field):
     #     view = """

@@ -13,49 +13,36 @@
       '}
   fields:
     fields:
-      name:
-        schema: {info: human-readable title of the category, '@': hyperweb.types.STRING}
-        '@': hyperweb.types.Field
-      info:
-        schema: {'@': hyperweb.types.STRING}
-        '@': hyperweb.types.Field
-      startup_site:
-        schema: {'@': hyperweb.types.OBJECT}
-        '@': hyperweb.types.Field
-      prototype:
-        schema: {info: 'Base category from which this one inherits. Multiple prototypes
-            are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
-        '@': hyperweb.types.Field
-      class_name:
-        schema: {default: hyperweb.core.Item, info: Full (dotted) path of a python
-            class. Or the class name that should be imported from `class_code` after
-            its execution., '@': hyperweb.types.STRING}
-        '@': hyperweb.types.Field
-      class_code:
-        schema: {'@': hyperweb.types.TEXT}
-        '@': hyperweb.types.Field
+      name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
+      info: {'@': hyperweb.types.STRING}
+      startup_site: {'@': hyperweb.types.OBJECT}
+      prototype: {info: 'Base category from which this one inherits. Multiple prototypes
+          are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
+      class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
+          class. Or the class name that should be imported from `class_code` after
+          its execution., '@': hyperweb.types.STRING}
+      class_code: {'@': hyperweb.types.TEXT}
       endpoints:
-        schema:
-          default: {view: '
+        default: {view: '
 
-              context $item
+            context $item
 
-              from base import %page_item
+            from base import %page_item
 
-              page_item $item
+            page_item $item
 
-              # dedent : page_item $item
+            # dedent : page_item $item
 
-              '}
-          values: {'@': hyperweb.types.CODE}
-          '@': hyperweb.types.CATALOG
-        '@': hyperweb.types.Field
+            '}
+        values: {'@': hyperweb.types.CODE}
+        '@': hyperweb.types.CATALOG
       fields:
-        schema:
-          values: {'@': hyperweb.types.OBJECT}
-          type: {'=': hyperweb.types.FIELDS, '@': (type)}
-          '@': hyperweb.types.CATALOG
-        '@': hyperweb.types.Field
+        values:
+          types:
+          - {'=': hyperweb.types.Schema, '@': (type)}
+          '@': hyperweb.types.OBJECT
+        type: {'=': hyperweb.types.FIELDS, '@': (type)}
+        '@': hyperweb.types.CATALOG
     '@': hyperweb.types.FIELDS
   startup_site:
   - [9, 1]
