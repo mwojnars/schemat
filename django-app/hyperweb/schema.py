@@ -827,11 +827,11 @@ class Field:
     @property
     def info(self): return self.schema.info
     
-    def __init__(self, schema = None, default = MISSING, info = None, multi = None):
+    def __init__(self, schema = None): #, default = MISSING, info = None, multi = None):
         if schema is not None:  self.schema = schema
-        if default is not Field.MISSING: self.schema.default = default
-        if multi is not None:   self.schema.multi = multi
-        if info is not None:    self.schema.info = info
+        # if default is not Field.MISSING: self.schema.default = default
+        # if multi is not None:   self.schema.multi = multi
+        # if info is not None:    self.schema.info = info
     
     def __getstate__(self):
         # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured

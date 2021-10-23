@@ -22,7 +22,6 @@
         execution., '@': hyperweb.types.STRING}
     class_code: {'@': hyperweb.types.TEXT}
     endpoints:
-      values: {'@': hyperweb.types.CODE}
       default: {view: '
 
           context $item
@@ -34,6 +33,7 @@
           # dedent : page_item $item
 
           '}
+      values: {'@': hyperweb.types.CODE}
       '@': hyperweb.types.CATALOG
     fields:
       values:
