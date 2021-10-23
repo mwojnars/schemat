@@ -9,7 +9,7 @@ from .errors import *
 from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
-from .schema import generic_schema, Field
+from .schema import generic_schema
 
 
 #####################################################################################################################################################
@@ -131,8 +131,8 @@ class Item(object, metaclass = MetaItem):
     When loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
     """
     
-    RAISE = MultiDict.RAISE
-    MISSING = Field.MISSING          # None as a field value is treated as a missing value
+    RAISE = object()  #MultiDict.RAISE
+    # MISSING = None          # None as a field value is treated as a missing value
     
     # builtin instance attributes & properties, not user-editable ...
     cid      = None         # CID (Category ID) of this item
@@ -206,57 +206,54 @@ class Item(object, metaclass = MetaItem):
     def __setitem__(self, field, value):
         return self.data.set(field, value)
         
-    def get(self, field, default = None, category_default = True, impute = True, mode = 'first'):
-        """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
-           if category_default=True. If the field is missing and has no default, `default` is returned,
+    def get(self, field, default = None, mode = 'first'):
+        """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults.
+           If the field is missing and has no default, `default` is returned,
            or KeyError is raised if default=RAISE.
-           `impute`: if True, value imputation will be attempted if `field` is a derived property (TODO)
         """
         self.load()
         
         if field in self.data:
             return self.data.get(field, mode = mode)
         
-        if category_default:
-            cat_default = self.category.get_default(field)
-            if cat_default is not Item.MISSING:  #Field.MISSING
-                return cat_default
-            
-            # TODO: check category-level field of the same name (another way to define a default value)
+        cat_default = self.category.get_default(field)
+        if cat_default is not None:
+            return cat_default
             
         if default is Item.RAISE:
             raise KeyError(field)
         
         return default
 
-    # def getfield(self, field, default = None, mode = 'first'):
+    # def get(self, field, default = None, category_default = True, impute = True, mode = 'first'):
+    #     """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
+    #        if category_default=True. If the field is missing and has no default, `default` is returned,
+    #        or KeyError is raised if default=RAISE.
+    #        `impute`: if True, value imputation will be attempted if `field` is a derived property (TODO)
     #     """
-    #     Like get(), but additionally looks for `field` inside `self` (instance or class attribute)
-    #     before returning the default.
-    #     """
-    #     try:
-    #         return self.get(field, Item.RAISE, mode = mode)
-    #     except KeyError:
-    #         pass
+    #     self.load()
     #
-    #     try:
-    #         return getattr(self, field)
-    #     except AttributeError:
-    #         pass
+    #     if field in self.data:
+    #         return self.data.get(field, mode = mode)
+    #
+    #     if category_default:
+    #         cat_default = self.category.get_default(field)
+    #         if cat_default is not Item.MISSING:
+    #             return cat_default
     #
     #     if default is Item.RAISE:
     #         raise KeyError(field)
     #
     #     return default
 
-    def get_uniq(self, field, default = None, category_default = True):
-        return self.get(field, default, category_default, 'uniq')
-        
-    def get_first(self, field, default = None, category_default = True):
-        return self.get(field, default, category_default, 'first')
-        
-    def get_last(self, field, default = None, category_default = True):
-        return self.get(field, default, category_default, 'last')
+    # def get_uniq(self, field, default = None, category_default = True):
+    #     return self.get(field, default, category_default, 'uniq')
+    #
+    # def get_first(self, field, default = None, category_default = True):
+    #     return self.get(field, default, category_default, 'first')
+    #
+    # def get_last(self, field, default = None, category_default = True):
+    #     return self.get(field, default, category_default, 'last')
         
     def get_list(self, field, copy_list = False):
         """Get a list of all values of an attribute from data. Shorthand for self.data.get_list()"""
@@ -526,10 +523,10 @@ class Category(Item):
         """
         return self.registry.get_item((self.iid, iid))           #(iid = iid, category = self)
     
-    def get_default(self, field):
-        """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
+    def get_default(self, field, default = None):
+        """Get default value of a field from category schema. Return `default` if no category default is configured."""
         field = self.get_schema().get(field)
-        return field.default if field else Item.MISSING  #Field.MISSING
+        return field.default if field else default
     
     def get_schema(self, field = None):
         """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""

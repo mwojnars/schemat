@@ -120,11 +120,9 @@ class Schema:
         ^^
        FORM (fields)   <--->   VALUE (object)   <--->   DB (json)
        
-
     Exceptions:
     - ValidationError in sanitize() -- invalid value submitted from a form
-    - SchemaError in encode() -- input object doesn't fit the schema
-    - DataError in decode() -- inconsistent data in DB
+    - DataError -- input object doesn't fit the schema (encode), or inconsistent data in DB (decode)
     """
     
     name  = None            # name of this schema instance for messaging purposes (not used currently)
@@ -135,7 +133,7 @@ class Schema:
     #                         # no other valid value can produce None as its serializable state
     # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
-    default = None          # default value to be used in web forms or upon reads when no value was provided (yet) by a user
+    default = None          # default value for a STRUCT field or for web forms; None means "no default" (!), rather than a "default value of None"
     info    = None          # human-readable description of this schema: what values are accepted and how are they interpreted
     multi   = False         # if multi=True and the schema is assigned to a field of STRUCT, the field can take on
                             # multiple values represented by a <multiple> instance;
