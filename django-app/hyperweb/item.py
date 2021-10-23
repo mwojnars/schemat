@@ -132,6 +132,7 @@ class Item(object, metaclass = MetaItem):
     """
     
     RAISE = MultiDict.RAISE
+    MISSING = Field.MISSING          # None as a field value is treated as a missing value
     
     # builtin instance attributes & properties, not user-editable ...
     cid      = None         # CID (Category ID) of this item
@@ -218,7 +219,7 @@ class Item(object, metaclass = MetaItem):
         
         if category_default:
             cat_default = self.category.get_default(field)
-            if cat_default is not Field.MISSING:            # TODO: refactor Field.MISSING -> Item.MISSING
+            if cat_default is not Item.MISSING:  #Field.MISSING
                 return cat_default
             
             # TODO: check category-level field of the same name (another way to define a default value)
@@ -528,7 +529,7 @@ class Category(Item):
     def get_default(self, field):
         """Get default value of a field from category schema. Field.MISSING is returned if no default is configured."""
         field = self.get_schema().get(field)
-        return field.default if field else Field.MISSING        # TODO: use Item.MISSING instead of Field.MISSING
+        return field.default if field else Item.MISSING  #Field.MISSING
     
     def get_schema(self, field = None):
         """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""

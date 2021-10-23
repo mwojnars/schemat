@@ -12,28 +12,17 @@
 
       '}
   fields:
-    name:
-      schema: {'@': hyperweb.types.STRING}
-      info: human-readable title of the category
-      '@': hyperweb.types.Field
+    name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
     info: {'@': hyperweb.types.STRING}
     startup_site: {'@': hyperweb.types.OBJECT}
-    prototype:
-      schema: {'@': hyperweb.types.ITEM}
-      info: Base category from which this one inherits. Multiple prototypes are allowed,
-        the first ones override settings of subsequent ones.
-      '@': hyperweb.types.Field
-    class_name:
-      schema: {'@': hyperweb.types.STRING}
-      default: hyperweb.core.Item
-      info: Full (dotted) path of a python class. Or the class name that should be
-        imported from `class_code` after its execution.
-      '@': hyperweb.types.Field
+    prototype: {info: 'Base category from which this one inherits. Multiple prototypes
+        are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
+    class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
+        class. Or the class name that should be imported from `class_code` after its
+        execution., '@': hyperweb.types.STRING}
     class_code: {'@': hyperweb.types.TEXT}
     endpoints:
-      schema:
-        values: {'@': hyperweb.types.CODE}
-        '@': hyperweb.types.CATALOG
+      values: {'@': hyperweb.types.CODE}
       default: {view: '
 
           context $item
@@ -45,7 +34,7 @@
           # dedent : page_item $item
 
           '}
-      '@': hyperweb.types.Field
+      '@': hyperweb.types.CATALOG
     fields:
       values:
         schema:

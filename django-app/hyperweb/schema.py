@@ -35,29 +35,60 @@ from .struct import struct, catalog
 #####  SCHEMA
 #####
 
-class multivalue:
+class multiple:
     """
-    Container for a list of values, possibly with labels, each value matching a common schema.
-    Values can be accessed by position (always), or label (if labels are allowed and present for a given entry).
-    Labels, if present, must be different between each other.
+    List of multiple values for a single data element (field of STRUCT), all matching a common schema.
+    Optionally, the values can be accompanied with textual labels. Values can be accessed by positions or labels.
+    If labels are present, they must differ between each other. Empty string is a valid non-missing label.
+    In methods, "key" means either an index (integer position), or a label (string).
     """
-    mode   = None       # whether labels are required/allowed: "yes", "no", "optional"
-    values = None       # list of (label, value) tuples; label=None if no label
-    labels = None       # dict of labels and their positions in `entries`: {label: index}
+    values = None       # list of (label, value) pairs, if labels are present, or a list of values otherwise
+    labels = None       # dict of labels and their positions in `entries`: {label: index}; or None if labels not used
     
-    def __init__(self, labels = "optional"):
-        self.mode   = str(labels).lower()
-        self.values = []
-        self.labels = {}
-        
-    def __getitem__(self, pos_or_label):
-        if isinstance(pos_or_label, str):
-            pos = self.labels[pos_or_label]
+    @property
+    def has_labels(self): return self.labels is not None
+    
+    def __init__(self, *unlabeled_values, **labeled_values):
+        assert not (unlabeled_values and labeled_values), "can't use labeled and unlabeled values at the same time"
+        if unlabeled_values:
+            self.values = list(unlabeled_values)
         else:
-            pos = pos_or_label
-            
-        return self.values[pos][1]
+            self.values = list(labeled_values.items())
+            self.labels = {label: pos for pos, label in enumerate(labeled_values)}
         
+    def __contains__(self, key):
+        return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
+
+    def __getitem__(self, key):
+        pos = self.position(key)
+        entry = self.values[pos]
+        return entry[1] if self.has_labels else entry
+
+    def __delitem__(self, key):
+        pos = self.position(key)
+        if self.has_labels:
+            label = self.values[pos][0]
+            del self.labels[label]
+        del self.values[pos]
+        
+    def get(self, key, default = None):
+        return self[key] if key in self else default
+        
+    def append(self, value, label = None):
+        if label is not None:
+            assert self.has_labels, f"trying to insert a labeled value ({label}, {value}) to an unlabeled multiple"
+            assert isinstance(label, str), f"label must be a string, not {label}"
+            assert label not in self.labels, f"duplicate label '{label}'"
+            self.labels[label] = len(self.values)
+        entry = (label, value) if self.has_labels else value
+        self.values.append(entry)
+
+    def position(self, key):
+        return self.labels[key] if isinstance(key, str) else key
+    
+# class multidict(multiple): pass
+# class multilist(multiple): pass
+
 
 #####################################################################################################################################################
 
@@ -104,14 +135,20 @@ class Schema:
     #                         # no other valid value can produce None as its serializable state
     # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
     
-    multi = False           # if True, a value can be a <multi> collection of inner values, each one matching this schema
-                            # (multi_list, multi_dict, group, catalog, cluster, batch) -- TODO: replace MultiDict & catalog
-                            # the detection of a multi-value will be done by an outer container (STRUCT?)
-                            # which should call encode_multi() instead of encode() and append * to a field name in output state
-    
+    default = None          # default value to be used in web forms or upon reads when no value was provided (yet) by a user
+    info    = None          # human-readable description of this schema: what values are accepted and how are they interpreted
+    multi   = False         # if multi=True and the schema is assigned to a field of STRUCT, the field can take on
+                            # multiple values represented by a <multiple> instance;
+                            # the detection of a multiple is done by a parent STRUCT (TODO), which calls
+                            # encode_multi() instead of encode() and appends * to a field name in output state
+
     is_catalog = False      # True only in CATALOG and subclasses
     #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
     
+    def __init__(self, default = None, info = None, multi = None):
+        if default is not None: self.default = default
+        if info is not None: self.info = info
+        if multi is not None: self.multi = multi
     
     def dump_json(self, value, compact = True, **json_format):
         """
@@ -312,7 +349,8 @@ class OBJECT(Schema):
     #     assert all(isinstance(t, type) for t in types)
     #     return types
     
-    def __init__(self, *types):
+    def __init__(self, *types, **params):
+        super(OBJECT, self).__init__(**params)
         if types: self.types = list(types)
         
     def _valid_type(self, obj):
@@ -364,7 +402,8 @@ class Primitive(Schema):
 
     type = None     # the predefined standard python type of all app-layer values; same type for db-layer values
     
-    def __init__(self, type = None):
+    def __init__(self, type = None, **params):
+        super(Primitive, self).__init__(**params)
         if type is None: return
         assert type in (bool, int, float, str)
         self.type = type
@@ -452,7 +491,8 @@ class ITEM(Schema):
     category = None
     cid      = None
     
-    def __init__(self, category = None, cid = None):
+    def __init__(self, category = None, cid = None, **params):
+        super(ITEM, self).__init__(**params)
         if cid is not None: self.cid = cid
         if category is not None: self.category = category
             # if category.iid is None:
@@ -531,7 +571,8 @@ class ENUM(Schema):
     valueset = None         # (temporary) set of permitted values
     indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
     
-    def __init__(self, *values, schema = None, indices = None):
+    def __init__(self, *values, schema = None, indices = None, **params):
+        super(ENUM, self).__init__(**params)
         self.values = list(values)
         if schema is not None: self.schema = schema
         if indices:
@@ -576,7 +617,8 @@ class LIST(Schema):
     type = list
     schema = None       # schema of individual elements
     
-    def __init__(self, schema):
+    def __init__(self, schema, **params):
+        super(LIST, self).__init__(**params)
         self.schema = schema
         
     def encode(self, values):
@@ -597,7 +639,8 @@ class TUPLE(Schema):
     type = tuple
     schemas = None      # list of schemas of individual elements
 
-    def __init__(self, *schemas):
+    def __init__(self, *schemas, **params):
+        super(TUPLE, self).__init__(**params)
         self.schemas = list(schemas)
         
     def encode(self, values):
@@ -633,7 +676,8 @@ class DICT(Schema):
     keys_default   = generic_schema
     values_default = generic_schema
     
-    def __init__(self, keys = None, values = None, type = None):
+    def __init__(self, keys = None, values = None, type = None, **params):
+        super(DICT, self).__init__(**params)
         
         if keys is not None: self.keys = keys
         if values is not None: self.values = values
@@ -689,7 +733,7 @@ class CATALOG(DICT):
     is_catalog   = True
     keys_default = STRING()
     
-    def __init__(self, values = None, keys = None, type = None):
+    def __init__(self, values = None, keys = None, type = None, **params):
         # if keys is None:
         #     keys = STRING()
         # else:
@@ -697,7 +741,7 @@ class CATALOG(DICT):
         
         if keys: assert isinstance(keys, STRING)        # `keys` may inherit from STRING, not necessarily be a STRING
         if type: assert issubclass(type, catalog)
-        super(CATALOG, self).__init__(keys, values, type)
+        super(CATALOG, self).__init__(keys, values, type, **params)
         
     def __str__(self):
         name   = self.name or self.__class__.__name__
@@ -729,8 +773,9 @@ class VARIANT(Schema):
     """
     schemas = None      # dict of sub-schemas; keys are names to be output during serialization
     
-    def __init__(self, **schemas):
+    def __init__(self, schemas, **params):
         """Either schema_list or schema_dict should be provided, but not both."""
+        super(VARIANT, self).__init__(**params)
         # if schema_list and schema_dict:
         #     raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
         # if schema_list:
@@ -768,24 +813,31 @@ class VARIANT(Schema):
 class Field:
     """Specification of a field in a FIELDS/STRUCT catalog."""
     
-    MISSING = object()      # token indicating that `default` value is missing; removed from output during serialization
+    MISSING = None #object()      # token indicating that `default` value is missing; removed from output during serialization
     
     schema  = None          # instance of Schema
-    default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
-    multi   = False         # whether this field can be repeated (take on multiple values)
-    info    = None          # human-readable description of the field
+    # default = MISSING       # value assumed if this field is missing in an item; or MISSING if no default
+    # multi   = False         # whether this field can be repeated (take on multiple values)
+    # info    = None          # human-readable description of the field
+    
+    @property
+    def default(self): return self.schema.default
+    @property
+    def multi(self): return self.schema.multi
+    @property
+    def info(self): return self.schema.info
     
     def __init__(self, schema = None, default = MISSING, info = None, multi = None):
         if schema is not None:  self.schema = schema
-        if default is not Field.MISSING: self.default = default
-        if multi is not None:   self.multi = multi
-        if info is not None:    self.info = info
+        if default is not Field.MISSING: self.schema.default = default
+        if multi is not None:   self.schema.multi = multi
+        if info is not None:    self.schema.info = info
     
     def __getstate__(self):
         # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
         #     return self.schema
         
-        if self.__dict__.get('default') is Field.MISSING:           # exclude explicit MISSING value from serialization
+        if 'default' in self.__dict__ and self.default is Field.MISSING:           # exclude explicit MISSING value from serialization
             state = self.__dict__.copy()
             del state['default']
         else:
@@ -856,7 +908,7 @@ class FIELDS(catalog, Schema):
     """
     
     # default field specification to be used for fields not present in `fields`
-    default_field = Field(generic_schema, multi = True)
+    default_field = Field(OBJECT(multi = True))
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     # fields   = None     # dict of field names & their Field() schema descriptors
@@ -865,7 +917,10 @@ class FIELDS(catalog, Schema):
     def __init__(self, **fields):
         # if __strict__ is not None: self.strict = __strict__
         # if fields: self.fields = fields
-        super(FIELDS, self).__init__(fields)
+        # super(FIELDS, self).__init__(fields)
+        params = {}                                     # TODO: accept nonempty params
+        catalog.__init__(self, fields)
+        Schema.__init__(self, **params)
         # self.update(fields)
         self._init_fields(self)
     
@@ -942,10 +997,10 @@ class FIELDS(catalog, Schema):
         return MultiDict(multiple = data)
     
     
-    def get_default(self, name):
-        """Get the default value of a given item property as defined in this schema, or Field.MISSING."""
-        field = self.get(name)
-        return field.default if field else Field.MISSING
+    # def get_default(self, name):
+    #     """Get the default value of a given item property as defined in this schema, or Field.MISSING."""
+    #     field = self.get(name)
+    #     return field.default if field else Field.MISSING
 
     def __str__(self):
         return str(dict(self))
