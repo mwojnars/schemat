@@ -59,6 +59,10 @@ class multiple:
     def __contains__(self, key):
         return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
 
+    def __setitem__(self, key, value):
+        pos = self.position(key)
+        # TODO... in subclasses
+
     def __getitem__(self, key):
         pos = self.position(key)
         entry = self.values[pos]
@@ -86,8 +90,24 @@ class multiple:
     def position(self, key):
         return self.labels[key] if isinstance(key, str) else key
     
-# class multidict(multiple): pass
-# class multilist(multiple): pass
+#####################################################################################################################################################
+
+# class multiple_base: pass
+# class multiple_dict(multiple_base):
+#     """"""
+#     def __init__(self, **values):
+#         self.values = list(values.items())
+#         self.labels = {label: pos for pos, label in enumerate(values)}
+#
+# class multiple_list(multiple_base):
+#     """"""
+#     def __init__(self, *values):
+#         self.values = list(values)
+#
+# def multiple(*unlabeled, **labeled):
+#     assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
+#     if labeled: return multiple_dict(**labeled)
+#     return multiple_list(*unlabeled)
 
 
 #####################################################################################################################################################
@@ -738,7 +758,6 @@ class CATALOG(DICT):
         #     assert isinstance(keys, STRING)             # `keys` may inherit from STRING, not necessarily be a STRING
         
         if keys: assert isinstance(keys, STRING)        # `keys` may inherit from STRING, not necessarily be a STRING
-        if type: assert issubclass(type, catalog)
         super(CATALOG, self).__init__(keys, values, type, **params)
         
     def __str__(self):
@@ -831,17 +850,17 @@ class Field:
         # if multi is not None:   self.schema.multi = multi
         # if info is not None:    self.schema.info = info
     
-    def __getstate__(self):
-        # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
-        #     return self.schema
-        
-        if 'default' in self.__dict__ and self.default is Field.MISSING:           # exclude explicit MISSING value from serialization
-            state = self.__dict__.copy()
-            del state['default']
-        else:
-            state = self.__dict__
-            
-        return state
+    # def __getstate__(self):
+    #     # if len(self.__dict__) == 1 and 'schema' in self.__dict__:   # compactify the state when only `schema` is configured
+    #     #     return self.schema
+    #
+    #     if 'default' in self.__dict__ and self.default is Field.MISSING:           # exclude explicit MISSING value from serialization
+    #         state = self.__dict__.copy()
+    #         del state['default']
+    #     else:
+    #         state = self.__dict__
+    #
+    #     return state
     
     # def __html__(self):
     #     view = """
@@ -860,11 +879,8 @@ class Field:
     #     """
     #     return hypertag(view).render(field = self)
     
-    def encode_one(self, value):
-        return self.schema.encode(value)
-    
-    def decode_one(self, encoded):
-        return self.schema.decode(encoded)
+    def encode(self, value):    return self.schema.encode(value)
+    def decode(self, encoded):  return self.schema.decode(encoded)
     
     def encode_many(self, values):
         """There can be multiple `values` to encode if self.multi is true. `values` is a list."""
@@ -892,7 +908,7 @@ class Field:
         
 #####################################################################################################################################################
 
-class FIELDS(catalog, Schema):
+class FIELDS(Schema):
     """
     Catalog of fields of items (MultiDict's) in a particular category;
     a dictionary of field names and their individual schemas as Field objects.
@@ -906,7 +922,8 @@ class FIELDS(catalog, Schema):
     """
     
     # default field specification to be used for fields not present in `fields`
-    default_field = Field(OBJECT(multi = True))
+    # default_field = Field(OBJECT(multi = True))
+    default_schema = OBJECT(multi = True)
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     # fields   = None     # dict of field names & their Field() schema descriptors
@@ -917,38 +934,45 @@ class FIELDS(catalog, Schema):
         # if fields: self.fields = fields
         # super(FIELDS, self).__init__(fields)
         params = {}                                     # TODO: accept nonempty params
-        catalog.__init__(self, fields)
         Schema.__init__(self, **params)
-        # self.update(fields)
-        self._init_fields(self)
+        # catalog.__init__(self, fields)
+        # self._init_fields(self)
+        self.fields = fields
     
-    def __getstate__(self):
-        return self._reduce_fields(dict(self))
-        
-    def __setstate__(self, state):
-        # self.__dict__ = dict(state)
-        self.clear()
-        self.update(state)
-        self._init_fields(self)
-
-    @staticmethod
-    def _init_fields(fields):
-        """Wrap up in Field all the fields whose values are plain Schema instances."""
-        # if self.fields is None: self.fields = {}
-        for name, field in fields.items():
-            assert isinstance(name, str)
-            if isinstance(field, Field): continue
-            if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
-            fields[name] = Field(field)
-        return fields
+    def __iter__(self): yield from self.fields
+    def __contains__(self, key): return key in self.fields
+    def __getitem__(self, key): return self.fields[key]
+    def __setitem__(self, key, value): self.fields[key] = value
+    def get(self, key): return self.fields.get(key)
+    def items(self): return self.fields.items()
     
-    @staticmethod
-    def _reduce_fields(fields):
-        """If a Field() only has a schema configured, replace it with the schema object."""
-        for name, field in fields.items():
-            if list(field.__dict__.keys()) == ['schema']:
-                fields[name] = field.schema
-        return fields
+    # def __getstate__(self):
+    #     return self._reduce_fields(dict(self))
+    #
+    # def __setstate__(self, state):
+    #     # self.__dict__ = dict(state)
+    #     self.clear()
+    #     self.update(state)
+    #     self._init_fields(self)
+    #
+    # @staticmethod
+    # def _init_fields(fields):
+    #     """Wrap up in Field all the fields whose values are plain Schema instances."""
+    #     # if self.fields is None: self.fields = {}
+    #     for name, field in fields.items():
+    #         assert isinstance(name, str)
+    #         if isinstance(field, Field): continue
+    #         if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
+    #         fields[name] = Field(field)
+    #     return fields
+    #
+    # @staticmethod
+    # def _reduce_fields(fields):
+    #     """If a Field() only has a schema configured, replace it with the schema object."""
+    #     for name, field in fields.items():
+    #         if list(field.__dict__.keys()) == ['schema']:
+    #             fields[name] = field.schema
+    #     return fields
     
     def encode(self, data):
         """
@@ -957,18 +981,21 @@ class FIELDS(catalog, Schema):
         """
         if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
         errors = []
+        fields = self.fields
         
         # encode & compactify values of fields through per-field schema definitions
         encoded = data.asdict_lists()
         for name, values in encoded.items():
             
-            if self.strict and name not in self:
+            if self.strict and name not in fields:
                 raise EncodeError(f'unknown field "{name}"')
             
             # schema-aware encoding
-            field = self.get(name) or self.default_field
-            encoded[name] = field.encode_many(values)
-            # TODO: catch exceptions and append to `errors`
+            assert len(values) == 1
+            schema = fields.get(name) or self.default_schema
+            encoded[name] = schema.encode(values[0])
+            # field = fields.get(name) or self.default_field
+            # encoded[name] = field.encode_many(values)
             
         if errors:
             raise EncodeErrors(errors)
@@ -981,27 +1008,24 @@ class FIELDS(catalog, Schema):
         Perform recursive top-down schema-based decoding of field values.
         """
         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
+        fields = self.fields
 
         # de-compactify & decode values of fields
-        for name, values in data.items():
+        for name, value in data.items():
             
-            if self.strict and name not in self:
+            if self.strict and name not in fields:
                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
             
             # schema-based decoding
-            field = self.get(name) or self.default_field
-            data[name] = field.decode_many(values)
+            schema = fields.get(name) or self.default_schema
+            data[name] = [schema.decode(value)]
+            # field = fields.get(name) or self.default_field
+            # data[name] = field.decode_many(values)
             
         return MultiDict(multiple = data)
-    
-    
-    # def get_default(self, name):
-    #     """Get the default value of a given item property as defined in this schema, or Field.MISSING."""
-    #     field = self.get(name)
-    #     return field.default if field else Field.MISSING
 
     def __str__(self):
-        return str(dict(self))
+        return str(dict(self.fields))
 
 #####################################################################################################################################################
 
@@ -1015,7 +1039,7 @@ class STRUCT(FIELDS):
     """
     
     type   = None       # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
-    fields = None       # optional dict of {field: schema} that can be defined by subclasses as an initial dict of `self` fields
+    # fields = None       # optional dict of {field: schema} that can be defined by subclasses as an initial dict of fields
     
     def __init__(self, **fields):
         self.type = self.type or struct
@@ -1024,7 +1048,7 @@ class STRUCT(FIELDS):
             fields = {**self.fields, **fields}
         
         super(STRUCT, self).__init__(**fields)
-        for name, field in self.items():
+        for name, field in self.fields.items():
             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
     
     def encode(self, obj):
@@ -1037,7 +1061,7 @@ class STRUCT(FIELDS):
         else:
             attrs = getstate(obj)
 
-        fields  = {**self.fields, **self} if self.fields else self
+        fields  = self.fields #{**self.fields, **self} if self.fields else self
         encoded = {}
         
         # encode values of fields through per-field schema definitions
@@ -1051,7 +1075,7 @@ class STRUCT(FIELDS):
     def decode(self, encoded):
 
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
-        fields = {**self.fields, **self} if self.fields else self
+        fields = self.fields #{**self.fields, **self} if self.fields else self
         attrs  = {}
         
         # decode values of fields
@@ -1068,7 +1092,7 @@ class STRUCT(FIELDS):
     def __str__(self):
         name = self.name or self.__class__.__name__
         if name != 'STRUCT': return name
-        fields = ','.join(self.keys())
+        fields = ','.join(self.fields.keys())
         return f"{name}({fields})"
 
     # def display(self, obj):
@@ -1086,12 +1110,13 @@ class FIELD(STRUCT):
     """Schema of a field specification in a category's list of fields."""
     
     type = Field
-    fields = FIELDS._init_fields({
-        'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-        'default': OBJECT(),
-        'multi':   BOOLEAN(),
-        'info':    STRING(),
-    })
+    fields = {'schema':  OBJECT(Schema)}
+    # fields = FIELDS._init_fields({
+    #     'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+    #     # 'default': OBJECT(),
+    #     # 'multi':   BOOLEAN(),
+    #     # 'info':    STRING(),
+    # })
     
     __widget__ = """
         context $value as f

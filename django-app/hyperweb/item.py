@@ -9,7 +9,7 @@ from .errors import *
 from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
-from .schema import generic_schema
+from .schema import generic_schema, Field
 
 
 #####################################################################################################################################################
@@ -208,8 +208,7 @@ class Item(object, metaclass = MetaItem):
         
     def get(self, field, default = None, mode = 'first'):
         """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults.
-           If the field is missing and has no default, `default` is returned,
-           or KeyError is raised if default=RAISE.
+           If the field is missing and has no default, `default` is returned, or KeyError is raised if default=RAISE.
         """
         self.load()
         
@@ -533,7 +532,8 @@ class Category(Item):
         self.load()
         fields = self.get('fields')
         if field is None: return fields
-        schema = fields[field].schema if field in fields else None
+        schema = fields[field] if field in fields else None
+        if isinstance(schema, Field): schema = schema.schema        # TODO: refactor
         return schema or generic_schema
     
     #####  Handlers & templates  #####
