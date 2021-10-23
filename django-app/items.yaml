@@ -37,10 +37,7 @@
         values: {'@': hyperweb.types.CODE}
         '@': hyperweb.types.CATALOG
       fields:
-        values:
-          types:
-          - {'=': hyperweb.types.Schema, '@': (type)}
-          '@': hyperweb.types.OBJECT
+        values: {'@': hyperweb.types.SCHEMA}
         type: {'=': hyperweb.types.FIELDS, '@': (type)}
         '@': hyperweb.types.CATALOG
     '@': hyperweb.types.FIELDS

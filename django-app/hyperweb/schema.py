@@ -235,7 +235,7 @@ class Schema:
         return esc(str(value))
 
     __widget__ = None
-    
+
     def form(self, value):
         """
         Return an HTML form (top-level #form element) for inputing values of a given schema.
@@ -329,7 +329,6 @@ class Schema:
         Return corrected value (None if incorrect), and a Validation result with an error/warning message.
         """
         
-
 #####################################################################################################################################################
 #####
 #####  ATOMIC schema types
@@ -401,6 +400,25 @@ class OBJECT(Schema):
 # the most generic schema for encoding/decoding of objects of any types
 generic_schema = OBJECT()
 
+#####################################################################################################################################################
+
+class SCHEMA(OBJECT):
+    types = [Schema]
+    
+    __widget__ = """
+        context $value as schema
+        span .field
+            | $schema
+            ...if schema.multi | *
+            if schema.default <> None
+                $default = str(schema.default)
+                span .default title="default value: {default:crop(1000)}"
+                    | ({default : crop(100)})
+            if schema.info
+                span .info | • $schema.info
+                # smaller dot: &middot;
+                # larger dot: •
+    """
 
 class CLASS(Schema):
     """
@@ -935,8 +953,6 @@ class FIELDS(Schema):
         # super(FIELDS, self).__init__(fields)
         params = {}                                     # TODO: accept nonempty params
         Schema.__init__(self, **params)
-        # catalog.__init__(self, fields)
-        # self._init_fields(self)
         self.fields = fields
     
     def __iter__(self): yield from self.fields
@@ -945,34 +961,6 @@ class FIELDS(Schema):
     def __setitem__(self, key, value): self.fields[key] = value
     def get(self, key): return self.fields.get(key)
     def items(self): return self.fields.items()
-    
-    # def __getstate__(self):
-    #     return self._reduce_fields(dict(self))
-    #
-    # def __setstate__(self, state):
-    #     # self.__dict__ = dict(state)
-    #     self.clear()
-    #     self.update(state)
-    #     self._init_fields(self)
-    #
-    # @staticmethod
-    # def _init_fields(fields):
-    #     """Wrap up in Field all the fields whose values are plain Schema instances."""
-    #     # if self.fields is None: self.fields = {}
-    #     for name, field in fields.items():
-    #         assert isinstance(name, str)
-    #         if isinstance(field, Field): continue
-    #         if field and not isinstance(field, Schema): raise Exception(f"expected an instance of Schema, got {field}")
-    #         fields[name] = Field(field)
-    #     return fields
-    #
-    # @staticmethod
-    # def _reduce_fields(fields):
-    #     """If a Field() only has a schema configured, replace it with the schema object."""
-    #     for name, field in fields.items():
-    #         if list(field.__dict__.keys()) == ['schema']:
-    #             fields[name] = field.schema
-    #     return fields
     
     def encode(self, data):
         """
@@ -994,8 +982,6 @@ class FIELDS(Schema):
             assert len(values) == 1
             schema = fields.get(name) or self.default_schema
             encoded[name] = schema.encode(values[0])
-            # field = fields.get(name) or self.default_field
-            # encoded[name] = field.encode_many(values)
             
         if errors:
             raise EncodeErrors(errors)
@@ -1019,8 +1005,6 @@ class FIELDS(Schema):
             # schema-based decoding
             schema = fields.get(name) or self.default_schema
             data[name] = [schema.decode(value)]
-            # field = fields.get(name) or self.default_field
-            # data[name] = field.decode_many(values)
             
         return MultiDict(multiple = data)
 
@@ -1061,28 +1045,27 @@ class STRUCT(FIELDS):
         else:
             attrs = getstate(obj)
 
-        fields  = self.fields #{**self.fields, **self} if self.fields else self
+        fields  = self.fields
         encoded = {}
         
         # encode values of fields through per-field schema definitions
         for name, value in attrs.items():
             
             if name not in fields: raise EncodeError(f'unknown field "{name}", expected one of {list(fields.keys())}')
-            encoded[name] = fields[name].encode_one(value)
+            encoded[name] = fields[name].encode(value)
             
         return encoded
         
     def decode(self, encoded):
 
         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
-        fields = self.fields #{**self.fields, **self} if self.fields else self
         attrs  = {}
         
         # decode values of fields
         for name, value in encoded.items():
             
-            if name not in fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
-            attrs[name] = fields[name].decode_one(value)
+            if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
+            attrs[name] = self.fields[name].decode(value)
             
         if self.type is struct:
             return struct(attrs)
@@ -1117,21 +1100,6 @@ class STRUCT(FIELDS):
 #     #     # 'multi':   BOOLEAN(),
 #     #     # 'info':    STRING(),
 #     # })
-#
-#     __widget__ = """
-#         context $value as f
-#         span .field
-#             | $f.schema
-#             ...if f.multi | *
-#             if f.default <> f.MISSING
-#                 $default = str(f.default)
-#                 span .default title="default value: {default:crop(1000)}"
-#                     | ({default : crop(100)})
-#             if f.info
-#                 span .info | • $f.info
-#                 # smaller dot: &middot;
-#                 # larger dot: •
-#     """
     
     # def display(self, field):
     #     view = """
@@ -1153,31 +1121,6 @@ class STRUCT(FIELDS):
     #     return hypertag(view).render(field = field)
 
 
-# def struct(typename, __type__ = object, **__fields__):
-#     """Dynamically create a subclass of STRUCT."""
-#
-#     class _struct_(STRUCT):
-#         type = __type__
-#         fields = __fields__
-#
-#     _struct_.__name__ = typename
-#     return _struct_
-
-# INFO: it's possible to use field_schema and record_schema, as below,
-#       but the YAML output of the root category becomes more verbose then (multiple nesting levels)
-#
-# field_schema = STRUCT(Field,
-#                       schema    = OBJECT(base = Schema),
-#                       default   = OBJECT(),
-#                       multi     = BOOLEAN(),
-#                       info      = STRING(),
-#                       )
-#
-# record_schema = STRUCT(FIELDS,
-#                        fields = DICT(STRING(), FIELD()),
-#                        strict = BOOLEAN(),
-#                        )
-    
 
 # # rules for detecting disallowed field names in category schema definitions
 # STOP_ATTR = {

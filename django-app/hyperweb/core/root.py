@@ -30,7 +30,7 @@ root_fields = FIELDS(
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),
-    fields       = CATALOG(OBJECT(Schema), type = FIELDS),
+    fields       = CATALOG(SCHEMA(), type = FIELDS),
     #indexes      = CATALOG(ITEM(Index)),
     
     #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
