@@ -9,10 +9,12 @@ from .errors import *
 from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
+from .serialize import JSON
 from .schema import generic_schema
 
 
 #####################################################################################################################################################
+
 
 class handler:
     """
@@ -328,7 +330,8 @@ class Item(object, metaclass = MetaItem):
             data_json = self.registry.load_data(self.id)
 
         schema = self.category.get_schema() if use_schema else generic_schema       # specification of field schema {field_name: schema}
-        data   = schema.load_json(data_json)
+        data   = JSON.load(data_json, schema.decode)
+        # data   = schema.load_json(data_json)
         self.data = MultiDict(data)
         self.bind()
 
@@ -439,9 +442,10 @@ class Item(object, metaclass = MetaItem):
     
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        json_format = dict(separators = (',', ':')) if compact else {}
+        # json_format = dict(separators = (',', ':')) if compact else {}
+        # return schema.dump_json(self.data, **json_format)
         schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
-        return schema.dump_json(self.data, **json_format)
+        return JSON.dump(self.data, schema.encode, compact = compact)
 
     def dump_item(self, use_schema = True):
         """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""

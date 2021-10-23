@@ -31,7 +31,12 @@ root_fields = FIELDS(
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),
     fields       = CATALOG(SCHEMA(), type = FIELDS),
-    #indexes      = CATALOG(ITEM(Index)),
+    
+    #field       = SCHEMA(multiple = True, labels = True)
+    #endpoint    = CODE(multiple = True, labels = True, default = {"view": page_item})
+    #index       = ITEM(Index),
+    
+    #dark_fields = BOOLEAN(default = False, info = "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is OBJECT()")
     
     #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
                                 # - these props are needed to generate "simple links" to this item on "edit" tabs of other items,
@@ -45,7 +50,7 @@ root_fields = FIELDS(
     
     #push_item_updates = BOOLEAN(),     # if True, updates to items of this category are broadcasted to all servers in a cluster;
                                         # should only be used for categories with few, rarely-updated items, like the root category
-    #inplace_upgrade_freq = FLOAT(),    # likelihood (0.0-1.0) that an edge server should write back an upgraded item
+    #live_upgrade_intensity = FLOAT(),  # likelihood (0.0-1.0) that an edge server should write back an upgraded item
                                         # that referred to an outdated revision of its category (esp. schema), instead of
                                         # leaving this upgrade-write for a background process; typically ~0.01
 )
@@ -56,6 +61,7 @@ root_data = dict(
     class_name  = 'hyperweb.core.Category',
     endpoints   = {"view": page_category},
     fields      = root_fields,
+    #field      = multiple(**root_fields),
 )
 
 #####################################################################################################################################################

@@ -3,6 +3,7 @@ Utilities for JSON-pickling and serialization of objects of arbitrary classes.
 """
 
 import json
+from types import FunctionType
 from importlib import import_module
 from .errors import EncodeError, DecodeError
 
@@ -99,18 +100,20 @@ class JSON:
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
     @staticmethod
-    def dump(obj, type_ = None, compact = True, **json_format):
-
+    def dump(obj, encode = None, type_ = None, compact = True, **json_format):
+        """`encode` is an optional encoding function: state=encode(obj)."""
+        
         base_format = dict(separators = (',', ':')) if compact else {}
         json_format = {**base_format, **json_format}            # manually configured format overrides the base_format defaults
         
-        state = JSON.encode(obj, type_)
+        state = encode(obj) if encode else JSON.encode(obj, type_)
         return json.dumps(state, ensure_ascii = False, **json_format)
     
     @staticmethod
-    def load(dump, type_ = None):
+    def load(dump, decode = None, type_ = None):
+        """`decode` is an optional dencoding function: obj=decode(state)."""
         state = json.loads(dump)
-        return JSON.decode(state, type_)
+        return decode(state) if decode else JSON.decode(state, type_)
     
     @staticmethod
     def encode(obj, type_ = None):
@@ -141,7 +144,7 @@ class JSON:
         
         from hyperweb.boot import registry
 
-        if isinstance(obj, type):
+        if isinstance(obj, (type, FunctionType)):
             state = registry.get_path(obj)
             return {JSON.ATTR_STATE: state, JSON.ATTR_CLASS: JSON.FLAG_TYPE}
         elif t in (set, tuple):

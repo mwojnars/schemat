@@ -27,7 +27,6 @@ from hypertag import HyperHTML
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import getstate, setstate, JSON
 from .multidict import MultiDict
-from .struct import struct, catalog
 
 
 #####################################################################################################################################################
@@ -35,79 +34,145 @@ from .struct import struct, catalog
 #####  SCHEMA
 #####
 
-class multiple:
+# class multiple:
+#     values = None       # list of (label, value) pairs, if labels are present, or a list of values otherwise
+#     labels = None       # dict of labels and their positions in `entries`: {label: index}; or None if labels not used
+#
+#     @property
+#     def has_labels(self): return self.labels is not None
+#
+#     def __init__(self, *unlabeled_values, **labeled_values):
+#         assert not (unlabeled_values and labeled_values), "can't use labeled and unlabeled values at the same time"
+#         if unlabeled_values:
+#             self.values = list(unlabeled_values)
+#         else:
+#             self.values = list(labeled_values.items())
+#             self.labels = {label: pos for pos, label in enumerate(labeled_values)}
+#
+#     def __contains__(self, key):
+#         return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
+#
+#     def __setitem__(self, key, value):
+#         pos = self.position(key)
+#         # TODO... in subclasses
+#
+#     def __getitem__(self, key):
+#         pos = self.position(key)
+#         entry = self.values[pos]
+#         return entry[1] if self.has_labels else entry
+#
+#     def __delitem__(self, key):
+#         pos = self.position(key)
+#         if self.has_labels:
+#             label = self.values[pos][0]
+#             del self.labels[label]
+#         del self.values[pos]
+#
+#     def get(self, key, default = None):
+#         return self[key] if key in self else default
+#
+#     def append(self, value, label = None):
+#         if label is not None:
+#             assert self.has_labels, f"trying to insert a labeled value ({label}, {value}) to an unlabeled multiple"
+#             assert isinstance(label, str), f"label must be a string, not {label}"
+#             assert label not in self.labels, f"duplicate label '{label}'"
+#             self.labels[label] = len(self.values)
+#         entry = (label, value) if self.has_labels else value
+#         self.values.append(entry)
+#
+#     def position(self, key):
+#         return self.labels[key] if isinstance(key, str) else key
+
+
+class multiple_base: pass
+
+class multiple_list(multiple_base):
+    """List of multiple values for a single data element, all matching a common schema."""
+    def __init__(self, *values):        self.values = list(values)
+    def __iter__(self):                 return iter(self.values)
+    def __setitem__(self, pos, value):  self.values[pos] = value
+    def __getitem__(self, pos):         return self.values[pos]
+    def __delitem__(self, pos):         del self.values[pos]
+    def get(self, pos, default=None):   return self[pos] if 0 <= pos < len(self.values) else default
+    def append(self, value):            self.values.append(value)
+
+class multiple_dict(multiple_base):
     """
-    List of multiple values for a single data element (field of STRUCT), all matching a common schema.
-    Optionally, the values can be accompanied with textual labels. Values can be accessed by positions or labels.
+    Collection of multiple values for a single data element, all matching a common schema.
+    Values are accompanied with textual labels, which differ between each other.
     If labels are present, they must differ between each other. Empty string is a valid non-missing label.
     In methods, "key" means either an index (integer position), or a label (string).
+    This class does NOT inherit from <dict>, but exposes a part of the dict's interface.
     """
-    values = None       # list of (label, value) pairs, if labels are present, or a list of values otherwise
-    labels = None       # dict of labels and their positions in `entries`: {label: index}; or None if labels not used
+    values = None       # list of items: (label, value) pairs in proper order
+    labels = None       # dict of labels and their positions in `entries`: {label: index}, the order is unspecified
     
-    @property
-    def has_labels(self): return self.labels is not None
+    def __init__(self, **values):
+        self.__setstate__(values)
+
+    def __getstate__(self):
+        return dict(self.values)
     
-    def __init__(self, *unlabeled_values, **labeled_values):
-        assert not (unlabeled_values and labeled_values), "can't use labeled and unlabeled values at the same time"
-        if unlabeled_values:
-            self.values = list(unlabeled_values)
-        else:
-            self.values = list(labeled_values.items())
-            self.labels = {label: pos for pos, label in enumerate(labeled_values)}
-        
-    def __contains__(self, key):
-        return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
+    def __setstate__(self, state):
+        self.values = list(state.items())
+        self.labels = {label: pos for pos, label in enumerate(state)}
+    
+    def __iter__(self):
+        return iter(label for (label, _) in self.values)
+
+    def __contains__(self, label):
+        return label in self.labels
+        # return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
 
     def __setitem__(self, key, value):
-        pos = self.position(key)
-        # TODO... in subclasses
+        if isinstance(key, str):
+            pos, label = self.labels.get(key, None), key
+        else:
+            pos, label = key, self.values[key][0]
+
+        if pos is None: self.append(value, label)
+        else:
+            self.labels[label] = pos
+            self.values[pos]   = (label, value)
 
     def __getitem__(self, key):
         pos = self.position(key)
-        entry = self.values[pos]
-        return entry[1] if self.has_labels else entry
+        return self.values[pos][1]
 
     def __delitem__(self, key):
+        # pos = self.labels[label]
         pos = self.position(key)
-        if self.has_labels:
-            label = self.values[pos][0]
-            del self.labels[label]
-        del self.values[pos]
+        label = self.values[pos][0]
+        del self.labels[label], self.values[pos]
         
     def get(self, key, default = None):
-        return self[key] if key in self else default
+        if isinstance(key, str):
+            if key not in self.labels: return default
+            pos = self.labels[key]
+        else:
+            if not (0 <= key < len(self.values)): return default
+            pos = key
+        return self.values[pos][1]
         
-    def append(self, value, label = None):
-        if label is not None:
-            assert self.has_labels, f"trying to insert a labeled value ({label}, {value}) to an unlabeled multiple"
-            assert isinstance(label, str), f"label must be a string, not {label}"
-            assert label not in self.labels, f"duplicate label '{label}'"
-            self.labels[label] = len(self.values)
-        entry = (label, value) if self.has_labels else value
-        self.values.append(entry)
+    def items(self):
+        return iter(self.values)
+
+    def append(self, value, label):
+        assert isinstance(label, str), f"label must be a string, not {label}"
+        assert label not in self.labels, f"duplicate label '{label}'"
+        self.labels[label] = len(self.values)
+        self.values.append((label, value))
 
     def position(self, key):
         return self.labels[key] if isinstance(key, str) else key
-    
-#####################################################################################################################################################
 
-# class multiple_base: pass
-# class multiple_dict(multiple_base):
-#     """"""
-#     def __init__(self, **values):
-#         self.values = list(values.items())
-#         self.labels = {label: pos for pos, label in enumerate(values)}
-#
-# class multiple_list(multiple_base):
-#     """"""
-#     def __init__(self, *values):
-#         self.values = list(values)
-#
-# def multiple(*unlabeled, **labeled):
-#     assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
-#     if labeled: return multiple_dict(**labeled)
-#     return multiple_list(*unlabeled)
+
+def multiple(*unlabeled, **labeled):
+    assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
+    if labeled:
+        return multiple_dict(**labeled)
+    else:
+        return multiple_list(*unlabeled)
 
 
 #####################################################################################################################################################
@@ -148,12 +213,15 @@ class Schema:
     name  = None            # name of this schema instance for messaging purposes (not used currently)
     registry = None         # (TODO) global registry instance, like Item.registry (not used currently)
     
-    # # instance-level settings
-    # blank = True            # if True, None is a valid input value and is encoded as None;
-    #                         # no other valid value can produce None as its serializable state
-    # required = False        # (unused) if True, the value for encoding must be non-empty (true boolean value)
+    # the settings below express INTENTIONS of how this schema should be used and how values should be
+    # dealt with (preprocessed, postprocessed) by a parent data structure; whether a particular setting
+    # is utilized at all and in what exact way depends on the PARENT container; most of the settings are mainly
+    # intended for use with STRUCT; none of these settings influence how encode() and decode() work internally
     
-    default = None          # default value for a STRUCT field or for web forms; None means "no default" (!), rather than a "default value of None"
+    # blank = True            # if True, None is a valid value that should be encoded by the parent schema rather than passed to self.encode()
+    # required = False        # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a STRUCT
+    
+    default = None          # default value for a STRUCT field or web forms; None means "no default" rather than a "default value equal None" (!)
     info    = None          # human-readable description of this schema: what values are accepted and how are they interpreted
     multi   = False         # if multi=True and the schema is assigned to a field of STRUCT, the field can take on
                             # multiple values represented by a <multiple> instance;
@@ -168,7 +236,7 @@ class Schema:
         if info is not None: self.info = info
         if multi is not None: self.multi = multi
     
-    def dump_json(self, value, compact = True, **json_format):
+    def dump_json(self, value, **json_format):
         """
         JSON-encoding proceeds in two phases:
         1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
@@ -292,21 +360,6 @@ class Schema:
               asset ".../protocols.js"
               div protocol=js_class
                 @body
-          
-        - JS:
-          class ValueInteger
-            constructor() { ..(attach event handlers to all elements marked with ValueInteger protocol).. }
-            ondblclick(e) { ... }
-            view_ondblclick(e) { ... }
-            form_buttonok_onclick(e)
-            
-        ----
-        WIDGET (js)
-        - new(state)
-        - set_state(state) -- state represented by a JS object
-        - get_state()
-        - render()
-        
         ----
         Return an HTML code with two top-level elements:
         1) #preview: static non-editable display of a current value of a (sub)field
@@ -1013,70 +1066,70 @@ class FIELDS(Schema):
 
 #####################################################################################################################################################
 
-class STRUCT(FIELDS):
-    """
-    Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
-    Similar to FIELDS, but the app-representation is a regular python object matching the schema
-    rather than a MultiDict; and multiple values are not allowed for a field.
-    When self.type is `struct`, both <struct> and <dict> instances are accepted during encoding,
-    with the latter being automatically converted to a <struct> during decoding (!).
-    """
-    
-    type   = None       # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
-    # fields = None       # optional dict of {field: schema} that can be defined by subclasses as an initial dict of fields
-    
-    def __init__(self, **fields):
-        self.type = self.type or struct
-        assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
-        if self.fields:
-            fields = {**self.fields, **fields}
-        
-        super(STRUCT, self).__init__(**fields)
-        for name, field in self.fields.items():
-            if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
-    
-    def encode(self, obj):
-
-        if self.type is struct:
-            assert isinstance(obj, dict), f'not a dict or struct: {obj}'
-            attrs = dict(obj)
-        elif not isinstance(obj, self.type):
-            raise EncodeError(f"expected an object of type {self.type}, got {obj}")
-        else:
-            attrs = getstate(obj)
-
-        fields  = self.fields
-        encoded = {}
-        
-        # encode values of fields through per-field schema definitions
-        for name, value in attrs.items():
-            
-            if name not in fields: raise EncodeError(f'unknown field "{name}", expected one of {list(fields.keys())}')
-            encoded[name] = fields[name].encode(value)
-            
-        return encoded
-        
-    def decode(self, encoded):
-
-        if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
-        attrs  = {}
-        
-        # decode values of fields
-        for name, value in encoded.items():
-            
-            if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
-            attrs[name] = self.fields[name].decode(value)
-            
-        if self.type is struct:
-            return struct(attrs)
-        
-        return setstate(self.type, attrs)
-
-    def __str__(self):
-        name = self.name or self.__class__.__name__
-        if name != 'STRUCT': return name
-        fields = ','.join(self.fields.keys())
-        return f"{name}({fields})"
+# class STRUCT(FIELDS):
+#     """
+#     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
+#     Similar to FIELDS, but the app-representation is a regular python object matching the schema
+#     rather than a MultiDict; and multiple values are not allowed for a field.
+#     When self.type is `struct`, both <struct> and <dict> instances are accepted during encoding,
+#     with the latter being automatically converted to a <struct> during decoding (!).
+#     """
+#
+#     type   = None       # python type of accepted app-representation objects; instances of subclasses of `type` are NOT accepted
+#     # fields = None       # optional dict of {field: schema} that can be defined by subclasses as an initial dict of fields
+#
+#     def __init__(self, **fields):
+#         self.type = self.type or struct
+#         assert isinstance(self.type, type), f'self.type is not a type: {self.type}'
+#         if self.fields:
+#             fields = {**self.fields, **fields}
+#
+#         super(STRUCT, self).__init__(**fields)
+#         for name, field in self.fields.items():
+#             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
+#
+#     def encode(self, obj):
+#
+#         if self.type is struct:
+#             assert isinstance(obj, dict), f'not a dict or struct: {obj}'
+#             attrs = dict(obj)
+#         elif not isinstance(obj, self.type):
+#             raise EncodeError(f"expected an object of type {self.type}, got {obj}")
+#         else:
+#             attrs = getstate(obj)
+#
+#         fields  = self.fields
+#         encoded = {}
+#
+#         # encode values of fields through per-field schema definitions
+#         for name, value in attrs.items():
+#
+#             if name not in fields: raise EncodeError(f'unknown field "{name}", expected one of {list(fields.keys())}')
+#             encoded[name] = fields[name].encode(value)
+#
+#         return encoded
+#
+#     def decode(self, encoded):
+#
+#         if not isinstance(encoded, dict): raise DecodeError(f"expected a <dict>, not {encoded}")
+#         attrs  = {}
+#
+#         # decode values of fields
+#         for name, value in encoded.items():
+#
+#             if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
+#             attrs[name] = self.fields[name].decode(value)
+#
+#         if self.type is struct:
+#             return struct(attrs)
+#
+#         return setstate(self.type, attrs)
+#
+#     def __str__(self):
+#         name = self.name or self.__class__.__name__
+#         if name != 'STRUCT': return name
+#         fields = ','.join(self.fields.keys())
+#         return f"{name}({fields})"
 
     # def display(self, obj):
     #
@@ -1088,38 +1141,6 @@ class STRUCT(FIELDS):
     #
     #     return ' '.join(parts)
     
-    
-# class FIELD(STRUCT):
-#     """Schema of a field specification in a category's list of fields."""
-#
-#     type = Field
-#     fields = {'schema':  OBJECT(Schema)}
-#     # fields = FIELDS._init_fields({
-#     #     'schema':  OBJECT(Schema),       # VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-#     #     # 'default': OBJECT(),
-#     #     # 'multi':   BOOLEAN(),
-#     #     # 'info':    STRING(),
-#     # })
-    
-    # def display(self, field):
-    #     view = """
-    #         context $field as f
-    #         span .field
-    #             | $f.schema
-    #             ...if f.multi | *
-    #             if f.default <> f.MISSING
-    #                 $default = str(f.default)
-    #                 span .default title="default value: {default:crop(1000)}"
-    #                     | [{default : crop(100)}]
-    #             if f.info
-    #                 span .info | • $f.info
-    #                 # smaller dot: &middot;
-    #                 # larger dot: •
-    #     """
-    #     # multi = '*' if self.multi else ''
-    #     # return f"{self.schema}{multi} [{self.default}] / <i>{esc(self.info or '')}</i>"
-    #     return hypertag(view).render(field = field)
-
 
 
 # # rules for detecting disallowed field names in category schema definitions
