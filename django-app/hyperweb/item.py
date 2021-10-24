@@ -390,7 +390,7 @@ class Item(object, metaclass = MetaItem):
         # return self.data.items()
         
         entries = []
-        fields  = self.category.get_schema()
+        fields  = self.category.fields
         
         # retrieve entries by their order in category's schema (fields)
         for f in fields:
@@ -441,8 +441,6 @@ class Item(object, metaclass = MetaItem):
     
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        # schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
-        # return JSON.dump(self.data, schema.encode, compact = compact)
         schema = self.category.get_schema()
         data = self.data.asdict_first()      # TODO: temporary code
         return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
@@ -484,6 +482,9 @@ class Category(Item):
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     """
+    @property
+    def fields(self): self.load('fields'); return self.get('fields')
+    
     def __call__(self, __data__ = None, __stage__ = True, **props):
         """
         Create a newborn item of this category (not yet in DB); connect it with self.registry;
@@ -532,16 +533,17 @@ class Category(Item):
     
     def get_default(self, field, default = None):
         """Get default value of a field from category schema. Return `default` if no category default is configured."""
-        field = self.get_schema().get(field)
+        field = self.fields.get(field)
         return field.default if field else default
     
     def get_schema(self, field = None):
         """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""
-        self.load()
-        fields = self.get('fields')
-        if field is None: return fields
-        schema = fields[field] if field in fields else None
-        return schema or generic_schema
+        fields = self.fields
+        if field is None:               # create and return a schema for the entire Item.data
+            return fields
+        else:                           # return a schema for a selected field only
+            schema = fields[field] if field in fields else None
+            return schema or generic_schema
     
     #####  Handlers & templates  #####
 

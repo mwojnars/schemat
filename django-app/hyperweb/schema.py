@@ -1004,43 +1004,32 @@ class STRUCT(Schema):
         super(STRUCT, self).__init__(**params)
         self.fields = fields
         
+    def __iter__(self): yield from self.fields
+    def __contains__(self, key): return key in self.fields
+    def __getitem__(self, key): return self.fields[key]
+    def __setitem__(self, key, value): self.fields[key] = value
+    def get(self, key): return self.fields.get(key)
+    def items(self): return self.fields.items()
+    
     def encode(self, data):
-        if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
-        fields = self.asdict()
-        
-        # encode & compactify values of fields through per-field schema definitions
-        encoded = data.asdict_lists()
-        for name, values in encoded.items():
-            
-            if self.strict and name not in fields:
+        if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")
+        state = {}
+        for name, value in data.items():        # encode & compactify values of fields through per-field schema definitions
+            if self.strict and name not in self.fields:
                 raise EncodeError(f'unknown field "{name}"')
-            
-            # schema-aware encoding
-            assert len(values) == 1
-            schema = fields.get(name) or self.default_schema
-            encoded[name] = schema.encode(values[0])
-            
-        return encoded
+            schema = self.fields.get(name) or self.default_schema
+            state[name] = schema.encode(value)
+        return state
         
     def decode(self, data):
-        """
-        Decode a dict of {attr: value(s)} back to a MultiDict.
-        Perform recursive top-down schema-based decoding of field values.
-        """
+        """Recursive top-down schema-based decoding of values a dict {field: value}."""
         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
-        fields = self.fields
-
-        # de-compactify & decode values of fields
         for name, value in data.items():
-            
-            if self.strict and name not in fields:
+            if self.strict and name not in self.fields:
                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
-            
-            # schema-based decoding
-            schema = fields.get(name) or self.default_schema
-            data[name] = [schema.decode(value)]
-            
-        return MultiDict(multiple = data)
+            schema = self.fields.get(name) or self.default_schema
+            data[name] = schema.decode(value)
+        return data
 
     def __str__(self):
         return str(dict(self.fields))
@@ -1076,7 +1065,6 @@ class FIELDS(Schema):
     
     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
     fields   = None     # dict of field names & their Field() schema descriptors
-    # blank    = False
     
     def __init__(self, **fields):
         # if __strict__ is not None: self.strict = __strict__
