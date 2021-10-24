@@ -33,7 +33,6 @@ from hyperweb.core.root import registry
 # all other items/categories are staged for commit automatically
 Category_ = registry.create_root(load = False)
 
-
 File_ = Category_(
     name    = "File",
     info    = """File with a text content. Accessible through the web filesystem.""",
@@ -43,7 +42,7 @@ File_ = Category_(
     #             after compilation. Some uses may allow multiple names to be declared.
     #           """,
     class_name  = 'hyperweb.core.File',
-    fields      = FIELDS(
+    fields      = dict(
         format  = STRING(),    # ProgrammingLanguage()
         content = CODE(),      # VARIANT(bin = BYTES(), txt = TEXT()),
     ),
@@ -53,7 +52,7 @@ FileLocal_ = Category_(
     info        = """File located on a local disk, identified by its local file path.""",
     prototype   = File_,
     class_name  = 'hyperweb.core.FileLocal',
-    fields      = FIELDS(
+    fields      = dict(
         path    = STRING(),     # path to a local file on disk
         # format  = STRING(),     # file format: pdf, xlsx, ...
     ),
@@ -64,7 +63,7 @@ Folder_ = Category_(
     name        = "Folder",
     info        = "A directory of files, each file has a unique name (path). May contain nested directories.",
     class_name  = 'hyperweb.core.Folder',
-    fields      = FIELDS(files = CATALOG(keys = FILENAME(), values = ITEM()))     # file & directory names mapped to item IDs
+    fields      = dict(files = CATALOG(keys = FILENAME(), values = ITEM()))     # file & directory names mapped to item IDs
 )
 # file system arrangement (root directory organization) - see https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 #  /categories/* (auto) -- categories listed by IID (or IID_name?), each entry links to a profile, shows links to other endpoints, and a link to /items/CAT
@@ -77,7 +76,7 @@ Folder_ = Category_(
 # Space_ = Category_(
 #     name        = "Space",
 #     info        = "Category of items that represent item spaces.",
-#     fields      = FIELDS(name = STRING(), categories = CATALOG(ITEM(Category_))),
+#     fields      = dict(name = STRING(), categories = CATALOG(ITEM(Category_))),
 #     # class_name  = 'hyperweb.core.Space',
 #     class_name  = "Space",
 #     class_code  =
@@ -99,7 +98,7 @@ Application_ = Category_(
     name        = "Application",
     info        = "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
     class_name  = 'hyperweb.core.Application',
-    fields      = FIELDS(name = STRING()),
+    fields      = dict(name = STRING()),
     # folder      = FILEPATH(),       # path to a folder in the site's directory where this application was installed;
                                     # if the app needs to store data items in the directory, it's recommended
                                     # to do this inside a .../data subfolder
@@ -109,31 +108,31 @@ AppRoot_  = Category_(
     info        = "A set of sub-applications, each bound to a different URL prefix.",
     class_name  = 'hyperweb.core.AppRoot',
     prototype   = Application_,     # TODO: add support for category inheritance (prototypes)
-    fields      = FIELDS(name = STRING(), apps = CATALOG(ITEM())),  # TODO: restrict apps to sub-categories of Application_ (?)
+    fields      = dict(name = STRING(), apps = CATALOG(ITEM())),  # TODO: restrict apps to sub-categories of Application_ (?)
 )
 
 AppAdmin_ = Category_(
     name        = "AppAdmin",
     class_name  = 'hyperweb.core.AppAdmin',
-    fields      = FIELDS(name = STRING()),
+    fields      = dict(name = STRING()),
 )
 AppFiles_ = Category_(
     name        = "AppFiles",
     class_name  = 'hyperweb.core.AppFiles',
-    fields      = FIELDS(name = STRING(), root_folder = ITEM(Folder_)),    # if root_folder is missing, Site's main folder is used
+    fields      = dict(name = STRING(), root_folder = ITEM(Folder_)),    # if root_folder is missing, Site's main folder is used
 )
 AppSpaces_ = Category_(
     name        = "AppSpaces",
     info        = "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
     class_name  = 'hyperweb.core.AppSpaces',
-    fields      = FIELDS(name = STRING(), spaces = CATALOG(ITEM(Category_))),
+    fields      = dict(name = STRING(), spaces = CATALOG(ITEM(Category_))),
 )
 
 Site_ = Category_(
     name        = "Site",
     info        = "Category of site records. A site contains information about applications, servers, startup",
     class_name  = 'hyperweb.core.Site',
-    fields      = FIELDS(
+    fields      = dict(
         name        = STRING(),
         base_url    = STRING(),                 # the base URL at which the `application` is served, /-terminated
         filesystem  = ITEM(Folder_),         # root of the site-global file system
@@ -145,14 +144,14 @@ Varia_ = Category_(
     name        = "Varia",
     info        = "Category of items that do not belong to any specific category",
     class_name  = 'hyperweb.core.Item',
-    fields      = FIELDS(name = STRING(), title = STRING()),            # multi = True
+    fields      = dict(name = STRING(), title = STRING()),            # multi = True
 )
 
 
 # Text_ = Category_(
 #     name    = "Text",
 #     info    = "Plain or rich text for human consumption. May keep information about language and/or markup.",
-#     fields  = FIELDS(
+#     fields  = dict(
 #         language = STRING(),    # HumanLanguage()
 #         markup   = STRING(),    # MarkupLanguage()
 #         text     = TEXT(),
@@ -166,6 +165,6 @@ Varia_ = Category_(
 # )
 # Struct_ = SchemaType_(
 #     name = 'STRUCT',
-#     schema = FIELDS(name = STRING(), type = CLASS(), fields = CATALOG(OBJECT(Schema))),
+#     schema = dict(name = STRING(), type = CLASS(), fields = CATALOG(OBJECT(Schema))),
 # )
 

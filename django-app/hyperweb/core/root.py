@@ -22,7 +22,7 @@ page_item $item
 #####################################################################################################################################################
 
 # fields of categories, including the root category
-root_fields = FIELDS(
+root_fields = dict(
     name         = STRING(info = "human-readable title of the category"),
     info         = STRING(),
     startup_site = OBJECT(),
@@ -30,7 +30,7 @@ root_fields = FIELDS(
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),
-    fields       = CATALOG(SCHEMA(), type = FIELDS),
+    fields       = CATALOG(SCHEMA()),
     
     #field       = SCHEMA(multiple = True, labels = True)
     #endpoint    = CODE(multiple = True, labels = True, default = {"view": page_item})

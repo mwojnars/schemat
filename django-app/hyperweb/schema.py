@@ -1074,12 +1074,12 @@ class FIELDS(Schema):
         Schema.__init__(self, **params)
         self.fields = fields
     
-    def __iter__(self): yield from self.fields
-    def __contains__(self, key): return key in self.fields
-    def __getitem__(self, key): return self.fields[key]
-    def __setitem__(self, key, value): self.fields[key] = value
-    def get(self, key): return self.fields.get(key)
-    def items(self): return self.fields.items()
+    # def __iter__(self): yield from self.fields
+    # def __contains__(self, key): return key in self.fields
+    # def __getitem__(self, key): return self.fields[key]
+    # def __setitem__(self, key, value): self.fields[key] = value
+    # def get(self, key): return self.fields.get(key)
+    # def items(self): return self.fields.items()
     
     def encode(self, data):
         """

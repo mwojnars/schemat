@@ -10,7 +10,7 @@ from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
 from .serialize import JSON
-from .schema import generic_schema
+from .schema import generic_schema, FIELDS
 
 
 #####################################################################################################################################################
@@ -537,10 +537,10 @@ class Category(Item):
         return field.default if field else default
     
     def get_schema(self, field = None):
-        """Return schema of a given field, or all fields (if field=None), in the latter case a FIELDS object is returned."""
+        """Return schema of a given field, or all Item.data (if field=None)."""
         fields = self.fields
         if field is None:               # create and return a schema for the entire Item.data
-            return fields
+            return FIELDS(**fields)
         else:                           # return a schema for a selected field only
             schema = fields[field] if field in fields else None
             return schema or generic_schema

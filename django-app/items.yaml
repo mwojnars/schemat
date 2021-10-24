@@ -12,35 +12,32 @@
 
       '}
   fields:
+    name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
+    info: {'@': hyperweb.types.STRING}
+    startup_site: {'@': hyperweb.types.OBJECT}
+    prototype: {info: 'Base category from which this one inherits. Multiple prototypes
+        are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
+    class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
+        class. Or the class name that should be imported from `class_code` after its
+        execution., '@': hyperweb.types.STRING}
+    class_code: {'@': hyperweb.types.TEXT}
+    endpoints:
+      default: {view: '
+
+          context $item
+
+          from base import %page_item
+
+          page_item $item
+
+          # dedent : page_item $item
+
+          '}
+      values: {'@': hyperweb.types.CODE}
+      '@': hyperweb.types.CATALOG
     fields:
-      name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
-      info: {'@': hyperweb.types.STRING}
-      startup_site: {'@': hyperweb.types.OBJECT}
-      prototype: {info: 'Base category from which this one inherits. Multiple prototypes
-          are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
-      class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
-          class. Or the class name that should be imported from `class_code` after
-          its execution., '@': hyperweb.types.STRING}
-      class_code: {'@': hyperweb.types.TEXT}
-      endpoints:
-        default: {view: '
-
-            context $item
-
-            from base import %page_item
-
-            page_item $item
-
-            # dedent : page_item $item
-
-            '}
-        values: {'@': hyperweb.types.CODE}
-        '@': hyperweb.types.CATALOG
-      fields:
-        values: {'@': hyperweb.types.SCHEMA}
-        type: {'=': hyperweb.types.FIELDS, '@': (type)}
-        '@': hyperweb.types.CATALOG
-    '@': hyperweb.types.FIELDS
+      values: {'@': hyperweb.types.SCHEMA}
+      '@': hyperweb.types.CATALOG
   startup_site: [9, 1]
 - id: [0, 1]
   name: File
