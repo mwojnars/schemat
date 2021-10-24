@@ -158,13 +158,13 @@ Varia_ = Category_(
 #     ),
 # )
 
-# Import_     = STRUCT(name = STRING(), code = ITEM(_Code))      # an object imported from a Code item
+# Import_     = RECORD(name = STRING(), code = ITEM(_Code))      # an object imported from a Code item
 # SchemaType_ = Category_(
 #     name        = "SchemaType",
 #     schema      = '???',
 # )
 # Struct_ = SchemaType_(
-#     name = 'STRUCT',
+#     name = 'RECORD',
 #     schema = dict(name = STRING(), type = CLASS(), fields = CATALOG(OBJECT(Schema))),
 # )
 

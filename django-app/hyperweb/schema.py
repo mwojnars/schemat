@@ -232,16 +232,16 @@ class Schema:
     # the settings below express INTENTIONS of how this schema should be used and how values should be
     # dealt with (preprocessed, postprocessed) by a parent data structure; whether a particular setting
     # is utilized at all and in what exact way depends on the PARENT container; most of the settings are mainly
-    # intended for use with STRUCT; none of these settings influence how encode() and decode() work internally
+    # intended for use with RECORD; none of these settings influence how encode() and decode() work internally
     
     # blank = True            # if True, None is a valid value that should be encoded by the parent schema rather than passed to self.encode()
-    # required = False        # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a STRUCT
+    # required = False        # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a RECORD
     
-    default = None          # default value for a STRUCT field or web forms; None means "no default" rather than a "default value equal None" (!)
+    default = None          # default value for a RECORD field or web forms; None means "no default" rather than a "default value equal None" (!)
     info    = None          # human-readable description of this schema: what values are accepted and how are they interpreted
-    multi   = False         # if multi=True and the schema is assigned to a field of STRUCT, the field can take on
+    multi   = False         # if multi=True and the schema is assigned to a field of RECORD, the field can take on
                             # multiple values represented by a <multiple> instance;
-                            # the detection of a multiple is done by a parent STRUCT (TODO), which calls
+                            # the detection of a multiple is done by a parent RECORD (TODO), which calls
                             # encode_multi() instead of encode() and appends * to a field name in output state
 
     is_catalog = False      # True only in CATALOG and subclasses
@@ -911,11 +911,11 @@ class VARIANT(Schema):
 
 #####################################################################################################################################################
 #####
-#####  FIELD(S), RECORD, STRUCT
+#####  RECORD
 #####
 
 # class Field:
-#     """Specification of a field in a FIELDS/STRUCT catalog."""
+#     """Specification of a field in a FIELDS/RECORD catalog."""
 #
 #     MISSING = None #object()      # token indicating that `default` value is missing; removed from output during serialization
 #
@@ -995,22 +995,25 @@ class VARIANT(Schema):
         
 #####################################################################################################################################################
 
-class STRUCT(Schema):
+class RECORD(Schema):
+    """
+    Schema of dict objects ("records") that are composed of a fixed number of predefined named fields,
+    each one having its own schema. RECORD is being used for serialization of Item.data,
+    but it can also represent compound values inside item properties. If strict=False, RECORD can encode
+    undeclared fields. In any case, inner fields may contain multiple values,
+    if only their corresponding schema permits that.
+    """
 
-    default_schema = OBJECT(multi = True)
-    strict = False      # if True, only the fields present in `fields` can occur in the data being encoded
+    fields = None           # dict of field names and their schema
+    strict = None           # if True, only the fields present in `fields` can occur in the data being encoded
 
-    def __init__(self, fields, **params):
-        super(STRUCT, self).__init__(**params)
-        self.fields = fields
-        
-    def __iter__(self): yield from self.fields
-    def __contains__(self, key): return key in self.fields
-    def __getitem__(self, key): return self.fields[key]
-    def __setitem__(self, key, value): self.fields[key] = value
-    def get(self, key): return self.fields.get(key)
-    def items(self): return self.fields.items()
+    default_schema = OBJECT(multi = True)       # schema to use for undeclared fields (if strict=False)
     
+    def __init__(self, fields, strict = True, **params):
+        super(RECORD, self).__init__(**params)
+        self.fields = fields
+        self.strict = strict
+        
     def encode(self, data):
         if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")
         state = {}
@@ -1034,105 +1037,92 @@ class STRUCT(Schema):
     def __str__(self):
         return str(dict(self.fields))
 
-class ITEM_DATA(STRUCT):
-    strict = False
 
-    def __init__(self, fields):
-        super(ITEM_DATA, self).__init__(fields)
+# class FIELDS(Schema):
+#     """
+#     Catalog of fields of items (MultiDict's) in a particular category;
+#     a dictionary of field names and their individual schemas as Field objects.
+#     Provides methods for schema-aware encoding and decoding of items,
+#     with every field value encoded through its dedicated field-specific schema.
+#
+#     Primarily used for schema definition inside categories.
+#     Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
+#     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
+#     to False in all fields.
+#     """
+#
+#     # default field specification to be used for fields not present in `fields`
+#     # default_field = Field(OBJECT(multi = True))
+#     default_schema = OBJECT(multi = True)
+#
+#     strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
+#     fields   = None     # dict of field names & their Field() schema descriptors
+#
+#     def __init__(self, **fields):
+#         # if __strict__ is not None: self.strict = __strict__
+#         # if fields: self.fields = fields
+#         # super(FIELDS, self).__init__(fields)
+#         params = {}                                     # TODO: accept nonempty params
+#         Schema.__init__(self, **params)
+#         self.fields = fields
+#
+#     # def __iter__(self): yield from self.fields
+#     # def __contains__(self, key): return key in self.fields
+#     # def __getitem__(self, key): return self.fields[key]
+#     # def __setitem__(self, key, value): self.fields[key] = value
+#     # def get(self, key): return self.fields.get(key)
+#     # def items(self): return self.fields.items()
+#
+#     def encode(self, data):
+#         """
+#         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
+#         while schema-encoding each field value beforehand.
+#         """
+#         # if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
+#         if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")
+#         errors = []
+#         fields = self.fields
+#
+#         # encode & compactify values of fields through per-field schema definitions
+#         encoded = {} #data.asdict_lists()
+#         for name, value in data.items():
+#
+#             if self.strict and name not in fields:
+#                 raise EncodeError(f'unknown field "{name}"')
+#
+#             # schema-aware encoding
+#             # assert len(values) == 1
+#             schema = fields.get(name) or self.default_schema
+#             encoded[name] = schema.encode(value)
+#
+#         if errors: raise EncodeErrors(errors)
+#
+#         return encoded
+#
+#     def decode(self, data):
+#         """
+#         Decode a dict of {attr: value(s)} back to a MultiDict.
+#         Perform recursive top-down schema-based decoding of field values.
+#         """
+#         if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
+#         fields = self.fields
+#
+#         # de-compactify & decode values of fields
+#         for name, value in data.items():
+#
+#             if self.strict and name not in fields:
+#                 raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
+#
+#             # schema-based decoding
+#             schema = fields.get(name) or self.default_schema
+#             data[name] = schema.decode(value)
+#
+#         return data #MultiDict(multiple = data)
+#
+#     def __str__(self):
+#         return str(dict(self.fields))
 
-    def encode(self, data):
-        if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
-        values = data.asdict_lists()
-        return super(ITEM_DATA, self).encode(values)
-
-
-class FIELDS(Schema):
-    """
-    Catalog of fields of items (MultiDict's) in a particular category;
-    a dictionary of field names and their individual schemas as Field objects.
-    Provides methods for schema-aware encoding and decoding of items,
-    with every field value encoded through its dedicated field-specific schema.
-
-    Primarily used for schema definition inside categories.
-    Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
-    are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
-    to False in all fields.
-    """
-    
-    # default field specification to be used for fields not present in `fields`
-    # default_field = Field(OBJECT(multi = True))
-    default_schema = OBJECT(multi = True)
-    
-    strict   = False    # if True, only the fields present in `fields` can occur in the data being encoded
-    fields   = None     # dict of field names & their Field() schema descriptors
-    
-    def __init__(self, **fields):
-        # if __strict__ is not None: self.strict = __strict__
-        # if fields: self.fields = fields
-        # super(FIELDS, self).__init__(fields)
-        params = {}                                     # TODO: accept nonempty params
-        Schema.__init__(self, **params)
-        self.fields = fields
-    
-    # def __iter__(self): yield from self.fields
-    # def __contains__(self, key): return key in self.fields
-    # def __getitem__(self, key): return self.fields[key]
-    # def __setitem__(self, key, value): self.fields[key] = value
-    # def get(self, key): return self.fields.get(key)
-    # def items(self): return self.fields.items()
-    
-    def encode(self, data):
-        """
-        Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
-        while schema-encoding each field value beforehand.
-        """
-        # if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
-        if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")
-        errors = []
-        fields = self.fields
-        
-        # encode & compactify values of fields through per-field schema definitions
-        encoded = {} #data.asdict_lists()
-        for name, value in data.items():
-            
-            if self.strict and name not in fields:
-                raise EncodeError(f'unknown field "{name}"')
-            
-            # schema-aware encoding
-            # assert len(values) == 1
-            schema = fields.get(name) or self.default_schema
-            encoded[name] = schema.encode(value)
-            
-        if errors: raise EncodeErrors(errors)
-            
-        return encoded
-        
-    def decode(self, data):
-        """
-        Decode a dict of {attr: value(s)} back to a MultiDict.
-        Perform recursive top-down schema-based decoding of field values.
-        """
-        if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
-        fields = self.fields
-
-        # de-compactify & decode values of fields
-        for name, value in data.items():
-            
-            if self.strict and name not in fields:
-                raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
-            
-            # schema-based decoding
-            schema = fields.get(name) or self.default_schema
-            data[name] = schema.decode(value)
-            
-        return data #MultiDict(multiple = data)
-
-    def __str__(self):
-        return str(dict(self.fields))
-
-#####################################################################################################################################################
-
-# class STRUCT(FIELDS):
+# class RECORD(FIELDS):
 #     """
 #     Schema of a plain dict-like object that contains a number of named fields each one having its own schema.
 #     Similar to FIELDS, but the app-representation is a regular python object matching the schema
@@ -1150,9 +1140,9 @@ class FIELDS(Schema):
 #         if self.fields:
 #             fields = {**self.fields, **fields}
 #
-#         super(STRUCT, self).__init__(**fields)
+#         super(RECORD, self).__init__(**fields)
 #         for name, field in self.fields.items():
-#             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a STRUCT schema')
+#             if field.multi: raise Exception(f'multiple values are not allowed for a field ("{name}") of a RECORD schema')
 #
 #     def encode(self, obj):
 #
@@ -1183,7 +1173,7 @@ class FIELDS(Schema):
 #         # decode values of fields
 #         for name, value in encoded.items():
 #
-#             if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a STRUCT')
+#             if name not in self.fields: raise DecodeError(f'invalid field "{name}", not present in schema of a RECORD')
 #             attrs[name] = self.fields[name].decode(value)
 #
 #         if self.type is struct:
@@ -1193,7 +1183,7 @@ class FIELDS(Schema):
 #
 #     def __str__(self):
 #         name = self.name or self.__class__.__name__
-#         if name != 'STRUCT': return name
+#         if name != 'RECORD': return name
 #         fields = ','.join(self.fields.keys())
 #         return f"{name}({fields})"
 
@@ -1208,6 +1198,7 @@ class FIELDS(Schema):
     #     return ' '.join(parts)
     
 
+#####################################################################################################################################################
 
 # # rules for detecting disallowed field names in category schema definitions
 # STOP_ATTR = {

@@ -5,7 +5,7 @@ Custom data structures for use as values of item properties.
 
 #####################################################################################################################################################
 #####
-#####  CATALOG & STRUCT
+#####  CATALOG & RECORD
 #####
 
 class catalog(dict):

@@ -343,12 +343,12 @@ export class CATALOG extends DICT {
 
 /**********************************************************************************************************************
  **
- **  FIELD(S), STRUCT
+ **  FIELD(S), RECORD
  **
  */
 
 export class Field {
-    /* Specification of a field in a FIELDS/STRUCT catalog. */
+    /* Specification of a field in a FIELDS/RECORD catalog. */
     
     // schema  = null          // instance of Schema
     // default = undefined     // value assumed if this field is missing in an item; or MISSING if no default
@@ -406,11 +406,11 @@ export class Field {
         
 /**********************************************************************************************************************/
 
-export class STRUCT extends Schema {
+export class RECORD extends Schema {
     /*
     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
     - unlike in DICT, where all values share the same schema.
-    STRUCT does not encode keys, but passes them unmodified.
+    RECORD does not encode keys, but passes them unmodified.
 
     The `type` of value objects can optionally be declared, for validation and more compact output representation.
     A MultiDict can be handled as a value type through its __getstate__ and __setstate__ methods.
@@ -430,7 +430,7 @@ export class STRUCT extends Schema {
 
     constructor(fields, {strict, type}) {
         super()
-        if (fields) this.fields = STRUCT._init_fields(fields)
+        if (fields) this.fields = RECORD._init_fields(fields)
         if (strict) this.strict = strict
         if (type)   this.type   = type
     }
@@ -490,7 +490,7 @@ export class STRUCT extends Schema {
 
 /**********************************************************************************************************************/
 
-export class FIELDS extends STRUCT {
+export class FIELDS extends RECORD {
     /*
     Dict of item properties declared by a particular category, as field name -> Field object.
     Provides methods for schema-aware encoding and decoding of item's data,
@@ -505,11 +505,11 @@ export class FIELDS extends STRUCT {
     // static multi = True   -- TODO
 }
 
-export class FIELD extends STRUCT {
+export class FIELD extends RECORD {
     /* Schema of a field specification in a category's list of fields. */
 
     // static type = Field
-    static fields = STRUCT._init_fields({
+    static fields = RECORD._init_fields({
         'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
         'default': new OBJECT,
         'multi':   new BOOLEAN,
