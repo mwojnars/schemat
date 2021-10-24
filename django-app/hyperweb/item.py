@@ -329,9 +329,8 @@ class Item(object, metaclass = MetaItem):
         if data_json is None:
             data_json = self.registry.load_data(self.id)
 
-        schema = self.category.get_schema() if use_schema else generic_schema       # specification of field schema {field_name: schema}
-        data   = JSON.load(data_json, schema.decode)
-        # data   = schema.load_json(data_json)
+        schema = self.category.get_schema() #if use_schema else generic_schema       # specification of field schema {field_name: schema}
+        data   = JSON.load(data_json, schema.decode if use_schema else None)
         self.data = MultiDict(data)
         self.bind()
 
@@ -442,21 +441,26 @@ class Item(object, metaclass = MetaItem):
     
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        # json_format = dict(separators = (',', ':')) if compact else {}
-        # return schema.dump_json(self.data, **json_format)
-        schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
-        return JSON.dump(self.data, schema.encode, compact = compact)
-
+        # schema = self.category.get_schema() if use_schema else generic_schema      # specification of field schema {field_name: schema}
+        # return JSON.dump(self.data, schema.encode, compact = compact)
+        schema = self.category.get_schema()
+        data = self.data.asdict_first()      # TODO: temporary code
+        return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
+    
+        # fields = self.category['field']       # multiple_dict
+        # schema = ITEM_DATA(fields)
+        
+    
     def dump_item(self, use_schema = True):
         """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
         state = self.__dict__.copy()
         state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
         state.pop('category', None)
         schema = self.category.get_schema() if use_schema else generic_schema
-        data = self.data if use_schema else self.data.asdict_first()      # temporary code
-        state['data'] = schema.encode(data)      # schema-aware encode (compactify) the `data` as <dict> (TODO multidict)
-        return json.dumps(state)
-        # return state              # state should be serialized through the standard `json`, not our custom object-encoding JSON
+        # data = self.data if use_schema else self.data.asdict_first()
+        data = self.data.asdict_first()      # TODO: temporary code
+        state['data'] = schema.encode(data)      # schema-aware encode (compactify) the `data` as <dict>
+        return json.dumps(state)                # state must be serialized through the standard `json`, not our custom object-encoding JSON
 
     @staticmethod
     def from_dump(state, category = None, use_schema = True):

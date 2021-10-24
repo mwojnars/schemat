@@ -84,7 +84,11 @@ from .multidict import MultiDict
 #         return self.labels[key] if isinstance(key, str) else key
 
 
-class multiple_base: pass
+class multiple_base:
+    """"""
+    # def labels(self): pass
+    # def values(self): pass
+    # def items(self): pass
 
 class multiple_list(multiple_base):
     """List of multiple values for a single data element, all matching a common schema."""
@@ -95,6 +99,9 @@ class multiple_list(multiple_base):
     def __delitem__(self, pos):         del self.values[pos]
     def get(self, pos, default=None):   return self[pos] if 0 <= pos < len(self.values) else default
     def append(self, value):            self.values.append(value)
+
+# class multiple_flex(multiple_base):
+#     """There can be labels for values, but they are not obligatory and don't need to be unique."""
 
 class multiple_dict(multiple_base):
     """
@@ -166,6 +173,15 @@ class multiple_dict(multiple_base):
     def position(self, key):
         return self.labels[key] if isinstance(key, str) else key
 
+    def asdict(self):
+        return dict(self.values)
+
+    # def encode_all(self, schema):
+    #     return {label: schema.encode(value) for label, value in self.values}
+    #
+    # def decode_all(self, schema, state):
+    #     self.values = {(label, schema.decode(value)) for label, value in state.items()}
+    #     self.labels = {label: pos for pos, label in enumerate(state)}
 
 def multiple(*unlabeled, **labeled):
     assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
@@ -236,20 +252,20 @@ class Schema:
         if info is not None: self.info = info
         if multi is not None: self.multi = multi
     
-    def dump_json(self, value, **json_format):
-        """
-        JSON-encoding proceeds in two phases:
-        1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
-           type information that's available; the flat object may still contain nested non-primitive objects;
-        2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
-        """
-        state = self.encode(value)
-        return json.dumps(state, ensure_ascii = False, **json_format)
-
-    def load_json(self, dump):
-
-        state = json.loads(dump)
-        return self.decode(state)
+    # def dump_json(self, value, **json_format):
+    #     """
+    #     JSON-encoding proceeds in two phases:
+    #     1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
+    #        type information that's available; the flat object may still contain nested non-primitive objects;
+    #     2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
+    #     """
+    #     state = self.encode(value)
+    #     return json.dumps(state, ensure_ascii = False, **json_format)
+    #
+    # def load_json(self, dump):
+    #
+    #     state = json.loads(dump)
+    #     return self.decode(state)
     
     def encode(self, value):
         """
@@ -979,6 +995,68 @@ class VARIANT(Schema):
         
 #####################################################################################################################################################
 
+class STRUCT(Schema):
+
+    default_schema = OBJECT(multi = True)
+    strict = False      # if True, only the fields present in `fields` can occur in the data being encoded
+
+    def __init__(self, fields, **params):
+        super(STRUCT, self).__init__(**params)
+        self.fields = fields
+        
+    def encode(self, data):
+        if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
+        fields = self.asdict()
+        
+        # encode & compactify values of fields through per-field schema definitions
+        encoded = data.asdict_lists()
+        for name, values in encoded.items():
+            
+            if self.strict and name not in fields:
+                raise EncodeError(f'unknown field "{name}"')
+            
+            # schema-aware encoding
+            assert len(values) == 1
+            schema = fields.get(name) or self.default_schema
+            encoded[name] = schema.encode(values[0])
+            
+        return encoded
+        
+    def decode(self, data):
+        """
+        Decode a dict of {attr: value(s)} back to a MultiDict.
+        Perform recursive top-down schema-based decoding of field values.
+        """
+        if not isinstance(data, dict): raise DecodeError(f"expected a <dict>, not {data}")
+        fields = self.fields
+
+        # de-compactify & decode values of fields
+        for name, value in data.items():
+            
+            if self.strict and name not in fields:
+                raise DecodeError(f'field "{name}" of a record not allowed by its schema definition')
+            
+            # schema-based decoding
+            schema = fields.get(name) or self.default_schema
+            data[name] = [schema.decode(value)]
+            
+        return MultiDict(multiple = data)
+
+    def __str__(self):
+        return str(dict(self.fields))
+
+class ITEM_DATA(STRUCT):
+    strict = False
+
+    def __init__(self, fields):
+        super(ITEM_DATA, self).__init__(fields)
+
+    def encode(self, data):
+        if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
+        values = data.asdict_lists()
+        return super(ITEM_DATA, self).encode(values)
+
+
 class FIELDS(Schema):
     """
     Catalog of fields of items (MultiDict's) in a particular category;
@@ -1020,24 +1098,24 @@ class FIELDS(Schema):
         Convert a MultiDict (`data`) to a dict of {attr_name: encoded_values} pairs,
         while schema-encoding each field value beforehand.
         """
-        if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
+        # if not isinstance(data, MultiDict): raise EncodeError(f"expected a MultiDict, got {data}")
+        if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")
         errors = []
         fields = self.fields
         
         # encode & compactify values of fields through per-field schema definitions
-        encoded = data.asdict_lists()
-        for name, values in encoded.items():
+        encoded = {} #data.asdict_lists()
+        for name, value in data.items():
             
             if self.strict and name not in fields:
                 raise EncodeError(f'unknown field "{name}"')
             
             # schema-aware encoding
-            assert len(values) == 1
+            # assert len(values) == 1
             schema = fields.get(name) or self.default_schema
-            encoded[name] = schema.encode(values[0])
+            encoded[name] = schema.encode(value)
             
-        if errors:
-            raise EncodeErrors(errors)
+        if errors: raise EncodeErrors(errors)
             
         return encoded
         
@@ -1057,9 +1135,9 @@ class FIELDS(Schema):
             
             # schema-based decoding
             schema = fields.get(name) or self.default_schema
-            data[name] = [schema.decode(value)]
+            data[name] = schema.decode(value)
             
-        return MultiDict(multiple = data)
+        return data #MultiDict(multiple = data)
 
     def __str__(self):
         return str(dict(self.fields))

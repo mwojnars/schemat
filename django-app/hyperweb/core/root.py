@@ -48,6 +48,8 @@ root_fields = FIELDS(
     #ttl_client  = INTEGER(),   # for how long to keep items of this category in cache, client side (in browser's localStorage)
     #ttl_server  = INTEGER(),   # for how long to keep items of this category in cache, server side
     
+    #versioning  = BOOLEAN()    # if True, `version` number is kept in every item and is increased on updates
+    
     #push_item_updates = BOOLEAN(),     # if True, updates to items of this category are broadcasted to all servers in a cluster;
                                         # should only be used for categories with few, rarely-updated items, like the root category
     #live_upgrade_intensity = FLOAT(),  # likelihood (0.0-1.0) that an edge server should write back an upgraded item

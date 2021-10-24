@@ -41,9 +41,7 @@
         type: {'=': hyperweb.types.FIELDS, '@': (type)}
         '@': hyperweb.types.CATALOG
     '@': hyperweb.types.FIELDS
-  startup_site:
-  - [9, 1]
-  '@': hyperweb.core.MultiDict
+  startup_site: [9, 1]
 - id: [0, 1]
   name: File
   info: File with a text content. Accessible through the web filesystem.

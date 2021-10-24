@@ -276,7 +276,7 @@ class Registry:
     def create_stub(self, id, category = None):
         """Create a "stub" item (no data) with a given ID and insert to cache."""
         cid, iid = id
-        category = category or self.get_category(cid)
+        category = category or self.get_category(cid)       # TODO: pick a proper REVISION of the category, by version id
         itemclass = category.get_class()
         item = itemclass(category = category)
         item.iid = iid
