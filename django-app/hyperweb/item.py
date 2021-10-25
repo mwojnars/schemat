@@ -140,10 +140,11 @@ class Item(object, metaclass = MetaItem):
     cid      = None         # CID (Category ID) of this item
     iid      = None         # IID (Item ID within category) of this item
                             # ... the (CID,IID) tuple is a globally unique ID of an item and a primary key in DB
-    
+    #cver    = None         # version no. of a category's revision that created this item; needed for correct
+                            # decoding under evolving category schema
+
     data     = None         # MultiDict with values of object attributes; an attribute can have multiple values
     
-    #ver_cat = None         # version of the `category` that provides schema for this item's decoding
     #version = None         # (int) version number of this item; incremented +1 after each successful modification of this item's properties in DB
     #dirty   = False        # True if this item has uncommitted changes; set to False after successful write to DB with version update
     

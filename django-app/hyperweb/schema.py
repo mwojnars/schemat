@@ -913,9 +913,9 @@ class RECORD(Schema):
     """
     Schema of dict objects ("records") that are composed of a fixed number of predefined named fields,
     each one having its own schema. RECORD is being used for serialization of Item.data,
-    but it can also represent compound values inside item properties. If strict=False, RECORD can encode
-    undeclared fields. In any case, inner fields may contain multiple values,
-    if only their corresponding schema permits that.
+    but it can also represent compound values inside item properties.
+    Inner fields may contain multiple values, if only their corresponding schema permits that.
+    If strict=False, RECORD can encode undeclared fields.
     """
 
     fields = None           # dict of field names and their schema
