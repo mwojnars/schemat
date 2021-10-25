@@ -175,7 +175,8 @@ base_hy = File_(
         # script type="module" src="/sys.file:1@get"
         # script type="module" src="/files/protocols.js"
         script type="module" !
-            import { JSONx } from "/files/protocols.js"
+            import {} from "/files/protocols.js"
+            import { JSONx } from "/files/serialize.js"
             window.JSONx = JSONx
 
     %assets
@@ -303,7 +304,9 @@ filesystem = Folder_(
         'base.css':         base_css,           # global styles for use in pages
         
         'protocols.js':     FileLocal_(path = f'{_path}/protocols.js'),
+        'serialize.js':     FileLocal_(path = f'{_path}/serialize.js'),
         'types.js':         FileLocal_(path = f'{_path}/types.js'),
+        'utils.js':         FileLocal_(path = f'{_path}/utils.js'),
         
         # 'item.hy':      page_item,          # generic page of an item
         # 'category.hy':  page_category,      # generic page of a category

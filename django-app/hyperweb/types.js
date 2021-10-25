@@ -1,59 +1,5 @@
-/**********************************************************************************************************************
- **
- **  UTILITIES
- **
- */
-
-export function assert(test, msg) {
-    if (test) return
-    throw `assertion failed: ${msg}`
-    // console.assert(test)
-}
-
-export class Types {
-    /*
-    A set of utility functions for working with objects and classes.
-    Below, the term "dict" (dictionary) means an object of no specific class, i.e., an instance of Object;
-    such objects are typically used to carry data, like <dict> in python, rather than to provide functionality.
-    */
-
-    // below, `null` is an expected (correct) argument, while `undefined` as incorrect, for all the functions;
-    // getClass(null) returns null, getClass(3) returns Number, etc.
-
-    static getOwnProperty = (obj,prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined
-    static get            = (obj,prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined      // alias for getOwnProperty()
-    static pop            = (obj,prop) => {                         // pop() = get() own property of `obj`, delete, return value
-        if (!obj.hasOwnProperty(prop)) return undefined
-        let x = obj[prop]; delete obj[prop]; return x
-    }
-    static getPrototype   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
-    static getClass       = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
-
-    static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
-    static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
-    static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)   // test if obj is a pure object (dict), no class assigned
-    static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)   // test if x is an object of class T exactly (NOT of a subclass)
-    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined) // test if C is a class (a constructor function with .prototype); false for arrays
-    static isSubclass     = (C,B) => (C === B || C.prototype instanceof B)                  // test if C is subclass of B, including C===B
-    static isMissing      = (obj) => (obj === null || obj === undefined)                    // test if obj is null or undefined (two cases of "missingness")
-    static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
-    static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
-
-    // create a new object (dict) by mapping items of `obj` to new [key,value] pairs;
-    // does NOT detect if two entries are mapped to the same key (!)
-    static mapDict        = (obj,fun)  => Object.fromEntries(Object.entries(obj).map(([k,v]) => fun(k,v)))
-
-    static getstate       = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
-    static setstate       = (cls,state) => {        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly
-        let obj = new cls()
-        if (obj['__setstate__']) obj['__setstate__'](state)
-        else Object.assign(obj, state)
-        return obj
-    }
-
-}
-export class T extends Types {}  // T is an alias for Types
+import { T } from './utils.js'
+import { JSONx } from './serialize.js'
 
 export class DataError extends Error {}
 
@@ -148,13 +94,13 @@ export class OBJECT extends Schema {
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw `invalid object type, expected one of ${this._types}, but got ${getClass(obj)}`
+            throw `invalid object type, expected one of ${this._types}, but got ${T.getClass(obj)}`
         return JSONx.encode(obj)
     }
     decode(state) {
         let obj = JSONx.decode(state)
         if (!this.valid(obj))
-            throw `invalid object type after decoding, expected one of ${this._types}, but got ${getClass(obj)}`
+            throw `invalid object type after decoding, expected one of ${this._types}, but got ${T.getClass(obj)}`
         return obj
     }
 }
@@ -354,7 +300,7 @@ export class CATALOG extends DICT {
         let name   = this.constructor.name
         let keys   = this.keys || this.constructor.keys_default
         let values = this.values || this.constructor.values_default
-        if (Types.ofType(keys, STRING))
+        if (T.ofType(keys, STRING))
             return `${name}(${values})`
         else
             return `${name}(${keys}, ${values})`
@@ -368,63 +314,6 @@ export class CATALOG extends DICT {
  **
  */
 
-// export class Field {
-//     /* Specification of a field in a FIELDS/RECORD catalog. */
-//
-//     // schema  = null          // instance of Schema
-//     // default = undefined     // value assumed if this field is missing in an item; or MISSING if no default
-//     // multi   = False         // whether this field can be repeated (take on multiple values)
-//     // info    = null          // human-readable description of the field
-//
-//     constructor(schema, params = {}) {
-//         let {default_, info, multi} = params
-//         if (schema) this.schema = schema
-//         if (info)   this.info = info
-//         if (multi !== undefined)    this.multi = multi
-//         if (default_ !== undefined) this['default'] = default_
-//         if ('default' in params)    this['default'] = params['default']
-//         // the 'default' property must be accessed through [...] to avoid syntax errors: "default" is a JS keyword
-//     }
-//
-//     // __getstate__() {
-//     //     if (Types.isMissing(this['default'])) {           // exclude explicit MISSING value from serialization
-//     //         state = this.__dict__.copy()
-//     //         del state['default']
-//     //     } else
-//     //         state = this.__dict__
-//     //     return state
-//     // }
-//
-//     encode_one(value) {
-//         return this.schema.encode(value)
-//     }
-//     decode_one(state) {
-//         return this.schema.decode(state)
-//     }
-//
-//     // encode_many(values) {
-//     //     /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
-//     //     if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
-//     //     let encoded = values.map((v) => this.schema.encode(v))
-//     //
-//     //     // compactify singleton lists
-//     //     if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
-//     //         encoded = encoded[0]
-//     //
-//     //     return encoded
-//     // }
-//     // decode_many(encoded) {
-//     //     /* Returns a list of value(s). */
-//     //
-//     //     // de-compactify singleton lists
-//     //     if (!this.multi || !(encoded instanceof Array))
-//     //         encoded = [encoded]
-//     //
-//     //     // schema-based decoding
-//     //     return encoded.map((s) => this.schema.decode(s))
-//     // }
-// }
-        
 export class RECORD extends Schema {
     /*
     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
@@ -486,29 +375,13 @@ export class RECORD extends Schema {
 
 /**********************************************************************************************************************/
 
-// export class FIELDS extends RECORD {
-//     /*
-//     Dict of item properties declared by a particular category, as field name -> Field object.
-//     Provides methods for schema-aware encoding and decoding of item's data,
-//     with every field value encoded through its dedicated field-specific schema.
+// export class SCHEMA extends RECORD {
+//     /* Schema of a schema specification for an item's field. */
 //
-//     Primarily used for schema definition inside categories.
-//     Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
-//     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
-//     to False in all fields.
-//     */
-//
-//     // static multi = True   -- TODO
-// }
-//
-// export class FIELD extends RECORD {
-//     /* Schema of a field specification in a category's list of fields. */
-//
-//     // static type = Field
-//     static fields = RECORD._init_fields({
-//         'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+//     static type = Schema
+//     static fields = {
 //         'default': new OBJECT,
 //         'multi':   new BOOLEAN,
 //         'info':    new STRING,
-//     })
+//     }
 // }
