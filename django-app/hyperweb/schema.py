@@ -23,15 +23,13 @@ import json, base64
 from hypertag.std.html import html_escape as esc
 from hypertag import HyperHTML
 
-# from .utils import dedent
 from .errors import EncodeError, EncodeErrors, DecodeError
 from .serialize import getstate, setstate, JSON
-from .multidict import MultiDict
 
 
 #####################################################################################################################################################
 #####
-#####  SCHEMA
+#####  MULTIPLE
 #####
 
 # class multiple:
@@ -84,114 +82,110 @@ from .multidict import MultiDict
 #         return self.labels[key] if isinstance(key, str) else key
 
 
-class multiple_base:
-    """"""
-    # def labels(self): pass
-    # def values(self): pass
-    # def items(self): pass
-
-class multiple_list(multiple_base):
-    """List of multiple values for a single data element, all matching a common schema."""
-    def __init__(self, *values):        self.values = list(values)
-    def __iter__(self):                 return iter(self.values)
-    def __setitem__(self, pos, value):  self.values[pos] = value
-    def __getitem__(self, pos):         return self.values[pos]
-    def __delitem__(self, pos):         del self.values[pos]
-    def get(self, pos, default=None):   return self[pos] if 0 <= pos < len(self.values) else default
-    def append(self, value):            self.values.append(value)
-
-# class multiple_flex(multiple_base):
-#     """There can be labels for values, but they are not obligatory and don't need to be unique."""
-
-class multiple_dict(multiple_base):
-    """
-    Collection of multiple values for a single data element, all matching a common schema.
-    Values are accompanied with textual labels, which differ between each other.
-    If labels are present, they must differ between each other. Empty string is a valid non-missing label.
-    In methods, "key" means either an index (integer position), or a label (string).
-    This class does NOT inherit from <dict>, but exposes a part of the dict's interface.
-    """
-    values = None       # list of items: (label, value) pairs in proper order
-    labels = None       # dict of labels and their positions in `entries`: {label: index}, the order is unspecified
-    
-    def __init__(self, **values):
-        self.__setstate__(values)
-
-    def __getstate__(self):
-        return dict(self.values)
-    
-    def __setstate__(self, state):
-        self.values = list(state.items())
-        self.labels = {label: pos for pos, label in enumerate(state)}
-    
-    def __iter__(self):
-        return iter(label for (label, _) in self.values)
-
-    def __contains__(self, label):
-        return label in self.labels
-        # return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
-
-    def __setitem__(self, key, value):
-        if isinstance(key, str):
-            pos, label = self.labels.get(key, None), key
-        else:
-            pos, label = key, self.values[key][0]
-
-        if pos is None: self.append(value, label)
-        else:
-            self.labels[label] = pos
-            self.values[pos]   = (label, value)
-
-    def __getitem__(self, key):
-        pos = self.position(key)
-        return self.values[pos][1]
-
-    def __delitem__(self, key):
-        # pos = self.labels[label]
-        pos = self.position(key)
-        label = self.values[pos][0]
-        del self.labels[label], self.values[pos]
-        
-    def get(self, key, default = None):
-        if isinstance(key, str):
-            if key not in self.labels: return default
-            pos = self.labels[key]
-        else:
-            if not (0 <= key < len(self.values)): return default
-            pos = key
-        return self.values[pos][1]
-        
-    def items(self):
-        return iter(self.values)
-
-    def append(self, value, label):
-        assert isinstance(label, str), f"label must be a string, not {label}"
-        assert label not in self.labels, f"duplicate label '{label}'"
-        self.labels[label] = len(self.values)
-        self.values.append((label, value))
-
-    def position(self, key):
-        return self.labels[key] if isinstance(key, str) else key
-
-    def asdict(self):
-        return dict(self.values)
-
-    # def encode_all(self, schema):
-    #     return {label: schema.encode(value) for label, value in self.values}
-    #
-    # def decode_all(self, schema, state):
-    #     self.values = {(label, schema.decode(value)) for label, value in state.items()}
-    #     self.labels = {label: pos for pos, label in enumerate(state)}
-
-def multiple(*unlabeled, **labeled):
-    assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
-    if labeled:
-        return multiple_dict(**labeled)
-    else:
-        return multiple_list(*unlabeled)
+# class multiple_base:
+#     """"""
+#     # def labels(self): pass
+#     # def values(self): pass
+#     # def items(self): pass
+#
+# class multiple_list(multiple_base):
+#     """List of multiple values for a single data element, all matching a common schema."""
+#     def __init__(self, *values):        self.values = list(values)
+#     def __iter__(self):                 return iter(self.values)
+#     def __setitem__(self, pos, value):  self.values[pos] = value
+#     def __getitem__(self, pos):         return self.values[pos]
+#     def __delitem__(self, pos):         del self.values[pos]
+#     def get(self, pos, default=None):   return self[pos] if 0 <= pos < len(self.values) else default
+#     def append(self, value):            self.values.append(value)
+#
+# # class multiple_flex(multiple_base):
+# #     """There can be labels for values, but they are not obligatory and don't need to be unique."""
+#
+# class multiple_dict(multiple_base):
+#     """
+#     Collection of multiple values for a single data element, all matching a common schema.
+#     Values are accompanied with textual labels, which differ between each other.
+#     If labels are present, they must differ between each other. Empty string is a valid non-missing label.
+#     In methods, "key" means either an index (integer position), or a label (string).
+#     This class does NOT inherit from <dict>, but exposes a part of the dict's interface.
+#     """
+#     values = None       # list of items: (label, value) pairs in proper order
+#     labels = None       # dict of labels and their positions in `entries`: {label: index}, the order is unspecified
+#
+#     def __init__(self, **values):
+#         self.__setstate__(values)
+#
+#     def __getstate__(self):
+#         return dict(self.values)
+#
+#     def __setstate__(self, state):
+#         self.values = list(state.items())
+#         self.labels = {label: pos for pos, label in enumerate(state)}
+#
+#     def __iter__(self):
+#         return iter(label for (label, _) in self.values)
+#
+#     def __contains__(self, label):
+#         return label in self.labels
+#         # return (key in self.labels) if isinstance(key, str) else (0 <= key < len(self.values))
+#
+#     def __setitem__(self, key, value):
+#         if isinstance(key, str):
+#             pos, label = self.labels.get(key, None), key
+#         else:
+#             pos, label = key, self.values[key][0]
+#
+#         if pos is None: self.append(value, label)
+#         else:
+#             self.labels[label] = pos
+#             self.values[pos]   = (label, value)
+#
+#     def __getitem__(self, key):
+#         pos = self.position(key)
+#         return self.values[pos][1]
+#
+#     def __delitem__(self, key):
+#         # pos = self.labels[label]
+#         pos = self.position(key)
+#         label = self.values[pos][0]
+#         del self.labels[label], self.values[pos]
+#
+#     def get(self, key, default = None):
+#         if isinstance(key, str):
+#             if key not in self.labels: return default
+#             pos = self.labels[key]
+#         else:
+#             if not (0 <= key < len(self.values)): return default
+#             pos = key
+#         return self.values[pos][1]
+#
+#     def items(self):
+#         return iter(self.values)
+#
+#     def append(self, value, label):
+#         assert isinstance(label, str), f"label must be a string, not {label}"
+#         assert label not in self.labels, f"duplicate label '{label}'"
+#         self.labels[label] = len(self.values)
+#         self.values.append((label, value))
+#
+#     def position(self, key):
+#         return self.labels[key] if isinstance(key, str) else key
+#
+#     def asdict(self):
+#         return dict(self.values)
+#
+# def multiple(*unlabeled, **labeled):
+#     assert not (unlabeled and labeled), "can't use labeled and unlabeled values at the same time in multiple()"
+#     if labeled:
+#         return multiple_dict(**labeled)
+#     else:
+#         return multiple_list(*unlabeled)
 
 
 #####################################################################################################################################################
+#####
+#####  SCHEMA
+#####
 
 class Schema:
     """
@@ -234,16 +228,18 @@ class Schema:
     # is utilized at all and in what exact way depends on the PARENT container; most of the settings are mainly
     # intended for use with RECORD; none of these settings influence how encode() and decode() work internally
     
-    # blank = True            # if True, None is a valid value that should be encoded by the parent schema rather than passed to self.encode()
-    # required = False        # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a RECORD
-    
     default = None          # default value for a RECORD field or web forms; None means "no default" rather than a "default value equal None" (!)
     info    = None          # human-readable description of this schema: what values are accepted and how are they interpreted
     multi   = False         # if multi=True and the schema is assigned to a field of RECORD, the field can take on
                             # multiple values represented by a <multiple> instance;
                             # the detection of a multiple is done by a parent RECORD (TODO), which calls
                             # encode_multi() instead of encode() and appends * to a field name in output state
-
+    
+    order      = None       # "first-best"/"last-best": which value is returned by Data.get() if multiple are present
+    blank      = True       # if True, None is a valid value that should be encoded by the parent schema rather than passed to self.encode()
+    required   = False      # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a RECORD
+    deprecated = False      # if True, a given element (field) of data should no longer be used, rather it should be left blank
+    
     is_catalog = False      # True only in CATALOG and subclasses
     #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
     
@@ -279,6 +275,10 @@ class Schema:
     def decode(self, state):
         """Convert a serializable "state" as returned by encode() back to an original custom object."""
         return JSON.decode(state)
+        
+    def encode_extended(self, xvalue):
+        """Extended encoding: accepts `xvalue`, which is either a regular value like in encode(),
+        or a blank, or a collection (list, dict) of multiple unlabeled/labeled values."""
         
     def __str__(self):
         name = self.name or self.__class__.__name__
@@ -915,18 +915,18 @@ class RECORD(Schema):
     each one having its own schema. RECORD is being used for serialization of Item.data,
     but it can also represent compound values inside item properties.
     Inner fields may contain multiple values, if only their corresponding schema permits that.
-    If strict=False, RECORD can encode undeclared fields.
+    If strict=False, a dict object may contain undeclared fields during encoding.
     """
 
     fields = None           # dict of field names and their schema
-    strict = None           # if True, only the fields present in `fields` can occur in a dict being encoded
+    strict = True           # if True, only the fields present in `fields` can occur in a dict being encoded
 
     default_schema = OBJECT(multi = True)       # schema to use for undeclared fields (if strict=False)
     
-    def __init__(self, fields, strict = True, **params):
+    def __init__(self, fields, strict = None, **params):
         super(RECORD, self).__init__(**params)
+        if strict is not None: self.strict = strict
         self.fields = fields
-        self.strict = strict
         
     def encode(self, data):
         if not isinstance(data, dict): raise EncodeError(f"expected a dict, got {data}")

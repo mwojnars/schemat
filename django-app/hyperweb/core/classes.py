@@ -247,7 +247,7 @@ class AppFiles(Application):
     #     while path:
     #         parent = item
     #         name = path.split(self.SEP_FOLDER, 1)[0]
-    #         item = parent.data['files'][name]
+    #         item = parent.get('files')[name]
     #         path = path[len(name)+1:]
     #     return item, parent
         
@@ -363,7 +363,7 @@ class Folder(Item):
         item = self
         while path:
             name = path.split(self.SEP_FOLDER, 1)[0]
-            item = item.data['files'][name]
+            item = item.get('files')[name]
             path = path[len(name)+1:]
         return item
         
@@ -382,7 +382,7 @@ class Folder(Item):
     @cached(ttl=10)
     def _names(self):
         """Take `files` property and compute its reverse mapping: item ID -> name."""
-        files = self.data['files']
+        files = self.get('files')
         return {f.id: name for name, f in files.items()}
     
 

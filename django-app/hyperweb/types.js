@@ -34,7 +34,7 @@ export class Types {
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)   // test if obj is a pure object (dict), no class assigned
     static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)   // test if x is an object of class T exactly (NOT of a subclass)
-    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined) // test if C is a class (a constructor function with .prototype)
+    static isClass        = (C)   => (typeof C === "function" && C.prototype !== undefined) // test if C is a class (a constructor function with .prototype); false for arrays
     static isSubclass     = (C,B) => (C === B || C.prototype instanceof B)                  // test if C is subclass of B, including C===B
     static isMissing      = (obj) => (obj === null || obj === undefined)                    // test if obj is null or undefined (two cases of "missingness")
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
@@ -66,6 +66,18 @@ export class DataError extends Error {}
 
 export class Schema {
 
+    default = undefined     // default value for a RECORD field or web forms, can be missing (undefined)
+    info    = null          // human-readable description of this schema: what values are accepted and how they are interpreted
+    multi   = false         // if true and the schema describes a RECORD field, the field can take on multiple values
+    
+    constructor(params = {}) {
+        let {default_, info, multi} = params || {}                      // params=null is valid
+        if (info !== undefined)     this.info = info
+        if (multi !== undefined)    this.multi = multi
+        if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
+        if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
+    }
+
     check(value) { if (!this.valid(value)) throw "Invalid" }
     valid(value) { return false }
 
@@ -88,7 +100,7 @@ export class Schema {
 
     encode(value) {
         /*
-        Convert `value` - a possibly composite object matching the current schema (self) -
+        Convert `value` - a possibly composite object matching the current schema (this) -
         to a JSON-serializable "state" that does not contain non-standard nested objects anymore.
         By default, generic object encoding (JSON.encode()) is performed.
         Subclasses may override this method to perform more compact, schema-aware encoding.
@@ -122,24 +134,33 @@ export class OBJECT extends Schema {
     from serializated output and is implied automatically during deserialization.
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     */
-    constructor(...types) {
-        super()
+    get _types() { return this.types || this.constructor.types }
+
+    constructor(types = [], params = {}) {
+        super(params)
+        if (types === null) types = []
+        if (T.isClass(types)) types = [types]           // wrap up a singleton type in an array
         if (types.length) this.types = types            // base type(s) for inheritance checks: obj instanceof T
     }
     valid(obj) {
-        return !this.types || this.types.length === 0 || this.types.filter((base) => obj instanceof base).length > 0
+        let types = this._types
+        return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw `invalid object type, expected one of ${this.types}, but got ${getClass(obj)}`
+            throw `invalid object type, expected one of ${this._types}, but got ${getClass(obj)}`
         return JSONx.encode(obj)
     }
     decode(state) {
         let obj = JSONx.decode(state)
         if (!this.valid(obj))
-            throw `invalid object type after decoding, expected one of ${this.types}, but got ${getClass(obj)}`
+            throw `invalid object type after decoding, expected one of ${this._types}, but got ${getClass(obj)}`
         return obj
     }
+}
+
+export class SCHEMA extends OBJECT {
+    static types = [Schema]
 }
 
 // the most generic schema for encoding/decoding of objects of any types
@@ -213,8 +234,8 @@ export class ITEM extends Schema {
     which is not possible with an OBJECT.
     */
 
-    constructor(category) {
-        super()
+    constructor(category, params = {}) {
+        super(params)
         if (category) this.category = category      // (optional) category of items to be encoded; undefined means all items can be encoded
     }
     get cid() {
@@ -268,8 +289,8 @@ export class DICT extends Schema {
     static keys_default   = generic_schema
     static values_default = generic_schema
 
-    constructor(keys, values, type) {
-        super()
+    constructor(keys, values, type, params = {}) {
+        super(params)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
         if (values) this.values = values        // schema of values of app-layer dicts
         if (type)   this.type = type            // optional subtype of <dict>; if present, only objects of this type are accepted for encoding
@@ -325,9 +346,9 @@ export class CATALOG extends DICT {
     get is_catalog() { return true }
     static keys_default = new STRING
 
-    constructor(values, keys, type) {
+    constructor(values, keys, type, params = {}) {
         if (keys && !(keys instanceof STRING)) throw `schema of keys must be an instance of STRING or its subclass, not ${keys}`
-        super(keys, values, type)
+        super(keys, values, type, params)
     }
     toString() {
         let name   = this.constructor.name
@@ -343,69 +364,67 @@ export class CATALOG extends DICT {
 
 /**********************************************************************************************************************
  **
- **  FIELD(S), RECORD
+ **  RECORD
  **
  */
 
-export class Field {
-    /* Specification of a field in a FIELDS/RECORD catalog. */
-    
-    // schema  = null          // instance of Schema
-    // default = undefined     // value assumed if this field is missing in an item; or MISSING if no default
-    // multi   = False         // whether this field can be repeated (take on multiple values)
-    // info    = null          // human-readable description of the field
-    
-    constructor(schema, params = {}) {
-        let {default_, info, multi} = params
-        if (schema) this.schema = schema
-        if (info)   this.info = info
-        if (multi !== undefined)    this.multi = multi
-        if (default_ !== undefined) this['default'] = default_
-        if ('default' in params)    this['default'] = params['default']
-        // the 'default' property must be accessed through [...] to avoid syntax errors: "default" is a JS keyword
-    }
-    
-    // __getstate__() {
-    //     if (Types.isMissing(this['default'])) {           // exclude explicit MISSING value from serialization
-    //         state = this.__dict__.copy()
-    //         del state['default']
-    //     } else
-    //         state = this.__dict__
-    //     return state
-    // }
-
-    encode_one(value) {
-        return this.schema.encode(value)
-    }
-    decode_one(state) {
-        return this.schema.decode(state)
-    }
-    
-    // encode_many(values) {
-    //     /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
-    //     if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
-    //     let encoded = values.map((v) => this.schema.encode(v))
-    //
-    //     // compactify singleton lists
-    //     if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
-    //         encoded = encoded[0]
-    //
-    //     return encoded
-    // }
-    // decode_many(encoded) {
-    //     /* Returns a list of value(s). */
-    //
-    //     // de-compactify singleton lists
-    //     if (!this.multi || !(encoded instanceof Array))
-    //         encoded = [encoded]
-    //
-    //     // schema-based decoding
-    //     return encoded.map((s) => this.schema.decode(s))
-    // }
-}        
+// export class Field {
+//     /* Specification of a field in a FIELDS/RECORD catalog. */
+//
+//     // schema  = null          // instance of Schema
+//     // default = undefined     // value assumed if this field is missing in an item; or MISSING if no default
+//     // multi   = False         // whether this field can be repeated (take on multiple values)
+//     // info    = null          // human-readable description of the field
+//
+//     constructor(schema, params = {}) {
+//         let {default_, info, multi} = params
+//         if (schema) this.schema = schema
+//         if (info)   this.info = info
+//         if (multi !== undefined)    this.multi = multi
+//         if (default_ !== undefined) this['default'] = default_
+//         if ('default' in params)    this['default'] = params['default']
+//         // the 'default' property must be accessed through [...] to avoid syntax errors: "default" is a JS keyword
+//     }
+//
+//     // __getstate__() {
+//     //     if (Types.isMissing(this['default'])) {           // exclude explicit MISSING value from serialization
+//     //         state = this.__dict__.copy()
+//     //         del state['default']
+//     //     } else
+//     //         state = this.__dict__
+//     //     return state
+//     // }
+//
+//     encode_one(value) {
+//         return this.schema.encode(value)
+//     }
+//     decode_one(state) {
+//         return this.schema.decode(state)
+//     }
+//
+//     // encode_many(values) {
+//     //     /* There can be multiple `values` to encode if this.multi is true. `values` is a list. */
+//     //     if (values.length >= 2 && !this.multi) throw `repeated keys are not allowed by ${this} schema`
+//     //     let encoded = values.map((v) => this.schema.encode(v))
+//     //
+//     //     // compactify singleton lists
+//     //     if (!this.multi || (encoded.length === 1 && !(encoded[0] instanceof Array)))
+//     //         encoded = encoded[0]
+//     //
+//     //     return encoded
+//     // }
+//     // decode_many(encoded) {
+//     //     /* Returns a list of value(s). */
+//     //
+//     //     // de-compactify singleton lists
+//     //     if (!this.multi || !(encoded instanceof Array))
+//     //         encoded = [encoded]
+//     //
+//     //     // schema-based decoding
+//     //     return encoded.map((s) => this.schema.decode(s))
+//     // }
+// }
         
-/**********************************************************************************************************************/
-
 export class RECORD extends Schema {
     /*
     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
@@ -420,37 +439,25 @@ export class RECORD extends Schema {
     get _strict() { return this.strict || this.constructor.strict }
     get _type  () { return this.type   || this.constructor.type   }
 
-    static fields = {}          // dict of field names & their Field() schema descriptors
+    static fields = {}          // dict of field names and their schema
     static strict = false       // if true, only the fields present in `fields` can occur in the data being encoded
     static type   = null        // class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
                                 // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
 
     // default field specification to be used for fields not present in `fields` (if strict=false)
-    static default_field = new Field(generic_schema, {multi: true})
+    static default_schema = new OBJECT(null, {multi: true})
 
-    constructor(fields, {strict, type}) {
-        super()
-        if (fields) this.fields = RECORD._init_fields(fields)
-        if (strict) this.strict = strict
+    constructor(fields, params = {}) {
+        let {strict, type, ...base_params} = params
+        super(base_params)
+        if (strict !== null) this.strict = strict
         if (type)   this.type   = type
+        if (fields) this.fields = fields
     }
-
-    static _init_fields(fields) {
-        /* Wrap up in Field all the values of `fields` that are plain Schema instances. */
-        for (let [name, field] of Object.entries(fields)) {
-            if (field instanceof Field) continue
-            if (field && !(field instanceof Schema)) throw `expected an instance of Field or Schema, got ${field}`
-            fields[name] = new Field(field)
-        }
-        return fields
-    }
-
     encode(data) {
-        /* Encode & compactify values of fields through per-field schema definitions (schema-aware encoding).
-        `data` is an object or a multidict (?).
-        */
-        // if (!(data instanceof MultiDict)) throw `expected a MultiDict, got ${data}`
+        /* Encode & compactify values of fields through per-field schema definitions. */
 
+        // type checking & state extraction
         let type = this._type
         if (type) {
             if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
@@ -458,61 +465,50 @@ export class RECORD extends Schema {
         }
         else if (!T.isDict(data)) throw new DataError(`expected a plain Object for encoding, got ${T.getClass(data)}`)
 
-        return T.mapDict(data, (name, value) => [name, this._get_field(name).encode_one(value)])
-
-        // TODO: catch exceptions and re-throw with the error location path extended
+        // state encoding
+        return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
     }
     decode(state) {
 
         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClass(state)}`)
-        let data = T.mapDict(state, (name, value) => [name, this._get_field(name).decode_one(value)])
-        // return MultiDict(multiple = data)
-
+        let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
         let type = this._type
         if (type) return T.setstate(type, data)
         return data
     }
-
-    _get_field(name) {
+    _schema(name) {
         let fields = this._fields
         if (this._strict && !fields.hasOwnProperty(name))
             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
-        return T.get(fields, name) || this.constructor.default_field
-    }
-
-    get_default(name) {
-        /* Get the default value of a given item property as defined in this schema, or undefined. */
-        let fields = this._fields
-        if (fields.hasOwnProperty(name))
-            return fields[name]['default']
+        return T.get(fields, name) || this.constructor.default_schema
     }
 }
 
 /**********************************************************************************************************************/
 
-export class FIELDS extends RECORD {
-    /*
-    Dict of item properties declared by a particular category, as field name -> Field object.
-    Provides methods for schema-aware encoding and decoding of item's data,
-    with every field value encoded through its dedicated field-specific schema.
-
-    Primarily used for schema definition inside categories.
-    Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
-    are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
-    to False in all fields.
-    */
-
-    // static multi = True   -- TODO
-}
-
-export class FIELD extends RECORD {
-    /* Schema of a field specification in a category's list of fields. */
-
-    // static type = Field
-    static fields = RECORD._init_fields({
-        'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
-        'default': new OBJECT,
-        'multi':   new BOOLEAN,
-        'info':    new STRING,
-    })
-}
+// export class FIELDS extends RECORD {
+//     /*
+//     Dict of item properties declared by a particular category, as field name -> Field object.
+//     Provides methods for schema-aware encoding and decoding of item's data,
+//     with every field value encoded through its dedicated field-specific schema.
+//
+//     Primarily used for schema definition inside categories.
+//     Can also be used as a sub-schema in compound schema definitions. Instances of MultiDict
+//     are valid objects for encoding. If standard dict-like functionality is desired, field.multi should be set
+//     to False in all fields.
+//     */
+//
+//     // static multi = True   -- TODO
+// }
+//
+// export class FIELD extends RECORD {
+//     /* Schema of a field specification in a category's list of fields. */
+//
+//     // static type = Field
+//     static fields = RECORD._init_fields({
+//         'schema':  new OBJECT(Schema),       // VARIANT(OBJECT(base=Schema), ITEM(schema-category))
+//         'default': new OBJECT,
+//         'multi':   new BOOLEAN,
+//         'info':    new STRING,
+//     })
+// }

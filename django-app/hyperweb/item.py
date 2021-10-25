@@ -123,18 +123,9 @@ class Item(object, metaclass = MetaItem):
     - dirty: has local modifications that may deviate from the contents of the corresponding DB record
     - stub/dummy/short/frame: IID is present, but no data loaded yet (lazy loading)
     - loaded:
-    
-    Mapping an internal Item to an ItemView for read-only access in templates and handlers:
-    - itemview.FIELD       -->  item.data.get_first(FIELD)
-    - itemview.FIELD__list  -->  item.data.get_list(FIELD)
-    - itemview.FIELD__first, FIELD__last
-    - itemview._first(FIELD), _last(), _list()
-    
-    When loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items
     """
     
-    RAISE = object()  #MultiDict.RAISE
-    # MISSING = None          # None as a field value is treated as a missing value
+    RAISE = object()
     
     # builtin instance attributes & properties, not user-editable ...
     cid      = None         # CID (Category ID) of this item
@@ -165,9 +156,6 @@ class Item(object, metaclass = MetaItem):
     # is_newborn, is_fresh, is_mature
     def has_id(self):   return self.cid is not None and self.iid is not None
     def has_data(self): return self.data is not None
-    
-    # # names that must not be used for attributes inside data
-    # __reserved__ = ['set', 'get', 'get_list', 'insert', 'update', 'save', 'get_url']
     
     
     def __init__(self, category = None, data = None):
@@ -213,7 +201,7 @@ class Item(object, metaclass = MetaItem):
         """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults.
            If the field is missing and has no default, `default` is returned, or KeyError is raised if default=RAISE.
         """
-        self.load()
+        self.load(field)
         
         if field in self.data:
             return self.data.get(field, mode = mode)
@@ -226,27 +214,6 @@ class Item(object, metaclass = MetaItem):
             raise KeyError(field)
         
         return default
-
-    # def get(self, field, default = None, category_default = True, impute = True, mode = 'first'):
-    #     """Get a value of `field` from self.data using data.get(), or from self.category's schema defaults
-    #        if category_default=True. If the field is missing and has no default, `default` is returned,
-    #        or KeyError is raised if default=RAISE.
-    #        `impute`: if True, value imputation will be attempted if `field` is a derived property (TODO)
-    #     """
-    #     self.load()
-    #
-    #     if field in self.data:
-    #         return self.data.get(field, mode = mode)
-    #
-    #     if category_default:
-    #         cat_default = self.category.get_default(field)
-    #         if cat_default is not Item.MISSING:
-    #             return cat_default
-    #
-    #     if default is Item.RAISE:
-    #         raise KeyError(field)
-    #
-    #     return default
 
     # def get_uniq(self, field, default = None, category_default = True):
     #     return self.get(field, default, category_default, 'uniq')
@@ -330,7 +297,7 @@ class Item(object, metaclass = MetaItem):
         if data_json is None:
             data_json = self.registry.load_data(self.id)
 
-        schema = self.category.get_schema() #if use_schema else generic_schema       # specification of field schema {field_name: schema}
+        schema = self.category.get_schema()
         data   = JSON.load(data_json, schema.decode if use_schema else None)
         self.data = MultiDict(data)
         self.bind()
@@ -508,10 +475,11 @@ class Category(Item):
 
     @cached(ttl = 3600)
     def get_class(self):
-
+        
         name = self.get('class_name')
         code = self.get('class_code')
         
+        # TODO: when loading a category NAME (iid XXX), a subclass NAME_XXX is dynamically created for its items (??)
         # TODO: check self.data for individual methods & templates to be treated as methods
         
         if code:
@@ -541,7 +509,7 @@ class Category(Item):
         """Return schema of a given field, or all Item.data (if field=None)."""
         fields = self.fields
         if field is None:               # create and return a schema for the entire Item.data
-            return RECORD(fields, strict = False)
+            return RECORD(fields, strict = True)
         else:                           # return a schema for a selected field only
             schema = fields[field] if field in fields else None
             return schema or generic_schema
