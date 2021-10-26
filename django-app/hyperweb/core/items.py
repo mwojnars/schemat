@@ -218,7 +218,7 @@ base_hy = File_(
                 $c = 1 - c
                 
     %data @dump id=None type="json"
-        p id=$id type=$type style="display:none" @ dump
+        p id=$id style="display:none" @ dump
     
     %properties item
         from hyperweb.serialize import $JSON, $json
@@ -231,12 +231,6 @@ base_hy = File_(
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
                 button #save-changes   .btn .btn-primary   disabled=False | Save
-
-        custom "hw-item-page"
-            # serialization must use `json` not `JSON` because the data is already JSON-encoded internally
-            #data #root     | $item.category.category.dump_item(use_schema=False)
-            data #category | $item.category.dump_item(use_schema=False)
-            data #item     | $item.dump_item()
 
     %page @body
         doctype
@@ -263,13 +257,13 @@ base_hy = File_(
                 h2 | Properties
                 properties $item
                 
-                custom "hw-data"
-                    from hyperweb.serialize import $JSON, $json
-                    $config = {'ajax_url': $item.registry.site.ajax_url()}
-                    data #config | $json.dumps(config)
-                    data #cache
-                        data     | $item.category.dump_item(use_schema=False)
-                        data     | $item.dump_item()
+                # dump client configuration and preloaded items to json and embed them
+                $config = {'ajax_url': item.registry.site.ajax_url()}
+                $items  = [item.category.encode_item(), item.encode_item()]
+                
+                from hyperweb.serialize import $json
+                data #data-config | $json.dumps(config)
+                data #data-items  | $json.dumps(items)
                 
                 @extra
             

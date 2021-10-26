@@ -4,6 +4,8 @@
  **
  */
 
+export let print = console.log
+
 export function assert(test, msg) {
     if (test) return
     throw `assertion failed: ${msg}`

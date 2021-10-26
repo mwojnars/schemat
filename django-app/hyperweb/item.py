@@ -190,14 +190,6 @@ class Item(object, metaclass = MetaItem):
         have been created and connected.
         """
     
-    # def seed(self, data, bind = True):
-    #     """
-    #     Initialize this (newly created) item with a given dict of property values, `data`.
-    #     Mark it as loaded. Then call bind(), if bind=True.
-    #     """
-    #     self.data = MultiDict(data)
-    #     if bind: self.bind()
-    
     def isinstance(self, category):
         """
         Check whether this item belongs to a category that inherits from `category` via a prototype chain.
@@ -317,8 +309,6 @@ class Item(object, metaclass = MetaItem):
         schema = self.category.get_schema() if use_schema else generic_schema
         state  = json.loads(data_json)
         data   = schema.decode(state)
-        # schema = self.category.get_schema()
-        # return JSON.load(data_json, schema.decode if use_schema else None)
         
         self.data = MultiDict(data)
         self.bind()
@@ -419,9 +409,6 @@ class Item(object, metaclass = MetaItem):
     
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        # schema = self.category.get_schema()
-        # data = self.data.asdict_first()             # TODO: temporary code
-        # return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
         state = self.encode_data(use_schema)
         return json.dumps(state)
     
@@ -430,9 +417,6 @@ class Item(object, metaclass = MetaItem):
         state = self.__dict__.copy()
         state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
         state.pop('category', None)
-        # schema = self.category.get_schema() if use_schema else generic_schema
-        # data = self.data.asdict_first()             # TODO: temporary code
-        # state['data'] = schema.encode(data)         # schema-aware encode (compactify) the `data` as <dict>
         state['data'] = self.encode_data(use_schema)
         return state
     

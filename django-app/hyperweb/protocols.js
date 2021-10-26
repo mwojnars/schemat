@@ -2,7 +2,7 @@
 
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-import { assert } from './utils.js'
+import { print, assert } from './utils.js'
 import { generic_schema } from './types.js'
 // import * as mod_types from './types.js'
 
@@ -104,7 +104,7 @@ class CustomElement extends HTMLElement {
     render()    {}          // override in subclasses
     init()      {}          // override in subclasses
 
-    read_data(selector, type) {
+    read_data(selector, type = "json") {
         /* Extract text contents of a (sub)element pointed to by a given selector ('' denotes the current node).
            Typically called from render(), before the DOM is overriden with the output of render().
            If `type` is given, or the element has `type` attribute, and it's equal "json",
@@ -112,13 +112,28 @@ class CustomElement extends HTMLElement {
          */
         let node = (selector ? this.querySelector(selector) : this)
         if (node === undefined) return undefined
-        let value = node.textContent
-        if (!type) type = node.getAttribute('type')
-
-        // decode `value` depending on the `type`
-        if (type === "json") return JSON.parse(value)
-        return value
+        return read_data(node, type)
+        // let value = node.textContent
+        // if (!type) type = node.getAttribute('type')
+        // if (type === "json") return JSON.parse(value)
+        // return value
     }
+}
+
+function read_data(node, type = "json") {
+    /* Extract text contents of an element pointed to by a given selector.
+       If `type` is given, or the element has `type` attribute, and the type is "json",
+       the extracted string is JSON-decoded to an object.
+     */
+    if (typeof node === "string")
+        node = document.querySelector(node)
+
+    let value = node.textContent
+    if (!type) type = node.getAttribute('type')
+
+    // decode `value` depending on the `type`
+    if (type === "json") return JSON.parse(value)
+    return value
 }
 
 /*************************************************************************************************/
@@ -694,8 +709,12 @@ export async function boot() {
     let registry = globalThis.registry = new LocalRegistry
     await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
 
-    let page_items = null
-    registry.boot(page_items)
+    let config = read_data('#data-config')
+    let items  = read_data('#data-items')
+    print('data-config:', config)
+    print('data-items: ', items)
+
+    registry.boot(items)
 
     window.customElements.define('hw-item-page', Item.Page);
 
