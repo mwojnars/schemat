@@ -245,37 +245,38 @@
     \              td .ct-nested colspan=2\n                            div .ct-field\
     \ | {field}\n                            catalog_2 $value $schema.values $c\n\
     \                    else\n                        catalog_row $field $value $schema\n\
-    \                $c = 1 - c\n                \n    %properties item\n        from\
-    \ hyperweb.serialize import $JSON, $json\n        \n        %jsondata @data id=None\n\
-    \            p style=\"display:none\" type=\"json\" id=$id @ data\n        \n\
-    \        custom \"hw-item-page-\"\n            jsondata #category | $item.category.dump_data(use_schema\
-    \ = False)\n            jsondata #item     | $item.dump_data(use_schema = False)\n\
-    \            # jsondata #item   | $JSON.dump(item.data)\n            < catalog_1\
-    \ $item\n            div style=\"text-align:right; padding-top:20px\"\n      \
-    \          button #cancel-changes .btn .btn-secondary disabled=False | Cancel\n\
-    \                button #save-changes   .btn .btn-primary   disabled=False | Save\n\
-    \n        custom \"hw-item-page\"\n            # serialization must use `json`\
+    \                $c = 1 - c\n                \n    %data @dump id=None type=\"\
+    json\"\n        p id=$id type=$type style=\"display:none\" @ dump\n    \n    %properties\
+    \ item\n        from hyperweb.serialize import $JSON, $json\n        \n      \
+    \  custom \"hw-item-page-\"\n            data #category | $item.category.dump_data(use_schema\
+    \ = False)\n            data #item     | $item.dump_data(use_schema = False)\n\
+    \            # data #item   | $JSON.dump(item.data)\n            < catalog_1 $item\n\
+    \            div style=\"text-align:right; padding-top:20px\"\n              \
+    \  button #cancel-changes .btn .btn-secondary disabled=False | Cancel\n      \
+    \          button #save-changes   .btn .btn-primary   disabled=False | Save\n\n\
+    \        custom \"hw-item-page\"\n            # serialization must use `json`\
     \ not `JSON` because the data is already JSON-encoded internally\n           \
-    \ #| $json.dumps(item.getstate())\n            #jsondata #root     | $item.category.category.dump_item(use_schema=False)\n\
-    \            jsondata #category | $item.category.dump_item(use_schema=False)\n\
-    \            jsondata #item     | $item.dump_item()\n\n    %page @body\n     \
-    \   doctype\n        ...html @body\n    \n    %page_item @extra item\n       \
-    \ page\n            head\n                title | $item['name']? $item.ciid(False)\n\
-    \                assets\n                style / $item.registry.read('base.css')\n\
+    \ #data #root     | $item.category.category.dump_item(use_schema=False)\n    \
+    \        data #category | $item.category.dump_item(use_schema=False)\n       \
+    \     data #item     | $item.dump_item()\n\n    %page @body\n        doctype\n\
+    \        ...html @body\n    \n    %page_item @extra item\n        page\n     \
+    \       head\n                title | $item['name']? $item.ciid(False)\n     \
+    \           assets\n                style / $item.registry.read('base.css')\n\
     \    \n            # body .container : div .row\n            #   div .col-1\n\
     \            #   div .col-10\n            body\n                h1\n         \
     \           $ciid = item.ciid()\n                    try\n                   \
     \     | $item['name']\n                        span style=\"font-size:40%; font-weight:normal\"\
     \ / $ciid\n                    else / $ciid\n                \n              \
     \  h2 | Properties\n                properties $item\n                \n     \
-    \           @extra\n            \n    %page_category category\n        page_item\
-    \ category\n            h2 | Items\n            table\n                for item\
-    \ in list(category.registry.load_items(category))\n                    tr\n  \
-    \                      td / #{item.iid} &nbsp;\n                        td\n \
-    \                           $ iname = item['name']? or item\n                \
-    \            try\n                                a href=$item.url() | $iname\n\
-    \                            else\n                                | $iname (no\
-    \ URL)\n    \n    "
+    \           custom \"hw-data\"\n                    data #registry |\n       \
+    \         \n                @extra\n            \n    %page_category category\n\
+    \        page_item category\n            h2 | Items\n            table\n     \
+    \           for item in list(category.registry.load_items(category))\n       \
+    \             tr\n                        td / #{item.iid} &nbsp;\n          \
+    \              td\n                            $ iname = item['name']? or item\n\
+    \                            try\n                                a href=$item.url()\
+    \ | $iname\n                            else\n                               \
+    \ | $iname (no URL)\n    \n    "
 - id: [3, 1]
   files:
     Site: [0, 9]

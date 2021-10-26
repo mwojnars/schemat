@@ -109,8 +109,8 @@ class Item(object, metaclass = MetaItem):
     
     Item's metadata - in DB:
     - cid, iid
-    - version -- current version 1,2,3,...; increased +1 after each modification of the item; for data-consistent updates
-    - created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    - version -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
+    ? created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
     - checksum -- to detect data corruption due to disk i/o errors etc.
     ? owner + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
     ? D is_draft -- this item is under construction, not fully functional yet (app-level feature)

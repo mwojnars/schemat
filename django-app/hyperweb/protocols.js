@@ -11,8 +11,10 @@ import { generic_schema } from './types.js'
 
 const ROOT_CID = 0
 
-/*************************************************************************************************/
-/* UTILITIES
+/**********************************************************************************************************************
+ **
+ **  UTILITIES
+ **
  */
 
 const htmlEscapes = {
@@ -323,8 +325,11 @@ class Item_ {
 window.customElements.define('hw-item-page-', Item_.Page);
 
 
-/*************************************************************************************************/
-/*************************************************************************************************/
+/**********************************************************************************************************************
+ **
+ **  ITEM & CATEGORY
+ **
+ */
 
 // class CatalogAtomicEntry extends LitElement {
 //     /* A row containing an atomic value of a data field (not a subcatalog) */
@@ -468,9 +473,13 @@ class RootCategory extends Category {
     }
 }
 
-/*************************************************************************************************/
+/**********************************************************************************************************************
+ **
+ **  REGISTRY
+ **
+ */
 
-class CacheOnClient {
+class LocalCache {
     /* Client-side item cache based on Web Storage (local storage or session storage). */
     // TODO: implement
 
@@ -549,6 +558,11 @@ class Classpath {
     }
 }
 
+class AjaxDB {
+    /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
+    preloaded = null        // list of item records that have been received on an initial web request to avoid subsequent remote calls
+}
+
 class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
@@ -565,9 +579,13 @@ class Registry {
 
         this.classpath = classpath
     }
+    init_cache(items) {
+        /* Insert selected preloaded items into cache before booting. */
+    }
 
-    boot() {
+    boot(items = []) {
         // this.store.load()
+        this.init_cache(items)
         this.root = this.create_root()
         this.site_id = this.root.get(Registry.STARTUP_SITE)
     }
@@ -635,16 +653,22 @@ class RegistryOnClient extends Registry {
 
     constructor() {
         super()
-        this.cache = new CacheOnClient()
+        this.cache = new LocalCache()
     }
 
 }
 
-/*************************************************************************************************/
+/**********************************************************************************************************************
+ **
+ **  START UP
+ **
+ */
 
 let registry = globalThis.registry = new Registry
 await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
-await registry.boot()
+
+let page_items = null
+registry.boot(page_items)
 
 window.customElements.define('hw-item-page', Item.Page);
 

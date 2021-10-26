@@ -48,11 +48,13 @@ root_fields = dict(
     #ttl_client  = INTEGER(),   # for how long to keep items of this category in cache, client side (in browser's localStorage)
     #ttl_server  = INTEGER(),   # for how long to keep items of this category in cache, server side
     
+    #immutable   = BOOLEAN()    # if True, items can't be modified after creation; e.g., Revision items, event logs etc.
+    #metadata ...               # what metadata to record for items: checksum, version, created_at, updated_at ...
+    #versioning  = BOOLEAN()    # if True, `version` number is stored in metadata and is increased on every update
+    #version_by  = STRING()     # name of an item's INTEGER field that should keep version number (if versioning is ON)
+    
     #revisions   = BOOLEAN()    # if True, a revision item is created on every update of an item of this category
     #revisions_config = RECORD  # config of revisions: retention period (dflt: infinite), ...
-    
-    #versioning  = BOOLEAN()    # if True, `version` number is stored in items' metadata and is increased on every update
-    #version_by  = STRING()     # name of an item's INTEGER field that should keep version number (if versioning is ON)
     
     #push_item_updates = BOOLEAN(),     # if True, updates to items of this category are broadcasted to all servers in a cluster;
                                         # should only be used for categories with few, rarely-updated items, like the root category

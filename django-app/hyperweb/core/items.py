@@ -216,16 +216,16 @@ base_hy = File_(
                         catalog_row $field $value $schema
                 $c = 1 - c
                 
+    %data @dump id=None type="json"
+        p id=$id type=$type style="display:none" @ dump
+    
     %properties item
         from hyperweb.serialize import $JSON, $json
         
-        %jsondata @data id=None
-            p style="display:none" type="json" id=$id @ data
-        
         custom "hw-item-page-"
-            jsondata #category | $item.category.dump_data(use_schema = False)
-            jsondata #item     | $item.dump_data(use_schema = False)
-            # jsondata #item   | $JSON.dump(item.data)
+            data #category | $item.category.dump_data(use_schema = False)
+            data #item     | $item.dump_data(use_schema = False)
+            # data #item   | $JSON.dump(item.data)
             < catalog_1 $item
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
@@ -233,10 +233,9 @@ base_hy = File_(
 
         custom "hw-item-page"
             # serialization must use `json` not `JSON` because the data is already JSON-encoded internally
-            #| $json.dumps(item.getstate())
-            #jsondata #root     | $item.category.category.dump_item(use_schema=False)
-            jsondata #category | $item.category.dump_item(use_schema=False)
-            jsondata #item     | $item.dump_item()
+            #data #root     | $item.category.category.dump_item(use_schema=False)
+            data #category | $item.category.dump_item(use_schema=False)
+            data #item     | $item.dump_item()
 
     %page @body
         doctype
@@ -262,6 +261,9 @@ base_hy = File_(
                 
                 h2 | Properties
                 properties $item
+                
+                custom "hw-data"
+                    data #registry |
                 
                 @extra
             
