@@ -32,12 +32,11 @@ default_db = None
 
 #####################################################################################################################################################
 #####
-#####  DATA STORE
+#####  DATABASE
 #####
 
-class DataStore:
+class Database:
     """"""
-
     def insert(self, item, flush = True):
         raise NotImplementedError
     
@@ -75,7 +74,7 @@ class DataStore:
         raise NotImplementedError
 
 
-class SimpleStore(DataStore):
+class SimpleDB(Database):
     """Data store that uses only local DB, no sharding."""
 
     _item_columns       = 'cid iid data created updated'.split()
@@ -164,7 +163,7 @@ class SimpleStore(DataStore):
 
 #####################################################################################################################################################
 
-class FileStore(SimpleStore):
+class FileDB(SimpleDB):
     """Items stored in a file. For use during development only."""
 
     filename = None
@@ -184,37 +183,37 @@ class FileStore(SimpleStore):
             yield self._make_record((cid_, iid_, data, None, None))
         
     
-class CsvStore(FileStore):
+# class CsvDB(FileDB):
+#
+#     def __init__(self, filename = None):
+#         self.filename = filename or DATABASES['csv']['FILE']
+#
+#         with open(self.filename, newline = '') as f:
+#             reader = csv.reader(f, delimiter = ';', quotechar = '"')
+#             self.items = {(int(cid), int(iid)): data for cid, iid, data in list(reader)}
+#
+#             print('CsvDB items loaded:')
+#             for id, data in self.items.items():
+#                 print(id, data)
+#
+# class JsonDB(FileDB):
+#     """Items stored in a JSON file. For use during development only."""
+#
+#     def __init__(self, filename = None):
+#         self.filename = filename or DATABASES['json']['FILE']
+#         self.reload()
+#
+#     def reload(self):
+#         self.items = {}
+#         for data in json.load(open(self.filename)):
+#             id_ = data.pop('id')
+#             self.items[tuple(id_)] = json.dumps(data)
+#
+#         print('JsonDB items loaded:')
+#         for id, data in self.items.items():
+#             print(id, data)
     
-    def __init__(self, filename = None):
-        self.filename = filename or DATABASES['csv']['FILE']
-        
-        with open(self.filename, newline = '') as f:
-            reader = csv.reader(f, delimiter = ';', quotechar = '"')
-            self.items = {(int(cid), int(iid)): data for cid, iid, data in list(reader)}
-            
-            print('CsvStore items loaded:')
-            for id, data in self.items.items():
-                print(id, data)
-    
-class JsonStore(FileStore):
-    """Items stored in a JSON file. For use during development only."""
-    
-    def __init__(self, filename = None):
-        self.filename = filename or DATABASES['json']['FILE']
-        self.reload()
-        
-    def reload(self):
-        self.items = {}
-        for data in json.load(open(self.filename)):
-            id_ = data.pop('id')
-            self.items[tuple(id_)] = json.dumps(data)
-        
-        print('JsonStore items loaded:')
-        for id, data in self.items.items():
-            print(id, data)
-    
-class YamlStore(FileStore):
+class YamlDB(FileDB):
     """Items stored in a YAML file. For use during development only."""
 
     max_iid = None      # dict of current maximum IIDs per category, as {cid: maximum_iid}
@@ -240,7 +239,7 @@ class YamlStore(FileStore):
             self.max_iid[cid] = max(curr_max, iid)
             self.items[id] = json.dumps(flat)
         
-        print('YamlStore items loaded:')
+        print('YamlDB items loaded:')
         for id, data in self.items.items():
             print(id, data)
     
@@ -283,7 +282,7 @@ class YamlStore(FileStore):
             flat.update(json.loads(raw))
             flats.append(flat)
             
-        print(f"YamlStore flushing {len(self.items)} items to {self.filename}...")
+        print(f"YamlDB flushing {len(self.items)} items to {self.filename}...")
         out = open(self.filename, 'wt')
         yaml.dump(flats, stream = out, default_flow_style = None, sort_keys = False, allow_unicode = True)
         

@@ -4,7 +4,7 @@ from types import FunctionType, BuiltinFunctionType
 from .config import ROOT_CID
 from .cache import LRUCache
 from .item import Category, RootCategory
-from .store import SimpleStore, CsvStore, JsonStore, YamlStore
+from .db import YamlDB
 
 
 #####################################################################################################################################################
@@ -131,7 +131,7 @@ class Registry:
     """
     STARTUP_SITE = 'startup_site'       # this property of the root category stores the current site, for startup boot()
     
-    store = None            # DataStore where items are read from and saved to
+    db    = None            # Database where all items and other data are permanently stored
     cache = None            # cached pairs of {ID: item}, with TTL configured on per-item basis
     
     root    = None          # permanent reference to a singleton root Category object, kept here instead of cache
@@ -169,7 +169,7 @@ class Registry:
 
     def __init__(self):
         self.cache = LRUCache(maxsize = 1000, ttl = 3)      # TODO: remove support for protected items in cache, no longer needed
-        self.store = YamlStore()
+        self.db = YamlDB()
         self.staging = []
         self.staging_ids = {}
         
@@ -205,7 +205,7 @@ class Registry:
     
     def boot(self):
         
-        self.store.load()
+        self.db.load()
         self.root = self.create_root()
         self.site_id = self.root[self.STARTUP_SITE]
         
@@ -216,8 +216,8 @@ class Registry:
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         """
         self.root = root = RootCategory(self, load)
-        if not load:                        # root created anew? self.store must be used directly (no stage/commit), because
-            self.store.insert(root)         # ...self.root already has an ID and it would get "updated" rather than inserted!
+        if not load:                        # root created anew? self.db must be used directly (no stage/commit), because
+            self.db.insert(root)            # ...self.root already has an ID and it would get "updated" rather than inserted!
         return root
         
     def set_site(self, site):
@@ -236,7 +236,7 @@ class Registry:
     def load_data(self, id):
         """Load item properties from DB and return as a schema-aware JSON-encoded string."""
         # """Load item record from DB and return as a dict with cid, iid, data etc."""
-        return self.store.select(id)['data']
+        return self.db.select(id)['data']
     
     def get_category(self, cid):
         cat = self.get_item((ROOT_CID, cid))
@@ -285,7 +285,7 @@ class Registry:
     
     def load_items(self, category):
         """Load from DB all items of a given category, ordered by IID. A generator."""
-        records = self.store.select_all(category.iid)
+        records = self.db.select_all(category.iid)
         return self.decode_items(records, category)
         
     def decode_items(self, records, category = None):
@@ -356,7 +356,7 @@ class Registry:
             if not incache: continue
             assert item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
 
-        self.store.upsert_many(self.staging)
+        self.db.upsert_many(self.staging)
         self.staging_ids = {}
         self.staging = []
         

@@ -49,7 +49,7 @@ root_fields = dict(
     #ttl_server  = INTEGER(),   # for how long to keep items of this category in cache, server side
     
     #immutable   = BOOLEAN()    # if True, items can't be modified after creation; e.g., Revision items, event logs etc.
-    #metadata ...               # what metadata to record for items: checksum, version, created_at, updated_at ...
+    #metadata ...               # what metadata to record for items: checksum, version, created, updated ...
     #versioning  = BOOLEAN()    # if True, `version` number is stored in metadata and is increased on every update
     #version_by  = STRING()     # name of an item's INTEGER field that should keep version number (if versioning is ON)
     

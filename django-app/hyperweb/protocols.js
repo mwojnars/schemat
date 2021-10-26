@@ -584,7 +584,7 @@ class Registry {
     }
 
     boot(items = []) {
-        // this.store.load()
+        // this.db.load()
         this.init_cache(items)
         this.root = this.create_root()
         this.site_id = this.root.get(Registry.STARTUP_SITE)
@@ -596,8 +596,8 @@ class Registry {
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         */
         this.root = new RootCategory(this, load)
-        // if (!load)                          # root created anew? this.store must be used directly (no stage/commit), because
-        //     this.store.insert(root)         # ...this.root already has an ID and it would get "updated" rather than inserted!
+        // if (!load)                          # root created anew? this.db must be used directly (no stage/commit), because
+        //     this.db.insert(root)         # ...this.root already has an ID and it would get "updated" rather than inserted!
         return this.root
     }
 
