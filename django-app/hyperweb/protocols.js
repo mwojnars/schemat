@@ -394,12 +394,22 @@ class Item {
     }
 
     get(field) {
-        return this.data[field];                        // TODO: support repeated keys (MultiDict)
+        return this.data[field]
     }
     load(data_flat) {
-        // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
-        // return fields.load_json(data_json);
-        return generic_schema.decode(data_flat);
+        // TODO TODO TODO .....
+        // let fields = this.category.get('fields')       // specification of fields {field_name: schema}
+        // return fields.load_json(data_json)
+        return generic_schema.decode(data_flat)
+    }
+    bind() {
+        /*
+        Override this method in subclasses to provide initialization after this item is retrieved from DB.
+        Typically, this method initializes transient properties and performs cross-item initialization.
+        Only after bind(), the item is a fully functional element of a graph of interconnected items.
+        When creating new items, bind() should be called manually, typically after all related items
+        have been created and connected.
+        */
     }
 
     static Properties = class extends Catalog {}
@@ -457,8 +467,6 @@ class RootCategory extends Category {
         this.bind()
     }
 }
-
-window.customElements.define('hw-item-page', Item.Page);
 
 /*************************************************************************************************/
 
@@ -577,7 +585,7 @@ class Registry {
 
     get_category(cid) { return this.get_item([ROOT_CID, cid]) }
 
-    get_item(id, load = true) {
+    get_item(id, version = null, load = false) {
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
@@ -632,7 +640,11 @@ class RegistryOnClient extends Registry {
 
 }
 
+/*************************************************************************************************/
+
 let registry = globalThis.registry = new Registry
 await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
 await registry.boot()
+
+window.customElements.define('hw-item-page', Item.Page);
 

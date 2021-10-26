@@ -200,7 +200,7 @@ class JSON:
                 state = state_attr
 
             if classname == JSON.FLAG_ITEM:                 # decoding a reference to an Item? get a stub from the Registry
-                return registry.get_item(state, load = False)
+                return registry.get_item(state)
             if classname == JSON.FLAG_TYPE:                 # decoding a type (an object that represents a class or type)?
                 return registry.get_class(state)            # ...get it from the Classpath
 
@@ -215,7 +215,7 @@ class JSON:
         # if isinstance(class_, type):
         from .item import Item
         if issubclass(class_, Item):                        # all Item instances (stubs) must be created through the Registry
-            return registry.get_item(state, load = False)
+            return registry.get_item(state)
         # if issubclass(class_, type):
         #     return registry.get_class(state)
 

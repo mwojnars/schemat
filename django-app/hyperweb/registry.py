@@ -243,7 +243,7 @@ class Registry:
         assert isinstance(cat, Category), f"not a Category object: {cat}"
         return cat
     
-    def get_item(self, id, load = True):
+    def get_item(self, id, load = False):
         """
         If load=True, the returned item's data (properties) are loaded - this does NOT mean reloading,
         as the item data may have been loaded earlier.
