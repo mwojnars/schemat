@@ -233,10 +233,11 @@ class Registry:
         self.root[self.STARTUP_SITE] = list(site.id)        # plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         self.commit(self.root)
         
-    def load_data(self, id):
-        """Load item properties from DB and return as a schema-aware JSON-encoded string."""
-        # """Load item record from DB and return as a dict with cid, iid, data etc."""
-        return self.db.select(id)['data']
+    def load_item(self, id):
+        """Load item record from DB and return as a dict with cid, iid, data etc."""
+        
+        # TODO: in the future, make a checkpoint here to verify user's permissions to access a given item.
+        return self.db.select(id)
     
     def get_category(self, cid):
         cat = self.get_item((ROOT_CID, cid))

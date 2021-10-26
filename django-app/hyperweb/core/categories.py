@@ -113,7 +113,14 @@ AppRoot_  = Category_(
 
 AppAdmin_ = Category_(
     name        = "AppAdmin",
+    info        = "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
     class_name  = 'hyperweb.core.AppAdmin',
+    fields      = dict(name = STRING()),
+)
+AppAjax_ = Category_(
+    name        = "AppAjax",
+    info        = "Internal application to serve AJAX requests, mainly for pulling additional items by client UI.",
+    class_name  = 'hyperweb.core.AppAjax',
     fields      = dict(name = STRING()),
 )
 AppFiles_ = Category_(

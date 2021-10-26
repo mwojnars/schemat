@@ -1,6 +1,7 @@
 import json
 from textwrap import dedent
 from xml.sax.saxutils import quoteattr
+from django.http import HttpResponse
 
 from nifty.text import html_escape
 from hypertag.std.html import html_escape as esc
@@ -109,9 +110,10 @@ class Item(object, metaclass = MetaItem):
     
     Item's metadata - in DB:
     - cid, iid
-    - version -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
-    ? created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
-    - checksum -- to detect data corruption due to disk i/o errors etc.
+    * version -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
+    * created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    * checksum -- to detect data corruption due to disk i/o errors etc.
+    ? status -- enum, "deleted" for tombstone items
     ? owner + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
     ? D is_draft -- this item is under construction, not fully functional yet (app-level feature)
     ? M is_mock  -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
@@ -295,7 +297,7 @@ class Item(object, metaclass = MetaItem):
         if self.iid is None:
             raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if data_json is None:
-            data_json = self.registry.load_data(self.id)
+            data_json = self.registry.load_item(self.id)['data']
 
         schema = self.category.get_schema()
         data   = JSON.load(data_json, schema.decode if use_schema else None)
@@ -400,34 +402,6 @@ class Item(object, metaclass = MetaItem):
         #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
-    @handler('set')
-    def _set_(self, request):
-        """
-        Ajax endpoint that modifies selected properties of this item and saves to DB.
-        None value for a property is interpreted as DELETE.
-        """
-    
-    def dump_data(self, use_schema = True, compact = True):
-        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        schema = self.category.get_schema()
-        data = self.data.asdict_first()      # TODO: temporary code
-        return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
-    
-        # fields = self.category['field']       # multiple_dict
-        # schema = ITEM_DATA(fields)
-        
-    
-    def dump_item(self, use_schema = True):
-        """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
-        state = self.__dict__.copy()
-        state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
-        state.pop('category', None)
-        schema = self.category.get_schema() if use_schema else generic_schema
-        # data = self.data if use_schema else self.data.asdict_first()
-        data = self.data.asdict_first()      # TODO: temporary code
-        state['data'] = schema.encode(data)      # schema-aware encode (compactify) the `data` as <dict>
-        return json.dumps(state)                # state must be serialized through the standard `json`, not our custom object-encoding JSON
-
     @staticmethod
     def from_dump(state, category = None, use_schema = True):
         """Recreate an item that was serialized with dump_item()."""
@@ -436,6 +410,37 @@ class Item(object, metaclass = MetaItem):
         item = Item(category, data)
         item.__dict__.update(state)
         return item
+    
+    def dump_item(self, use_schema = True):
+        """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
+        state = self.__dict__.copy()
+        state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
+        state.pop('category', None)
+        schema = self.category.get_schema() if use_schema else generic_schema
+        data = self.data.asdict_first()             # TODO: temporary code
+        state['data'] = schema.encode(data)         # schema-aware encode (compactify) the `data` as <dict>
+        return json.dumps(state)                    # state must be serialized through the standard `json`, not our custom object-encoding JSON
+
+    def dump_data(self, use_schema = True, compact = True):
+        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
+        schema = self.category.get_schema()
+        data = self.data.asdict_first()             # TODO: temporary code
+        return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
+    
+    @handler('json')
+    def _json_(self, request):
+        """Return JSON representation of this item: its data (encoded) and metadata."""
+        self.load()
+        dump = self.dump_item()
+        return HttpResponse(dump, content_type = "application/json")
+
+    @handler('set')
+    def _set_(self, request):
+        """
+        Ajax endpoint that modifies selected properties of this item and saves to DB.
+        None value for a property is interpreted as DELETE.
+        """
+    
     
 ItemDoesNotExist.item_class = Item
 

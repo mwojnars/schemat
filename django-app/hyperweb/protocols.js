@@ -475,7 +475,7 @@ class RootCategory extends Category {
 
 /**********************************************************************************************************************
  **
- **  REGISTRY
+ **  CACHE & DATABASE
  **
  */
 
@@ -493,11 +493,6 @@ class LocalCache {
 class Classpath {
     forward = new Map()         // dict of objects indexed by paths: (path -> object)
     inverse = new Map()         // dict of paths indexed by objects: (object -> path)
-
-    constructor() {
-        //this.forward.set(path_C, C)
-        //this.inverse.set(C, path_C)
-    }
 
     set(path, obj) {
         /*
@@ -558,15 +553,41 @@ class Classpath {
     }
 }
 
-class AjaxDB {
+/**********************************************************************************************************************/
+
+class Database {}
+
+class AjaxDB extends Database {
     /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
+
+    base_url  = ""
     preloaded = null        // list of item records that have been received on an initial web request to avoid subsequent remote calls
+
+    select(id) {
+        /* Retrieve an item from DB by its ID = (CID,IID) */
+        let url  = window.location.href
+        let data = undefined
+
+        $.ajax({
+            method:         'POST',
+            url:            url + '@set',
+            data:           JSON.stringify(data),
+            contentType:    "application/json; charset=utf-8",
+        })
+    }
 }
+
+/**********************************************************************************************************************
+ **
+ **  REGISTRY
+ **
+ */
 
 class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
+    db      = null          // Database instance for accessing items and other data from database servers
     cache   = null
     root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
     site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
@@ -599,6 +620,10 @@ class Registry {
         // if (!load)                          # root created anew? this.db must be used directly (no stage/commit), because
         //     this.db.insert(root)         # ...this.root already has an ID and it would get "updated" rather than inserted!
         return this.root
+    }
+    load_item(id) {
+        /* Load item record from DB and return as a dict with keys: cid, iid, data, all metadata etc. */
+        this.db.select(id)
     }
 
     get_category(cid) { return this.get_item([ROOT_CID, cid]) }
@@ -648,23 +673,23 @@ class Registry {
     }
 }
 
-class RegistryOnClient extends Registry {
+class LocalRegistry extends Registry {
     /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
 
     constructor() {
         super()
+        this.db    = new AjaxDB()
         this.cache = new LocalCache()
     }
-
 }
 
 /**********************************************************************************************************************
  **
- **  START UP
+ **  STARTUP
  **
  */
 
-let registry = globalThis.registry = new Registry
+let registry = globalThis.registry = new LocalRegistry
 await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
 
 let page_items = null

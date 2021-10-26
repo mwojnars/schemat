@@ -263,7 +263,12 @@ base_hy = File_(
                 properties $item
                 
                 custom "hw-data"
-                    data #registry |
+                    from hyperweb.serialize import $JSON, $json
+                    $server = {'ajax_url': $item.registry.site['base_url'] + 'ajax/'}
+                    data #server | $json.dumps(server)
+                    data #cache
+                        data     | $item.category.dump_item(use_schema=False)
+                        data     | $item.dump_item()
                 
                 @extra
             
@@ -318,6 +323,7 @@ filesystem = Folder_(
 #####################################################################################################################################################
 
 app_admin = AppAdmin_(name = "Admin",)
+app_ajax  = AppAjax_ (name = "AJAX",)
 app_files = AppFiles_(name = "Files",)
 
 app_catalog = AppSpaces_(
@@ -334,6 +340,7 @@ app_root = AppRoot_ (
     name        = "Applications",
     apps        = {
         'admin':    app_admin,
+        'ajax':     app_ajax,
         'files':    app_files,
         '':         app_catalog,        # default route
     },

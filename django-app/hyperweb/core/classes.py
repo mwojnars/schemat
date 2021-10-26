@@ -113,7 +113,7 @@ class Application(Item):
         raise NotImplementedError()
     
     def _split_endpoint(self, path):
-        """Decode /endpoint from the URL path."""
+        """Decode @endpoint from the URL path."""
         
         endpoint = ""
         if '?' in path:
@@ -189,14 +189,19 @@ class AppRoot(Application):
 class AppAdmin(Application):
     """Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID """
     
-    def handle(self, request, path):
+    def _find_item(self, path, request):
+        """Extract CID, IID, endpoint from a raw URL of the form CID:IID@endpoint, return CID and IID, save endpoint to request."""
         try:
             path, request.endpoint = self._split_endpoint(path[1:])
             cid, iid = map(int, path.split(':'))
         except Exception as ex:
             raise Exception(f'URL path not found: {path}')
 
-        item = self.registry.get_item((cid, iid))
+        return self.registry.get_item((cid, iid))
+
+    def handle(self, request, path):
+        
+        item = self._find_item(path, request)
         return item.serve(request, self)
         
     def url_path(self, item, route = '', relative = True, endpoint = None, params = None):
@@ -204,6 +209,13 @@ class AppAdmin(Application):
         cid, iid = item.id
         url = f'{cid}:{iid}'
         return self._set_endpoint(url, endpoint, params)
+        
+class AppAjax(AppAdmin):
+    
+    def handle(self, request, path):
+        item = self._find_item(path, request)
+        request.endpoint = "json"
+        return item.serve(request, self)
         
 class AppFiles(Application):
     """

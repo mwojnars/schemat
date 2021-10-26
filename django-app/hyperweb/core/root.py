@@ -36,7 +36,7 @@ root_fields = dict(
     #endpoint    = CODE(multiple = True, labels = True, default = {"view": page_item})
     #index       = ITEM(Index),
     
-    #dark_fields = BOOLEAN(default = False, info = "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is OBJECT()")
+    #custom_fields = BOOLEAN(default = False, info = "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is OBJECT()")
     
     #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
                                 # - these props are needed to generate "simple links" to this item on "edit" tabs of other items,
@@ -55,6 +55,10 @@ root_fields = dict(
     
     #revisions   = BOOLEAN()    # if True, a revision item is created on every update of an item of this category
     #revisions_config = RECORD  # config of revisions: retention period (dflt: infinite), ...
+    
+    #tombstone                  # if True, item is left with "tombstone" status after delete
+    
+    #iid_interlace, iid_gaps    # (freq) how often to leave a gap in IID autoincrement when inserting items
     
     #push_item_updates = BOOLEAN(),     # if True, updates to items of this category are broadcasted to all servers in a cluster;
                                         # should only be used for categories with few, rarely-updated items, like the root category
