@@ -10,7 +10,6 @@ from .errors import *
 from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
-from .serialize import JSON
 from .schema import generic_schema, RECORD
 
 
@@ -162,8 +161,8 @@ class Item(object, metaclass = MetaItem):
     
     def __init__(self, category = None, data = None):
         """
-        Create a new item instance. Assign category, registry, properties, CID (if possible).
-        self.loaded is left uninitialized (False).
+        Basic item initialization: category, registry, data. For a fully operational item,
+        bind() must be called after __init__().
         """
         if data is not None:                            # not-loaded item has self.data=None
             self.data = data if isinstance(data, MultiDict) else MultiDict(data)
@@ -173,16 +172,32 @@ class Item(object, metaclass = MetaItem):
             self.registry = category.registry           # can be None
             self.cid      = category.iid
 
-    def seed(self, data, bind = True):
+    @staticmethod
+    def from_dump(state, category = None, use_schema = True):
+        """Recreate an item that was encoded/serialized with encode_item() or dump_item()."""
+        schema = category.get_schema() if use_schema else generic_schema
+        data = schema.decode(state.pop('data'))
+        item = Item(category, data)
+        item.__dict__.update(state)
+        return item
+    
+    def bind(self):
         """
-        Initialize this (newly created) item with a given dict of property values, `data`.
-        Mark it as loaded. Then call bind(), if bind=True.
+        Override this method in subclasses to provide initialization after this item is retrieved from DB.
+        Typically, this method initializes transient properties and performs cross-item initialization.
+        Only after bind(), the item is a fully functional element of a graph of interconnected items.
+        When creating new items, bind() should be called manually, typically after all related items
+        have been created and connected.
         """
-        # self.data.update(data)
-        # self._loaded = True
-        self.data = MultiDict(data)
-        if bind: self.bind()
-
+    
+    # def seed(self, data, bind = True):
+    #     """
+    #     Initialize this (newly created) item with a given dict of property values, `data`.
+    #     Mark it as loaded. Then call bind(), if bind=True.
+    #     """
+    #     self.data = MultiDict(data)
+    #     if bind: self.bind()
+    
     def isinstance(self, category):
         """
         Check whether this item belongs to a category that inherits from `category` via a prototype chain.
@@ -299,21 +314,15 @@ class Item(object, metaclass = MetaItem):
         if data_json is None:
             data_json = self.registry.load_item(self.id)['data']
 
-        schema = self.category.get_schema()
-        data   = JSON.load(data_json, schema.decode if use_schema else None)
+        schema = self.category.get_schema() if use_schema else generic_schema
+        state  = json.loads(data_json)
+        data   = schema.decode(state)
+        # schema = self.category.get_schema()
+        # return JSON.load(data_json, schema.decode if use_schema else None)
+        
         self.data = MultiDict(data)
         self.bind()
-
         return self
-    
-    def bind(self):
-        """
-        Override this method in subclasses to provide initialization after this item is retrieved from DB.
-        Typically, this method initializes transient properties and performs cross-item initialization.
-        Only after bind(), the item is a fully functional element of a graph of interconnected items.
-        When creating new items, bind() should be called manually, typically after all related items
-        have been created and connected.
-        """
     
     def serve(self, request, app, default_endpoint = 'view'):
         """
@@ -402,36 +411,39 @@ class Item(object, metaclass = MetaItem):
         #  `retries` -- max. no. of retries if UPDATE finds a different `revision` number than the initial SELECT pulled
         # Execution of this method can be delegated to the local node where `self` resides to minimize intra-network traffic (?)
         
-    @staticmethod
-    def from_dump(state, category = None, use_schema = True):
-        """Recreate an item that was serialized with dump_item()."""
-        schema = category.get_schema() if use_schema else generic_schema
-        data = schema.decode(state.pop('data'))
-        item = Item(category, data)
-        item.__dict__.update(state)
-        return item
+    def encode_data(self, use_schema = True):
+        """Encode self.data into a JSON-serializable dict composed of plain JSON objects only, compacted."""
+        schema = self.category.get_schema() if use_schema else generic_schema
+        data = self.data.asdict_first()             # TODO: temporary code
+        return schema.encode(data)
     
-    def dump_item(self, use_schema = True):
-        """Dump all contents of this item (data & metadata) to JSON, fields `registry` and `category` excluded."""
+    def dump_data(self, use_schema = True, compact = True):
+        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
+        # schema = self.category.get_schema()
+        # data = self.data.asdict_first()             # TODO: temporary code
+        # return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
+        state = self.encode_data(use_schema)
+        return json.dumps(state)
+    
+    def encode_item(self, use_schema = True):
+        """Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded."""
         state = self.__dict__.copy()
         state.pop('registry', None)                         # Registry is not serializable, must be removed now and imputed after deserialization
         state.pop('category', None)
-        schema = self.category.get_schema() if use_schema else generic_schema
-        data = self.data.asdict_first()             # TODO: temporary code
-        state['data'] = schema.encode(data)         # schema-aware encode (compactify) the `data` as <dict>
-        return json.dumps(state)                    # state must be serialized through the standard `json`, not our custom object-encoding JSON
-
-    def dump_data(self, use_schema = True, compact = True):
-        """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
-        schema = self.category.get_schema()
-        data = self.data.asdict_first()             # TODO: temporary code
-        return JSON.dump(data, schema.encode if use_schema else None, compact = compact)
+        # schema = self.category.get_schema() if use_schema else generic_schema
+        # data = self.data.asdict_first()             # TODO: temporary code
+        # state['data'] = schema.encode(data)         # schema-aware encode (compactify) the `data` as <dict>
+        state['data'] = self.encode_data(use_schema)
+        return state
     
+    def dump_item(self, use_schema = True):
+        state = self.encode_item(use_schema)
+        return json.dumps(state)
+
     @handler('json')
     def _json_(self, request):
         """Return JSON representation of this item: its data (encoded) and metadata."""
-        self.load()
-        dump = self.dump_item()
+        dump = self.load().dump_item()
         return HttpResponse(dump, content_type = "application/json")
 
     @handler('set')
@@ -566,9 +578,9 @@ class RootCategory(Category):
             
         self.bind()
         
-    def dump_data(self, use_schema = False, compact = True):
-        """Same as Item.dump_data(), but use_schema is False by default to avoid circular dependency during deserialization."""
-        return super(RootCategory, self).dump_data(use_schema, compact)
+    def encode_data(self, use_schema = False):
+        """Same as Item.encode_data(), but use_schema is False by default to avoid circular dependency during deserialization."""
+        return super(RootCategory, self).encode_data(use_schema)
 
     def load(self, *args, **kwargs):
         """Same as Item.load(), but use_schema is False by default to avoid circular dependency during deserialization."""
@@ -644,8 +656,18 @@ class Index(Item):
 #####  Remarks
 #####
 
-# TODO:
-# -
-
-# ISSUES:
-# -
+"""
+Rate Limiting. Signals to delay / drop (random) / drop (permanent) requests per IP:
+- cookies not accepted (by browser)
+- cookies not submitted (in the current request)
+- unrecognized user agent
+- old user agent
+- continuous scan over IIDs with small (+/-1) increments
+- requests for non-existing items (honeypot IIDs)
+- no requests for assets (js, css, pics)
+- no requests for the special signaling asset (hidden "pixel")
+- too many concurrent requests from the same IP
+Positive signals (reverting the above):
+- known search bot in user agent
+- known search bot's IP range
+"""

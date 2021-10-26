@@ -689,11 +689,14 @@ class LocalRegistry extends Registry {
  **
  */
 
-let registry = globalThis.registry = new LocalRegistry
-await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
+export async function boot() {
 
-let page_items = null
-registry.boot(page_items)
+    let registry = globalThis.registry = new LocalRegistry
+    await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
 
-window.customElements.define('hw-item-page', Item.Page);
+    let page_items = null
+    registry.boot(page_items)
 
+    window.customElements.define('hw-item-page', Item.Page);
+
+}

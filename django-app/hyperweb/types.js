@@ -287,7 +287,7 @@ export class CATALOG extends DICT {
     Similar to DICT, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
     Provides tight integration with the UI: convenient layout for display of items,
     and access paths for locating form validation errors.
-    Watch out the reversed ordering of arguments in constructor() !!
+    Watch out the reversed ordering of arguments in constructor()!
     */
     get is_catalog() { return true }
     static keys_default = new STRING

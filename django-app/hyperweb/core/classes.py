@@ -328,6 +328,9 @@ class Site(Item):
         """Retrieve an item through the Registry that belongs to the current thread."""
         return self.registry.get_item(*args, **kwargs)
         
+    def get_route(self, ):
+        pass
+        
     def get_url(self, item, route = '', relative = False, no_base = False, params = None):
         """Return an absolute or relative URL of `item` as assigned by the application anchored at `route`."""
         app  = self['application']
@@ -343,6 +346,10 @@ class Site(Item):
 
         if base[-1:] == '/': base = base[:-1]
         return base + path                              # absolute URL with base
+    
+    def ajax_url(self):
+        """Absolute base URL for AJAX calls originating at a client UI."""
+        return self['base_url'] + '/ajax'
 
     def handle(self, request):
         """Forward the request to a root application configured in the `app` property."""

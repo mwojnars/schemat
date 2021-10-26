@@ -175,18 +175,19 @@ base_hy = File_(
         # script type="module" src="/sys.file:1@get"
         # script type="module" src="/files/protocols.js"
         script type="module" !
-            import {} from "/files/protocols.js"
+            import { boot } from "/files/protocols.js"
             import { JSONx } from "/files/serialize.js"
             window.JSONx = JSONx
+            boot()
 
     %assets
         assets_external
         assets_internal
     
-    %protocol @body classname
-        # asset ".../protocols.js"
-        div .widget protocol=classname
-            @body
+    # %protocol @body classname
+    #     # asset ".../protocols.js"
+    #     div .widget protocol=classname
+    #         @body
 
     %catalog_row key value schema
         # a row containing an atomic value of a data field (not a subcatalog)
@@ -264,8 +265,8 @@ base_hy = File_(
                 
                 custom "hw-data"
                     from hyperweb.serialize import $JSON, $json
-                    $server = {'ajax_url': $item.registry.site['base_url'] + 'ajax/'}
-                    data #server | $json.dumps(server)
+                    $config = {'ajax_url': $item.registry.site.ajax_url()}
+                    data #config | $json.dumps(config)
                     data #cache
                         data     | $item.category.dump_item(use_schema=False)
                         data     | $item.dump_item()
@@ -340,7 +341,7 @@ app_root = AppRoot_ (
     name        = "Applications",
     apps        = {
         'admin':    app_admin,
-        'ajax':     app_ajax,
+        'ajax':     app_ajax,           # this app must be present under the "ajax" route for proper handling of client-server communication
         'files':    app_files,
         '':         app_catalog,        # default route
     },
@@ -348,7 +349,7 @@ app_root = AppRoot_ (
 
 catalog_wiki = Site_(
     name        = "catalog.wiki",
-    base_url    = "http://localhost:8001/",
+    base_url    = "http://localhost:8001",
     filesystem  = filesystem,
     application = app_root,
 )

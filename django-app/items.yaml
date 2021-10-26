@@ -236,28 +236,29 @@
     data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==\"\
     \ rel=\"icon\" type=\"image/x-icon\"\n        \n        # script type=\"module\"\
     \ src=\"/sys.file:1@get\"\n        # script type=\"module\" src=\"/files/protocols.js\"\
-    \n        script type=\"module\" !\n            import {} from \"/files/protocols.js\"\
+    \n        script type=\"module\" !\n            import { boot } from \"/files/protocols.js\"\
     \n            import { JSONx } from \"/files/serialize.js\"\n            window.JSONx\
-    \ = JSONx\n\n    %assets\n        assets_external\n        assets_internal\n \
-    \   \n    %protocol @body classname\n        # asset \".../protocols.js\"\n  \
-    \      div .widget protocol=classname\n            @body\n\n    %catalog_row key\
-    \ value schema\n        # a row containing an atomic value of a data field (not\
-    \ a subcatalog)\n        th .ct-field | $key\n        # td .ct-flags | *\n   \
-    \     td .ct-value / $schema.display(value)\n\n    %catalog_2 data schema start_color=0\n\
-    \        $c = start_color\n        div .wrap-offset : table .catalog-2\n     \
-    \       for field, value in data.items()\n                tr class=\"ct-color{c}\"\
-    \n                    catalog_row $field $value $schema\n                # $c\
-    \ = 1 - c\n    \n    %catalog_1 item\n        $c = 0          # alternating color\
-    \ of rows: 0 or 1\n        table .catalog-1\n            for field, value in item.get_entries()\n\
-    \                $schema = item.category.get_schema(field)\n                tr\
-    \ class=\"ct-color{c}\"\n                    if schema.is_catalog\n          \
-    \              td .ct-nested colspan=2\n                            div .ct-field\
-    \ | {field}\n                            catalog_2 $value $schema.values $c\n\
-    \                    else\n                        catalog_row $field $value $schema\n\
-    \                $c = 1 - c\n                \n    %data @dump id=None type=\"\
-    json\"\n        p id=$id type=$type style=\"display:none\" @ dump\n    \n    %properties\
-    \ item\n        from hyperweb.serialize import $JSON, $json\n        \n      \
-    \  custom \"hw-item-page-\"\n            data #category | $item.category.dump_data(use_schema\
+    \ = JSONx\n            boot()\n\n    %assets\n        assets_external\n      \
+    \  assets_internal\n    \n    # %protocol @body classname\n    #     # asset \"\
+    .../protocols.js\"\n    #     div .widget protocol=classname\n    #         @body\n\
+    \n    %catalog_row key value schema\n        # a row containing an atomic value\
+    \ of a data field (not a subcatalog)\n        th .ct-field | $key\n        # td\
+    \ .ct-flags | *\n        td .ct-value / $schema.display(value)\n\n    %catalog_2\
+    \ data schema start_color=0\n        $c = start_color\n        div .wrap-offset\
+    \ : table .catalog-2\n            for field, value in data.items()\n         \
+    \       tr class=\"ct-color{c}\"\n                    catalog_row $field $value\
+    \ $schema\n                # $c = 1 - c\n    \n    %catalog_1 item\n        $c\
+    \ = 0          # alternating color of rows: 0 or 1\n        table .catalog-1\n\
+    \            for field, value in item.get_entries()\n                $schema =\
+    \ item.category.get_schema(field)\n                tr class=\"ct-color{c}\"\n\
+    \                    if schema.is_catalog\n                        td .ct-nested\
+    \ colspan=2\n                            div .ct-field | {field}\n           \
+    \                 catalog_2 $value $schema.values $c\n                    else\n\
+    \                        catalog_row $field $value $schema\n                $c\
+    \ = 1 - c\n                \n    %data @dump id=None type=\"json\"\n        p\
+    \ id=$id type=$type style=\"display:none\" @ dump\n    \n    %properties item\n\
+    \        from hyperweb.serialize import $JSON, $json\n        \n        custom\
+    \ \"hw-item-page-\"\n            data #category | $item.category.dump_data(use_schema\
     \ = False)\n            data #item     | $item.dump_data(use_schema = False)\n\
     \            # data #item   | $JSON.dump(item.data)\n            < catalog_1 $item\n\
     \            div style=\"text-align:right; padding-top:20px\"\n              \
@@ -278,9 +279,9 @@
     \ / $ciid\n                    else / $ciid\n                \n              \
     \  h2 | Properties\n                properties $item\n                \n     \
     \           custom \"hw-data\"\n                    from hyperweb.serialize import\
-    \ $JSON, $json\n                    $server = {'ajax_url': $item.registry.site['base_url']\
-    \ + 'ajax/'}\n                    data #server | $json.dumps(server)\n       \
-    \             data #cache\n                        data     | $item.category.dump_item(use_schema=False)\n\
+    \ $JSON, $json\n                    $config = {'ajax_url': $item.registry.site.ajax_url()}\n\
+    \                    data #config | $json.dumps(config)\n                    data\
+    \ #cache\n                        data     | $item.category.dump_item(use_schema=False)\n\
     \                        data     | $item.dump_item()\n                \n    \
     \            @extra\n            \n    %page_category category\n        page_item\
     \ category\n            h2 | Items\n            table\n                for item\
@@ -340,7 +341,7 @@
     : [9, 1]
 - id: [10, 1]
   name: catalog.wiki
-  base_url: http://localhost:8001/
+  base_url: http://localhost:8001
   filesystem: 4
   application: [5, 1]
 - id: [11, 1]
