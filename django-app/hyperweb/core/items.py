@@ -261,9 +261,11 @@ base_hy = File_(
                 $config = {'ajax_url': item.registry.site.ajax_url()}
                 $items  = item.preload_items()     #[item.category.encode_item(), item.encode_item()]
                 
-                from hyperweb.serialize import $json
-                data #data-config | $json.dumps(config, separators = (',',':'))
-                data #data-items  | $json.dumps(items, separators = (',',':'))
+                from hyperweb.serialize import $json, $JSON
+                data #data-config | $JSON.dump64(config)
+                data #data-items  | $JSON.dump64(items)
+                # data #data-config | $json.dumps(config, separators = (',',':'))
+                # data #data-items  | $json.dumps(items, separators = (',',':'))
                 
                 @extra
             

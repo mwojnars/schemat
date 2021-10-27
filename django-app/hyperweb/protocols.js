@@ -133,6 +133,8 @@ function read_data(node, type = "json") {
 
     // decode `value` depending on the `type`
     if (type === "json") return JSON.parse(value)
+    if (type === "json+base64") return JSON.parse(atob(value))
+
     return value
 }
 
@@ -731,8 +733,8 @@ class LocalRegistry extends Registry {
 
 export async function boot() {
 
-    let config = read_data('#data-config')
-    let items  = read_data('#data-items')
+    let config = read_data('#data-config', 'json+base64')
+    let items  = read_data('#data-items', 'json+base64')
     print('data-config:', config)
     print('data-items: ', items)
 

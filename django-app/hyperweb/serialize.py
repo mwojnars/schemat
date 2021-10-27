@@ -3,6 +3,7 @@ Utilities for JSON-pickling and serialization of objects of arbitrary classes.
 """
 
 import json
+from base64 import b64encode, b64decode
 from types import FunctionType
 from importlib import import_module
 from .errors import EncodeError, DecodeError
@@ -99,6 +100,23 @@ class JSON:
     ATTR_STATE = "="            # special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     PRIMITIVES = (bool, int, float, str, type(None))        # objects of these types are left unchanged during encoding
     
+    @staticmethod
+    def dump64(state, encode = None):
+        """
+        Utility method that calls json.dumps() followed by b64encode(). Encoding of an input object
+        is only done when encode() function was provided, or if encode=True.
+        """
+        if encode: state = encode(state) if encode is not True else JSON.encode(state)
+        dump = json.dumps(state, separators = (',', ':'))
+        return b64encode(dump.encode()).decode()
+    
+    @staticmethod
+    def load64(dump, decode = None):
+        dump  = b64decode(dump.encode()).decode()
+        state = json.loads(dump)
+        if decode: return decode(state) if decode is not True else JSON.decode(state)
+        return state
+
     @staticmethod
     def dump(obj, encode = None, type_ = None, compact = True, **json_format):
         """`encode` is an optional encoding function: state=encode(obj)."""
