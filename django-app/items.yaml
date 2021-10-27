@@ -275,12 +275,13 @@
     \  h2 | Properties\n                properties $item\n                \n     \
     \           # dump client configuration and preloaded items to json and embed\
     \ them\n                $config = {'ajax_url': item.registry.site.ajax_url()}\n\
-    \                $items  = [item.category.encode_item(), item.encode_item()]\n\
-    \                \n                from hyperweb.serialize import $json\n    \
-    \            data #data-config | $json.dumps(config)\n                data #data-items\
-    \  | $json.dumps(items)\n                \n                @extra\n          \
-    \  \n    %page_category category\n        page_item category\n            h2 |\
-    \ Items\n            table\n                for item in list(category.registry.load_items(category))\n\
+    \                $items  = item.preload_items()     #[item.category.encode_item(),\
+    \ item.encode_item()]\n                \n                from hyperweb.serialize\
+    \ import $json\n                data #data-config | $json.dumps(config, separators\
+    \ = (',',':'))\n                data #data-items  | $json.dumps(items, separators\
+    \ = (',',':'))\n                \n                @extra\n            \n    %page_category\
+    \ category\n        page_item category\n            h2 | Items\n            table\n\
+    \                for item in list(category.registry.scan_category(category))\n\
     \                    tr\n                        td / #{item.iid} &nbsp;\n   \
     \                     td\n                            $ iname = item['name']?\
     \ or item\n                            try\n                                a\

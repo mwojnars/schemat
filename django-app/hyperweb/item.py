@@ -304,7 +304,8 @@ class Item(object, metaclass = MetaItem):
         if self.iid is None:
             raise Exception(f'trying to load() a newborn item with no IID, {self}')
         if data_json is None:
-            data_json = self.registry.load_item(self.id)['data']
+            record = self.registry.load_record(self.id)
+            data_json = record['data']          # TODO: initialize item metadata - the remaining attributes from `record`
 
         schema = self.category.get_schema() if use_schema else generic_schema
         state  = json.loads(data_json)
@@ -423,6 +424,12 @@ class Item(object, metaclass = MetaItem):
     def dump_item(self, use_schema = True):
         state = self.encode_item(use_schema)
         return json.dumps(state)
+
+    def preload_items(self):
+        """List of encoded items to be sent over to a client to bootstrap client-side item cache."""
+        # items = [self.registry.root]
+        items = filter(None, {self, self.category, self.registry.root})
+        return [i.load().encode_item() for i in items]
 
     @handler('json')
     def _json_(self, request):
@@ -546,15 +553,14 @@ class Category(Item):
 
 class RootCategory(Category):
     """"""
-    cid = ROOT_CID
-    iid = ROOT_CID
-
     def __init__(self, registry, load):
 
         super(RootCategory, self).__init__()
         self.registry = registry
         self.category = self                    # root category is a category for itself
-        
+        self.cid = ROOT_CID
+        self.iid = ROOT_CID
+
         if load: self.load()
         else:                                   # data is set from scratch only when the root is created anew rather than loaded
             from .core.root import root_data
@@ -563,12 +569,13 @@ class RootCategory(Category):
         self.bind()
         
     def encode_data(self, use_schema = False):
-        """Same as Item.encode_data(), but use_schema is False by default to avoid circular dependency during deserialization."""
-        return super(RootCategory, self).encode_data(use_schema)
+        """Same as Item.encode_data(), but use_schema is False to avoid circular dependency during deserialization."""
+        return super(RootCategory, self).encode_data(use_schema = False)
 
     def load(self, *args, **kwargs):
-        """Same as Item.load(), but use_schema is False by default to avoid circular dependency during deserialization."""
-        kwargs.setdefault('use_schema', False)
+        """Same as Item.load(), but use_schema is False to avoid circular dependency during deserialization."""
+        # kwargs.setdefault('use_schema', False)
+        kwargs['use_schema'] = False
         return super(RootCategory, self).load(*args, **kwargs)
         
 

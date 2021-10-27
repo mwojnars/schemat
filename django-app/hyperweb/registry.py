@@ -233,7 +233,7 @@ class Registry:
         self.root[self.STARTUP_SITE] = list(site.id)        # plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         self.commit(self.root)
         
-    def load_item(self, id):
+    def load_record(self, id):
         """Load item record from DB and return as a dict with cid, iid, data etc."""
         
         # TODO: in the future, make a checkpoint here to verify user's permissions to access a given item.
@@ -284,16 +284,9 @@ class Registry:
         self.cache.set(id, item)  # ttl = None
         return item
     
-    def load_items(self, category):
+    def scan_category(self, category):
         """Load from DB all items of a given category, ordered by IID. A generator."""
-        records = self.db.select_all(category.iid)
-        return self.decode_items(records, category)
-        
-    def decode_items(self, records, category = None):
-        """
-        Given a sequence of raw DB `records` decode each of them and yield as an item.
-        The items are saved in the registry and so they may override existing items.
-        """
+        records = self.db.scan_category(category.iid)
         for record in records:
             cid = record['cid']
             iid = record['iid']
@@ -307,11 +300,6 @@ class Registry:
                 item.load(data_json = record['data'])
                 yield item
         
-    # def _set(self, item, ttl = None):
-    #     """Add `item` to internal cache. If ttl=None, default (positive) TTL is used."""
-    #     assert item.id != (ROOT_CID, ROOT_CID)
-    #     self.cache.set(item.id, item, ttl)
-
     def get_path(self, cls):
         """
         Return a dotted module path of a given class or function as stored in a global Classpath.

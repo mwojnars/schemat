@@ -3,7 +3,7 @@
 //import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
 import { print, assert } from './utils.js'
-import { generic_schema } from './types.js'
+import { generic_schema, RECORD } from './types.js'
 // import * as mod_types from './types.js'
 
 // console.log("Schema:", Schema)
@@ -313,8 +313,7 @@ class Item_ {
 
     constructor(data_flat, category) {
         this.category = category;
-        this.data = data_flat; //this.load(data_flat);
-        // console.log('Item_() data_flat:', data_flat);
+        this.data = data_flat;
     }
 
     get(field) {
@@ -398,13 +397,11 @@ class Item {
             this.registry = category.registry
             this.cid      = category.iid
         }
-        //this.load(data)
-        // console.log('Item() data_flat:', data)
     }
 
-    static from_dump(state, category = null, use_schema = true) {
+    static async from_dump(state, category = null, use_schema = true) {
         /* Recreate an item that was serialized with Item.dump_item(), possibly at the server. */
-        let schema = use_schema ? category.get_schema() : generic_schema
+        let schema = use_schema ? await category.get_schema() : generic_schema
         let data = schema.decode(state['data'])
         delete state['data']
 
@@ -413,14 +410,31 @@ class Item {
         return item
     }
 
-    get(field) {
+    async get(field) {
+        await this.load(field)
         return this.data[field]
+        // TODO: category default
     }
-    load(data_flat) {
-        // TODO TODO TODO .....
-        // let fields = this.category.get('fields')       // specification of fields {field_name: schema}
-        // return fields.load_json(data_json)
-        return generic_schema.decode(data_flat)
+    async load(field = null, data_json = null, use_schema = true) {
+        /*
+        Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
+        Only with a not-None `data_json`, (re)loading takes place even if `this` was already loaded
+        - the newly loaded `data` fully replaces the existing this.data in such case.
+        */
+        // if field !== null && field in this.loaded: return      # this will be needed when partial loading from indexes is available
+        
+        if (this.has_data() && !data_json) return this
+        if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
+        if (!data_json) {
+            let record = await this.registry.load_record(this.id)
+            data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
+        }
+        let schema = use_schema ? await this.category.get_schema() : generic_schema
+        let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
+        this.data  = schema.decode(state)
+        this.bind()
+        print(`done item.load() of [${this.cid},${this.iid}]`)
+        return this
     }
     bind() {
         /*
@@ -460,31 +474,36 @@ class Item {
 }
 
 class Category extends Item {
-    get_schema(field = null) {
-        /* Return schema of a given field, or all fields (if field=null), in the latter case a FIELDS object is returned. */
-        // this.load()
-        let fields = this.get('fields')
-        if (!field) return fields
-        let schema = (field in fields) ? fields[field].schema : null
-        return schema || generic_schema
+
+    async fields() { await this.load('fields'); return await this.get('fields') }
+
+    async get_schema(field = null) {
+        /* Return schema of a given field, or all Item.data (if field=null). */
+        let fields = await this.fields()
+        if (!field)                                     // create and return a schema for the entire Item.data
+            return new RECORD(fields, {strict: true})
+        else {                                          // return a schema for a selected field only
+            let schema = (field in fields) ? fields[field] : null
+            return schema || generic_schema
+        }
     }
 }
 class RootCategory extends Category {
     cid = ROOT_CID
     iid = ROOT_CID
 
-    constructor(registry, load) {
+    constructor(registry) {
         super()
         this.registry = registry
         this.category = this                    // root category is a category for itself
-
-        if (load) this.load()
-        else {                                  // data is set from scratch only when the root is created anew rather than loaded
-            assert(false)
-            // from .core.root import root_data
-            // this.data = Data(root_data)
-        }
-        this.bind()
+    }
+    encode_data(use_schema = false) {
+        /* Same as Item.encode_data(), but use_schema is false to avoid circular dependency during deserialization. */
+        return super.encode_data(false)
+    }
+    async load(field = null, data_json = null, use_schema = false) {
+        /* Same as Item.load(), but use_schema is false to avoid circular dependency during deserialization. */
+        return await super.load(field, data_json, false)
     }
 }
 
@@ -575,20 +594,28 @@ class Database {}
 class AjaxDB extends Database {
     /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
 
-    base_url  = ""
-    preloaded = null        // list of item records that have been received on an initial web request to avoid subsequent remote calls
+    ajax_url        // base URL for AJAX calls, no trailing slash '/'
+    boot_items      // list of schema-encoded item records that were received on an initial web request to avoid subsequent remote calls
 
-    select(id) {
-        /* Retrieve an item from DB by its ID = (CID,IID) */
-        let url  = window.location.href
-        let data = undefined
+    constructor(ajax_url, boot_items = []) {
+        super()
+        this.ajax_url = ajax_url
+        this.boot_items = boot_items
+        assert(!ajax_url.endsWith('/'))
+    }
 
-        $.ajax({
-            method:         'POST',
-            url:            url + '@set',
-            data:           JSON.stringify(data),
-            contentType:    "application/json; charset=utf-8",
-        })
+    async select(id) {
+        /* Look up boot_items for a given `id` and return if found. */
+        let [cid, iid] = id
+        return this._from_boot(cid, iid) || await this._from_ajax(cid, iid)
+    }
+    _from_boot(cid, iid) {
+        for (item of this.boot_items)
+            if (item.cid === cid && item.iid === iid) return item
+    }
+    async _from_ajax(cid, iid) {
+        /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
+        return await $.get(`${this.ajax_url}/${cid}:${iid}`)
     }
 }
 
@@ -615,35 +642,34 @@ class Registry {
 
         this.classpath = classpath
     }
-    init_cache(items) {
-        /* Insert selected preloaded items into cache before booting. */
-    }
 
-    boot(items = []) {
-        // this.db.load()
-        this.init_cache(items)
-        this.root = this.create_root()
-        this.site_id = this.root.get(Registry.STARTUP_SITE)
+    async boot() {
+        this.root = await this.create_root()
+        this.site_id = await this.root.get(Registry.STARTUP_SITE)
     }
-    create_root(load = true) {
+    async create_root(load = true) {
         /*
         Create the RootCategory object, ID=(0,0). If `data` is provided,
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         */
-        this.root = new RootCategory(this, load)
-        // if (!load)                          # root created anew? this.db must be used directly (no stage/commit), because
-        //     this.db.insert(root)         # ...this.root already has an ID and it would get "updated" rather than inserted!
-        return this.root
+        let root = this.root = new RootCategory(this, load)
+        if (load) await root.load()
+        else                             // root created anew? this.db must be used directly (no stage/commit), because
+            // from .core.root import root_data
+            // root.data = root_data
+            this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
+        root.bind()
+        return root
     }
-    load_item(id) {
-        /* Load item record from DB and return as a dict with keys: cid, iid, data, all metadata etc. */
-        this.db.select(id)
+    async load_record(id) {
+        /* Load item record from server-side DB and return as a dict with keys: cid, iid, data (encoded), all metadata. */
+        return await this.db.select(id)
     }
 
     get_category(cid) { return this.get_item([ROOT_CID, cid]) }
 
-    get_item(id, version = null, load = false) {
+    get_item(id, version = null) {
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
@@ -656,7 +682,6 @@ class Registry {
             // separated to ensure proper handling of circular relationships between items
             item = this.create_stub(id)
 
-        if (load) item.load()
         return item
     }
     create_stub(id, category = null) {
@@ -691,9 +716,9 @@ class Registry {
 class LocalRegistry extends Registry {
     /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
 
-    constructor() {
+    constructor(boot_items, {ajax_url}) {
         super()
-        this.db    = new AjaxDB()
+        this.db    = new AjaxDB(ajax_url, boot_items)
         this.cache = new LocalCache()
     }
 }
@@ -706,15 +731,14 @@ class LocalRegistry extends Registry {
 
 export async function boot() {
 
-    let registry = globalThis.registry = new LocalRegistry
-    await registry.init_classpath()     // TODO: make sure that registry is NOT used before this call completes
-
     let config = read_data('#data-config')
     let items  = read_data('#data-items')
     print('data-config:', config)
     print('data-items: ', items)
 
-    registry.boot(items)
+    let registry = globalThis.registry = new LocalRegistry(items, config)
+    await registry.init_classpath()
+    await registry.boot()
 
     window.customElements.define('hw-item-page', Item.Page);
 

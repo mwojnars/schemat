@@ -101,7 +101,7 @@ class SimpleDB(Database):
             row = cur.fetchone()
             return self._make_record(row, id_)
 
-    def select_all(self, cid):
+    def scan_category(self, cid):
         """
         Load from DB all items of a given category (CID) ordered by IID, possibly with a limit.
         Items are returned as an iterable of records (dicts).
@@ -175,7 +175,7 @@ class FileDB(SimpleDB):
         row = id_ + (data, None, None)
         return self._make_record(row, id_)
 
-    def select_all(self, cid):
+    def scan_category(self, cid):
         
         for row in self.items.items():
             (cid_, iid_), data = row

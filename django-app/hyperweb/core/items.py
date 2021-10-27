@@ -259,11 +259,11 @@ base_hy = File_(
                 
                 # dump client configuration and preloaded items to json and embed them
                 $config = {'ajax_url': item.registry.site.ajax_url()}
-                $items  = [item.category.encode_item(), item.encode_item()]
+                $items  = item.preload_items()     #[item.category.encode_item(), item.encode_item()]
                 
                 from hyperweb.serialize import $json
-                data #data-config | $json.dumps(config)
-                data #data-items  | $json.dumps(items)
+                data #data-config | $json.dumps(config, separators = (',',':'))
+                data #data-items  | $json.dumps(items, separators = (',',':'))
                 
                 @extra
             
@@ -271,7 +271,7 @@ base_hy = File_(
         page_item category
             h2 | Items
             table
-                for item in list(category.registry.load_items(category))
+                for item in list(category.registry.scan_category(category))
                     tr
                         td / #{item.iid} &nbsp;
                         td
