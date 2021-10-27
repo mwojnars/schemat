@@ -260,35 +260,33 @@
     \ hyperweb.serialize import $JSON, $json\n        \n        custom \"hw-item-page-\"\
     \n            data #category | $item.category.dump_data(use_schema = False)\n\
     \            data #item     | $item.dump_data(use_schema = False)\n          \
-    \  # data #item   | $JSON.dump(item.data)\n            < catalog_1 $item\n   \
-    \         div style=\"text-align:right; padding-top:20px\"\n                button\
-    \ #cancel-changes .btn .btn-secondary disabled=False | Cancel\n              \
-    \  button #save-changes   .btn .btn-primary   disabled=False | Save\n\n    %page\
-    \ @body\n        doctype\n        ...html @body\n    \n    %page_item @extra item\n\
-    \        page\n            head\n                title | $item['name']? $item.ciid(False)\n\
-    \                assets\n                style / $item.registry.read('base.css')\n\
-    \    \n            # body .container : div .row\n            #   div .col-1\n\
-    \            #   div .col-10\n            body\n                h1\n         \
-    \           $ciid = item.ciid()\n                    try\n                   \
-    \     | $item['name']\n                        span style=\"font-size:40%; font-weight:normal\"\
-    \ / $ciid\n                    else / $ciid\n                \n              \
-    \  h2 | Properties\n                properties $item\n                \n     \
-    \           # dump client configuration and preloaded items to json and embed\
-    \ them\n                $config = {'ajax_url': item.registry.site.ajax_url()}\n\
-    \                $items  = item.preload_items()     #[item.category.encode_item(),\
-    \ item.encode_item()]\n                \n                from hyperweb.serialize\
-    \ import $json, $JSON\n                data #data-config | $JSON.dump64(config)\n\
-    \                data #data-items  | $JSON.dump64(items)\n                # data\
-    \ #data-config | $json.dumps(config, separators = (',',':'))\n               \
-    \ # data #data-items  | $json.dumps(items, separators = (',',':'))\n         \
-    \       \n                @extra\n            \n    %page_category category\n\
-    \        page_item category\n            h2 | Items\n            table\n     \
-    \           for item in list(category.registry.scan_category(category))\n    \
-    \                tr\n                        td / #{item.iid} &nbsp;\n       \
-    \                 td\n                            $ iname = item['name']? or item\n\
-    \                            try\n                                a href=$item.url()\
-    \ | $iname\n                            else\n                               \
-    \ | $iname (no URL)\n    \n    "
+    \  < catalog_1 $item\n            div style=\"text-align:right; padding-top:20px\"\
+    \n                button #cancel-changes .btn .btn-secondary disabled=False |\
+    \ Cancel\n                button #save-changes   .btn .btn-primary   disabled=False\
+    \ | Save\n\n    %page @body\n        doctype\n        ...html @body\n    \n  \
+    \  %page_item @extra item\n        page\n            head\n                title\
+    \ | $item['name']? $item.ciid(False)\n                assets\n               \
+    \ style / $item.registry.read('base.css')\n    \n            # body .container\
+    \ : div .row\n            #   div .col-1\n            #   div .col-10\n      \
+    \      body\n                h1\n                    $ciid = item.ciid()\n   \
+    \                 try\n                        | $item['name']\n             \
+    \           span style=\"font-size:40%; font-weight:normal\" / $ciid\n       \
+    \             else / $ciid\n                \n                h2 | Properties\n\
+    \                properties $item\n                \n                # dump client\
+    \ configuration and preloaded items to json and embed them\n                $config\
+    \ = {'ajax_url': item.registry.site.ajax_url()}\n                $items  = item.preload_items()\n\
+    \                \n                from hyperweb.serialize import $json, $JSON\n\
+    \                data #data-config | $JSON.dump64(config)\n                data\
+    \ #data-items  | $JSON.dump64(items)\n                # data #data-config | $JSON.dump(config)\n\
+    \                # data #data-items  | $JSON.dump(items)\n                \n \
+    \               @extra\n            \n    %page_category category\n        page_item\
+    \ category\n            h2 | Items\n            table\n                for item\
+    \ in list(category.registry.scan_category(category))\n                    tr\n\
+    \                        td / #{item.iid} &nbsp;\n                        td\n\
+    \                            $ iname = item['name']? or item\n               \
+    \             try\n                                a href=$item.url() | $iname\n\
+    \                            else\n                                | $iname (no\
+    \ URL)\n    \n    "
 - id: [3, 1]
   files:
     Site: [0, 10]

@@ -226,7 +226,6 @@ base_hy = File_(
         custom "hw-item-page-"
             data #category | $item.category.dump_data(use_schema = False)
             data #item     | $item.dump_data(use_schema = False)
-            # data #item   | $JSON.dump(item.data)
             < catalog_1 $item
             div style="text-align:right; padding-top:20px"
                 button #cancel-changes .btn .btn-secondary disabled=False | Cancel
@@ -259,13 +258,13 @@ base_hy = File_(
                 
                 # dump client configuration and preloaded items to json and embed them
                 $config = {'ajax_url': item.registry.site.ajax_url()}
-                $items  = item.preload_items()     #[item.category.encode_item(), item.encode_item()]
+                $items  = item.preload_items()
                 
                 from hyperweb.serialize import $json, $JSON
                 data #data-config | $JSON.dump64(config)
                 data #data-items  | $JSON.dump64(items)
-                # data #data-config | $json.dumps(config, separators = (',',':'))
-                # data #data-items  | $json.dumps(items, separators = (',',':'))
+                # data #data-config | $JSON.dump(config)
+                # data #data-items  | $JSON.dump(items)
                 
                 @extra
             

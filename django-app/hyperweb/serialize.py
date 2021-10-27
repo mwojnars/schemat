@@ -119,19 +119,19 @@ class JSON:
 
     @staticmethod
     def dump(obj, encode = None, type_ = None, compact = True, **json_format):
-        """`encode` is an optional encoding function: state=encode(obj)."""
+        """`encode` is an optional encoding function: state=encode(obj), or True for JSON.encode()."""
         
         base_format = dict(separators = (',', ':')) if compact else {}
         json_format = {**base_format, **json_format}            # manually configured format overrides the base_format defaults
         
-        state = encode(obj) if encode else JSON.encode(obj, type_)
+        state = JSON.encode(obj, type_) if encode is True else encode(obj) if encode else obj
         return json.dumps(state, ensure_ascii = False, **json_format)
     
     @staticmethod
     def load(dump, decode = None, type_ = None):
-        """`decode` is an optional dencoding function: obj=decode(state)."""
+        """`decode` is an optional dencoding function: obj=decode(state), or True for JSON.decode()."""
         state = json.loads(dump)
-        return decode(state) if decode else JSON.decode(state, type_)
+        return JSON.decode(state, type_) if decode is True else decode(state) if decode else state
     
     @staticmethod
     def encode(obj, type_ = None):
