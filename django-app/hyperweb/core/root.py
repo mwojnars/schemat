@@ -26,7 +26,7 @@ root_fields = dict(
     name         = STRING(info = "human-readable title of the category"),
     info         = STRING(),
     startup_site = OBJECT(),
-    prototype    = ITEM(info = "Base category from which this one inherits. Multiple prototypes are allowed, the first ones override settings of subsequent ones."),
+    prototype    = ITEM(info = "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."),
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),

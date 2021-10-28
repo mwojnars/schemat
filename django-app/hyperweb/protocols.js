@@ -1,10 +1,11 @@
 "use strict";
 
-//import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
-
 import { print, assert } from './utils.js'
 import { generic_schema, RECORD } from './types.js'
 // import * as mod_types from './types.js'
+
+// import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
+// print("LitElement:", LitElement)
 
 // console.log("Schema:", Schema)
 // console.log("mod_types:", mod_types, typeof mod_types)
@@ -16,6 +17,24 @@ const ROOT_CID = 0
  **  UTILITIES
  **
  */
+
+let e = React.createElement
+
+function _e(name) {
+    return (...args) =>
+        args[0]?.$$typeof || typeof args[0] === 'string' ?      // is the 1st arg a React element or a string
+            e(name, null, ...args) :
+            e(name, args[0], ...args.slice(1))
+}
+
+let DIV  = _e('div')
+let SPAN = _e('span')
+let P    = _e('p')
+let H1   = _e('h1')
+let H2   = _e('h2')
+let H3   = _e('h3')
+
+/*************************************************************************************************/
 
 const htmlEscapes = {
     '&': '&amp',
@@ -341,6 +360,19 @@ class Item_ {
 window.customElements.define('hw-item-page-', Item_.Page);
 
 
+/**********************************************************************************************************************/
+
+// import * as react from "./react.production.min.js"
+// import "https://unpkg.com/react@17/umd/react.development.js?module"
+// import {ReactDOM} from "https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+
+// print('react:', react)
+// print(react['Module'])
+// print(react.exports)
+// print(react.React)
+// print('ReactDOM:', ReactDOM)
+
+
 /**********************************************************************************************************************
  **
  **  ITEM & CATEGORY
@@ -450,28 +482,38 @@ class Item {
 
     static Properties = class extends Catalog {}
 
-    static Page = class extends CustomElement {
-        static props = {useShadowDOM: true,}
-        init() {
-            let g = globalThis
+    // static Page = class extends CustomElement {
+    //     static props = {useShadowDOM: true,}
+    //     init() {
+    //         let g = globalThis
+    //
+    //         let dump_catg = this.read_data('p#category', 'json');
+    //         console.log('Item.Page.init() dump_catg:', dump_catg)
+    //         g.category = Item.from_dump(dump_catg, null, false)
+    //         console.log('Item.Page.init() category:', g.category)
+    //
+    //         // let dump_item = this.read_data('p#item', 'json');
+    //         // console.log('Item.Page.init() dump_item:', dump_item)
+    //         // g.item     = Item.from_dump(dump_item, g.category)
+    //         // console.log('Item.Page.init() item:', g.item)
+    //
+    //         // g.category = this._category = new Item_(this.read_data('p#category'));
+    //         // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+    //     }
+    //     render = () => `
+    //         <h2>Properties</h2>
+    //         <hw-item-properties></hw-item-properties>
+    //     `
+    // }
+    // static Widget = class extends React.Component {
+    // }
 
-            let dump_catg = this.read_data('p#category', 'json');
-            console.log('Item.Page.init() dump_catg:', dump_catg)
-            g.category = Item.from_dump(dump_catg, null, false)
-            console.log('Item.Page.init() category:', g.category)
-
-            // let dump_item = this.read_data('p#item', 'json');
-            // console.log('Item.Page.init() dump_item:', dump_item)
-            // g.item     = Item.from_dump(dump_item, g.category)
-            // console.log('Item.Page.init() item:', g.item)
-
-            // g.category = this._category = new Item_(this.read_data('p#category'));
-            // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
-        }
-        render = () => `
-            <h2>Properties</h2>
-            <hw-item-properties></hw-item-properties>
-        `
+    static Page = class extends React.Component {
+        // render = () => DIV(`
+        //     <h2>Properties (React)</h2>
+        //     <p>Item ID: ${this.props.id}</p>
+        // `)
+        render = () => DIV(H2('Properties (React)'), P(`Item ID: [${this.props.id}]`))
     }
 }
 
@@ -718,9 +760,9 @@ class Registry {
 class LocalRegistry extends Registry {
     /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
 
-    constructor(boot_items, {ajax_url}) {
+    constructor(boot_items, config) {
         super()
-        this.db    = new AjaxDB(ajax_url, boot_items)
+        this.db    = new AjaxDB(config['ajax_url'], boot_items)
         this.cache = new LocalCache()
     }
 }
@@ -733,8 +775,8 @@ class LocalRegistry extends Registry {
 
 export async function boot() {
 
-    let config = read_data('#data-config', 'json+base64')
-    let items  = read_data('#data-items', 'json+base64')
+    let config = read_data('#data-config') //, 'json+base64')
+    let items  = read_data('#data-items') //, 'json+base64')
     print('data-config:', config)
     print('data-items: ', items)
 
@@ -742,6 +784,14 @@ export async function boot() {
     await registry.init_classpath()
     await registry.boot()
 
-    window.customElements.define('hw-item-page', Item.Page);
+    // let {start, view} = config
+    // let start_item = registry.get_item(start)
+    // let method = `show_${view}`
+    // start_item[method]()
 
+    // window.customElements.define('hw-item-page', Item.Page);
+
+    let react_root = document.querySelector("#react-root")
+    ReactDOM.render(e(Item.Page, {id: config.item}), react_root)
+    // ReactDOM.render(e("p", null, "react component"), react_root)
 }

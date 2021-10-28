@@ -332,7 +332,7 @@ class Item(object, metaclass = MetaItem):
         
         # search for a Hypertag script in item's property `endpoints`
         template = self.category.get('endpoints', {}).get(endpoint)   #or self.templates.get(endpoint)
-        if template: return self.render(template, request)
+        if template: return self.render_hypertag(template, request)
 
         # search for a handler method inside the class
         handler = self.handlers.get(endpoint)
@@ -340,7 +340,7 @@ class Item(object, metaclass = MetaItem):
 
         raise InvalidHandler(f'Endpoint "{endpoint}" not found in {self} ({self.__class__})')
         
-    def render(self, template, request):
+    def render_hypertag(self, template, request):
         """Render a given template script as a response to a given request."""
         
         app   = request.app

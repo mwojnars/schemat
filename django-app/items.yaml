@@ -16,7 +16,7 @@
     info: {'@': hyperweb.types.STRING}
     startup_site: {'@': hyperweb.types.OBJECT}
     prototype: {info: 'Base category from which this one inherits. Multiple prototypes
-        are allowed, the first ones override settings of subsequent ones.', '@': hyperweb.types.ITEM}
+        are allowed, the first one overrides settings of subsequent ones.', '@': hyperweb.types.ITEM}
     class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
         class. Or the class name that should be imported from `class_code` after its
         execution., '@': hyperweb.types.STRING}
@@ -207,13 +207,13 @@
     \ rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\"\
     \ crossorigin=\"anonymous\"\n        script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js\"\
     \ integrity=\"sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM\"\
-    \ crossorigin=\"anonymous\"\n        # Lodash 4.17.21 (https://lodash.com/)\n\
-    \        script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
+    \ crossorigin=\"anonymous\"\n        # # Lodash 4.17.21 (https://lodash.com/)\n\
+    \        # script src=\"https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js\"\
     \ integrity=\"sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=\" crossorigin=\"\
-    anonymous\"\n\n        # # React\n        # # Uwaga: podczas wdrażania aplikacji\
-    \ do środowiska produkcyjnego, zamień \"development.js\" na \"production.min.js\"\
-    \n        # script src=\"https://unpkg.com/react@17/umd/react.development.js\"\
-    \ crossorigin=True\n        # script src=\"https://unpkg.com/react-dom@17/umd/react-dom.development.js\"\
+    anonymous\"\n\n        # React\n        # Uwaga: podczas wdrażania aplikacji do\
+    \ środowiska produkcyjnego, zamień \"development.js\" na \"production.min.js\"\
+    \n        script src=\"https://unpkg.com/react@17/umd/react.development.js\" crossorigin=True\n\
+    \        script src=\"https://unpkg.com/react-dom@17/umd/react-dom.development.js\"\
     \ crossorigin=True\n        \n        # # Lit\n        # script type=\"module\"\
     \ !\n        #     import {LitElement, html, css} from 'https://unpkg.com/lit-element/lit-element.js?module';\n\
     \        #     window.LitElement = LitElement;\n        #\n        #     class\
@@ -274,19 +274,20 @@
     \             else / $ciid\n                \n                h2 | Properties\n\
     \                properties $item\n                \n                # dump client\
     \ configuration and preloaded items to json and embed them\n                $config\
-    \ = {'ajax_url': item.registry.site.ajax_url()}\n                $items  = item.preload_items()\n\
-    \                \n                from hyperweb.serialize import $json, $JSON\n\
-    \                data #data-config | $JSON.dump64(config)\n                data\
-    \ #data-items  | $JSON.dump64(items)\n                # data #data-config | $JSON.dump(config)\n\
-    \                # data #data-items  | $JSON.dump(items)\n                \n \
-    \               @extra\n            \n    %page_category category\n        page_item\
-    \ category\n            h2 | Items\n            table\n                for item\
-    \ in list(category.registry.scan_category(category))\n                    tr\n\
-    \                        td / #{item.iid} &nbsp;\n                        td\n\
-    \                            $ iname = item['name']? or item\n               \
-    \             try\n                                a href=$item.url() | $iname\n\
-    \                            else\n                                | $iname (no\
-    \ URL)\n    \n    "
+    \ = {'ajax_url': item.registry.site.ajax_url(), 'item': list(item.id)}\n     \
+    \           $items  = item.preload_items()\n                \n               \
+    \ from hyperweb.serialize import $json, $JSON\n                # data #data-config\
+    \ | $JSON.dump64(config)\n                # data #data-items  | $JSON.dump64(items)\n\
+    \                data #data-config | $JSON.dump(config)\n                data\
+    \ #data-items  | $JSON.dump(items)\n                \n                div #react-root\n\
+    \                \n                @extra\n            \n    %page_category category\n\
+    \        page_item category\n            h2 | Items\n            table\n     \
+    \           for item in list(category.registry.scan_category(category))\n    \
+    \                tr\n                        td / #{item.iid} &nbsp;\n       \
+    \                 td\n                            $ iname = item['name']? or item\n\
+    \                            try\n                                a href=$item.url()\
+    \ | $iname\n                            else\n                               \
+    \ | $iname (no URL)\n    \n    "
 - id: [3, 1]
   files:
     Site: [0, 10]
@@ -308,6 +309,8 @@
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/types.js
 - id: [2, 4]
   path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/utils.js
+- id: [2, 5]
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/react.production.min.js
 - id: [3, 4]
   files:
     system: [3, 1]
@@ -318,6 +321,7 @@
     serialize.js: [2, 2]
     types.js: [2, 3]
     utils.js: [2, 4]
+    react.production.min.js: [2, 5]
 - id: [6, 1]
   name: Admin
 - id: [7, 1]

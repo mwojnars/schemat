@@ -137,13 +137,13 @@ base_hy = File_(
         # Bootstrap 5.0.2
         link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"
         script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"
-        # Lodash 4.17.21 (https://lodash.com/)
-        script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
+        # # Lodash 4.17.21 (https://lodash.com/)
+        # script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"
 
-        # # React
-        # # Uwaga: podczas wdrażania aplikacji do środowiska produkcyjnego, zamień "development.js" na "production.min.js"
-        # script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin=True
-        # script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin=True
+        # React
+        # Uwaga: podczas wdrażania aplikacji do środowiska produkcyjnego, zamień "development.js" na "production.min.js"
+        script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin=True
+        script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin=True
         
         # # Lit
         # script type="module" !
@@ -257,14 +257,16 @@ base_hy = File_(
                 properties $item
                 
                 # dump client configuration and preloaded items to json and embed them
-                $config = {'ajax_url': item.registry.site.ajax_url()}
+                $config = {'ajax_url': item.registry.site.ajax_url(), 'item': list(item.id)}
                 $items  = item.preload_items()
                 
                 from hyperweb.serialize import $json, $JSON
-                data #data-config | $JSON.dump64(config)
-                data #data-items  | $JSON.dump64(items)
-                # data #data-config | $JSON.dump(config)
-                # data #data-items  | $JSON.dump(items)
+                # data #data-config | $JSON.dump64(config)
+                # data #data-items  | $JSON.dump64(items)
+                data #data-config | $JSON.dump(config)
+                data #data-items  | $JSON.dump(items)
+                
+                div #react-root
                 
                 @extra
             
@@ -310,6 +312,7 @@ filesystem = Folder_(
         'serialize.js':     FileLocal_(path = f'{_path}/serialize.js'),
         'types.js':         FileLocal_(path = f'{_path}/types.js'),
         'utils.js':         FileLocal_(path = f'{_path}/utils.js'),
+        'react.production.min.js': FileLocal_(path = f'{_path}/react.production.min.js'),
         
         # 'item.hy':      page_item,          # generic page of an item
         # 'category.hy':  page_category,      # generic page of a category
