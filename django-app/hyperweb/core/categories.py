@@ -86,10 +86,6 @@ Folder_ = Category_(
 #             def get_category(self, name):
 #                 return self['categories'][name]
 #     """,
-#     # get_category = Method("""
-#     #     def get_category(self, name):
-#     #         return self['categories'][name]
-#     # """),
 # )
 
 #####################################################################################################################################################

@@ -76,13 +76,82 @@ class HyItemLoader(HyLoader):
 
 #####################################################################################################################################################
 #####
+#####  SITE
+#####
+
+class Site(Item):
+    """
+    Global configuration of all applications that comprise this website, with URL routing etc.
+    """
+    
+    @property
+    @cached(ttl = 60)
+    def hypertag(self):
+        """Return a HyperHTML runtime with customized loaders to search through an internal filesystem of items."""
+        files = self.get('filesystem')
+        loaders = [HyItemLoader(files), PyLoader]       # PyLoader is needed to load Python built-ins
+        return HyperHTML(loaders)
+        
+    # def bind(self):
+    #     self._qualifiers = bidict()
+    #     for app in self.get_list('app'):
+    #         for space_name, space in app.get('spaces').items():
+    #             for category_name, category in space.get('categories').items():
+    #                 qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
+    #                 self._qualifiers[qualifier] = category.iid
+
+    # def get_category(self, cid):
+    #     """Retrieve a category through the Registry that belongs to the current thread."""
+    #     return self.registry.get_category(cid)
+    
+    # def get_item(self, *args, **kwargs):
+    #     """Retrieve an item through the Registry that belongs to the current thread."""
+    #     return self.registry.get_item(*args, **kwargs)
+    
+    def ajax_url(self):
+        """Absolute base URL for AJAX calls originating at a client UI."""
+        return self['base_url'] + '/ajax'
+
+    def get_url(self, item, route = '', relative = False, no_base = False, params = None):
+        """Return an absolute or relative URL of `item` as assigned by the application anchored at `route`."""
+        app  = self['application']
+        base = self['base_url']
+        
+        # relative URL
+        path = app.url_path(item, route, relative = relative, params = params)
+        if relative: return path
+        
+        #if path[:1] != '/': path = '/' + path
+        path = '/' + path
+        if no_base: return path                         # absolute URL without base
+
+        if base[-1:] == '/': base = base[:-1]
+        return base + path                              # absolute URL with base
+    
+    def handle(self, request):
+        """Forward the request to a root application configured in the `app` property."""
+        url  = request.url
+        app  = self['application']
+        base = self['base_url']
+        if base[-1:] == '/': base = base[:-1]           # truncate the trailing '/'
+        
+        path = url[len(base):]                          # path starts with '/', or is an empty string!
+
+        if not url.startswith(base): raise Exception(f'page not found: {url}')
+
+        # request.base_url = base
+        return app.handle(request, path)
+
+
+#####################################################################################################################################################
+#####
 #####  APPLICATIONS
 #####
 
 class Application(Item):
     """
     An application implements a mapping of URL paths to item methods, and the way back.
-    Some application classes may allow for nested applications.
+    Some application classes may support nested applications.
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     """
     SEP_ROUTE    = '/'      # separator of route segments in URL, each segment corresponds to another (sub)application
@@ -296,75 +365,8 @@ class AppSpaces(Application):
 
 #####################################################################################################################################################
 #####
-#####  SITE
+#####  FILES & FOLDERS
 #####
-
-class Site(Item):
-    """
-    Global configuration of all applications that comprise this website, with URL routing etc.
-    """
-    
-    @property
-    @cached(ttl = 60)
-    def hypertag(self):
-        """Return a HyperHTML runtime with customized loaders to search through an internal filesystem of items."""
-        files = self.get('filesystem')
-        loaders = [HyItemLoader(files), PyLoader]       # PyLoader is needed to load Python built-ins
-        return HyperHTML(loaders)
-        
-    # def bind(self):
-    #     self._qualifiers = bidict()
-    #     for app in self.get_list('app'):
-    #         for space_name, space in app.get('spaces').items():
-    #             for category_name, category in space.get('categories').items():
-    #                 qualifier = f"{space_name}.{category_name}"         # space-category qualifier of item IDs in URLs
-    #                 self._qualifiers[qualifier] = category.iid
-
-    def get_category(self, cid):
-        """Retrieve a category through the Registry that belongs to the current thread."""
-        return self.registry.get_category(cid)
-    
-    def get_item(self, *args, **kwargs):
-        """Retrieve an item through the Registry that belongs to the current thread."""
-        return self.registry.get_item(*args, **kwargs)
-        
-    def get_route(self, ):
-        pass
-        
-    def get_url(self, item, route = '', relative = False, no_base = False, params = None):
-        """Return an absolute or relative URL of `item` as assigned by the application anchored at `route`."""
-        app  = self['application']
-        base = self['base_url']
-        
-        # relative URL
-        path = app.url_path(item, route, relative = relative, params = params)
-        if relative: return path
-        
-        #if path[:1] != '/': path = '/' + path
-        path = '/' + path
-        if no_base: return path                         # absolute URL without base
-
-        if base[-1:] == '/': base = base[:-1]
-        return base + path                              # absolute URL with base
-    
-    def ajax_url(self):
-        """Absolute base URL for AJAX calls originating at a client UI."""
-        return self['base_url'] + '/ajax'
-
-    def handle(self, request):
-        """Forward the request to a root application configured in the `app` property."""
-        url  = request.url
-        app  = self['application']
-        base = self['base_url']
-        if base[-1:] == '/': base = base[:-1]           # truncate the trailing '/'
-        
-        path = url[len(base):]                          # path starts with '/', or is an empty string!
-
-        if not url.startswith(base): raise Exception(f'page not found: {url}')
-
-        # request.base_url = base
-        return app.handle(request, path)
-
 
 class Folder(Item):
     """"""

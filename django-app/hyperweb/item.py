@@ -461,7 +461,7 @@ class Category(Item):
     @property
     def fields(self): self.load('fields'); return self.get('fields')
     
-    def __call__(self, __data__ = None, __stage__ = True, **props):
+    def new(self, __data__ = None, __stage__ = True, **props):
         """
         Create a newborn item of this category (not yet in DB); connect it with self.registry;
         mark it as pending for insertion to DB if __stage__=True (default).
@@ -470,6 +470,8 @@ class Category(Item):
         item = itemclass(category = self, data = __data__ or props)
         if __stage__: self.registry.stage(item)                         # mark `item` for insertion on the next commit()
         return item
+
+    __call__ = new
     
     def issubcat(self, category):
         """
@@ -525,7 +527,7 @@ class Category(Item):
     #####  Handlers & templates  #####
 
     @handler('new')
-    def new(self, request):
+    def _new_(self, request):
         """Web handler that creates a new item of this category based on `request` data."""
         
         data = MultiDict()
@@ -539,7 +541,7 @@ class Category(Item):
             
         # TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         
-        item = self(__data__ = data)
+        item = self.new(__data__ = data)
         item.commit()
         
         return html_escape(f"Item created: {item}")

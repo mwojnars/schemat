@@ -8,7 +8,7 @@ export let print = console.log
 
 export function assert(test, msg) {
     if (test) return
-    throw `assertion failed: ${msg}`
+    throw Error(`assertion failed: ${msg}`)
     // console.assert(test)
 }
 
@@ -44,7 +44,13 @@ export class Types {
 
     // create a new object (dict) by mapping items of `obj` to new [key,value] pairs;
     // does NOT detect if two entries are mapped to the same key (!)
-    static mapDict        = (obj,fun)  => Object.fromEntries(Object.entries(obj).map(([k,v]) => fun(k,v)))
+    static mapDict        = (obj,fun) => Object.fromEntries(Object.entries(obj).map(([k,v]) => fun(k,v)))
+
+    // like mapDict, but for asynchronous `fun`
+    static amapDict       = async (obj,fun) =>
+        Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k,v]) => await fun(k,v))))
+
+    static amap           = async (arr,fun) => await Promise.all(arr.map(async v => await fun(v)))
 
     static getstate       = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
     static setstate       = (cls,state) => {        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly
@@ -56,4 +62,32 @@ export class Types {
 
 }
 export class T extends Types {}  // T is an alias for Types
+
+
+/**********************************************************************************************************************
+ **
+ **  REACT
+ **
+ */
+
+export let e = React.createElement         // React must be imported in global scope
+
+function _e(name) {
+    return (...args) =>
+        args[0]?.$$typeof || typeof args[0] === 'string' ?      // if the 1st arg is a React element or string, no props are present
+            e(name, null, ...args) :
+            e(name, args[0], ...args.slice(1))
+}
+
+export let DIV  = _e('div')
+export let SPAN = _e('span')
+export let A    = _e('A')
+export let B    = _e('B')
+export let I    = _e('I')
+export let P    = _e('p')
+export let H1   = _e('h1')
+export let H2   = _e('h2')
+export let H3   = _e('h3')
+
+/*************************************************************************************************/
 

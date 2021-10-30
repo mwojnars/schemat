@@ -24,7 +24,7 @@ export class Schema {
         if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
     }
 
-    check(value) { if (!this.valid(value)) throw "Invalid" }
+    check(value) { if (!this.valid(value)) throw new DataError("Invalid") }
     valid(value) { return false }
 
     dump_json(value, format = {}) {
@@ -39,9 +39,9 @@ export class Schema {
         return JSON.stringify(state, replacer, space)
     }
 
-    load_json(dump) {
+    async load_json(dump) {
         let state = JSON.parse(dump)
-        return this.decode(state)
+        return await this.decode(state)
     }
 
     encode(value) {
@@ -54,9 +54,9 @@ export class Schema {
         return JSONx.encode(value)
     }
 
-    decode(state) {
+    async decode(state) {
         /* Convert a serializable "state" as returned by encode() back to an original custom object. */
-        return JSONx.decode(state)
+        return await JSONx.decode(state)
     }
 
     toString() {
@@ -94,13 +94,13 @@ export class OBJECT extends Schema {
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw `invalid object type, expected one of ${this._types}, but got ${T.getClass(obj)}`
+            throw new DataError(`invalid object type, expected one of ${this._types}, but got ${T.getClass(obj)}`)
         return JSONx.encode(obj)
     }
-    decode(state) {
-        let obj = JSONx.decode(state)
+    async decode(state) {
+        let obj = await JSONx.decode(state)
         if (!this.valid(obj))
-            throw `invalid object type after decoding, expected one of ${this._types}, but got ${T.getClass(obj)}`
+            throw new DataError(`invalid object type after decoding, expected one of ${this._types}, but got ${T.getClass(obj)}`)
         return obj
     }
 }
@@ -121,8 +121,8 @@ export class CLASS extends Schema {
         if (value === null) return null
         return globalThis.registry.get_path(value)
     }
-    decode(value) {
-        if (typeof value !== "string") throw `expected a string after decoding, not ${value}`
+    async decode(value) {
+        if (typeof value !== "string") throw new DataError(`expected a string after decoding, not ${value}`)
         return globalThis.registry.get_class(value)
     }
 }
@@ -138,13 +138,13 @@ export class Primitive extends Schema {
 
     check(value) {
         let t = this.constructor.type
-        if (typeof value !== t) throw `expected a primitive value of type "${t}", got ${value} instead`
+        if (typeof value !== t) throw new DataError(`expected a primitive value of type "${t}", got ${value} instead`)
     }
     encode(value) {
         this.check(value)
         return value
     }
-    decode(value) {
+    async decode(value) {
         this.check(value)
         return value
     }
@@ -184,37 +184,38 @@ export class ITEM extends Schema {
         super(params)
         if (category) this.category = category      // (optional) category of items to be encoded; undefined means all items can be encoded
     }
-    get cid() {
+    get _cid() {
+        // if (!T.isMissing(this.cid)) return this.cid
         return this.category ? this.category.iid : null
     }
     encode(item) {
         if (!item.has_id())
-            throw `item to be encoded has missing or incomplete ID: ${item.id}`
+            throw new DataError(`item to be encoded has missing or incomplete ID: ${item.id}`)
 
-        let cid = this.cid
+        let cid = this._cid
         if (cid === null) return item.id
         if (cid === item.cid) return item.iid
-        throw `incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`
+        throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
     }
-    decode(value) {
-        let ref_cid = this.cid
+    async decode(value) {
+        let ref_cid = this._cid
         let cid, iid
 
-        if (typeof value === "number")
+        if (typeof value === "number") {
+            if (ref_cid === null) throw new DataError(`expected a (CID,IID) tuple, but got only IID (${iid})`)
+            cid = ref_cid
             iid = value
-            if (ref_cid === null) throw `expected a (CID,IID) tuple, but got only IID (${iid})`
-        else
+        } else
             if (value instanceof Array && value.length === 2)
                 [cid, iid] = value
-        else
-            throw `expected a (CID,IID) tuple, got ${value} instead during decoding`
+            else
+                throw new DataError(`expected a (CID,IID) tuple, got ${value} instead during decoding`)
 
-        if (!Number.isInteger(cid)) throw `expected CID to be an integer, got ${cid} instead during decoding`
-        if (!Number.isInteger(iid)) throw `expected IID to be an integer, got ${iid} instead during decoding`
-        if (cid === null)
-            cid = ref_cid
+        // if (cid === null) cid = ref_cid
+        if (!Number.isInteger(cid)) throw new DataError(`expected CID to be an integer, got ${cid} instead during decoding`)
+        if (!Number.isInteger(iid)) throw new DataError(`expected IID to be an integer, got ${iid} instead during decoding`)
 
-        return globalThis.registry.get_item([cid, iid])
+        return await globalThis.registry.get_item([cid, iid])
     }
 }
 
@@ -243,7 +244,7 @@ export class DICT extends Schema {
     }
     encode(d) {
         let type = this.type || Object
-        if (!(d instanceof type)) throw `expected an object of type ${type}, got ${d} instead`
+        if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
 
         let schema_keys   = this.keys || this.constructor.keys_default
         let schema_values = this.values || this.constructor.values_default
@@ -252,14 +253,14 @@ export class DICT extends Schema {
         // encode keys & values through predefined field types
         for (let [key, value] of Object.entries(d)) {
             let k = schema_keys.encode(key)
-            if (k in state) throw `two different keys encoded to the same state (${k}) in DICT, one of them: ${key}`
+            if (k in state) throw new DataError(`two different keys encoded to the same state (${k}) in DICT, one of them: ${key}`)
             state[k] = schema_values.encode(value)
         }
         return state
     }
-    decode(state) {
+    async decode(state) {
 
-        if (typeof state != "object") throw `expected an object as state for decoding, got ${state} instead`
+        if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
         let schema_keys   = this.keys || this.constructor.keys_default
         let schema_values = this.values || this.constructor.values_default
@@ -267,9 +268,9 @@ export class DICT extends Schema {
 
         // decode keys & values through predefined field types
         for (let [key, value] of Object.entries(state)) {
-            let k = schema_keys.decode(key)
-            if (k in d) throw `two different keys of state decoded to the same key (${key}) of output object, one of them: ${k}`
-            d[k] = schema_values.decode(value)
+            let k = await schema_keys.decode(key)
+            if (k in d) throw new DataError(`two different keys of state decoded to the same key (${key}) of output object, one of them: ${k}`)
+            d[k] = await schema_values.decode(value)
         }
         return d
     }
@@ -293,7 +294,7 @@ export class CATALOG extends DICT {
     static keys_default = new STRING
 
     constructor(values, keys, type, params = {}) {
-        if (keys && !(keys instanceof STRING)) throw `schema of keys must be an instance of STRING or its subclass, not ${keys}`
+        if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
         super(keys, values, type, params)
     }
     toString() {
@@ -357,10 +358,10 @@ export class RECORD extends Schema {
         // state encoding
         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
     }
-    decode(state) {
+    async decode(state) {
 
         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClass(state)}`)
-        let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
+        let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
         let type = this._type
         if (type) return T.setstate(type, data)
         return data

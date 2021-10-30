@@ -20,9 +20,9 @@ export class JSONx {
         let state = JSONx.encode(obj, type);
         return JSON.stringify(state);
     }
-    static load(dump, type = null) {
+    static async load(dump, type = null) {
         let state = JSON.parse(dump);
-        return JSONx.decode(state, type);
+        return await JSONx.decode(state, type);
     }
 
     static encode(obj, type = null) {
@@ -37,7 +37,7 @@ export class JSONx {
         let of_type = T.ofType(obj, type)
         let state
 
-        if (obj === undefined)          throw "Can't encode an `undefined` value"
+        if (obj === undefined)      throw "Can't encode an `undefined` value"
         if (T.isPrimitiveObj(obj))  return obj
         if (T.isArray(obj))         return JSONx.encode_list(obj)
 
@@ -79,7 +79,7 @@ export class JSONx {
         return state
     }
 
-    static decode(state, type = null) {
+    static async decode(state, type = null) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
@@ -92,7 +92,7 @@ export class JSONx {
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_DICT)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
-            return JSONx.decode_dict(state)
+            return await JSONx.decode_dict(state)
         }
 
         // determine the expected class (constructor function) for the output object
@@ -113,7 +113,7 @@ export class JSONx {
                 state = state_attr;
             }
             if (classname === JSONx.FLAG_ITEM)
-                return registry.get_item(state);
+                return await registry.get_item(state);
             cls = registry.get_class(classname);
         }
         else cls = Object
@@ -122,15 +122,15 @@ export class JSONx {
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
-        if (cls === Array)              return JSONx.decode_list(state)
-        if (cls === Object)             return JSONx.decode_dict(state)
-        if (cls === Set)                return new cls(JSONx.decode_list(state))
+        if (cls === Array)          return await JSONx.decode_list(state)
+        if (cls === Object)         return await JSONx.decode_dict(state)
+        if (cls === Set)            return new cls(await JSONx.decode_list(state))
 
         let Item = registry.get_class("hyperweb.core.Item")
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
-            return registry.get_item(state)
+            return await registry.get_item(state)
 
-        state = JSONx.decode_dict(state)
+        state = await JSONx.decode_dict(state)
         // let obj = JSONx.decode_dict(state)
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
@@ -138,31 +138,33 @@ export class JSONx {
         return T.setstate(cls, state)
     }
 
-    static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
-    static decenc(state) { return JSONx.encode(JSONx.decode(state)) }       // for testing purposes
+    static async encdec(obj)   { return await JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
+    static async decenc(state) { return JSONx.encode(await JSONx.decode(state)) }       // for testing purposes
 
     static encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
         return values.map(v => JSONx.encode(v))
     }
-    static decode_list(state) {
+    static async decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return state.map(v => JSONx.decode(v))
+        return await Promise.all(state.map(async v => await JSONx.decode(v)))
     }
     static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
-        for (let [key, value] of Object.entries(obj))
+        for (let [key, value] of Object.entries(obj)) {
             if (typeof key !== "string")
                 throw `Non-serializable object state, contains a non-string key: ${key}`
             if (value === undefined)
                 delete obj[key]
-
-        let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
-        return Object.fromEntries(entries)
+        }
+        return T.mapDict(obj, (k, v) => [k, JSONx.encode(v)])
+        // let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
+        // return Object.fromEntries(entries)
     }
-    static decode_dict(state) {
+    static async decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        let entries = Object.entries(state).map(([k, v]) => [k, JSONx.decode(v)])
-        return Object.fromEntries(entries)
+        return await T.amapDict(state, async (k, v) => [k, await JSONx.decode(v)])
+        // let entries = await Promise.all(Object.entries(state).map(async ([k, v]) => [k, await JSONx.decode(v)]))
+        // return Object.fromEntries(entries)
     }
 }

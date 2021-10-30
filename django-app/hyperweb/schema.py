@@ -594,11 +594,11 @@ class ITEM(Schema):
     
     # the required category or CID of items to be encoded; if None, all items can be encoded
     category = None
-    cid      = None
+    # cid      = None
     
-    def __init__(self, category = None, cid = None, **params):
+    def __init__(self, category = None, **params):    #cid = None,
         super(ITEM, self).__init__(**params)
-        if cid is not None: self.cid = cid
+        # if cid is not None: self.cid = cid
         if category is not None: self.category = category
             # if category.iid is None:
             #     print(f"WARNING: category {category} has empty ID in ITEM.__init__()")
@@ -606,7 +606,7 @@ class ITEM(Schema):
             # self.cid = category.iid
     
     def _get_cid(self):
-        if self.cid is not None: return self.cid
+        # if self.cid is not None: return self.cid
         if self.category: return self.category.iid
         return None
     

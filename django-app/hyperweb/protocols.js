@@ -1,7 +1,8 @@
 "use strict";
 
 import { print, assert } from './utils.js'
-import { generic_schema, RECORD } from './types.js'
+import { generic_schema } from './types.js'
+import { RootCategory, ROOT_CID } from './item.js'
 // import * as mod_types from './types.js'
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -10,31 +11,11 @@ import { generic_schema, RECORD } from './types.js'
 // console.log("Schema:", Schema)
 // console.log("mod_types:", mod_types, typeof mod_types)
 
-const ROOT_CID = 0
-
 /**********************************************************************************************************************
  **
  **  UTILITIES
  **
  */
-
-let e = React.createElement
-
-function _e(name) {
-    return (...args) =>
-        args[0]?.$$typeof || typeof args[0] === 'string' ?      // is the 1st arg a React element or a string
-            e(name, null, ...args) :
-            e(name, args[0], ...args.slice(1))
-}
-
-let DIV  = _e('div')
-let SPAN = _e('span')
-let P    = _e('p')
-let H1   = _e('h1')
-let H2   = _e('h2')
-let H3   = _e('h3')
-
-/*************************************************************************************************/
 
 const htmlEscapes = {
     '&': '&amp',
@@ -341,10 +322,10 @@ class Item_ {
         return this.data[field];                        // TODO: support repeated keys (MultiDict)
     }
 
-    load(data_flat) {
+    async load(data_flat) {
         // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
         // return fields.load_json(data_json);
-        return generic_schema.decode(data_flat);
+        return await generic_schema.decode(data_flat);
         // return MultiDict(...);
     }
 
@@ -373,12 +354,6 @@ window.customElements.define('hw-item-page-', Item_.Page);
 // print('ReactDOM:', ReactDOM)
 
 
-/**********************************************************************************************************************
- **
- **  ITEM & CATEGORY
- **
- */
-
 // class CatalogAtomicEntry extends LitElement {
 //     /* A row containing an atomic value of a data field (not a subcatalog) */
 //
@@ -394,162 +369,19 @@ window.customElements.define('hw-item-page-', Item_.Page);
 //         `;
 //     }
 // }
-class Catalog extends CustomElement {
-    render = () => `
-        <th class="ct-field">${escape(this.props.key)}</th>
-        <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
-    `
-    __render() {
-        const { data } = this.props;
-        for (let [key, value] of Object.entries(data)) {
-            console.log(key, value);
-        }
-    }
-}
 
-class Item {
-
-    cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
-    iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
-
-    data            // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
-
-    category        // parent category of this item, as an instance of Category
-    registry        // Registry that manages access to this item (should refer to the unique global registry)
-
-    //loaded = null;    // names of fields that have been loaded so far
-
-    get id()   { return [this.cid, this.iid] }
-    has_id()   { return this.cid !== null && this.iid !== null }
-    // has_id()   { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
-    has_data() { return !!this.data }
-
-    constructor(category = null, data = null) {
-        if (data) this.data = data
-        if (category) {
-            this.category = category
-            this.registry = category.registry
-            this.cid      = category.iid
-        }
-    }
-
-    static async from_dump(state, category = null, use_schema = true) {
-        /* Recreate an item that was serialized with Item.dump_item(), possibly at the server. */
-        let schema = use_schema ? await category.get_schema() : generic_schema
-        let data = schema.decode(state['data'])
-        delete state['data']
-
-        let item = new Item(category, data)
-        Object.assign(item, state)                  // copy remaining metadata from `state` to `item`
-        return item
-    }
-
-    async get(field) {
-        await this.load(field)
-        return this.data[field]
-        // TODO: category default
-    }
-    async load(field = null, data_json = null, use_schema = true) {
-        /*
-        Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
-        Only with a not-None `data_json`, (re)loading takes place even if `this` was already loaded
-        - the newly loaded `data` fully replaces the existing this.data in such case.
-        */
-        // if field !== null && field in this.loaded: return      # this will be needed when partial loading from indexes is available
-        
-        if (this.has_data() && !data_json) return this
-        if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
-        if (!data_json) {
-            let record = await this.registry.load_record(this.id)
-            data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
-        }
-        let schema = use_schema ? await this.category.get_schema() : generic_schema
-        let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
-        this.data  = schema.decode(state)
-        this.bind()
-        print(`done item.load() of [${this.cid},${this.iid}]`)
-        return this
-    }
-    bind() {
-        /*
-        Override this method in subclasses to provide initialization after this item is retrieved from DB.
-        Typically, this method initializes transient properties and performs cross-item initialization.
-        Only after bind(), the item is a fully functional element of a graph of interconnected items.
-        When creating new items, bind() should be called manually, typically after all related items
-        have been created and connected.
-        */
-    }
-
-    static Properties = class extends Catalog {}
-
-    // static Page = class extends CustomElement {
-    //     static props = {useShadowDOM: true,}
-    //     init() {
-    //         let g = globalThis
-    //
-    //         let dump_catg = this.read_data('p#category', 'json');
-    //         console.log('Item.Page.init() dump_catg:', dump_catg)
-    //         g.category = Item.from_dump(dump_catg, null, false)
-    //         console.log('Item.Page.init() category:', g.category)
-    //
-    //         // let dump_item = this.read_data('p#item', 'json');
-    //         // console.log('Item.Page.init() dump_item:', dump_item)
-    //         // g.item     = Item.from_dump(dump_item, g.category)
-    //         // console.log('Item.Page.init() item:', g.item)
-    //
-    //         // g.category = this._category = new Item_(this.read_data('p#category'));
-    //         // g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
-    //     }
-    //     render = () => `
-    //         <h2>Properties</h2>
-    //         <hw-item-properties></hw-item-properties>
-    //     `
-    // }
-    // static Widget = class extends React.Component {
-    // }
-
-    static Page = class extends React.Component {
-        // render = () => DIV(`
-        //     <h2>Properties (React)</h2>
-        //     <p>Item ID: ${this.props.id}</p>
-        // `)
-        render = () => DIV(H2('Properties (React)'), P(`Item ID: [${this.props.id}]`))
-    }
-}
-
-class Category extends Item {
-
-    async fields() { await this.load('fields'); return await this.get('fields') }
-
-    async get_schema(field = null) {
-        /* Return schema of a given field, or all Item.data (if field=null). */
-        let fields = await this.fields()
-        if (!field)                                     // create and return a schema for the entire Item.data
-            return new RECORD(fields, {strict: true})
-        else {                                          // return a schema for a selected field only
-            let schema = (field in fields) ? fields[field] : null
-            return schema || generic_schema
-        }
-    }
-}
-class RootCategory extends Category {
-    cid = ROOT_CID
-    iid = ROOT_CID
-
-    constructor(registry) {
-        super()
-        this.registry = registry
-        this.category = this                    // root category is a category for itself
-    }
-    encode_data(use_schema = false) {
-        /* Same as Item.encode_data(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.encode_data(false)
-    }
-    async load(field = null, data_json = null, use_schema = false) {
-        /* Same as Item.load(), but use_schema is false to avoid circular dependency during deserialization. */
-        return await super.load(field, data_json, false)
-    }
-}
+// class Catalog extends CustomElement {
+//     render = () => `
+//         <th class="ct-field">${escape(this.props.key)}</th>
+//         <td class="ct-value">${this.props.schema.display(this.props.value)}</td>
+//     `
+//     __render() {
+//         const { data } = this.props;
+//         for (let [key, value] of Object.entries(data)) {
+//             console.log(key, value);
+//         }
+//     }
+// }
 
 /**********************************************************************************************************************
  **
@@ -585,7 +417,7 @@ class Classpath {
         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
         for (let obj of objects) {
             let name = obj.name
-            if (!name) throw `Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`
+            if (!name) throw Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
             this.set(`${path}.${name}`, obj)
         }
         // for (let [name, obj] of Object.entries(named ?? {}))
@@ -620,13 +452,13 @@ class Classpath {
         under different names (paths), the most recently assigned path is returned.
         */
         let path = this.inverse.get(obj)
-        if (path === undefined) throw `Not in classpath: ${obj.name ?? obj}`
+        if (path === undefined) throw Error(`Not in classpath: ${obj.name ?? obj}`)
         return path
     }
     decode(path) {
         /* Return object pointed to by a given path. */
         let obj = this.forward.get(path)
-        if (obj === undefined) throw `Unknown class path: ${path}`
+        if (obj === undefined) throw Error(`Unknown class path: ${path}`)
         return obj
     }
 }
@@ -659,6 +491,7 @@ class AjaxDB extends Database {
     }
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
+        print(`ajax download [${cid},${iid}]...`)
         return await $.get(`${this.ajax_url}/${cid}:${iid}`)
     }
 }
@@ -681,7 +514,7 @@ class Registry {
     async init_classpath() {
         let classpath = new Classpath
 
-              classpath.set_many  ("hyperweb.core", Item, Category)
+        await classpath.set_module("hyperweb.core",  "./item.js")  //Item, Category)
         await classpath.set_module("hyperweb.types", "./types.js")
 
         this.classpath = classpath
@@ -699,10 +532,11 @@ class Registry {
         */
         let root = this.root = new RootCategory(this, load)
         if (load) await root.load()
-        else                             // root created anew? this.db must be used directly (no stage/commit), because
+        else {                           // root created anew? this.db must be used directly (no stage/commit), because
             // from .core.root import root_data
             // root.data = root_data
             this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
+        }
         root.bind()
         return root
     }
@@ -711,9 +545,9 @@ class Registry {
         return await this.db.select(id)
     }
 
-    get_category(cid) { return this.get_item([ROOT_CID, cid]) }
+    async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
 
-    get_item(id, version = null) {
+    async get_item(id, {load = false, version = null} = {}) {
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
@@ -724,15 +558,16 @@ class Registry {
         if (!item)
             // create a stub of an item and insert to cache, then load item data - these two steps are
             // separated to ensure proper handling of circular relationships between items
-            item = this.create_stub(id)
+            item = await this.create_stub(id)
 
+        if (load) await item.load()
         return item
     }
-    create_stub(id, category = null) {
+    async create_stub(id, category = null) {
         /* Create a "stub" item (no data) with a given ID and insert to cache. */
         let [cid, iid] = id
-        category = category || this.get_category(cid)
-        let itemclass = Item // TODO: category.get_class()
+        category = category || await this.get_category(cid)
+        let itemclass = await category.get_class()
         let item = new itemclass(category)
         item.iid = iid
         this.cache.set(id, item)
@@ -791,7 +626,13 @@ export async function boot() {
 
     // window.customElements.define('hw-item-page', Item.Page);
 
+    // print('root:', await registry.get_item([0,0], {load: true}))
+    // print('[0,10]:', await registry.get_item([0,10], {load: true}))
+    // print('[10,1]:', await registry.get_item([10,1], {load: true}))
+
     let react_root = document.querySelector("#react-root")
-    ReactDOM.render(e(Item.Page, {id: config.item}), react_root)
-    // ReactDOM.render(e("p", null, "react component"), react_root)
+    let item = await registry.get_item(config.id, {load: true})
+    print('main item:', item)
+    item.display(react_root)
+    // ReactDOM.render(e(Item.Page, {id: config.item}), react_root)
 }

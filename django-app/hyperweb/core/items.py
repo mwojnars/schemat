@@ -257,7 +257,7 @@ base_hy = File_(
                 properties $item
                 
                 # dump client configuration and preloaded items to json and embed them
-                $config = {'ajax_url': item.registry.site.ajax_url(), 'item': list(item.id)}
+                $config = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}
                 $items  = item.preload_items()
                 
                 from hyperweb.serialize import $json, $JSON
@@ -308,11 +308,12 @@ filesystem = Folder_(
         'base.hy':          base_hy,            # reusable components for use in pages
         'base.css':         base_css,           # global styles for use in pages
         
+        'item.js':          FileLocal_(path = f'{_path}/item.js'),
         'protocols.js':     FileLocal_(path = f'{_path}/protocols.js'),
         'serialize.js':     FileLocal_(path = f'{_path}/serialize.js'),
         'types.js':         FileLocal_(path = f'{_path}/types.js'),
         'utils.js':         FileLocal_(path = f'{_path}/utils.js'),
-        'react.production.min.js': FileLocal_(path = f'{_path}/react.production.min.js'),
+        # 'react.production.min.js': FileLocal_(path = f'{_path}/react.production.min.js'),
         
         # 'item.hy':      page_item,          # generic page of an item
         # 'category.hy':  page_category,      # generic page of a category

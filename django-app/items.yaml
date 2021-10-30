@@ -274,9 +274,9 @@
     \             else / $ciid\n                \n                h2 | Properties\n\
     \                properties $item\n                \n                # dump client\
     \ configuration and preloaded items to json and embed them\n                $config\
-    \ = {'ajax_url': item.registry.site.ajax_url(), 'item': list(item.id)}\n     \
-    \           $items  = item.preload_items()\n                \n               \
-    \ from hyperweb.serialize import $json, $JSON\n                # data #data-config\
+    \ = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}\n       \
+    \         $items  = item.preload_items()\n                \n                from\
+    \ hyperweb.serialize import $json, $JSON\n                # data #data-config\
     \ | $JSON.dump64(config)\n                # data #data-items  | $JSON.dump64(items)\n\
     \                data #data-config | $JSON.dump(config)\n                data\
     \ #data-items  | $JSON.dump(items)\n                \n                div #react-root\n\
@@ -302,26 +302,26 @@
   files:
     tmp1: [3, 2]
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/protocols.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/item.js
 - id: [2, 2]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/serialize.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/protocols.js
 - id: [2, 3]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/types.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/serialize.js
 - id: [2, 4]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/utils.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/types.js
 - id: [2, 5]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/react.production.min.js
+  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/utils.js
 - id: [3, 4]
   files:
     system: [3, 1]
     tmp: [3, 3]
     base.hy: [1, 2]
     base.css: [1, 1]
-    protocols.js: [2, 1]
-    serialize.js: [2, 2]
-    types.js: [2, 3]
-    utils.js: [2, 4]
-    react.production.min.js: [2, 5]
+    item.js: [2, 1]
+    protocols.js: [2, 2]
+    serialize.js: [2, 3]
+    types.js: [2, 4]
+    utils.js: [2, 5]
 - id: [6, 1]
   name: Admin
 - id: [7, 1]
