@@ -1,8 +1,12 @@
-import { print, assert, T } from './utils.js'
-import { e, DIV, P, H1, H2 } from './utils.js'
+import { print, assert, T, escape_html } from './utils.js'
+import { e, DIV, P, H1, H2, SPAN, delayed_render } from './utils.js'
 import { generic_schema, RECORD } from './types.js'
 
 export const ROOT_CID = 0
+
+const useState = React.useState
+const useEffect = React.useEffect
+
 
 /**********************************************************************************************************************
  **
@@ -90,17 +94,85 @@ export class Item {
         have been created and connected.
         */
     }
-    display(place) {
-        /* `place` is a target HTMLElement where to inject the rendered HTML output. */
-        let Page = this.constructor.Page  //Item.Page
-        ReactDOM.render(e(Page, {item: this}), place)
+
+    async ciid({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /*
+        "Category-Item ID" (CIID) string (stamp, emblem) having the form:
+        - [CATEGORY-NAME:IID], if the category of self has a "name" property; or
+        - [CID:IID] otherwise.
+        If html=True, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page
+        (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not None,
+        CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
+        */
+        // return `Item [${this.id}]`
+
+        let cat = await this.category.get('name', this.cid.toString())
+        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
+        if (html) {
+            cat = escape_html(cat)
+            let url = '' //this.category.url('')
+            if (url) cat = `<a href=${url}>${cat}</a>`
+        }
+        let stamp = `${cat}:${this.iid}`
+        if (!brackets) return stamp
+        return `[${stamp}]`
+    }
+
+    display(target) {
+        /* `target` is an HTMLElement where to inject the rendered HTML output. */
+        let Page = this.Page  //Item.Page
+        ReactDOM.render(e(Page, {item: this}), target)
+    }
+
+    // Title(props) {
+    //     const [name, setName] = useState()
+    //     const [ciid, setCiid] = useState()
+    //     // print('Item.Title:name =', name)
+    //
+    //     const initData = async () => {
+    //         setName(await props.item.get('name', null))
+    //         setCiid(await props.item.ciid())
+    //     }
+    //     useEffect(initData, [])
+    //
+    //     if (name === undefined) return null         // skip rendering until initData() above executes
+    //     if (name)
+    //         return H1(name, SPAN({style:"font-size:40%; font-weight:normal"}, ciid))
+    //     else
+    //         return H1(ciid)
+    // }
+
+    Title(props) {
+        return delayed_render(async () => {
+            let name = await props.item.get('name', null)
+            let ciid = await props.item.ciid()
+            if (name)
+                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}}, ciid))
+            else
+                return H1(ciid)
+        })
     }
 
     // static Properties = class extends Catalog {}
 
-    static Page = class extends React.Component {
-        render = () => DIV(H2({style: {color:'blue'}}, 'Properties (React)'), P(`Item ID: [${this.props.item.id}]`))
+    Page(props) {           // React functional component
+        let item = props.item
+        return DIV(
+            e(item.Title, props),
+            H2('Properties'),                               //{style: {color:'blue'}}
+            P(`Item ID: [${item.id}]`),
+        )
     }
+    // static Page = class extends React.Component {
+    //     render() {
+    //         let item = this.props.item
+    //         return DIV(
+    //             e(item.constructor.Title, {item: item}),
+    //             H2('Properties'),                               //{style: {color:'blue'}}
+    //             P(`Item ID: [${item.id}]`),
+    //         )
+    //     }
+    // }
 }
 
 /**********************************************************************************************************************/

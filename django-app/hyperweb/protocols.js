@@ -13,25 +13,9 @@ import { RootCategory, ROOT_CID } from './item.js'
 
 /**********************************************************************************************************************
  **
- **  UTILITIES
+ **  CUSTOM ELEMENTS
  **
  */
-
-const htmlEscapes = {
-    '&': '&amp',
-    '<': '&lt',
-    '>': '&gt',
-    //'"': '&quot',
-    //"'": '&#39'
-}
-const reUnescapedHtml = /[&<>]/g
-
-function escape(string) {
-    // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
-    return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
-}
-
-/*************************************************************************************************/
 
 // class Schema_ extends HTMLElement {
 //     connectedCallback() {

@@ -12,6 +12,22 @@ export function assert(test, msg) {
     // console.assert(test)
 }
 
+const htmlEscapes = {
+    '&': '&amp',
+    '<': '&lt',
+    // '>': '&gt',
+    //'"': '&quot',
+    //"'": '&#39'
+}
+const reUnescapedHtml = /[&<]/g
+
+export function escape_html(string) {
+    // reduced version of Lodash's escape(): https://github.com/lodash/lodash/blob/9d11b48ce5758df247607dc837a98cbfe449784a/escape.js
+    return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
+}
+
+/*************************************************************************************************/
+
 export class Types {
     /*
     A set of utility functions for working with objects and classes.
@@ -70,7 +86,7 @@ export class T extends Types {}  // T is an alias for Types
  **
  */
 
-export let e = React.createElement         // React must be imported in global scope
+export const e = React.createElement         // React must be imported in global scope
 
 function _e(name) {
     return (...args) =>
@@ -79,15 +95,27 @@ function _e(name) {
             e(name, args[0], ...args.slice(1))
 }
 
-export let DIV  = _e('div')
-export let SPAN = _e('span')
-export let A    = _e('A')
-export let B    = _e('B')
-export let I    = _e('I')
-export let P    = _e('p')
-export let H1   = _e('h1')
-export let H2   = _e('h2')
-export let H3   = _e('h3')
+export const DIV  = _e('div')
+export const SPAN = _e('span')
+export const A    = _e('A')
+export const B    = _e('B')
+export const I    = _e('I')
+export const P    = _e('p')
+export const H1   = _e('h1')
+export const H2   = _e('h2')
+export const H3   = _e('h3')
+
+export const HTML = () => _e('div')
+
+
+export function delayed_render(async_fun, empty = undefined) {
+    /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
+       rendering output through async_fun() and requests re-rendering to return the final result. */
+    const [output, setOutput] = React.useState(empty)
+    React.useEffect(async () => setOutput(await async_fun()), [])
+    return (output === empty) ? null : output
+}
+
 
 /*************************************************************************************************/
 
