@@ -433,11 +433,10 @@ class Item(object, metaclass = MetaItem):
         return [i.load().encode_item() for i in items]
 
     def response_data(self):
-        """Request and configuration data to be embedded in HTML response, state-encoded."""
+        """Request and configuration data to be embedded in HTML response; .request is state-encoded."""
         req = self.registry.current_request
         request  = {'item': req.item, 'app': req.app, 'state': req.state}
         ajax_url = self.registry.site.ajax_url()
-        # config   = {'ajax_url': ajax_url, 'id': list(self.id)}
         return {'ajax_url': ajax_url, 'request': JSON.encode(request)}
 
     @handler('json')

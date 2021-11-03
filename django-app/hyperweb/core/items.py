@@ -257,15 +257,14 @@ base_hy = File_(
                 properties $item
                 
                 # dump client configuration and preloaded items to json and embed them
-                $config = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}
-                $items  = item.response_items()
+                #$config = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}
+                #$items  = item.response_items()
                 
                 from hyperweb.serialize import $json, $JSON
-                # data #data-items  | $JSON.dump64(items)
-                # data #data-config | $JSON.dump64(config)
-                data #data-items  | $JSON.dump(items)
-                data #data-config | $JSON.dump(config)
-                data #data-data   | $JSON.dump(item.response_data())
+                # data #data-items | $JSON.dump64(item.response_items())
+                # data #data-data  | $JSON.dump64(item.response_data())
+                data #data-items | $JSON.dump(item.response_items())
+                data #data-data  | $JSON.dump(item.response_data())
                 
                 div #react-root
                 

@@ -113,7 +113,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = '' //await this.category.url('', false)
+            let url = await this.category.url('', true)
             if (url) cat = `<a href=${url}>${cat}</a>`
         }
         let stamp = `${cat}:${this.iid}`
@@ -121,7 +121,7 @@ export class Item {
         return `[${stamp}]`
     }
 
-    async url(route = null, raise = true, args = null) {
+    async url(route = null, raise = true, args = {}) {
         /*
         Return a *relative* URL of this item as assigned by the current Application (if route=null),
         that is, by the one that's processing the current web request; or an *absolute* URL
@@ -133,7 +133,8 @@ export class Item {
                 let app = this.registry.current_request.app
                 return './' + await app.url_path(this, args)      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
             }
-            return await this.registry.site.get_url(this, route, args)
+            let site = await this.registry.site
+            return await site.get_url(this, route, args)
         }
         catch (ex) { if (raise) {throw ex} else return '' }
     }
@@ -150,10 +151,11 @@ export class Item {
         return delayed_render(async () => {
             let name = await props.item.get('name', null)
             let ciid = await props.item.ciid()
+            let ciid_html = {dangerouslySetInnerHTML: {__html:ciid}}
             if (name)
-                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}}, ciid))
+                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...ciid_html}))
             else
-                return H1(ciid)
+                return H1(ciid_html)
         })
     }
 
@@ -303,7 +305,7 @@ export class AppRoot extends Application {
             step = path.split(Application.SEP_ROUTE)[0]
         
         let apps = await this.get('apps')
-        let app  = apps.get(step, null)
+        let app  = T.getOwnProperty(apps, step)
         
         if (step && app)                        // non-default (named) route can be followed with / in path
             return [step, app, path.slice(lead + step.length)]
@@ -318,7 +320,7 @@ export class AppRoot extends Application {
 
         let [step, app, path] = await this._route(route)
         let subpath = await app.url_path(item, path, opts)
-        if (relative) return subpath                                // path relative to `route`
+        if (opts.relative) return subpath                           // path relative to `route`
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
         return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
     }

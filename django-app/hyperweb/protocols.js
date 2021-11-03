@@ -498,6 +498,7 @@ class Registry {
 
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
+    get site() { return this.get_item(this.site_id) }       // this is async code, must be used with await !!
 
     async init_classpath() {
         let classpath = new Classpath
@@ -612,13 +613,6 @@ export async function boot() {
     await registry.init_classpath()
     await registry.boot(data.request)
 
-    // let {start, view} = config
-    // let start_item = registry.get_item(start)
-    // let method = `show_${view}`
-    // start_item[method]()
-
-    // window.customElements.define('hw-item-page', Item.Page);
-
     // print('root:', await registry.get_item([0,0], {load: true}))
     // print('[0,10]:', await registry.get_item([0,10], {load: true}))
     // print('[10,1]:', await registry.get_item([10,1], {load: true}))
@@ -627,7 +621,5 @@ export async function boot() {
     // let item = await registry.get_item(config.id, {load: true})
     // print('main item:', item)
 
-    let item = registry.current_request.item
-    item.display(react_root)
-    // ReactDOM.render(e(Item.Page, {id: config.item}), react_root)
+    registry.current_request.item.display(react_root)
 }
