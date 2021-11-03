@@ -1,6 +1,7 @@
 "use strict";
 
 import { print, assert } from './utils.js'
+import { JSONx } from './serialize.js'
 import { generic_schema } from './types.js'
 import { RootCategory, ROOT_CID } from './item.js'
 // import * as mod_types from './types.js'
@@ -495,6 +496,9 @@ class Registry {
     root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
     site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
 
+    current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
+
+
     async init_classpath() {
         let classpath = new Classpath
 
@@ -579,10 +583,15 @@ class Registry {
 class LocalRegistry extends Registry {
     /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
 
-    constructor(boot_items, config) {
+    constructor(boot_items, ajax_url) {
         super()
-        this.db    = new AjaxDB(config['ajax_url'], boot_items)
+        this.db    = new AjaxDB(ajax_url, boot_items)
         this.cache = new LocalCache()
+        // this.current_request = current_request
+    }
+    async boot(request) {
+        await super.boot()
+        this.current_request = await JSONx.decode(request)
     }
 }
 
@@ -594,14 +603,14 @@ class LocalRegistry extends Registry {
 
 export async function boot() {
 
-    let config = read_data('#data-config') //, 'json+base64')
     let items  = read_data('#data-items') //, 'json+base64')
-    print('data-config:', config)
+    let data   = read_data('#data-data') //, 'json+base64')
     print('data-items: ', items)
+    print('data-data:', data)
 
-    let registry = globalThis.registry = new LocalRegistry(items, config)
+    let registry = globalThis.registry = new LocalRegistry(items, data.ajax_url)
     await registry.init_classpath()
-    await registry.boot()
+    await registry.boot(data.request)
 
     // let {start, view} = config
     // let start_item = registry.get_item(start)
@@ -615,8 +624,10 @@ export async function boot() {
     // print('[10,1]:', await registry.get_item([10,1], {load: true}))
 
     let react_root = document.querySelector("#react-root")
-    let item = await registry.get_item(config.id, {load: true})
-    print('main item:', item)
+    // let item = await registry.get_item(config.id, {load: true})
+    // print('main item:', item)
+
+    let item = registry.current_request.item
     item.display(react_root)
     // ReactDOM.render(e(Item.Page, {id: config.item}), react_root)
 }

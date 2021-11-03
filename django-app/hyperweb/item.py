@@ -11,6 +11,7 @@ from .config import ROOT_CID
 from .multidict import MultiDict
 from .cache import LRUCache
 from .schema import generic_schema, RECORD
+from .serialize import JSON
 
 
 #####################################################################################################################################################
@@ -425,11 +426,19 @@ class Item(object, metaclass = MetaItem):
         state = self.encode_item(use_schema)
         return json.dumps(state)
 
-    def preload_items(self):
-        """List of encoded items to be sent over to a client to bootstrap client-side item cache."""
+    def response_items(self):
+        """List of state-encoded items to be sent over to a client to bootstrap client-side item cache."""
         # items = [self.registry.root]
         items = filter(None, {self, self.category, self.registry.root})
         return [i.load().encode_item() for i in items]
+
+    def response_data(self):
+        """Request and configuration data to be embedded in HTML response, state-encoded."""
+        req = self.registry.current_request
+        request  = {'item': req.item, 'app': req.app, 'state': req.state}
+        ajax_url = self.registry.site.ajax_url()
+        # config   = {'ajax_url': ajax_url, 'id': list(self.id)}
+        return {'ajax_url': ajax_url, 'request': JSON.encode(request)}
 
     @handler('json')
     def _json_(self, request):

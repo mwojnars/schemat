@@ -275,19 +275,20 @@
     \                properties $item\n                \n                # dump client\
     \ configuration and preloaded items to json and embed them\n                $config\
     \ = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}\n       \
-    \         $items  = item.preload_items()\n                \n                from\
-    \ hyperweb.serialize import $json, $JSON\n                # data #data-config\
-    \ | $JSON.dump64(config)\n                # data #data-items  | $JSON.dump64(items)\n\
-    \                data #data-config | $JSON.dump(config)\n                data\
-    \ #data-items  | $JSON.dump(items)\n                \n                div #react-root\n\
-    \                \n                @extra\n            \n    %page_category category\n\
-    \        page_item category\n            h2 | Items\n            table\n     \
-    \           for item in list(category.registry.scan_category(category))\n    \
-    \                tr\n                        td / #{item.iid} &nbsp;\n       \
-    \                 td\n                            $ iname = item['name']? or item\n\
-    \                            try\n                                a href=$item.url()\
-    \ | $iname\n                            else\n                               \
-    \ | $iname (no URL)\n    \n    "
+    \         $items  = item.response_items()\n                \n                from\
+    \ hyperweb.serialize import $json, $JSON\n                # data #data-items \
+    \ | $JSON.dump64(items)\n                # data #data-config | $JSON.dump64(config)\n\
+    \                data #data-items  | $JSON.dump(items)\n                data #data-config\
+    \ | $JSON.dump(config)\n                data #data-data   | $JSON.dump(item.response_data())\n\
+    \                \n                div #react-root\n                \n       \
+    \         @extra\n            \n    %page_category category\n        page_item\
+    \ category\n            h2 | Items\n            table\n                for item\
+    \ in list(category.registry.scan_category(category))\n                    tr\n\
+    \                        td / #{item.iid} &nbsp;\n                        td\n\
+    \                            $ iname = item['name']? or item\n               \
+    \             try\n                                a href=$item.url() | $iname\n\
+    \                            else\n                                | $iname (no\
+    \ URL)\n    \n    "
 - id: [3, 1]
   files:
     Site: [0, 10]

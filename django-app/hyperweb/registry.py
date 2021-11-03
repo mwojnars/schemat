@@ -370,8 +370,10 @@ class Registry:
 
         X request.base_url = URL prefix that preceeds descriptor of the target item, used during URL generation
         """
-        request.url  = request.build_absolute_uri()
-        request.site = site = self.site
+        request.url   = request.build_absolute_uri()
+        request.site  = site = self.site
+        request.state = None
+        
         self.start_request(request)
 
         response = site.handle(request)
