@@ -38,11 +38,10 @@ function Catalog1({item}) {
 }
 
 function Catalog2({data, schema, color = 0}) {
-    let rows = Object.entries(data).map(([field, value]) =>
-                TR({className: `ct-color${color}`}, e(CatalogRow, {field: field, value: value, schema: schema})))
     return DIV({className: 'wrap-offset'},
             TABLE({className: 'catalog-2'},
-              TBODY(...rows
+              TBODY(...Object.entries(data).map(([field, value]) =>
+                TR({className: `ct-color${color}`}, e(CatalogRow, {field: field, value: value, schema: schema})))
            )))
 }
 
@@ -50,7 +49,7 @@ function CatalogRow({field, value, schema}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
-                TD({className: 'ct-value'}, value.toString()),
+                TD({className: 'ct-value'}, schema.widget({value: value})),
            )
 }
 

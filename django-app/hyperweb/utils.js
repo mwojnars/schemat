@@ -26,6 +26,35 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
+export function truncate(s, length = 255, {end = '...', killwords = false, maxdrop = 10, leeway = 0} = {}) {
+    /*
+    Truncate a string `s` to a given maximum length, with ellipsis.
+    If `killwords` is false, the last word will be discarded, unless the resulting string
+    gets shorter than `maxdrop` characters only due to word preservation,
+    in which case the word still gets split (not discarded).
+    */
+
+    // the implementation inspired by Jinja's truncate(): https://github.com/pallets/jinja/blob/main/src/jinja2/filters.py
+    assert(length >= end.length, `expected length >= ${end.length}, got ${length}`)
+    assert(leeway >= 0, `expected leeway >= 0, got ${leeway}`)
+
+    if (s.length <= length + leeway) return s
+
+    let maxlen = length - end.length                // maximum string length before appending the `end`
+    let short  = s.slice(0, maxlen)
+
+    if (killwords) return short + end
+
+    // let result = s.slice(0, maxlen).rsplit(" ", 1)[0]
+    let words  = short.split(' ')
+    let result = words.slice(0, -1).join(' ')
+
+    if (result.length < maxlen - maxdrop || result.length === 0)
+        result = short
+
+    return result + end
+}
+
 /*************************************************************************************************/
 
 export class Types {

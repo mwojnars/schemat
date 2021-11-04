@@ -1,4 +1,5 @@
-import { T } from './utils.js'
+import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
+import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
 
 export class DataError extends Error {}
@@ -66,6 +67,11 @@ export class Schema {
         return this.constructor.name
         // return JSON.stringify(this._fields).slice(0, 60)
     }
+
+    widget({value, edit = true}) {
+        /* Return a React-compatible component that displays a `value` of an item's field and (possibly) allows its editing. */
+        return value.toString()
+    }
 }
 
 /**********************************************************************************************************************
@@ -110,6 +116,21 @@ export class OBJECT extends Schema {
 
 export class SCHEMA extends OBJECT {
     static types = [Schema]
+
+    widget({value}) {
+        let schema = value
+        let defalt = `${schema.default}`
+        return SPAN({className: 'field'},
+                `${schema}`,
+                schema.default !== undefined &&
+                    SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
+                        ` (${truncate(defalt,100)})`),
+                schema.info &&
+                    SPAN({className: 'info'}, ` • ${schema.info}`),
+                    // smaller dot: &middot;
+                    // larger dot: •
+        )
+    }
 }
 
 // the most generic schema for encoding/decoding of objects of any types
@@ -166,11 +187,21 @@ export class INTEGER extends FLOAT {
 
 export class STRING extends Primitive {
     static type = "string"
+    widget({value}) {
+        return e("hw-widget-string-", {'data-value': value})
+    }
 }
 export class TEXT extends Primitive {
     static type = "string"
+    widget({value}) {
+        return e("hw-widget-text-", {'data-value': value})
+    }
 }
-export class CODE extends TEXT {}
+export class CODE extends TEXT {
+    widget({value}) {
+        return e("hw-widget-code-", {'data-value': value}) //dedent(value, false)})
+    }
+}
 export class FILENAME extends STRING {}
 
 
