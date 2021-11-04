@@ -95,17 +95,28 @@ function _e(name) {
             e(name, args[0], ...args.slice(1))
 }
 
-export const DIV  = _e('div')
-export const SPAN = _e('span')
-export const A    = _e('A')
-export const B    = _e('B')
-export const I    = _e('I')
-export const P    = _e('p')
-export const H1   = _e('h1')
-export const H2   = _e('h2')
-export const H3   = _e('h3')
+export const DIV   = _e('div')
+export const SPAN  = _e('span')
+export const A     = _e('A')
+export const B     = _e('B')
+export const I     = _e('I')
+export const P     = _e('p')
+export const H1    = _e('h1')
+export const H2    = _e('h2')
+export const H3    = _e('h3')
+export const H4    = _e('h4')
+export const H5    = _e('h5')
+export const TABLE = _e('table')
+export const THEAD = _e('thead')
+export const TBODY = _e('tbody')
+export const TFOOT = _e('tfoot')
+export const TH    = _e('th')
+export const TR    = _e('tr')
+export const TD    = _e('td')
 
-export const HTML = () => _e('div')
+export const HTML  = (html) => { return {dangerouslySetInnerHTML: {__html:html}} }
+
+export const FRAGMENT = (...nodes) => e(React.Fragment, {}, ...nodes)
 
 
 export function delayed_render(async_fun, empty = undefined) {

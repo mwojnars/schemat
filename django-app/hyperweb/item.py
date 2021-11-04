@@ -357,7 +357,10 @@ class Item(object, metaclass = MetaItem):
         raise Exception("Item instance cannot be directly serialized, incorrect schema configuration")
 
     def get_entries(self, order = 'schema'):
-        """Retrieve a list of entries in self.data ordered appropriately."""
+        """
+        Retrieve a list of this item's fields and their values, ordered appropriately.
+        Multiple values for a single field are returned as separate entries.
+        """
         # return self.data.items()
         
         entries = []

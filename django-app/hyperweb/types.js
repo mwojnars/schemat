@@ -4,6 +4,9 @@ import { JSONx } from './serialize.js'
 export class DataError extends Error {}
 
 
+export class multiple {}
+
+
 /**********************************************************************************************************************
  **
  **  SCHEMA base class

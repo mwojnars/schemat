@@ -1,12 +1,58 @@
+import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
-import { e, DIV, P, H1, H2, SPAN, delayed_render } from './utils.js'
-import { generic_schema, RECORD } from './types.js'
+import { generic_schema, multiple, RECORD } from './types.js'
 
 export const ROOT_CID = 0
 
-const useState = React.useState
+const useState  = React.useState
 const useEffect = React.useEffect
 
+
+/**********************************************************************************************************************
+ **
+ **  UI COMPONENTS
+ **
+ */
+
+function Catalog1({item}) {
+    return delayed_render(async () => {
+        let start_color = 0                                   // color of the first row: 0 or 1
+        let category = item.category
+        let entries = await item.get_entries()
+        let schemas = await category.get_fields()
+
+        let rows = entries.map(([field, value], i) => {
+            let schema = schemas[field]  //await category.get_schema(field)
+            let color  = (start_color + i) % 2
+            return TR({className: `ct-color${color}`},
+                      schema.is_catalog
+                        ? TD({className: 'ct-nested', colSpan: 2},
+                            DIV({className: 'ct-field'}, field),
+                            e(Catalog2, {data: value, schema: schema.values, color: color})
+                        )
+                        : e(CatalogRow, {field: field, value: value, schema: schema})
+            )
+        })
+        return TABLE({className: 'catalog-1'}, TBODY(...rows))
+    })
+}
+
+function Catalog2({data, schema, color = 0}) {
+    let rows = Object.entries(data).map(([field, value]) =>
+                TR({className: `ct-color${color}`}, e(CatalogRow, {field: field, value: value, schema: schema})))
+    return DIV({className: 'wrap-offset'},
+            TABLE({className: 'catalog-2'},
+              TBODY(...rows
+           )))
+}
+
+function CatalogRow({field, value, schema}) {
+    /* A table row containing an atomic value of a data field (not a subcatalog). */
+    return FRAGMENT(
+                TH({className: 'ct-field'}, field),
+                TD({className: 'ct-value'}, value.toString()),
+           )
+}
 
 /**********************************************************************************************************************
  **
@@ -54,19 +100,6 @@ export class Item {
         return item
     }
 
-    async get(field, default_ = undefined) {
-        await this.load(field)
-
-        if (this.data.hasOwnProperty(field))
-            return this.data[field]
-
-        if (this.category !== this) {
-            let cat_default = await this.category.get_default(field)
-            if (cat_default !== undefined)
-                return cat_default
-        }
-        return default_
-    }
     async load(field = null, data_json = null, use_schema = true) {
         /*
         Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
@@ -121,6 +154,50 @@ export class Item {
         return `[${stamp}]`
     }
 
+    async get(field, default_ = undefined) {
+        await this.load(field)
+
+        if (this.data.hasOwnProperty(field))
+            return this.data[field]
+
+        if (this.category !== this) {
+            let cat_default = await this.category.get_default(field)
+            if (cat_default !== undefined)
+                return cat_default
+        }
+        return default_
+    }
+
+    async get_entries(order = 'schema') {
+        /*
+        Retrieve a list of this item's fields and their values, ordered appropriately.
+        Multiple values for a single field are returned as separate entries.
+        */
+        await this.load()
+        let data    = this.data
+        let fields  = await this.category.get_fields()
+        let entries = []
+
+        function push(f, v) {
+            if (v instanceof multiple)
+                for (w of v.values()) entries.push([f, w])
+            else
+                entries.push([f, v])
+        }
+
+        // retrieve entries by their order in category's schema
+        for (const f in fields) {
+            let v = T.getOwnProperty(data, f)
+            if (v !== undefined) push(f, v)
+        }
+
+        // add out-of-schema entries, in their natural order (of insertion)
+        for (const f in data)
+            if (!fields.hasOwnProperty(f)) push(f, data[f])
+
+        return entries
+    }
+    
     async url(route = null, raise = true, args = {}) {
         /*
         Return a *relative* URL of this item as assigned by the current Application (if route=null),
@@ -151,22 +228,19 @@ export class Item {
         return delayed_render(async () => {
             let name = await props.item.get('name', null)
             let ciid = await props.item.ciid()
-            let ciid_html = {dangerouslySetInnerHTML: {__html:ciid}}
             if (name)
-                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...ciid_html}))
+                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
             else
-                return H1(ciid_html)
+                return H1(HTML(ciid))
         })
     }
-
-    // Properties(props) {}
 
     Page(props) {           // React functional component
         let item = props.item
         return DIV(
             e(item.Title, props),
             H2('Properties'),                               //{style: {color:'blue'}}
-            P(`Item ID: [${item.id}]`),
+            e(Catalog1, props)
         )
     }
 }
@@ -175,31 +249,28 @@ export class Item {
 
 export class Category extends Item {
 
-    async fields() { return await this.get('fields') }
+    async get_fields() { return await this.get('fields') }
 
     async get_class() {
-
         let name = await this.get('class_name')
         let code = await this.get('class_code')
-
         if (code)
             return eval(code)
             // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
             // TODO: check this.data for individual methods & templates to be treated as methods
 
         assert(name, `no class_name defined for category ${this}: ${name}`)
-
         return globalThis.registry.get_class(name)
     }
     async get_default(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
-        let fields = await this.fields()
+        let fields = await this.get_fields()
         let schema = T.getOwnProperty(fields, field)
         return schema ? schema.default : default_
     }
     async get_schema(field = null) {
-        /* Return schema of a given field, or all Item.data (if field=null). */
-        let fields = await this.fields()
+        /* Return schema of a given `field` (if present), or a RECORD schema of all fields. */
+        let fields = await this.get_fields()
         if (!field)                                     // create and return a schema for the entire Item.data
             return new RECORD(fields, {strict: true})
         else {                                          // return a schema for a selected field only
