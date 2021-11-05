@@ -156,9 +156,9 @@ function _e(name) {
 
 export const DIV   = _e('div')
 export const SPAN  = _e('span')
-export const A     = _e('A')
-export const B     = _e('B')
-export const I     = _e('I')
+export const A     = _e('a')
+export const B     = _e('b')
+export const I     = _e('i')
 export const P     = _e('p')
 export const H1    = _e('h1')
 export const H2    = _e('h2')

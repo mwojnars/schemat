@@ -1,4 +1,4 @@
-import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
+import {e, delayed_render, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
 
@@ -254,6 +254,24 @@ export class ITEM extends Schema {
         if (!Number.isInteger(iid)) throw new DataError(`expected IID to be an integer, got ${iid} instead during decoding`)
 
         return await globalThis.registry.get_item([cid, iid])
+    }
+
+    Widget({value}) {
+        return delayed_render(async () => {
+            let item = value
+            let url  = await item.url(null, false)
+            let name = await item.get('name', '')
+            let ciid = HTML(await item.ciid({html: false, brackets: false}))
+
+            if (name && url) {
+                let note = await item.category.get('name', null)
+                return FRAGMENT(
+                    url ? A({href: url}, name) : name,
+                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+                )
+            } else
+                return FRAGMENT('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+        })
     }
 }
 

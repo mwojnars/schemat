@@ -551,24 +551,17 @@ class Registry {
         // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
         // and only later on, the inner code of create_stub() gets executed; in this way, if another caller
         // requests the same item asynchronously, it will receive the same unique item object, eventually, without
-        // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified
+        // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
+        // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
         let pending = this.create_stub(id)
         if (load) pending = pending.then(item => {item.load(); return item})
         this.cache.set(id, pending)
         pending.then(item => this.cache.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
         return pending
-
-        // if (!item) {
-        //     // create a stub of an item and insert to cache, then load item data - these two steps are
-        //     // separated to ensure proper handling of circular relationships between items
-        //     item = await this.create_stub(id)
-        //     this.cache.set(id, item)
-        // }
-        // if (load) await item.load()
-        // return item
     }
+
     async create_stub(id, category = null) {
-        /* Create a "stub" item (no data) with a given ID and insert to cache. */
+        /* Create and return a "stub" item (no data) with a given ID. */
         let [cid, iid] = id
         category = category || await this.get_category(cid)
         let itemclass = await category.get_class()

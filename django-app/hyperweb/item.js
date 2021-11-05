@@ -45,7 +45,7 @@ function Catalog2({data, schema, color = 0}) {
            )))
 }
 
-function CatalogRow({field, value, schema}) {
+function CatalogRow({field, value, schema = generic_schema}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
@@ -77,7 +77,6 @@ export class Item {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return this.cid !== null && this.iid !== null
     }
-    // has_id()   { let id = this.id; return !(id.includes(null) || id.includes(undefined)) }
     has_data() { return !!this.data }
 
     constructor(category = null, data = null) {
@@ -100,32 +99,6 @@ export class Item {
         return item
     }
 
-    // async load(field = null, data_json = null, use_schema = true) {
-    //     /*
-    //     Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
-    //     Only with a not-null `data_json`, (re)loading takes place even if `this` was already loaded
-    //     - the newly loaded `data` fully replaces the existing this.data in such case.
-    //     */
-    //     // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
-    //     // if (this.category && this.category !== this)
-    //     //     this.category.load()
-    //
-    //     if (this.has_data() && !data_json) return this
-    //     if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
-    //
-    //     print(`${this.id_str}.reload() started...`)
-    //     if (!data_json) {
-    //         let record = await this.registry.load_record(this.id)
-    //         data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
-    //     }
-    //     let schema = use_schema ? await this.category.get_schema() : generic_schema
-    //     let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
-    //     this.data  = await schema.decode(state)
-    //     print(`${this.id_str}.reload() done`)
-    //
-    //     this.bind()
-    //     return this
-    // }
     async load(field = null, use_schema = true) {
         /* Return this item's data (this.data). The data is loaded from a DB, if not loaded yet. */
 
@@ -183,7 +156,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url('', true)
+            let url = await this.category.url('', false)
             if (url) cat = `<a href=${url}>${cat}</a>`
         }
         let stamp = `${cat}:${this.iid}`
