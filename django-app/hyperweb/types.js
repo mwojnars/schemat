@@ -89,7 +89,7 @@ export class OBJECT extends Schema {
     from serializated output and is implied automatically during deserialization.
     Types can be given as import paths (strings), which will be automatically converted to a type object.
     */
-    get _types() { return this.types || this.constructor.types }
+    get _types() { return this.types || this.constructor.types || [] }
 
     constructor(types = [], params = {}) {
         super(params)
@@ -103,14 +103,18 @@ export class OBJECT extends Schema {
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw new DataError(`invalid object type, expected one of ${this._types}, but got ${T.getClass(obj)}`)
+            throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return JSONx.encode(obj)
     }
     async decode(state) {
         let obj = await JSONx.decode(state)
         if (!this.valid(obj))
-            throw new DataError(`invalid object type after decoding, expected one of ${this._types}, but got ${T.getClass(obj)}`)
+            throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return obj
+    }
+    Widget({value}) {
+        let state = this.encode(value)
+        return JSON.stringify(state)            // OBJECT displays raw JSON representation of a value
     }
 }
 
@@ -146,7 +150,7 @@ export class CLASS extends Schema {
         return globalThis.registry.get_path(value)
     }
     async decode(value) {
-        if (typeof value !== "string") throw new DataError(`expected a string after decoding, not ${value}`)
+        if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
         return globalThis.registry.get_class(value)
     }
 }
@@ -387,14 +391,14 @@ export class RECORD extends Schema {
             if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
             data = T.getstate(data)
         }
-        else if (!T.isDict(data)) throw new DataError(`expected a plain Object for encoding, got ${T.getClass(data)}`)
+        else if (!T.isDict(data)) throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
 
         // state encoding
         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
     }
     async decode(state) {
 
-        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClass(state)}`)
+        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
         let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
         let type = this._type
         if (type) return T.setstate(type, data)

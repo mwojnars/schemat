@@ -1,18 +1,25 @@
 /**********************************************************************************************************************
  **
- **  GLOBAL SETTINGS
+ **  GLOBAL CONFIGURATION
  **
  */
 
-Object.prototype.toString = function() {
+export function toString() {
     // let json = trycatch(() => JSON.stringify(this), null)    -- this does NOT work due to circular call to toString() in stringify()
-    let value   = (v) => typeof v === 'object' ? `[${v.constructor.name}]` : JSON.stringify(v)
-    let entries = trycatch(() => Object.entries(this).map(([k,v]) => k+`:${value(v)}`).join(' '))
-    let summary = entries ? truncate(entries,40) : ''
-    if (this.constructor === Object && summary) return `{${summary}}`     // special display form for plain Objects: {..} with no class name
+    const value  = (v) => typeof v === 'object' ? `[${v.constructor.name}]` : JSON.stringify(v)
+    let isObject = (this.constructor === Object)
+    let sep      = (isObject ? ', ' : ' ')
+    let entries  = trycatch(() => Object.entries(this).map(([k,v]) => k+`:${value(v)}`).join(sep))
+    let summary  = entries ? truncate(entries,40) : ''
+
+    if (isObject) return `{${summary}}`         // special display form for plain Objects: {...} with no class name
+
     let gap = summary ? ' ' : ''
     return `[${this.constructor.name}${gap}${summary}]`
 }
+
+Object.prototype.toString = toString
+
 
 /**********************************************************************************************************************
  **
@@ -97,6 +104,7 @@ export class Types {
     }
     static getPrototype   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
     static getClass       = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
+    static getClassName   = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor.name
 
     static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)

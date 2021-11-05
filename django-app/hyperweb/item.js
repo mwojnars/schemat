@@ -70,7 +70,9 @@ export class Item {
 
     //loaded = null;    // names of fields that have been loaded so far
 
-    get id()   { return [this.cid, this.iid] }
+    get id()        { return [this.cid, this.iid] }
+    get id_str()    { return `[${this.cid},${this.iid}]` }
+
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return this.cid !== null && this.iid !== null
@@ -98,38 +100,73 @@ export class Item {
         return item
     }
 
-    async load(field = null, data_json = null, use_schema = true) {
-        /*
-        Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
-        Only with a not-null `data_json`, (re)loading takes place even if `this` was already loaded
-        - the newly loaded `data` fully replaces the existing this.data in such case.
-        */
+    // async load(field = null, data_json = null, use_schema = true) {
+    //     /*
+    //     Load properties of this item from a DB or JSON string `data_json` into this.data, IF NOT LOADED YET.
+    //     Only with a not-null `data_json`, (re)loading takes place even if `this` was already loaded
+    //     - the newly loaded `data` fully replaces the existing this.data in such case.
+    //     */
+    //     // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
+    //     // if (this.category && this.category !== this)
+    //     //     this.category.load()
+    //
+    //     if (this.has_data() && !data_json) return this
+    //     if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
+    //
+    //     print(`${this.id_str}.reload() started...`)
+    //     if (!data_json) {
+    //         let record = await this.registry.load_record(this.id)
+    //         data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
+    //     }
+    //     let schema = use_schema ? await this.category.get_schema() : generic_schema
+    //     let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
+    //     this.data  = await schema.decode(state)
+    //     print(`${this.id_str}.reload() done`)
+    //
+    //     this.bind()
+    //     return this
+    // }
+    async load(field = null, use_schema = true) {
+        /* Return this item's data (this.data). The data is loaded from a DB, if not loaded yet. */
+
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
         // if (this.category && this.category !== this)
         //     this.category.load()
 
-        if (this.has_data() && !data_json) return this
+        if (this.data) return this.data   //field === null ? this.data : T.getOwnProperty(this.data, field)
         if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
+
+        // store and return a Promise that will eventually load this item's data;
+        // for efficiency, replace in self the proxy promise with an actual `data` object when it's ready
+        this.data = this.reload(use_schema).then(data => {this.data = data; return data})
+        // this.bind()
+
+        // if (field !== null && data.hasOwnProperty(field))
+        //     return this.data[field]
+        return this.data
+    }
+    async reload(use_schema = true, data_json = null) {
+        /* Return this item's data object newly loaded from a DB or from `data_json`. */
+        print(`${this.id_str}.reload() started...`)
         if (!data_json) {
             let record = await this.registry.load_record(this.id)
             data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
         }
         let schema = use_schema ? await this.category.get_schema() : generic_schema
         let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
-        this.data  = await schema.decode(state)
-        this.bind()
-        print(`done item.load() of [${this.cid},${this.iid}]`)
-        return this
+        let data   = await schema.decode(state)
+        print(`${this.id_str}.reload() done`)
+        return data
     }
-    bind() {
-        /*
-        Override this method in subclasses to provide initialization after this item is retrieved from DB.
-        Typically, this method initializes transient properties and performs cross-item initialization.
-        Only after bind(), the item is a fully functional element of a graph of interconnected items.
-        When creating new items, bind() should be called manually, typically after all related items
-        have been created and connected.
-        */
-    }
+    // bind() {
+    //     /*
+    //     Override this method in subclasses to provide initialization after this item is retrieved from DB.
+    //     Typically, this method initializes transient properties and performs cross-item initialization.
+    //     Only after bind(), the item is a fully functional element of a graph of interconnected items.
+    //     When creating new items, bind() should be called manually, typically after all related items
+    //     have been created and connected.
+    //     */
+    // }
 
     async ciid({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
@@ -155,11 +192,11 @@ export class Item {
     }
 
     async get(field, default_ = undefined) {
-        await this.load(field)
         // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
+        let data = await this.load()
 
-        if (this.data.hasOwnProperty(field))
-            return this.data[field]
+        if (data.hasOwnProperty(field))
+            return data[field]
 
         if (this.category !== this) {
             let cat_default = await this.category.get_default(field)
@@ -174,8 +211,8 @@ export class Item {
         Retrieve a list of this item's fields and their values, ordered appropriately.
         Multiple values for a single field are returned as separate entries.
         */
-        await this.load()
-        let data    = this.data
+        // await this.load()
+        let data    = await this.load() //this.data
         let fields  = await this.category.get_fields()
         let entries = []
 
@@ -295,9 +332,13 @@ export class RootCategory extends Category {
         /* Same as Item.encode_data(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encode_data(false)
     }
-    async load(field = null, data_json = null, use_schema = false) {
-        /* Same as Item.load(), but use_schema is false to avoid circular dependency during deserialization. */
-        return await super.load(field, data_json, false)
+    // async load(field = null, data_json = null, use_schema = false) {
+    //     /* Same as Item.load(), but use_schema is false to avoid circular dependency during deserialization. */
+    //     return await super.load(field, data_json, false)
+    // }
+    async reload(use_schema = false, data_json = null) {
+        /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
+        return await super.reload(data_json, false)
     }
 }
 

@@ -501,12 +501,14 @@ class Registry {
     get site() { return this.get_item(this.site_id) }       // this is async code, must be used with await !!
 
     async init_classpath() {
+        print('init_classpath() started...')
         let classpath = new Classpath
 
         await classpath.set_module("hyperweb.core",  "./item.js")  //Item, Category)
         await classpath.set_module("hyperweb.types", "./types.js")
 
         this.classpath = classpath
+        print('init_classpath() done')
     }
 
     async boot() {
@@ -519,14 +521,14 @@ class Registry {
         the properties are initialized from `data`, the object is bound through bind(),
         marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
         */
-        let root = this.root = new RootCategory(this, load)
+        let root = this.root = new RootCategory(this)
         if (load) await root.load()
         else {                           // root created anew? this.db must be used directly (no stage/commit), because
             // from .core.root import root_data
             // root.data = root_data
             this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
         }
-        root.bind()
+        // root.bind()
         return root
     }
     async load_record(id) {
@@ -543,14 +545,27 @@ class Registry {
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested is already present in cache? return the cached instance
-        let item = this.cache.get(id)
-        if (!item)
-            // create a stub of an item and insert to cache, then load item data - these two steps are
-            // separated to ensure proper handling of circular relationships between items
-            item = await this.create_stub(id)
+        let item = this.cache.get(id)       // this may return a Promise or an item, see below...
+        if (item) return item
 
-        if (load) await item.load()
-        return item
+        // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
+        // and only later on, the inner code of create_stub() gets executed; in this way, if another caller
+        // requests the same item asynchronously, it will receive the same unique item object, eventually, without
+        // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified
+        let pending = this.create_stub(id)
+        if (load) pending = pending.then(item => {item.load(); return item})
+        this.cache.set(id, pending)
+        pending.then(item => this.cache.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
+        return pending
+
+        // if (!item) {
+        //     // create a stub of an item and insert to cache, then load item data - these two steps are
+        //     // separated to ensure proper handling of circular relationships between items
+        //     item = await this.create_stub(id)
+        //     this.cache.set(id, item)
+        // }
+        // if (load) await item.load()
+        // return item
     }
     async create_stub(id, category = null) {
         /* Create a "stub" item (no data) with a given ID and insert to cache. */
@@ -559,7 +574,6 @@ class Registry {
         let itemclass = await category.get_class()
         let item = new itemclass(category)
         item.iid = iid
-        this.cache.set(id, item)
         return item
     }
 
@@ -615,11 +629,11 @@ export async function boot() {
     await registry.boot(data.request)
 
     // print('root:', await registry.get_item([0,0], {load: true}))
-    // print('[0,10]:', await registry.get_item([0,10], {load: true}))
-    // print('[10,1]:', await registry.get_item([10,1], {load: true}))
+    print('[0,10]:', await registry.get_item([0,10], {load: true}))
+    print('[10,1]:', await registry.get_item([10,1], {load: true}))
 
     let react_root = document.querySelector("#react-root")
-    // let item = await registry.get_item(config.id, {load: true})
+    // let item = await (await registry.get_item(config.id)).load()
     // print('main item:', item)
 
     registry.current_request.item.display(react_root)
