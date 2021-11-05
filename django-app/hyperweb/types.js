@@ -68,8 +68,8 @@ export class Schema {
         // return JSON.stringify(this._fields).slice(0, 60)
     }
 
-    widget({value, edit = true}) {
-        /* Return a React-compatible component that displays a `value` of an item's field and (possibly) allows its editing. */
+    Widget({value, edit = true}) {
+        /* A React-compatible component that displays a `value` of an item's field and (possibly) allows its editing. */
         return value.toString()
     }
 }
@@ -117,7 +117,7 @@ export class OBJECT extends Schema {
 export class SCHEMA extends OBJECT {
     static types = [Schema]
 
-    widget({value}) {
+    Widget({value}) {
         let schema = value
         let defalt = `${schema.default}`
         return SPAN({className: 'field'},
@@ -187,18 +187,18 @@ export class INTEGER extends FLOAT {
 
 export class STRING extends Primitive {
     static type = "string"
-    widget({value}) {
+    Widget({value}) {
         return e("hw-widget-string-", {'data-value': value})
     }
 }
 export class TEXT extends Primitive {
     static type = "string"
-    widget({value}) {
+    Widget({value}) {
         return e("hw-widget-text-", {'data-value': value})
     }
 }
 export class CODE extends TEXT {
-    widget({value}) {
+    Widget({value}) {
         return e("hw-widget-code-", {'data-value': value}) //dedent(value, false)})
     }
 }

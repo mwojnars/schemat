@@ -1,5 +1,21 @@
 /**********************************************************************************************************************
  **
+ **  GLOBAL SETTINGS
+ **
+ */
+
+Object.prototype.toString = function() {
+    // let json = trycatch(() => JSON.stringify(this), null)    -- this does NOT work due to circular call to toString() in stringify()
+    let value   = (v) => typeof v === 'object' ? `[${v.constructor.name}]` : JSON.stringify(v)
+    let entries = trycatch(() => Object.entries(this).map(([k,v]) => k+`:${value(v)}`).join(' '))
+    let summary = entries ? truncate(entries,40) : ''
+    if (this.constructor === Object && summary) return `{${summary}}`     // special display form for plain Objects: {..} with no class name
+    let gap = summary ? ' ' : ''
+    return `[${this.constructor.name}${gap}${summary}]`
+}
+
+/**********************************************************************************************************************
+ **
  **  UTILITIES
  **
  */
@@ -10,6 +26,12 @@ export function assert(test, msg) {
     if (test) return
     throw Error(`assertion failed: ${msg}`)
     // console.assert(test)
+}
+
+export function trycatch(func, fail = null) {
+    /* Call a function, func(), and return its result if no exception was raised; otherwise return `fail` value. */
+    try { return func() }
+    catch(e) { return fail }
 }
 
 const htmlEscapes = {
@@ -26,7 +48,7 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
-export function truncate(s, length = 255, {end = '...', killwords = false, maxdrop = 10, leeway = 0} = {}) {
+export function truncate(s, length = 255, {end = '...', killwords = false, maxdrop = null, leeway = 0} = {}) {
     /*
     Truncate a string `s` to a given maximum length, with ellipsis.
     If `killwords` is false, the last word will be discarded, unless the resulting string
@@ -49,7 +71,7 @@ export function truncate(s, length = 255, {end = '...', killwords = false, maxdr
     let words  = short.split(' ')
     let result = words.slice(0, -1).join(' ')
 
-    if (result.length < maxlen - maxdrop || result.length === 0)
+    if (maxdrop !== null && (result.length === 0 || result.length < maxlen - maxdrop))
         result = short
 
     return result + end

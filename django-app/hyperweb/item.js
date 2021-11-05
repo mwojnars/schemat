@@ -49,7 +49,7 @@ function CatalogRow({field, value, schema}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
-                TD({className: 'ct-value'}, schema.widget({value: value})),
+                TD({className: 'ct-value'}, schema.Widget({value: value})),
            )
 }
 
@@ -64,10 +64,9 @@ export class Item {
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
-    data            // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
-
-    category        // parent category of this item, as an instance of Category
-    registry        // Registry that manages access to this item (should refer to the unique global registry)
+    // data            // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
+    // category        // parent category of this item, as an instance of Category
+    // registry        // Registry that manages access to this item (should refer to the unique global registry)
 
     //loaded = null;    // names of fields that have been loaded so far
 
@@ -106,6 +105,8 @@ export class Item {
         - the newly loaded `data` fully replaces the existing this.data in such case.
         */
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
+        // if (this.category && this.category !== this)
+        //     this.category.load()
 
         if (this.has_data() && !data_json) return this
         if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
@@ -155,6 +156,7 @@ export class Item {
 
     async get(field, default_ = undefined) {
         await this.load(field)
+        // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
 
         if (this.data.hasOwnProperty(field))
             return this.data[field]
@@ -216,9 +218,8 @@ export class Item {
     }
 
     display(target) {
-        /* `target` is an HTMLElement where to inject the rendered HTML output. */
-        let Page = this.Page  //Item.Page
-        ReactDOM.render(e(Page, {item: this}), target)
+        /* Render this item into a `target` HTMLElement. */
+        ReactDOM.render(e(this.Page, {item: this}), target)
     }
 
     /***  React components  ***/
