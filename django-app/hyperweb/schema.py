@@ -235,13 +235,13 @@ class Schema:
                             # the detection of a multiple is done by a parent RECORD (TODO), which calls
                             # encode_multi() instead of encode() and appends * to a field name in output state
     
-    order      = None       # "first-best"/"last-best": which value is returned by Data.get() if multiple are present
+    order      = None       # "default-first"/"default-last": which value is returned by Data.get() if multiple are present
     blank      = True       # if True, None is a valid value that should be encoded by the parent schema rather than passed to self.encode()
     required   = False      # if True, a non-blank value for this schema must always be provided in a parent container, e.g., for a field in a RECORD
     deprecated = False      # if True, a given element (field) of data should no longer be used, rather it should be left blank
     
     is_catalog = False      # True only in CATALOG and subclasses
-    #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (OBJECT too!)
+    #is_compound = False    # True in schema classes that describe compound objects: catalogs, dicts, lists etc. (GENERIC too!)
     
     def __init__(self, default = None, info = None, multi = None):
         if default is not None: self.default = default
@@ -403,7 +403,7 @@ class Schema:
 #####  ATOMIC schema types
 #####
 
-class OBJECT(Schema):
+class GENERIC(Schema):
     """
     Accepts any python object, optionally restricted to objects whose type(obj) is equal to one of
     predefined type(s) - the `type` parameter - or the object is an instance of one of predefined base classes
@@ -436,7 +436,7 @@ class OBJECT(Schema):
     #     return types
     
     def __init__(self, *types, **params):
-        super(OBJECT, self).__init__(**params)
+        super(GENERIC, self).__init__(**params)
         if types: self.types = list(types)
         
     def _valid_type(self, obj):
@@ -467,11 +467,11 @@ class OBJECT(Schema):
 
 
 # the most generic schema for encoding/decoding of objects of any types
-generic_schema = OBJECT()
+generic_schema = GENERIC()
 
 #####################################################################################################################################################
 
-class SCHEMA(OBJECT):
+class SCHEMA(GENERIC):
     types = [Schema]
     
     __widget__ = """
@@ -588,8 +588,8 @@ class FILENAME(STRING):
 class ITEM(Schema):
     """
     Reference to an Item, encoded as ID=(CID,IID), or just IID if `category` or `cid` was provided.
-    ITEM without parameters is equivalent to OBJECT(Item), however, ITEM can also be parameterized,
-    which is not possible using an OBJECT.
+    ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
+    which is not possible using an GENERIC.
     """
     
     # the required category or CID of items to be encoded; if None, all items can be encoded
@@ -665,59 +665,6 @@ class ITEM(Schema):
 #####  COMPOUND schema types
 #####
 
-class ENUM(Schema):
-    """
-    Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
-    or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
-    of values in __init__() is meaningful for subsequent decoding.
-    """
-    schema   = STRING()
-    values   = None
-    valueset = None         # (temporary) set of permitted values
-    indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
-    
-    def __init__(self, *values, schema = None, indices = None, **params):
-        super(ENUM, self).__init__(**params)
-        self.values = list(values)
-        if schema is not None: self.schema = schema
-        if indices:
-            self.indices = indices
-        self._init()
-        
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['valueset']
-        state['indices'] = bool(self.indices)
-        return state
-    
-    def __setstate__(self, state):
-        self.__dict__ = state
-        self._init()
-        
-    def _init(self):
-        self.valueset = set(self.values)         # for fast lookups
-        if self.indices:
-            self.indices = {v: idx for idx, v in enumerate(self.values)}
-
-    def encode(self, value):
-        if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
-        if self.indices:
-            return self.indices[value]
-        else:
-            return self.schema.encode(value)
-    
-    def decode(self, encoded):
-        # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
-        
-        if self.indices:
-            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
-            return self.values[encoded]
-        
-        value = self.schema.decode(encoded)
-        if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
-        return value
-    
-    
 class LIST(Schema):
     type = list
     schema = None       # schema of individual elements
@@ -868,45 +815,105 @@ class CATALOG(DICT):
     #     """
     #     return hypertag(view).render(catalog = values)
 
-
-class VARIANT(Schema):
+class ENUM(Schema):
     """
-    Logical alternative of a number of distinct schemas: an app-layer object is serialized through
-    the first matching sub-schema, and its name is stored in the output to allow deserialization
-    through the same sub-schema.
+    Only string values are allowed by default. Use `schema` argument to pass another type of schema for values;
+    or set indices=True to enforce that only indices of values (0,1,...) are stored in the output - then the ordering
+    of values in __init__() is meaningful for subsequent decoding.
     """
-    schemas = None      # dict of sub-schemas; keys are names to be output during serialization
+    schema   = STRING()
+    values   = None
+    valueset = None         # (temporary) set of permitted values
+    indices  = None         # (temporary) dict of {index: value} when indices=True in __init__; serialized as False/True
     
-    def __init__(self, schemas, **params):
-        """Either schema_list or schema_dict should be provided, but not both."""
-        super(VARIANT, self).__init__(**params)
-        # if schema_list and schema_dict:
-        #     raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
-        # if schema_list:
-        #     self.schemas = dict(enumerate(schema_list))
-        # else:
-        self.schemas = schemas
+    def __init__(self, *values, schema = None, indices = None, **params):
+        super(ENUM, self).__init__(**params)
+        self.values = list(values)
+        if schema is not None: self.schema = schema
+        if indices:
+            self.indices = indices
+        self._init()
         
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['valueset']
+        state['indices'] = bool(self.indices)
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._init()
+        
+    def _init(self):
+        self.valueset = set(self.values)         # for fast lookups
+        if self.indices:
+            self.indices = {v: idx for idx, v in enumerate(self.values)}
+
     def encode(self, value):
-        
-        for name, schema in self.schemas:
-            try:
-                encoded = schema.encode(value)
-                return [name, encoded]
-                
-            except EncodeError:
-                continue
-                
-        raise EncodeError(f"invalid value, no matching sub-schema in VARIANT for: {value}")
-        
+        if value not in self.valueset: raise EncodeError(f"unknown ENUM value: {value}")
+        if self.indices:
+            return self.indices[value]
+        else:
+            return self.schema.encode(value)
+    
     def decode(self, encoded):
+        # if not isinstance(encoded, list): raise DecodeError(f"expected a list, got {encoded}")
         
-        if not (isinstance(encoded, list) and len(encoded) == 2):
-            raise DecodeError(f"data corruption in VARIANT, the encoded object should be a 2-element list, got {encoded} instead")
+        if self.indices:
+            if not isinstance(encoded, int): raise DecodeError(f"expected an integer as encoded ENUM value, got {encoded}")
+            return self.values[encoded]
         
-        name, encoded = encoded
-        schema = self.schemas[name]
-        return schema.decode(encoded)
+        value = self.schema.decode(encoded)
+        if value not in self.valueset: raise DecodeError(f"unknown ENUM value after decoding: {value}")
+        return value
+    
+    
+class SELECT(Schema):
+    """
+    Alternative of a number of string options, with optional values per option each having its own schema.
+    If schemas are provided, an app-level value has a form of (option, value); otherwise it's just an option.
+    """
+    schemas = None      # dict of sub-schemas; keys are option names to be output during serialization
+    
+
+# class VARIANT(Schema):
+#     """
+#     (SELECT/OPTIONS) Logical alternative of a number of distinct schemas: an app-layer object is serialized through
+#     the first matching sub-schema, and its name is stored in the output to allow deserialization
+#     through the same sub-schema.
+#     """
+#     schemas = None      # dict of sub-schemas; keys are names to be output during serialization
+#
+#     def __init__(self, schemas, **params):
+#         """Either schema_list or schema_dict should be provided, but not both."""
+#         super(VARIANT, self).__init__(**params)
+#         # if schema_list and schema_dict:
+#         #     raise Exception("invalid parameters, either schema_list or schema_dict should be provided, but not both")
+#         # if schema_list:
+#         #     self.schemas = dict(enumerate(schema_list))
+#         # else:
+#         self.schemas = schemas
+#
+#     def encode(self, value):
+#
+#         for name, schema in self.schemas:
+#             try:
+#                 encoded = schema.encode(value)
+#                 return [name, encoded]
+#
+#             except EncodeError:
+#                 continue
+#
+#         raise EncodeError(f"invalid value, no matching sub-schema in VARIANT for: {value}")
+#
+#     def decode(self, encoded):
+#
+#         if not (isinstance(encoded, list) and len(encoded) == 2):
+#             raise DecodeError(f"data corruption in VARIANT, the encoded object should be a 2-element list, got {encoded} instead")
+#
+#         name, encoded = encoded
+#         schema = self.schemas[name]
+#         return schema.decode(encoded)
         
 
 class RECORD(Schema):
@@ -921,7 +928,7 @@ class RECORD(Schema):
     fields = None           # dict of field names and their schema
     strict = True           # if True, only the fields present in `fields` can occur in a dict being encoded
 
-    default_schema = OBJECT(multi = True)       # schema to use for undeclared fields (if strict=False)
+    default_schema = GENERIC(multi = True)       # schema applied to undeclared fields (if strict=False)
     
     def __init__(self, fields, strict = None, **params):
         super(RECORD, self).__init__(**params)

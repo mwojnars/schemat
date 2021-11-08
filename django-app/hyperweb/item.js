@@ -30,7 +30,7 @@ function Catalog1({item}) {
                             DIV({className: 'ct-field'}, field),
                             e(Catalog2, {data: value, schema: schema.values, color: color})
                         )
-                        : e(CatalogRow, {field: field, value: value, schema: schema})
+                        : e(Entry, {field: field, value: value, schema: schema})
             )
         })
         return TABLE({className: 'catalog-1'}, TBODY(...rows))
@@ -41,11 +41,11 @@ function Catalog2({data, schema, color = 0}) {
     return DIV({className: 'wrap-offset'},
             TABLE({className: 'catalog-2'},
               TBODY(...Object.entries(data).map(([field, value]) =>
-                TR({className: `ct-color${color}`}, e(CatalogRow, {field: field, value: value, schema: schema})))
+                TR({className: `ct-color${color}`}, e(Entry, {field: field, value: value, schema: schema})))
            )))
 }
 
-function CatalogRow({field, value, schema = generic_schema}) {
+function Entry({field, value, schema = generic_schema}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
@@ -181,32 +181,34 @@ export class Item {
 
     async get_entries(order = 'schema') {
         /*
-        Retrieve a list of this item's fields and their values, ordered appropriately.
+        Retrieve a list of this item's fields and their values.
         Multiple values for a single field are returned as separate entries.
         */
         // await this.load()
-        let data    = await this.load() //this.data
-        let fields  = await this.category.get_fields()
-        let entries = []
+        let data = await this.load()
+        return Object.entries(data)
 
-        function push(f, v) {
-            if (v instanceof multiple)
-                for (w of v.values()) entries.push([f, w])
-            else
-                entries.push([f, v])
-        }
-
-        // retrieve entries by their order in category's schema
-        for (const f in fields) {
-            let v = T.getOwnProperty(data, f)
-            if (v !== undefined) push(f, v)
-        }
-
-        // add out-of-schema entries, in their natural order (of insertion)
-        for (const f in data)
-            if (!fields.hasOwnProperty(f)) push(f, data[f])
-
-        return entries
+        // let fields  = await this.category.get_fields()
+        // let entries = []
+        //
+        // function push(f, v) {
+        //     if (v instanceof multiple)
+        //         for (w of v.values()) entries.push([f, w])
+        //     else
+        //         entries.push([f, v])
+        // }
+        //
+        // // retrieve entries by their order in category's schema
+        // for (const f in fields) {
+        //     let v = T.getOwnProperty(data, f)
+        //     if (v !== undefined) push(f, v)
+        // }
+        //
+        // // add out-of-schema entries, in their natural order (of insertion)
+        // for (const f in data)
+        //     if (!fields.hasOwnProperty(f)) push(f, data[f])
+        //
+        // return entries
     }
     
     async url(route = null, raise = true, args = {}) {

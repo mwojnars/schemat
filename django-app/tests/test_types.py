@@ -2,7 +2,7 @@ import pickle, pytest
 
 from hyperweb.item import Item
 from hyperweb.boot import registry
-from hyperweb.schema import Schema, OBJECT, INTEGER, CLASS
+from hyperweb.schema import Schema, GENERIC, INTEGER, CLASS
 
 
 #####################################################################################################################################################
@@ -47,34 +47,34 @@ def test_Object():
     with pytest.raises(Exception, match = 'expected an instance'):
         run(INTEGER(), 10.5)       # hyperweb.errors.EncodeError: expected an instance of <class 'int'>, got <class 'float'>: 10.5
     
-    # run(OBJECT(CLASS), None)
-    run(OBJECT(CLASS), CLASS())
+    # run(GENERIC(CLASS), None)
+    run(GENERIC(CLASS), CLASS())
 
-    run(OBJECT(CLASS), CLASS())
-    run(OBJECT(T), T(x=10))
-    # run(OBJECT(base = T), T(x=10))
-    run(OBJECT(str), 'kot')
-    # run(OBJECT(type = (int, float)), 5.5)
-    # run(OBJECT(base = (int, float)), float_(5.5))
-    run(OBJECT(dict), {'a': 1, 'b': 2})
-    run(OBJECT(), {'a': 1, 'b': 2})
-    run(OBJECT(), {'a': 1, 'b': 2, '@': 'ampersand'})
-    run(OBJECT(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
-    run(OBJECT(), INTEGER())
-    # run(OBJECT(base = Schema), INTEGER())
-    # run(OBJECT(type = INTEGER), INTEGER())
-    # run(OBJECT(base = Schema), OBJECT(dict))
-    # run(OBJECT(base = Schema), OBJECT((list, dict, str, T)))
-    # run(OBJECT(base = Schema), OBJECT((C, T)))
+    run(GENERIC(CLASS), CLASS())
+    run(GENERIC(T), T(x=10))
+    # run(GENERIC(base = T), T(x=10))
+    run(GENERIC(str), 'kot')
+    # run(GENERIC(type = (int, float)), 5.5)
+    # run(GENERIC(base = (int, float)), float_(5.5))
+    run(GENERIC(dict), {'a': 1, 'b': 2})
+    run(GENERIC(), {'a': 1, 'b': 2})
+    run(GENERIC(), {'a': 1, 'b': 2, '@': 'ampersand'})
+    run(GENERIC(dict), {'a': 1, 'b': 2, '@': 'ampersand'})
+    run(GENERIC(), INTEGER())
+    # run(GENERIC(base = Schema), INTEGER())
+    # run(GENERIC(type = INTEGER), INTEGER())
+    # run(GENERIC(base = Schema), GENERIC(dict))
+    # run(GENERIC(base = Schema), GENERIC((list, dict, str, T)))
+    # run(GENERIC(base = Schema), GENERIC((C, T)))
 
     c = C()
     c.d = C()
     c.y = [3,4,'5']
     
     with pytest.raises(Exception, match = 'non-serializable'):
-        run(OBJECT(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
-    run(OBJECT(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
-    run(OBJECT(), {"@": "xyz", "v": 5})
+        run(GENERIC(), {'a':1, 'łąęńÓŚŹŻ':2, 3:[]})         # hyperweb.errors.EncodeError: non-serializable object state, contains a non-string key: 3
+    run(GENERIC(), [{'a':1, 'łąęńÓŚŹŻ':2, '3':[]}, None, c, C])
+    run(GENERIC(), {"@": "xyz", "v": 5})
 
 
 def test_Item():
@@ -89,8 +89,8 @@ def test_Item():
     site = registry.site
     from hyperweb.core.classes import Site
 
-    # run(OBJECT(base = Item), site, True)
-    run(OBJECT(Site), site, True)
+    # run(GENERIC(base = Item), site, True)
+    run(GENERIC(Site), site, True)
     
 
 #####################################################################################################################################################

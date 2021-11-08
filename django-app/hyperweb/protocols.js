@@ -1,6 +1,6 @@
 "use strict";
 
-import { print, assert } from './utils.js'
+import { print, assert, DIV, INPUT } from './utils.js'
 import { JSONx } from './serialize.js'
 import { generic_schema } from './types.js'
 import { RootCategory, ROOT_CID } from './item.js'
@@ -211,7 +211,6 @@ class EditableElement extends CustomElement {
 }
 // console.log(new EditableElement.View());
 
-
 class STRING_ extends EditableElement {
     static props = { enter_accepts: true }
     render = () => `
@@ -291,39 +290,39 @@ window.customElements.define('hw-widget-code-', CODE_);
 
 /*************************************************************************************************/
 
-class Item_ {
-
-    cid = null;
-    iid = null;
-
-    //loaded = null;    // a set of field names that have already been loaded
-
-    constructor(data_flat, category) {
-        this.category = category;
-        this.data = data_flat;
-    }
-
-    get(field) {
-        return this.data[field];                        // TODO: support repeated keys (MultiDict)
-    }
-
-    async load(data_flat) {
-        // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
-        // return fields.load_json(data_json);
-        return await generic_schema.decode(data_flat);
-        // return MultiDict(...);
-    }
-
-    static Page = class extends CustomElement {
-        init() {
-            let g = globalThis;
-            g.category = this._category = new Item_(this.read_data('p#category'));
-            g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
-        }
-    }
-}
-
-window.customElements.define('hw-item-page-', Item_.Page);
+// class Item_ {
+//
+//     cid = null;
+//     iid = null;
+//
+//     //loaded = null;    // a set of field names that have already been loaded
+//
+//     constructor(data_flat, category) {
+//         this.category = category;
+//         this.data = data_flat;
+//     }
+//
+//     get(field) {
+//         return this.data[field];                        // TODO: support repeated keys (MultiDict)
+//     }
+//
+//     async load(data_flat) {
+//         // let fields = this.category.get('fields');       // specification of fields {field_name: schema}
+//         // return fields.load_json(data_json);
+//         return await generic_schema.decode(data_flat);
+//         // return MultiDict(...);
+//     }
+//
+//     static Page = class extends CustomElement {
+//         init() {
+//             let g = globalThis;
+//             g.category = this._category = new Item_(this.read_data('p#category'));
+//             g.item     = this._item     = new Item_(this.read_data('p#item'), category)        //this.getAttribute('data-item')
+//         }
+//     }
+// }
+//
+// window.customElements.define('hw-item-page-', Item_.Page);
 
 
 /**********************************************************************************************************************/

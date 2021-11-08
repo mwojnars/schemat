@@ -25,7 +25,7 @@ page_item $item
 root_fields = dict(
     name         = STRING(info = "human-readable title of the category"),
     info         = STRING(),
-    startup_site = OBJECT(),
+    startup_site = GENERIC(),
     prototype    = ITEM(info = "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."),
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
@@ -36,7 +36,7 @@ root_fields = dict(
     #endpoint    = CODE(multiple = True, labels = True, default = {"view": page_item})
     #index       = ITEM(Index),
     
-    #custom_fields = BOOLEAN(default = False, info = "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is OBJECT()")
+    #custom_fields = BOOLEAN(default = False, info = "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()")
     
     #summary_idx = STRING(),    # name of index that should be used for loading core props: name, title, ... of the item
                                 # - these props are needed to generate "simple links" to this item on "edit" tabs of other items,

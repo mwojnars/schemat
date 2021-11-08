@@ -1,6 +1,8 @@
-import {e, delayed_render, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
+import {e, delayed_render, DIV, A, P, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
+
+const useState = React.useState
 
 export class DataError extends Error {}
 
@@ -80,9 +82,9 @@ export class Schema {
  **
  */
 
-export class OBJECT extends Schema {
+export class GENERIC extends Schema {
     /*
-    Accepts object of any class, optionally restricted to objects whose type(obj) is equal to one of
+    Accepts objects of any class, optionally restricted to objects whose type(obj) is equal to one of
     predefined type(s) - the `type` parameter - or the object is an instance of one of predefined base classes
     - the `base` parameter; at least one of these conditions must hold.
     If there is only one type in `type`, and an empty `base`, the type name is excluded
@@ -114,11 +116,11 @@ export class OBJECT extends Schema {
     }
     Widget({value}) {
         let state = this.encode(value)
-        return JSON.stringify(state)            // OBJECT displays raw JSON representation of a value
+        return JSON.stringify(state)            // GENERIC displays raw JSON representation of a value
     }
 }
 
-export class SCHEMA extends OBJECT {
+export class SCHEMA extends GENERIC {
     static types = [Schema]
 
     Widget({value}) {
@@ -138,7 +140,7 @@ export class SCHEMA extends OBJECT {
 }
 
 // the most generic schema for encoding/decoding of objects of any types
-export let generic_schema = new OBJECT()
+export let generic_schema = new GENERIC()
 
 
 /**********************************************************************************************************************/
@@ -191,8 +193,25 @@ export class INTEGER extends FLOAT {
 
 export class STRING extends Primitive {
     static type = "string"
+    // Widget({value}) {
+    //     return e("hw-widget-string-", {'data-value': value})
+    // }
     Widget({value}) {
-        return e("hw-widget-string-", {'data-value': value})
+        let [editing, setEditing] = useState(false)
+        let [current_value, setValue] = useState(value)
+
+        function show(e) {
+            setEditing(true)
+        }
+        function hide(e) {
+            setEditing(false)
+        }
+
+        if (!editing)
+            return DIV({onDoubleClick: show}, current_value)
+        else
+            return DIV({onBlur: hide},
+                INPUT({defaultValue: current_value, className: "focus input", type: "text", style: {width:"100%"}}))
     }
 }
 export class TEXT extends Primitive {
@@ -214,8 +233,8 @@ export class FILENAME extends STRING {}
 export class ITEM extends Schema {
     /*
     Reference to an Item, encoded as ID=(CID,IID), or just IID if `category` was provided.
-    ITEM without parameters is equivalent to OBJECT(Item), however, ITEM can also be parameterized,
-    which is not possible with an OBJECT.
+    ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
+    which is not possible with an GENERIC.
     */
 
     constructor(category, params = {}) {
@@ -391,7 +410,7 @@ export class RECORD extends Schema {
                                 // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
 
     // default field specification to be used for fields not present in `fields` (if strict=false)
-    static default_schema = new OBJECT(null, {multi: true})
+    static default_schema = new GENERIC(null, {multi: true})
 
     constructor(fields, params = {}) {
         let {strict, type, ...base_params} = params
@@ -437,7 +456,7 @@ export class RECORD extends Schema {
 //
 //     static type = Schema
 //     static fields = {
-//         'default': new OBJECT,
+//         'default': new GENERIC,
 //         'multi':   new BOOLEAN,
 //         'info':    new STRING,
 //     }

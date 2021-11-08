@@ -14,7 +14,7 @@
   fields:
     name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
     info: {'@': hyperweb.types.STRING}
-    startup_site: {'@': hyperweb.types.OBJECT}
+    startup_site: {'@': hyperweb.types.GENERIC}
     prototype: {info: 'Base category from which this one inherits. Multiple prototypes
         are allowed, the first one overrides settings of subsequent ones.', '@': hyperweb.types.ITEM}
     class_name: {default: hyperweb.core.Item, info: Full (dotted) path of a python
