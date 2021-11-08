@@ -1,8 +1,7 @@
 import {e, delayed_render, DIV, A, P, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
+import { useState, useRef } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
-
-const useState = React.useState
 
 export class DataError extends Error {}
 
@@ -193,25 +192,29 @@ export class INTEGER extends FLOAT {
 
 export class STRING extends Primitive {
     static type = "string"
-    // Widget({value}) {
-    //     return e("hw-widget-string-", {'data-value': value})
-    // }
-    Widget({value}) {
+
+    Widget({value, enter_accepts = true, esc_accepts = true}) {
         let [editing, setEditing] = useState(false)
         let [current_value, setValue] = useState(value)
+        let edit = useRef(null)
 
-        function show(e) {
+        let accept_keys = []
+        if (enter_accepts) { accept_keys.push("Enter") }
+        if (esc_accepts)   { accept_keys.push("Escape") }
+
+        const show = (e) => {
             setEditing(true)
+            // edit.current.focus()
         }
-        function hide(e) {
+        const hide = (e) => {
+            setValue(edit.current.value)
             setEditing(false)
         }
-
-        if (!editing)
-            return DIV({onDoubleClick: show}, current_value)
+        if (editing)
+            return INPUT({ref: edit, onBlur: hide, onKeyUp: ({key}) => accept_keys.includes(key) && hide(),
+                defaultValue: current_value, autoFocus: true, type: "text", style: {width:"100%"}})
         else
-            return DIV({onBlur: hide},
-                INPUT({defaultValue: current_value, className: "focus input", type: "text", style: {width:"100%"}}))
+            return DIV({onDoubleClick: show}, current_value)
     }
 }
 export class TEXT extends Primitive {

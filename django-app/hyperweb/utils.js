@@ -179,6 +179,11 @@ export const HTML  = (html) => { return {dangerouslySetInnerHTML: {__html:html}}
 
 export const FRAGMENT = (...nodes) => e(React.Fragment, {}, ...nodes)
 
+export const useEffect = React.useEffect
+export const useState  = React.useState
+export const useRef    = React.useRef
+
+/*************************************************************************************************/
 
 export function delayed_render(async_fun, empty = undefined) {
     /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
