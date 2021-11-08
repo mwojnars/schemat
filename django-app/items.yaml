@@ -13,7 +13,7 @@
       '}
   fields:
     name: {info: human-readable title of the category, '@': hyperweb.types.STRING}
-    info: {'@': hyperweb.types.STRING}
+    info: {'@': hyperweb.types.TEXT}
     startup_site: {'@': hyperweb.types.GENERIC}
     prototype: {info: 'Base category from which this one inherits. Multiple prototypes
         are allowed, the first one overrides settings of subsequent ones.', '@': hyperweb.types.ITEM}

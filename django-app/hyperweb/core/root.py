@@ -24,7 +24,7 @@ page_item $item
 # fields of categories, including the root category
 root_fields = dict(
     name         = STRING(info = "human-readable title of the category"),
-    info         = STRING(),
+    info         = TEXT(),
     startup_site = GENERIC(),
     prototype    = ITEM(info = "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."),
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),

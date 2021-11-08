@@ -1,5 +1,5 @@
-import {e, delayed_render, DIV, A, P, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
-import { useState, useRef } from './utils.js'
+import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './utils.js'
+import { useState, useRef, delayed_render } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
 
@@ -182,7 +182,6 @@ export class Primitive extends Schema {
 export class BOOLEAN extends Primitive {
     static type = "boolean"
 }
-
 export class FLOAT extends Primitive {
     static type = "number"
 }
@@ -190,17 +189,21 @@ export class INTEGER extends FLOAT {
     /* Same value type as FLOAT's, but different constraints. */
 }
 
-export class STRING extends Primitive {
+
+export class Textual extends Primitive {
+    /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static type = "string"
 
-    Widget({value, enter_accepts = true, esc_accepts = true}) {
+    EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
+
+    Widget({value}) {       // enter_accepts = true, esc_accepts = true
         let [editing, setEditing] = useState(false)
         let [current_value, setValue] = useState(value)
         let edit = useRef(null)
 
-        let accept_keys = []
-        if (enter_accepts) { accept_keys.push("Enter") }
-        if (esc_accepts)   { accept_keys.push("Escape") }
+        // let accept_keys = []
+        // if (enter_accepts) { accept_keys.push("Enter") }
+        // if (esc_accepts)   { accept_keys.push("Escape") }
 
         const show = (e) => {
             setEditing(true)
@@ -210,18 +213,59 @@ export class STRING extends Primitive {
             setValue(edit.current.value)
             setEditing(false)
         }
-        if (editing)
-            return INPUT({ref: edit, onBlur: hide, onKeyUp: ({key}) => accept_keys.includes(key) && hide(),
-                defaultValue: current_value, autoFocus: true, type: "text", style: {width:"100%"}})
-        else
-            return DIV({onDoubleClick: show}, current_value)
+        return editing ? this.EditWidget(current_value, hide, edit) : this.ViewWidget(current_value, show)
+
+        // if (editing)
+        //     return INPUT({ref: edit, onBlur: hide, onKeyUp: ({key}) => accept_keys.includes(key) && hide(),
+        //         defaultValue: current_value, autoFocus: true, type: "text", style: {width:"100%"}})
+        // else
+        //     return DIV({onDoubleClick: show}, current_value || this.EmptyValue())
     }
 }
-export class TEXT extends Primitive {
-    static type = "string"
-    Widget({value}) {
-        return e("hw-widget-text-", {'data-value': value})
+
+export class STRING extends Textual
+{
+    ViewWidget(value, show) {
+        return DIV({onDoubleClick: show}, value || this.EmptyValue())
     }
+    EditWidget(value, hide, ref) {
+        return INPUT({ref: ref, onBlur: hide,
+                onKeyUp: (e) => this.acceptKey(e) && hide(),
+                defaultValue: value, autoFocus: true, type: "text", style: {width:"100%"}}
+        )
+    }
+    acceptKey(event) { return ["Enter","Escape"].includes(event.key) }
+}
+export class TEXT extends Textual
+{
+    ViewWidget(value, show) {
+        return PRE(DIV(
+            {className: 'scroll', onDoubleClick: show},
+            value || this.EmptyValue()
+        ))
+    }
+    EditWidget(value, hide, ref) {
+        return PRE(TEXTAREA({
+            ref:            ref,
+            onBlur:         hide,
+            onKeyUp:        (e) => this.acceptKey(e) && hide(),
+            defaultValue:   value,
+            autoFocus:      true,
+            rows:           1,
+            wrap:           'off',
+            style:          {width:'100%', height:'10em'}
+        }))
+    }
+    acceptKey(event) { return event.key === "Escape" || (event.key === "Enter" && event.shiftKey) }
+
+    // <pre><div id="view" class="scroll"></div></pre>
+    // <div id="edit" style="display:none">
+    //     <pre><textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" /></pre>
+    // </div>
+
+    // Widget({value}) {
+    //     return e("hw-widget-text-", {'data-value': value})
+    // }
 }
 export class CODE extends TEXT {
     Widget({value}) {

@@ -154,8 +154,6 @@ function _e(name) {
             e(name, args[0], ...args.slice(1))
 }
 
-export const DIV   = _e('div')
-export const SPAN  = _e('span')
 export const A     = _e('a')
 export const B     = _e('b')
 export const I     = _e('i')
@@ -165,6 +163,9 @@ export const H2    = _e('h2')
 export const H3    = _e('h3')
 export const H4    = _e('h4')
 export const H5    = _e('h5')
+export const PRE   = _e('pre')
+export const DIV   = _e('div')
+export const SPAN  = _e('span')
 export const TABLE = _e('table')
 export const THEAD = _e('thead')
 export const TBODY = _e('tbody')
