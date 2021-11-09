@@ -589,15 +589,6 @@ class LocalRegistry extends Registry {
     }
 }
 
-class Changes {
-    /* List of changes to item's data that have been made by a user and have to be submitted
-       to the server and applied in DB. Multiple edits of the same data entry are merged into one.
-     */
-    constructor(item) {
-        this.item = item
-    }
-}
-
 /**********************************************************************************************************************
  **
  **  STARTUP
@@ -616,14 +607,12 @@ export async function boot() {
     await registry.boot(data.request)
 
     // print('root:', await registry.get_item([0,0], {load: true}))
-    print('[0,10]:', await registry.get_item([0,10], {load: true}))
-    print('[10,1]:', await registry.get_item([10,1], {load: true}))
+    // print('[0,10]:', await registry.get_item([0,10], {load: true}))
+    // print('[10,1]:', await registry.get_item([10,1], {load: true}))
 
     let react_root = document.querySelector("#react-root")
     // let item = await (await registry.get_item(config.id)).load()
     // print('main item:', item)
 
-    let item = registry.current_request.item
-    let changes = new Changes(item)
-    item.display(react_root, changes)
+    registry.current_request.item.display(react_root)
 }

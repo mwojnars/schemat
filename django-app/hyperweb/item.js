@@ -1,4 +1,4 @@
-import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML} from './utils.js'
+import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, multiple, RECORD } from './types.js'
 
@@ -49,6 +49,30 @@ function Entry({field, value, schema = generic_schema}) {
                 TD({className: 'ct-value'}, schema.Widget({value: value})),
            )
 }
+
+/**********************************************************************************************************************/
+
+class Changes {
+    /* List of changes to item's data that have been made by a user and have to be submitted
+       to the server and applied in DB. Multiple edits of the same data entry are merged into one.
+     */
+    constructor(item) {
+        this.item = item
+    }
+    reset() {
+        print('Reset clicked')
+    }
+    submit() {
+        print('Submit clicked')
+    }
+
+    Buttons = ({changes}) =>
+        DIV({style: {textAlign:'right', paddingTop:'20px'}},
+            BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: changes.reset,  disabled: false}, 'Reset'), ' ',
+            BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: changes.submit, disabled: false}, 'Submit'),
+        )
+}
+
 
 /**********************************************************************************************************************
  **
@@ -233,10 +257,10 @@ export class Item {
 
     /***  React components  ***/
 
-    Title(props) {
+    Title({item}) {
         return delayed_render(async () => {
-            let name = await props.item.get('name', null)
-            let ciid = await props.item.ciid()
+            let name = await item.get('name', null)
+            let ciid = await item.ciid()
             if (name)
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
             else
@@ -244,12 +268,13 @@ export class Item {
         })
     }
 
-    Page(props) {           // React functional component
-        let item = props.item
+    Page({item}) {                                  // React functional component
+        let changes = new Changes(item)
         return DIV(
-            e(item.Title, props),
+            e(item.Title, {item}),
             H2('Properties'),                               //{style: {color:'blue'}}
-            e(Catalog1, props)
+            e(Catalog1, {item, changes}),
+            e(changes.Buttons, {changes}),
         )
     }
 }

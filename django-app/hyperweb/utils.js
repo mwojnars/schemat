@@ -174,6 +174,7 @@ export const TH    = _e('th')
 export const TR    = _e('tr')
 export const TD    = _e('td')
 export const INPUT = _e('input')
+export const BUTTON   = _e('button')
 export const TEXTAREA = _e('textarea')
 
 export const HTML  = (html) => { return {dangerouslySetInnerHTML: {__html:html}} }
