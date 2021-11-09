@@ -184,53 +184,48 @@ base_hy = File_(
         assets_external
         assets_internal
     
-    # %protocol @body classname
-    #     # asset ".../protocols.js"
-    #     div .widget protocol=classname
-    #         @body
+    # %catalog_row key value schema
+    #     # a row containing an atomic value of a data field (not a subcatalog)
+    #     th .ct-field | $key
+    #     # td .ct-flags | *
+    #     td .ct-value / $schema.display(value)
+    #
+    # %catalog_2 data schema start_color=0
+    #     $c = start_color
+    #     div .wrap-offset : table .catalog-2
+    #         for field, value in data.items()
+    #             tr class="ct-color{c}"
+    #                 catalog_row $field $value $schema
+    #             # $c = 1 - c
+    #
+    # %catalog_1 item
+    #     $c = 0          # alternating color of rows: 0 or 1
+    #     table .catalog-1
+    #         for field, value in item.get_entries()
+    #             $schema = item.category.get_schema(field)
+    #             tr class="ct-color{c}"
+    #                 if schema.is_catalog
+    #                     td .ct-nested colspan=2
+    #                         div .ct-field | {field}
+    #                         catalog_2 $value $schema.values $c
+    #                 else
+    #                     catalog_row $field $value $schema
+    #             $c = 1 - c
+    #
+    # %properties item
+    #     from hyperweb.serialize import $JSON, $json
+    #
+    #     custom "hw-item-page-"
+    #         data #category | $item.category.dump_data(use_schema = False)
+    #         data #item     | $item.dump_data(use_schema = False)
+    #         < catalog_1 $item
+    #         div style="text-align:right; padding-top:20px"
+    #             button #revert .btn .btn-secondary disabled=False | Revert
+    #             button #submit .btn .btn-primary   disabled=False | Submit
 
-    %catalog_row key value schema
-        # a row containing an atomic value of a data field (not a subcatalog)
-        th .ct-field | $key
-        # td .ct-flags | *
-        td .ct-value / $schema.display(value)
-
-    %catalog_2 data schema start_color=0
-        $c = start_color
-        div .wrap-offset : table .catalog-2
-            for field, value in data.items()
-                tr class="ct-color{c}"
-                    catalog_row $field $value $schema
-                # $c = 1 - c
-    
-    %catalog_1 item
-        $c = 0          # alternating color of rows: 0 or 1
-        table .catalog-1
-            for field, value in item.get_entries()
-                $schema = item.category.get_schema(field)
-                tr class="ct-color{c}"
-                    if schema.is_catalog
-                        td .ct-nested colspan=2
-                            div .ct-field | {field}
-                            catalog_2 $value $schema.values $c
-                    else
-                        catalog_row $field $value $schema
-                $c = 1 - c
-                
     %data @dump id=None type="json"
         p id=$id style="display:none" @ dump
     
-    %properties item
-        from hyperweb.serialize import $JSON, $json
-        
-        custom "hw-item-page-"
-            data #category | $item.category.dump_data(use_schema = False)
-            data #item     | $item.dump_data(use_schema = False)
-            < catalog_1 $item
-            div style="text-align:right; padding-top:20px"
-                button #cancel-changes .btn .btn-secondary disabled=False | Cancel
-                button #save-changes   .btn .btn-primary   disabled=False | Save
-
     %page @body
         doctype
         ...html @body
@@ -246,23 +241,18 @@ base_hy = File_(
             #   div .col-1
             #   div .col-10
             body
-                h1
-                    $ciid = item.ciid()
-                    try
-                        | $item['name']
-                        span style="font-size:40%; font-weight:normal" / $ciid
-                    else / $ciid
+                # h1
+                #     $ciid = item.ciid()
+                #     try
+                #         | $item['name']
+                #         span style="font-size:40%; font-weight:normal" / $ciid
+                #     else / $ciid
+                #
+                # h2 | Properties
+                # properties $item
                 
-                h2 | Properties
-                properties $item
-                
-                # dump client configuration and preloaded items to json and embed them
-                #$config = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}
-                #$items  = item.response_items()
-                
-                from hyperweb.serialize import $json, $JSON
-                # data #data-items | $JSON.dump64(item.response_items())
-                # data #data-data  | $JSON.dump64(item.response_data())
+                # dump client configuration and preloaded items to json and embed them in HTML
+                from hyperweb.serialize import $JSON
                 data #data-items | $JSON.dump(item.response_items())
                 data #data-data  | $JSON.dump(item.response_data())
                 

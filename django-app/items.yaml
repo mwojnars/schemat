@@ -239,50 +239,45 @@
     \n        script type=\"module\" !\n            import { boot } from \"/files/protocols.js\"\
     \n            import { JSONx } from \"/files/serialize.js\"\n            window.JSONx\
     \ = JSONx\n            boot()\n\n    %assets\n        assets_external\n      \
-    \  assets_internal\n    \n    # %protocol @body classname\n    #     # asset \"\
-    .../protocols.js\"\n    #     div .widget protocol=classname\n    #         @body\n\
-    \n    %catalog_row key value schema\n        # a row containing an atomic value\
-    \ of a data field (not a subcatalog)\n        th .ct-field | $key\n        # td\
-    \ .ct-flags | *\n        td .ct-value / $schema.display(value)\n\n    %catalog_2\
-    \ data schema start_color=0\n        $c = start_color\n        div .wrap-offset\
-    \ : table .catalog-2\n            for field, value in data.items()\n         \
-    \       tr class=\"ct-color{c}\"\n                    catalog_row $field $value\
-    \ $schema\n                # $c = 1 - c\n    \n    %catalog_1 item\n        $c\
-    \ = 0          # alternating color of rows: 0 or 1\n        table .catalog-1\n\
-    \            for field, value in item.get_entries()\n                $schema =\
-    \ item.category.get_schema(field)\n                tr class=\"ct-color{c}\"\n\
-    \                    if schema.is_catalog\n                        td .ct-nested\
-    \ colspan=2\n                            div .ct-field | {field}\n           \
-    \                 catalog_2 $value $schema.values $c\n                    else\n\
-    \                        catalog_row $field $value $schema\n                $c\
-    \ = 1 - c\n                \n    %data @dump id=None type=\"json\"\n        p\
-    \ id=$id style=\"display:none\" @ dump\n    \n    %properties item\n        from\
-    \ hyperweb.serialize import $JSON, $json\n        \n        custom \"hw-item-page-\"\
-    \n            data #category | $item.category.dump_data(use_schema = False)\n\
-    \            data #item     | $item.dump_data(use_schema = False)\n          \
-    \  < catalog_1 $item\n            div style=\"text-align:right; padding-top:20px\"\
-    \n                button #cancel-changes .btn .btn-secondary disabled=False |\
-    \ Cancel\n                button #save-changes   .btn .btn-primary   disabled=False\
-    \ | Save\n\n    %page @body\n        doctype\n        ...html @body\n    \n  \
-    \  %page_item @extra item\n        page\n            head\n                title\
-    \ | $item['name']? $item.ciid(False)\n                assets\n               \
-    \ style / $item.registry.read('base.css')\n    \n            # body .container\
-    \ : div .row\n            #   div .col-1\n            #   div .col-10\n      \
-    \      body\n                h1\n                    $ciid = item.ciid()\n   \
-    \                 try\n                        | $item['name']\n             \
-    \           span style=\"font-size:40%; font-weight:normal\" / $ciid\n       \
-    \             else / $ciid\n                \n                h2 | Properties\n\
-    \                properties $item\n                \n                # dump client\
-    \ configuration and preloaded items to json and embed them\n                #$config\
-    \ = {'ajax_url': item.registry.site.ajax_url(), 'id': list(item.id)}\n       \
-    \         #$items  = item.response_items()\n                \n               \
-    \ from hyperweb.serialize import $json, $JSON\n                # data #data-items\
-    \ | $JSON.dump64(item.response_items())\n                # data #data-data  |\
-    \ $JSON.dump64(item.response_data())\n                data #data-items | $JSON.dump(item.response_items())\n\
-    \                data #data-data  | $JSON.dump(item.response_data())\n       \
-    \         \n                div #react-root\n                \n              \
-    \  @extra\n            \n    %page_category category\n        page_item category\n\
-    \            h2 | Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
+    \  assets_internal\n    \n    # %catalog_row key value schema\n    #     # a row\
+    \ containing an atomic value of a data field (not a subcatalog)\n    #     th\
+    \ .ct-field | $key\n    #     # td .ct-flags | *\n    #     td .ct-value / $schema.display(value)\n\
+    \    #\n    # %catalog_2 data schema start_color=0\n    #     $c = start_color\n\
+    \    #     div .wrap-offset : table .catalog-2\n    #         for field, value\
+    \ in data.items()\n    #             tr class=\"ct-color{c}\"\n    #         \
+    \        catalog_row $field $value $schema\n    #             # $c = 1 - c\n \
+    \   #\n    # %catalog_1 item\n    #     $c = 0          # alternating color of\
+    \ rows: 0 or 1\n    #     table .catalog-1\n    #         for field, value in\
+    \ item.get_entries()\n    #             $schema = item.category.get_schema(field)\n\
+    \    #             tr class=\"ct-color{c}\"\n    #                 if schema.is_catalog\n\
+    \    #                     td .ct-nested colspan=2\n    #                    \
+    \     div .ct-field | {field}\n    #                         catalog_2 $value\
+    \ $schema.values $c\n    #                 else\n    #                     catalog_row\
+    \ $field $value $schema\n    #             $c = 1 - c\n    #\n    # %properties\
+    \ item\n    #     from hyperweb.serialize import $JSON, $json\n    #\n    #  \
+    \   custom \"hw-item-page-\"\n    #         data #category | $item.category.dump_data(use_schema\
+    \ = False)\n    #         data #item     | $item.dump_data(use_schema = False)\n\
+    \    #         < catalog_1 $item\n    #         div style=\"text-align:right;\
+    \ padding-top:20px\"\n    #             button #revert .btn .btn-secondary disabled=False\
+    \ | Revert\n    #             button #submit .btn .btn-primary   disabled=False\
+    \ | Submit\n\n    %data @dump id=None type=\"json\"\n        p id=$id style=\"\
+    display:none\" @ dump\n    \n    %page @body\n        doctype\n        ...html\
+    \ @body\n    \n    %page_item @extra item\n        page\n            head\n  \
+    \              title | $item['name']? $item.ciid(False)\n                assets\n\
+    \                style / $item.registry.read('base.css')\n    \n            #\
+    \ body .container : div .row\n            #   div .col-1\n            #   div\
+    \ .col-10\n            body\n                # h1\n                #     $ciid\
+    \ = item.ciid()\n                #     try\n                #         | $item['name']\n\
+    \                #         span style=\"font-size:40%; font-weight:normal\" /\
+    \ $ciid\n                #     else / $ciid\n                #\n             \
+    \   # h2 | Properties\n                # properties $item\n                \n\
+    \                # dump client configuration and preloaded items to json and embed\
+    \ them in HTML\n                from hyperweb.serialize import $JSON\n       \
+    \         data #data-items | $JSON.dump(item.response_items())\n             \
+    \   data #data-data  | $JSON.dump(item.response_data())\n                \n  \
+    \              div #react-root\n                \n                @extra\n   \
+    \         \n    %page_category category\n        page_item category\n        \
+    \    h2 | Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
     \                    tr\n                        td / #{item.iid} &nbsp;\n   \
     \                     td\n                            $ iname = item['name']?\
     \ or item\n                            try\n                                a\
