@@ -189,8 +189,8 @@ export const useRef    = React.useRef
 export function delayed_render(async_fun, empty = undefined) {
     /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
        rendering output through async_fun() and requests re-rendering to return the final result. */
-    const [output, setOutput] = React.useState(empty)
-    React.useEffect(async () => setOutput(await async_fun()), [])
+    const [output, setOutput] = useState(empty)
+    useEffect(async () => setOutput(await async_fun()), [])
     return (output === empty) ? null : output
 }
 

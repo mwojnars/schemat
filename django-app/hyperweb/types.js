@@ -1,5 +1,5 @@
 import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './utils.js'
-import { useState, useRef, delayed_render } from './utils.js'
+import { useState, useRef, useEffect, delayed_render } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
 
@@ -196,60 +196,49 @@ export class Textual extends Primitive {
 
     EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
 
-    Widget({value}) {       // enter_accepts = true, esc_accepts = true
+    Widget({value}) {
         let [editing, setEditing] = useState(false)
-        let [current_value, setValue] = useState(value)
-        let edit = useRef(null)
-
-        // let accept_keys = []
-        // if (enter_accepts) { accept_keys.push("Enter") }
-        // if (esc_accepts)   { accept_keys.push("Escape") }
+        let [currentValue, setValue] = useState(value)
+        let editor = useRef(null)
 
         const show = (e) => {
             setEditing(true)
-            // edit.current.focus()
+            // editor.current.focus()
         }
         const hide = (e) => {
-            setValue(edit.current.value)
+            setValue(editor.current.value)
             setEditing(false)
         }
-        return editing ? this.EditWidget(current_value, hide, edit) : this.ViewWidget(current_value, show)
-
-        // if (editing)
-        //     return INPUT({ref: edit, onBlur: hide, onKeyUp: ({key}) => accept_keys.includes(key) && hide(),
-        //         defaultValue: current_value, autoFocus: true, type: "text", style: {width:"100%"}})
-        // else
-        //     return DIV({onDoubleClick: show}, current_value || this.EmptyValue())
+        return editing ? this.Editor(currentValue, hide, editor) : this.Viewer(currentValue, show)
     }
 }
 
 export class STRING extends Textual
 {
-    ViewWidget(value, show) {
+    Viewer(value, show) {
         return DIV({onDoubleClick: show}, value || this.EmptyValue())
     }
-    EditWidget(value, hide, ref) {
-        return INPUT({ref: ref, onBlur: hide,
+    Editor(value, hide, ref) {
+        return INPUT({defaultValue: value, ref: ref, onBlur: hide,
                 onKeyUp: (e) => this.acceptKey(e) && hide(),
-                defaultValue: value, autoFocus: true, type: "text", style: {width:"100%"}}
+                autoFocus: true, type: "text", style: {width:"100%"}}
         )
     }
     acceptKey(event) { return ["Enter","Escape"].includes(event.key) }
 }
 export class TEXT extends Textual
 {
-    ViewWidget(value, show) {
-        return PRE(DIV(
-            {className: 'scroll', onDoubleClick: show},
+    Viewer(value, show) {
+        return PRE(DIV({className: 'scroll', onDoubleClick: show},
             value || this.EmptyValue()
         ))
     }
-    EditWidget(value, hide, ref) {
+    Editor(value, hide, ref) {
         return PRE(TEXTAREA({
+            defaultValue:   value,
             ref:            ref,
             onBlur:         hide,
             onKeyUp:        (e) => this.acceptKey(e) && hide(),
-            defaultValue:   value,
             autoFocus:      true,
             rows:           1,
             wrap:           'off',
@@ -257,21 +246,79 @@ export class TEXT extends Textual
         }))
     }
     acceptKey(event) { return event.key === "Escape" || (event.key === "Enter" && event.shiftKey) }
-
-    // <pre><div id="view" class="scroll"></div></pre>
-    // <div id="edit" style="display:none">
-    //     <pre><textarea class="focus input" rows="1" style="width:100%;height:10em" wrap="off" /></pre>
-    // </div>
-
-    // Widget({value}) {
-    //     return e("hw-widget-text-", {'data-value': value})
-    // }
 }
-export class CODE extends TEXT {
-    Widget({value}) {
-        return e("hw-widget-code-", {'data-value': value}) //dedent(value, false)})
+export class CODE extends TEXT
+{
+    Editor(value, hide, ref) {
+        return DIV({
+            defaultValue:   value,
+            ref:            ref,
+            onBlur:         hide,
+            onKeyUp:        (e) => this.acceptKey(e) && hide(),
+            autoFocus:      true,
+            className:      "ace-editor",
+        })
     }
+
+    // viewer_options = {
+    //     mode:           "ace/mode/haml",
+    //     theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+    //     readOnly:               true,
+    //     showGutter:             false,
+    //     displayIndentGuides:    false,
+    //     showPrintMargin:        false,
+    //     highlightActiveLine:    false,
+    // };
+    editor_options = {
+        mode:           "ace/mode/haml",
+        theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+        showGutter:             true,
+        displayIndentGuides:    true,
+        showPrintMargin:        true,
+        highlightActiveLine:    true,
+    };
+
+    Widget({value}) {
+        let [editing, setEditing] = useState(false)
+        let [currentValue, setValue] = useState(value)
+        let editor_div = useRef(null)
+        let editor_ace = null
+
+        useEffect(() => {
+            if (!editing) return
+            // viewer_ace = this.create_editor("#view", this.view_options);
+            // viewer_ace.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
+            // viewer_ace.session.setValue(currentValue)
+
+            let div = editor_div.current
+            editor_ace = ace.edit(div, this.editor_options)
+            editor_ace.session.setValue(currentValue)
+            new ResizeObserver(() => editor_ace.resize()).observe(div)      // allow resizing of the editor box by a user, must update the Ace widget then
+            editor_ace.focus()
+            // editor_ace.gotoLine(1)
+            // editor_ace.session.setScrollTop(1)
+
+        }, [editing])
+
+        const show = () => setEditing(true)
+        const hide = () => {
+            setValue(editor_ace.session.getValue())
+            setEditing(false)
+        }
+        return editing ? this.Editor(currentValue, hide, editor_div) : this.Viewer(currentValue, show)
+    }
+    // ACE editor methods/props:
+    //  editor.renderer.setAnnotations()
+    //  editor.resize()
+    //  editor.renderer.updateFull()
+    //  position:relative
+    //  editor.clearSelection(1)
+    //  editor.gotoLine(1)
+    //  editor.getSession().setScrollTop(1)
+    //  editor.blur()
+    //  editor.focus()
 }
+
 export class FILENAME extends STRING {}
 
 

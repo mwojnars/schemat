@@ -4,9 +4,6 @@ import { generic_schema, multiple, RECORD } from './types.js'
 
 export const ROOT_CID = 0
 
-const useState  = React.useState
-const useEffect = React.useEffect
-
 
 /**********************************************************************************************************************
  **
