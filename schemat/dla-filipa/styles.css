@@ -1,0 +1,55 @@
+/*** GENERAL STYLES */
+
+html {
+  --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
+  --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
+  --ct-th1-width: 300px;
+  --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+  --textarea-height: 12rem;
+}
+body {
+  width: 1120px;
+  margin: 0 auto;
+  padding-bottom: 50px;
+  font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/*** SITEWIDE */
+
+a { color: #006ecc }
+a:visited { color: #00427a }
+
+.btn { border: none; border-radius: 0; }
+.btn-primary, .btn-primary.disabled, .btn-primary:disabled       { background-color: #5b8fdd; }
+.btn-primary:hover                                               { background-color: #4b78bb; }
+.btn-secondary, .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993; }
+
+/*** ITEM PAGE */
+
+.ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
+.ct-color1                      { background: #f6f6f6; }
+
+.catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+.wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
+td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }
+
+.catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
+.catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
+.catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
+
+.catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
+.catalog-1 th                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+
+/* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
+.catalog-2                  { width: 100%; }
+.catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+/*.catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
+
+.catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
+.catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
+
+.ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
+.ct-value .field .default   { color: #888; }
+.ct-value .field .info      { font-style: italic; }
+.ct-value pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace; }

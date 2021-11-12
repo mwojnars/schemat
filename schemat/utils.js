@@ -146,7 +146,11 @@ export class T extends Types {}  // T is an alias for Types
  **
  */
 
-export const e = React.createElement         // React must be imported in global scope
+let React = globalThis.React                            // on client
+try { React = (await import("react")).default }         // on server
+catch (e) {}
+
+export const e = React.createElement
 
 function _e(name) {
     return (...args) =>
