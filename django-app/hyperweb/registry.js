@@ -2,8 +2,8 @@
 
 import { print, assert, DIV, INPUT } from './utils.js'
 import { JSONx } from './serialize.js'
-import { generic_schema } from './types.js'
 import { RootCategory, ROOT_CID } from './item.js'
+// import { generic_schema } from './types.js'
 // import * as mod_types from './types.js'
 
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -359,7 +359,7 @@ function read_data(node, type = "json") {
  **
  */
 
-class LocalCache {
+class ClientCache {
     /* Client-side item cache based on Web Storage (local storage or session storage). */
     // TODO: implement
 
@@ -573,13 +573,13 @@ class Registry {
     }
 }
 
-class LocalRegistry extends Registry {
+class ClientRegistry extends Registry {
     /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
 
     constructor(boot_items, ajax_url) {
         super()
         this.db    = new AjaxDB(ajax_url, boot_items)
-        this.cache = new LocalCache()
+        this.cache = new ClientCache()
         // this.current_request = current_request
     }
     async boot(request) {
@@ -588,6 +588,10 @@ class LocalRegistry extends Registry {
         // this.current_request.item.load()
     }
 }
+
+export class ServerRegistry extends Registry {
+}
+
 
 /**********************************************************************************************************************
  **
@@ -602,7 +606,7 @@ export async function boot() {
     print('data-items: ', items)
     print('data-data:', data)
 
-    let registry = globalThis.registry = new LocalRegistry(items, data.ajax_url)
+    let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
     await registry.init_classpath()
     await registry.boot(data.request)
 

@@ -373,7 +373,7 @@ class Schema:
                 div #view .view-long/.view-short
                 div #form
           - %protocol @body js_class
-              asset ".../protocols.js"
+              asset ".../registry.js"
               div protocol=js_class
                 @body
         ----

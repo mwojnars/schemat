@@ -182,11 +182,12 @@ export class Primitive extends Schema {
 export class BOOLEAN extends Primitive {
     static type = "boolean"
 }
-export class FLOAT extends Primitive {
+export class NUMBER extends Primitive {
+    /* Floating-point number */
     static type = "number"
 }
-export class INTEGER extends FLOAT {
-    /* Same value type as FLOAT's, but different constraints. */
+export class INTEGER extends NUMBER {
+    /* Same as NUMBER, but with additional constraints. */
 }
 
 

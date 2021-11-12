@@ -53,7 +53,7 @@ function Entry({field, value, schema = generic_schema}) {
 /**********************************************************************************************************************/
 
 class Changes {
-    /* List of changes to item's data that have been made by a user and have to be submitted
+    /* List of changes to item's data that have been made by a user and can be submitted
        to the server and applied in DB. Multiple edits of the same data entry are merged into one.
      */
     constructor(item) {

@@ -438,7 +438,7 @@ class Item(object, metaclass = MetaItem):
     def response_data(self):
         """Request and configuration data to be embedded in HTML response; .request is state-encoded."""
         req = self.registry.current_request
-        request  = {'item': req.item, 'app': req.app, 'state': req.state}
+        request  = {'item': req.item, 'state': req.state, 'app': req.app}
         ajax_url = self.registry.site.ajax_url()
         return {'ajax_url': ajax_url, 'request': JSON.encode(request)}
 

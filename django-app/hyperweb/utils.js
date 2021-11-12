@@ -6,6 +6,7 @@
 
 export function toString() {
     // let json = trycatch(() => JSON.stringify(this), null)    -- this does NOT work due to circular call to toString() in stringify()
+    if (this === undefined) return "undefined"
     const value  = (v) => typeof v === 'object' ? `[${v.constructor.name}]` : JSON.stringify(v)
     let isObject = (this.constructor === Object)
     let sep      = (isObject ? ', ' : ' ')

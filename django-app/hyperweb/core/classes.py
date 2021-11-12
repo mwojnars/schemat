@@ -130,17 +130,20 @@ class Site(Item):
     
     def handle(self, request):
         """Forward the request to a root application configured in the `app` property."""
-        url  = request.url
-        app  = self['application']
-        base = self['base_url']
-        if base[-1:] == '/': base = base[:-1]           # truncate the trailing '/'
-        
-        path = url[len(base):]                          # path starts with '/', or is an empty string!
+        app = self['application']
+        return app.handle(request, request.path)
 
-        if not url.startswith(base): raise Exception(f'page not found: {url}')
-
-        # request.base_url = base
-        return app.handle(request, path)
+        # url  = request.url
+        # app  = self['application']
+        # base = self['base_url']
+        # if base[-1:] == '/': base = base[:-1]           # truncate the trailing '/'
+        #
+        # path = url[len(base):]                          # path starts with '/', or is an empty string!
+        #
+        # if not url.startswith(base): raise Exception(f'page not found: {url}')
+        #
+        # # request.base_url = base
+        # return app.handle(request, path)
 
 
 #####################################################################################################################################################
@@ -292,7 +295,7 @@ class AppFiles(Application):
     "file path" routing pattern: .../dir1/dir2/file.txt
     """
     def handle(self, request, path):
-        if not path.startswith('/'): return redirect(request.url + '/')
+        if not path.startswith('/'): return redirect(request.path + '/')
 
         # TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
         filepath, request.endpoint = self._split_endpoint(path[1:])
@@ -309,7 +312,7 @@ class AppFiles(Application):
         if item.isinstance(File_):
             default_endpoint = ('download',)
         elif item.isinstance(Folder_):
-            # if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.url + '/')       # folder URLs must end with '/'
+            # if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.path + '/')       # folder URLs must end with '/'
             request.state['folder'] = item          # leaf folder, for use when generating file URLs (url_path())
             # default_endpoint = ('browse',)
         

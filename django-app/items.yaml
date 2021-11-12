@@ -235,8 +235,8 @@
     \ - https://www.favicon.cc/?action=icon&file_id=967133\n        # link href=\"\
     data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==\"\
     \ rel=\"icon\" type=\"image/x-icon\"\n        \n        # script type=\"module\"\
-    \ src=\"/sys.file:1@get\"\n        # script type=\"module\" src=\"/files/protocols.js\"\
-    \n        script type=\"module\" !\n            import { boot } from \"/files/protocols.js\"\
+    \ src=\"/sys.file:1@get\"\n        # script type=\"module\" src=\"/files/registry.js\"\
+    \n        script type=\"module\" !\n            import { boot } from \"/files/registry.js\"\
     \n            import { JSONx } from \"/files/serialize.js\"\n            window.JSONx\
     \ = JSONx\n            boot()\n\n    %assets\n        assets_external\n      \
     \  assets_internal\n    \n    # %catalog_row key value schema\n    #     # a row\
@@ -297,15 +297,15 @@
   files:
     tmp1: [3, 2]
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/item.js
+  path: /home/marcin/Documents/priv/schemat/src/item.js
 - id: [2, 2]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/protocols.js
+  path: /home/marcin/Documents/priv/schemat/src/registry.js
 - id: [2, 3]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/serialize.js
+  path: /home/marcin/Documents/priv/schemat/src/serialize.js
 - id: [2, 4]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/types.js
+  path: /home/marcin/Documents/priv/schemat/src/types.js
 - id: [2, 5]
-  path: /home/marcin/Documents/priv/catalog/src/django-app/hyperweb/utils.js
+  path: /home/marcin/Documents/priv/schemat/src/utils.js
 - id: [3, 4]
   files:
     system: [3, 1]
@@ -313,7 +313,7 @@
     base.hy: [1, 2]
     base.css: [1, 1]
     item.js: [2, 1]
-    protocols.js: [2, 2]
+    registry.js: [2, 2]
     serialize.js: [2, 3]
     types.js: [2, 4]
     utils.js: [2, 5]
