@@ -435,7 +435,7 @@ class Classpath {
 
 /**********************************************************************************************************************/
 
-class Database {}
+export class Database {}
 
 class AjaxDB extends Database {
     /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
@@ -472,7 +472,7 @@ class AjaxDB extends Database {
  **
  */
 
-class Registry {
+export class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
@@ -483,7 +483,7 @@ class Registry {
 
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
-    get site() { return this.get_item(this.site_id) }       // this is async code, must be used with await !!
+    get site() { return this.get_item(this.site_id) }       // this is async code that returns a Promise (!), must be used with await
 
     async init_classpath() {
         print('init_classpath() started...')
@@ -588,10 +588,6 @@ class ClientRegistry extends Registry {
         // this.current_request.item.load()
     }
 }
-
-export class ServerRegistry extends Registry {
-}
-
 
 /**********************************************************************************************************************
  **

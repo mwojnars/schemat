@@ -237,7 +237,7 @@ class YamlDB(FileDB):
             assert id not in self.items, f"duplicate item ID: {id}"
             curr_max = self.max_iid.get(cid, 0)
             self.max_iid[cid] = max(curr_max, iid)
-            self.items[id] = json.dumps(flat)
+            self.items[id] = json.dumps(flat, ensure_ascii = False)
         
         print('YamlDB items loaded:')
         for id, data in self.items.items():

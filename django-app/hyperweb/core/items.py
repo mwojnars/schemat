@@ -278,7 +278,7 @@ base_hy = File_(
 )
 
 # _path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_path = "/home/marcin/Documents/priv/schemat/src"
+_path = "/home/marcin/Documents/priv/catalog/src/schemat"
 
 dir_system = Folder_(
     files = {

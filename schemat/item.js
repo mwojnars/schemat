@@ -329,10 +329,6 @@ export class RootCategory extends Category {
         /* Same as Item.encode_data(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encode_data(false)
     }
-    // async load(field = null, data_json = null, use_schema = false) {
-    //     /* Same as Item.load(), but use_schema is false to avoid circular dependency during deserialization. */
-    //     return await super.load(field, data_json, false)
-    // }
     async reload(use_schema = false, data_json = null) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return await super.reload(data_json, false)

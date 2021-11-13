@@ -107,7 +107,7 @@ class JSON:
         is only done when encode() function was provided, or if encode=True.
         """
         if encode: state = encode(state) if encode is not True else JSON.encode(state)
-        dump = json.dumps(state, separators = (',', ':'))
+        dump = json.dumps(state, ensure_ascii = False, separators = (',', ':'))
         return b64encode(dump.encode()).decode()
     
     @staticmethod

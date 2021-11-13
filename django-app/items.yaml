@@ -297,15 +297,15 @@
   files:
     tmp1: [3, 2]
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/schemat/src/item.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/item.js
 - id: [2, 2]
-  path: /home/marcin/Documents/priv/schemat/src/registry.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/registry.js
 - id: [2, 3]
-  path: /home/marcin/Documents/priv/schemat/src/serialize.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/serialize.js
 - id: [2, 4]
-  path: /home/marcin/Documents/priv/schemat/src/types.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
 - id: [2, 5]
-  path: /home/marcin/Documents/priv/schemat/src/utils.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
 - id: [3, 4]
   files:
     system: [3, 1]

@@ -415,7 +415,7 @@ class Item(object, metaclass = MetaItem):
     def dump_data(self, use_schema = True, compact = True):
         """Dump self.data to a JSON string using schema-aware (if schema=True) encoding of nested values."""
         state = self.encode_data(use_schema)
-        return json.dumps(state)
+        return json.dumps(state, ensure_ascii = False)
     
     def encode_item(self, use_schema = True):
         """Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded."""
@@ -427,7 +427,7 @@ class Item(object, metaclass = MetaItem):
     
     def dump_item(self, use_schema = True):
         state = self.encode_item(use_schema)
-        return json.dumps(state)
+        return json.dumps(state, ensure_ascii = False)
 
     def response_items(self):
         """List of state-encoded items to be sent over to a client to bootstrap client-side item cache."""
