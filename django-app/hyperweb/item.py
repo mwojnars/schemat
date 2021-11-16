@@ -141,6 +141,7 @@ class Item(object, metaclass = MetaItem):
     #version = None         # (int) version number of this item; incremented +1 after each successful modification of this item's properties in DB
     #dirty   = False        # True if this item has uncommitted changes; set to False after successful write to DB with version update
     
+    #partial = None         # True if this item has been only partially loaded from DB
     #loaded  = None         # a set of field names that have been loaded after a PARTIAL load (item loaded from INDEX not main table)
     #timestamp = None       # server-side timestamp when this item was loaded from DB
     

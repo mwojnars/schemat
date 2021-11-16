@@ -6,7 +6,7 @@ import express from 'express'
 import { readFileSync } from 'fs'
 
 import { assert, print, T } from './utils.js'
-import { Database, Registry } from './registry.js'
+import { Database, Registry, ItemsMap } from './registry.js'
 import yaml from 'js-yaml'
 
 
@@ -27,7 +27,7 @@ class FileDB extends Database {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    items    = new Map()        // preloaded flat items, as {key: item_record} pairs; keys are strings "cid:iid";
+    items    = new ItemsMap()   // preloaded flat items, as {key: item_record} pairs; keys are strings "cid:iid";
                                 // item records are schema-encoded, but JSON-decoded (!), with fields cid,iid,data
     
     constructor(filename) {
@@ -35,13 +35,8 @@ class FileDB extends Database {
         this.filename = filename
     }
     
-    _key(id) {
-        let [cid, iid] = id
-        assert(cid !== null && iid !== null)
-        return `${cid}:${iid}`
-    }
-    _get(id)        { return this.items.get(this._key(id)) }
-    _set(id, item)  { return this.items.set(this._key(id), item) }
+    _get(id)        { return this.items.get(id) }
+    _set(id, item)  { return this.items.set(id, item) }
 
     select(id) {
         let item = this._get(id)
@@ -121,11 +116,12 @@ class YamlDB extends FileDB {
     //     yaml.dump(flats, stream = out, default_flow_style = null, sort_keys = False, allow_unicode = true)
 }
 
-export class ServerRegistry extends Registry {
+/**********************************************************************************************************************/
+
+class ServerRegistry extends Registry {
     constructor() {
         super()
         this.db = new YamlDB(DB_YAML)
-        // this.cache = new ServerCache()
     }
     async boot() {
         this.db.load()

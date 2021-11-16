@@ -355,20 +355,63 @@ function read_data(node, type = "json") {
 
 /**********************************************************************************************************************
  **
- **  CACHE & DATABASE
+ **  DATABASE & CACHE
  **
  */
 
-class ClientCache {
-    /* Client-side item cache based on Web Storage (local storage or session storage). */
-    // TODO: implement
+export class Database {}
 
-    cache = new Map()
+class AjaxDB extends Database {
+    /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
 
-    key(id)       { return `${id[0]}:${id[1]}` }            // item ID is an array that must be converted to a string for equality comparisons inside Map
-    set(id, item) { this.cache.set(this.key(id), item) }
-    get(id)       { return this.cache.get(this.key(id)) }
+    ajax_url        // base URL for AJAX calls, no trailing slash '/'
+    boot_items      // list of schema-encoded item records that were received on an initial web request to avoid subsequent remote calls
+
+    constructor(ajax_url, boot_items = []) {
+        super()
+        this.ajax_url = ajax_url
+        this.boot_items = boot_items
+        assert(!ajax_url.endsWith('/'))
+    }
+
+    async select(id) {
+        /* Look up boot_items for a given `id` and return if found. */
+        let [cid, iid] = id
+        return this._from_boot(cid, iid) || await this._from_ajax(cid, iid)
+    }
+    _from_boot(cid, iid) {
+        for (let item of this.boot_items)
+            if (item.cid === cid && item.iid === iid) return item
+    }
+    async _from_ajax(cid, iid) {
+        /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
+        print(`ajax download [${cid},${iid}]...`)
+        return await $.get(`${this.ajax_url}/${cid}:${iid}`)
+    }
 }
+
+/**********************************************************************************************************************/
+
+export class ItemsMap extends Map {
+    /* A Map that keeps objects (items, records, promises) indexed by item ID converted to a string.
+       Item ID is an array that must be converted to a string for equality comparisons inside Map.
+     */
+    _key(id) {
+        let [cid, iid] = id
+        assert(cid !== null && iid !== null)
+        return `${cid}:${iid}`
+    }
+    set(id, obj) { super.set(this._key(id), obj) }
+    get(id)        { return super.get(this._key(id)) }
+    has(id)        { return super.has(this._key(id)) }
+    delete(id)     { return super.delete(this._key(id)) }
+}
+
+// class ClientCache {
+//     /* Client-side item cache based on Web Storage (local storage or session storage). */
+// }
+
+/**********************************************************************************************************************/
 
 class Classpath {
     forward = new Map()         // dict of objects indexed by paths: (path -> object)
@@ -404,7 +447,7 @@ class Classpath {
     {
         // import(module_url).then(module => {console.log(module)})
         let module = await import(module_url)
-        
+
         if (typeof symbols === "string")    symbols = symbols.split()
         else if (!symbols)                  symbols = Object.keys(module)
         if (exclude_variables)              symbols = symbols.filter(s => typeof module[s] === "function")
@@ -433,39 +476,6 @@ class Classpath {
     }
 }
 
-/**********************************************************************************************************************/
-
-export class Database {}
-
-class AjaxDB extends Database {
-    /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
-
-    ajax_url        // base URL for AJAX calls, no trailing slash '/'
-    boot_items      // list of schema-encoded item records that were received on an initial web request to avoid subsequent remote calls
-
-    constructor(ajax_url, boot_items = []) {
-        super()
-        this.ajax_url = ajax_url
-        this.boot_items = boot_items
-        assert(!ajax_url.endsWith('/'))
-    }
-
-    async select(id) {
-        /* Look up boot_items for a given `id` and return if found. */
-        let [cid, iid] = id
-        return this._from_boot(cid, iid) || await this._from_ajax(cid, iid)
-    }
-    _from_boot(cid, iid) {
-        for (let item of this.boot_items)
-            if (item.cid === cid && item.iid === iid) return item
-    }
-    async _from_ajax(cid, iid) {
-        /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
-        print(`ajax download [${cid},${iid}]...`)
-        return await $.get(`${this.ajax_url}/${cid}:${iid}`)
-    }
-}
-
 /**********************************************************************************************************************
  **
  **  REGISTRY
@@ -477,13 +487,17 @@ export class Registry {
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
     db      = null          // Database instance for accessing items and other data from database servers
-    cache   = null
+    items   = null
     root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
     site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
 
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
     get site() { return this.get_item(this.site_id) }       // this is async code that returns a Promise (!), must be used with await
+
+    constructor() {
+        this.items = new ItemsMap()
+    }
 
     async init_classpath() {
         print('init_classpath() started...')
@@ -529,8 +543,8 @@ export class Registry {
         if (iid === null) throw new Error('missing IID')
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
-        // ID requested is already present in cache? return the cached instance
-        let item = this.cache.get(id)       // this may return a Promise or an item, see below...
+        // ID requested was already loaded/created? return the existing instance
+        let item = this.items.get(id)       // this may return a Promise or an item, see below...
         if (item) return item
 
         // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
@@ -540,8 +554,8 @@ export class Registry {
         // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
         let pending = this.create_stub(id)
         if (load) pending = pending.then(item => {item.load(); return item})
-        this.cache.set(id, pending)
-        pending.then(item => this.cache.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
+        this.items.set(id, pending)
+        pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
         return pending
     }
 
@@ -578,9 +592,8 @@ class ClientRegistry extends Registry {
 
     constructor(boot_items, ajax_url) {
         super()
-        this.db    = new AjaxDB(ajax_url, boot_items)
-        this.cache = new ClientCache()
-        // this.current_request = current_request
+        this.db = new AjaxDB(ajax_url, boot_items)
+        // this.cache = new ClientCache()
     }
     async boot(request) {
         await super.boot()
