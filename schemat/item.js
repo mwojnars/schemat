@@ -131,7 +131,7 @@ export class Item {
         if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
 
         // store and return a Promise that will eventually load this item's data;
-        // for efficiency, replace in self the proxy promise with an actual `data` object when it's ready
+        // for efficiency, replace in this the proxy promise with an actual `data` object when it's ready
         this.data = this.reload(use_schema).then(data => {this.data = data; return data})
         // this.bind()
 
@@ -218,13 +218,11 @@ export class Item {
         //     else
         //         entries.push([f, v])
         // }
-        //
         // // retrieve entries by their order in category's schema
         // for (const f in fields) {
         //     let v = T.getOwnProperty(data, f)
         //     if (v !== undefined) push(f, v)
         // }
-        //
         // // add out-of-schema entries, in their natural order (of insertion)
         // for (const f in data)
         //     if (!fields.hasOwnProperty(f)) push(f, data[f])
@@ -250,6 +248,30 @@ export class Item {
         catch (ex) { if (raise) {throw ex} else return '' }
     }
 
+    async serve(request, response, app, endpoint = 'view') {
+        /*
+        Serve a web request submitted to a given @endpoint of this item.
+        Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
+
+           function handler(item, {request, response, endpoint, app})
+
+        A handler function can directly write to `response`, and/or return a string that will be appended
+        to the response. The function can return a Promise (async function). It can have arbitrary name, or be anonymous.
+        */
+        let handlers = await this.category.get('handlers', {})
+        let source   = handlers.get(endpoint)
+
+        if (source) {
+            let handler = eval('(' + source + ')')     // surrounding (...) are added automatically, required when parsing a function definition
+            let page = handler(this, {request, response, endpoint, app})
+            if (page instanceof Promise) page = await page
+            if (typeof page === 'string')
+                response.send(page)
+        }
+
+        throw new Error(`Endpoint "${endpoint}" not found`)
+    }
+    
     display(target) {
         /* Render this item into a `target` HTMLElement. */
         ReactDOM.render(e(this.Page, {item: this}), target)
@@ -361,6 +383,12 @@ export class Site extends Item {
         if (base.endsWith('/')) base = base.slice(-1)
         return base + path                              // absolute URL with base
     }
+
+    async handle(request, response) {
+        /* Forward the request to a root application configured in the `app` property. */
+        let app = await this.get('application')
+        await app.execute(request.path, request, response)
+    }
 }
 
 export class Application extends Item {
@@ -388,6 +416,30 @@ export class Application extends Item {
         if (endpoint) url += `${Application.SEP_ENDPOINT}${endpoint}`
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
+    }
+
+    async execute(action, request, response) {
+        /*
+        Execute an `action` that originated from a web `request` and emit results to a web `response`.
+        Typically, `action` is a URL path or subpath that points to an item and its particular view
+        that should be rendered in response; this is not a strict rule, however.
+
+        When spliting an original request.path on SEP_ROUTE, parent applications should ensure that
+        the separatoror (if present) is preserved in a remaining subpath, so that sub-applications
+        can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
+        */
+        throw Error('method not implemented in a subclass')
+    }
+    _split_endpoint(path) {
+        /* Decode @endpoint from the URL path. Return [subpath, endpoint]. */
+        // if ('?' in path)
+        //     path = path.split('?')[0]
+        if (Application.SEP_ENDPOINT in path) {
+            let parts = path.split(Application.SEP_ENDPOINT)
+            if (parts.length !== 2) throw new Error(`unknown URL path: ${path}`)
+            return parts
+        }
+        else return [path, '']
     }
 }
 
@@ -429,6 +481,15 @@ export class AppRoot extends Application {
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
         return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
     }
+
+    async execute(path, request, response) {
+        /*
+        Find an application in 'apps' that matches the requested URL path and call its execute().
+        `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
+        */
+        let [route, app, subpath] = await this._route(path)
+        await app.execute(subpath, request, response)
+    }
 }
 
 export class AppAdmin extends Application {
@@ -440,9 +501,30 @@ export class AppAdmin extends Application {
         let url = `${cid}:${iid}`
         return this._set_endpoint(url, opts)
     }
+    async execute(path, request, response) {
+        let item = await this._find_item(path, request)
+        await item.serve(this, request, response)
+    }
+    async _find_item(path, request) {
+        /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
+        let id
+        try {
+            [path, request.endpoint] = this._split_endpoint(path.slice(1))
+            id = path.split(':').map(Number)
+        } catch (ex) {
+            throw new Error(`URL path not found: ${path}`)
+        }
+        return this.registry.get_item(id)
+    }
 }
 
-export class AppAjax extends Application {}
+export class AppAjax extends Application {
+    async execute(path, request, response) {
+        let item = await this._find_item(path, request)
+        request.endpoint = "json"
+        await item.serve(this, request, response)
+    }
+}
 
 export class AppFiles extends Application {
     /*
@@ -454,11 +536,37 @@ export class AppFiles extends Application {
         let state = this.registry.current_request.state
         return state['folder'].get_name(item)
     }
+    async execute(path, request, response) {
+        if (!path.startsWith('/'))
+            return response.redirect(request.path + '/')
+
+        // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
+        let filepath
+        [filepath, request.endpoint] = this._split_endpoint(path.slice(1))
+        request.state = {'filepath': filepath}
+        
+        let root = await this.get('root_folder') || this.registry.files
+        let item = root.search(filepath)
+
+        let files = await this.registry.files
+        let File_ = files.search('system/File')
+        let Folder_ = files.search('system/Folder')
+        
+        let endpoint = 'view'
+        if (item.isinstance(File_))
+            endpoint = 'download'
+        else if (item.isinstance(Folder_))
+            // if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.path + '/')       // folder URLs must end with '/'
+            request.state['folder'] = item          // leaf folder, for use when generating file URLs (url_path())
+            // default_endpoint = ('browse',)
+        
+        return item.serve(this, request, response, endpoint)
+    }
 }
 
 export class AppSpaces extends Application {
     /*
-    Application for accessing public data through verbose paths of the form: .../SPACE:IID,
+    Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
 
@@ -475,6 +583,18 @@ export class AppSpaces extends Application {
         for (const [space, cat] of Object.entries(spaces))
             if (cat.has_id(id)) return space
         throw new Error(`URL path not found for items of category ${category}`)
+    }
+    async execute(path, request, response) {
+        let space, item_id, category
+        try {
+            [path, request.endpoint] = this._split_endpoint(path.slice(1))
+            [space, item_id] = path.split(':')        // decode space identifier and convert to a category object
+            category = (await this.get('spaces'))[space]
+        } catch (ex) {
+            throw new Error(`URL path not found: ${path}`)
+        }
+        let item = await category.get_item(Number(item_id))
+        return item.serve(this, request, response)
     }
 }
 

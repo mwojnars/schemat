@@ -493,7 +493,9 @@ export class Registry {
 
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
-    get site() { return this.get_item(this.site_id) }       // this is async code that returns a Promise (!), must be used with await
+    // the getters below are async functions that return a Promise (!) and should be used with await
+    get site()  { return this.get_item(this.site_id) }
+    get files() { return this.site.then(site => site.get('filesystem')) }
 
     constructor() {
         this.items = new ItemsMap()

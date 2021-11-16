@@ -4,6 +4,14 @@ from hyperweb.registry import Registry
 
 #####################################################################################################################################################
 
+# default template to display a generic item page if a category-specific template is missing
+page_item = """
+context $item
+from base import %page_item
+page_item $item
+# dedent : page_item $item
+"""
+
 # template to display a category page
 page_category = """
 context $item
@@ -11,12 +19,13 @@ from base import %page_category
 page_category item
 """
 
-# default template to display a generic item page if a category-specific template is missing
-page_item = """
-context $item
-from base import %page_item
-page_item $item
-# dedent : page_item $item
+render_item = """
+function render(item, {request, response, endpoint, app}) {
+}
+"""
+render_category = """
+function render(item, {request, response, endpoint, app}) {
+}
 """
 
 #####################################################################################################################################################
@@ -30,6 +39,7 @@ root_fields = dict(
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),
+    handlers     = CATALOG(CODE(), default = {"view": render_item}),
     fields       = CATALOG(SCHEMA()),
     
     #field       = SCHEMA(multiple = True, labels = True)
@@ -72,6 +82,7 @@ root_data = dict(
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.core.Category',
     endpoints   = {"view": page_category},
+    handlers    = {"view": render_category},
     fields      = root_fields,
     #field      = multiple(**root_fields),
 )

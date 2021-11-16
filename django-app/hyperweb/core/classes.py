@@ -166,7 +166,7 @@ class Application(Item):
         find an item pointed to by `path` and call its serve() to render response.
         Raise an exception if item not found or the path not recognized.
         `path` is a part of the URL after application's base URL that typically identifies an item
-        and its endpoint within this application; may include a query string.
+        and its endpoint within this application; does NOT include a query string.
         Parent applications should ensure that whenever a sub-application's handle() is called,
         the leading SEP_ROUTE separator is preserved in its `path`, so that the sub-application
         can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".

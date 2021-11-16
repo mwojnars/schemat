@@ -35,11 +35,8 @@ class FileDB extends Database {
         this.filename = filename
     }
     
-    _get(id)        { return this.items.get(id) }
-    _set(id, item)  { return this.items.set(id, item) }
-
     select(id) {
-        let item = this._get(id)
+        let item = this.items.get(id)
         assert(item.cid === id[0] && item.iid === id[1])
         return item
     }
@@ -63,10 +60,10 @@ class YamlDB extends FileDB {
         for (let data of db) {
             let id = T.pop(data, 'id')
             let [cid, iid] = id
-            assert(!this.items.has(this._key(id)), `duplicate item ID: ${id}`)
+            assert(!this.items.has(id), `duplicate item ID: ${id}`)
             let curr_max = this.max_iid.get(cid) || 0
             this.max_iid[cid] = Math.max(curr_max, iid)
-            this._set(id, {cid, iid, data})
+            this.items.set(id, {cid, iid, data})
         }
         // print('YamlDB items loaded:')
         // for (const [id, data] of this.items)
@@ -150,9 +147,10 @@ class Server {
         /*
         During request processing, some additional non-standard attributes are assigned in `request`
         to carry Hyperweb-specific information for downstream processing functions:
-        - request.item  = target item that's responsible for actual handling of this request
 
+        x request.item  = target item that's responsible for actual handling of this request
         TODO remove/rename:
+        - request.endpoint = item's endpoint/view that should be executed
         - request.app   = leaf Application object this request is addressed to
         - request.state = app-specific temporary data that's written during routing (handle()) and can be used for
                           response generation when a specific app's method is called, most typically url_path()
@@ -160,7 +158,7 @@ class Server {
         print('Server.handle() start')
         this.start_request(req)
         let site = await this.registry.site
-        site.handle(req, res)
+        await site.handle(req, res)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         res.end()
         this.stop_request()
@@ -209,11 +207,11 @@ async function serve_express() {
     const server = new Server()
     await server.boot()
 
-    web.get('*', async (req, res) => {
-        await server.handle(req, res)
-        // res.send(`URL path: ${req.path}`)
-        // res.send('Hello World!')
-    })
+    web.get('*', server.handle)
+    // web.get('*', async (req, res) => {
+    //     res.send(`URL path: ${req.path}`)
+    //     res.send('Hello World!')
+    // })
 
     web.listen(PORT, HOSTNAME, () => {
         console.log(`Example app listening at http://${HOSTNAME}:${PORT}`)
