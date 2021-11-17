@@ -207,7 +207,7 @@ async function serve_express() {
     const server = new Server()
     await server.boot()
 
-    web.get('*', server.handle)
+    web.get('*', (req, res) => server.handle(req, res))
     // web.get('*', async (req, res) => {
     //     res.send(`URL path: ${req.path}`)
     //     res.send('Hello World!')

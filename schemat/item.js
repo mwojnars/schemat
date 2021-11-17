@@ -331,6 +331,13 @@ export class Category extends Item {
         assert(name, `no class_name defined for category ${this}: ${name}`)
         return globalThis.registry.get_class(name)
     }
+    async get_item(iid) {
+        /*
+        Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
+        but do NOT load remaining contents from DB (lazy loading).
+        */
+        return this.registry.get_item([this.iid, iid])
+    }
     async get_default(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         let fields = await this.get_fields()
@@ -453,7 +460,7 @@ export class Application extends Item {
         /* Decode @endpoint from the URL path. Return [subpath, endpoint]. */
         // if ('?' in path)
         //     path = path.split('?')[0]
-        if (Application.SEP_ENDPOINT in path) {
+        if (path.includes(Application.SEP_ENDPOINT)) {
             let parts = path.split(Application.SEP_ENDPOINT)
             if (parts.length !== 2) throw new Error(`unknown URL path: ${path}`)
             return parts
@@ -606,9 +613,10 @@ export class AppSpaces extends Application {
     async execute(path, request, response) {
         let space, item_id, category
         try {
-            [path, request.endpoint] = this._split_endpoint(path.slice(1))
-            [space, item_id] = path.split(':')        // decode space identifier and convert to a category object
-            category = (await this.get('spaces'))[space]
+            [path, request.endpoint] = this._split_endpoint(path.slice(1));
+            [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
+            let spaces = await this.get('spaces')
+            category = spaces[space]
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
