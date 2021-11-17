@@ -35,6 +35,9 @@
           '}
       values: {'@': hyperweb.types.CODE}
       '@': hyperweb.types.CATALOG
+    handlers:
+      values: {'@': hyperweb.types.CODE}
+      '@': hyperweb.types.CATALOG
     fields:
       values: {'@': hyperweb.types.SCHEMA}
       '@': hyperweb.types.CATALOG
@@ -141,65 +144,6 @@
     name: {'@': hyperweb.types.STRING}
     title: {'@': hyperweb.types.STRING}
 - id: [1, 1]
-  format: css
-  content: "\n        /*** GENERAL STYLES */\n        # html {\n        #   font-family:\
-    \ 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n   \
-    \     #   font-size: 16px;\n        #   color: #333;\n        # }\n\n        html\
-    \ {\n          --ct-cell-pad: 35px;          /* default left & right padding of\
-    \ all table cells */\n          --ct-nested-offset: 50px;     /* distance between\
-    \ left edges of a nested catalog and its container catalog */\n          --ct-th1-width:\
-    \ 300px;\n          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));\n\
-    \          --textarea-height: 12rem;\n        }\n        body {\n          width:\
-    \ 1120px;\n          margin: 0 auto;\n          padding-bottom: 50px;\n      \
-    \    font-family: 'Quattrocento Sans', \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n\
-    \        }\n        \n        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em;\
-    \ }\n        \n        a { color: #006ecc }\n        a:visited { color: #00427a\
-    \ }\n        \n        /*** SITEWIDE */\n        \n        .btn { border: none;\
-    \ border-radius: 0; }\n        .btn-primary, .btn-primary.disabled, .btn-primary:disabled\
-    \       { background-color: #5b8fdd; }\n        .btn-primary:hover           \
-    \                                    { background-color: #4b78bb; }\n        .btn-secondary,\
-    \ .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993;\
-    \ }\n        \n        /*** UTILITIES */\n        \n        .scroll {\n      \
-    \      overflow: scroll;\n            max-height: var(--textarea-height);\n  \
-    \          border-bottom: 1px solid rgba(0,0,0,0.1);\n            border-right:\
-    \  1px solid rgba(0,0,0,0.1);\n            resize: vertical;\n        }\n    \
-    \    .scroll[style*=\"height\"] {\n            max-height: unset;            \
-    \  /* this allows manual resizing (resize:vertical) to exceed predefined max-height\
-    \ */\n        }\n        \n        /*** WIDGETS */\n        \n        .ace-editor\
-    \ {\n            --bk-color: rgba(255,255,255,0.3);\n            background-color:\
-    \ var(--bk-color);\n            height: var(--textarea-height);\n            width:\
-    \ 100%;\n            line-height: 1.4;\n            font-family: var(--bs-font-monospace);\n\
-    \            font-size: 13px;\n            resize: vertical;        /* editor\
-    \ box resizing requires editor.resize() to be invoked by ResizeObserver */\n \
-    \           /*margin-left: -10px;      /* shift the editor to better align inner\
-    \ text with text of surrounding rows in a catalog */\n            /*border-left:\
-    \ 8px solid var(--bk-color);*/\n        }\n\n        /*** ITEM PAGE */\n\n   \
-    \     .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */\n\
-    \        .ct-color1                      { background: #f6f6f6; }\n\n        .catalog-1\
-    \ th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right:\
-    \ none;*/ }\n        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset)\
-    \ - var(--ct-cell-pad)); }\n        td.ct-nested                    { padding-right:\
-    \ 0px; padding-bottom: 0px; }\n        td.ct-flags                     { width:\
-    \ 30px; padding-left:20px; padding-right:20px; }\n\n        .catalog-1, .catalog-2\
-    \          { border-collapse: collapse; table-layout: fixed; }\n        .catalog-1\
-    \ th, .catalog-2 th    { border-right: 1px solid #fff; }\n        .catalog-1 tr:not(:last-child)\
-    \  { border-bottom: 1px solid #fff; }\n\n        .catalog-1                  \
-    \    { width: 100%; min-width: 100%; max-width: 100%; }\n        .catalog-1 th\
-    \                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width);\
-    \ max-width: var(--ct-th1-width); }\n\n        /* th widths get reduced by 55px\
-    \ when nesting a subcatalog to account for paddings of outer td + div */\n   \
-    \     .catalog-2                  { width: 100%; }\n        .catalog-2 th    \
-    \           { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width);\
-    \ max-width: var(--ct-th2-width); }\n        /*.catalog-2 th               { width:\
-    \ 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/\n       \
-    \ \n        .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px;\
-    \ }\n        .catalog-2 .ct-field        { font-weight: normal; font-style: italic;\
-    \ }\n        \n        .ct-value, .ct-value > *    { font-size: 14px; font-family:\
-    \ monospace; /* courier */ }\n        .ct-value .field .default   { color: #888;\
-    \ }\n        .ct-value .field .info      { font-style: italic; }\n        .ct-value\
-    \ pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace;\
-    \ }\n    "
-- id: [1, 2]
   format: hypertag
   content: "\n    %assets_external\n        # jQuery 3.6.0\n        script src=\"\
     https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js\" integrity=\"sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=\"\
@@ -234,28 +178,26 @@
     \ rel=\"icon\" type=\"image/x-icon\"\n        # # favicon: thequiz (check mark)\
     \ - https://www.favicon.cc/?action=icon&file_id=967133\n        # link href=\"\
     data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==\"\
-    \ rel=\"icon\" type=\"image/x-icon\"\n        \n        # script type=\"module\"\
-    \ src=\"/sys.file:1@get\"\n        # script type=\"module\" src=\"/files/registry.js\"\
-    \n        script type=\"module\" !\n            import { boot } from \"/files/registry.js\"\
-    \n            import { JSONx } from \"/files/serialize.js\"\n            window.JSONx\
-    \ = JSONx\n            boot()\n\n    %assets\n        assets_external\n      \
-    \  assets_internal\n    \n    # %catalog_row key value schema\n    #     # a row\
-    \ containing an atomic value of a data field (not a subcatalog)\n    #     th\
-    \ .ct-field | $key\n    #     # td .ct-flags | *\n    #     td .ct-value / $schema.display(value)\n\
-    \    #\n    # %catalog_2 data schema start_color=0\n    #     $c = start_color\n\
-    \    #     div .wrap-offset : table .catalog-2\n    #         for field, value\
-    \ in data.items()\n    #             tr class=\"ct-color{c}\"\n    #         \
-    \        catalog_row $field $value $schema\n    #             # $c = 1 - c\n \
-    \   #\n    # %catalog_1 item\n    #     $c = 0          # alternating color of\
-    \ rows: 0 or 1\n    #     table .catalog-1\n    #         for field, value in\
-    \ item.get_entries()\n    #             $schema = item.category.get_schema(field)\n\
-    \    #             tr class=\"ct-color{c}\"\n    #                 if schema.is_catalog\n\
-    \    #                     td .ct-nested colspan=2\n    #                    \
-    \     div .ct-field | {field}\n    #                         catalog_2 $value\
-    \ $schema.values $c\n    #                 else\n    #                     catalog_row\
-    \ $field $value $schema\n    #             $c = 1 - c\n    #\n    # %properties\
-    \ item\n    #     from hyperweb.serialize import $JSON, $json\n    #\n    #  \
-    \   custom \"hw-item-page-\"\n    #         data #category | $item.category.dump_data(use_schema\
+    \ rel=\"icon\" type=\"image/x-icon\"\n\n        link href='/files/style.css' rel=\"\
+    stylesheet\"\n        #style / $item.registry.read('base.css')\n        \n   \
+    \ %assets\n        assets_external\n        assets_internal\n    \n    # %catalog_row\
+    \ key value schema\n    #     # a row containing an atomic value of a data field\
+    \ (not a subcatalog)\n    #     th .ct-field | $key\n    #     # td .ct-flags\
+    \ | *\n    #     td .ct-value / $schema.display(value)\n    #\n    # %catalog_2\
+    \ data schema start_color=0\n    #     $c = start_color\n    #     div .wrap-offset\
+    \ : table .catalog-2\n    #         for field, value in data.items()\n    #  \
+    \           tr class=\"ct-color{c}\"\n    #                 catalog_row $field\
+    \ $value $schema\n    #             # $c = 1 - c\n    #\n    # %catalog_1 item\n\
+    \    #     $c = 0          # alternating color of rows: 0 or 1\n    #     table\
+    \ .catalog-1\n    #         for field, value in item.get_entries()\n    #    \
+    \         $schema = item.category.get_schema(field)\n    #             tr class=\"\
+    ct-color{c}\"\n    #                 if schema.is_catalog\n    #             \
+    \        td .ct-nested colspan=2\n    #                         div .ct-field\
+    \ | {field}\n    #                         catalog_2 $value $schema.values $c\n\
+    \    #                 else\n    #                     catalog_row $field $value\
+    \ $schema\n    #             $c = 1 - c\n    #\n    # %properties item\n    #\
+    \     from hyperweb.serialize import $JSON, $json\n    #\n    #     custom \"\
+    hw-item-page-\"\n    #         data #category | $item.category.dump_data(use_schema\
     \ = False)\n    #         data #item     | $item.dump_data(use_schema = False)\n\
     \    #         < catalog_1 $item\n    #         div style=\"text-align:right;\
     \ padding-top:20px\"\n    #             button #revert .btn .btn-secondary disabled=False\
@@ -264,20 +206,23 @@
     display:none\" @ dump\n    \n    %page @body\n        doctype\n        ...html\
     \ @body\n    \n    %page_item @extra item\n        page\n            head\n  \
     \              title | $item['name']? $item.ciid(False)\n                assets\n\
-    \                style / $item.registry.read('base.css')\n    \n            #\
-    \ body .container : div .row\n            #   div .col-1\n            #   div\
-    \ .col-10\n            body\n                # h1\n                #     $ciid\
-    \ = item.ciid()\n                #     try\n                #         | $item['name']\n\
-    \                #         span style=\"font-size:40%; font-weight:normal\" /\
-    \ $ciid\n                #     else / $ciid\n                #\n             \
-    \   # h2 | Properties\n                # properties $item\n                \n\
-    \                # dump client configuration and preloaded items to json and embed\
-    \ them in HTML\n                from hyperweb.serialize import $JSON\n       \
-    \         data #data-items | $JSON.dump(item.response_items())\n             \
-    \   data #data-data  | $JSON.dump(item.response_data())\n                \n  \
-    \              div #react-root\n                \n                @extra\n   \
-    \         \n    %page_category category\n        page_item category\n        \
-    \    h2 | Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
+    \    \n                # script type=\"module\" src=\"/files/registry.js\"\n \
+    \               script type=\"module\" !\n                    import { boot }\
+    \ from \"/files/registry.js\"\n                    import { JSONx } from \"/files/serialize.js\"\
+    \n                    window.JSONx = JSONx\n                    boot()\n     \
+    \   \n            # body .container : div .row\n            #   div .col-1\n \
+    \           #   div .col-10\n            body\n                # h1\n        \
+    \        #     $ciid = item.ciid()\n                #     try\n              \
+    \  #         | $item['name']\n                #         span style=\"font-size:40%;\
+    \ font-weight:normal\" / $ciid\n                #     else / $ciid\n         \
+    \       #\n                # h2 | Properties\n                # properties $item\n\
+    \                \n                # dump client configuration and preloaded items\
+    \ to json and embed them in HTML\n                from hyperweb.serialize import\
+    \ $JSON\n                data #data-items | $JSON.dump(item.response_items())\n\
+    \                data #data-data  | $JSON.dump(item.response_data())\n       \
+    \         \n                div #react-root\n                \n              \
+    \  @extra\n            \n    %page_category category\n        page_item category\n\
+    \            h2 | Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
     \                    tr\n                        td / #{item.iid} &nbsp;\n   \
     \                     td\n                            $ iname = item['name']?\
     \ or item\n                            try\n                                a\
@@ -288,35 +233,37 @@
     Site: [0, 10]
     File: [0, 1]
     Folder: [0, 3]
-- id: [1, 3]
+- id: [1, 2]
   content: This is a test file.
 - id: [3, 2]
   files:
-    test.txt: [1, 3]
+    test.txt: [1, 2]
 - id: [3, 3]
   files:
     tmp1: [3, 2]
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/item.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/style.css
 - id: [2, 2]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/registry.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/item.js
 - id: [2, 3]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/serialize.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/registry.js
 - id: [2, 4]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/serialize.js
 - id: [2, 5]
+  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
+- id: [2, 6]
   path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
 - id: [3, 4]
   files:
     system: [3, 1]
     tmp: [3, 3]
-    base.hy: [1, 2]
-    base.css: [1, 1]
-    item.js: [2, 1]
-    registry.js: [2, 2]
-    serialize.js: [2, 3]
-    types.js: [2, 4]
-    utils.js: [2, 5]
+    base.hy: [1, 1]
+    style.css: [2, 1]
+    item.js: [2, 2]
+    registry.js: [2, 3]
+    serialize.js: [2, 4]
+    types.js: [2, 5]
+    utils.js: [2, 6]
 - id: [6, 1]
   name: Admin
 - id: [7, 1]

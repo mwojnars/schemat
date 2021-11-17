@@ -248,36 +248,49 @@ export class Item {
         catch (ex) { if (raise) {throw ex} else return '' }
     }
 
-    async serve(request, response, app, endpoint = 'view') {
+    async serve(req, res, app, endpoint = 'view') {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
 
-           function handler(item, {request, response, endpoint, app})
+           function handler({item, req, res, app, endpoint})
 
         A handler function can directly write to `response`, and/or return a string that will be appended
         to the response. The function can return a Promise (async function). It can have arbitrary name, or be anonymous.
         */
+
+        // get handler's source code from category's data
         let handlers = await this.category.get('handlers', {})
-        let source   = handlers.get(endpoint)
+        let source   = T.getOwnProperty(handlers, endpoint)         // TODO: make `handlers` a Catalog (Map-like) not plain object
+        let handler
 
         if (source) {
-            let handler = eval('(' + source + ')')     // surrounding (...) are added automatically, required when parsing a function definition
-            let page = handler(this, {request, response, endpoint, app})
-            if (page instanceof Promise) page = await page
-            if (typeof page === 'string')
-                response.send(page)
+            handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
+            // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
+        else                                        // fallback: try to get source code from static .handlers of the Item subclass
+            handler = T.getOwnProperty(this.constructor.handlers, endpoint)
 
-        throw new Error(`Endpoint "${endpoint}" not found`)
+        if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
+
+        let page = handler({item: this, req, res, endpoint, app})
+        if (page instanceof Promise) page = await page
+        if (typeof page === 'string')
+            res.send(page)
     }
-    
+
+    static handlers = {
+        "view": function viewItem({item, req, res, app, endpoint}) {
+            return `Rendering item ${item}...`
+        }
+    }
+
+    /***  React components  ***/
+
     display(target) {
         /* Render this item into a `target` HTMLElement. */
         ReactDOM.render(e(this.Page, {item: this}), target)
     }
-
-    /***  React components  ***/
 
     Title({item}) {
         return delayed_render(async () => {
@@ -332,6 +345,12 @@ export class Category extends Item {
         else {                                          // return a schema for a selected field only
             let schema = (field in fields) ? fields[field] : null
             return schema || generic_schema
+        }
+    }
+
+    static handlers = {
+        "view": function viewCategory({item}) {
+            return `Rendering category ${item}...`
         }
     }
 }
@@ -503,7 +522,7 @@ export class AppAdmin extends Application {
     }
     async execute(path, request, response) {
         let item = await this._find_item(path, request)
-        await item.serve(this, request, response)
+        await item.serve(request, response, this)
     }
     async _find_item(path, request) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
@@ -522,7 +541,7 @@ export class AppAjax extends Application {
     async execute(path, request, response) {
         let item = await this._find_item(path, request)
         request.endpoint = "json"
-        await item.serve(this, request, response)
+        await item.serve(request, response, this)
     }
 }
 
@@ -560,7 +579,7 @@ export class AppFiles extends Application {
             request.state['folder'] = item          // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
         
-        return item.serve(this, request, response, endpoint)
+        return item.serve(request, response, this, endpoint)
     }
 }
 
@@ -594,7 +613,7 @@ export class AppSpaces extends Application {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.get_item(Number(item_id))
-        return item.serve(this, request, response)
+        return item.serve(request, response, this)
     }
 }
 

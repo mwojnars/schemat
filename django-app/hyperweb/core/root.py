@@ -19,15 +19,6 @@ from base import %page_category
 page_category item
 """
 
-render_item = """
-function render(item, {request, response, endpoint, app}) {
-}
-"""
-render_category = """
-function render(item, {request, response, endpoint, app}) {
-}
-"""
-
 #####################################################################################################################################################
 
 # fields of categories, including the root category
@@ -39,7 +30,7 @@ root_fields = dict(
     class_name   = STRING(default = 'hyperweb.core.Item', info = "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."),
     class_code   = TEXT(),     # TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     endpoints    = CATALOG(CODE(), default = {"view": page_item}),
-    handlers     = CATALOG(CODE(), default = {"view": render_item}),
+    handlers     = CATALOG(CODE()),
     fields       = CATALOG(SCHEMA()),
     
     #field       = SCHEMA(multiple = True, labels = True)
@@ -82,7 +73,7 @@ root_data = dict(
     info        = "Category of items that represent categories",
     class_name  = 'hyperweb.core.Category',
     endpoints   = {"view": page_category},
-    handlers    = {"view": render_category},
+    # handlers  = {"view": render_category},
     fields      = root_fields,
     #field      = multiple(**root_fields),
 )

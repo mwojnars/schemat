@@ -14,101 +14,101 @@ from hyperweb.core.categories import *
 #####  ITEMS
 #####
 
-base_css = File_(
-    format  = 'css',
-    content = """
-        /*** GENERAL STYLES */
-        # html {
-        #   font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
-        #   font-size: 16px;
-        #   color: #333;
-        # }
-
-        html {
-          --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
-          --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
-          --ct-th1-width: 300px;
-          --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
-          --textarea-height: 12rem;
-        }
-        body {
-          width: 1120px;
-          margin: 0 auto;
-          padding-bottom: 50px;
-          font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
-        }
-        
-        h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
-        
-        a { color: #006ecc }
-        a:visited { color: #00427a }
-        
-        /*** SITEWIDE */
-        
-        .btn { border: none; border-radius: 0; }
-        .btn-primary, .btn-primary.disabled, .btn-primary:disabled       { background-color: #5b8fdd; }
-        .btn-primary:hover                                               { background-color: #4b78bb; }
-        .btn-secondary, .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993; }
-        
-        /*** UTILITIES */
-        
-        .scroll {
-            overflow: scroll;
-            max-height: var(--textarea-height);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            border-right:  1px solid rgba(0,0,0,0.1);
-            resize: vertical;
-        }
-        .scroll[style*="height"] {
-            max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-        }
-        
-        /*** WIDGETS */
-        
-        .ace-editor {
-            --bk-color: rgba(255,255,255,0.3);
-            background-color: var(--bk-color);
-            height: var(--textarea-height);
-            width: 100%;
-            line-height: 1.4;
-            font-family: var(--bs-font-monospace);
-            font-size: 13px;
-            resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
-            /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
-            /*border-left: 8px solid var(--bk-color);*/
-        }
-
-        /*** ITEM PAGE */
-
-        .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
-        .ct-color1                      { background: #f6f6f6; }
-
-        .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-        .wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-        td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
-        td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }
-
-        .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
-        .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
-        .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
-
-        .catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
-        .catalog-1 th                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-
-        /* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
-        .catalog-2                  { width: 100%; }
-        .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
-        /*.catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
-        
-        .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
-        .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
-        
-        .ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
-        .ct-value .field .default   { color: #888; }
-        .ct-value .field .info      { font-style: italic; }
-        .ct-value pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace; }
-    """,
-)
+# base_css = File_(
+#     format  = 'css',
+#     content = """
+#         /*** GENERAL STYLES */
+#         # html {
+#         #   font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+#         #   font-size: 16px;
+#         #   color: #333;
+#         # }
+#
+#         html {
+#           --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
+#           --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
+#           --ct-th1-width: 300px;
+#           --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+#           --textarea-height: 12rem;
+#         }
+#         body {
+#           width: 1120px;
+#           margin: 0 auto;
+#           padding-bottom: 50px;
+#           font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+#         }
+#
+#         h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
+#
+#         a { color: #006ecc }
+#         a:visited { color: #00427a }
+#
+#         /*** SITEWIDE */
+#
+#         .btn { border: none; border-radius: 0; }
+#         .btn-primary, .btn-primary.disabled, .btn-primary:disabled       { background-color: #5b8fdd; }
+#         .btn-primary:hover                                               { background-color: #4b78bb; }
+#         .btn-secondary, .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993; }
+#
+#         /*** UTILITIES */
+#
+#         .scroll {
+#             overflow: scroll;
+#             max-height: var(--textarea-height);
+#             border-bottom: 1px solid rgba(0,0,0,0.1);
+#             border-right:  1px solid rgba(0,0,0,0.1);
+#             resize: vertical;
+#         }
+#         .scroll[style*="height"] {
+#             max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+#         }
+#
+#         /*** WIDGETS */
+#
+#         .ace-editor {
+#             --bk-color: rgba(255,255,255,0.3);
+#             background-color: var(--bk-color);
+#             height: var(--textarea-height);
+#             width: 100%;
+#             line-height: 1.4;
+#             font-family: var(--bs-font-monospace);
+#             font-size: 13px;
+#             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
+#             /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+#             /*border-left: 8px solid var(--bk-color);*/
+#         }
+#
+#         /*** ITEM PAGE */
+#
+#         .ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
+#         .ct-color1                      { background: #f6f6f6; }
+#
+#         .catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+#         .wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+#         td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
+#         td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }
+#
+#         .catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
+#         .catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
+#         .catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
+#
+#         .catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
+#         .catalog-1 th                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+#
+#         /* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
+#         .catalog-2                  { width: 100%; }
+#         .catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+#         /*.catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
+#
+#         .catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
+#         .catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
+#
+#         .ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
+#         .ct-value .field .default   { color: #888; }
+#         .ct-value .field .info      { font-style: italic; }
+#         .ct-value pre               { margin-bottom: 0px; font-size: 13px; font-family: monospace; }
+#     """,
+# )
 
 # box model of a catalog of item properties:
 """
@@ -171,15 +171,10 @@ base_hy = File_(
         link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon"
         # # favicon: thequiz (check mark) - https://www.favicon.cc/?action=icon&file_id=967133
         # link href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiXvci7e73IuHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLizvci7k73Iu/+9yLsjvci4CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7q73Iu/+9yLv/vci7+73IuZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLjDvci7p73Iu/+9yLv/vci7j73Iu/+9yLvLvci4VAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLibvci7p73Iu/+9yLv/vci6u73IuBu9yLunvci7/73IusgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLi3vci7q73Iu/u9yLv7vci6i73IuBAAAAADvci5n73Iu/+9yLv/vci5TAAAAAAAAAAAAAAAAAAAAAO9yLijvci6773Iupe9yLnLvci4173IuAwAAAAAAAAAA73IuA+9yLt/vci7/73Iu7u9yLgQAAAAAAAAAAAAAAAA0GQoBNBkKAjQZCgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5a73Iu/+9yLv7vci4sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLtjvci7/73IuWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci5M73Iu/+9yLooAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA73IuAe9yLsHvci7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4273Iu8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLr3vci4kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvci4v73IuUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO9yLiMAAAAA//8AAP9/AAD+PwAA/D8AAPgfAADwjwAA4c8AAM/HAAD/5wAA/+cAAP/zAAD/8wAA//sAAP/7AAD//wAA//8AAA==" rel="icon" type="image/x-icon"
-        
-        # script type="module" src="/sys.file:1@get"
-        # script type="module" src="/files/registry.js"
-        script type="module" !
-            import { boot } from "/files/registry.js"
-            import { JSONx } from "/files/serialize.js"
-            window.JSONx = JSONx
-            boot()
 
+        link href='/files/style.css' rel="stylesheet"
+        #style / $item.registry.read('base.css')
+        
     %assets
         assets_external
         assets_internal
@@ -235,8 +230,14 @@ base_hy = File_(
             head
                 title | $item['name']? $item.ciid(False)
                 assets
-                style / $item.registry.read('base.css')
     
+                # script type="module" src="/files/registry.js"
+                script type="module" !
+                    import { boot } from "/files/registry.js"
+                    import { JSONx } from "/files/serialize.js"
+                    window.JSONx = JSONx
+                    boot()
+        
             # body .container : div .row
             #   div .col-1
             #   div .col-10
@@ -297,8 +298,9 @@ filesystem = Folder_(
         'system':           dir_system,
         'tmp':              dir_tmp2,
         'base.hy':          base_hy,            # reusable components for use in pages
-        'base.css':         base_css,           # global styles for use in pages
+        # 'base.css':         base_css,           # global styles for use in pages
         
+        'style.css':        FileLocal_(path = f'{_path}/assets/style.css'),
         'item.js':          FileLocal_(path = f'{_path}/item.js'),
         'registry.js':      FileLocal_(path = f'{_path}/registry.js'),
         'serialize.js':     FileLocal_(path = f'{_path}/serialize.js'),
