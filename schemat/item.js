@@ -245,16 +245,18 @@ export class Item {
         state.data = await this.encodeData(use_schema)
         return state
     }
-    async responseItems() {
+    async bootItems() {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
         let items = [this, this.category, this.registry.root]
         items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
         return T.amap(items, async i => i.encodeSelf())
     }
-    async responseData({item, app, state}) {
+    async bootData() {
         /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
         // let req = this.registry.current_request
-        let request  = {'item': item, 'state': state, 'app': app}
+        // let request  = {item: this, app, state}
+        let {item, app, state} = this.registry.current_request
+        let request  = {item, app, state}
         let ajax_url = await (await this.registry.site).ajax_url()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
@@ -288,10 +290,12 @@ export class Item {
            function handler({item, req, res, app, endpoint})
 
         or as methods of a particular Item subclass, named `_handler_{endpoint}`.
-        In all cases, the function's `this` is bound to `item` (this===item).
-        A handler function can directly write to `response`, and/or return a string that will be appended
-        to the response. The function can return a Promise (async function). It can have arbitrary name, or be anonymous.
+        In every case, the function's `this` is bound to `item` (this===item).
+        A handler function can directly write to the response, and/or return a string that will be appended.
+        The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
+        req.item = this
+        req.app  = app
 
         // get handler's source code from category's data
         let handlers = await this.category.get('handlers', {})
@@ -313,16 +317,37 @@ export class Item {
         if (typeof page === 'string')
             res.send(page)
     }
-    
+
+    async _handler_json({res}) {
+        /* Send JSON representation of this item: its data (encoded) and metadata. */
+        let state = await this.encodeSelf()
+        res.json(state)
+    }
+
     async _handler_view({req, res, app, endpoint}) {
-        // return `Rendering item ${this}...`
+
         let name = await this.get('name', '')
         let ciid = await this.ciid({html: false})
+        // let body = `
+        //     <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
+        //     <p id="data-data" style="display:none">${JSON.stringify(await this.bootData())}</p>
+        //     <div id="react-root"></div>
+        //
+        //     <script type="module">
+        //         import { boot } from "/files/registry.js"
+        //         boot()
+        //     </script>
+        // `
+        return this.HTML({
+            title: `${name} ${ciid}`,
+            body:  await this.BOOT(),
+        })
+    }
 
-        return `
+    HTML({title, body}) { return `
         <!DOCTYPE html><html>
         <head>
-            <title>${name} ${ciid}</title>
+            <title>${title}</title>
             <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
             <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
@@ -335,31 +360,24 @@ export class Item {
             <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
             <link href="/files/style.css" rel="stylesheet" />
         </head>
-        <body>
-            <p id="data-items" style="display:none">${JSON.stringify(await this.responseItems())}</p>
-            <p id="data-data" style="display:none">${JSON.stringify(await this.responseData({item: this, app, state: req.state}))}</p>
-            <div id="react-root"></div>
-        
-            <script type="module">
-                import { boot } from "/files/registry.js"
-                boot()
-            </script>
-        </body>
+        <body>${body}</body>
         </html>
-        `
-    }
+    `}
 
-    async _handler_json({res}) {
-        /* Send JSON representation of this item: its data (encoded) and metadata. */
-        let state = await this.encodeSelf()
-        res.json(state)
-    }
+    async BOOT() { return `
+        <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
+        <p id="data-data" style="display:none">${JSON.stringify(await this.bootData())}</p>
+        <div id="react-root"></div>
+        <script type="module">
+            import { boot } from "/files/registry.js"
+            boot()
+        </script>
+    `}
 
-
-    /***  Components (server & client side)  ***/
+    /***  Components (server side & client side)  ***/
 
     display(target) {
-        /* Render this item into a `target` HTMLElement. */
+        /* Render this item into a `target` HTMLElement. Client side. */
         ReactDOM.render(e(this.Page, {item: this}), target)
     }
 
@@ -439,7 +457,7 @@ export class Category extends Item {
         }
     }
 
-    async _handler_view() {
+    async _handler_view({}) {
         return `Rendering category ${this}...`
     }
 }
@@ -616,26 +634,26 @@ export class AppAdmin extends Application {
         return this._set_endpoint(url, opts)
     }
     async execute(path, request, response) {
-        let item = await this._find_item(path, request)
-        await item.serve(request, response, this)
+        let [item, endpoint] = await this._find_item(path, request)
+        await item.serve(request, response, this, endpoint)
     }
-    async _find_item(path, request) {
+    async _find_item(path) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
         let id, endpoint
         try {
             [path, endpoint] = this._split_endpoint(path.slice(1))
             id = path.split(':').map(Number)
-            assert(!endpoint)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
-        return this.registry.get_item(id)
+        return [await this.registry.get_item(id), endpoint]
     }
 }
 
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
-        let item = await this._find_item(path, request)
+        let [item, endpoint] = await this._find_item(path, request)
+        assert(!endpoint)
         await item.serve(request, response, this, "json")
     }
 }
