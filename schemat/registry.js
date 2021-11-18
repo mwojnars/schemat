@@ -571,6 +571,22 @@ export class Registry {
         return item
     }
 
+    async *scan_category(category) {
+        /* Load from DB all items of a given category, ordered by IID. A generator. */
+        let records = await this.db.scan_category(category.iid)
+        for (const {cid, iid, data} of records) {
+            assert(!category || cid === category.iid)
+            if (cid === ROOT_CID && iid === ROOT_CID)
+                yield this.root
+            else {
+                // item = category.stub(iid)
+                let item = this.create_stub([cid, iid], category)
+                item.reload(true, data)
+                yield item
+            }
+        }
+    }
+
     get_path(cls) {
         /*
         Return a dotted module path of a given class or function as stored in a global Classpath.

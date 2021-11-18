@@ -1,5 +1,5 @@
-import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
-import { print, assert, T, escape_html } from './utils.js'
+import {e, delayed_render, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
+import { print, assert, trycatch, T, escape_html } from './utils.js'
 import { generic_schema, multiple, RECORD } from './types.js'
 import { JSONx } from './serialize.js'
 
@@ -148,15 +148,15 @@ export class Item {
         //     return this.data[field]
         return this.data
     }
-    async reload(use_schema = true, data_json = null) {
-        /* Return this item's data object newly loaded from a DB or from `data_json`. */
+    async reload(use_schema = true, flat = null) {
+        /* Return this item's data object newly loaded from a DB or from `flat` data (json string or record). */
         print(`${this.id_str}.reload() started...`)
-        if (!data_json) {
+        if (!flat) {
             let record = await this.registry.load_record(this.id)
-            data_json = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
+            flat = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
         }
         let schema = use_schema ? await this.category.get_schema() : generic_schema
-        let state  = (typeof data_json === 'string') ? JSON.parse(data_json) : data_json
+        let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = await schema.decode(state)
         print(`${this.id_str}.reload() done`)
         return data
@@ -328,16 +328,6 @@ export class Item {
 
         let name = await this.get('name', '')
         let ciid = await this.ciid({html: false})
-        // let body = `
-        //     <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
-        //     <p id="data-data" style="display:none">${JSON.stringify(await this.bootData())}</p>
-        //     <div id="react-root"></div>
-        //
-        //     <script type="module">
-        //         import { boot } from "/files/registry.js"
-        //         boot()
-        //     </script>
-        // `
         return this.HTML({
             title: `${name} ${ciid}`,
             body:  await this.BOOT(),
@@ -374,6 +364,7 @@ export class Item {
         </script>
     `}
 
+
     /***  Components (server side & client side)  ***/
 
     display(target) {
@@ -392,13 +383,14 @@ export class Item {
         })
     }
 
-    Page({item}) {                                  // React functional component
+    Page({item, extra = null}) {                                  // React functional component
         let changes = new Changes(item)
         return DIV(
             e(item.Title, {item}),
             H2('Properties'),                               //{style: {color:'blue'}}
             e(Catalog1, {item, changes}),
             e(changes.Buttons, {changes}),
+            extra,
         )
     }
 }
@@ -457,8 +449,35 @@ export class Category extends Item {
         }
     }
 
-    async _handler_view({}) {
-        return `Rendering category ${this}...`
+    // async _handler_view({}) {
+    //     return `Rendering category ${this}...`
+    // }
+
+    Page({item}) {
+        /*
+            for item in list(category.registry.scan_category(category))
+                tr
+                    td / #{item.iid} &nbsp;
+                    td
+                        $ iname = item['name']? or item
+                        try
+                            a href=$item.url() | $iname
+                        else
+                            | $iname (no URL)
+         */
+        return delayed_render(async () => {
+            let category = item
+            let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
+            let rows = []
+            for await (const it of items) {
+                let name = await it.get('name') || it.toString()
+                rows.push(TR(
+                    TD(`#${it.iid} `),
+                    TD(trycatch(A({href: await it.url()}, name), `${name} (no URL)`)),
+                ))
+            }
+            return Item.prototype.Page({item, extra: FRAGMENT(H2('Items'), TABLE(TBODY(...rows)))})
+        })
     }
 }
 
@@ -721,7 +740,7 @@ export class AppSpaces extends Application {
             [path, endpoint] = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
             let spaces = await this.get('spaces')
-            category = spaces[space]
+            category = T.getOwnProperty(spaces, space)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
