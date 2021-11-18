@@ -16,14 +16,14 @@ export class JSONx {
     static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
-    static dump(obj, type = null) {
-        let state = JSONx.encode(obj, type);
-        return JSON.stringify(state);
-    }
-    static async load(dump, type = null) {
-        let state = JSON.parse(dump);
-        return await JSONx.decode(state, type);
-    }
+    // static dump(obj, type = null) {
+    //     let state = JSONx.encode(obj, type);
+    //     return JSON.stringify(state);
+    // }
+    // static async load(dump, type = null) {
+    //     let state = JSON.parse(dump);
+    //     return await JSONx.decode(state, type);
+    // }
 
     static encode(obj, type = null) {
         /*

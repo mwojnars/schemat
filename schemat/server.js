@@ -149,8 +149,8 @@ class Server {
         to carry Hyperweb-specific information for downstream processing functions:
 
         x request.item  = target item that's responsible for actual handling of this request
+        x request.endpoint = item's endpoint/view that should be executed
         TODO remove/rename:
-        - request.endpoint = item's endpoint/view that should be executed
         - request.app   = leaf Application object this request is addressed to
         - request.state = app-specific temporary data that's written during routing (handle()) and can be used for
                           response generation when a specific app's method is called, most typically url_path()
@@ -160,7 +160,6 @@ class Server {
         let site = await this.registry.site
         await site.handle(req, res)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
-        res.end()
         this.stop_request()
     }
 

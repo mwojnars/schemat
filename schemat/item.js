@@ -1,6 +1,7 @@
 import {e, delayed_render, DIV, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, multiple, RECORD } from './types.js'
+import { JSONx } from './serialize.js'
 
 export const ROOT_CID = 0
 
@@ -100,6 +101,14 @@ export class Item {
     }
     has_data() { return !!this.data }
 
+    async isinstance(category) {
+        /*
+        Check whether this item belongs to a category that inherits from `category` via a prototype chain.
+        All comparisons along the way use IDs of category items, not object identity.
+        */
+        return this.category.issubcat(category)
+    }
+
     constructor(category = null, data = null) {
         if (data) this.data = data
         if (category) {
@@ -109,16 +118,16 @@ export class Item {
         }
     }
 
-    static async from_dump(state, category = null, use_schema = true) {
-        /* Recreate an item that was serialized with Item.dump_item(), possibly at the server. */
-        let schema = use_schema ? await category.get_schema() : generic_schema
-        let data = await schema.decode(state['data'])
-        delete state['data']
-
-        let item = new Item(category, data)
-        Object.assign(item, state)                  // copy remaining metadata from `state` to `item`
-        return item
-    }
+    // static async fromDump(state, category = null, use_schema = true) {
+    //     /* Recreate an item that was encoded at the server with Item.encodeSelf(). */
+    //     let schema = use_schema ? await category.get_schema() : generic_schema
+    //     let data = await schema.decode(state['data'])
+    //     delete state['data']
+    //
+    //     let item = new Item(category, data)
+    //     Object.assign(item, state)                  // copy remaining metadata from `state` to `item`
+    //     return item
+    // }
 
     async load(field = null, use_schema = true) {
         /* Return this item's data (this.data). The data is loaded from a DB, if not loaded yet. */
@@ -152,15 +161,6 @@ export class Item {
         print(`${this.id_str}.reload() done`)
         return data
     }
-    // bind() {
-    //     /*
-    //     Override this method in subclasses to provide initialization after this item is retrieved from DB.
-    //     Typically, this method initializes transient properties and performs cross-item initialization.
-    //     Only after bind(), the item is a fully functional element of a graph of interconnected items.
-    //     When creating new items, bind() should be called manually, typically after all related items
-    //     have been created and connected.
-    //     */
-    // }
 
     async ciid({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
@@ -171,8 +171,6 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        // return `Item [${this.id}]`
-
         let cat = await this.category.get('name', this.cid.toString())
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
@@ -229,6 +227,37 @@ export class Item {
         //
         // return entries
     }
+
+    async encodeData(use_schema = true) {
+        /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
+        let schema = use_schema ? await this.category.get_schema() : generic_schema
+        return schema.encode(this.data)
+    }
+    async dumpData(use_schema = true, compact = true) {
+        /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
+        let state = await this.encodeData(use_schema)
+        return JSON.stringify(state)
+    }
+    async encodeSelf(use_schema = true, load = true) {
+        /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
+        if (load) await this.load()
+        let {registry, category, ...state} = this               // Registry is not serializable, must be removed now and imputed after deserialization
+        state.data = await this.encodeData(use_schema)
+        return state
+    }
+    async responseItems() {
+        /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
+        let items = [this, this.category, this.registry.root]
+        items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
+        return T.amap(items, async i => i.encodeSelf())
+    }
+    async responseData({item, app, state}) {
+        /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
+        // let req = this.registry.current_request
+        let request  = {'item': item, 'state': state, 'app': app}
+        let ajax_url = await (await this.registry.site).ajax_url()
+        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
+    }
     
     async url(route = null, raise = true, args = {}) {
         /*
@@ -248,6 +277,9 @@ export class Item {
         catch (ex) { if (raise) {throw ex} else return '' }
     }
 
+
+    /***  Handlers (server side)  ***/
+
     async serve(req, res, app, endpoint = 'view') {
         /*
         Serve a web request submitted to a given @endpoint of this item.
@@ -255,6 +287,8 @@ export class Item {
 
            function handler({item, req, res, app, endpoint})
 
+        or as methods of a particular Item subclass, named `_handler_{endpoint}`.
+        In all cases, the function's `this` is bound to `item` (this===item).
         A handler function can directly write to `response`, and/or return a string that will be appended
         to the response. The function can return a Promise (async function). It can have arbitrary name, or be anonymous.
         */
@@ -268,24 +302,61 @@ export class Item {
             handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
-        else                                        // fallback: try to get source code from static .handlers of the Item subclass
-            handler = T.getOwnProperty(this.constructor.handlers, endpoint)
+        else                                        // fallback: get handler from the item's class
+            handler = this[`_handler_${endpoint}`]
 
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
+        handler = handler.bind(this)
         let page = handler({item: this, req, res, endpoint, app})
         if (page instanceof Promise) page = await page
         if (typeof page === 'string')
             res.send(page)
     }
+    
+    async _handler_view({req, res, app, endpoint}) {
+        // return `Rendering item ${this}...`
+        let name = await this.get('name', '')
+        let ciid = await this.ciid({html: false})
 
-    static handlers = {
-        "view": function viewItem({item, req, res, app, endpoint}) {
-            return `Rendering item ${item}...`
-        }
+        return `
+        <!DOCTYPE html><html>
+        <head>
+            <title>${name} ${ciid}</title>
+            <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+            <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        
+            <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+            <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        
+            <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
+            <link href="/files/style.css" rel="stylesheet" />
+        </head>
+        <body>
+            <p id="data-items" style="display:none">${JSON.stringify(await this.responseItems())}</p>
+            <p id="data-data" style="display:none">${JSON.stringify(await this.responseData({item: this, app, state: req.state}))}</p>
+            <div id="react-root"></div>
+        
+            <script type="module">
+                import { boot } from "/files/registry.js"
+                boot()
+            </script>
+        </body>
+        </html>
+        `
     }
 
-    /***  React components  ***/
+    async _handler_json({res}) {
+        /* Send JSON representation of this item: its data (encoded) and metadata. */
+        let state = await this.encodeSelf()
+        res.json(state)
+    }
+
+
+    /***  Components (server & client side)  ***/
 
     display(target) {
         /* Render this item into a `target` HTMLElement. */
@@ -318,6 +389,19 @@ export class Item {
 
 export class Category extends Item {
 
+    async issubcat(category) {
+        /*
+        Return true if `this` is `category` (by item ID comparison) or inherits from it, i.e.,
+        if ID of `category` is present on an item prototype chain(s) of `this`.
+        */
+        if (this.has_id(category.id)) return true
+        let prototype = await this.get('prototype')        // TODO: support multiple prototypes (multibase inheritance)
+        if (!prototype) return false
+        return prototype.issubcat(category)
+        // for (let base in prototypes)
+        //     if (await base.issubcat(category)) return true
+        // return false
+    }
     async get_fields() { return await this.get('fields') }
 
     async get_class() {
@@ -355,10 +439,8 @@ export class Category extends Item {
         }
     }
 
-    static handlers = {
-        "view": function viewCategory({item}) {
-            return `Rendering category ${item}...`
-        }
+    async _handler_view() {
+        return `Rendering category ${this}...`
     }
 }
 
@@ -373,9 +455,9 @@ export class RootCategory extends Category {
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
-    encode_data(use_schema = false) {
-        /* Same as Item.encode_data(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.encode_data(false)
+    encodeData(use_schema = false) {
+        /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
+        return super.encodeData(false)
     }
     async reload(use_schema = false, data_json = null) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
@@ -414,6 +496,12 @@ export class Site extends Item {
         /* Forward the request to a root application configured in the `app` property. */
         let app = await this.get('application')
         await app.execute(request.path, request, response)
+    }
+
+    async ajax_url() {
+        /* Absolute base URL for AJAX calls originating at a client UI. */
+        return "http://127.0.0.1:3000/ajax"                 // TODO: change 'base_url' in DB; call ajax_url() on client not server
+        // return (await this.get('base_url')) + '/ajax'
     }
 }
 
@@ -533,10 +621,11 @@ export class AppAdmin extends Application {
     }
     async _find_item(path, request) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
-        let id
+        let id, endpoint
         try {
-            [path, request.endpoint] = this._split_endpoint(path.slice(1))
+            [path, endpoint] = this._split_endpoint(path.slice(1))
             id = path.split(':').map(Number)
+            assert(!endpoint)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
@@ -544,11 +633,10 @@ export class AppAdmin extends Application {
     }
 }
 
-export class AppAjax extends Application {
+export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
         let item = await this._find_item(path, request)
-        request.endpoint = "json"
-        await item.serve(request, response, this)
+        await item.serve(request, response, this, "json")
     }
 }
 
@@ -567,26 +655,25 @@ export class AppFiles extends Application {
             return response.redirect(request.path + '/')
 
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
-        let filepath
-        [filepath, request.endpoint] = this._split_endpoint(path.slice(1))
+        let [filepath, endpoint] = this._split_endpoint(path.slice(1))
         request.state = {'filepath': filepath}
         
-        let root = await this.get('root_folder') || this.registry.files
-        let item = root.search(filepath)
+        let root = await this.get('root_folder') || await this.registry.files
+        let item = await root.search(filepath)
 
         let files = await this.registry.files
-        let File_ = files.search('system/File')
-        let Folder_ = files.search('system/Folder')
+        let File_ = await files.search('system/File')
+        let Folder_ = await files.search('system/Folder')
         
-        let endpoint = 'view'
-        if (item.isinstance(File_))
-            endpoint = 'download'
-        else if (item.isinstance(Folder_))
+        let default_endpoint = 'view'
+        if (await item.isinstance(File_))
+            default_endpoint = 'download'
+        else if (await item.isinstance(Folder_))
             // if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.path + '/')       // folder URLs must end with '/'
             request.state['folder'] = item          // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
         
-        return item.serve(request, response, this, endpoint)
+        return item.serve(request, response, this, endpoint || default_endpoint)
     }
 }
 
@@ -611,9 +698,9 @@ export class AppSpaces extends Application {
         throw new Error(`URL path not found for items of category ${category}`)
     }
     async execute(path, request, response) {
-        let space, item_id, category
+        let space, item_id, category, endpoint
         try {
-            [path, request.endpoint] = this._split_endpoint(path.slice(1));
+            [path, endpoint] = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
             let spaces = await this.get('spaces')
             category = spaces[space]
@@ -621,7 +708,7 @@ export class AppSpaces extends Application {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.get_item(Number(item_id))
-        return item.serve(request, response, this)
+        return item.serve(request, response, this, endpoint || 'view')
     }
 }
 
@@ -631,7 +718,87 @@ export class AppSpaces extends Application {
  **
  */
 
-export class Folder extends Item {}
-export class File extends Item {}
-export class FileLocal extends File {}
+export class Folder extends Item {
+    static SEP_FOLDER = '/'          // separator of folders in a file path
+
+    exists(path) {
+        /* Check whether a given path exists in this folder. */
+    }
+    async search(path) {
+        /*
+        Find an item pointed to by a `path`. The path may start with '/', but this is not obligatory.
+        The search is performed recursively in subfolders.
+        */
+        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+        let item = this
+        while (path) {
+            let name = path.split(Folder.SEP_FOLDER)[0]
+            let files = await item.get('files')
+            item = T.getOwnProperty(files, name)
+            path = path.slice(name.length+1)
+        }
+        return item
+    }
+    async read(path) {
+        /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
+        let f = await this.search(path)
+        if (f instanceof File) return f.read()
+        throw new Error(`not a file: ${path}`)
+    }
+    async get_name(item) {
+        /* Return a name assigned to a given item. If the same item is assigned multiple names,
+        the last one is returned. */
+        let names = await this._names()
+        return names.get(item.id, null)
+    }
+    // @cached(ttl=10)
+    async _names() {
+        /* Take `files` property and compute its reverse mapping: item ID -> name. */
+        let files = await this.get('files')
+        return T.mapDict(files, (name, f) => [f.id, name])
+    }
+}
+
+export class File extends Item {
+    async read() {
+        return this.get('content')
+    }
+    async _handler_download() {
+        /* Return full content of this file, either as <str> or a Response object. */
+        return this.read()
+    }
+}
+
+export class FileLocal extends File {
+    async read(encoding = 'utf8') {
+        let fs = import('fs')
+        let path = await this.get('path', null)
+        if (path === null) return null
+        return fs.readFileSync(path, {encoding})
+    }
+
+    async _handler_download({res}) {
+        
+        let content = await this.get('content', null)
+        if (typeof content === 'string')
+            return res.send(content)
+        
+        let path = await this.get('path', null)
+        if (!path) res.sendStatus(404)
+
+        res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
+
+        // let [content_type, encoding] = mimetypes.guess_type(path)
+        // content_type = content_type || 'application/octet-stream'
+        //
+        // content = open(path, 'rb')
+        // let response = FileResponse(content, content_type = content_type)
+        //
+        // if (encoding)
+        //     response.headers["Content-Encoding"] = encoding
+            
+        // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
+        // https://github.com/django/django/blob/main/django/views/static.py
+    }
+}
 
