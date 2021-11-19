@@ -133,13 +133,11 @@ export class Item {
     // }
 
     async load(field = null, use_schema = true) {
-        /* Load this item's data (this.data) from a DB, if not loaded yet. Return this. */
+        /* Load this item's data (this.data) from a DB, if not loaded yet. Return this object. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
-        // if (this.category && this.category !== this)
-        //     this.category.load()
 
-        if (this.data) { //return this.data
+        if (this.data) {
             await this.data
             return this         //field === null ? this.data : T.getOwnProperty(this.data, field)
         }
@@ -152,21 +150,21 @@ export class Item {
         await this.data
         return this
         // if (field !== null && data.hasOwnProperty(field)) return this.data[field]
-
-        // return this.data
     }
-    async reload(use_schema = true, flat = null) {
-        /* Return this item's data object newly loaded from a DB or from `flat` data (json string or data object, NOT a full item record). */
+    async reload(use_schema = true, record = null) {
+        /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
         print(`${this.id_str}.reload() started...`)
-        if (!flat) {
+        if (!record) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            let record = await this.registry.load_record(this.id)
-            flat = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
+            record = await this.registry.load_record(this.id)
         }
+        let flat   = record.data
         let schema = use_schema ? await this.category.get_schema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = await schema.decode(state)
         this.data  = data
+        // TODO: initialize item metadata - the remaining attributes from `record`
+
         print(`${this.id_str}.reload() done`)
         return data
     }
@@ -465,7 +463,7 @@ export class Category extends Item {
          */
         let items = []
         for await (const item of this.registry.scan_category(this))
-            items.push(item)
+            items.push(await item.encodeSelf())
         res.json(items)
     }
 
@@ -512,9 +510,9 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    async reload(use_schema = false, flat = null) {
+    async reload(use_schema = false, record = null) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.reload(false, flat)
+        return super.reload(false, record)
     }
 }
 
@@ -595,7 +593,7 @@ export class Application extends Item {
         the separatoror (if present) is preserved in a remaining subpath, so that sub-applications
         can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
         */
-        throw Error('method not implemented in a subclass')
+        throw new Error('method not implemented in a subclass')
     }
     _split_endpoint(path) {
         /* Decode @endpoint from the URL path. Return [subpath, endpoint]. */

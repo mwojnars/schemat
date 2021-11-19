@@ -32,7 +32,7 @@ export let print = console.log
 
 export function assert(test, msg) {
     if (test) return
-    throw Error(`assertion failed: ${msg}`)
+    throw new Error(`assertion failed: ${msg}`)
     // console.assert(test)
 }
 

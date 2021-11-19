@@ -27,24 +27,23 @@ class FileDB extends Database {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    items    = new ItemsMap()   // preloaded flat items, as {key: json_record} pairs; keys are strings "cid:iid";
-                                // values are full item records (with cid,iid,data), schema-encoded and stringified for safety,
-                                // so that clients create a new deep copy of an item on every access
+    records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
+                                // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
+                                // so that clients create a new deep copy of item data on every access
     
     constructor(filename) {
         super()
         this.filename = filename
     }
     
-    select(id) {
-        return this.items.get(id)
-        // let item = this.items.get(id)
-        // assert(item.cid === id[0] && item.iid === id[1])
-        // return item
+    async select(id) {
+        let record = this.records.get(id)
+        assert(record.cid === id[0] && record.iid === id[1])
+        return record
     }
     async *scan_category(cid) {
-        for (const item of this.items.values())
-            if (cid === item.cid) yield item
+        for (const record of this.records.values())
+            if (cid === record.cid) yield record
     }
 }
 
@@ -56,16 +55,16 @@ class YamlDB extends FileDB {
     load() {
         let file = readFileSync(this.filename, 'utf8')
         let db = yaml.load(file)
-        this.items.clear()
+        this.records.clear()
         this.max_iid.clear()
         
-        for (let data of db) {
-            let id = T.pop(data, 'id')
+        for (let record of db) {
+            let id = T.pop(record, 'id')
             let [cid, iid] = id
-            assert(!this.items.has(id), `duplicate item ID: ${id}`)
+            assert(!this.records.has(id), `duplicate item ID: ${id}`)
             let curr_max = this.max_iid.get(cid) || 0
             this.max_iid[cid] = Math.max(curr_max, iid)
-            this.items.set(id, {cid, iid, data})
+            this.records.set(id, {cid, iid, data: JSON.stringify(record)})
         }
         // print('YamlDB items loaded:')
         // for (const [id, data] of this.items)

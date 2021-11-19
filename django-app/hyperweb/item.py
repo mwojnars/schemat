@@ -107,18 +107,21 @@ class MetaItem(type):
 class Item(object, metaclass = MetaItem):
     """
     Item is an elementary object operated upon by Hyperweb and a unit of storage in DB.
-    
-    Item's metadata - in DB:
     - cid, iid
-    * version -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
-    * created_at, updated_at -- kept inside DB as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
-    * checksum -- to detect data corruption due to disk i/o errors etc.
-    ? status -- enum, "deleted" for tombstone items
-    ? owner + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
-    ? D is_draft -- this item is under construction, not fully functional yet (app-level feature)
-    ? M is_mock  -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
-    ? H is_honeypot -- artificial empty item for detection and tracking of automated access
-    ? R is_removed -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
+    
+    Item's extra metadata, in this.data.__meta__ OR this.meta (?)
+    * meta fields accessible through this.get('#FIELD')
+    - name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
+    ? summary  -- same as above; max length ~300; maybe a rich-text TEXT schema with embedded markup indicator?
+    - version  -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
+    - checksum -- to detect data corruption due to disk i/o errors etc.
+    - created_at, updated_at -- stored as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    - owner(s) + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
+    - honeypot -- artificial empty item for detection and tracking of spambots
+    - draft    -- this item is under construction, not fully functional yet (app-level feature)
+    - mock     -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
+    - removed  -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
+    - status   -- enum, "deleted" for tombstone items
     
     Item's status -- temporary (in memory):
     - draft/newborn: newly created object, not linked with a record in DB (= IID is missing); may be inserted to DB to create a new record, or be filled with an existing record from DB

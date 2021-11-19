@@ -364,25 +364,31 @@ export class Database {}
 class AjaxDB extends Database {
     /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
 
-    ajax_url        // base URL for AJAX calls, no trailing slash '/'
-    boot_items      // list of schema-encoded item records that were received on an initial web request to avoid subsequent remote calls
+    ajax_url = null                 // base URL for AJAX calls, no trailing slash '/'
+    records  = new ItemsMap()       // map of item records received on initial web request to avoid subsequent remote calls;
+                                    // each record is {cid,iid,data}, `data` is JSON-encoded
 
     constructor(ajax_url, boot_items = []) {
         super()
         this.ajax_url = ajax_url
-        this.boot_items = boot_items
+        // this.records = boot_items.map(item => [])
+        for (const item of boot_items) {
+            item.data = JSON.stringify(item.data)
+            this.records.set([item.cid, item.iid], item)
+        }
         assert(!ajax_url.endsWith('/'))
     }
 
     async select(id) {
-        /* Look up boot_items for a given `id` and return if found. */
+        /* Look up this.records for a given `id` and return if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
-        return this._from_boot(cid, iid) || await this._from_ajax(cid, iid)
+        return this.records.get(id) || this._from_ajax(cid, iid)
+        // return this._from_boot(cid, iid) || await this._from_ajax(cid, iid)
     }
-    _from_boot(cid, iid) {
-        for (let item of this.boot_items)
-            if (item.cid === cid && item.iid === iid) return item
-    }
+    // _from_boot(cid, iid) {
+    //     for (let item of this.records)
+    //         if (item.cid === cid && item.iid === iid) return item
+    // }
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${cid},${iid}]...`)
@@ -436,7 +442,7 @@ class Classpath {
         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
         for (let obj of objects) {
             let name = obj.name
-            if (!name) throw Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
+            if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
             this.set(`${path}.${name}`, obj)
         }
         // for (let [name, obj] of Object.entries(named ?? {}))
@@ -471,13 +477,13 @@ class Classpath {
         under different names (paths), the most recently assigned path is returned.
         */
         let path = this.inverse.get(obj)
-        if (path === undefined) throw Error(`Not in classpath: ${obj.name ?? obj}`)
+        if (path === undefined) throw new Error(`Not in classpath: ${obj.name ?? obj}`)
         return path
     }
     decode(path) {
         /* Return object pointed to by a given path. */
         let obj = this.forward.get(path)
-        if (obj === undefined) throw Error(`Unknown class path: ${path}`)
+        if (obj === undefined) throw new Error(`Unknown class path: ${path}`)
         return obj
     }
 }
@@ -538,14 +544,6 @@ export class Registry {
         // root.bind()
         return root
     }
-    // async load_data(id) {
-    //     /* Load item's data from server-side DB and return as a dict with keys: cid, iid, data (encoded), all metadata. */
-    //     return this.db.select(id)
-    // }
-    async load_record(id) {
-        /* Load item record from server-side DB and return as a dict with keys: cid, iid, data (encoded), all metadata. */
-        return this.db.select(id)
-    }
 
     async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
 
@@ -565,7 +563,7 @@ export class Registry {
         // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
         // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
         let pending = this.create_stub(id)
-        if (load) pending = pending.then(item => item.load()) //{item.load(); return item})
+        if (load) pending = pending.then(item => item.load())
         this.items.set(id, pending)
         pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
         return pending
@@ -581,17 +579,24 @@ export class Registry {
         return item
     }
 
+    async load_record(id) {
+        /* Load item's record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
+           Note that `data` can either be a JSON-encoded string, or a schema-encoded object
+           - the caller must be prepared for both cases!
+         */
+        return this.db.select(id)
+    }
     async *scan_category(category) {
         /* Load from DB all items of a given category ordered by IID. A generator. */
         let records = this.db.scan_category(category.iid)
-        for await (const {cid, iid, data} of records) {
+        for await (const record of records) {
+            let {cid, iid} = record
             assert(!category || cid === category.iid)
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                // item = category.stub(iid)
                 let item = await this.create_stub([cid, iid], category)
-                await item.reload(undefined, data)
+                await item.reload(undefined, record)
                 yield item
             }
         }
