@@ -388,6 +388,12 @@ class AjaxDB extends Database {
         print(`ajax download [${cid},${iid}]...`)
         return await $.get(`${this.ajax_url}/${cid}:${iid}`)
     }
+
+    async *scan_category(cid) {
+        print(`ajax category scan [0,${cid}]...`)
+        let items = await $.get(`${this.ajax_url}/0:${cid}@scan`)
+        for (const item of items) yield item
+    }
 }
 
 /**********************************************************************************************************************/
@@ -532,9 +538,13 @@ export class Registry {
         // root.bind()
         return root
     }
+    // async load_data(id) {
+    //     /* Load item's data from server-side DB and return as a dict with keys: cid, iid, data (encoded), all metadata. */
+    //     return this.db.select(id)
+    // }
     async load_record(id) {
         /* Load item record from server-side DB and return as a dict with keys: cid, iid, data (encoded), all metadata. */
-        return await this.db.select(id)
+        return this.db.select(id)
     }
 
     async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
@@ -555,7 +565,7 @@ export class Registry {
         // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
         // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
         let pending = this.create_stub(id)
-        if (load) pending = pending.then(item => {item.load(); return item})
+        if (load) pending = pending.then(item => item.load()) //{item.load(); return item})
         this.items.set(id, pending)
         pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
         return pending
@@ -572,16 +582,16 @@ export class Registry {
     }
 
     async *scan_category(category) {
-        /* Load from DB all items of a given category, ordered by IID. A generator. */
-        let records = await this.db.scan_category(category.iid)
-        for (const {cid, iid, data} of records) {
+        /* Load from DB all items of a given category ordered by IID. A generator. */
+        let records = this.db.scan_category(category.iid)
+        for await (const {cid, iid, data} of records) {
             assert(!category || cid === category.iid)
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
                 // item = category.stub(iid)
-                let item = this.create_stub([cid, iid], category)
-                item.reload(true, data)
+                let item = await this.create_stub([cid, iid], category)
+                await item.reload(undefined, data)
                 yield item
             }
         }

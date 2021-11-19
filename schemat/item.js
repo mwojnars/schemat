@@ -86,9 +86,12 @@ export class Item {
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
-    // data            // properties of this item, as a plain object {..}; in the future, MultiDict can be used instead
-    // category        // parent category of this item, as an instance of Category
-    // registry        // Registry that manages access to this item (should refer to the unique global registry)
+    /*
+    data            - properties of this item, as a plain object {..}; in the future, MultiDict can be used instead;
+                      `data` can hold a Promise, so it always should be awaited or accessed directly after await load()
+    category        - parent category of this item, as an instance of Category
+    registry        - Registry that manages access to this item (should refer to the unique global registry)
+    */
 
     //loaded = null;    // names of fields that have been loaded so far
 
@@ -130,34 +133,40 @@ export class Item {
     // }
 
     async load(field = null, use_schema = true) {
-        /* Return this item's data (this.data). The data is loaded from a DB, if not loaded yet. */
+        /* Load this item's data (this.data) from a DB, if not loaded yet. Return this. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
         // if (this.category && this.category !== this)
         //     this.category.load()
 
-        if (this.data) return this.data   //field === null ? this.data : T.getOwnProperty(this.data, field)
-        if (this.iid === null) throw Error(`trying to load() a newborn item with no IID`)
+        if (this.data) { //return this.data
+            await this.data
+            return this         //field === null ? this.data : T.getOwnProperty(this.data, field)
+        }
 
         // store and return a Promise that will eventually load this item's data;
-        // for efficiency, replace in this the proxy promise with an actual `data` object when it's ready
-        this.data = this.reload(use_schema).then(data => {this.data = data; return data})
+        // the promise will be replaced in this.data with an actual `data` object when ready
+        this.data = this.reload(use_schema)
         // this.bind()
 
-        // if (field !== null && data.hasOwnProperty(field))
-        //     return this.data[field]
-        return this.data
+        await this.data
+        return this
+        // if (field !== null && data.hasOwnProperty(field)) return this.data[field]
+
+        // return this.data
     }
     async reload(use_schema = true, flat = null) {
-        /* Return this item's data object newly loaded from a DB or from `flat` data (json string or record). */
+        /* Return this item's data object newly loaded from a DB or from `flat` data (json string or data object, NOT a full item record). */
         print(`${this.id_str}.reload() started...`)
         if (!flat) {
+            if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             let record = await this.registry.load_record(this.id)
             flat = record['data']          // TODO: initialize item metadata - the remaining attributes from `record`
         }
         let schema = use_schema ? await this.category.get_schema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = await schema.decode(state)
+        this.data  = data
         print(`${this.id_str}.reload() done`)
         return data
     }
@@ -185,10 +194,10 @@ export class Item {
 
     async get(field, default_ = undefined) {
         // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
-        let data = await this.load()
+        await this.load()
 
-        if (data.hasOwnProperty(field))
-            return data[field]
+        if (this.data.hasOwnProperty(field))
+            return this.data[field]
 
         if (this.category !== this) {
             let cat_default = await this.category.get_default(field)
@@ -204,8 +213,8 @@ export class Item {
         Multiple values for a single field are returned as separate entries.
         */
         // await this.load()
-        let data = await this.load()
-        return Object.entries(data)
+        await this.load()
+        return Object.entries(this.data)
 
         // let fields  = await this.category.get_fields()
         // let entries = []
@@ -231,7 +240,7 @@ export class Item {
     async encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         let schema = use_schema ? await this.category.get_schema() : generic_schema
-        return schema.encode(this.data)
+        return schema.encode(await this.data)
     }
     async dumpData(use_schema = true, compact = true) {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
@@ -449,9 +458,16 @@ export class Category extends Item {
         }
     }
 
-    // async _handler_view({}) {
-    //     return `Rendering category ${this}...`
-    // }
+    async _handler_scan({res}) {
+        /* Retrieve all children of this category and return as a JSON.
+           TODO: set a size limit & offset (pagination).
+           TODO: let declare if full items (loaded) or stubs should be sent.
+         */
+        let items = []
+        for await (const item of this.registry.scan_category(this))
+            items.push(item)
+        res.json(items)
+    }
 
     Page({item}) {
         /*
@@ -496,9 +512,9 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    async reload(use_schema = false, data_json = null) {
+    async reload(use_schema = false, flat = null) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return await super.reload(data_json, false)
+        return super.reload(false, flat)
     }
 }
 
@@ -672,8 +688,8 @@ export class AppAdmin extends Application {
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
         let [item, endpoint] = await this._find_item(path, request)
-        assert(!endpoint)
-        await item.serve(request, response, this, "json")
+        endpoint = endpoint || "json"
+        await item.serve(request, response, this, endpoint)
     }
 }
 

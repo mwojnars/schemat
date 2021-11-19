@@ -83,6 +83,7 @@ export class JSONx {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
+        This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
         */
         let registry = globalThis.registry
         let isdict = T.isDict(state)
@@ -92,17 +93,17 @@ export class JSONx {
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_DICT)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
-            return await JSONx.decode_dict(state)
+            return JSONx.decode_dict(state)
         }
 
         // determine the expected class (constructor function) for the output object
         if (type) {
             if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
                 throw `Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`
-            cls = type;
+            cls = type
         }
         else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
-            cls = T.getClass(state)             // cls=null denotes a class of null value
+            cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
             let classname = T.pop(state, JSONx.ATTR_CLASS)
@@ -110,25 +111,25 @@ export class JSONx {
                 let state_attr = T.pop(state, JSONx.ATTR_STATE)
                 if (T.notEmpty(state))
                     throw `Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
-                state = state_attr;
+                state = state_attr
             }
             if (classname === JSONx.FLAG_ITEM)
-                return await registry.get_item(state);
-            cls = registry.get_class(classname);
+                return registry.get_item(state)
+            cls = registry.get_class(classname)
         }
         else cls = Object
 
-        console.assert(cls !== undefined, {msg: "`cls` is undefined", state: state, type: type})
+        console.assert(cls !== undefined, {msg: "`cls` is undefined", state, type})
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
-        if (cls === Array)          return await JSONx.decode_list(state)
-        if (cls === Object)         return await JSONx.decode_dict(state)
+        if (cls === Array)          return JSONx.decode_list(state)
+        if (cls === Object)         return JSONx.decode_dict(state)
         if (cls === Set)            return new cls(await JSONx.decode_list(state))
 
         let Item = registry.get_class("hyperweb.core.Item")
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
-            return await registry.get_item(state)
+            return registry.get_item(state)
 
         state = await JSONx.decode_dict(state)
         // let obj = JSONx.decode_dict(state)
@@ -147,7 +148,7 @@ export class JSONx {
     }
     static async decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return await Promise.all(state.map(async v => await JSONx.decode(v)))
+        return Promise.all(state.map(async v => await JSONx.decode(v)))
     }
     static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
@@ -163,7 +164,7 @@ export class JSONx {
     }
     static async decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        return await T.amapDict(state, async (k, v) => [k, await JSONx.decode(v)])
+        return T.amapDict(state, async (k, v) => [k, await JSONx.decode(v)])
         // let entries = await Promise.all(Object.entries(state).map(async ([k, v]) => [k, await JSONx.decode(v)]))
         // return Object.fromEntries(entries)
     }

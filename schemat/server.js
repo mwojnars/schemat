@@ -27,8 +27,9 @@ class FileDB extends Database {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    items    = new ItemsMap()   // preloaded flat items, as {key: item_record} pairs; keys are strings "cid:iid";
-                                // item records are schema-encoded, but JSON-decoded (!), with fields cid,iid,data
+    items    = new ItemsMap()   // preloaded flat items, as {key: json_record} pairs; keys are strings "cid:iid";
+                                // values are full item records (with cid,iid,data), schema-encoded and stringified for safety,
+                                // so that clients create a new deep copy of an item on every access
     
     constructor(filename) {
         super()
@@ -36,11 +37,12 @@ class FileDB extends Database {
     }
     
     select(id) {
-        let item = this.items.get(id)
-        assert(item.cid === id[0] && item.iid === id[1])
-        return item
+        return this.items.get(id)
+        // let item = this.items.get(id)
+        // assert(item.cid === id[0] && item.iid === id[1])
+        // return item
     }
-    *scan_category(cid) {
+    async *scan_category(cid) {
         for (const item of this.items.values())
             if (cid === item.cid) yield item
     }
