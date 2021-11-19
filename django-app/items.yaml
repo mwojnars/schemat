@@ -242,7 +242,7 @@
   files:
     tmp1: [3, 2]
 - id: [2, 1]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/style.css
+  path: /home/marcin/Documents/priv/catalog/src/schemat/client.js
 - id: [2, 2]
   path: /home/marcin/Documents/priv/catalog/src/schemat/item.js
 - id: [2, 3]
@@ -250,20 +250,26 @@
 - id: [2, 4]
   path: /home/marcin/Documents/priv/catalog/src/schemat/serialize.js
 - id: [2, 5]
-  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/server.js
 - id: [2, 6]
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/style.css
+- id: [2, 7]
+  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
+- id: [2, 8]
   path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
 - id: [3, 4]
   files:
     system: [3, 1]
     tmp: [3, 3]
     base.hy: [1, 1]
-    style.css: [2, 1]
+    client.js: [2, 1]
     item.js: [2, 2]
     registry.js: [2, 3]
     serialize.js: [2, 4]
-    types.js: [2, 5]
-    utils.js: [2, 6]
+    server.js: [2, 5]
+    style.css: [2, 6]
+    types.js: [2, 7]
+    utils.js: [2, 8]
 - id: [6, 1]
   name: Admin
 - id: [7, 1]

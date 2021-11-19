@@ -204,10 +204,12 @@ filesystem = Folder_(
         'base.hy':          base_hy,            # reusable components for use in pages
         # 'base.css':         base_css,           # global styles for use in pages
         
-        'style.css':        FileLocal_(path = f'{_path}/assets/style.css'),
+        'client.js':        FileLocal_(path = f'{_path}/client.js'),
         'item.js':          FileLocal_(path = f'{_path}/item.js'),
         'registry.js':      FileLocal_(path = f'{_path}/registry.js'),
         'serialize.js':     FileLocal_(path = f'{_path}/serialize.js'),
+        'server.js':        FileLocal_(path = f'{_path}/assets/server.js'),
+        'style.css':        FileLocal_(path = f'{_path}/assets/style.css'),
         'types.js':         FileLocal_(path = f'{_path}/types.js'),
         'utils.js':         FileLocal_(path = f'{_path}/utils.js'),
         # 'react.production.min.js': FileLocal_(path = f'{_path}/react.production.min.js'),

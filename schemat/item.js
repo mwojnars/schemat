@@ -366,7 +366,7 @@ export class Item {
         <p id="data-data" style="display:none">${JSON.stringify(await this.bootData())}</p>
         <div id="react-root"></div>
         <script type="module">
-            import { boot } from "/files/registry.js"
+            import { boot } from "/files/client.js"
             boot()
         </script>
     `}
@@ -459,7 +459,7 @@ export class Category extends Item {
     async _handler_scan({res}) {
         /* Retrieve all children of this category and return as a JSON.
            TODO: set a size limit & offset (pagination).
-           TODO: let declare if full items (loaded) or stubs should be sent.
+           TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
          */
         let items = []
         for await (const item of this.registry.scan_category(this))
@@ -468,17 +468,6 @@ export class Category extends Item {
     }
 
     Page({item}) {
-        /*
-            for item in list(category.registry.scan_category(category))
-                tr
-                    td / #{item.iid} &nbsp;
-                    td
-                        $ iname = item['name']? or item
-                        try
-                            a href=$item.url() | $iname
-                        else
-                            | $iname (no URL)
-         */
         return delayed_render(async () => {
             let category = item
             let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
@@ -711,6 +700,7 @@ export class AppFiles extends Application {
         
         let root = await this.get('root_folder') || await this.registry.files
         let item = await root.search(filepath)
+        assert(item, `item not found: ${filepath}`)
 
         let files = await this.registry.files
         let File_ = await files.search('system/File')
