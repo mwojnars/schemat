@@ -135,11 +135,9 @@ base_hy = File_(
                 title | $item['name']? $item.ciid(False)
                 assets
     
-                # script type="module" src="/files/registry.js"
+                # script type="module" src="/files/client.js"
                 script type="module" !
-                    import { boot } from "/files/registry.js"
-                    import { JSONx } from "/files/serialize.js"
-                    window.JSONx = JSONx
+                    import { boot } from "/files/client.js"
                     boot()
         
             # body .container : div .row

@@ -373,7 +373,7 @@ export class ITEM extends Schema {
     Widget({value}) {
         return delayed_render(async () => {
             let item = value
-            let url  = await item.url(null, false)
+            let url  = await item.url()
             let name = await item.get('name', '')
             let ciid = HTML(await item.ciid({html: false, brackets: false}))
 

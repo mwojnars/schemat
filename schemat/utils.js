@@ -159,6 +159,7 @@ function _e(name) {
             e(name, args[0], ...args.slice(1))
 }
 
+export const NBSP  = '\u00A0'       // plain character equivalent of &nbsp; entity
 export const A     = _e('a')
 export const B     = _e('b')
 export const I     = _e('i')

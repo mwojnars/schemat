@@ -1,5 +1,5 @@
-import {e, delayed_render, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
-import { print, assert, trycatch, T, escape_html } from './utils.js'
+import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
+import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, multiple, RECORD } from './types.js'
 import { JSONx } from './serialize.js'
 
@@ -82,6 +82,22 @@ class Changes {
  */
 
 export class Item {
+
+    /*
+    TODO: Item's metadata, in this.data.__meta__ OR this.meta (?)
+    >> meta fields accessible through this.get('#FIELD')
+    - name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
+    ? summary  -- same as above; max length ~300; a rich-text TEXT schema with embedded markup indicator?
+    - version  -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
+    - checksum -- to detect data corruption due to disk i/o errors etc.
+    - created_at, updated_at -- stored as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    - owner(s) + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
+    - honeypot -- artificial empty item for detection and tracking of spambots
+    - draft    -- this item is under construction, not fully functional yet (app-level feature)
+    - mock     -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
+    - removed  -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
+    - status   -- enum, "deleted" for tombstone items
+    */
 
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
@@ -182,7 +198,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url('', false)
+            let url = await this.category.url('')
             if (url) cat = `<a href=${url}>${cat}</a>`
         }
         let stamp = `${cat}:${this.iid}`
@@ -268,7 +284,7 @@ export class Item {
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
     
-    async url(route = null, raise = true, args = {}) {
+    async url(route = null, {raise = false, args = null} = {}) {
         /*
         Return a *relative* URL of this item as assigned by the current Application (if route=null),
         that is, by the one that's processing the current web request; or an *absolute* URL
@@ -277,13 +293,14 @@ export class Item {
         */
         try {
             if (route === null) {
-                let app = this.registry.current_request.app
-                return './' + await app.url_path(this, args)      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+                let app  = this.registry.current_request.app
+                let path = await app.url_path(this, args)
+                return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
             }
             let site = await this.registry.site
             return await site.get_url(this, route, args)
         }
-        catch (ex) { if (raise) {throw ex} else return '' }
+        catch (ex) { if (raise) {throw ex} else return null }
     }
 
 
@@ -474,15 +491,17 @@ export class Category extends Item {
             let rows = []
             for await (const it of items) {
                 let name = await it.get('name') || it.toString()
+                let url  = await it.url()
                 rows.push(TR(
-                    TD(`#${it.iid} `),
-                    TD(trycatch(A({href: await it.url()}, name), `${name} (no URL)`)),
+                    TD(`#${it.iid} ${NBSP}`),
+                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
                 ))
             }
             return Item.prototype.Page({item, extra: FRAGMENT(H2('Items'), TABLE(TBODY(...rows)))})
         })
     }
 }
+
 
 /**********************************************************************************************************************/
 

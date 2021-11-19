@@ -206,23 +206,22 @@
     display:none\" @ dump\n    \n    %page @body\n        doctype\n        ...html\
     \ @body\n    \n    %page_item @extra item\n        page\n            head\n  \
     \              title | $item['name']? $item.ciid(False)\n                assets\n\
-    \    \n                # script type=\"module\" src=\"/files/registry.js\"\n \
-    \               script type=\"module\" !\n                    import { boot }\
-    \ from \"/files/registry.js\"\n                    import { JSONx } from \"/files/serialize.js\"\
-    \n                    window.JSONx = JSONx\n                    boot()\n     \
-    \   \n            # body .container : div .row\n            #   div .col-1\n \
-    \           #   div .col-10\n            body\n                # h1\n        \
-    \        #     $ciid = item.ciid()\n                #     try\n              \
-    \  #         | $item['name']\n                #         span style=\"font-size:40%;\
-    \ font-weight:normal\" / $ciid\n                #     else / $ciid\n         \
-    \       #\n                # h2 | Properties\n                # properties $item\n\
-    \                \n                # dump client configuration and preloaded items\
-    \ to json and embed them in HTML\n                from hyperweb.serialize import\
-    \ $JSON\n                data #data-items | $JSON.dump(item.response_items())\n\
-    \                data #data-data  | $JSON.dump(item.response_data())\n       \
-    \         \n                div #react-root\n                \n              \
-    \  @extra\n            \n    %page_category category\n        page_item category\n\
-    \            h2 | Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
+    \    \n                # script type=\"module\" src=\"/files/client.js\"\n   \
+    \             script type=\"module\" !\n                    import { boot } from\
+    \ \"/files/client.js\"\n                    boot()\n        \n            # body\
+    \ .container : div .row\n            #   div .col-1\n            #   div .col-10\n\
+    \            body\n                # h1\n                #     $ciid = item.ciid()\n\
+    \                #     try\n                #         | $item['name']\n      \
+    \          #         span style=\"font-size:40%; font-weight:normal\" / $ciid\n\
+    \                #     else / $ciid\n                #\n                # h2 |\
+    \ Properties\n                # properties $item\n                \n         \
+    \       # dump client configuration and preloaded items to json and embed them\
+    \ in HTML\n                from hyperweb.serialize import $JSON\n            \
+    \    data #data-items | $JSON.dump(item.response_items())\n                data\
+    \ #data-data  | $JSON.dump(item.response_data())\n                \n         \
+    \       div #react-root\n                \n                @extra\n          \
+    \  \n    %page_category category\n        page_item category\n            h2 |\
+    \ Items\n            table\n                for item in list(category.registry.scan_category(category))\n\
     \                    tr\n                        td / #{item.iid} &nbsp;\n   \
     \                     td\n                            $ iname = item['name']?\
     \ or item\n                            try\n                                a\
