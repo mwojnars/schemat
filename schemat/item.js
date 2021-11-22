@@ -85,26 +85,30 @@ export class Item {
 
     /*
     TODO: Item's metadata, in this.data.__meta__ OR this.meta (?)
-    >> meta fields accessible through this.get('#FIELD')
-    - name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
-    ? summary  -- same as above; max length ~300; a rich-text TEXT schema with embedded markup indicator?
-    - version  -- current version 1,2,3,...; increased +1 after each modification of the item; None if no versioning
-    - checksum -- to detect data corruption due to disk i/o errors etc.
-    - created_at, updated_at -- stored as UTC and converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
-    - owner(s) + permissions  -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
-    - honeypot -- artificial empty item for detection and tracking of spambots
-    - draft    -- this item is under construction, not fully functional yet (app-level feature)
+    >> meta fields are accessible through this.get('#FIELD')
+    >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
+    - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
+    - cver     -- version of the category that encoded this item's data; the exact same version must perform decoding
+    - sum      -- checksum of `data` (or of full item with `sum` value excluded) to detect corruption due to disk i/o errors etc.
+    - itime, utime -- "inserted" timestamp, last "updated" timestamp
+      created, updated -- Unix timestamps [sec] or [ms]; converted to local timezone during select (https://stackoverflow.com/a/16751478/1202674)
+    ? owner(s) + permissions -- the owner can be a group of users (e.g., all editors of a journal, all site admins, ...)
+    - honey    -- honeypot; artificial empty item for detection of spambots
+    - draft    -- this item is under construction, not fully functional yet (app-level feature) ??
     - mock     -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
-    - removed  -- undelete is possible for a predefined grace period, eg. 1 day (since updated_at)
-    - status   -- enum, "deleted" for tombstone items
+    - removed  -- undelete during a predefined grace period since updated_at, eg. 1 day; after that, `data` is removed, but id+meta stay
+    ? status   -- enum, "deleted" for tombstone items
+    ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
+    ? info     -- a string like `name`, but longer ~300-500 ??
     */
 
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
     /*
-    data            - properties of this item, as a plain object {..}; in the future, MultiDict can be used instead;
-                      `data` can hold a Promise, so it always should be awaited or accessed directly after await load()
+    data            - data fields of this item, as a plain object {..}; in the future, MultiDict can be used instead;
+                      `data` can hold a Promise, so it always should be awaited or accessed directly after await load();
+                      callers should rather use item.get() to access individual fields
     category        - parent category of this item, as an instance of Category
     registry        - Registry that manages access to this item (should refer to the unique global registry)
     */
@@ -417,12 +421,44 @@ export class Item {
             extra,
         )
     }
+
+    // box model of a catalog of item properties:
+    /*
+        hw-item-properties
+            table .catalog-1
+                tr .ct-colorX                              // X = 0 or 1
+                    // field with an atomic value:
+                    th .ct-field
+                    td .ct-value
+                tr .ct-colorX
+                    // field with a catalog of sub-fields:
+                    td .ct-nested colspan=2
+                        div .ct-field
+                        div .wrap-offset : table .catalog-2
+                            tr .ct-colorX
+                                th .ct-field
+                                td .ct-value
+    */
 }
 
 /**********************************************************************************************************************/
 
 export class Category extends Item {
+    /*
+    A category is an item that describes other items: their schema and functionality;
+    also acts as a manager that controls access to and creation of new items within category.
+    */
 
+    async new(data = null, stage = true) {
+        /*
+        Create a newborn item of this category (not yet in DB); connect it with this.registry;
+        mark it as pending for insertion to DB if stage=true (default).
+        */
+        let itemclass = await this.get_class()
+        let item = new itemclass(this, data)
+        if (stage) this.registry.stage(item)                    // mark `item` for insertion on the next commit()
+        return item
+    }
     async issubcat(category) {
         /*
         Return true if `this` is `category` (by item ID comparison) or inherits from it, i.e.,
@@ -581,7 +617,7 @@ export class Application extends Item {
         it is absolute, i.e., includes segments for all intermediate applications;
         the path does NOT have a leading separator, or it has a different meaning -
         in any case, a leading separator should be appended by caller if needed.
-        `opt` may include: endpoint (null), relative (True), args (null)
+        `opt` may include: endpoint (null), relative (true), args (null)
         */
         throw new Error()
     }

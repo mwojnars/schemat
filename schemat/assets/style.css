@@ -20,7 +20,9 @@ body {
   font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-h1, h2, h3 { margin-top: 0.8em; margin-bottom: 0.6em; }
+h1, h2, h3      { margin-top: 0.8em; margin-bottom: 0.6em; }
+h2              { font-size: 1.3rem; text-transform: uppercase; }
+h2:first-letter { font-size: 1.7rem; }
 
 a { color: #006ecc }
 a:visited { color: #00427a }

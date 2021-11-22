@@ -12,7 +12,7 @@ import yaml from 'js-yaml'
 
 /**********************************************************************************************************************/
 
-const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/django-app/items.yaml'
+const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/db.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
 
@@ -124,6 +124,40 @@ class ServerRegistry extends Registry {
     async boot() {
         this.db.load()
         await super.boot()
+    }
+
+    /***  DB modifications  ***/
+
+    stage(item) {
+        /*
+        Add an updated or newly created `item` to the staging area.
+        For updates, this typically should be called BEFORE modifying an item,
+        so that its refresh in cache is prevented during modifications (TODO).
+        */
+        throw new Error("not implemented")
+        // has_id = item.has_id()
+        // if has_id and item.id in self.staging_ids:          # do NOT insert the same item twice (NOT checked for newborn items)
+        //     assert item is self.staging_ids[item.id]        # make sure the identity of `item` hasn't changed - this should be ...
+        //     return                                          # guaranteed by the way how Cache and Registry work (single-threaded; cache eviction only after request)
+        //
+        // self.staging.append(item)
+        // if has_id: self.staging_ids[item.id] = item
+    }
+    async commit(...items) {
+        /* Insert/update all staged items (self.staging) in DB and purge the staging area. Append `items` before that. */
+        throw new Error("not implemented")
+        // for item in items: self.stage(item)
+        // if not self.staging: return
+        //
+        // # assert cache validity: the items to be updated must not have been substituted in cache in the meantime
+        // for item in self.staging:
+        //     incache = self.cache.get(item.id)
+        //     if not incache: continue
+        //     assert item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
+        //
+        // self.db.upsert_many(self.staging)
+        // self.staging_ids = {}
+        // self.staging = []
     }
 }
 

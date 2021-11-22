@@ -146,7 +146,8 @@ export class Registry {
         if (load) await root.load()
         else {                           // root created anew? this.db must be used directly (no stage/commit), because
             // from .core.root import root_data
-            // root.data = root_data
+            let bootstrap = await import('./server/bootstrap.js')
+            root.data = bootstrap.root_data
             this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
         }
         // root.bind()
