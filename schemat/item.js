@@ -210,6 +210,10 @@ export class Item {
         return `[${stamp}]`
     }
 
+    async set(key, value) {
+        await this.load()
+        this.data[key] = value
+    }
     async get(field, default_ = undefined) {
         // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
         await this.load()

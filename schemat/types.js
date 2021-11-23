@@ -17,9 +17,9 @@ export class multiple {}
 
 export class Schema {
 
-    default = undefined     // default value for a RECORD field or web forms, can be missing (undefined)
-    info    = null          // human-readable description of this schema: what values are accepted and how they are interpreted
-    multi   = false         // if true and the schema describes a RECORD field, the field can take on multiple values
+    default         // default value for a RECORD field or web forms, can be missing (undefined)
+    info            // human-readable description of this schema: what values are accepted and how they are interpreted
+    multi           // if true and the schema describes a RECORD field, the field can take on multiple values
     
     constructor(params = {}) {
         let {default_, info, multi} = params || {}                      // params=null is valid
@@ -270,7 +270,7 @@ export class CODE extends TEXT
     //     showPrintMargin:        false,
     //     highlightActiveLine:    false,
     // };
-    editor_options = {
+    static editor_options = {
         mode:           "ace/mode/haml",
         theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
         showGutter:             true,
@@ -292,7 +292,7 @@ export class CODE extends TEXT
             // viewer_ace.session.setValue(currentValue)
 
             let div = editor_div.current
-            editor_ace = ace.edit(div, this.editor_options)
+            editor_ace = ace.edit(div, this.constructor.editor_options)
             editor_ace.session.setValue(currentValue)
             new ResizeObserver(() => editor_ace.resize()).observe(div)      // allow resizing of the editor box by a user, must update the Ace widget then
             editor_ace.focus()
@@ -332,7 +332,7 @@ export class ITEM extends Schema {
     which is not possible with an GENERIC.
     */
 
-    constructor(category, params = {}) {
+    constructor(category = null, params = {}) {
         super(params)
         if (category) this.category = category      // (optional) category of items to be encoded; undefined means all items can be encoded
     }
@@ -342,7 +342,7 @@ export class ITEM extends Schema {
     }
     encode(item) {
         if (!item.has_id())
-            throw new DataError(`item to be encoded has missing or incomplete ID: ${item.id}`)
+            throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
         let cid = this._cid
         if (cid === null) return item.id
@@ -406,7 +406,7 @@ export class DICT extends Schema {
     static keys_default   = generic_schema
     static values_default = generic_schema
 
-    constructor(keys, values, type, params = {}) {
+    constructor(values, keys, type, params = {}) {
         super(params)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
         if (values) this.values = values        // schema of values of app-layer dicts
@@ -459,13 +459,15 @@ export class CATALOG extends DICT {
     Provides tight integration with the UI: convenient layout for display of items,
     and access paths for locating form validation errors.
     Watch out the reversed ordering of arguments in constructor()!
+
+    TODO: merge DICT into CATALOG; make an unrelated class, MAP, for arbitrary mappings
     */
     get is_catalog() { return true }
     static keys_default = new STRING
 
     constructor(values, keys, type, params = {}) {
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
-        super(keys, values, type, params)
+        super(values, keys, type, params)
     }
     toString() {
         let name   = this.constructor.name

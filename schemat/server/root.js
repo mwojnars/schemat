@@ -4,7 +4,7 @@ import {GENERIC, SCHEMA, STRING, TEXT, CODE, ITEM, CATALOG} from '../types.js'
 
 /**********************************************************************************************************************
  **
- **  FILES & FOLDERS
+ **  SCHEMA of ROOT
  **
  */
 

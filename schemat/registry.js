@@ -20,6 +20,7 @@ export class ItemsMap extends Map {
        Item ID is an array that must be converted to a string for equality comparisons inside Map.
      */
     _key(id) {
+        assert(id)
         let [cid, iid] = id
         assert(cid !== null && iid !== null)
         return `${cid}:${iid}`
@@ -107,19 +108,15 @@ export class Registry {
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
     db      = null          // Database instance for accessing items and other data from database servers
-    items   = null
     root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
     site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
+    items   = new ItemsMap()
 
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
     // the getters below are async functions that return a Promise (!) and should be used with await
     get site()  { return this.get_item(this.site_id) }
     get files() { return this.site.then(site => site.get('filesystem')) }
-
-    constructor() {
-        this.items = new ItemsMap()
-    }
 
     async init_classpath() {
         print('init_classpath() started...')
@@ -133,26 +130,32 @@ export class Registry {
     }
 
     async boot() {
-        this.root = await this.create_root()
+        await this.create_root()
         this.site_id = await this.root.get(Registry.STARTUP_SITE)
     }
-    async create_root(load = true) {
-        /*
-        Create the RootCategory object, ID=(0,0). If `data` is provided,
-        the properties are initialized from `data`, the object is bound through bind(),
-        marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
-        */
+    async create_root() {
+        /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
         let root = this.root = new RootCategory(this)
-        if (load) await root.load()
-        else {                           // root created anew? this.db must be used directly (no stage/commit), because
-            // from .core.root import root_data
-            let bootstrap = await import('./server/bootstrap.js')
-            root.data = bootstrap.root_data
-            this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
-        }
-        // root.bind()
+        await root.load()
         return root
     }
+    // async create_root(load = true) {
+    //     /*
+    //     Create the RootCategory object, ID=(0,0). If `data` is provided,
+    //     the properties are initialized from `data`, the object is bound through bind(),
+    //     marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
+    //     */
+    //     let root = this.root = new RootCategory(this)
+    //     if (load) await root.load()
+    //     else {                           // root created anew? this.db must be used directly (no stage/commit), because
+    //         // from .core.root import root_data
+    //         let bootstrap = await import('./server/bootstrap.js')
+    //         root.data = bootstrap.root_data
+    //         this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
+    //     }
+    //     // root.bind()
+    //     return root
+    // }
 
     async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
 

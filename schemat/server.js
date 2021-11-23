@@ -3,11 +3,9 @@
 
 import http from 'http'
 import express from 'express'
-import { readFileSync } from 'fs'
 
-import { assert, print, T } from './utils.js'
-import { Database, Registry, ItemsMap } from './registry.js'
-import yaml from 'js-yaml'
+import {assert, print} from './utils.js'
+import {ServerRegistry} from './server/s-registry.js'
 
 
 /**********************************************************************************************************************/
@@ -23,152 +21,13 @@ const PORT      =  3000
  **
  */
 
-class FileDB extends Database {
-    /* Items stored in a file. For use during development only. */
-
-    filename = null
-    records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
-                                // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
-                                // so that clients create a new deep copy of item data on every access
-    
-    constructor(filename) {
-        super()
-        this.filename = filename
-    }
-    
-    async select(id) {
-        let record = this.records.get(id)
-        assert(record.cid === id[0] && record.iid === id[1])
-        return record
-    }
-    async *scan_category(cid) {
-        for (const record of this.records.values())
-            if (cid === record.cid) yield record
-    }
-}
-
-class YamlDB extends FileDB {
-    /* Items stored in a YAML file. For use during development only. */
-
-    max_iid = new Map()         // current maximum IIDs per category, as {cid: maximum_iid}
-    
-    load() {
-        let file = readFileSync(this.filename, 'utf8')
-        let db = yaml.load(file)
-        this.records.clear()
-        this.max_iid.clear()
-        
-        for (let record of db) {
-            let id = T.pop(record, 'id')
-            let [cid, iid] = id
-            assert(!this.records.has(id), `duplicate item ID: ${id}`)
-            let curr_max = this.max_iid.get(cid) || 0
-            this.max_iid[cid] = Math.max(curr_max, iid)
-            this.records.set(id, {cid, iid, data: JSON.stringify(record)})
-        }
-        // print('YamlDB items loaded:')
-        // for (const [id, data] of this.items)
-        //     print(id, data)
-    }
-    // insert(item, flush = true):
-    //    
-    //     if item.cid is null:
-    //         item.cid = item.category.iid
-    //     cid = item.cid
-    //    
-    //     if cid == 0 and cid not in this.max_iid:
-    //         max_iid = -1   # use =0 if the root category is not getting an IID here
-    //     else:
-    //         max_iid = this.max_iid.get(cid, 0)
-    //        
-    //     item.iid = iid = max_iid + 1
-    //     this.max_iid[cid] = iid
-    //    
-    //     assert item.has_data()
-    //     assert item.id not in this.items
-    //     # print("store:", list(item.data.lists()))
-    //    
-    //     this.items[item.id] = item.dump_data()
-    //
-    //     if flush: this.flush()
-    //
-    // update(item, flush = true):
-    //    
-    //     assert item.has_data()
-    //     assert item.has_id()
-    //     this.items[item.id] = item.dump_data()
-    //     if flush: this.flush()
-    //
-    // flush():
-    //     """Save the entire database (this.items) to a file."""
-    //     flats = []
-    //
-    //     for id, raw in this.items.items():
-    //        
-    //         flat = {'id': list(id)}
-    //         flat.update(json.loads(raw))
-    //         flats.append(flat)
-    //        
-    //     print(f"YamlDB flushing {len(this.items)} items to {this.filename}...")
-    //     out = open(this.filename, 'wt')
-    //     yaml.dump(flats, stream = out, default_flow_style = null, sort_keys = False, allow_unicode = true)
-}
-
-/**********************************************************************************************************************/
-
-class ServerRegistry extends Registry {
-    constructor() {
-        super()
-        this.db = new YamlDB(DB_YAML)
-    }
-    async boot() {
-        this.db.load()
-        await super.boot()
-    }
-
-    /***  DB modifications  ***/
-
-    stage(item) {
-        /*
-        Add an updated or newly created `item` to the staging area.
-        For updates, this typically should be called BEFORE modifying an item,
-        so that its refresh in cache is prevented during modifications (TODO).
-        */
-        throw new Error("not implemented")
-        // has_id = item.has_id()
-        // if has_id and item.id in self.staging_ids:          # do NOT insert the same item twice (NOT checked for newborn items)
-        //     assert item is self.staging_ids[item.id]        # make sure the identity of `item` hasn't changed - this should be ...
-        //     return                                          # guaranteed by the way how Cache and Registry work (single-threaded; cache eviction only after request)
-        //
-        // self.staging.append(item)
-        // if has_id: self.staging_ids[item.id] = item
-    }
-    async commit(...items) {
-        /* Insert/update all staged items (self.staging) in DB and purge the staging area. Append `items` before that. */
-        throw new Error("not implemented")
-        // for item in items: self.stage(item)
-        // if not self.staging: return
-        //
-        // # assert cache validity: the items to be updated must not have been substituted in cache in the meantime
-        // for item in self.staging:
-        //     incache = self.cache.get(item.id)
-        //     if not incache: continue
-        //     assert item is incache, f"item instance substituted in cache while being modified: {item}, instances {id(item)} vs {id(incache)}"
-        //
-        // self.db.upsert_many(self.staging)
-        // self.staging_ids = {}
-        // self.staging = []
-    }
-}
-
-
 class Server {
     /* Sending & receiving multi-part data (HTML+JSON) in http response:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    registry = new ServerRegistry()
+    registry = new ServerRegistry(DB_YAML)
 
     constructor() {
         globalThis.registry = this.registry
@@ -251,5 +110,7 @@ async function serve_express() {
         console.log(`Example app listening at http://${HOSTNAME}:${PORT}`)
     });
 }
+
+/**********************************************************************************************************************/
 
 await serve_express()
