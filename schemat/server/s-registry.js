@@ -69,9 +69,7 @@ class YamlDB extends FileDB {
     max_iid = new Map()         // current maximum IIDs per category, as {cid: maximum_iid}
 
     async load() {
-        // let file = readFileSync(this.filename, 'utf8')
         let file = await fs.promises.readFile(this.filename, 'utf8')
-        // let db = yaml.load(file)
         let db = YAML.parse(file)
         this.records.clear()
         this.max_iid.clear()
@@ -106,7 +104,6 @@ class YamlDB extends FileDB {
         assert(item.has_data())
         assert(!this.records.has(item.id))
 
-        // print('insert:', item.id)
         this.records.set(item.id, {cid, iid, data: await item.dumpData()})
 
         if (flush) await this.flush()
@@ -125,7 +122,6 @@ class YamlDB extends FileDB {
         let flat = [...this.records.values()]
         let recs = flat.map(({cid, iid, data}) => ({id: [cid, iid], ...JSON.parse(data)}))
         let out  = YAML.stringify(recs)
-        // let out  = yaml.dump(recs)
         await fs.promises.writeFile(this.filename, out, 'utf8')
     }
 }

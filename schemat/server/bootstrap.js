@@ -78,7 +78,7 @@ let root_data = {
  **
  */
 
-async function createCategories(Category) {
+async function create_categories(Category) {
     let cat = {}
 
     cat.File = await Category.new({
@@ -170,7 +170,7 @@ async function createCategories(Category) {
 
 /**********************************************************************************************************************/
 
-async function createItems(cat, Category) {
+async function create_items(cat, Category) {
     let item = {}
     
     // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -264,8 +264,8 @@ async function bootstrap(db) {
 
     // create non-root categories & leaf items; while being create with Category.new(),
     // each item is staged for insertion to DB
-    let cats  = await createCategories(Category)
-    let items = await createItems(cats, Category)
+    let cats  = await create_categories(Category)
+    let items = await create_items(cats, Category)
 
     // insert all items to DB; the insertion order is important: if item A is referenced by item B,
     // the A must be inserted first so that its ID is available before B gets inserted
@@ -275,5 +275,5 @@ async function bootstrap(db) {
 
 /**********************************************************************************************************************/
 
-await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/db.yaml')
+await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml')
 

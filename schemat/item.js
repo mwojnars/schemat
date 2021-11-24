@@ -599,8 +599,7 @@ export class Site extends Item {
 
     async ajax_url() {
         /* Absolute base URL for AJAX calls originating at a client UI. */
-        return "http://127.0.0.1:3000/ajax"                 // TODO: change 'base_url' in DB; call ajax_url() on client not server
-        // return (await this.get('base_url')) + '/ajax'
+        return (await this.get('base_url')) + '/ajax'
     }
 }
 

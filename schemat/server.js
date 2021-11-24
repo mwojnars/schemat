@@ -10,7 +10,7 @@ import {ServerRegistry} from './server/s-registry.js'
 
 /**********************************************************************************************************************/
 
-const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/db.yaml'
+const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
 
