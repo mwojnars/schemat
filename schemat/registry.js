@@ -139,23 +139,6 @@ export class Registry {
         await root.load()
         return root
     }
-    // async create_root(load = true) {
-    //     /*
-    //     Create the RootCategory object, ID=(0,0). If `data` is provided,
-    //     the properties are initialized from `data`, the object is bound through bind(),
-    //     marked as loaded, and staged for insertion to DB. Otherwise, the object is left uninitialized.
-    //     */
-    //     let root = this.root = new RootCategory(this)
-    //     if (load) await root.load()
-    //     else {                           // root created anew? this.db must be used directly (no stage/commit), because
-    //         // from .core.root import root_data
-    //         let bootstrap = await import('./server/bootstrap.js')
-    //         root.data = bootstrap.root_data
-    //         this.db.insert(root)         // ...this.root already has an ID and it would get "updated" rather than inserted!
-    //     }
-    //     // root.bind()
-    //     return root
-    // }
 
     async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
 

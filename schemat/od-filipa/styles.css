@@ -1,0 +1,129 @@
+/*** GENERAL STYLES */
+
+html {
+  --ct-cell-pad: 35px; /* default left & right padding of all table cells */
+  --ct-nested-offset: 50px; /* distance between left edges of a nested catalog and its container catalog */
+  --ct-th1-width: 300px;
+  --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+  --textarea-height: 12rem;
+}
+body {
+  width: 1120px;
+  margin: 0 auto;
+  padding-bottom: 50px;
+  font-family: "Quattrocento Sans", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+}
+
+a {
+  color: #006ecc;
+}
+a:visited {
+  color: #00427a;
+}
+
+.btn {
+  border: none;
+  border-radius: 0;
+}
+.btn-primary,
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background-color: #5b8fdd;
+}
+.btn-primary:hover {
+  background-color: #4b78bb;
+}
+.btn-secondary,
+.btn-secondary.disabled,
+.btn-secondary:disabled {
+  background-color: #7e8993;
+}
+
+/*** ITEM PAGE */
+
+.ct-color0 {
+  background: #e2eef9;
+} /* #D0E4F5 */
+.ct-color1 {
+  background: #f6f6f6;
+}
+.ct-color2 {
+  background: #a87777;
+}
+.wrap-offset {
+  padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad));
+}
+
+.catalog {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 1120px;
+  min-width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ct-value,
+.ct-value > * {
+  font-size: 14px;
+  font-family: monospace; /* courier */
+}
+.ct-value .field .default {
+  color: #888;
+}
+.ct-value .field .info {
+  font-style: italic;
+}
+.ct-value pre {
+  margin-bottom: 0px;
+  font-size: 13px;
+  font-family: monospace;
+}
+/* .ct-value:hover,
+.ct-field:hover {
+  opacity: 0.6;
+} */
+
+tr:last-of-type {
+  margin-bottom: 10px;
+}
+.row-block {
+  width: 100%;
+  font-size: 15px;
+  border-bottom: 1px solid rgb(202, 202, 202);
+  box-sizing: border-box;
+  position: relative;
+}
+.row-block > .ct-value {
+  box-sizing: border-box;
+  width: 75%;
+  display: inline-block;
+  padding: 15px 0px 15px 25px;
+  font-size: 15px;
+}
+.row-block > .ct-field {
+  box-sizing: border-box;
+  width: 25%;
+  display: inline-block;
+  padding: 15px 0px 15px 25px;
+  border-right: 2px solid rgb(202, 202, 202);
+}
+
+.ct-nested {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px 0px 15px 25px;
+}
+
+.ct-delete {
+  position: absolute;
+  padding-top: 15px;
+  left: -10px;
+  display: block;
+}
+
+/* .row-block:hover .ct-delete {
+  display: block;
+} */

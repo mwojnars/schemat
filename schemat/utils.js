@@ -118,6 +118,8 @@ export class Types {
     static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
     static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
 
+    static deleteFirst    = (arr,x) => { let i = arr.indexOf(x); if(i>-1) arr.splice(i,1); return (i>-1) }  // find and delete the 1st occur. of x in array
+
     // create a new object (dict) by mapping items of `obj` to new [key,value] pairs;
     // does NOT detect if two entries are mapped to the same key (!)
     static mapDict        = (obj,fun) => Object.fromEntries(Object.entries(obj).map(([k,v]) => fun(k,v)))

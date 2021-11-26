@@ -36,12 +36,12 @@ class AjaxDB extends Database {
     records  = new ItemsMap()       // map of item records received on initial web request to avoid subsequent remote calls;
                                     // each record is {cid,iid,data}, `data` is JSON-encoded
 
-    constructor(ajax_url, boot_items = []) {
+    constructor(ajax_url, records = []) {
         super()
         this.ajax_url = ajax_url
-        for (const item of boot_items) {
-            item.data = JSON.stringify(item.data)
-            this.records.set([item.cid, item.iid], item)
+        for (const rec of records) {
+            rec.data = JSON.stringify(rec.data)
+            this.records.set([rec.cid, rec.iid], rec)
         }
         assert(!ajax_url.endsWith('/'))
     }

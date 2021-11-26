@@ -1,7 +1,8 @@
 import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
-import { generic_schema, multiple, RECORD } from './types.js'
+import { generic_schema, OBJECT, CATALOG } from './types.js'
 import { JSONx } from './serialize.js'
+import { Data } from './data.js'
 
 export const ROOT_CID = 0
 
@@ -16,14 +17,14 @@ function Catalog1({item}) {
     return delayed_render(async () => {
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
-        let entries = await item.get_entries()
+        let entries = await item.getEntries()
         let schemas = await category.get_fields()
 
         let rows = entries.map(([field, value], i) => {
             let schema = schemas[field]  //await category.get_schema(field)
             let color  = (start_color + i) % 2
             return TR({className: `ct-color${color}`},
-                      schema.is_catalog
+                      schema instanceof CATALOG
                         ? TD({className: 'ct-nested', colSpan: 2},
                             DIV({className: 'ct-field'}, field),
                             e(Catalog2, {data: value, schema: schema.values, color: color})
@@ -181,12 +182,11 @@ export class Item {
         let flat   = record.data
         let schema = use_schema ? await this.category.get_schema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
-        let data   = await schema.decode(state)
-        this.data  = data
+        this.data  = await schema.decode(state)
         // TODO: initialize item metadata - the remaining attributes from `record`
 
         print(`${this.id_str}.reload() done`)
-        return data
+        return this.data
     }
 
     async ciid({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -210,15 +210,22 @@ export class Item {
         return `[${stamp}]`
     }
 
-    async set(key, value) {
+    async set(key, value, {label, comment} = {}) {
         await this.load()
-        this.data[key] = value
+        if (this.data instanceof Data)
+            this.data.set(key, value, {label, comment})
+        else
+            this.data[key] = value
     }
     async get(field, default_ = undefined) {
         // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
         await this.load()
 
-        if (this.data.hasOwnProperty(field))
+        if (this.data instanceof Data) {
+            let value = this.data.get(field)
+            if (value !== undefined) return value
+        }
+        else if (this.data.hasOwnProperty(field))
             return this.data[field]
 
         if (this.category !== this) {
@@ -229,13 +236,14 @@ export class Item {
         return default_
     }
 
-    async get_entries(order = 'schema') {
+    async getEntries(order = 'schema') {
         /*
         Retrieve a list of this item's fields and their values.
         Multiple values for a single field are returned as separate entries.
         */
         // await this.load()
         await this.load()
+        if (this.data instanceof Data) return this.data.getEntries()
         return Object.entries(this.data)
 
         // let fields  = await this.category.get_fields()
@@ -314,7 +322,7 @@ export class Item {
 
     /***  Handlers (server side)  ***/
 
-    async serve(req, res, app, endpoint = 'view') {
+    async serve(req, res, app, endpoint = null) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -328,8 +336,10 @@ export class Item {
         */
         req.item = this
         req.app  = app
+        endpoint = endpoint || 'view'
 
         // get handler's source code from category's data
+        // let source = await this.category.get(`handlers/${endpoint}`)
         let handlers = await this.category.get('handlers', {})
         let source   = T.getOwnProperty(handlers, endpoint)         // TODO: make `handlers` a Catalog (Map-like) not plain object
         let handler
@@ -487,7 +497,7 @@ export class Category extends Item {
             // TODO: check this.data for individual methods & templates to be treated as methods
 
         assert(name, `no class_name defined for category ${this}: ${name}`)
-        return globalThis.registry.get_class(name)
+        return this.registry.get_class(name)
     }
     async get_item(iid) {
         /*
@@ -503,10 +513,11 @@ export class Category extends Item {
         return schema ? schema.default : default_
     }
     async get_schema(field = null) {
-        /* Return schema of a given `field` (if present), or a RECORD schema of all fields. */
+        /* Return schema of a given `field` (if present), or an OBJECT schema of all fields. */
+        // TODO: replace get_schema() with a derived field `schema`
         let fields = await this.get_fields()
         if (!field)                                     // create and return a schema for the entire Item.data
-            return new RECORD(fields, {strict: true})
+            return new OBJECT(fields, {strict: true})
         else {                                          // return a schema for a selected field only
             let schema = (field in fields) ? fields[field] : null
             return schema || generic_schema
@@ -807,7 +818,7 @@ export class AppSpaces extends Application {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.get_item(Number(item_id))
-        return item.serve(request, response, this, endpoint || 'view')
+        return item.serve(request, response, this, endpoint)
     }
 }
 

@@ -65,7 +65,7 @@ function Catalog1({item}) {
     return delayed_render(async () => {
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
-        let entries = await item.get_entries()
+        let entries = await item.getEntries()
         let schemas = await category.get_fields()
 
         let rows = entries.map(([field, value], i) => {

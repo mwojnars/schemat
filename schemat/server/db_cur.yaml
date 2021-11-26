@@ -17,18 +17,18 @@
         allowed, the first one overrides settings of subsequent ones.
       "@": hyperweb.types.ITEM
     class_name:
+      default: hyperweb.core.Item
       info: Full (dotted) path of a python class. Or the class name that should be
         imported from `class_code` after its execution.
-      default: hyperweb.core.Item
       "@": hyperweb.types.STRING
     class_code:
       "@": hyperweb.types.TEXT
     handlers:
-      schema:
+      values:
         "@": hyperweb.types.CODE
       "@": hyperweb.types.CATALOG
     fields:
-      schema:
+      values:
         "@": hyperweb.types.SCHEMA
       "@": hyperweb.types.CATALOG
   startup_site:
@@ -68,7 +68,7 @@
     files:
       keys:
         "@": hyperweb.types.FILENAME
-      schema:
+      values:
         "@": hyperweb.types.ITEM
       "@": hyperweb.types.CATALOG
 - id:
@@ -94,7 +94,7 @@
     name:
       "@": hyperweb.types.STRING
     apps:
-      schema:
+      values:
         "@": hyperweb.types.ITEM
       "@": hyperweb.types.CATALOG
 - id:
@@ -144,7 +144,7 @@
     name:
       "@": hyperweb.types.STRING
     spaces:
-      schema:
+      values:
         "@": hyperweb.types.ITEM
       "@": hyperweb.types.CATALOG
 - id:

@@ -2,6 +2,7 @@ import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRA
 import { useState, useRef, useEffect, delayed_render } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
+import { Catalog } from './data.js'
 
 export class DataError extends Error {}
 
@@ -17,14 +18,21 @@ export class multiple {}
 
 export class Schema {
 
-    default         // default value for a RECORD field or web forms, can be missing (undefined)
+    // common properties of schemas; can be utilized by subclasses or callers:
+
     info            // human-readable description of this schema: what values are accepted and how they are interpreted
-    multi           // if true and the schema describes a RECORD field, the field can take on multiple values
+    default         // default value to be assumed when none was provided by a user (in a web form etc.)
+    unique          // if true, the field described by this schema cannot be repeated (max. one value allowed)
+    multi           // if true and the schema describes an OBJECT field, the field can be repeated (multiple values)
+    blank           // if true, `null` should be treated as a valid value
+    type            // class constructor; if present, all values should be instances of `type` or its subclasses
     
     constructor(params = {}) {
-        let {default_, info, multi} = params || {}                      // params=null is valid
-        if (info !== undefined)     this.info = info
+        let {default_, info, multi, blank, type} = params || {}         // params=null is valid
+        if (info  !== undefined)    this.info  = info
         if (multi !== undefined)    this.multi = multi
+        if (blank !== undefined)    this.blank = blank
+        if (type  !== undefined)    this.type  = type
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
         if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
     }
@@ -82,35 +90,31 @@ export class Schema {
  */
 
 export class GENERIC extends Schema {
-    /*
-    Accepts objects of any class, optionally restricted to objects whose type(obj) is equal to one of
-    predefined type(s) - the `type` parameter - or the object is an instance of one of predefined base classes
-    - the `base` parameter; at least one of these conditions must hold.
-    If there is only one type in `type`, and an empty `base`, the type name is excluded
-    from serializated output and is implied automatically during deserialization.
-    Types can be given as import paths (strings), which will be automatically converted to a type object.
-    */
-    get _types() { return this.types || this.constructor.types || [] }
+    /* Accepts objects of any class, optionally restricted to objects whose class constructor is this.type. */
+    // get _types() { return this.types || this.constructor.types || [] }
 
-    constructor(types = [], params = {}) {
-        super(params)
-        if (types === null) types = []
-        if (T.isClass(types)) types = [types]           // wrap up a singleton type in an array
-        if (types.length) this.types = types            // base type(s) for inheritance checks: obj instanceof T
-    }
+    // constructor(params = {}) {
+    //     super(params)
+    //     let types = params.type ? [params.type] : []
+    //     if (T.isClass(types)) types = [types]           // wrap up a singleton type in an array
+    //     if (types.length) this.types = types            // base type(s) for inheritance checks: obj instanceof T
+    // }
     valid(obj) {
-        let types = this._types
-        return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
+        return !this.type || obj instanceof this.type
+        // let types = this._types
+        // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
+            throw new DataError(`invalid object type, expected an instance of ${this.type}, got ${obj} instead`)
+            // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return JSONx.encode(obj)
     }
     async decode(state) {
         let obj = await JSONx.decode(state)
         if (!this.valid(obj))
-            throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
+            throw new DataError(`invalid object type after decoding, expected an instance of ${this.type}, got ${obj} instead`)
+            // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return obj
     }
     Widget({value}) {
@@ -159,18 +163,17 @@ export class CLASS extends Schema {
 export class Primitive extends Schema {
     /* Base class for schemas of primitive JSON-serializable python types. */
 
-    // // the predefined standard type of all app-layer values; same type for db-layer values;
-    // // must be declared as a getter method to allow efficient overriding in subclasses without an instance-level copy
-    // get _type() { return null }
-
-    static type         // the predefined standard type of all app-layer values; same type for db-layer values;
+    static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
     check(value) {
-        let t = this.constructor.type
-        if (typeof value !== t) throw new DataError(`expected a primitive value of type "${t}", got ${value} instead`)
+        let t = this.constructor.stype
+        if (typeof value === t || (this.blank && (value === null || value === undefined)))
+            return true
+        throw new DataError(`expected a primitive value of type "${t}", got ${value} instead`)
     }
     encode(value) {
         this.check(value)
+        if (value === undefined) return null
         return value
     }
     async decode(value) {
@@ -180,11 +183,11 @@ export class Primitive extends Schema {
 }
 
 export class BOOLEAN extends Primitive {
-    static type = "boolean"
+    static stype = "boolean"
 }
 export class NUMBER extends Primitive {
     /* Floating-point number */
-    static type = "number"
+    static stype = "number"
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -193,7 +196,7 @@ export class INTEGER extends NUMBER {
 
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
-    static type = "string"
+    static stype = "string"
 
     EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
 
@@ -406,7 +409,7 @@ export class DICT extends Schema {
     static keys_default   = generic_schema
     static values_default = generic_schema
 
-    constructor(values, keys, type, params = {}) {
+    constructor(values, keys, type = null, params = {}) {
         super(params)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
         if (values) this.values = values        // schema of values of app-layer dicts
@@ -448,53 +451,144 @@ export class DICT extends Schema {
         let name   = this.constructor.name
         let keys   = this.keys || this.constructor.keys_default
         let values = this.values || this.constructor.values_default
-        return `${name}(${keys}, ${values})`
+        return `${name}(${values}, ${keys})`
     }
 }
 
-export class CATALOG extends DICT {
-    /*
-    Schema of a catalog of items.
-    Similar to DICT, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
-    Provides tight integration with the UI: convenient layout for display of items,
-    and access paths for locating form validation errors.
-    Watch out the reversed ordering of arguments in constructor()!
+// export class CATALOG extends DICT {
+//     /*
+//     Schema of a catalog of items.
+//     Similar to DICT, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
+//     Provides tight integration with the UI: convenient layout for display of items,
+//     and access paths for locating form validation errors.
+//     Watch out the reversed ordering of arguments in constructor()!
+//     TODO: merge DICT into CATALOG; make an unrelated class, MAP, for arbitrary mappings
+//     */
+//     static keys_default = new STRING
+//
+//     constructor(values, keys, params = {}) {
+//         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
+//         super(values, keys, null, params)
+//     }
+//     toString() {
+//         let name   = this.constructor.name
+//         let keys   = this.keys || this.constructor.keys_default
+//         let values = this.values || this.constructor.values_default
+//         if (T.ofType(keys, STRING))
+//             return `${name}(${values})`
+//         else
+//             return `${name}(${values}, ${keys})`
+//         }
+// }
 
-    TODO: merge DICT into CATALOG; make an unrelated class, MAP, for arbitrary mappings
-    */
-    get is_catalog() { return true }
-    static keys_default = new STRING
+export class CATALOG extends Schema {
 
-    constructor(values, keys, type, params = {}) {
+    static default_schema_vals = new GENERIC({multi: true})
+    static default_schema_keys = new STRING({blank: true})
+
+    keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
+    schema      // common schema of values of an input catalog
+
+    get _keys() { return this.keys || this.constructor.default_schema_keys }
+
+    constructor(schema = null, keys = null, params = {}) {
+        super(params)
+        if (keys)   this.keys = keys
+        if (schema) this.schema = schema
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
-        super(values, keys, type, params)
     }
-    toString() {
-        let name   = this.constructor.name
-        let keys   = this.keys || this.constructor.keys_default
-        let values = this.values || this.constructor.values_default
-        if (T.ofType(keys, STRING))
-            return `${name}(${values})`
-        else
-            return `${name}(${keys}, ${values})`
+    encode(cat) {
+        /* Encode & compactify values of fields through per-field schema definitions. */
+        if (!(T.isDict(cat) || cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
+        // if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
+        return T.isDict(cat) || cat.isDict() ? this._to_dict(cat) : this._to_list(cat)
+    }
+    _to_dict(cat) {
+        /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */
+        let state = {}
+        let encode_key = (k) => this._keys.encode(k)
+        // for (const e of cat.entries())
+        //     state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
+        for (const [key,value] of Object.entries(cat))
+            state[encode_key(key)] = this._schema(key).encode(value)
+        return state
+    }
+    _to_list(cat) {
+        /* Encode a catalog as a list of tuples [value,key,label,comment], possibly truncated if label/comment
+           is missing, and with `value` being schema-encoded.
+         */
+        let encode_key = (k) => this._keys.encode(k)
+        return cat.getEntries().map(e => {
+            let value = this._schema(e.key).encode(e.value)
+            let tuple = [value, encode_key(e.key), e.label, e.comment]
+            tuple.slice(2).forEach(s => {if(!(T.isMissing(s) || typeof s === 'string')) throw new DataError(`expected a string, got ${s}`)})
+            while (tuple.length >= 2 && !tuple[tuple.length-1])
+                tuple = tuple.slice(-1)             // truncate the last elements if label or comment are missing
+            return tuple
+        })
+    }
+
+    async decode(state) {
+        if (T.isDict(state))  return this._from_dict(state)
+        if (T.isArray(state)) return this._from_list(state)
+        throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
+        // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
+        // let type = this._type
+        // if (type) return T.setstate(type, data)
+        // return data
+    }
+    async _from_dict(state) {
+        let cat = {} //new Catalog()
+        let schema_keys = this._keys
+        for (let [key, value] of Object.entries(state)) {
+            key = await schema_keys.decode(key)
+            value = await this._schema(key).decode(value)
+            cat[key] = value
+            // cat.set(key, value)
         }
+        return cat
+    }
+    async _from_list(state) {
+        let cat = new Catalog()
+        let schema_keys = this._keys
+        for (let [value, key, label, comment] of state) {
+            key = await schema_keys.decode(key)
+            value = await this._schema(key).decode(value)
+            cat.pushEntry({key, value, label, comment})
+        }
+        return cat
+    }
+
+    _schema() {
+        return this.schema || this.constructor.default_schema_vals
+    }
+}
+
+export class DATA extends CATALOG {
+    /* Like CATALOG, but provides distinct value schemas for different allowed keys of a catalog.
+       Primarily used for encoding Item.data. Not intended for other uses.
+     */
+    schemas         // dict of field names and their schema; null for a key means a default schema should be used
+
+    constructor(schemas, keys = null, params = {}) {
+        super(null, keys, params)
+        this.schemas = schemas
+    }
+    _schema(key) {
+        if (!this.schemas.hasOwnProperty(key))
+            throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.schemas)}`)
+        return this.schemas[key]
+    }
 }
 
 
-/**********************************************************************************************************************
- **
- **  RECORD
- **
- */
-
-export class RECORD extends Schema {
+export class OBJECT extends Schema {
     /*
     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
     - unlike in DICT, where all values share the same schema.
-    RECORD does not encode keys, but passes them unmodified.
-
+    OBJECT does not encode keys, but passes them unmodified.
     The `type` of value objects can optionally be declared, for validation and more compact output representation.
-    A MultiDict can be handled as a value type through its __getstate__ and __setstate__ methods.
+    ?? A Data catalog can be handled as a value type through its __getstate__ and __setstate__ methods. ??
     */
 
     get _fields() { return this.fields || this.constructor.fields }
@@ -507,7 +601,7 @@ export class RECORD extends Schema {
                                 // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
 
     // default field specification to be used for fields not present in `fields` (if strict=false)
-    static default_schema = new GENERIC(null, {multi: true})
+    static default_schema = new GENERIC({multi: true})
 
     constructor(fields, params = {}) {
         let {strict, type, ...base_params} = params
@@ -545,16 +639,3 @@ export class RECORD extends Schema {
         return T.get(fields, name) || this.constructor.default_schema
     }
 }
-
-/**********************************************************************************************************************/
-
-// export class SCHEMA extends RECORD {
-//     /* Schema of a schema specification for an item's field. */
-//
-//     static type = Schema
-//     static fields = {
-//         'default': new GENERIC,
-//         'multi':   new BOOLEAN,
-//         'info':    new STRING,
-//     }
-// }

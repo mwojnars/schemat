@@ -61,6 +61,8 @@ export class JSONx {
             state = JSONx.encode_list(Array.from(obj))
         else {
             state = T.getstate(obj)
+            // if (obj !== state) state = JSONx.encode(state)
+            // if (T.isDict(obj))
             state = JSONx.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;

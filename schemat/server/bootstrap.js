@@ -22,7 +22,6 @@ let root_fields = {
     prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."}),
     class_name   : new STRING({default: 'hyperweb.core.Item', info: "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    endpoints    : new CATALOG(new CODE()),
     handlers     : new CATALOG(new CODE()),
     fields       : new CATALOG(new SCHEMA()),
 
@@ -65,8 +64,6 @@ let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
     class_name  : 'hyperweb.core.Category',
-    endpoints   : {},
-    //handlers  : {"view": render_category},
     fields      : root_fields,
     //field     : multiple(**root_fields),
 }
@@ -194,6 +191,7 @@ async function create_items(cat, Category) {
             'tmp':              item.dir_tmp2,
             
             'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
+            'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
             'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
             'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
             'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
