@@ -5,6 +5,7 @@ Creating core items from scratch and storing them as initial items in DB.
 import {print} from '../utils.js'
 import {ServerRegistry} from './s-registry.js'
 import {GENERIC, SCHEMA, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../types.js'
+import {Catalog} from '../data.js'
 //import {Index} from '../item.js'
 
 
@@ -14,19 +15,20 @@ import {GENERIC, SCHEMA, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../t
  **
  */
 
+let _cat = (data) => new Catalog(data)
+
 // fields of categories, including the root category
-let root_fields = {
+let root_fields = _cat({
     name         : new STRING({info: "human-readable title of the category"}),
     info         : new TEXT(),
     startup_site : new GENERIC(),
     prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."}),
-    class_name   : new STRING({default: 'hyperweb.core.Item', info: "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."}),
+    class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE()),
     fields       : new CATALOG(new SCHEMA()),
 
     //field       : SCHEMA(multiple : True, labels : True)
-    //endpoint    : CODE(multiple : True, labels : True)
     //index       : ITEM(Index),
 
     //custom_fields : BOOLEAN(default : False, info : "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()")
@@ -58,16 +60,15 @@ let root_fields = {
     //live_upgrade_intensity : FLOAT(),  // likelihood (0.0-1.0) that an edge server should write back an upgraded item
                                         // that referred to an outdated revision of its category (esp. schema), instead of
                                         // leaving this upgrade-write for a background process; typically ~0.01
-}
+})
 
 let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
-    class_name  : 'hyperweb.core.Category',
+    class_name  : 'schemat.item.Category',
     fields      : root_fields,
     //field     : multiple(**root_fields),
 }
-
 
 /**********************************************************************************************************************
  **
@@ -81,7 +82,7 @@ async function create_categories(Category) {
     cat.File = await Category.new({
         name    : "File",
         info    : "File with a text content. Accessible through the web filesystem.",
-        class_name  : 'hyperweb.core.File',
+        class_name  : 'schemat.item.File',
         fields      : {
             format  : new STRING(),    // ProgrammingLanguage()
             content : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
@@ -91,7 +92,7 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        class_name  : 'hyperweb.core.FileLocal',
+        class_name  : 'schemat.item.FileLocal',
         fields      : {
             path    : new STRING(),             // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
@@ -100,14 +101,14 @@ async function create_categories(Category) {
     cat.Folder = await Category.new({
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_name  : 'hyperweb.core.Folder',
+        class_name  : 'schemat.item.Folder',
         fields      : {files: new CATALOG(new ITEM(), new FILENAME())}     // file & directory names mapped to item IDs
     })
     
     cat.Application = await Category.new({
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class_name  : 'hyperweb.core.Application',
+        class_name  : 'schemat.item.Application',
         fields      : {name: new STRING()},
         // folder   : FILEPATH(),       // path to a folder in the site's directory where this application was installed;
                                         // if the app needs to store data items in the directory, it's recommended
@@ -116,38 +117,38 @@ async function create_categories(Category) {
     cat.AppRoot  = await Category.new({
         name        : "AppRoot",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
-        class_name  : 'hyperweb.core.AppRoot',
+        class_name  : 'schemat.item.AppRoot',
         prototype   : cat.Application,
         fields      : {name: new STRING(), apps: new CATALOG(new ITEM())},  // TODO: restrict apps to sub-categories of Application_ (?)
     })
     cat.AppAdmin = await Category.new({
         name        : "AppAdmin",
         info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
-        class_name  : 'hyperweb.core.AppAdmin',
+        class_name  : 'schemat.item.AppAdmin',
         fields      : {name: new STRING()},
     })
     cat.AppAjax = await Category.new({
         name        : "AppAjax",
         info        : "Internal application to serve AJAX requests, mainly for pulling additional items by client UI.",
-        class_name  : 'hyperweb.core.AppAjax',
+        class_name  : 'schemat.item.AppAjax',
         fields      : {name: new STRING()},
     })
     cat.AppFiles = await Category.new({
         name        : "AppFiles",
-        class_name  : 'hyperweb.core.AppFiles',
+        class_name  : 'schemat.item.AppFiles',
         fields      : {name: new STRING(), root_folder: new ITEM(cat.Folder)},    // if root_folder is missing, Site's main folder is used
     })
     cat.AppSpaces = await Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_name  : 'hyperweb.core.AppSpaces',
+        class_name  : 'schemat.item.AppSpaces',
         fields      : {name: new STRING(), spaces: new CATALOG(new ITEM(cat.Category))},
     })
     
     cat.Site = await Category.new({
         name        : "Site",
         info        : "Category of site records. A site contains information about applications, servers, startup",
-        class_name  : 'hyperweb.core.Site',
+        class_name  : 'schemat.item.Site',
         fields      : {
             name        : new STRING(),
             base_url    : new STRING(),             // the base URL at which the `application` is served, /-terminated
@@ -158,7 +159,7 @@ async function create_categories(Category) {
     cat.Varia = await Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
-        class_name  : 'hyperweb.core.Item',
+        class_name  : 'schemat.item.Item',
         fields      : {name: new STRING(), title: new STRING()},            // multi: true
     })
     

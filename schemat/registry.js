@@ -122,8 +122,10 @@ export class Registry {
         print('init_classpath() started...')
         let classpath = new Classpath
 
-        await classpath.set_module("hyperweb.core",  "./item.js")
-        await classpath.set_module("hyperweb.types", "./types.js")
+        classpath.set_many("schemat.data", Map, Set)                      // javascript.Map, javascript.Set
+        await classpath.set_module("schemat.data", "./data.js")
+        await classpath.set_module("schemat.item", "./item.js")
+        await classpath.set_module("schemat.type", "./types.js")
 
         this.classpath = classpath
         print('init_classpath() done')

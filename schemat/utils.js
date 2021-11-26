@@ -131,11 +131,13 @@ export class Types {
     static amap           = async (arr,fun) => await Promise.all(arr.map(async v => await fun(v)))
 
     static getstate       = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
-    static setstate       = (cls,state) => {        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly
+    static setstate       = (cls,state) => {
+        // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
+        // __setstate__() should return the object after state decoding; __setstate__() can be async, and
+        // in such case setstate() returns a promise
         let obj = new cls()
-        if (obj['__setstate__']) obj['__setstate__'](state)
-        else Object.assign(obj, state)
-        return obj
+        if (obj['__setstate__']) return obj['__setstate__'](state)
+        return Object.assign(obj, state)
     }
 
 }

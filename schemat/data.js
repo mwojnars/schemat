@@ -152,12 +152,12 @@ export class Catalog {
         for (const ent of this._entries) yield ent
     }
 
-    __getstate__() {
-        // return:
-        // - dict {key: value} if hasUniqueKeys && !labels && !comments
-        // - list of entries, each entry converted to a tuple [value,key,label,comm], possibly truncated when missing lbl/comm;
-        //   wrapped up in dict, or TODO: add support for non-dict state in JSONx
-    }
+    // __getstate__() {
+    //     // return:
+    //     // - dict {key: value} if hasUniqueKeys && !labels && !comments
+    //     // - list of entries, each entry converted to a tuple [value,key,label,comm], possibly truncated when missing lbl/comm;
+    //     //   wrapped up in dict, or TODO: add support for non-dict state in JSONx
+    // }
 }
 
 

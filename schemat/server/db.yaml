@@ -3,34 +3,62 @@
     - 0
   name: Category
   info: Category of items that represent categories
-  class_name: hyperweb.core.Category
+  class_name: schemat.item.Category
   fields:
-    name:
-      info: human-readable title of the category
-      "@": hyperweb.types.STRING
-    info:
-      "@": hyperweb.types.TEXT
-    startup_site:
-      "@": hyperweb.types.GENERIC
-    prototype:
-      info: Base category from which this one inherits. Multiple prototypes are
-        allowed, the first one overrides settings of subsequent ones.
-      "@": hyperweb.types.ITEM
-    class_name:
-      info: Full (dotted) path of a python class. Or the class name that should be
-        imported from `class_code` after its execution.
-      default: hyperweb.core.Item
-      "@": hyperweb.types.STRING
-    class_code:
-      "@": hyperweb.types.TEXT
-    handlers:
-      values:
-        "@": hyperweb.types.CODE
-      "@": hyperweb.types.CATALOG
-    fields:
-      values:
-        "@": hyperweb.types.SCHEMA
-      "@": hyperweb.types.CATALOG
+    _entries:
+      - key: name
+        value:
+          info: human-readable title of the category
+          "@": schemat.type.STRING
+      - key: info
+        value:
+          "@": schemat.type.TEXT
+      - key: startup_site
+        value:
+          "@": schemat.type.GENERIC
+      - key: prototype
+        value:
+          info: Base category from which this one inherits. Multiple prototypes are
+            allowed, the first one overrides settings of subsequent ones.
+          "@": schemat.type.ITEM
+      - key: class_name
+        value:
+          info: Full (dotted) path of a python class. Or the class name that should be
+            imported from `class_code` after its execution.
+          default: schemat.item.Item
+          "@": schemat.type.STRING
+      - key: class_code
+        value:
+          "@": schemat.type.TEXT
+      - key: handlers
+        value:
+          values:
+            "@": schemat.type.CODE
+          "@": schemat.type.CATALOG
+      - key: fields
+        value:
+          values:
+            "@": schemat.type.SCHEMA
+          "@": schemat.type.CATALOG
+    _keys:
+      name:
+        - 0
+      info:
+        - 1
+      startup_site:
+        - 2
+      prototype:
+        - 3
+      class_name:
+        - 4
+      class_code:
+        - 5
+      handlers:
+        - 6
+      fields:
+        - 7
+      "@": schemat.data.Map
+    "@": schemat.data.Catalog
   startup_site:
     - 10
     - 1
@@ -39,12 +67,12 @@
     - 1
   name: File
   info: File with a text content. Accessible through the web filesystem.
-  class_name: hyperweb.core.File
+  class_name: schemat.item.File
   fields:
     format:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     content:
-      "@": hyperweb.types.CODE
+      "@": schemat.type.CODE
 - id:
     - 0
     - 2
@@ -53,85 +81,85 @@
   prototype:
     - 0
     - 1
-  class_name: hyperweb.core.FileLocal
+  class_name: schemat.item.FileLocal
   fields:
     path:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
 - id:
     - 0
     - 3
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class_name: hyperweb.core.Folder
+  class_name: schemat.item.Folder
   fields:
     files:
       keys:
-        "@": hyperweb.types.FILENAME
+        "@": schemat.type.FILENAME
       values:
-        "@": hyperweb.types.ITEM
-      "@": hyperweb.types.CATALOG
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
 - id:
     - 0
     - 4
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_name: hyperweb.core.Application
+  class_name: schemat.item.Application
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
 - id:
     - 0
     - 5
   name: AppRoot
   info: A set of sub-applications, each bound to a different URL prefix.
-  class_name: hyperweb.core.AppRoot
+  class_name: schemat.item.AppRoot
   prototype:
     - 0
     - 4
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     apps:
       values:
-        "@": hyperweb.types.ITEM
-      "@": hyperweb.types.CATALOG
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
 - id:
     - 0
     - 6
   name: AppAdmin
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
-  class_name: hyperweb.core.AppAdmin
+  class_name: schemat.item.AppAdmin
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
 - id:
     - 0
     - 7
   name: AppAjax
   info: Internal application to serve AJAX requests, mainly for pulling additional
     items by client UI.
-  class_name: hyperweb.core.AppAjax
+  class_name: schemat.item.AppAjax
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
 - id:
     - 0
     - 8
   name: AppFiles
-  class_name: hyperweb.core.AppFiles
+  class_name: schemat.item.AppFiles
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     root_folder:
       category:
         =:
           - 0
           - 3
         "@": (item)
-      "@": hyperweb.types.ITEM
+      "@": schemat.type.ITEM
 - id:
     - 0
     - 9
@@ -139,46 +167,46 @@
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_name: hyperweb.core.AppSpaces
+  class_name: schemat.item.AppSpaces
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     spaces:
       values:
-        "@": hyperweb.types.ITEM
-      "@": hyperweb.types.CATALOG
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
 - id:
     - 0
     - 10
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
-  class_name: hyperweb.core.Site
+  class_name: schemat.item.Site
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     base_url:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     filesystem:
       category:
         =:
           - 0
           - 3
         "@": (item)
-      "@": hyperweb.types.ITEM
+      "@": schemat.type.ITEM
     application:
-      "@": hyperweb.types.ITEM
+      "@": schemat.type.ITEM
 - id:
     - 0
     - 11
   name: Varia
   info: Category of items that do not belong to any specific category
-  class_name: hyperweb.core.Item
+  class_name: schemat.item.Item
   fields:
     name:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
     title:
-      "@": hyperweb.types.STRING
+      "@": schemat.type.STRING
 - id:
     - 3
     - 1

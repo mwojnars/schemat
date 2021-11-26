@@ -39,7 +39,7 @@ function Catalog1({item}) {
 function Catalog2({data, schema, color = 0}) {
     return DIV({className: 'wrap-offset'},
             TABLE({className: 'catalog-2'},
-              TBODY(...Object.entries(data).map(([field, value]) =>
+              TBODY(...Object.entries(_obj(data)).map(([field, value]) =>
                 TR({className: `ct-color${color}`}, e(Entry, {field: field, value: value, schema: schema})))
            )))
 }

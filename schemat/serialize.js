@@ -15,6 +15,7 @@ export class JSONx {
     static FLAG_DICT  = "(dict)"       // special value of ATTR_CLASS that denotes a dict wrapper for another dict containing the reserved "@" key
     static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    static PATH_ITEM  = "schemat.item.Item"
 
     // static dump(obj, type = null) {
     //     let state = JSONx.encode(obj, type);
@@ -47,7 +48,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        let Item = registry.get_class("hyperweb.core.Item")
+        let Item = registry.get_class(JSONx.PATH_ITEM)
         if (obj instanceof Item) {
             if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
@@ -59,6 +60,8 @@ export class JSONx {
         }
         else if (obj instanceof Set)
             state = JSONx.encode_list(Array.from(obj))
+        else if (obj instanceof Map)
+            state = JSONx.encode_dict(Object.fromEntries(obj.entries()))
         else {
             state = T.getstate(obj)
             // if (obj !== state) state = JSONx.encode(state)
@@ -127,9 +130,11 @@ export class JSONx {
         if (T.isPrimitiveCls(cls))  return state
         if (cls === Array)          return JSONx.decode_list(state)
         if (cls === Object)         return JSONx.decode_dict(state)
-        if (cls === Set)            return new cls(await JSONx.decode_list(state))
+        if (cls === Set)            return new Set(await JSONx.decode_list(state))
+        if (cls === Map)
+            return new Map(Object.entries(await JSONx.decode_dict(state)))
 
-        let Item = registry.get_class("hyperweb.core.Item")
+        let Item = registry.get_class(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.get_item(state)
 
