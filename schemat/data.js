@@ -8,6 +8,12 @@ function missing(key) {
     return key === null || key === undefined
 }
 
+/**********************************************************************************************************************
+ **
+ **  CATALOG
+ **
+ */
+
 export class Catalog {
     /* An Array-like and Map-like collection that keeps a list of values (entries) with optional:
        - key
@@ -17,7 +23,7 @@ export class Catalog {
        Keys may repeat. Keys may include all printable characters except ":" and whitespace.
        Labels may include all printable characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.
-       Empty strings in key/label/comment are treated as missing.
+       Empty strings in label/comment are treated as missing. Empty string is a valid non-missing key.
        Entries can be accessed by their key, or integer position (0,1,...), or a path. The path may contain
        - labels: "key:label/key2:label2"
        - flags:  "key/key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
@@ -28,15 +34,24 @@ export class Catalog {
 
     get size()          { return this._entries.length }
     get length()        { return this._entries.length }
+    has(key)            { return this._keys.has(key) }
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this._entries.length }
     hasAnnot()          { return this._entries.filter(e => !e.label && !e.comment).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
+    asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
 
     get(path, default_ = undefined) {
         /* Return a value on a given path. */
         let entry = this.getEntry(path)
         return entry === undefined ? default_ : entry.value
+    }
+    getEntry(key) {
+        if (typeof key === 'number') return this._entries[key]
+        if (key in this._keys) {
+            let pos = this._keys.get(key)[0]        // first entry returned if multiple occurrences
+            return this._entries[pos]
+        }
     }
 
     _prepare(entry) {
@@ -51,7 +66,7 @@ export class Catalog {
            a new value, label, and/or comment is assigned; pass `undefined` as a value/label/comment to leave
            the old object, or `null` to force its removal (for label/comment).
          */
-        if (typeof key == 'number') {
+        if (typeof key === 'number') {
             let e = this._entries[key]
             if (value !== undefined) e.value = value
             if (label !== undefined) {if (label) e.label = label; else delete e.label}
@@ -91,7 +106,7 @@ export class Catalog {
         /* Delete a single entry at a given position in _entries, if `key` is a number;
            or delete all 0+ entries that contain a given `key` value. Return true if min. 1 entry deleted.
          */
-        if (typeof key == 'number') {
+        if (typeof key === 'number') {
             let pos = key, e = this._entries[key]
             if (pos < 0 || pos >= this._entries.length) return false
             this._entries.splice(pos, 1)                        // delete the entry at position `pos`, rearrange the array
@@ -148,3 +163,20 @@ export class Data extends Catalog {
 //     use_labels
 //     use_comments
 // }
+
+
+/**********************************************************************************************************************/
+
+export function _obj(cat) {
+    if (cat instanceof Catalog) return cat.asDict()
+    return cat
+}
+export function _has(cat, key) {
+    if (cat instanceof Catalog) return cat.has(key)
+    return key in cat
+}
+export function _get(cat, key) {
+    if (cat instanceof Catalog) return cat.get(key)
+    return T.getOwnProperty(cat, key)
+}
+

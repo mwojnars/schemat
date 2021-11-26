@@ -487,14 +487,14 @@ export class CATALOG extends Schema {
     static default_schema_keys = new STRING({blank: true})
 
     keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
-    schema      // common schema of values of an input catalog
+    values      // common schema of values of an input catalog
 
     get _keys() { return this.keys || this.constructor.default_schema_keys }
 
-    constructor(schema = null, keys = null, params = {}) {
+    constructor(values = null, keys = null, params = {}) {
         super(params)
         if (keys)   this.keys = keys
-        if (schema) this.schema = schema
+        if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
     encode(cat) {
@@ -558,10 +558,19 @@ export class CATALOG extends Schema {
         }
         return cat
     }
-
     _schema() {
-        return this.schema || this.constructor.default_schema_vals
+        return this.values || this.constructor.default_schema_vals
     }
+
+    toString() {
+        let name   = this.constructor.name
+        let keys   = this.keys || this.constructor.default_schema_keys
+        let values = this.values || this.constructor.default_schema_vals
+        if (T.ofType(keys, STRING))
+            return `${name}(${values})`
+        else
+            return `${name}(${values}, ${keys})`
+        }
 }
 
 export class DATA extends CATALOG {

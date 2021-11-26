@@ -2,7 +2,7 @@ import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBO
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, OBJECT, CATALOG } from './types.js'
 import { JSONx } from './serialize.js'
-import { Data } from './data.js'
+import { Data, _obj, _has, _get } from './data.js'
 
 export const ROOT_CID = 0
 
@@ -21,7 +21,7 @@ function Catalog1({item}) {
         let schemas = await category.get_fields()
 
         let rows = entries.map(([field, value], i) => {
-            let schema = schemas[field]  //await category.get_schema(field)
+            let schema = _get(schemas, field)
             let color  = (start_color + i) % 2
             return TR({className: `ct-color${color}`},
                       schema instanceof CATALOG
@@ -341,7 +341,7 @@ export class Item {
         // get handler's source code from category's data
         // let source = await this.category.get(`handlers/${endpoint}`)
         let handlers = await this.category.get('handlers', {})
-        let source   = T.getOwnProperty(handlers, endpoint)         // TODO: make `handlers` a Catalog (Map-like) not plain object
+        let source   = _get(handlers, endpoint)
         let handler
 
         if (source) {
@@ -509,7 +509,7 @@ export class Category extends Item {
     async get_default(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         let fields = await this.get_fields()
-        let schema = T.getOwnProperty(fields, field)
+        let schema = _get(fields, field) //T.getOwnProperty(fields, field)
         return schema ? schema.default : default_
     }
     async get_schema(field = null) {
@@ -517,9 +517,9 @@ export class Category extends Item {
         // TODO: replace get_schema() with a derived field `schema`
         let fields = await this.get_fields()
         if (!field)                                     // create and return a schema for the entire Item.data
-            return new OBJECT(fields, {strict: true})
+            return new OBJECT(_obj(fields), {strict: true})
         else {                                          // return a schema for a selected field only
-            let schema = (field in fields) ? fields[field] : null
+            let schema = _has(fields, field) ? _get(fields, field) : null
             return schema || generic_schema
         }
     }
@@ -685,13 +685,13 @@ export class AppRoot extends Application {
             step = path.split(Application.SEP_ROUTE)[0]
         
         let apps = await this.get('apps')
-        let app  = T.getOwnProperty(apps, step)
+        let app  = _get(apps, step)
         
         if (step && app)                        // non-default (named) route can be followed with / in path
             return [step, app, path.slice(lead + step.length)]
         
-        if ('' in apps)                         // default (unnamed) route has special format, no "/"
-            return ['', apps[''], path]
+        if (_has(apps, ''))                     // default (unnamed) route has special format, no "/"
+            return ['', _get(apps, ''), path]
         
         throw new Error(`URL path not found: ${path}`)
     }
@@ -803,7 +803,7 @@ export class AppSpaces extends Application {
     async _find_space(category) {
         let id = category.id
         let spaces = await this.get('spaces')
-        for (const [space, cat] of Object.entries(spaces))
+        for (const [space, cat] of Object.entries(_obj(spaces)))
             if (cat.has_id(id)) return space
         throw new Error(`URL path not found for items of category ${category}`)
     }
@@ -813,7 +813,7 @@ export class AppSpaces extends Application {
             [path, endpoint] = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
             let spaces = await this.get('spaces')
-            category = T.getOwnProperty(spaces, space)
+            category = _get(spaces, space)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
@@ -844,7 +844,7 @@ export class Folder extends Item {
         while (path) {
             let name = path.split(Folder.SEP_FOLDER)[0]
             let files = await item.get('files')
-            item = T.getOwnProperty(files, name)
+            item = _get(files, name)
             path = path.slice(name.length+1)
         }
         return item
@@ -865,7 +865,7 @@ export class Folder extends Item {
     async _names() {
         /* Take `files` property and compute its reverse mapping: item ID -> name. */
         let files = await this.get('files')
-        return T.mapDict(files, (name, f) => [f.id, name])
+        return T.mapDict(_obj(files), (name, f) => [f.id, name])
     }
 }
 
