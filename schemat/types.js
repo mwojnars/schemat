@@ -2,7 +2,7 @@ import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRA
 import { useState, useRef, useEffect, delayed_render } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
-import { Catalog } from './data.js'
+import { Catalog, _obj } from './data.js'
 
 export class DataError extends Error {}
 
@@ -501,7 +501,7 @@ export class CATALOG extends Schema {
         /* Encode & compactify values of fields through per-field schema definitions. */
         if (!(T.isDict(cat) || cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
         // if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
-        return T.isDict(cat) || cat.isDict() ? this._to_dict(cat) : this._to_list(cat)
+        return (T.isDict(cat) || cat.isDict()) ? this._to_dict(cat) : this._to_list(cat)
     }
     _to_dict(cat) {
         /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */
@@ -509,6 +509,7 @@ export class CATALOG extends Schema {
         let encode_key = (k) => this._keys.encode(k)
         // for (const e of cat.entries())
         //     state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
+        cat = _obj(cat)
         for (const [key,value] of Object.entries(cat))
             state[encode_key(key)] = this._schema(key).encode(value)
         return state
@@ -538,13 +539,13 @@ export class CATALOG extends Schema {
         // return data
     }
     async _from_dict(state) {
-        let cat = {} //new Catalog()
+        let cat = new Catalog()   //{}
         let schema_keys = this._keys
         for (let [key, value] of Object.entries(state)) {
             key = await schema_keys.decode(key)
             value = await this._schema(key).decode(value)
-            cat[key] = value
-            // cat.set(key, value)
+            cat.set(key, value)
+            // cat[key] = value
         }
         return cat
     }
@@ -628,7 +629,8 @@ export class OBJECT extends Schema {
             if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
             data = T.getstate(data)
         }
-        else if (!T.isDict(data)) throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
+        else if (!T.isDict(data))
+            throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
 
         // state encoding
         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])

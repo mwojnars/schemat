@@ -37,22 +37,43 @@ export class Catalog {
     has(key)            { return this._keys.has(key) }
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this._entries.length }
-    hasAnnot()          { return this._entries.filter(e => !e.label && !e.comment).length > 0 }     // at least one label or comment is present?
+    hasAnnot()          { return this._entries.filter(e => e.label || e.comment).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
     asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
+    *keys()             { return this._keys.keys }
+    *values()           { for (const e of this._entries) yield e.value }
+    *entries()          { for (const e of this._entries) yield e }
+
+    constructor(data = null) {
+        if (!data) return
+        if (data instanceof Catalog)
+            data = data.getEntries()
+        if (data instanceof Array)
+            for (const entry of data)
+                this.pushEntry(e)
+        else if (T.isDict(data))
+            for (const [key, value] of Object.entries(data))
+                this.pushEntry({key, value})
+    }
 
     get(path, default_ = undefined) {
         /* Return a value on a given path. */
         let entry = this.getEntry(path)
         return entry === undefined ? default_ : entry.value
     }
+    getAll(key) {
+        /* Return an array of all values that are present for a given key. */
+        let poslist = this._keys.get(key) || []
+        return poslist.map(pos => this._entries[pos].value)
+    }
     getEntry(key) {
         if (typeof key === 'number') return this._entries[key]
-        if (key in this._keys) {
+        if (this._keys.has(key)) {
             let pos = this._keys.get(key)[0]        // first entry returned if multiple occurrences
             return this._entries[pos]
         }
     }
+    getEntries(key) { return [...this._entries] }
 
     _prepare(entry) {
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
@@ -81,7 +102,7 @@ export class Catalog {
         let pos = this._entries.push(entry) - 1
         if (!missing(entry.key)) {
             this.delete(entry.key)
-            this._keys.set(entry.key, pos)
+            this._keys.set(entry.key, [pos])
         }
         return entry
     }
@@ -126,18 +147,10 @@ export class Catalog {
         return true
     }
 
-    // these methods return arrays:
-    // getAll(path)
-    // getEntry(path)
-    // getEntries(path)
-
     *[Symbol.iterator]() {
         /* Iterator over entries. Same as this.entries(). */
         for (const ent of this._entries) yield ent
     }
-    //*keys()         { return this._keys.keys }
-    //*values()       { for (const e in this._entries) yield e.value }
-    *entries()      { for (const e in this._entries) yield e }
 
     __getstate__() {
         // return:

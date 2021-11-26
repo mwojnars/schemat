@@ -134,7 +134,7 @@ export class Item {
     }
 
     constructor(category = null, data = null) {
-        if (data) this.data = data
+        if (data) this.data = data instanceof Data ? data : new Data(data)
         if (category) {
             this.category = category
             this.registry = category.registry
@@ -182,7 +182,7 @@ export class Item {
         let flat   = record.data
         let schema = use_schema ? await this.category.get_schema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
-        this.data  = await schema.decode(state)
+        this.data  = await schema.decode(state).then(d => new Data(d))
         // TODO: initialize item metadata - the remaining attributes from `record`
 
         print(`${this.id_str}.reload() done`)
@@ -241,10 +241,8 @@ export class Item {
         Retrieve a list of this item's fields and their values.
         Multiple values for a single field are returned as separate entries.
         */
-        // await this.load()
         await this.load()
-        if (this.data instanceof Data) return this.data.getEntries()
-        return Object.entries(this.data)
+        return Object.entries(_obj(this.data))
 
         // let fields  = await this.category.get_fields()
         // let entries = []
@@ -270,7 +268,7 @@ export class Item {
     async encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         let schema = use_schema ? await this.category.get_schema() : generic_schema
-        return schema.encode(await this.data)
+        return schema.encode(_obj(await this.data))
     }
     async dumpData(use_schema = true, compact = true) {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
