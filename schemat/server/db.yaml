@@ -5,7 +5,7 @@
   info: Category of items that represent categories
   class_name: schemat.item.Category
   fields:
-    _entries:
+    entries:
       - key: name
         value:
           info: human-readable title of the category
@@ -40,24 +40,6 @@
           values:
             "@": schemat.type.SCHEMA
           "@": schemat.type.CATALOG
-    _keys:
-      name:
-        - 0
-      info:
-        - 1
-      startup_site:
-        - 2
-      prototype:
-        - 3
-      class_name:
-        - 4
-      class_code:
-        - 5
-      handlers:
-        - 6
-      fields:
-        - 7
-      "@": schemat.data.Map
     "@": schemat.data.Catalog
   startup_site:
     - 10

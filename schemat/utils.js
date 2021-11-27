@@ -30,7 +30,7 @@ Object.prototype.toString = toString
 
 export let print = console.log
 
-export function assert(test, msg) {
+export function assert(test, msg = "unknown reason") {
     if (test) return
     throw new Error(`assertion failed: ${msg}`)
     // console.assert(test)
@@ -133,8 +133,8 @@ export class Types {
     static getstate       = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
     static setstate       = (cls,state) => {
         // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
-        // __setstate__() should return the object after state decoding; __setstate__() can be async, and
-        // in such case setstate() returns a promise
+        // __setstate__() can be async, in such case setstate() returns a promise;
+        // __setstate__() must end with "return this" (!)
         let obj = new cls()
         if (obj['__setstate__']) return obj['__setstate__'](state)
         return Object.assign(obj, state)
