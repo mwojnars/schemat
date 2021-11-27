@@ -499,19 +499,20 @@ export class CATALOG extends Schema {
     }
     encode(cat) {
         /* Encode & compactify values of fields through per-field schema definitions. */
-        if (!(T.isDict(cat) || cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
-        // if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
+        if (T.isDict(cat)) throw new DataError(`plain object no longer supported by CATALOG.encode(), wrap it up in "new Catalog(...)": ${cat}`)
+        // if (!(T.isDict(cat) || cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
+        if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
         return (T.isDict(cat) || cat.isDict()) ? this._to_dict(cat) : this._to_list(cat)
     }
     _to_dict(cat) {
         /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */
         let state = {}
         let encode_key = (k) => this._keys.encode(k)
-        // for (const e of cat.entries())
-        //     state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
-        cat = _obj(cat)
-        for (const [key,value] of Object.entries(cat))
-            state[encode_key(key)] = this._schema(key).encode(value)
+        for (const e of cat.entries())
+            state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
+        // cat = _obj(cat)
+        // for (const [key,value] of Object.entries(cat))
+        //     state[encode_key(key)] = this._schema(key).encode(value)
         return state
     }
     _to_list(cat) {
@@ -533,19 +534,14 @@ export class CATALOG extends Schema {
         if (T.isDict(state))  return this._from_dict(state)
         if (T.isArray(state)) return this._from_list(state)
         throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
-        // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-        // let type = this._type
-        // if (type) return T.setstate(type, data)
-        // return data
     }
     async _from_dict(state) {
-        let cat = new Catalog()   //{}
+        let cat = new Catalog()
         let schema_keys = this._keys
         for (let [key, value] of Object.entries(state)) {
             key = await schema_keys.decode(key)
             value = await this._schema(key).decode(value)
             cat.set(key, value)
-            // cat[key] = value
         }
         return cat
     }
