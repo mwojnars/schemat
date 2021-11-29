@@ -2,7 +2,7 @@ import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRA
 import { useState, useRef, useEffect, delayed_render } from './utils.js'
 import { T, truncate } from './utils.js'
 import { JSONx } from './serialize.js'
-import { Catalog, _obj } from './data.js'
+import { Catalog } from './data.js'
 
 export class DataError extends Error {}
 

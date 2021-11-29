@@ -181,16 +181,19 @@ export class Data extends Catalog {
 
 /**********************************************************************************************************************/
 
-export function _obj(cat) {
-    if (cat instanceof Catalog) return cat.asDict()
-    return cat
-}
-export function _has(cat, key) {
-    if (cat instanceof Catalog) return cat.has(key)
-    return key in cat
-}
-export function _get(cat, key) {
-    if (cat instanceof Catalog) return cat.get(key)
-    return T.getOwnProperty(cat, key)
-}
+// export function _obj(cat) {
+//     assert(cat instanceof Catalog)
+//     if (cat instanceof Catalog) return cat.asDict()
+//     return cat
+// }
+// export function _has(cat, key) {
+//     assert(cat instanceof Catalog)
+//     if (cat instanceof Catalog) return cat.has(key)
+//     return key in cat
+// }
+// export function _get(cat, key) {
+//     assert(cat instanceof Catalog)
+//     if (cat instanceof Catalog) return cat.get(key)
+//     return T.getOwnProperty(cat, key)
+// }
 

@@ -30,9 +30,9 @@ Object.prototype.toString = toString
 
 export let print = console.log
 
-export function assert(test, msg = "unknown reason") {
+export function assert(test, msg = null) {
     if (test) return
-    throw new Error(`assertion failed: ${msg}`)
+    throw new Error(msg ? `assertion failed: ${msg}` : `assertion failed`)
     // console.assert(test)
 }
 

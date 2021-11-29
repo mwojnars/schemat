@@ -2,6 +2,7 @@ import fs from 'fs'
 import YAML from 'yaml'
 
 import { assert, print, T } from '../utils.js'
+import { Data } from '../data.js'
 import { Item, RootCategory } from '../item.js'
 import { Database, Registry, ItemsMap } from '../registry.js'
 
@@ -153,9 +154,8 @@ export class ServerRegistry extends Registry {
         Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
         are initialized from there rather than being loaded from DB.
         */
-        let root = this.root = new RootCategory(this)
-        if (root_data) root.data = root_data
-        else await root.load()
+        let root = this.root = new RootCategory(this, root_data)
+        if (!root_data) await root.load()
         return root
     }
 
