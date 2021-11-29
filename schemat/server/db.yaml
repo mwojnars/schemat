@@ -1,50 +1,57 @@
-- id:
+- __id:
     - 0
     - 0
-  name: Category
-  info: Category of items that represent categories
-  class_name: schemat.item.Category
-  fields:
-    entries:
-      - key: name
-        value:
-          info: human-readable title of the category
-          "@": schemat.type.STRING
-      - key: info
-        value:
-          "@": schemat.type.TEXT
-      - key: startup_site
-        value:
-          "@": schemat.type.GENERIC
-      - key: prototype
-        value:
-          info: Base category from which this one inherits. Multiple prototypes are
-            allowed, the first one overrides settings of subsequent ones.
-          "@": schemat.type.ITEM
-      - key: class_name
-        value:
-          info: Full (dotted) path of a python class. Or the class name that should be
-            imported from `class_code` after its execution.
-          default: schemat.item.Item
-          "@": schemat.type.STRING
-      - key: class_code
-        value:
-          "@": schemat.type.TEXT
-      - key: handlers
-        value:
-          values:
-            "@": schemat.type.CODE
-          "@": schemat.type.CATALOG
-      - key: fields
-        value:
-          values:
-            "@": schemat.type.SCHEMA
-          "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
-  startup_site:
-    - 10
-    - 1
-- id:
+  entries:
+    - key: name
+      value: Category
+    - key: info
+      value: Category of items that represent categories
+    - key: class_name
+      value: schemat.item.Category
+    - key: fields
+      value:
+        entries:
+          - key: name
+            value:
+              info: human-readable title of the category
+              "@": schemat.type.STRING
+          - key: info
+            value:
+              "@": schemat.type.TEXT
+          - key: startup_site
+            value:
+              "@": schemat.type.GENERIC
+          - key: prototype
+            value:
+              info: Base category from which this one inherits. Multiple prototypes are
+                allowed, the first one overrides settings of subsequent ones.
+              "@": schemat.type.ITEM
+          - key: class_name
+            value:
+              info: Full (dotted) path of a python class. Or the class name that should be
+                imported from `class_code` after its execution.
+              default: schemat.item.Item
+              "@": schemat.type.STRING
+          - key: class_code
+            value:
+              "@": schemat.type.TEXT
+          - key: handlers
+            value:
+              values:
+                "@": schemat.type.CODE
+              "@": schemat.type.CATALOG
+          - key: fields
+            value:
+              values:
+                "@": schemat.type.SCHEMA
+              "@": schemat.type.CATALOG
+        "@": schemat.data.Catalog
+    - key: startup_site
+      value:
+        - 10
+        - 1
+  "@": schemat.data.Data
+- __id:
     - 0
     - 1
   name: File
@@ -55,7 +62,7 @@
       "@": schemat.type.STRING
     content:
       "@": schemat.type.CODE
-- id:
+- __id:
     - 0
     - 2
   name: FileLocal
@@ -67,7 +74,7 @@
   fields:
     path:
       "@": schemat.type.STRING
-- id:
+- __id:
     - 0
     - 3
   name: Folder
@@ -81,7 +88,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-- id:
+- __id:
     - 0
     - 4
   name: Application
@@ -91,7 +98,7 @@
   fields:
     name:
       "@": schemat.type.STRING
-- id:
+- __id:
     - 0
     - 5
   name: AppRoot
@@ -107,7 +114,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-- id:
+- __id:
     - 0
     - 6
   name: AppAdmin
@@ -117,7 +124,7 @@
   fields:
     name:
       "@": schemat.type.STRING
-- id:
+- __id:
     - 0
     - 7
   name: AppAjax
@@ -127,7 +134,7 @@
   fields:
     name:
       "@": schemat.type.STRING
-- id:
+- __id:
     - 0
     - 8
   name: AppFiles
@@ -142,7 +149,7 @@
           - 3
         "@": (item)
       "@": schemat.type.ITEM
-- id:
+- __id:
     - 0
     - 9
   name: AppSpaces
@@ -157,7 +164,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-- id:
+- __id:
     - 0
     - 10
   name: Site
@@ -178,7 +185,7 @@
       "@": schemat.type.ITEM
     application:
       "@": schemat.type.ITEM
-- id:
+- __id:
     - 0
     - 11
   name: Varia
@@ -189,7 +196,7 @@
       "@": schemat.type.STRING
     title:
       "@": schemat.type.STRING
-- id:
+- __id:
     - 3
     - 1
   files:
@@ -202,61 +209,61 @@
     Folder:
       - 0
       - 3
-- id:
+- __id:
     - 1
     - 1
   content: This is a test file.
-- id:
+- __id:
     - 3
     - 2
   files:
     test.txt:
       - 1
       - 1
-- id:
+- __id:
     - 3
     - 3
   files:
     tmp1:
       - 3
       - 2
-- id:
+- __id:
     - 2
     - 1
   path: /home/marcin/Documents/priv/catalog/src/schemat/client.js
-- id:
+- __id:
     - 2
     - 2
   path: /home/marcin/Documents/priv/catalog/src/schemat/data.js
-- id:
+- __id:
     - 2
     - 3
   path: /home/marcin/Documents/priv/catalog/src/schemat/item.js
-- id:
+- __id:
     - 2
     - 4
   path: /home/marcin/Documents/priv/catalog/src/schemat/registry.js
-- id:
+- __id:
     - 2
     - 5
   path: /home/marcin/Documents/priv/catalog/src/schemat/serialize.js
-- id:
+- __id:
     - 2
     - 6
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/server.js
-- id:
+- __id:
     - 2
     - 7
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/style.css
-- id:
+- __id:
     - 2
     - 8
   path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
-- id:
+- __id:
     - 2
     - 9
   path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
-- id:
+- __id:
     - 3
     - 4
   files:
@@ -293,19 +300,19 @@
     utils.js:
       - 2
       - 9
-- id:
+- __id:
     - 6
     - 1
   name: Admin
-- id:
+- __id:
     - 7
     - 1
   name: AJAX
-- id:
+- __id:
     - 8
     - 1
   name: Files
-- id:
+- __id:
     - 9
     - 1
   name: Catalog
@@ -325,7 +332,7 @@
     sys.file:
       - 0
       - 2
-- id:
+- __id:
     - 5
     - 1
   name: Applications
@@ -342,7 +349,7 @@
     "":
       - 9
       - 1
-- id:
+- __id:
     - 10
     - 1
   name: catalog.wiki
@@ -351,12 +358,17 @@
   application:
     - 5
     - 1
-- id:
+- __id:
     - 11
     - 1
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-- id:
+- __id:
     - 11
     - 2
-  title: ąłęÓŁŻŹŚ
-  name: duplicate
+  __data:
+    - - ąłęÓŁŻŹŚ
+      - title
+    - - test_item
+      - name
+    - - duplicate
+      - name

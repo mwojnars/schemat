@@ -23,6 +23,7 @@ export class Schema {
     info            // human-readable description of this schema: what values are accepted and how they are interpreted
     default         // default value to be assumed when none was provided by a user (in a web form etc.)
     unique          // if true, the field described by this schema cannot be repeated (max. one value allowed)
+    single
     multi           // if true and the schema describes an OBJECT field, the field can be repeated (multiple values)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` or its subclasses
@@ -525,7 +526,7 @@ export class CATALOG extends Schema {
             let tuple = [value, encode_key(e.key), e.label, e.comment]
             tuple.slice(2).forEach(s => {if(!(T.isMissing(s) || typeof s === 'string')) throw new DataError(`expected a string, got ${s}`)})
             while (tuple.length >= 2 && !tuple[tuple.length-1])
-                tuple = tuple.slice(-1)             // truncate the last elements if label or comment are missing
+                tuple.pop()                         // truncate the last element(s) if a label or comment are missing
             return tuple
         })
     }

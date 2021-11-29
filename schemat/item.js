@@ -1,6 +1,6 @@
 import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
-import { generic_schema, OBJECT, CATALOG } from './types.js'
+import { generic_schema, OBJECT, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
 import { Data, Catalog } from './data.js'
 
@@ -272,7 +272,7 @@ export class Item {
     async encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         let schema = use_schema ? await this.category.get_schema() : generic_schema
-        return schema.encode((await this.data).asDict())
+        return schema.encode(await this.data)
     }
     async dumpData(use_schema = true, compact = true) {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
@@ -516,10 +516,10 @@ export class Category extends Item {
     }
     async get_schema(field = null) {
         /* Return schema of a given `field` (if present), or an OBJECT schema of all fields. */
-        // TODO: replace get_schema() with a derived field `schema`
         let fields = await this.get_fields()
         if (!field)                                     // create and return a schema for the entire Item.data
-            return new OBJECT(fields.asDict(), {strict: true})
+            return new DATA(fields.asDict())
+            // return new OBJECT(fields.asDict(), {strict: true})
         else                                            // return a schema for a selected field only
             return fields.get(field) || generic_schema
     }

@@ -76,12 +76,14 @@ class YamlDB extends FileDB {
         this.max_iid.clear()
 
         for (let record of db) {
-            let id = T.pop(record, 'id')
+            let id = T.pop(record, '__id')
             let [cid, iid] = id
             assert(!this.records.has(id), `duplicate item ID: ${id}`)
+
+            let data = '__data' in record ? record.__data : record
             let curr_max = this.max_iid.get(cid) || 0
             this.max_iid[cid] = Math.max(curr_max, iid)
-            this.records.set(id, {cid, iid, data: JSON.stringify(record)})
+            this.records.set(id, {cid, iid, data: JSON.stringify(data)})
         }
         // print('YamlDB items loaded:')
         // for (const [id, data] of this.records)
@@ -121,7 +123,10 @@ class YamlDB extends FileDB {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.values()]
-        let recs = flat.map(({cid, iid, data}) => ({id: [cid, iid], ...JSON.parse(data)}))
+        let recs = flat.map(({cid, iid, data:d}) => {
+                let id = {__id: [cid, iid]}, data = JSON.parse(d)
+                return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
+            })
         let out  = YAML.stringify(recs)
         await fs.promises.writeFile(this.filename, out, 'utf8')
     }

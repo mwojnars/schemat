@@ -49,8 +49,10 @@ export class Catalog {
         if (data instanceof Catalog)
             data = data.getEntries()
         if (data instanceof Array)
-            for (const entry of data)
-                this.pushEntry(e)
+            for (const entry of data) {
+                assert('value' in entry)
+                this.pushEntry(entry)
+            }
         else if (T.isDict(data))
             for (const [key, value] of Object.entries(data))
                 this.pushEntry({key, value})
@@ -176,24 +178,5 @@ export class Data extends Catalog {
 //         allow_empty ??                // if true, '' string is a valid key (better skip this)
 //     use_labels
 //     use_comments
-// }
-
-
-/**********************************************************************************************************************/
-
-// export function _obj(cat) {
-//     assert(cat instanceof Catalog)
-//     if (cat instanceof Catalog) return cat.asDict()
-//     return cat
-// }
-// export function _has(cat, key) {
-//     assert(cat instanceof Catalog)
-//     if (cat instanceof Catalog) return cat.has(key)
-//     return key in cat
-// }
-// export function _get(cat, key) {
-//     assert(cat instanceof Catalog)
-//     if (cat instanceof Catalog) return cat.get(key)
-//     return T.getOwnProperty(cat, key)
 // }
 
