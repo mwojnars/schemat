@@ -26,7 +26,7 @@ export class Schema {
     single
     multi           // if true and the schema describes a field in a CATALOG, the field can be repeated (multiple values)
     blank           // if true, `null` should be treated as a valid value
-    type            // class constructor; if present, all values should be instances of `type` or its subclasses
+    type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
     
     constructor(params = {}) {
         let {default_, info, multi, blank, type} = params || {}         // params=null is valid
@@ -399,22 +399,21 @@ export class ITEM extends Schema {
  **
  */
 
-export class DICT extends Schema {
+export class MAP extends Schema {
     /*
-    Accepts dictionaries (pure Object instances) as data values, or objects of a given `type`.
-    Outputs a dict with keys and values encoded through their own schema.
-    If no schema is provided, `generic_schema` is used as a default.
+    Accepts plain objects as data values, or objects of a given `type`.
+    Outputs an object with keys and values encoded through their own schema.
+    If no schema is provided, `generic_schema` is used as a default for values, or STRING() for keys.
     */
 
     // the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
-    static keys_default   = generic_schema
+    static keys_default   = new STRING()
     static values_default = generic_schema
 
-    constructor(values, keys, type = null, params = {}) {
+    constructor(values, keys, params = {}) {
         super(params)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
         if (values) this.values = values        // schema of values of app-layer dicts
-        if (type)   this.type = type            // optional subtype of <dict>; if present, only objects of this type are accepted for encoding
     }
     encode(d) {
         let type = this.type || Object
@@ -427,7 +426,7 @@ export class DICT extends Schema {
         // encode keys & values through predefined field types
         for (let [key, value] of Object.entries(d)) {
             let k = schema_keys.encode(key)
-            if (k in state) throw new DataError(`two different keys encoded to the same state (${k}) in DICT, one of them: ${key}`)
+            if (k in state) throw new DataError(`two different keys encoded to the same state (${k}) in MAP, one of them: ${key}`)
             state[k] = schema_values.encode(value)
         }
         return state
@@ -456,41 +455,55 @@ export class DICT extends Schema {
     }
 }
 
-// export class CATALOG extends DICT {
-//     /*
-//     Schema of a catalog of items.
-//     Similar to DICT, but assumes keys are strings; and `type`, if present, must be a subclass of <catalog>.
-//     Provides tight integration with the UI: convenient layout for display of items,
-//     and access paths for locating form validation errors.
-//     Watch out the reversed ordering of arguments in constructor()!
-//     TODO: merge DICT into CATALOG; make an unrelated class, MAP, for arbitrary mappings
-//     */
-//     static keys_default = new STRING
-//
-//     constructor(values, keys, params = {}) {
-//         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
-//         super(values, keys, null, params)
-//     }
-//     toString() {
-//         let name   = this.constructor.name
-//         let keys   = this.keys || this.constructor.keys_default
-//         let values = this.values || this.constructor.values_default
-//         if (T.ofType(keys, STRING))
-//             return `${name}(${values})`
-//         else
-//             return `${name}(${values}, ${keys})`
-//         }
-// }
+export class RECORD extends Schema {
+    /*
+    Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
+    - unlike in MAP, where all values share the same schema. RECORD does not encode keys, but passes them unmodified.
+    `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
+    */
+    constructor(fields, params = {}) {
+        super(params)
+        this.fields = fields            // plain object containing field names and their schemas
+    }
+    encode(data) {
+        /* Encode & compactify values of fields through per-field schema definitions. */
+        if (this.type) {
+            if (!T.ofType(data, this.type)) throw new DataError(`expected an instance of ${this.type}, got ${data}`)
+            data = T.getstate(data)
+        }
+        else if (!T.isDict(data))
+            throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
+
+        return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
+    }
+    async decode(state) {
+        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
+        let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
+        if (this.type) return T.setstate(this.type, data)
+        return data
+    }
+    _schema(name) {
+        if (!this.fields.hasOwnProperty(name))
+            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
+        return this.fields[name]
+    }
+}
+
+/**********************************************************************************************************************
+ **
+ **  CATALOG & DATA
+ **
+ */
 
 export class CATALOG extends Schema {
 
-    static default_schema_vals = new GENERIC({multi: true})
-    static default_schema_keys = new STRING({blank: true})
+    static keys_default   = new STRING({blank: true})
+    static values_default = new GENERIC({multi: true})
 
     keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
     values      // common schema of values of an input catalog
 
-    get _keys() { return this.keys || this.constructor.default_schema_keys }
+    get _keys() { return this.keys || this.constructor.keys_default }
 
     constructor(values = null, keys = null, params = {}) {
         super(params)
@@ -501,7 +514,6 @@ export class CATALOG extends Schema {
     encode(cat) {
         /* Encode & compactify values of fields through per-field schema definitions. */
         if (T.isDict(cat)) throw new DataError(`plain object no longer supported by CATALOG.encode(), wrap it up in "new Catalog(...)": ${cat}`)
-        // if (!(T.isDict(cat) || cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
         if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
         return (T.isDict(cat) || cat.isDict()) ? this._to_dict(cat) : this._to_list(cat)
     }
@@ -511,9 +523,6 @@ export class CATALOG extends Schema {
         let encode_key = (k) => this._keys.encode(k)
         for (const e of cat.entries())
             state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
-        // cat = _obj(cat)
-        // for (const [key,value] of Object.entries(cat))
-        //     state[encode_key(key)] = this._schema(key).encode(value)
         return state
     }
     _to_list(cat) {
@@ -556,14 +565,12 @@ export class CATALOG extends Schema {
         }
         return cat
     }
-    _schema() {
-        return this.values || this.constructor.default_schema_vals
-    }
+    _schema() { return this.values || this.constructor.values_default }
 
     toString() {
         let name   = this.constructor.name
-        let keys   = this.keys || this.constructor.default_schema_keys
-        let values = this.values || this.constructor.default_schema_vals
+        let keys   = this.keys || this.constructor.keys_default
+        let values = this.values || this.constructor.values_default
         if (T.ofType(keys, STRING))
             return `${name}(${values})`
         else
@@ -588,62 +595,3 @@ export class DATA extends CATALOG {
     }
 }
 
-
-// export class OBJECT extends Schema {
-//     /*
-//     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
-//     - unlike in DICT, where all values share the same schema.
-//     OBJECT does not encode keys, but passes them unmodified.
-//     The `type` of value objects can optionally be declared, for validation and more compact output representation.
-//     ?? A Data catalog can be handled as a value type through its __getstate__ and __setstate__ methods. ??
-//     */
-//
-//     get _fields() { return this.fields || this.constructor.fields }
-//     get _strict() { return this.strict || this.constructor.strict }
-//     get _type  () { return this.type   || this.constructor.type   }
-//
-//     static fields = {}          // dict of field names and their schema
-//     static strict = false       // if true, only the fields present in `fields` can occur in the data being encoded
-//     static type   = null        // class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
-//                                 // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
-//
-//     // default field specification to be used for fields not present in `fields` (if strict=false)
-//     static default_schema = new GENERIC({multi: true})
-//
-//     constructor(fields, params = {}) {
-//         let {strict, type, ...base_params} = params
-//         super(base_params)
-//         if (strict !== null) this.strict = strict
-//         if (type)   this.type   = type
-//         if (fields) this.fields = fields
-//     }
-//     encode(data) {
-//         /* Encode & compactify values of fields through per-field schema definitions. */
-//
-//         // type checking & state extraction
-//         let type = this._type
-//         if (type) {
-//             if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
-//             data = T.getstate(data)
-//         }
-//         else if (!T.isDict(data))
-//             throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
-//
-//         // state encoding
-//         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
-//     }
-//     async decode(state) {
-//
-//         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
-//         let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-//         let type = this._type
-//         if (type) return T.setstate(type, data)
-//         return data
-//     }
-//     _schema(name) {
-//         let fields = this._fields
-//         if (this._strict && !fields.hasOwnProperty(name))
-//             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
-//         return T.get(fields, name) || this.constructor.default_schema
-//     }
-// }
