@@ -216,24 +216,18 @@ export class Item {
     }
     async set(key, value, {label, comment} = {}) {
         await this.load()
-        if (this.data instanceof Data)
-            this.data.set(key, value, {label, comment})
-        else
-            this.data[key] = value
+        this.data.set(key, value, {label, comment})
     }
-    async get(field, default_ = undefined) {
-        // if (!this.data) await this.load()           // TODO: expect explicit pre-loading by caller; remove "async" in this and related methods
+    async get(path, default_ = undefined) {
         await this.load()
 
-        if (this.data instanceof Data) {
-            let value = this.data.get(field)
-            if (value !== undefined) return value
-        }
-        else if (this.data.hasOwnProperty(field))
-            return this.data[field]
+        // search in this.data
+        let value = this.data.get(path)
+        if (value !== undefined) return value
 
+        // search in category's defaults
         if (this.category !== this) {
-            let cat_default = await this.category.get_default(field)
+            let cat_default = await this.category.get_default(path)
             if (cat_default !== undefined)
                 return cat_default
         }
@@ -341,11 +335,7 @@ export class Item {
         endpoint = endpoint || 'view'
 
         // get handler's source code from category's data
-        // let source = await this.category.get(`handlers/${endpoint}`)
-        let handlers = await this.category.get('handlers', new Catalog())   // TODO: get(`handlers/${endpoint}`)
-        let source   = handlers.get(endpoint)
-        let handler
-
+        let handler, source = await this.category.get(`handlers/${endpoint}`)
         if (source) {
             handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
@@ -367,7 +357,6 @@ export class Item {
         let state = await this.encodeSelf()
         res.json(state)
     }
-
     async _handler_view({req, res, app, endpoint}) {
 
         let name = await this.get('name', '')
@@ -809,8 +798,9 @@ export class AppSpaces extends Application {
         try {
             [path, endpoint] = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
-            let spaces = await this.get('spaces')   // TODO: `spaces/${space}`
-            category = spaces.get(space)
+            category = await this.get(`spaces/${space}`)
+            // let spaces = await this.get('spaces')
+            // category = spaces.get(space)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
@@ -840,8 +830,9 @@ export class Folder extends Item {
         let item = this
         while (path) {
             let name = path.split(Folder.SEP_FOLDER)[0]
-            let files = await item.get('files')     // TODO: `files/${name}`
-            item = files.get(name)
+            // let files = await item.get('files')     // TODO: `files/${name}`
+            // item = files.get(name)
+            item = await item.get(`files/${name}`)
             path = path.slice(name.length+1)
         }
         return item

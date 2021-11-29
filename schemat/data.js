@@ -58,24 +58,53 @@ export class Catalog {
                 this.pushEntry({key, value})
     }
 
-    get(path, default_ = undefined) {
-        /* Return a value on a given path. */
-        let entry = this.getEntry(path)
-        return entry === undefined ? default_ : entry.value
-    }
-    getAll(key) {
-        /* Return an array of all values that are present for a given key. */
-        let poslist = this._keys.get(key) || []
-        return poslist.map(pos => this._entries[pos].value)
-    }
-    getEntry(key) {
+    _findEntry(key) {
         if (typeof key === 'number') return this._entries[key]
         if (this._keys.has(key)) {
             let pos = this._keys.get(key)[0]        // first entry returned if multiple occurrences
             return this._entries[pos]
         }
     }
-    getEntries(key) { return [...this._entries] }
+    _findEntries(key) {
+        let poslist = this._keys.get(key) || []
+        return poslist.map(pos => this._entries[pos])
+    }
+
+    get(path, default_ = undefined) {
+        /* Return a value on a given path, or default_ if path not found. */
+        let entry = this.getEntry(path)
+        return entry === undefined ? default_ : entry.value
+    }
+    getAll(key) {
+        /* Return an array of all values that are present for a given top-level key. */
+        return this._findEntries(key).map(e => e.value)
+    }
+    getEntry(path, default_ = undefined) {
+        if (typeof path === 'string')
+            path = path.split('/')
+
+        // make one step forward, then call getEntry() recursively if needed
+        let step  = path[0]
+        let entry = this._findEntry(step)
+
+        if (!entry) return default_
+        if (path.length <= 1) return entry
+
+        let subcat  = entry.value
+        let subpath = path.slice(1)
+
+        if (subcat instanceof Catalog)  return subcat.getEntry(subpath, default_)
+        if (subpath.length > 1)         return default_
+        let key = subpath[0]
+
+        if (subcat instanceof Map)  return {key, value: subcat.get(key)}        // last step inside a Map
+        if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
+        return default_
+    }
+    getEntries(key = undefined) {
+        if (key === undefined) return [...this._entries]
+        return this._findEntries(key)
+    }
 
     _prepare(entry) {
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))

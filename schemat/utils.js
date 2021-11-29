@@ -85,6 +85,21 @@ export function truncate(s, length = 255, {end = '...', killwords = false, maxdr
     return result + end
 }
 
+export function splitFirst(s, sep = ' ') {
+    /* Split `s` on the first occurrence of `sep` and return BOTH parts as an array, [left,right];
+       or return [s,""] if no occurrence of `sep` was found. */
+    let left  = s.split(sep, 1)[0]
+    let right = s.slice(left.length + sep.length)
+    return [left, right]
+}
+export function splitLast(s, sep = ' ') {
+    /* Split `s` on the last occurrence of `sep` and return BOTH parts as an array, [left,right];
+       or return ["",s] if no occurrence of `sep` was found. */
+    let right = s.split(sep).pop()
+    let left  = s.substring(0, s.length - right.length - sep.length)
+    return [left, right]
+}
+
 /*************************************************************************************************/
 
 export class Types {

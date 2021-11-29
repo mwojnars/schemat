@@ -485,7 +485,7 @@ export class RECORD extends Schema {
     _schema(name) {
         if (!this.fields.hasOwnProperty(name))
             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
-        return this.fields[name]
+        return this.fields[name] || generic_schema
     }
 }
 
@@ -579,19 +579,19 @@ export class CATALOG extends Schema {
 }
 
 export class DATA extends CATALOG {
-    /* Like CATALOG, but provides distinct value schemas for different allowed keys of a catalog.
+    /* Like CATALOG, but provides distinct value schemas for different predefined keys (fields) of a catalog.
        Primarily used for encoding Item.data. Not intended for other uses.
      */
-    schemas         // dict of field names and their schema; null for a key means a default schema should be used
+    fields         // dict of field names and their schema; null for a key means a default schema should be used
 
-    constructor(schemas, keys = null, params = {}) {
+    constructor(fields, keys = null, params = {}) {
         super(null, keys, params)
-        this.schemas = schemas
+        this.fields = fields
     }
     _schema(key) {
-        if (!this.schemas.hasOwnProperty(key))
-            throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.schemas)}`)
-        return this.schemas[key]
+        if (!this.fields.hasOwnProperty(key))
+            throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
+        return this.fields[key] || this.constructor.values_default
     }
 }
 
