@@ -24,7 +24,7 @@ export class Schema {
     default         // default value to be assumed when none was provided by a user (in a web form etc.)
     unique          // if true, the field described by this schema cannot be repeated (max. one value allowed)
     single
-    multi           // if true and the schema describes an OBJECT field, the field can be repeated (multiple values)
+    multi           // if true and the schema describes a field in a CATALOG, the field can be repeated (multiple values)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` or its subclasses
     
@@ -589,61 +589,61 @@ export class DATA extends CATALOG {
 }
 
 
-export class OBJECT extends Schema {
-    /*
-    Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
-    - unlike in DICT, where all values share the same schema.
-    OBJECT does not encode keys, but passes them unmodified.
-    The `type` of value objects can optionally be declared, for validation and more compact output representation.
-    ?? A Data catalog can be handled as a value type through its __getstate__ and __setstate__ methods. ??
-    */
-
-    get _fields() { return this.fields || this.constructor.fields }
-    get _strict() { return this.strict || this.constructor.strict }
-    get _type  () { return this.type   || this.constructor.type   }
-
-    static fields = {}          // dict of field names and their schema
-    static strict = false       // if true, only the fields present in `fields` can occur in the data being encoded
-    static type   = null        // class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
-                                // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
-
-    // default field specification to be used for fields not present in `fields` (if strict=false)
-    static default_schema = new GENERIC({multi: true})
-
-    constructor(fields, params = {}) {
-        let {strict, type, ...base_params} = params
-        super(base_params)
-        if (strict !== null) this.strict = strict
-        if (type)   this.type   = type
-        if (fields) this.fields = fields
-    }
-    encode(data) {
-        /* Encode & compactify values of fields through per-field schema definitions. */
-
-        // type checking & state extraction
-        let type = this._type
-        if (type) {
-            if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
-            data = T.getstate(data)
-        }
-        else if (!T.isDict(data))
-            throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
-
-        // state encoding
-        return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
-    }
-    async decode(state) {
-
-        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
-        let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-        let type = this._type
-        if (type) return T.setstate(type, data)
-        return data
-    }
-    _schema(name) {
-        let fields = this._fields
-        if (this._strict && !fields.hasOwnProperty(name))
-            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
-        return T.get(fields, name) || this.constructor.default_schema
-    }
-}
+// export class OBJECT extends Schema {
+//     /*
+//     Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
+//     - unlike in DICT, where all values share the same schema.
+//     OBJECT does not encode keys, but passes them unmodified.
+//     The `type` of value objects can optionally be declared, for validation and more compact output representation.
+//     ?? A Data catalog can be handled as a value type through its __getstate__ and __setstate__ methods. ??
+//     */
+//
+//     get _fields() { return this.fields || this.constructor.fields }
+//     get _strict() { return this.strict || this.constructor.strict }
+//     get _type  () { return this.type   || this.constructor.type   }
+//
+//     static fields = {}          // dict of field names and their schema
+//     static strict = false       // if true, only the fields present in `fields` can occur in the data being encoded
+//     static type   = null        // class (or prototype?) of values (optional); if present, only instances of this exact type (not subclasses)
+//                                 // are accepted, and an object state is retrieved/stored through Types.getstate()/setstate()
+//
+//     // default field specification to be used for fields not present in `fields` (if strict=false)
+//     static default_schema = new GENERIC({multi: true})
+//
+//     constructor(fields, params = {}) {
+//         let {strict, type, ...base_params} = params
+//         super(base_params)
+//         if (strict !== null) this.strict = strict
+//         if (type)   this.type   = type
+//         if (fields) this.fields = fields
+//     }
+//     encode(data) {
+//         /* Encode & compactify values of fields through per-field schema definitions. */
+//
+//         // type checking & state extraction
+//         let type = this._type
+//         if (type) {
+//             if (!T.ofType(data, type)) throw new DataError(`expected an object of type ${type}, got ${data}`)
+//             data = T.getstate(data)
+//         }
+//         else if (!T.isDict(data))
+//             throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
+//
+//         // state encoding
+//         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
+//     }
+//     async decode(state) {
+//
+//         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
+//         let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
+//         let type = this._type
+//         if (type) return T.setstate(type, data)
+//         return data
+//     }
+//     _schema(name) {
+//         let fields = this._fields
+//         if (this._strict && !fields.hasOwnProperty(name))
+//             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
+//         return T.get(fields, name) || this.constructor.default_schema
+//     }
+// }

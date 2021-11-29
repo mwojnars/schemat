@@ -1,6 +1,6 @@
 import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
-import { generic_schema, OBJECT, CATALOG, DATA } from './types.js'
+import { generic_schema, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
 import { Data, Catalog } from './data.js'
 
@@ -515,13 +515,10 @@ export class Category extends Item {
         return schema ? schema.default : default_
     }
     async get_schema(field = null) {
-        /* Return schema of a given `field` (if present), or an OBJECT schema of all fields. */
+        /* Return schema of a given `field` (if present), or a DATA schema of all the fields. */
         let fields = await this.get_fields()
-        if (!field)                                     // create and return a schema for the entire Item.data
-            return new DATA(fields.asDict())
-            // return new OBJECT(fields.asDict(), {strict: true})
-        else                                            // return a schema for a selected field only
-            return fields.get(field) || generic_schema
+        if (field) return fields.get(field) || generic_schema       // return a schema for a selected field only...
+        return new DATA(fields.asDict())                            // ...or for the entire Item.data
     }
 
     async _handler_scan({res}) {
