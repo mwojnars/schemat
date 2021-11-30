@@ -52,7 +52,7 @@ class Server {
         print('Server.handle() start')
         this.start_request(req)
         let site = await this.registry.site
-        await site.handle(req, res)
+        await site.execute(req, res)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         this.stop_request()
     }

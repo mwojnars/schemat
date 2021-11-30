@@ -141,17 +141,6 @@ export class Item {
         }
     }
 
-    // static async fromDump(state, category = null, use_schema = true) {
-    //     /* Recreate an item that was encoded at the server with Item.encodeSelf(). */
-    //     let schema = use_schema ? await category.get_schema() : generic_schema
-    //     let data = await schema.decode(state['data'])
-    //     delete state['data']
-    //
-    //     let item = new Item(category, data)
-    //     Object.assign(item, state)                  // copy remaining metadata from `state` to `item`
-    //     return item
-    // }
-
     async load(field = null, use_schema = true) {
         /* Load this item's data (this.data) from a DB, if not loaded yet. Return this object. */
 
@@ -331,7 +320,7 @@ export class Item {
 
     /***  Handlers (server side)  ***/
 
-    async serve(req, res, app, endpoint = null) {
+    async handle(req, res, app, endpoint = null) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -516,12 +505,6 @@ export class Category extends Item {
         let schema = fields.get(field)
         return schema ? schema.default : default_
     }
-    // async get_schema(field = null) {
-    //     /* Return schema of a given `field` (if present), or a DATA schema of all the fields. */
-    //     let fields = await this.get_fields()
-    //     if (field) return fields.get(field) || generic_schema       // return a schema for a selected field only...
-    //     return new DATA(fields.asDict())                            // ...or for the entire Item.data
-    // }
     async _temp_schema() {
         let fields = await this.get_fields()
         return new DATA(fields.asDict())
@@ -605,7 +588,7 @@ export class Site extends Item {
         return base + path                              // absolute URL with base
     }
 
-    async handle(request, response) {
+    async execute(request, response) {
         /* Forward the request to a root application configured in the `app` property. */
         let app = await this.get('application')
         await app.execute(request.path, request, response)
@@ -729,7 +712,7 @@ export class AppAdmin extends Application {
     }
     async execute(path, request, response) {
         let [item, endpoint] = await this._find_item(path, request)
-        await item.serve(request, response, this, endpoint)
+        await item.handle(request, response, this, endpoint)
     }
     async _find_item(path) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
@@ -748,7 +731,7 @@ export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
         let [item, endpoint] = await this._find_item(path, request)
         endpoint = endpoint || "json"
-        await item.serve(request, response, this, endpoint)
+        await item.handle(request, response, this, endpoint)
     }
 }
 
@@ -786,7 +769,7 @@ export class AppFiles extends Application {
             request.state['folder'] = item          // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
         
-        return item.serve(request, response, this, endpoint || default_endpoint)
+        return item.handle(request, response, this, endpoint || default_endpoint)
     }
 }
 
@@ -814,7 +797,7 @@ export class AppSpaces extends Application {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.get_item(Number(item_id))
-        return item.serve(request, response, this, endpoint)
+        return item.handle(request, response, this, endpoint)
     }
 }
 
