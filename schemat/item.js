@@ -2,7 +2,7 @@ import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBO
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
-import { Data, Catalog } from './data.js'
+import { Data, ItemsMap } from './data.js'
 
 export const ROOT_CID = 0
 
@@ -106,13 +106,12 @@ export class Item {
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
-    /*
-    data            - data fields of this item, as a plain object {..}; in the future, MultiDict can be used instead;
-                      `data` can hold a Promise, so it always should be awaited or accessed directly after await load();
-                      callers should rather use item.get() to access individual fields
-    category        - parent category of this item, as an instance of Category
-    registry        - Registry that manages access to this item (should refer to the unique global registry)
-    */
+    data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
+                    // or accessed after await load(), or through item.get()
+    category        // parent category of this item, as an instance of Category
+    registry        // Registry that manages access to this item
+
+    temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
     //loaded = null;    // names of fields that have been loaded so far
 
@@ -170,7 +169,6 @@ export class Item {
 
         await this.data
         return this
-        // if (field !== null && data.hasOwnProperty(field)) return this.data[field]
     }
     async reload(use_schema = true, record = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
@@ -180,7 +178,7 @@ export class Item {
             record = await this.registry.load_record(this.id)
         }
         let flat   = record.data
-        let schema = use_schema ? await this.category.get_schema() : generic_schema
+        let schema = use_schema ? await this.category.temp('schema') : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         this.data  = await schema.decode(state).then(d => new Data(d))
         // TODO: initialize item metadata - the remaining attributes from `record`
@@ -210,14 +208,14 @@ export class Item {
         return `[${stamp}]`
     }
 
-    async push(key, value, {label, comment} = {}) {
-        await this.load()
-        this.data.pushEntry({key, value, label, comment})
-    }
-    async set(key, value, {label, comment} = {}) {
-        await this.load()
-        this.data.set(key, value, {label, comment})
-    }
+    // async push(key, value, {label, comment} = {}) {
+    //     await this.load()
+    //     this.data.pushEntry({key, value, label, comment})
+    // }
+    // async set(key, value, {label, comment} = {}) {
+    //     await this.load()
+    //     this.data.set(key, value, {label, comment})
+    // }
     async get(path, default_ = undefined) {
         await this.load()
 
@@ -231,6 +229,10 @@ export class Item {
             if (cat_default !== undefined)
                 return cat_default
         }
+        // // try imputing the value with a call to this._impute_PATH() - for top-level fields
+        // value = await this.impute(path)
+        // if (value !== undefined) return value
+
         return default_
     }
 
@@ -263,9 +265,20 @@ export class Item {
         // return entries
     }
 
+    async temp(field) {
+        /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
+           (can be async). The value is computed once and cached in this.temporary for subsequent temp() calls. */
+        if (this.temporary.has(field)) return this.temporary.get(field)
+        let fun = this[`_temp_${field}`]
+        if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
+        let value = fun.bind(this)()
+        this.temporary.set(field, value)        // this may store a promise
+        return value                            // this may return a promise
+    }
+
     async encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
-        let schema = use_schema ? await this.category.get_schema() : generic_schema
+        let schema = use_schema ? await this.category.temp('schema') : generic_schema
         return schema.encode(await this.data)
     }
     async dumpData(use_schema = true, compact = true) {
@@ -325,7 +338,7 @@ export class Item {
 
            function handler({item, req, res, app, endpoint})
 
-        or as methods of a particular Item subclass, named `_handler_{endpoint}`.
+        or as methods of a particular Item subclass, named `_handle_{endpoint}`.
         In every case, the function's `this` is bound to `item` (this===item).
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
@@ -341,7 +354,7 @@ export class Item {
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
         else                                        // fallback: get handler from the item's class
-            handler = this[`_handler_${endpoint}`]
+            handler = this[`_handle_${endpoint}`]
 
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
@@ -352,12 +365,12 @@ export class Item {
             res.send(page)
     }
 
-    async _handler_json({res}) {
+    async _handle_json({res}) {
         /* Send JSON representation of this item: its data (encoded) and metadata. */
         let state = await this.encodeSelf()
         res.json(state)
     }
-    async _handler_view({req, res, app, endpoint}) {
+    async _handle_view({req, res, app, endpoint}) {
 
         let name = await this.get('name', '')
         let ciid = await this.ciid({html: false})
@@ -503,14 +516,18 @@ export class Category extends Item {
         let schema = fields.get(field)
         return schema ? schema.default : default_
     }
-    async get_schema(field = null) {
-        /* Return schema of a given `field` (if present), or a DATA schema of all the fields. */
+    // async get_schema(field = null) {
+    //     /* Return schema of a given `field` (if present), or a DATA schema of all the fields. */
+    //     let fields = await this.get_fields()
+    //     if (field) return fields.get(field) || generic_schema       // return a schema for a selected field only...
+    //     return new DATA(fields.asDict())                            // ...or for the entire Item.data
+    // }
+    async _temp_schema() {
         let fields = await this.get_fields()
-        if (field) return fields.get(field) || generic_schema       // return a schema for a selected field only...
-        return new DATA(fields.asDict())                            // ...or for the entire Item.data
+        return new DATA(fields.asDict())
     }
 
-    async _handler_scan({res}) {
+    async _handle_scan({res}) {
         /* Retrieve all children of this category and return as a JSON.
            TODO: set a size limit & offset (pagination).
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
@@ -778,29 +795,34 @@ export class AppSpaces extends Application {
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
-
     async url_path(item, route = '', opts = {}) {
-        let space = await this._find_space(item.category)
-        let url   = `${space}:${item.iid}`
+        // let space = await this._find_space(item.category)
+        let spaces_rev = await this.temp('spaces_rev')
+        let space = spaces_rev.get(item.category.id)
+        if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
+        let url = `${space}:${item.iid}`
         return this._set_endpoint(url, opts)
     }
-
-    //@cached(ttl = 10)
-    async _find_space(category) {
-        let id = category.id
+    async _temp_spaces_rev() {
         let spaces = await this.get('spaces')
-        for (const {key:space, value:cat} of spaces.entries())
-            if (cat.has_id(id)) return space
-        throw new Error(`URL path not found for items of category ${category}`)
+        return ItemsMap.reversed(spaces)
+        // return new ItemsMap(spaces.map(({key:space, value:category}) => [category.id, space]))
     }
+
+    // //@cached(ttl = 10)
+    // async _find_space(category) {
+    //     let id = category.id
+    //     let spaces = await this.get('spaces')
+    //     for (const {key:space, value:cat} of spaces.entries())
+    //         if (cat.has_id(id)) return space
+    //     throw new Error(`URL path not found for items of category ${category}`)
+    // }
     async execute(path, request, response) {
         let space, item_id, category, endpoint
         try {
             [path, endpoint] = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
             category = await this.get(`spaces/${space}`)
-            // let spaces = await this.get('spaces')
-            // category = spaces.get(space)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
@@ -830,8 +852,6 @@ export class Folder extends Item {
         let item = this
         while (path) {
             let name = path.split(Folder.SEP_FOLDER)[0]
-            // let files = await item.get('files')     // TODO: `files/${name}`
-            // item = files.get(name)
             item = await item.get(`files/${name}`)
             path = path.slice(name.length+1)
         }
@@ -846,14 +866,14 @@ export class Folder extends Item {
     async get_name(item) {
         /* Return a name assigned to a given item. If the same item is assigned multiple names,
         the last one is returned. */
-        let names = await this._names()
+        let names = await this.temp('names')
         return names.get(item.id, null)
     }
-    // @cached(ttl=10)
-    async _names() {
-        /* Take `files` property and compute its reverse mapping: item ID -> name. */
+    async _temp_names() {
+        /* Return the reverse mapping of the `files` property: item ID -> name. */
         let files = await this.get('files')
-        return files.getEntries().map(({key:name, value:file}) => [file.id, name])
+        return ItemsMap.reversed(files)
+        // return new ItemsMap(files.map(({key:name, value:file}) => [file.id, name]))
     }
 }
 
@@ -861,7 +881,7 @@ export class File extends Item {
     async read() {
         return this.get('content')
     }
-    async _handler_download() {
+    async _handle_download() {
         /* Return full content of this file, either as <str> or a Response object. */
         return this.read()
     }
@@ -875,7 +895,7 @@ export class FileLocal extends File {
         return fs.readFileSync(path, {encoding})
     }
 
-    async _handler_download({res}) {
+    async _handle_download({res}) {
         
         let content = await this.get('content', null)
         if (typeof content === 'string')

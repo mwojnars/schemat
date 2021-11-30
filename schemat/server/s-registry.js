@@ -2,9 +2,9 @@ import fs from 'fs'
 import YAML from 'yaml'
 
 import { assert, print, T } from '../utils.js'
-import { Data } from '../data.js'
+import { ItemsMap } from '../data.js'
 import { Item, RootCategory } from '../item.js'
-import { Database, Registry, ItemsMap } from '../registry.js'
+import { Database, Registry } from '../registry.js'
 
 
 /**********************************************************************************************************************
@@ -169,7 +169,7 @@ export class ServerRegistry extends Registry {
         assert(site instanceof Site)
         assert(site.has_id())
         this.site_id = site.id
-        await this.root.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
+        await this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         await this.commit(this.root)
     }
     

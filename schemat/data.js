@@ -1,11 +1,53 @@
 import { print, assert, T } from './utils.js'
 
 
+/**********************************************************************************************************************
+ **
+ **  UTILITIES
+ **
+ */
+
 function isstring(s) {
     return s === null || s === undefined || typeof s === 'string'
 }
 function missing(key) {
     return key === null || key === undefined
+}
+
+/**********************************************************************************************************************
+ **
+ **  ITEMS MAP
+ **
+ */
+
+export class ItemsMap extends Map {
+    /* A Map that keeps objects (items, records, promises) indexed by item ID converted to a string.
+       Item ID is an array that must be converted to a string for equality comparisons inside Map.
+     */
+
+    constructor(pairs) {
+        super()
+        if (pairs)
+            for (const [id, obj] of pairs) this.set(id, obj)
+    }
+
+    static reversed(catalog) {
+        /* Given a catalog of entries where values are items, create a reversed ItemsMap: item.id -> key.
+           If there are multiple entries with the same item, the last entry's key will be assigned to the item's id.
+         */
+        return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
+    }
+
+    _key(id) {
+        assert(id)
+        let [cid, iid] = id
+        assert(cid !== null && iid !== null)
+        return `${cid}:${iid}`
+    }
+    set(id, obj) { super.set(this._key(id), obj) }
+    get(id)        { return super.get(this._key(id)) }
+    has(id)        { return super.has(this._key(id)) }
+    delete(id)     { return super.delete(this._key(id)) }
 }
 
 /**********************************************************************************************************************
@@ -43,6 +85,7 @@ export class Catalog {
     *keys()             { return this._keys.keys }
     *values()           { for (const e of this._entries) yield e.value }
     *entries()          { for (const e of this._entries) yield e }
+    map(fun)            { return this._entries.map(fun) }
 
     constructor(data = null) {
         if (!data) return

@@ -1,6 +1,7 @@
 import { print, assert } from './utils.js'
+import { ItemsMap } from './data.js'
 import { JSONx } from './serialize.js'
-import { ItemsMap, Database, Registry } from './registry.js'
+import { Database, Registry } from './registry.js'
 
 
 /**********************************************************************************************************************/

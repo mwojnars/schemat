@@ -22,9 +22,7 @@ export class Schema {
 
     info            // human-readable description of this schema: what values are accepted and how they are interpreted
     default         // default value to be assumed when none was provided by a user (in a web form etc.)
-    unique          // if true, the field described by this schema cannot be repeated (max. one value allowed)
-    single
-    multi           // if true and the schema describes a field in a CATALOG, the field can be repeated (multiple values)
+    multi           // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
     
@@ -124,6 +122,11 @@ export class GENERIC extends Schema {
     }
 }
 
+// the most generic schema for encoding/decoding of objects of any types
+export let generic_schema = new GENERIC()
+
+/**********************************************************************************************************************/
+
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
@@ -143,9 +146,27 @@ export class SCHEMA extends GENERIC {
     }
 }
 
-// the most generic schema for encoding/decoding of objects of any types
-export let generic_schema = new GENERIC()
+export class FIELD extends SCHEMA {
 
+    unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
+    //repeated        // if true, the field can occur multiple times in an item
+
+    virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
+
+    derived         // if true, the field's value can be automatically imputed, if missing,
+                    // through a call to item._get_XYZ(); only available when multi=false
+    // .persistent
+    // .editable
+    // .hidden
+
+    /*
+      1) derived: transient non-editable hidden; refreshed on item's data change
+      2) imputed: persistent editable displayed; not refreshed ??
+
+      1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
+      2) impute on write
+    */
+}
 
 /**********************************************************************************************************************/
 
@@ -594,4 +615,7 @@ export class DATA extends CATALOG {
         return this.fields[key] || this.constructor.values_default
     }
 }
+
+
+/**********************************************************************************************************************/
 

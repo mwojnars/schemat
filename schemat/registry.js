@@ -1,6 +1,7 @@
 "use strict";
 
 import { print, assert } from './utils.js'
+import { ItemsMap } from './data.js'
 import { RootCategory, ROOT_CID } from './item.js'
 
 // import * as mod_types from './types.js'
@@ -14,22 +15,6 @@ import { RootCategory, ROOT_CID } from './item.js'
  */
 
 export class Database {}
-
-export class ItemsMap extends Map {
-    /* A Map that keeps objects (items, records, promises) indexed by item ID converted to a string.
-       Item ID is an array that must be converted to a string for equality comparisons inside Map.
-     */
-    _key(id) {
-        assert(id)
-        let [cid, iid] = id
-        assert(cid !== null && iid !== null)
-        return `${cid}:${iid}`
-    }
-    set(id, obj) { super.set(this._key(id), obj) }
-    get(id)        { return super.get(this._key(id)) }
-    has(id)        { return super.has(this._key(id)) }
-    delete(id)     { return super.delete(this._key(id)) }
-}
 
 /**********************************************************************************************************************
  **
