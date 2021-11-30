@@ -796,27 +796,14 @@ export class AppSpaces extends Application {
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
     async url_path(item, route = '', opts = {}) {
-        // let space = await this._find_space(item.category)
         let spaces_rev = await this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
         if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
         let url = `${space}:${item.iid}`
         return this._set_endpoint(url, opts)
     }
-    async _temp_spaces_rev() {
-        let spaces = await this.get('spaces')
-        return ItemsMap.reversed(spaces)
-        // return new ItemsMap(spaces.map(({key:space, value:category}) => [category.id, space]))
-    }
+    async _temp_spaces_rev()    { return ItemsMap.reversed(await this.get('spaces')) }
 
-    // //@cached(ttl = 10)
-    // async _find_space(category) {
-    //     let id = category.id
-    //     let spaces = await this.get('spaces')
-    //     for (const {key:space, value:cat} of spaces.entries())
-    //         if (cat.has_id(id)) return space
-    //     throw new Error(`URL path not found for items of category ${category}`)
-    // }
     async execute(path, request, response) {
         let space, item_id, category, endpoint
         try {
@@ -869,12 +856,7 @@ export class Folder extends Item {
         let names = await this.temp('names')
         return names.get(item.id, null)
     }
-    async _temp_names() {
-        /* Return the reverse mapping of the `files` property: item ID -> name. */
-        let files = await this.get('files')
-        return ItemsMap.reversed(files)
-        // return new ItemsMap(files.map(({key:name, value:file}) => [file.id, name]))
-    }
+    async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
 }
 
 export class File extends Item {
