@@ -521,11 +521,11 @@ export class Category extends Item {
         res.json(items)
     }
 
-    Page({item}) {
+    ChildItems({category}) {
+        /* A list (table) of items in `category`. */
         return delayed_render(async () => {
-            let category = item
-            let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
             let rows = []
+            let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
             for await (const it of items) {
                 let name = await it.get('name') || it.toString()
                 let url  = await it.url()
@@ -534,8 +534,29 @@ export class Category extends Item {
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
                 ))
             }
-            return Item.prototype.Page({item, extra: FRAGMENT(H2('Items'), TABLE(TBODY(...rows)))})
+            return TABLE(TBODY(...rows))
         })
+    }
+
+    Page({item}) {
+        // return delayed_render(async () => {
+        //     let category = item
+        //     let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
+        //     let rows = []
+        //     for await (const it of items) {
+        //         let name = await it.get('name') || it.toString()
+        //         let url  = await it.url()
+        //         rows.push(TR(
+        //             TD(`#${it.iid} ${NBSP}`),
+        //             TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
+        //         ))
+        //     }
+        //     return Item.prototype.Page({item, extra: FRAGMENT(H2('Items'), TABLE(TBODY(...rows)))})
+        // })
+        return Item.prototype.Page({item, extra: FRAGMENT(
+                H2('Items'),
+                e(item.ChildItems, {category: item}),
+        )})
     }
 }
 
