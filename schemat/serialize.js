@@ -17,13 +17,13 @@ export class JSONx {
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     static PATH_ITEM  = "schemat.item.Item"
 
-    // static dump(obj, type = null) {
-    //     let state = JSONx.encode(obj, type);
-    //     return JSON.stringify(state);
-    // }
-    // static async load(dump, type = null) {
-    //     let state = JSON.parse(dump);
-    //     return await JSONx.decode(state, type);
+    static stringify(obj, type = null) {
+        let state = JSONx.encode(obj, type)
+        return JSON.stringify(state)
+    }
+    // static async parse(dump, type = null) {
+    //     let state = JSON.parse(dump)
+    //     return await JSONx.decode(state, type)
     // }
 
     static encode(obj, type = null) {

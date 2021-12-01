@@ -49,7 +49,15 @@ class Server {
         - request.state = app-specific temporary data that's written during routing (handle()) and can be used for
                           response generation when a specific app's method is called, most typically url_path()
         */
-        print('Server.handle() start')
+        if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
+
+        // print('Server.handle() start')
+
+        // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
+        // // or an array [val1, val2, ...] if PARAM occurs multiple times
+        // print('request query: ', req.query)
+        // print('request body:  ', req.body)
+
         this.start_request(req)
         let site = await this.registry.site
         await site.execute(req, res)
@@ -96,17 +104,25 @@ class Server {
 
 async function serve_express() {
     // const express = require('express')
-    const web = express()
+    const app = express()
     const server = new Server()
     await server.boot()
 
-    web.get('*', (req, res) => server.handle(req, res))
+    // for official middleware see: https://expressjs.com/en/resources/middleware.html
+    // for receiving files:
+    //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
+    //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
+
+    app.use(express.json())                                 // for parsing application/json
+    app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
+
+    app.all('*', (req, res) => server.handle(req, res))
     // web.get('*', async (req, res) => {
     //     res.send(`URL path: ${req.path}`)
     //     res.send('Hello World!')
     // })
 
-    web.listen(PORT, HOSTNAME, () => {
+    app.listen(PORT, HOSTNAME, () => {
         console.log(`Example app listening at http://${HOSTNAME}:${PORT}`)
     });
 }

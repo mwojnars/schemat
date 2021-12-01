@@ -198,7 +198,7 @@ async function create_items(cat, Category) {
             'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
             'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
             'server.js':        await cat.FileLocal.new({path: `${path}/assets/server.js`}),
-            'style.css':        await cat.FileLocal.new({path: `${path}/assets/style.css`}),
+            'styles.css':       await cat.FileLocal.new({path: `${path}/assets/styles.css`}),
             'types.js':         await cat.FileLocal.new({path: `${path}/types.js`}),
             'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
             // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),

@@ -82,7 +82,7 @@ class YamlDB extends FileDB {
 
             let data = '__data' in record ? record.__data : record
             let curr_max = this.max_iid.get(cid) || 0
-            this.max_iid[cid] = Math.max(curr_max, iid)
+            this.max_iid.set(cid, Math.max(curr_max, iid))
             this.records.set(id, {cid, iid, data: JSON.stringify(data)})
         }
         // print('YamlDB items loaded:')
@@ -105,7 +105,7 @@ class YamlDB extends FileDB {
         this.max_iid.set(cid, iid)
 
         assert(item.has_data())
-        assert(!this.records.has(item.id))
+        assert(!this.records.has(item.id), "an item with the same ID already exists")
 
         this.records.set(item.id, {cid, iid, data: await item.dumpData()})
 

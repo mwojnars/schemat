@@ -1,4 +1,5 @@
-import {e, delayed_render, NBSP, DIV, A, P, H1, H2, SPAN, TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
+import {e, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL,
+        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
@@ -161,7 +162,7 @@ export class Item {
     }
     async reload(use_schema = true, record = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
-        print(`${this.id_str}.reload() started...`)
+        //print(`${this.id_str}.reload() started...`)
         if (!record) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             record = await this.registry.load_record(this.id)
@@ -172,7 +173,7 @@ export class Item {
         this.data  = await schema.decode(state).then(d => new Data(d))
         // TODO: initialize item metadata - the remaining attributes from `record`
 
-        print(`${this.id_str}.reload() done`)
+        //print(`${this.id_str}.reload() done`)
         return this.data
     }
 
@@ -197,10 +198,10 @@ export class Item {
         return `[${stamp}]`
     }
 
-    // async push(key, value, {label, comment} = {}) {
-    //     await this.load()
-    //     this.data.pushEntry({key, value, label, comment})
-    // }
+    async push(key, value, {label, comment} = {}) {
+        await this.load()
+        this.data.pushEntry({key, value, label, comment})
+    }
     // async set(key, value, {label, comment} = {}) {
     //     await this.load()
     //     this.data.set(key, value, {label, comment})
@@ -383,7 +384,7 @@ export class Item {
             <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         
             <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
-            <link href="/files/style.css" rel="stylesheet" />
+            <link href="/files/styles.css" rel="stylesheet" />
         </head>
         <body>${body}</body>
         </html>
@@ -520,8 +521,23 @@ export class Category extends Item {
             items.push(await item.encodeSelf())
         res.json(items)
     }
+    async _handle_new({req, res}) {
+        /* Create a new item in this category based on request data. */
+        print('in _handle_new()...')
+        print('request body:  ', req.body)
+        assert(req.method === 'POST')
 
-    ChildItems({category}) {
+        // req.body is an object representing state of a Data instance, decoded from JSON by middleware
+        let data = await (new Data).__setstate__(req.body)
+        let item = await this.new(data)
+        this.registry.commit()
+        print('new item.id:', item.id)
+        print('new item.data:', item.data)
+        res.end()
+        // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+    }
+
+    Items({category}) {
         /* A list (table) of items in `category`. */
         return delayed_render(async () => {
             let rows = []
@@ -537,25 +553,45 @@ export class Category extends Item {
             return TABLE(TBODY(...rows))
         })
     }
+    NewItem({category}) {
+
+        let form  = useRef(null)
+        let input = useRef(null)
+
+        async function submit(e) {
+            // e.preventDefault() -- not needed when the button has type=button
+            // todo: disabled=true on submit button
+            let url  = `${await category.url()}@new`
+            let fdata = new FormData(form.current)
+            fdata.append('name', 'another name')
+            // print('submit().data:', Array.from(fdata))
+            // let name = input.current.value
+            // let json = JSON.stringify(Array.from(fdata))
+
+            let data = new Data()
+            for (let [k, v] of fdata) data.push(k, v)
+
+            let json = JSON.stringify(data.__getstate__())
+
+            // let response = await $.post(url, json)
+            let response = await fetch(url, {body: json, method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}})
+            print('submit().response:', response)
+
+            // todo: disabled=false on submit button
+        }
+
+        return FORM({method: 'post', ref: form},
+            LABEL('Name:', INPUT({name: 'name', ref: input})),
+            BUTTON({type: 'button', onClick: submit}, 'Create Item'),
+        )
+    }
 
     Page({item}) {
-        // return delayed_render(async () => {
-        //     let category = item
-        //     let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
-        //     let rows = []
-        //     for await (const it of items) {
-        //         let name = await it.get('name') || it.toString()
-        //         let url  = await it.url()
-        //         rows.push(TR(
-        //             TD(`#${it.iid} ${NBSP}`),
-        //             TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
-        //         ))
-        //     }
-        //     return Item.prototype.Page({item, extra: FRAGMENT(H2('Items'), TABLE(TBODY(...rows)))})
-        // })
         return Item.prototype.Page({item, extra: FRAGMENT(
-                H2('Items'),
-                e(item.ChildItems, {category: item}),
+            H2('Items'),
+            e(item.Items, {category: item}),
+            H2('New item ...'),
+            e(item.NewItem, {category: item}),
         )})
     }
 }

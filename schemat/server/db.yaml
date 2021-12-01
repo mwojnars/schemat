@@ -254,7 +254,7 @@
 - __id:
     - 2
     - 7
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/style.css
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/styles.css
 - __id:
     - 2
     - 8
@@ -291,7 +291,7 @@
     server.js:
       - 2
       - 6
-    style.css:
+    styles.css:
       - 2
       - 7
     types.js:
