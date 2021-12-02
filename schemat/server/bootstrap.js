@@ -239,8 +239,8 @@ async function create_items(cat, Category) {
     item.item_001 = await cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
     item.item_002 = await cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
 
-    await item.item_002.push('name', "test_item")
-    await item.item_002.push('name', "duplicate")
+    // await item.item_002.push('name', "test_item")
+    // await item.item_002.push('name', "duplicate")
 
     return item
 }

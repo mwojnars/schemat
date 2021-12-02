@@ -1,10 +1,10 @@
 // Run:
 // $ node server.js
 
-import http from 'http'
+// import http from 'http'
 import express from 'express'
 
-import {assert, print} from './utils.js'
+import {assert, print, T} from './utils.js'
 import {ServerRegistry} from './server/s-registry.js'
 
 
@@ -13,6 +13,21 @@ import {ServerRegistry} from './server/s-registry.js'
 const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
+
+let RES = express.response          // standard Express' prototype of all response objects;
+                                    // we're extending it with higher-level methods for handling items
+
+RES.sendItem = async function(item) {
+    /* Send JSON response with a single item: its data (encoded) and metadata. */
+    print('sendItem():', item.id)
+    this.json(await item.encodeSelf())
+}
+RES.sendItems = async function(items) {
+    /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
+    if (!(items instanceof Array)) items = Array.from(items)
+    let states = await T.amap(items, item => item.encodeSelf())
+    this.json(states)
+}
 
 
 /**********************************************************************************************************************

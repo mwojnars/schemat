@@ -99,6 +99,8 @@ export class Item {
     - draft    -- this item is under construction, not fully functional yet (app-level feature) ??
     - mock     -- a mockup object created for unit testing or integration tests; should stay invisible to users and be removed after tests
     - removed  -- undelete during a predefined grace period since updated_at, eg. 1 day; after that, `data` is removed, but id+meta stay
+    - moved    -- ID of another item that contains more valid/complete data and replaces this one
+    - stopper  -- knowingly invalid item that's kept in DB to prevent re-insertion of the same data again; with a text explanation
     ? status   -- enum, "deleted" for tombstone items
     ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
     ? info     -- a string like `name`, but longer ~300-500 ??
@@ -198,14 +200,6 @@ export class Item {
         return `[${stamp}]`
     }
 
-    async push(key, value, {label, comment} = {}) {
-        await this.load()
-        this.data.pushEntry({key, value, label, comment})
-    }
-    // async set(key, value, {label, comment} = {}) {
-    //     await this.load()
-    //     this.data.set(key, value, {label, comment})
-    // }
     async get(path, default_ = undefined) {
         await this.load()
 
@@ -355,11 +349,7 @@ export class Item {
             res.send(page)
     }
 
-    async _handle_json({res}) {
-        /* Send JSON representation of this item: its data (encoded) and metadata. */
-        let state = await this.encodeSelf()
-        res.json(state)
-    }
+    async _handle_json({res}) { return res.sendItem(this) }
     async _handle_view({req, res, app, endpoint}) {
 
         let name = await this.get('name', '')
@@ -451,6 +441,31 @@ export class Item {
 
 /**********************************************************************************************************************/
 
+class EditableItem extends Item {
+    /* A set of methods appended through monkey-patching to an item object to make it editable (see Item.editable()).
+       Edit methods should be synchronous. They can assume this.data is already loaded, no need for awaiting.
+     */
+
+    edit(action, args) {
+        let method = this[`_edit_${action}`]
+        if (!method) throw new Error(`edit action "${action}" not found in ${this}`)
+        return method.bind(this)(args)
+    }
+
+    push(key, value, {label, comment} = {}) {
+        /* Shorthand for edit('push', ...) */
+        return this.edit('push', {key, value, label, comment})
+    }
+    // set(key, value, {label, comment} = {}) {
+    //     this.data.set(key, value, {label, comment})
+    // }
+
+    _edit_push(entry) { return this.data.pushEntry(entry) }
+    _edit_set (entry) { return this.data.setEntry (entry) }
+}
+
+/**********************************************************************************************************************/
+
 export class Category extends Item {
     /*
     A category is an item that describes other items: their schema and functionality;
@@ -512,17 +527,18 @@ export class Category extends Item {
     }
 
     async _handle_scan({res}) {
-        /* Retrieve all children of this category and return as a JSON.
+        /* Retrieve all children of this category and send to client as a JSON.
            TODO: set a size limit & offset (pagination).
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
          */
         let items = []
         for await (const item of this.registry.scan_category(this))
-            items.push(await item.encodeSelf())
-        res.json(items)
+            items.push(item) //await item.encodeSelf())
+        res.sendItems(items)
+        // res.json(items)
     }
     async _handle_new({req, res}) {
-        /* Create a new item in this category based on request data. */
+        /* Web handler to create a new item in this category based on request data. */
         print('in _handle_new()...')
         print('request body:  ', req.body)
         assert(req.method === 'POST')
@@ -533,8 +549,16 @@ export class Category extends Item {
         this.registry.commit()
         print('new item.id:', item.id)
         print('new item.data:', item.data)
-        res.end()
+        res.sendItem(item)
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+    }
+    async remote_new(data) {
+        /* Client-side method to request insertion of a new item with given `data` to a server-side DB. */
+        let json = JSON.stringify(data.__getstate__())
+        let url  = `${await this.url()}@new`
+        let response = await fetch(url, {body: json, method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}})
+        // let response = await $.post(url, json)
+        print('remote_new().response:', response)
     }
 
     Items({category}) {
@@ -561,7 +585,6 @@ export class Category extends Item {
         async function submit(e) {
             // e.preventDefault() -- not needed when the button has type=button
             // todo: disabled=true on submit button
-            let url  = `${await category.url()}@new`
             let fdata = new FormData(form.current)
             fdata.append('name', 'another name')
             // print('submit().data:', Array.from(fdata))
@@ -571,12 +594,7 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let json = JSON.stringify(data.__getstate__())
-
-            // let response = await $.post(url, json)
-            let response = await fetch(url, {body: json, method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}})
-            print('submit().response:', response)
-
+            await category.remote_new(data)
             // todo: disabled=false on submit button
         }
 
@@ -590,7 +608,8 @@ export class Category extends Item {
         return Item.prototype.Page({item, extra: FRAGMENT(
             H2('Items'),
             e(item.Items, {category: item}),
-            H2('New item ...'),
+            H3('Added'),
+            H3('New item'),
             e(item.NewItem, {category: item}),
         )})
     }

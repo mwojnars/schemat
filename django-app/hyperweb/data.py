@@ -9,7 +9,7 @@ class Data:
     - derived fields (auto-imputation)
     - change management (propagation of "draft" flags)
     - data paths: subelements can be accessed in a single get(), e.g., get('population.2020/warsaw/male')
-      - field-label separator:     "."
+      - field-label separator:     ":"
       - field-subfield separator:  "/"
     
     - derived properties: an indicator of a property being derived from other props rather than stored in DB;
@@ -26,6 +26,7 @@ class Data:
       - 'population-2020', 'population-2021' (statistics of population of a country in different years)
       - 'title.en', 'title:en', 'long-field.en', 'long-field:en'
       - 'population.2020/warsaw/male', 'population[1]/warsaw/male'
+      - 'xid:springer.com' (xid pulled from springer.com)
     - 'field' -- single (unique??) entry for a field; schema may contain a flag first/last/error to control
       the exact behavior when multiple entries are present
 
