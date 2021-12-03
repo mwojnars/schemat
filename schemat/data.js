@@ -221,18 +221,9 @@ export class Catalog {
         return true
     }
 
-    *[Symbol.iterator]() {
-        /* Iterator over entries. Same as this.entries(). */
-        for (const ent of this._entries) yield ent
-    }
-
-    __getstate__() {
-        return {entries: [...this._entries]}
-    }
-    __setstate__(state) {
-        for (let e of state.entries) this.pushEntry(e)
-        return this
-    }
+    *[Symbol.iterator]()    { for (const e of this._entries) yield e }      // iterator over entries, same as this.entries()
+    __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
+    __getstate__()          { return {entries: [...this._entries]} }
 }
 
 

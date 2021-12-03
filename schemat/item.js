@@ -3,7 +3,7 @@ import {e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, 
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
-import { Data, ItemsMap } from './data.js'
+import { Catalog, Data, ItemsMap } from './data.js'
 
 export const ROOT_CID = 0
 
@@ -504,7 +504,30 @@ export class Category extends Item {
             if (await proto.issubcat(category)) return true
         return false
     }
-    async getFields() { return await this.get('fields') }
+    async _inherited(field) {
+        /* Merge catalogs for a given `field` present in all base categories of this, `this` included.
+           It's assumed that the catalogs are dictionaries (unique non-missing keys).
+           If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
+         */
+        let catalog    = new Catalog()
+        let prototypes = await this.getAll('prototype')
+        for (const proto of [this, ...prototypes]) {
+            let cat = await proto.get(field)
+            if (!cat) continue
+            for (const entry of cat)
+                if (entry.key !== undefined && !catalog.has(entry.key))
+                    catalog.pushEntry({...entry})
+        }
+        return catalog
+    }
+    async getFields() {
+        return await this.temp('fields_all')
+        // return await this.get('fields')
+    }
+    async _temp_fields_all() {
+        /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
+        return this._inherited('fields')
+    }
 
     async getClass() {
         let name = await this.get('class_name')
