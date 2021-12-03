@@ -887,25 +887,35 @@ export class AppFiles extends Application {
         request.state = {}
         
         let root = await this.get('root_folder') || await this.registry.files
+        // return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
+
         let item = await root.search(filepath)
         assert(item, `item not found: ${filepath}`)
 
-        let files   = await this.registry.files
-        let File_   = await files.search('system/File')
-        let Folder_ = await files.search('system/Folder')
         let default_endpoint = 'view'
 
-        if (await item.isinstance(File_)) {
+        if (await item.get('_is_file'))
             default_endpoint = 'download'
-            let is = await item.get('_is_file')
-            assert(is === true)
-        }
-        else if (await item.isinstance(Folder_)) {
+
+        else if (await item.get('_is_folder'))
             request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
-            let is = await item.get('_is_folder')
-            assert(is === true)
-        }
+
+        // let files   = await this.registry.files
+        // let File_   = await files.search('system/File')
+        // let Folder_ = await files.search('system/Folder')
+        //
+        // if (await item.isinstance(File_)) {
+        //     default_endpoint = 'download'
+        //     let is = await item.get('_is_file')
+        //     assert(is === true)
+        // }
+        // else if (await item.isinstance(Folder_)) {
+        //     request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
+        //     // default_endpoint = ('browse',)
+        //     let is = await item.get('_is_folder')
+        //     assert(is === true)
+        // }
         return item.handle(request, response, this, endpoint || default_endpoint)
     }
 
