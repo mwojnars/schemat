@@ -536,7 +536,7 @@ export class CATALOG extends Schema {
         /* Encode & compactify values of fields through per-field schema definitions. */
         if (T.isDict(cat)) throw new DataError(`plain object no longer supported by CATALOG.encode(), wrap it up in "new Catalog(...)": ${cat}`)
         if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
-        return (T.isDict(cat) || cat.isDict()) ? this._to_dict(cat) : this._to_list(cat)
+        return cat.isDict() ? this._to_dict(cat) : this._to_list(cat)
     }
     _to_dict(cat) {
         /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */

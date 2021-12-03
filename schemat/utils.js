@@ -202,6 +202,7 @@ export const INPUT = _e('input')
 export const LABEL = _e('label')
 export const BUTTON   = _e('button')
 export const TEXTAREA = _e('textarea')
+export const FIELDSET = _e('fieldset')
 
 export const HTML  = (html) => { return {dangerouslySetInnerHTML: {__html:html}} }
 
@@ -213,12 +214,27 @@ export const useRef    = React.useRef
 
 /*************************************************************************************************/
 
-export function delayed_render(async_fun, empty = undefined) {
+export function delayed_render(async_fun, deps = [], empty = undefined) {
     /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
        rendering output through async_fun() and requests re-rendering to return the final result. */
+
     const [output, setOutput] = useState(empty)
-    useEffect(async () => setOutput(await async_fun()), [])
+    useEffect(async () => setOutput(await async_fun()), deps)
     return (output === empty) ? null : output
+
+    // DRAFT to allow deps=null without infinite re-rendering loop:
+    // const [output, setOutput] = useState(empty)
+    // const updating = useRef(false)
+    //
+    // if (!updating.current) {
+    //     useEffect(async () => {
+    //         updating.current = true
+    //         setOutput(await async_fun())
+    //     }, deps)
+    // } else
+    //     updating.current = false
+    //
+    // return (output === empty) ? null : output
 }
 
 

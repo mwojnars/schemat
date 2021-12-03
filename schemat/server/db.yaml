@@ -372,3 +372,27 @@
       - name
     - - duplicate
       - name
+- __id:
+    - 11
+    - 3
+  name: A
+- __id:
+    - 11
+    - 4
+  name: a
+- __id:
+    - 11
+    - 5
+  name: b
+- __id:
+    - 11
+    - 6
+  name: c
+- __id:
+    - 11
+    - 7
+  name: d
+- __id:
+    - 11
+    - 8
+  name: s

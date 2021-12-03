@@ -24,27 +24,29 @@ function read_data(node, type = "json") {
     return value
 }
 
-// class ClientCache {
-//     /* Client-side item cache based on Web Storage (local storage or session storage). */
-// }
-
 /**********************************************************************************************************************/
 
 class AjaxDB extends Database {
-    /* Remote abstract DB layer that's accessed by this web client over AJAX calls. */
+    /* Remote abstract DB layer that's accessed by this web client over AJAX calls.
+       In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
+     */
 
     ajax_url = null                 // base URL for AJAX calls, no trailing slash '/'
-    records  = new ItemsMap()       // map of item records received on initial web request to avoid subsequent remote calls;
-                                    // each record is {cid,iid,data}, `data` is JSON-encoded
+    records  = new ItemsMap()       // cached records received on initial or subsequent web requests;
+                                    // each record is {cid,iid,data}, `data` is JSON-encoded for safety
 
     constructor(ajax_url, records = []) {
         super()
         this.ajax_url = ajax_url
+        this.keep(...records)
+        assert(!ajax_url.endsWith('/'))
+    }
+
+    keep(...records) {
         for (const rec of records) {
-            rec.data = JSON.stringify(rec.data)
+            if (typeof rec.data !== 'string') rec.data = JSON.stringify(rec.data)
             this.records.set([rec.cid, rec.iid], rec)
         }
-        assert(!ajax_url.endsWith('/'))
     }
 
     async select(id) {

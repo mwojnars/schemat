@@ -1,4 +1,4 @@
-import {e, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL,
+import {e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
@@ -446,14 +446,18 @@ class EditableItem extends Item {
        Edit methods should be synchronous. They can assume this.data is already loaded, no need for awaiting.
      */
 
+    actions         // list of edit actions executed on this item so far; submitted to DB on commit for DB-side replay
+
     edit(action, args) {
         let method = this[`_edit_${action}`]
         if (!method) throw new Error(`edit action "${action}" not found in ${this}`)
-        return method.bind(this)(args)
+        let result = method.bind(this)(args)
+        this.edits.push([action, args])
+        return result
     }
 
     push(key, value, {label, comment} = {}) {
-        /* Shorthand for edit('push', ...) */
+        /* Shortcut for edit('push', ...) */
         return this.edit('push', {key, value, label, comment})
     }
     // set(key, value, {label, comment} = {}) {
@@ -557,15 +561,17 @@ export class Category extends Item {
         let json = JSON.stringify(data.__getstate__())
         let url  = `${await this.url()}@new`
         let response = await fetch(url, {body: json, method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}})
-        // let response = await $.post(url, json)
-        print('remote_new().response:', response)
+        let record = await response.json()
+        this.registry.db.keep(record)
+        return record
+        // print('remote_new().response:', response)
     }
 
-    Items({category}) {
+    Items({items}) {
         /* A list (table) of items in `category`. */
+        if (!items || items.length === 0) return null
         return delayed_render(async () => {
             let rows = []
-            let items = category.registry.scan_category(category)       // this is an async generator, requires "for await"
             for await (const it of items) {
                 let name = await it.get('name') || it.toString()
                 let url  = await it.url()
@@ -575,42 +581,56 @@ export class Category extends Item {
                 ))
             }
             return TABLE(TBODY(...rows))
-        })
+        }, [items])
     }
-    NewItem({category}) {
+    NewItem({category, itemAdded}) {
 
         let form  = useRef(null)
-        let input = useRef(null)
+
+        function setFormDisabled(disabled) {
+            let fieldset = form.current?.getElementsByTagName('fieldset')[0]
+            if (fieldset) fieldset.disabled = disabled
+        }
 
         async function submit(e) {
-            // e.preventDefault() -- not needed when the button has type=button
-            // todo: disabled=true on submit button
+            e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
             let fdata = new FormData(form.current)
-            fdata.append('name', 'another name')
-            // print('submit().data:', Array.from(fdata))
+            setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+            // fdata.append('name', 'another name')
             // let name = input.current.value
             // let json = JSON.stringify(Array.from(fdata))
 
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            await category.remote_new(data)
-            // todo: disabled=false on submit button
+            let record = await category.remote_new(data)
+            let item   = await category.registry.get_item([record.cid, record.iid])
+            itemAdded(item)
+
+            form.current.reset()            // clear input fields
+            setFormDisabled(false)
         }
 
-        return FORM({method: 'post', ref: form},
-            LABEL('Name:', INPUT({name: 'name', ref: input})),
-            BUTTON({type: 'button', onClick: submit}, 'Create Item'),
-        )
+        return FORM({ref: form}, FIELDSET(
+            // LABEL('Name: ', INPUT({name: 'name'}), ' '),
+            INPUT({name: 'name', placeholder: 'name'}),
+            BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+        ))
     }
 
-    Page({item}) {
-        return Item.prototype.Page({item, extra: FRAGMENT(
+    Page({item: category}) {
+        // child items; state is used to prevent re-scan after every itemAdded();
+        // scan_category() returns an async generator that requires "for await"
+        const items = useRef(category.registry.scan_category(category))
+        const [newItems, setNewItems] = useState([])
+        const itemAdded = (item) => { setNewItems(prev => [...prev, item]); print('item added:', item.id) }
+
+        return Item.prototype.Page({item: category, extra: FRAGMENT(
             H2('Items'),
-            e(item.Items, {category: item}),
-            H3('Added'),
-            H3('New item'),
-            e(item.NewItem, {category: item}),
+            e(category.Items, {items: items.current}),
+            H3('Add item'),
+            e(category.Items, {items: newItems}),
+            e(category.NewItem, {category, itemAdded}),
         )})
     }
 }
