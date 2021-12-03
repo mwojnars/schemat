@@ -48,7 +48,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        let Item = registry.get_class(JSONx.PATH_ITEM)
+        let Item = registry.getClass(JSONx.PATH_ITEM)
         if (obj instanceof Item) {
             if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
@@ -119,8 +119,8 @@ export class JSONx {
                 state = state_attr
             }
             if (classname === JSONx.FLAG_ITEM)
-                return registry.get_item(state)
-            cls = registry.get_class(classname)
+                return registry.getItem(state)
+            cls = registry.getClass(classname)
         }
         else cls = Object
 
@@ -134,9 +134,9 @@ export class JSONx {
         if (cls === Map)
             return new Map(Object.entries(await JSONx.decode_dict(state)))
 
-        let Item = registry.get_class(JSONx.PATH_ITEM)
+        let Item = registry.getClass(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
-            return registry.get_item(state)
+            return registry.getItem(state)
 
         state = await JSONx.decode_dict(state)
         // let obj = JSONx.decode_dict(state)

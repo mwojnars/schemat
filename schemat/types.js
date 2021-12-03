@@ -178,7 +178,7 @@ export class CLASS extends Schema {
     }
     async decode(value) {
         if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
-        return globalThis.registry.get_class(value)
+        return globalThis.registry.getClass(value)
     }
 }
 
@@ -392,7 +392,7 @@ export class ITEM extends Schema {
         if (!Number.isInteger(cid)) throw new DataError(`expected CID to be an integer, got ${cid} instead during decoding`)
         if (!Number.isInteger(iid)) throw new DataError(`expected IID to be an integer, got ${iid} instead during decoding`)
 
-        return await globalThis.registry.get_item([cid, iid])
+        return await globalThis.registry.getItem([cid, iid])
     }
 
     Widget({value}) {

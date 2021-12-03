@@ -67,7 +67,7 @@ class AjaxDB extends Database {
 }
 
 class ClientRegistry extends Registry {
-    /* Client-side registry: get_item() pulls items from server and caches in browser's web storage. */
+    /* Client-side registry: getItem() pulls items from server and caches in browser's web storage. */
 
     constructor(boot_items, ajax_url) {
         super()
@@ -98,12 +98,12 @@ export async function boot() {
     await registry.init_classpath()
     await registry.boot(data.request)
 
-    // print('root:', await registry.get_item([0,0], {load: true}))
-    // print('[0,10]:', await registry.get_item([0,10], {load: true}))
-    // print('[10,1]:', await registry.get_item([10,1], {load: true}))
+    // print('root:', await registry.getItem([0,0], {load: true}))
+    // print('[0,10]:', await registry.getItem([0,10], {load: true}))
+    // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
     let react_root = document.querySelector("#react-root")
-    // let item = await (await registry.get_item(config.id)).load()
+    // let item = await (await registry.getItem(config.id)).load()
     // print('main item:', item)
 
     registry.current_request.item.display(react_root)

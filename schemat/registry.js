@@ -100,7 +100,7 @@ export class Registry {
     current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
     // the getters below are async functions that return a Promise (!) and should be used with await
-    get site()  { return this.get_item(this.site_id) }
+    get site()  { return this.getItem(this.site_id) }
     get files() { return this.site.then(site => site.get('filesystem')) }
 
     async init_classpath() {
@@ -127,9 +127,9 @@ export class Registry {
         return root
     }
 
-    async get_category(cid) { return await this.get_item([ROOT_CID, cid]) }
+    async get_category(cid) { return await this.getItem([ROOT_CID, cid]) }
 
-    async get_item(id, {load = false, version = null} = {}) {
+    async getItem(id, {load = false, version = null} = {}) {
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
@@ -155,7 +155,7 @@ export class Registry {
         /* Create and return a "stub" item (no data) with a given ID. */
         let [cid, iid] = id
         category = category || await this.get_category(cid)
-        let itemclass = await category.get_class()
+        let itemclass = await category.getClass()
         let item = new itemclass(category)
         item.iid = iid
         return item
@@ -196,7 +196,7 @@ export class Registry {
         return this.classpath.encode(cls)
     }
 
-    get_class(path) {
+    getClass(path) {
         /* Get a global object - class or function from a virtual package (Classpath) - pointed to by `path`. */
         return this.classpath.decode(path)
     }

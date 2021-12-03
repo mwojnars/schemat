@@ -81,8 +81,8 @@ async function create_categories(Category) {
     let cat = {}
 
     cat.File = await Category.new({
-        name    : "File",
-        info    : "File with a text content. Accessible through the web filesystem.",
+        name        : "File",
+        info        : "File with a text content. Accessible through the web filesystem.",
         class_name  : 'schemat.item.File',
         fields      : C({
             format  : new STRING(),    // ProgrammingLanguage()
@@ -105,7 +105,14 @@ async function create_categories(Category) {
         class_name  : 'schemat.item.Folder',
         fields      : C({files: new CATALOG(new ITEM(), new FILENAME())}),     // file & directory names mapped to item IDs
     })
-    
+    cat.FolderLocal = await Category.new({
+        name        : "FolderLocal",
+        info        : "File folder located on a local disk, identified by its local file path. Gives access to all files and folders beneath the path.",
+        prototype   : cat.Folder,
+        class_name  : 'schemat.item.FolderLocal',
+        fields      : C({path: new STRING()}),
+    })
+
     cat.Application = await Category.new({
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
@@ -191,13 +198,13 @@ async function create_items(cat, Category) {
         files: C({
             'system':           item.dir_system,
             'tmp':              item.dir_tmp2,
-            
+            'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
+
             'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
             'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
             'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
             'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
             'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
-            'server.js':        await cat.FileLocal.new({path: `${path}/assets/server.js`}),
             'styles.css':       await cat.FileLocal.new({path: `${path}/assets/styles.css`}),
             'types.js':         await cat.FileLocal.new({path: `${path}/types.js`}),
             'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),

@@ -19,7 +19,7 @@ function Catalog1({item}) {
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
         let entries = await item.getEntries()
-        let schemas = await category.get_fields()
+        let schemas = await category.getFields()
 
         let rows = entries.map(({key:field, value}, i) => {
             let schema = schemas.get(field)
@@ -209,7 +209,7 @@ export class Item {
 
         // search in category's defaults
         if (this.category !== this) {
-            let cat_default = await this.category.get_default(path)
+            let cat_default = await this.category.getDefault(path)
             if (cat_default !== undefined)
                 return cat_default
         }
@@ -235,7 +235,7 @@ export class Item {
         await this.load()
         return this.data.getEntries()
 
-        // let fields  = await this.category.get_fields()
+        // let fields  = await this.category.getFields()
         // let entries = []
         //
         // function push(f, v) {
@@ -488,7 +488,7 @@ export class Category extends Item {
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         mark it as pending for insertion to DB if stage=true (default).
         */
-        let itemclass = await this.get_class()
+        let itemclass = await this.getClass()
         let item = new itemclass(this, data)
         if (stage) this.registry.stage(item)                    // mark `item` for insertion on the next commit()
         return item
@@ -499,19 +499,14 @@ export class Category extends Item {
         Inheritance means that the ID of `category` is present on an item-prototype chain of `this`.
         */
         if (this.has_id(category.id)) return true
-
-        // let prototype = await this.get('prototype')        // TODO: support multiple prototypes (multibase inheritance)
-        // if (!prototype) return false
-        // return prototype.issubcat(category)
-
         let prototypes = await this.getAll('prototype')
         for (const proto of prototypes)
             if (await proto.issubcat(category)) return true
         return false
     }
-    async get_fields() { return await this.get('fields') }
+    async getFields() { return await this.get('fields') }
 
-    async get_class() {
+    async getClass() {
         let name = await this.get('class_name')
         let code = await this.get('class_code')
         if (code)
@@ -520,28 +515,28 @@ export class Category extends Item {
             // TODO: check this.data for individual methods & templates to be treated as methods
 
         assert(name, `no class_name defined for category ${this}: ${name}`)
-        return this.registry.get_class(name)
+        return this.registry.getClass(name)
     }
-    async get_item(iid) {
+    async getItem(iid) {
         /*
         Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         */
-        return this.registry.get_item([this.iid, iid])
+        return this.registry.getItem([this.iid, iid])
     }
-    async get_default(field, default_ = undefined) {
+    async getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
-        let fields = await this.get_fields()
+        let fields = await this.getFields()
         let schema = fields.get(field)
         if (schema) return schema.default
 
         // search prototypes
-        
+
 
         return default_
     }
     async _temp_schema() {
-        let fields = await this.get_fields()
+        let fields = await this.getFields()
         return new DATA(fields.asDict())
     }
 
@@ -625,7 +620,7 @@ export class Category extends Item {
             for (let [k, v] of fdata) data.push(k, v)
 
             let record = await category.remote_new(data)
-            let item   = await category.registry.get_item([record.cid, record.iid])
+            let item   = await category.registry.getItem([record.cid, record.iid])
             itemAdded(item)
 
             form.current.reset()            // clear input fields
@@ -840,7 +835,7 @@ export class AppAdmin extends Application {
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
-        return [await this.registry.get_item(id), endpoint]
+        return [await this.registry.getItem(id), endpoint]
     }
 }
 
@@ -915,7 +910,7 @@ export class AppSpaces extends Application {
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
-        let item = await category.get_item(Number(item_id))
+        let item = await category.getItem(Number(item_id))
         return item.handle(request, response, this, endpoint)
     }
 }
