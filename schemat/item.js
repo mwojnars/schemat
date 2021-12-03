@@ -219,6 +219,13 @@ export class Item {
 
         return default_
     }
+    async getAll(key) {
+        /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
+           Default value (if defined) is NOT used.
+         */
+        await this.load()
+        return this.data.getAll(key)
+    }
 
     async getEntries(order = 'schema') {
         /*
@@ -488,16 +495,19 @@ export class Category extends Item {
     }
     async issubcat(category) {
         /*
-        Return true if `this` is `category` (by item ID comparison) or inherits from it, i.e.,
-        if ID of `category` is present on an item prototype chain(s) of `this`.
+        Return true if `this` inherits from `category`, or is `category` (by ID comparison).
+        Inheritance means that the ID of `category` is present on an item-prototype chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let prototype = await this.get('prototype')        // TODO: support multiple prototypes (multibase inheritance)
-        if (!prototype) return false
-        return prototype.issubcat(category)
-        // for (let base in prototypes)
-        //     if (await base.issubcat(category)) return true
-        // return false
+
+        // let prototype = await this.get('prototype')        // TODO: support multiple prototypes (multibase inheritance)
+        // if (!prototype) return false
+        // return prototype.issubcat(category)
+
+        let prototypes = await this.getAll('prototype')
+        for (const proto of prototypes)
+            if (await proto.issubcat(category)) return true
+        return false
     }
     async get_fields() { return await this.get('fields') }
 
@@ -523,7 +533,12 @@ export class Category extends Item {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         let fields = await this.get_fields()
         let schema = fields.get(field)
-        return schema ? schema.default : default_
+        if (schema) return schema.default
+
+        // search prototypes
+        
+
+        return default_
     }
     async _temp_schema() {
         let fields = await this.get_fields()
@@ -842,18 +857,15 @@ export class AppFiles extends Application {
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     */
-    async url_path(item, route = '', opts = {}) {
-        // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
-        let state = this.registry.current_request.state
-        return state['folder'].get_name(item)
-    }
     async execute(path, request, response) {
+        /* Find an item (file/folder) pointed to by `path` and call its handle(). */
+
         if (!path.startsWith('/'))
             return response.redirect(request.path + '/')
 
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
         let [filepath, endpoint] = this._split_endpoint(path.slice(1))
-        request.state = {'filepath': filepath}
+        request.state = {}
         
         let root = await this.get('root_folder') || await this.registry.files
         let item = await root.search(filepath)
@@ -867,11 +879,16 @@ export class AppFiles extends Application {
         if (await item.isinstance(File_))
             default_endpoint = 'download'
         else if (await item.isinstance(Folder_))
-            // if not filepath.endswith('/'): raise Exception("folder URLs must end with '/'") #return redirect(request.path + '/')       // folder URLs must end with '/'
-            request.state['folder'] = item          // leaf folder, for use when generating file URLs (url_path())
+            request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
         
         return item.handle(request, response, this, endpoint || default_endpoint)
+    }
+
+    async url_path(item, route = '', opts = {}) {
+        // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
+        let state = this.registry.current_request.state
+        return state.folder.get_name(item)
     }
 }
 
@@ -909,6 +926,37 @@ export class AppSpaces extends Application {
  **
  */
 
+export class File extends Item {
+    async read() {
+        return this.get('content')
+    }
+    async _handle_download() {
+        /* Return full content of this file, either as <str> or a Response object. */
+        return this.read()
+    }
+}
+
+export class FileLocal extends File {
+    async read(encoding = 'utf8') {
+        let fs = import('fs')
+        let path = await this.get('path')
+        if (path) return fs.readFileSync(path, {encoding})
+    }
+    async _handle_download({res}) {
+        let content = await this.get('content', null)
+        if (typeof content === 'string')
+            return res.send(content)
+        
+        let path = await this.get('path', null)
+        if (!path) res.sendStatus(404)
+
+        res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
+
+        // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
+        // https://github.com/django/django/blob/main/django/views/static.py
+    }
+}
+
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
@@ -944,46 +992,40 @@ export class Folder extends Item {
     async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
 }
 
-export class File extends Item {
-    async read() {
-        return this.get('content')
-    }
-    async _handle_download() {
-        /* Return full content of this file, either as <str> or a Response object. */
-        return this.read()
-    }
-}
+export class FolderLocal extends Folder {
 
-export class FileLocal extends File {
-    async read(encoding = 'utf8') {
+    async search(path) {
         let fs = import('fs')
-        let path = await this.get('path', null)
-        if (path === null) return null
-        return fs.readFileSync(path, {encoding})
+        let root = await this.get('path')
+
+        if (!root) return undefined
+        if (!root.endsWith('/')) root = root + '/'
+        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+        let fullpath = root + path
+
+        if (path) return fs.readFileSync(path, {encoding})
+
+
+        let item = this
+        while (path) {
+            let name = path.split(Folder.SEP_FOLDER)[0]
+            item = await item.get(`files/${name}`)
+            path = path.slice(name.length+1)
+        }
+        return item
     }
-
-    async _handle_download({res}) {
-        
-        let content = await this.get('content', null)
-        if (typeof content === 'string')
-            return res.send(content)
-        
-        let path = await this.get('path', null)
-        if (!path) res.sendStatus(404)
-
-        res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
-
-        // let [content_type, encoding] = mimetypes.guess_type(path)
-        // content_type = content_type || 'application/octet-stream'
-        //
-        // content = open(path, 'rb')
-        // let response = FileResponse(content, content_type = content_type)
-        //
-        // if (encoding)
-        //     response.headers["Content-Encoding"] = encoding
-            
-        // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
-        // https://github.com/django/django/blob/main/django/views/static.py
+    async read(path) {
+        /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
+        let f = await this.search(path)
+        if (f instanceof File) return f.read()
+        throw new Error(`not a file: ${path}`)
     }
+    async get_name(item) {
+        /* Return a name assigned to a given item. If the same item is assigned multiple names,
+        the last one is returned. */
+        let names = await this.temp('names')
+        return names.get(item.id, null)
+    }
+    async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
 }
 
