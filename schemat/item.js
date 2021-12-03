@@ -567,17 +567,23 @@ export class Category extends Item {
         // print('remote_new().response:', response)
     }
 
+    remote_delete(id, callback) {
+        /*  */
+    }
+
     Items({items}) {
         /* A list (table) of items in `category`. */
         if (!items || items.length === 0) return null
+        const remove = (id) => { print('clicked delete item:', id) }
         return delayed_render(async () => {
             let rows = []
-            for await (const it of items) {
-                let name = await it.get('name') || it.toString()
-                let url  = await it.url()
+            for await (const item of items) {
+                let name = await item.get('name') || item.toString()
+                let url  = await item.url()
                 rows.push(TR(
-                    TD(`#${it.iid} ${NBSP}`),
+                    TD(`${item.iid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
+                    TD(BUTTON({onClick: () => remove(item.id)}, 'Delete')),
                 ))
             }
             return TABLE(TBODY(...rows))
@@ -623,7 +629,7 @@ export class Category extends Item {
         // scan_category() returns an async generator that requires "for await"
         const items = useRef(category.registry.scan_category(category))
         const [newItems, setNewItems] = useState([])
-        const itemAdded = (item) => { setNewItems(prev => [...prev, item]); print('item added:', item.id) }
+        const itemAdded = (item) => { setNewItems(prev => [...prev, item]) }
 
         return Item.prototype.Page({item: category, extra: FRAGMENT(
             H2('Items'),
