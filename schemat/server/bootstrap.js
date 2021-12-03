@@ -4,7 +4,7 @@ Creating core items from scratch and storing them as initial items in DB.
 
 import {print} from '../utils.js'
 import {ServerRegistry} from './s-registry.js'
-import {GENERIC, SCHEMA, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../types.js'
+import {GENERIC, SCHEMA, BOOLEAN, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../types.js'
 import {Catalog} from '../data.js'
 //import {Index} from '../item.js'
 
@@ -68,7 +68,6 @@ let root_data = {
     info        : "Category of items that represent categories",
     class_name  : 'schemat.item.Category',
     fields      : root_fields,
-    //field     : multiple(**root_fields),
 }
 
 /**********************************************************************************************************************
@@ -85,8 +84,9 @@ async function create_categories(Category) {
         info        : "File with a text content. Accessible through the web filesystem.",
         class_name  : 'schemat.item.File',
         fields      : C({
-            format  : new STRING(),    // ProgrammingLanguage()
-            content : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
+            format      : new STRING(),    // ProgrammingLanguage()
+            content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
+            _is_file    : new BOOLEAN({default: true}),
         }),
     })
     cat.FileLocal = await Category.new({
@@ -103,7 +103,10 @@ async function create_categories(Category) {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         class_name  : 'schemat.item.Folder',
-        fields      : C({files: new CATALOG(new ITEM(), new FILENAME())}),     // file & directory names mapped to item IDs
+        fields      : C({
+            files       : new CATALOG(new ITEM(), new FILENAME()),     // file & directory names mapped to item IDs
+            _is_folder  : new BOOLEAN({default: true}),
+        }),
     })
     cat.FolderLocal = await Category.new({
         name        : "FolderLocal",

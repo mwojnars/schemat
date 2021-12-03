@@ -510,6 +510,31 @@ export class Category extends Item {
     async getFields()       { return this.temp('fields_all') }
     async getHandlers()     { return this.temp('handlers_all') }
 
+    async getClass() {
+        let name = await this.get('class_name')
+        let code = await this.get('class_code')
+        if (code)
+            return eval(code)
+            // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
+            // TODO: check this.data for individual methods & templates to be treated as methods
+
+        assert(name, `no class_name defined for category ${this}: ${name}`)
+        return this.registry.getClass(name)
+    }
+    async getItem(iid) {
+        /*
+        Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
+        but do NOT load remaining contents from DB (lazy loading).
+        */
+        return this.registry.getItem([this.iid, iid])
+    }
+    async getDefault(field, default_ = undefined) {
+        /* Get default value of a field from category schema. Return `default` if no category default is configured. */
+        let fields = await this.getFields()
+        let schema = fields.get(field)
+        return schema ? schema.default : default_
+    }
+
     async _inherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
            It's assumed that the catalogs are dictionaries (unique non-missing keys).
@@ -533,36 +558,6 @@ export class Category extends Item {
     async _temp_handlers_all() {
         /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
         return this._inherited('handlers')
-    }
-
-    async getClass() {
-        let name = await this.get('class_name')
-        let code = await this.get('class_code')
-        if (code)
-            return eval(code)
-            // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
-            // TODO: check this.data for individual methods & templates to be treated as methods
-
-        assert(name, `no class_name defined for category ${this}: ${name}`)
-        return this.registry.getClass(name)
-    }
-    async getItem(iid) {
-        /*
-        Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
-        but do NOT load remaining contents from DB (lazy loading).
-        */
-        return this.registry.getItem([this.iid, iid])
-    }
-    async getDefault(field, default_ = undefined) {
-        /* Get default value of a field from category schema. Return `default` if no category default is configured. */
-        let fields = await this.getFields()
-        let schema = fields.get(field)
-        if (schema) return schema.default
-
-        // search prototypes
-
-
-        return default_
     }
     async _temp_schema() {
         let fields = await this.getFields()
@@ -895,17 +890,22 @@ export class AppFiles extends Application {
         let item = await root.search(filepath)
         assert(item, `item not found: ${filepath}`)
 
-        let files = await this.registry.files
-        let File_ = await files.search('system/File')
+        let files   = await this.registry.files
+        let File_   = await files.search('system/File')
         let Folder_ = await files.search('system/Folder')
-        
         let default_endpoint = 'view'
-        if (await item.isinstance(File_))
+
+        if (await item.isinstance(File_)) {
             default_endpoint = 'download'
-        else if (await item.isinstance(Folder_))
+            let is = await item.get('_is_file')
+            assert(is === true)
+        }
+        else if (await item.isinstance(Folder_)) {
             request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
-        
+            let is = await item.get('_is_folder')
+            assert(is === true)
+        }
         return item.handle(request, response, this, endpoint || default_endpoint)
     }
 

@@ -48,7 +48,7 @@
         "@": schemat.data.Catalog
     - key: startup_site
       value:
-        - 10
+        - 11
         - 1
   "@": schemat.data.Data
 - __id:
@@ -62,6 +62,9 @@
       "@": schemat.type.STRING
     content:
       "@": schemat.type.CODE
+    _is_file:
+      default: true
+      "@": schemat.type.BOOLEAN
 - __id:
     - 0
     - 2
@@ -88,9 +91,25 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
+    _is_folder:
+      default: true
+      "@": schemat.type.BOOLEAN
 - __id:
     - 0
     - 4
+  name: FolderLocal
+  info: File folder located on a local disk, identified by its local file path.
+    Gives access to all files and folders beneath the path.
+  prototype:
+    - 0
+    - 3
+  class_name: schemat.item.FolderLocal
+  fields:
+    path:
+      "@": schemat.type.STRING
+- __id:
+    - 0
+    - 5
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
@@ -100,13 +119,13 @@
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 5
+    - 6
   name: AppRoot
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: schemat.item.AppRoot
   prototype:
     - 0
-    - 4
+    - 5
   fields:
     name:
       "@": schemat.type.STRING
@@ -116,7 +135,7 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 6
+    - 7
   name: AppAdmin
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
@@ -126,7 +145,7 @@
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 7
+    - 8
   name: AppAjax
   info: Internal application to serve AJAX requests, mainly for pulling additional
     items by client UI.
@@ -136,7 +155,7 @@
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 8
+    - 9
   name: AppFiles
   class_name: schemat.item.AppFiles
   fields:
@@ -151,7 +170,7 @@
       "@": schemat.type.ITEM
 - __id:
     - 0
-    - 9
+    - 10
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -166,7 +185,7 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 10
+    - 11
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -187,7 +206,7 @@
       "@": schemat.type.ITEM
 - __id:
     - 0
-    - 11
+    - 12
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: schemat.item.Item
@@ -202,7 +221,7 @@
   files:
     Site:
       - 0
-      - 10
+      - 11
     File:
       - 0
       - 1
@@ -228,6 +247,10 @@
       - 3
       - 2
 - __id:
+    - 4
+    - 1
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets
+- __id:
     - 2
     - 1
   path: /home/marcin/Documents/priv/catalog/src/schemat/client.js
@@ -250,18 +273,14 @@
 - __id:
     - 2
     - 6
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/server.js
-- __id:
-    - 2
-    - 7
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/styles.css
 - __id:
     - 2
-    - 8
+    - 7
   path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
 - __id:
     - 2
-    - 9
+    - 8
   path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
 - __id:
     - 3
@@ -273,6 +292,9 @@
     tmp:
       - 3
       - 3
+    assets:
+      - 4
+      - 1
     client.js:
       - 2
       - 1
@@ -288,32 +310,29 @@
     serialize.js:
       - 2
       - 5
-    server.js:
-      - 2
-      - 6
     styles.css:
       - 2
-      - 7
+      - 6
     types.js:
       - 2
-      - 8
+      - 7
     utils.js:
       - 2
-      - 9
-- __id:
-    - 6
-    - 1
-  name: Admin
+      - 8
 - __id:
     - 7
     - 1
-  name: AJAX
+  name: Admin
 - __id:
     - 8
     - 1
-  name: Files
+  name: AJAX
 - __id:
     - 9
+    - 1
+  name: Files
+- __id:
+    - 10
     - 1
   name: Catalog
   spaces:
@@ -322,10 +341,10 @@
       - 0
     sys.item:
       - 0
-      - 11
+      - 12
     sys.site:
       - 0
-      - 10
+      - 11
     sys.dir:
       - 0
       - 3
@@ -333,42 +352,36 @@
       - 0
       - 2
 - __id:
-    - 5
+    - 6
     - 1
   name: Applications
   apps:
     admin:
-      - 6
-      - 1
-    ajax:
       - 7
       - 1
-    files:
+    ajax:
       - 8
       - 1
-    "":
+    files:
       - 9
       - 1
+    "":
+      - 10
+      - 1
 - __id:
-    - 10
+    - 11
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
   filesystem: 4
   application:
-    - 5
+    - 6
     - 1
 - __id:
-    - 11
+    - 12
     - 1
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - __id:
-    - 11
+    - 12
     - 2
-  __data:
-    - - ąłęÓŁŻŹŚ
-      - title
-    - - test_item
-      - name
-    - - duplicate
-      - name
+  title: ąłęÓŁŻŹŚ
