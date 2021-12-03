@@ -327,7 +327,7 @@ export class Item {
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
 
-           function handler({item, req, res, app, endpoint})
+           function handler({item, req, res, endpoint})
 
         or as methods of a particular Item subclass, named `_handle_{endpoint}`.
         In every case, the function's `this` is bound to `item` (this===item).
@@ -338,8 +338,11 @@ export class Item {
         req.app  = app
         endpoint = endpoint || 'view'
 
-        // get handler's source code from category's data
-        let handler, source = await this.category.get(`handlers/${endpoint}`)
+        let handler
+        let handlers = await this.category.getHandlers()
+        let source   = handlers.get(endpoint)
+
+        // get handler's source code from category's properties?
         if (source) {
             handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
@@ -350,14 +353,14 @@ export class Item {
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
         handler = handler.bind(this)
-        let page = handler({item: this, req, res, endpoint, app})
+        let page = handler({item: this, req, res, endpoint})
         if (page instanceof Promise) page = await page
         if (typeof page === 'string')
             res.send(page)
     }
 
     async _handle_json({res}) { return res.sendItem(this) }
-    async _handle_view({req, res, app, endpoint}) {
+    async _handle_view({req, res, endpoint}) {
 
         let name = await this.get('name', '')
         let ciid = await this.ciid({html: false})
@@ -504,8 +507,11 @@ export class Category extends Item {
             if (await proto.issubcat(category)) return true
         return false
     }
+    async getFields()       { return this.temp('fields_all') }
+    async getHandlers()     { return this.temp('handlers_all') }
+
     async _inherited(field) {
-        /* Merge catalogs for a given `field` present in all base categories of this, `this` included.
+        /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
            It's assumed that the catalogs are dictionaries (unique non-missing keys).
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
          */
@@ -520,13 +526,13 @@ export class Category extends Item {
         }
         return catalog
     }
-    async getFields() {
-        return await this.temp('fields_all')
-        // return await this.get('fields')
-    }
     async _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
         return this._inherited('fields')
+    }
+    async _temp_handlers_all() {
+        /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
+        return this._inherited('handlers')
     }
 
     async getClass() {
