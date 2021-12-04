@@ -338,7 +338,7 @@ export class Item {
         */
         req.item = this
         req.app  = app
-        let endpoint = req.endpoint || 'view'
+        let endpoint = req.endpoint || req.endpointDefault || 'view'
 
         let handler
         let handlers = await this.category.getHandlers()
@@ -855,7 +855,8 @@ export class AppAdmin extends Application {
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
         let item = await this._find_item(path)
-        if (!request.endpoint) request.endpoint = "json"
+        // if (!request.endpoint) request.endpoint = "json"
+        request.endpointDefault = "json"
         return item.handle(request, response, this)
     }
 }
@@ -881,16 +882,17 @@ export class AppFiles extends Application {
         let item = await root.search(filepath)
         assert(item, `item not found: ${filepath}`)
 
-        let default_endpoint = 'view'
+        // let default_endpoint = 'view'
 
         if (await item.get('_is_file'))
-            default_endpoint = 'download'
+            request.endpointDefault = 'download'
 
         else if (await item.get('_is_folder'))
             request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
 
-        if (!request.endpoint) request.endpoint = default_endpoint
+        // if (!request.endpoint) request.endpoint = default_endpoint
+        // request.endpointDefault = default_endpoint
         return item.handle(request, response, this)
     }
 
@@ -990,7 +992,8 @@ export class Folder extends Item {
             // default_endpoint = ('browse',)
             if (path) return item.execute(path, request, response)
         }
-        if (!request.endpoint) request.endpoint = default_endpoint
+        // if (!request.endpoint) request.endpoint = default_endpoint
+        request.endpointDefault = default_endpoint
 
         return item.handle(request, response, this)
     }

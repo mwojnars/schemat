@@ -58,6 +58,8 @@ class Server {
         to carry Hyperweb-specific information for downstream processing functions:
         - request.ipath    = like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
         - request.endpoint = item's endpoint/view that should be executed; empty string '' if no endpoint
+        - request.endpointDefault = default endpoint that should be used instead of "view" if `endpoint` is missing;
+                                    configured by an application that handles the request
         TODO remove/rename:
         - request.item  = target item that's responsible for actual handling of this request
         - request.app   = leaf Application object this request is addressed to
