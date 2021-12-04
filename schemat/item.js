@@ -302,26 +302,40 @@ export class Item {
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
     
-    async url({route = null, endpoint, args, relative, raise = true} = {}) {
-        /*
-        Return a *relative* URL of this item as assigned by the current Application (if route=null),
-        that is, by the one that's processing the current web request; or an *absolute* URL
-        assigned by an application anchored at a given route.
-        route=null should only be used during request processing, when a current app is defined.
-        */
-        // TODO: append `endpoint` and `args` to the result URL
-        let opts = {route, relative}
+    async url({raise = true, ...params}) {
         try {
-            if (route === null) {
-                let app  = this.registry.current_request.app
-                let path = await app.url_path(this, opts)
-                return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-            }
             let site = await this.registry.site
-            return await site.get_url(this, opts)
+            return await site.buildURL(this, params)
         }
-        catch (ex) { if (raise) {throw ex} else return null }
+        catch(ex) { if (raise) {throw ex} else return null }
     }
+    // async url({route = null, endpoint, args, relative, raise = true} = {}) {
+    //     /*
+    //     Return a relative URL of this item as assigned by the current deep-most Application (if route=null)
+    //     that's processing the current web request; or an absolute or relative URL
+    //     assigned by an application anchored at a given route.
+    //     route=null should only be used during request processing, when the current app is defined.
+    //     */
+    //     let site = await this.registry.site
+    //     return site.buildURL(this, params)
+    //
+    //     try {
+    //         let url = await this._urlPath(route, relative)
+    //         return url
+    //     }
+    //     catch (ex) { if (raise) {throw ex} else return null }
+    // }
+    // async _urlPath(route, relative) {
+    //     let opts = {route, relative}
+    //     if (route === null) {
+    //         let app  = this.registry.current_request.app
+    //         let path = await app.url_path(this, opts)
+    //         return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+    //     }
+    //     let site = await this.registry.site
+    //     return await site.get_url(this, opts)
+    //     // return this._set_endpoint(url, {endpoint, args})       // append `endpoint` and `args` to the URL
+    // }
 
 
     /***  Handlers (server side)  ***/
@@ -710,26 +724,55 @@ export class RootCategory extends Category {
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    async get_url(item, {route = '', relative, with_base}) {
-        /* Return an absolute or relative URL of `item` as assigned by the application anchored at `route`. */
-        let app  = await this.get('application')
-        let base = await this.get('base_url')
+    static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
-        // relative URL
-        let path = await app.url_path(item, {route, relative})
+
+    async buildURL(item, {route = null, relative, baseURL, endpoint, args}) {
+        /*
+        Return a relative URL of `item` as assigned by the deep-most Application (if route=null)
+        that's processing the current web request; or an absolute or relative URL
+        assigned by an application anchored at a given `route`.
+        route=null should only be used during request processing, when the current app is defined.
+        */
+        let url = await this.url_path(item, {route, relative, baseURL})
+        return this.setEndpoint(url, endpoint, args)              // append `endpoint` and `args` to the URL
+    }
+
+    async url_path(item, {route, relative, baseURL}) {
+        let opts = {route, relative}
+
+        // relative URL anchored at the deep-most application's route
+        if (route === null) {
+            let app  = this.registry.current_request.app
+            let path = await app.url_path(item, opts)
+            return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+        }
+
+        // relative URL anchored at `route`
+        let root = await this.get('application')
+        let path = await root.url_path(item, opts)
         if (relative) return path
-        
-        path = '/' + path
-        if (!with_base) return path                         // absolute URL without base
 
+        // absolute URL without base?
+        path = '/' + path
+        if (!baseURL) return path
+
+        // absolute URL with base (protocol+domain+port)
+        let base = (typeof baseURL === 'string') ? baseURL : await this.get('base_url')
         if (base.endsWith('/')) base = base.slice(-1)
-        return base + path                                  // absolute URL with base
+        return base + path
+    }
+
+    setEndpoint(url, endpoint, args) {
+        if (endpoint) url += `${Site.SEP_ENDPOINT}${endpoint}`
+        if (args) url += '?' + new URLSearchParams(args).toString()
+        return url
     }
 
     async execute(request, response) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
         let app  = await this.get('application')
-        let path = request.path, sep = Application.SEP_ENDPOINT;
+        let path = request.path, sep = Site.SEP_ENDPOINT;
         [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
         return app.execute(request.path, request, response)
     }
@@ -746,9 +789,8 @@ export class Application extends Item {
     Some application classes may support nested applications.
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
-    static SEP_ROUTE    = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
-    static SEP_ENDPOINT = '@'
-    
+    static SEP_ROUTE    = '/'       // separator of route segments in URL, each segment corresponds to another (sub)application
+
     async url_path(item, {route, relative}) {
         /*
         Generate URL path (URL fragment after route) for `item`.
@@ -759,12 +801,6 @@ export class Application extends Item {
         */
         throw new Error()
     }
-    _set_endpoint(url, {endpoint = null, args = null}) {
-        if (endpoint) url += `${Application.SEP_ENDPOINT}${endpoint}`
-        if (args) url += '?' + new URLSearchParams(args).toString()
-        return url
-    }
-
     async execute(action, request, response) {
         /*
         Execute an `action` that originated from a web `request` and emit results to a web `response`.
@@ -823,7 +859,7 @@ export class AppRoot extends Application {
         Find an application in 'apps' that matches the requested URL path and call its execute().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
-        let [route, app, subpath] = await this._route(path)
+        let [step, app, subpath] = await this._route(path)
         await app.execute(subpath, request, response)
     }
 }
@@ -834,8 +870,7 @@ export class AppAdmin extends Application {
     async url_path(item, opts = {}) {
         assert(item.has_id())
         let [cid, iid] = item.id
-        let url = `${cid}:${iid}`
-        return this._set_endpoint(url, opts)
+        return `${cid}:${iid}`
     }
     async execute(path, request, response) {
         let item = await this._find_item(path)
@@ -906,8 +941,7 @@ export class AppSpaces extends Application {
         let spaces_rev = await this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
         if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
-        let url = `${space}:${item.iid}`
-        return this._set_endpoint(url, opts)
+        return `${space}:${item.iid}`
     }
     async _temp_spaces_rev()    { return ItemsMap.reversed(await this.get('spaces')) }
 
