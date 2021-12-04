@@ -374,12 +374,13 @@ export class Item {
         
             <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         
-            <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
-            <link href="/files/styles.css" rel="stylesheet" />
+            <link href="/files/assets/favicon.ico" rel="icon" type="image/x-icon" />
+            <link href="/files/assets/styles.css" rel="stylesheet" />
         </head>
         <body>${body}</body>
         </html>
     `}
+    // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 
     async BOOT() { return `
         <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
@@ -873,13 +874,11 @@ export class AppFiles extends Application {
 
         if (!path.startsWith('/'))
             return response.redirect(request.ipath + '/')
-        // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
+        // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
 
-        let filepath  = path.slice(1)
-        request.app   = this
-        
+        request.app = this
         let root = await this.get('root_folder') || await this.registry.files
-        return root.execute(filepath, request, response)     // `root` must be an item of Folder_ or its subcategory
+        return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
     }
 
     async url_path(item, opts = {}) {
@@ -903,13 +902,10 @@ export class AppSpaces extends Application {
     async _temp_spaces_rev()    { return ItemsMap.reversed(await this.get('spaces')) }
 
     async execute(path, request, response) {
-        let space, item_id, category
-        try {
-            [space, item_id] = path.slice(1).split(':')         // decode space identifier and convert to a category object
-            category = await this.get(`spaces/${space}`)
-        } catch (ex) {
-            throw new Error(`URL path not found: ${path}`)
-        }
+        // decode space identifier and convert to a category object
+        let category, [space, item_id] = path.slice(1).split(':')
+        category = await this.get(`spaces/${space}`)
+        if (!category) return response.sendStatus(404)
         let item = await category.getItem(Number(item_id))
         return item.handle(request, response, this)
     }
@@ -1017,38 +1013,23 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    // async search(path) {
-    //     let fs = import('fs')
-    //     let root = await this.get('path')
-    //
-    //     if (!root) return undefined
-    //     if (!root.endsWith('/')) root = root + '/'
-    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-    //     let fullpath = root + path
-    //
-    //     if (path) return fs.readFileSync(path, {encoding})
-    //
-    //
-    //     let item = this
-    //     while (path) {
-    //         let name = path.split(Folder.SEP_FOLDER)[0]
-    //         item = await item.get(`files/${name}`)
-    //         path = path.slice(name.length+1)
-    //     }
-    //     return item
-    // }
-    // async read(path) {
-    //     /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
-    //     let f = await this.search(path)
-    //     if (f instanceof File) return f.read()
-    //     throw new Error(`not a file: ${path}`)
-    // }
-    // async get_name(item) {
-    //     /* Return a name assigned to a given item. If the same item is assigned multiple names,
-    //     the last one is returned. */
-    //     let names = await this.temp('names')
-    //     return names.get(item.id, null)
-    // }
-    // async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
+    async execute(path, request, response) {
+        /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
+           FolderLocal does NOT provide web browsing of files and nested folders.
+         */
+        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+        if (!path) return this.handle(request, response)        // if no file `path` given, display this folder as an item
+
+        let root = await this.get('path')
+        if (!root) throw new Error('missing `path` property in a FolderLocal')
+        if (!root.endsWith('/')) root += '/'
+
+        let fspath   = await import('path')
+        let fullpath = fspath.join(root, path)              // this interpretes and reduces the '..' symbols, so we have to check
+        if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
+            throw new Error(`URL path not found: ${path}`)
+
+        response.sendFile(fullpath, {}, (err) => {if(err) response.sendStatus(err.status)})
+    }
 }
 
