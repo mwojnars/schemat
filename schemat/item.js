@@ -779,16 +779,6 @@ export class Application extends Item {
         */
         throw new Error('method not implemented in a subclass')
     }
-    _split_endpoint(path) {
-        /* Decode @endpoint from the URL path. Return [subpath, endpoint]. */
-        return path
-        // if (path.includes(Application.SEP_ENDPOINT)) {
-        //     let parts = path.split(Application.SEP_ENDPOINT)
-        //     if (parts.length !== 2) throw new Error(`unknown URL path: ${path}`)
-        //     return parts
-        // }
-        // else return [path, '']
-    }
 }
 
 export class AppRoot extends Application {
@@ -857,12 +847,11 @@ export class AppAdmin extends Application {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
         let id
         try {
-            path = this._split_endpoint(path.slice(1))
-            id = path.split(':').map(Number)
+            id = path.slice(1).split(':').map(Number)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
-        return await this.registry.getItem(id) //, endpoint]
+        return await this.registry.getItem(id)
     }
 }
 
@@ -886,7 +875,7 @@ export class AppFiles extends Application {
             return response.redirect(request.ipath + '/')
 
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
-        let filepath = this._split_endpoint(path.slice(1))
+        let filepath = path.slice(1)
         request.state = {}
         
         let root = await this.get('root_folder') || await this.registry.files
@@ -931,8 +920,7 @@ export class AppSpaces extends Application {
     async execute(path, request, response) {
         let space, item_id, category
         try {
-            path = this._split_endpoint(path.slice(1));
-            [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
+            [space, item_id] = path.slice(1).split(':')         // decode space identifier and convert to a category object
             category = await this.get(`spaces/${space}`)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
