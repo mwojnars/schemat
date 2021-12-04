@@ -324,7 +324,7 @@ export class Item {
 
     /***  Handlers (server side)  ***/
 
-    async handle(req, res, app, endpoint = null) {
+    async handle(req, res, app) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -338,7 +338,7 @@ export class Item {
         */
         req.item = this
         req.app  = app
-        endpoint = endpoint || 'view'
+        let endpoint = req.endpoint || 'view'
 
         let handler
         let handlers = await this.category.getHandlers()
@@ -840,26 +840,23 @@ export class AppAdmin extends Application {
         return this._set_endpoint(url, opts)
     }
     async execute(path, request, response) {
-        let item = await this._find_item(path, request)
-        await item.handle(request, response, this, request.endpoint)
+        let item = await this._find_item(path)
+        return item.handle(request, response, this)
     }
     async _find_item(path) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
         let id
-        try {
-            id = path.slice(1).split(':').map(Number)
-        } catch (ex) {
-            throw new Error(`URL path not found: ${path}`)
-        }
-        return await this.registry.getItem(id)
+        try { id = path.slice(1).split(':').map(Number) }
+        catch (ex) { throw new Error(`URL path not found: ${path}`) }
+        return this.registry.getItem(id)
     }
 }
 
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
-        let item = await this._find_item(path, request)
-        let endpoint = request.endpoint || "json"
-        await item.handle(request, response, this, endpoint)
+        let item = await this._find_item(path)
+        if (!request.endpoint) request.endpoint = "json"
+        return item.handle(request, response, this)
     }
 }
 
@@ -893,7 +890,8 @@ export class AppFiles extends Application {
             request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
 
-        return item.handle(request, response, this, request.endpoint || default_endpoint)
+        if (!request.endpoint) request.endpoint = default_endpoint
+        return item.handle(request, response, this)
     }
 
     async url_path(item, route = '', opts = {}) {
@@ -926,7 +924,7 @@ export class AppSpaces extends Application {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.getItem(Number(item_id))
-        return item.handle(request, response, this, request.endpoint)
+        return item.handle(request, response, this)
     }
 }
 
@@ -992,8 +990,9 @@ export class Folder extends Item {
             // default_endpoint = ('browse',)
             if (path) return item.execute(path, request, response)
         }
+        if (!request.endpoint) request.endpoint = default_endpoint
 
-        return item.handle(request, response, this, endpoint || default_endpoint)
+        return item.handle(request, response, this)
     }
 
     exists(path) {
