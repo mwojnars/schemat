@@ -1,6 +1,6 @@
 import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
-    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, splitLast
+    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, splitFirst, splitLast
 } from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
@@ -194,7 +194,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url('')
+            let url = await this.category.url({route: ''})
             if (url) cat = `<a href=${url}>${cat}</a>`
         }
         let stamp = `${cat}:${this.iid}`
@@ -302,21 +302,23 @@ export class Item {
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
     
-    async url(route = null, {raise = false, args = null} = {}) {
+    async url({route = null, endpoint, args, relative, raise = true} = {}) {
         /*
         Return a *relative* URL of this item as assigned by the current Application (if route=null),
         that is, by the one that's processing the current web request; or an *absolute* URL
         assigned by an application anchored at a given route.
         route=null should only be used during request processing, when a current app is defined.
         */
+        // TODO: append `endpoint` and `args` to the result URL
+        let opts = {route, relative}
         try {
             if (route === null) {
                 let app  = this.registry.current_request.app
-                let path = await app.url_path(this, args)
+                let path = await app.url_path(this, opts)
                 return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
             }
             let site = await this.registry.site
-            return await site.get_url(this, route, args)
+            return await site.get_url(this, opts)
         }
         catch (ex) { if (raise) {throw ex} else return null }
     }
@@ -324,7 +326,7 @@ export class Item {
 
     /***  Handlers (server side)  ***/
 
-    async handle(req, res, app) {
+    async handle(req, res, app = null) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -337,7 +339,7 @@ export class Item {
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
         req.item = this
-        req.app  = app
+        if (app) req.app = app
         let endpoint = req.endpoint || req.endpointDefault || 'view'
 
         let handler
@@ -708,22 +710,20 @@ export class RootCategory extends Category {
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    async get_url(item, route = '', opts = {}) {
-        /* Return an absolute or relative URL of `item` as assigned by the application anchored at `route`.
-         * `opts` may include: args (null), relative (false), no_base (false) */
+    async get_url(item, {route = '', relative, with_base}) {
+        /* Return an absolute or relative URL of `item` as assigned by the application anchored at `route`. */
         let app  = await this.get('application')
         let base = await this.get('base_url')
-        let no_base = T.pop(opts, 'no_base')
 
         // relative URL
-        let path = await app.url_path(item, route, opts)
-        if (opts.relative) return path
+        let path = await app.url_path(item, {route, relative})
+        if (relative) return path
         
         path = '/' + path
-        if (no_base) return path                        // absolute URL without base
+        if (!with_base) return path                         // absolute URL without base
 
         if (base.endsWith('/')) base = base.slice(-1)
-        return base + path                              // absolute URL with base
+        return base + path                                  // absolute URL with base
     }
 
     async execute(request, response) {
@@ -749,15 +749,13 @@ export class Application extends Item {
     static SEP_ROUTE    = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
     static SEP_ENDPOINT = '@'
     
-    async url_path(item, route = '', opts = {}) {
+    async url_path(item, {route, relative}) {
         /*
-        Generate URL path (URL fragment after route) for `item`, possibly extended with a non-default
-        endpoint designation and/or arguments to be passed to a handler function or a template.
+        Generate URL path (URL fragment after route) for `item`.
         If relative=true, the path is relative to a given application `route`; otherwise,
-        it is absolute, i.e., includes segments for all intermediate applications;
+        it is absolute, i.e., includes segments for all intermediate applications below this one;
         the path does NOT have a leading separator, or it has a different meaning -
         in any case, a leading separator should be appended by caller if needed.
-        `opt` may include: endpoint (null), relative (true), args (null)
         */
         throw new Error()
     }
@@ -784,7 +782,7 @@ export class Application extends Item {
 export class AppRoot extends Application {
     /* A set of sub-applications, each bound to a different URL prefix. */
 
-    async _route(path) {
+    async _route(path = '') {
         /*
         Make one step forward along a URL `path`. Return the extracted route segment (step),
         the associated application object, and the remaining subpath.
@@ -811,10 +809,10 @@ export class AppRoot extends Application {
         throw new Error(`URL path not found: ${path}`)
     }
 
-    async url_path(item, route = '', opts = {}) {
+    async url_path(item, opts = {}) {
 
-        let [step, app, path] = await this._route(route)
-        let subpath = await app.url_path(item, path, opts)
+        let [step, app, path] = await this._route(opts.route)
+        let subpath = await app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
         return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
@@ -833,7 +831,7 @@ export class AppRoot extends Application {
 export class AppAdmin extends Application {
     /* Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
-    async url_path(item, route = '', opts = {}) {
+    async url_path(item, opts = {}) {
         assert(item.has_id())
         let [cid, iid] = item.id
         let url = `${cid}:${iid}`
@@ -854,9 +852,8 @@ export class AppAdmin extends Application {
 
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
-        let item = await this._find_item(path)
-        // if (!request.endpoint) request.endpoint = "json"
         request.endpointDefault = "json"
+        let item = await this._find_item(path)
         return item.handle(request, response, this)
     }
 }
@@ -873,30 +870,27 @@ export class AppFiles extends Application {
             return response.redirect(request.ipath + '/')
 
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
-        let filepath = path.slice(1)
+        let filepath  = path.slice(1)
         request.state = {}
+        request.app   = this
         
         let root = await this.get('root_folder') || await this.registry.files
-        // return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
+        return root.execute(filepath, request, response)     // `root` must be an item of Folder_ or its subcategory
 
-        let item = await root.search(filepath)
-        assert(item, `item not found: ${filepath}`)
-
-        // let default_endpoint = 'view'
-
-        if (await item.get('_is_file'))
-            request.endpointDefault = 'download'
-
-        else if (await item.get('_is_folder'))
-            request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
-            // default_endpoint = ('browse',)
-
-        // if (!request.endpoint) request.endpoint = default_endpoint
-        // request.endpointDefault = default_endpoint
-        return item.handle(request, response, this)
+        // let item = await root.search(filepath)
+        // assert(item, `item not found: ${filepath}`)
+        //
+        // if (await item.get('_is_file'))
+        //     request.endpointDefault = 'download'
+        //
+        // else if (await item.get('_is_folder'))
+        //     request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
+        //     // request.endpointDefault = 'browse'
+        //
+        // return item.handle(request, response, this)
     }
 
-    async url_path(item, route = '', opts = {}) {
+    async url_path(item, opts = {}) {
         // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
         let state = this.registry.current_request.state
         return state.folder.get_name(item)
@@ -908,7 +902,7 @@ export class AppSpaces extends Application {
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
-    async url_path(item, route = '', opts = {}) {
+    async url_path(item, opts = {}) {
         let spaces_rev = await this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
         if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
@@ -972,38 +966,38 @@ export class Folder extends Item {
 
     async execute(path, request, response) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
-           If the object is a Folder, call its execute(). If the object is an item, call its handle().
+           If the object is a Folder, call its execute() with a truncated path. If the object is an item, call its handle().
          */
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         let name = path.split(Folder.SEP_FOLDER)[0]
-        let item = await this.get(`files/${name}`)
-        path = path.slice(name.length+1)
+        let item = this
 
-        assert(item instanceof Item)
-
-        let default_endpoint = 'view'
+        if (name) {
+            item = await this.get(`files/${name}`)
+            if (!item) throw new Error(`URL path not found: ${path}`)
+            assert(item instanceof Item, `not an item: ${item}`)
+            path = path.slice(name.length+1)
+        }
 
         if (await item.get('_is_file')) {
             if (path) throw new Error('URL not found')
-            default_endpoint = 'download'
+            request.endpointDefault = 'download'
         }
         else if (await item.get('_is_folder')) {
-            request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
-            // default_endpoint = ('browse',)
+            // request.endpointDefault = 'browse'
             if (path) return item.execute(path, request, response)
+            else request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
-        // if (!request.endpoint) request.endpoint = default_endpoint
-        request.endpointDefault = default_endpoint
 
-        return item.handle(request, response, this)
+        return item.handle(request, response)
     }
 
-    exists(path) {
-        /* Check whether a given path exists in this folder. */
-    }
+    // exists(path) {
+    //     /* Check whether a given path exists in this folder. */
+    // }
     async search(path) {
         /*
-        Find an object pointed to by a `path`. The path may start with '/', but this is not obligatory.
+        Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
         The search is performed recursively in subfolders.
         */
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
