@@ -124,6 +124,7 @@ export class Types {
 
     static isPrimitiveObj = (obj) => ["number","string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
+    static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))               // test if obj is a valid number, not NaN
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype)   // test if obj is a pure object (dict), no class assigned
     static ofType         = (x,T) => (x && T && Object.getPrototypeOf(x) === T.prototype)   // test if x is an object of class T exactly (NOT of a subclass)

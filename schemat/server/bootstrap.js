@@ -108,13 +108,13 @@ async function create_categories(Category) {
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
-    cat.FolderLocal = await Category.new({
-        name        : "FolderLocal",
-        info        : "File folder located on a local disk, identified by its local file path. Gives access to all files and folders beneath the path.",
-        prototype   : cat.Folder,
-        class_name  : 'schemat.item.FolderLocal',
-        fields      : C({path: new STRING()}),
-    })
+    // cat.FolderLocal = await Category.new({
+    //     name        : "FolderLocal",
+    //     info        : "File folder located on a local disk, identified by its local file path. Gives access to all files and folders beneath the path.",
+    //     prototype   : cat.Folder,
+    //     class_name  : 'schemat.item.FolderLocal',
+    //     fields      : C({path: new STRING()}),
+    // })
 
     cat.Application = await Category.new({
         name        : "Application",
@@ -201,7 +201,7 @@ async function create_items(cat, Category) {
         files: C({
             'system':           item.dir_system,
             'tmp':              item.dir_tmp2,
-            'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
+            // 'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
 
             'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
             'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),

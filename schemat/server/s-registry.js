@@ -55,6 +55,8 @@ class FileDB extends ServerDB {
 
     async select(id) {
         let record = this.records.get(id)
+        if (!record)
+            throw new Error(`undefined record for ${id}`)
         assert(record.cid === id[0] && record.iid === id[1])
         return record
     }

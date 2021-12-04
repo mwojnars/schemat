@@ -298,45 +298,18 @@ export class Item {
         // let request  = {item: this, app, state}
         let {item, app, state} = this.registry.current_request
         let request  = {item, app, state}
-        let ajax_url = await (await this.registry.site).ajax_url()
+        let ajax_url = await (await this.registry.site).ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
-    
-    async url({raise = true, ...params}) {
-        try {
-            let site = await this.registry.site
-            return await site.buildURL(this, params)
-        }
-        catch(ex) { if (raise) {throw ex} else return null }
-    }
-    // async url({route = null, endpoint, args, relative, raise = true} = {}) {
-    //     /*
-    //     Return a relative URL of this item as assigned by the current deep-most Application (if route=null)
-    //     that's processing the current web request; or an absolute or relative URL
-    //     assigned by an application anchored at a given route.
-    //     route=null should only be used during request processing, when the current app is defined.
-    //     */
-    //     let site = await this.registry.site
-    //     return site.buildURL(this, params)
-    //
-    //     try {
-    //         let url = await this._urlPath(route, relative)
-    //         return url
-    //     }
-    //     catch (ex) { if (raise) {throw ex} else return null }
-    // }
-    // async _urlPath(route, relative) {
-    //     let opts = {route, relative}
-    //     if (route === null) {
-    //         let app  = this.registry.current_request.app
-    //         let path = await app.url_path(this, opts)
-    //         return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-    //     }
-    //     let site = await this.registry.site
-    //     return await site.get_url(this, opts)
-    //     // return this._set_endpoint(url, {endpoint, args})       // append `endpoint` and `args` to the URL
-    // }
+    async url(params = {}) {
+        let {raise = true, ...params_} = params
+        let site   = await this.registry.site
+        let build  = site.buildURL(this, params_)
+        if (raise) return build
 
+        try { return await build }
+        catch(ex) { return null }
+    }
 
     /***  Handlers (server side)  ***/
 
@@ -726,8 +699,20 @@ export class Site extends Item {
 
     static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
+    async execute(request, response) {
+        /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
+        let app  = await this.get('application')
+        let path = request.path, sep = Site.SEP_ENDPOINT;
+        [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        return app.execute(request.ipath, request, response)
+    }
 
-    async buildURL(item, {route = null, relative, baseURL, endpoint, args}) {
+    async ajaxURL() {
+        /* Absolute base URL for AJAX calls originating at a client UI. */
+        return (await this.get('base_url')) + '/ajax'
+    }
+
+    async buildURL(item, {route = null, relative = true, baseURL, endpoint, args} = {}) {
         /*
         Return a relative URL of `item` as assigned by the deep-most Application (if route=null)
         that's processing the current web request; or an absolute or relative URL
@@ -739,18 +724,17 @@ export class Site extends Item {
     }
 
     async url_path(item, {route, relative, baseURL}) {
-        let opts = {route, relative}
 
         // relative URL anchored at the deep-most application's route
         if (route === null) {
             let app  = this.registry.current_request.app
-            let path = await app.url_path(item, opts)
+            let path = await app.url_path(item, {route, relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
 
         // relative URL anchored at `route`
         let root = await this.get('application')
-        let path = await root.url_path(item, opts)
+        let path = await root.url_path(item, {route, relative})
         if (relative) return path
 
         // absolute URL without base?
@@ -762,24 +746,10 @@ export class Site extends Item {
         if (base.endsWith('/')) base = base.slice(-1)
         return base + path
     }
-
     setEndpoint(url, endpoint, args) {
         if (endpoint) url += `${Site.SEP_ENDPOINT}${endpoint}`
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
-    }
-
-    async execute(request, response) {
-        /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
-        let app  = await this.get('application')
-        let path = request.path, sep = Site.SEP_ENDPOINT;
-        [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        return app.execute(request.path, request, response)
-    }
-
-    async ajax_url() {
-        /* Absolute base URL for AJAX calls originating at a client UI. */
-        return (await this.get('base_url')) + '/ajax'
     }
 }
 
@@ -791,16 +761,6 @@ export class Application extends Item {
     */
     static SEP_ROUTE    = '/'       // separator of route segments in URL, each segment corresponds to another (sub)application
 
-    async url_path(item, {route, relative}) {
-        /*
-        Generate URL path (URL fragment after route) for `item`.
-        If relative=true, the path is relative to a given application `route`; otherwise,
-        it is absolute, i.e., includes segments for all intermediate applications below this one;
-        the path does NOT have a leading separator, or it has a different meaning -
-        in any case, a leading separator should be appended by caller if needed.
-        */
-        throw new Error()
-    }
     async execute(action, request, response) {
         /*
         Execute an `action` that originated from a web `request` and emit results to a web `response`.
@@ -813,10 +773,29 @@ export class Application extends Item {
         */
         throw new Error('method not implemented in a subclass')
     }
+    async url_path(item, {route, relative}) {
+        /*
+        Generate URL path (URL fragment after route) for `item`.
+        If relative=true, the path is relative to a given application `route`; otherwise,
+        it is absolute, i.e., includes segments for all intermediate applications below this one;
+        the path does NOT have a leading separator, or it has a different meaning -
+        in any case, a leading separator should be appended by caller if needed.
+        */
+        throw new Error()
+    }
 }
 
 export class AppRoot extends Application {
     /* A set of sub-applications, each bound to a different URL prefix. */
+
+    async execute(path, request, response) {
+        /*
+        Find an application in 'apps' that matches the requested URL path and call its execute().
+        `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
+        */
+        let [step, app, subpath] = await this._route(path)
+        await app.execute(subpath, request, response)
+    }
 
     async _route(path = '') {
         /*
@@ -853,25 +832,11 @@ export class AppRoot extends Application {
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
         return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
     }
-
-    async execute(path, request, response) {
-        /*
-        Find an application in 'apps' that matches the requested URL path and call its execute().
-        `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
-        */
-        let [step, app, subpath] = await this._route(path)
-        await app.execute(subpath, request, response)
-    }
 }
 
 export class AppAdmin extends Application {
     /* Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
-    async url_path(item, opts = {}) {
-        assert(item.has_id())
-        let [cid, iid] = item.id
-        return `${cid}:${iid}`
-    }
     async execute(path, request, response) {
         let item = await this._find_item(path)
         return item.handle(request, response, this)
@@ -882,6 +847,11 @@ export class AppAdmin extends Application {
         try { id = path.slice(1).split(':').map(Number) }
         catch (ex) { throw new Error(`URL path not found: ${path}`) }
         return this.registry.getItem(id)
+    }
+    async url_path(item, opts = {}) {
+        assert(item.has_id())
+        let [cid, iid] = item.id
+        return `${cid}:${iid}`
     }
 }
 
@@ -903,26 +873,13 @@ export class AppFiles extends Application {
 
         if (!path.startsWith('/'))
             return response.redirect(request.ipath + '/')
-
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
+
         let filepath  = path.slice(1)
-        request.state = {}
         request.app   = this
         
         let root = await this.get('root_folder') || await this.registry.files
         return root.execute(filepath, request, response)     // `root` must be an item of Folder_ or its subcategory
-
-        // let item = await root.search(filepath)
-        // assert(item, `item not found: ${filepath}`)
-        //
-        // if (await item.get('_is_file'))
-        //     request.endpointDefault = 'download'
-        //
-        // else if (await item.get('_is_folder'))
-        //     request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
-        //     // request.endpointDefault = 'browse'
-        //
-        // return item.handle(request, response, this)
     }
 
     async url_path(item, opts = {}) {

@@ -85,7 +85,7 @@ class Server {
     start_request(req) {
         assert(!this.registry.current_request, 'trying to start a new request when another one is still open')
         this.registry.current_request = req
-        req.state = null
+        req.state = {}
     }
     stop_request() {
         assert(this.registry.current_request, 'trying to stop a request when none was started')

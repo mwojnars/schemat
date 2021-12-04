@@ -131,6 +131,8 @@ export class Registry {
 
     async getItem(id, {load = false, version = null} = {}) {
         let [cid, iid] = id
+        assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
+
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
