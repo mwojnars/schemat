@@ -56,8 +56,8 @@ class Server {
         /*
         During request processing, some additional non-standard attributes are assigned in `request`
         to carry Hyperweb-specific information for downstream processing functions:
-
-        x request.endpoint = item's endpoint/view that should be executed
+        - request.ipath    = like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
+        - request.endpoint = item's endpoint/view that should be executed; empty string '' if no endpoint
         TODO remove/rename:
         - request.item  = target item that's responsible for actual handling of this request
         - request.app   = leaf Application object this request is addressed to

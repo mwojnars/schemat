@@ -1,5 +1,7 @@
-import {e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
-        TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML} from './utils.js'
+import {
+    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
+    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, splitLast
+} from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './types.js'
 import { JSONx } from './serialize.js'
@@ -725,9 +727,11 @@ export class Site extends Item {
     }
 
     async execute(request, response) {
-        /* Forward the request to a root application configured in the `app` property. */
-        let app = await this.get('application')
-        await app.execute(request.path, request, response)
+        /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
+        let app  = await this.get('application')
+        let path = request.path, sep = Application.SEP_ENDPOINT;
+        [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        return app.execute(request.path, request, response)
     }
 
     async ajax_url() {
@@ -777,14 +781,13 @@ export class Application extends Item {
     }
     _split_endpoint(path) {
         /* Decode @endpoint from the URL path. Return [subpath, endpoint]. */
-        // if ('?' in path)
-        //     path = path.split('?')[0]
-        if (path.includes(Application.SEP_ENDPOINT)) {
-            let parts = path.split(Application.SEP_ENDPOINT)
-            if (parts.length !== 2) throw new Error(`unknown URL path: ${path}`)
-            return parts
-        }
-        else return [path, '']
+        return path
+        // if (path.includes(Application.SEP_ENDPOINT)) {
+        //     let parts = path.split(Application.SEP_ENDPOINT)
+        //     if (parts.length !== 2) throw new Error(`unknown URL path: ${path}`)
+        //     return parts
+        // }
+        // else return [path, '']
     }
 }
 
@@ -847,26 +850,26 @@ export class AppAdmin extends Application {
         return this._set_endpoint(url, opts)
     }
     async execute(path, request, response) {
-        let [item, endpoint] = await this._find_item(path, request)
-        await item.handle(request, response, this, endpoint)
+        let item = await this._find_item(path, request)
+        await item.handle(request, response, this, request.endpoint)
     }
     async _find_item(path) {
         /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
-        let id, endpoint
+        let id
         try {
-            [path, endpoint] = this._split_endpoint(path.slice(1))
+            path = this._split_endpoint(path.slice(1))
             id = path.split(':').map(Number)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
-        return [await this.registry.getItem(id), endpoint]
+        return await this.registry.getItem(id) //, endpoint]
     }
 }
 
 export class AppAjax extends AppAdmin {
     async execute(path, request, response) {
-        let [item, endpoint] = await this._find_item(path, request)
-        endpoint = endpoint || "json"
+        let item = await this._find_item(path, request)
+        let endpoint = request.endpoint || "json"
         await item.handle(request, response, this, endpoint)
     }
 }
@@ -880,10 +883,10 @@ export class AppFiles extends Application {
         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
 
         if (!path.startsWith('/'))
-            return response.redirect(request.path + '/')
+            return response.redirect(request.ipath + '/')
 
         // TODO: make sure that special symbols, e.g. "$", are forbidden in file paths
-        let [filepath, endpoint] = this._split_endpoint(path.slice(1))
+        let filepath = this._split_endpoint(path.slice(1))
         request.state = {}
         
         let root = await this.get('root_folder') || await this.registry.files
@@ -901,22 +904,7 @@ export class AppFiles extends Application {
             request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
             // default_endpoint = ('browse',)
 
-        // let files   = await this.registry.files
-        // let File_   = await files.search('system/File')
-        // let Folder_ = await files.search('system/Folder')
-        //
-        // if (await item.isinstance(File_)) {
-        //     default_endpoint = 'download'
-        //     let is = await item.get('_is_file')
-        //     assert(is === true)
-        // }
-        // else if (await item.isinstance(Folder_)) {
-        //     request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
-        //     // default_endpoint = ('browse',)
-        //     let is = await item.get('_is_folder')
-        //     assert(is === true)
-        // }
-        return item.handle(request, response, this, endpoint || default_endpoint)
+        return item.handle(request, response, this, request.endpoint || default_endpoint)
     }
 
     async url_path(item, route = '', opts = {}) {
@@ -941,16 +929,16 @@ export class AppSpaces extends Application {
     async _temp_spaces_rev()    { return ItemsMap.reversed(await this.get('spaces')) }
 
     async execute(path, request, response) {
-        let space, item_id, category, endpoint
+        let space, item_id, category
         try {
-            [path, endpoint] = this._split_endpoint(path.slice(1));
+            path = this._split_endpoint(path.slice(1));
             [space, item_id] = path.split(':')              // decode space identifier and convert to a category object
             category = await this.get(`spaces/${space}`)
         } catch (ex) {
             throw new Error(`URL path not found: ${path}`)
         }
         let item = await category.getItem(Number(item_id))
-        return item.handle(request, response, this, endpoint)
+        return item.handle(request, response, this, request.endpoint)
     }
 }
 
@@ -994,12 +982,38 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
+    async execute(path, request, response) {
+        /* Propagate a web request down to the nearest object pointed to by `path`.
+           If the object is a Folder, call its execute(). If the object is an item, call its handle().
+         */
+        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+        let name = path.split(Folder.SEP_FOLDER)[0]
+        let item = await this.get(`files/${name}`)
+        path = path.slice(name.length+1)
+
+        assert(item instanceof Item)
+
+        let default_endpoint = 'view'
+
+        if (await item.get('_is_file')) {
+            if (path) throw new Error('URL not found')
+            default_endpoint = 'download'
+        }
+        else if (await item.get('_is_folder')) {
+            request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
+            // default_endpoint = ('browse',)
+            if (path) return item.execute(path, request, response)
+        }
+
+        return item.handle(request, response, this, endpoint || default_endpoint)
+    }
+
     exists(path) {
         /* Check whether a given path exists in this folder. */
     }
     async search(path) {
         /*
-        Find an item pointed to by a `path`. The path may start with '/', but this is not obligatory.
+        Find an object pointed to by a `path`. The path may start with '/', but this is not obligatory.
         The search is performed recursively in subfolders.
         */
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
@@ -1015,7 +1029,7 @@ export class Folder extends Item {
         /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
         let f = await this.search(path)
         if (f instanceof File) return f.read()
-        throw new Error(`not a file: ${path}`)
+        throw new Error(`not a File: ${path}`)
     }
     async get_name(item) {
         /* Return a name assigned to a given item. If the same item is assigned multiple names,
@@ -1028,38 +1042,38 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async search(path) {
-        let fs = import('fs')
-        let root = await this.get('path')
-
-        if (!root) return undefined
-        if (!root.endsWith('/')) root = root + '/'
-        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        let fullpath = root + path
-
-        if (path) return fs.readFileSync(path, {encoding})
-
-
-        let item = this
-        while (path) {
-            let name = path.split(Folder.SEP_FOLDER)[0]
-            item = await item.get(`files/${name}`)
-            path = path.slice(name.length+1)
-        }
-        return item
-    }
-    async read(path) {
-        /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
-        let f = await this.search(path)
-        if (f instanceof File) return f.read()
-        throw new Error(`not a file: ${path}`)
-    }
-    async get_name(item) {
-        /* Return a name assigned to a given item. If the same item is assigned multiple names,
-        the last one is returned. */
-        let names = await this.temp('names')
-        return names.get(item.id, null)
-    }
-    async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
+    // async search(path) {
+    //     let fs = import('fs')
+    //     let root = await this.get('path')
+    //
+    //     if (!root) return undefined
+    //     if (!root.endsWith('/')) root = root + '/'
+    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+    //     let fullpath = root + path
+    //
+    //     if (path) return fs.readFileSync(path, {encoding})
+    //
+    //
+    //     let item = this
+    //     while (path) {
+    //         let name = path.split(Folder.SEP_FOLDER)[0]
+    //         item = await item.get(`files/${name}`)
+    //         path = path.slice(name.length+1)
+    //     }
+    //     return item
+    // }
+    // async read(path) {
+    //     /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
+    //     let f = await this.search(path)
+    //     if (f instanceof File) return f.read()
+    //     throw new Error(`not a file: ${path}`)
+    // }
+    // async get_name(item) {
+    //     /* Return a name assigned to a given item. If the same item is assigned multiple names,
+    //     the last one is returned. */
+    //     let names = await this.temp('names')
+    //     return names.get(item.id, null)
+    // }
+    // async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
 }
 
