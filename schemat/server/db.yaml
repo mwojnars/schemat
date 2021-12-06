@@ -278,7 +278,7 @@
 - __id:
     - 2
     - 6
-  path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
+  path: /home/marcin/Documents/priv/catalog/src/schemat/type.js
 - __id:
     - 2
     - 7
@@ -311,7 +311,7 @@
     serialize.js:
       - 2
       - 5
-    types.js:
+    type.js:
       - 2
       - 6
     utils.js:

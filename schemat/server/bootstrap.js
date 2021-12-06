@@ -4,7 +4,7 @@ Creating core items from scratch and storing them as initial items in DB.
 
 import {print} from '../utils.js'
 import {ServerRegistry} from './s-registry.js'
-import {GENERIC, SCHEMA, BOOLEAN, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../types.js'
+import {GENERIC, SCHEMA, BOOLEAN, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
 //import {Index} from '../item.js'
 
@@ -210,7 +210,7 @@ async function create_items(cat, Category) {
             'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
             'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
             'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
-            'types.js':         await cat.FileLocal.new({path: `${path}/types.js`}),
+            'type.js':         await cat.FileLocal.new({path: `${path}/type.js`}),
             'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
             // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
         }),

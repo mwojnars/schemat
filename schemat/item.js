@@ -3,7 +3,7 @@ import {
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, splitFirst, splitLast
 } from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
-import { generic_schema, CATALOG, DATA } from './types.js'
+import { generic_schema, CATALOG, DATA } from './type.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsMap } from './data.js'
 

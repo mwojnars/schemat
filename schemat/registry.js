@@ -4,7 +4,7 @@ import { print, assert } from './utils.js'
 import { ItemsMap } from './data.js'
 import { RootCategory, ROOT_CID } from './item.js'
 
-// import * as mod_types from './types.js'
+// import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
 
@@ -110,7 +110,7 @@ export class Registry {
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
         await classpath.set_module("schemat.data", "./data.js")
         await classpath.set_module("schemat.item", "./item.js")
-        await classpath.set_module("schemat.type", "./types.js")
+        await classpath.set_module("schemat.type", "./type.js")
 
         this.classpath = classpath
         print('init_classpath() done')
