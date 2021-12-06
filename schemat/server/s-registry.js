@@ -34,8 +34,8 @@ class ServerDB extends Database {
     // }
     async upsert_many(items, flush = true) {
         for (const item of items)
-            if (item.iid === null) await this.insert(item, false)
-            else                   await this.update(item, false)
+            if (item.newborn) await this.insert(item)
+            else              await this.update(item)
         if (flush) await this.flush()
     }
 }
@@ -91,7 +91,11 @@ class YamlDB extends FileDB {
         // for (const [id, data] of this.records)
         //     print(id, data)
     }
-    async insert(item, flush = true) {
+    async insert(...items) {
+        await Promise.all(items.map(item => this.insertOne(item, false)))
+        await this.flush()
+    }
+    async insertOne(item, flush = true) {
 
         if (item.cid === null)
             item.cid = item.category.iid
@@ -110,7 +114,6 @@ class YamlDB extends FileDB {
         assert(!this.records.has(item.id), "an item with the same ID already exists")
 
         this.records.set(item.id, {cid, iid, data: await item.dumpData()})
-
         if (flush) await this.flush()
     }
 
@@ -142,9 +145,13 @@ class YamlDB extends FileDB {
 
 export class ServerRegistry extends Registry {
 
+    // staging area...
+    inserts = []                // a list of newly created items scheduled for insertion to DB
+    edits   = new ItemsMap()    // a list of edits per each item scheduled for write to DB: item.id -> edits;
+                                // each edit is an object {oper,data,action,args}
+
     staging = []                // list of modified or newly created items that will be updated/inserted to DB
-                                // on next commit(); the items will be commited to DB in the SAME order as in this list;
-                                // if a staged item is already in cache, it can't be purged there until committed (TODO)
+                                // on next commit(); the items will be commited to DB in the SAME order as in this list
     staging_ids = new Map()     // dict of items with a non-empty ID that have already been added to `staging`,
                                 // to avoid repeated insertion of the same item twice and to verify its identity (newborn items excluded)
 
@@ -172,36 +179,65 @@ export class ServerRegistry extends Registry {
         assert(site.has_id())
         this.site_id = site.id
         await this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
-        await this.commit(this.root)
+        return this.root.update()
+        // this.stage(this.root)
+        // return this.commit()
     }
     
     /***  DB modifications  ***/
 
-    // async insert(...items) {
-    //     for (const item of items) {
-    //         assert(!item.has_id() || (item instanceof RootCategory))
-    //         // this.stage(item)
-    //     }
-    //     await this.db.insert_many(items)
-    // }
-    stage(item) {
-        /*
-        Add an updated or newly created `item` to the staging area.
-        For updates, this typically should be called BEFORE modifying an item,
-        so that its refresh in cache is prevented during modifications (TODO).
+    async update(item) {
+        /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
+        return this.db.update(item)
+    }
+    async delete(item) {
+        /* Delete `item` from DB. Executed instantly without commit. */
+        assert(item.has_id())
+        return this.db.delete(item.id)
+    }
+
+    stage_(item, edit) {
+        /* Add an updated or newly created `item` to the staging area.
+           For updates, stage() can be called before the first edit is created.
         */
         assert(item instanceof Item)
-        let has_id = item.has_id()
-        if (has_id && this.staging_ids.has(item.id)) {      // do NOT insert the same item twice (NOT checked for newborn items)
+        if (item.newborn)                           // newborn items get scheduled for insertion; do NOT stage the same item twice!
+            this.inserts.push(item)
+        else {                                      // item already in DB? push an edit to a list of edits
+            let edits = this.edits.get(item.id) || []
+            edits.push(edit)
+            if (edits.length === 1) this.edits.set(item.id, edits)
+        }
+    }
+    async commit_() {
+        // insert new items; during this operation, each item's IID (item.iid) gets assigned
+        let insert = this.db.insert(...this.inserts)                // a promise
+        this.inserts = []
+
+        // edit/update/delete existing items
+        let edits = Array.from(this.edits, ([id, edits]) => this.db.write(id, edits))       // array of promises
+        this.edits.clear()
+
+        return Promise.all([insert, ...edits])          // all the operations are executed concurrently
+    }
+
+    stage(item) {
+        /* Add an updated or newly created `item` to the staging area.
+           For updates, stage() can be called before a first edit is created.
+        */
+        assert(item instanceof Item)
+        let id = item.has_id()
+        if (id && this.staging_ids.has(item.id)) {      // do NOT insert the same item twice (NOT checked for newborn items)
             assert(item === this.staging_ids.get(item.id))  // make sure the identity of `item` hasn't changed - this should be ...
             return                                          // guaranteed by the way how Cache and Registry work (single-threaded; cache eviction only after request)
         }
         this.staging.push(item)
-        if (has_id) this.staging_ids.set(item.id, item)
+        if (id) this.staging_ids.set(item.id, item)
     }
-    async commit(...items) {
-        /* Insert/update all staged items (this.staging) in DB and purge the staging area. Append `items` before that. */
-        for (const item of items) this.stage(item)
+    async commit() { //...items
+        /* Write all staged edits/inserts to the DB and purge the staging area. */
+
+        // for (const item of items) this.stage(item)
         if (!this.staging.length) return
 
         // assert cache validity: the items to be updated must not have been substituted in cache in the meantime

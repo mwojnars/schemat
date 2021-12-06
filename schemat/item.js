@@ -1,6 +1,6 @@
 import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
-    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML
+    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
@@ -122,6 +122,7 @@ export class Item {
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
+    get newborn()   { return this.iid === null }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
@@ -310,6 +311,38 @@ export class Item {
         try { return await build }
         catch(ex) { return null }
     }
+
+    /***  Client-server communication protocols (operation chains)  ***/
+
+    // delete = Protocol({
+    //     onclient:  async function () {},         // bound to `delete` when called on client
+    //     onserver:  async function () {},         // bound to `delete` when called on a web app process, or a db process
+    //     onfront:   async function () {},   (web handler)
+    //     onback:    ...                     (db handler)
+    // })
+
+    async delete_remote(callback) {
+        /* Remotely delete this item in DB. */
+        let url = `${await this.url()}@delete`
+        let msg = await fetchJson(url)
+        if (msg.error) throw new Error(`server-side error: ${msg.error}`)
+        if (callback) callback(msg)
+    }
+    async _handle_delete({res}) {
+        /* Web handler to create a new item in this category based on request data. */
+        print('in _handle_delete()...')
+
+        // req.body is an object representing state of a Data instance, decoded from JSON by middleware
+        await this.registry.delete(this)
+        this.registry.commit()
+        // print('new item.id:', item.id)
+        // print('new item.data:', item.data)
+
+        return res.json({error: null})
+    }
+
+    async update() { return this.registry.update(this) }
+    async delete() { return this.registry.delete(this) }
 
     /***  Handlers (server side)  ***/
 
@@ -527,7 +560,7 @@ export class Category extends Item {
         return schema ? schema.default : default_
     }
 
-    async _inherited(field) {
+    async mergeInherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
            It's assumed that the catalogs are dictionaries (unique non-missing keys).
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
@@ -545,11 +578,11 @@ export class Category extends Item {
     }
     async _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
-        return this._inherited('fields')
+        return this.mergeInherited('fields')
     }
     async _temp_handlers_all() {
         /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
-        return this._inherited('handlers')
+        return this.mergeInherited('handlers')
     }
     async _temp_schema() {
         let fields = await this.getFields()
@@ -569,38 +602,35 @@ export class Category extends Item {
     }
     async _handle_new({req, res}) {
         /* Web handler to create a new item in this category based on request data. */
-        print('in _handle_new()...')
-        print('request body:  ', req.body)
+        // print('in _handle_new()...')
+        // print('request body:  ', req.body)
         assert(req.method === 'POST')
 
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
         let item = await this.new(data)
         this.registry.commit()
-        print('new item.id:', item.id)
-        print('new item.data:', item.data)
+        // print('new item.id:', item.id)
+        // print('new item.data:', item.data)
         res.sendItem(item)
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }
-    async remote_new(data) {
-        /* Client-side method to request insertion of a new item with given `data` to a server-side DB. */
-        let json = JSON.stringify(data.__getstate__())
-        let url  = `${await this.url()}@new`
-        let response = await fetch(url, {body: json, method: 'POST', headers: {'Content-Type': 'application/json; charset=utf-8'}})
-        let record = await response.json()
+    async new_remote(data) {
+        /* Remotely insert a new item with `data` to a DB. */
+        let url = `${await this.url()}@new`
+        let record = await fetchJson(url, data.__getstate__())
         this.registry.db.keep(record)
         return record
-        // print('remote_new().response:', response)
-    }
-
-    remote_delete(id, callback) {
-        /*  */
+        // print('new_remote().response:', response)
     }
 
     Items({items}) {
-        /* A list (table) of items in `category`. */
+        /* A list (table) of items. */
         if (!items || items.length === 0) return null
-        const remove = (id) => { print('clicked delete item:', id) }
+        const remove = async (item) => {
+            print('clicked delete item:', item.id)
+            await item.delete_remote()
+        }
         return delayed_render(async () => {
             let rows = []
             for await (const item of items) {
@@ -609,7 +639,7 @@ export class Category extends Item {
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
-                    TD(BUTTON({onClick: () => remove(item.id)}, 'Delete')),
+                    TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
                 ))
             }
             return TABLE(TBODY(...rows))
@@ -635,7 +665,7 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await category.remote_new(data)
+            let record = await category.new_remote(data)
             let item   = await category.registry.getItem([record.cid, record.iid])
             itemAdded(item)
 
