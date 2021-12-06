@@ -352,41 +352,64 @@ export class FILENAME extends STRING {}
 
 export class ITEM extends Schema {
     /*
-    Reference to an Item, encoded as ID=(CID,IID), or just IID if `category` was provided.
+    Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
     ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
-    which is not possible with an GENERIC.
+    which is not possible with a GENERIC.
     */
 
-    constructor(category = null, params = {}) {
-        super(params)
-        if (category) this.category = category      // (optional) category of items to be encoded; undefined means all items can be encoded
+    // cid_exact       // (optional) CID of an exact category the items should belong to
+    // cid_proto       // (optional) CID of a base category the items should inherit from or belong to
+    // cat_exact       // like cid_exact, but as a Category instance; used during bootstrap when the category's IID is...
+    // cat_proto       // ...not yet assigned, hence we need to keep the object itself
+
+    category_exact      // (optional) an exact category of the items being encoded; stored as an object
+                        // because during bootstrap there's no IID yet (!) when this ITEM is being created;
+    category_base       // (optional) a base category the items should inherit from
+
+    constructor(base, params = {}) {
+        /* `params.exact` may contain a category object for exact category checks. */
+        let {exact, ...base_params} = params
+        super(base_params)
+        if (exact) this.category_exact = exact
+        if (base)  this.category_base  = base
     }
-    get _cid() {
-        // if (!T.isMissing(this.cid)) return this.cid
-        return this.category ? this.category.iid : null
-    }
+    // get cid_exact() {
+    //     return this.category_exact ? this.category_exact.iid : undefined
+    // }
     encode(item) {
         if (!item.has_id())
             throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
-        let cid = this._cid
-        if (cid === null) return item.id
-        if (cid === item.cid) return item.iid
-        throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
+        // verify inheritance from a base category
+        if (this.category_base)
+            if (!item.isinstance(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
+
+        // return IID alone if an exact category is known
+        if (this.category_exact) {
+            let cid = this.category_exact.iid
+            if (item.cid !== cid) throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
+            return item.iid
+        }
+        return item.id
+
+        // let cid = this.cid_exact
+        // if (cid === undefined) return item.id
+        // if (cid === item.cid) return item.iid
+        // throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
     }
     async decode(value) {
-        let ref_cid = this._cid
+        // let ref_cid = this.cid_exact
         let cid, iid
 
-        if (typeof value === "number") {
-            if (ref_cid === null) throw new DataError(`expected a (CID,IID) tuple, but got only IID (${iid})`)
+        if (typeof value === "number") {                                // decoding an IID alone
+            let ref_cid = this.category_exact?.iid
+            if (ref_cid === undefined) throw new DataError(`expected a [CID,IID] pair, but got only IID=${iid}`)
             cid = ref_cid
             iid = value
-        } else
-            if (value instanceof Array && value.length === 2)
-                [cid, iid] = value
-            else
-                throw new DataError(`expected a (CID,IID) tuple, got ${value} instead during decoding`)
+        } else if (value instanceof Array && value.length === 2)        // decoding a full ID = [CID,IID]
+            [cid, iid] = value
+        else
+            throw new DataError(`expected a (CID,IID) tuple, got ${value} instead during decoding`)
 
         // if (cid === null) cid = ref_cid
         if (!Number.isInteger(cid)) throw new DataError(`expected CID to be an integer, got ${cid} instead during decoding`)

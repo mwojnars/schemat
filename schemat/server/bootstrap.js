@@ -23,14 +23,13 @@ let root_fields = C({
     name         : new STRING({info: "human-readable title of the category"}),
     info         : new TEXT(),
     startup_site : new GENERIC(),
-    prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first one overrides settings of subsequent ones."}),
+    prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first ones have priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a python class. Or the class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE()),
-    fields       : new CATALOG(new SCHEMA()),
+    fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
 
-    //field       : SCHEMA(multiple : True, labels : True)
-    //index       : ITEM(Index),
+    //indexes    : new CATALOG(new ITEM(Index)),
 
     //custom_fields : BOOLEAN(default : False, info : "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()")
 
@@ -77,7 +76,9 @@ let root_data = {
  */
 
 async function create_categories(Category) {
-    let cat = {}
+    let cat = {
+        get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
+    }
 
     cat.File = await Category.new({
         name        : "File",
@@ -153,7 +154,7 @@ async function create_categories(Category) {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_name  : 'schemat.item.AppSpaces',
-        fields      : C({name: new STRING(), spaces: new CATALOG(new ITEM(cat.Category))}),
+        fields      : C({name: new STRING(), spaces: new CATALOG(new ITEM(null, {exact: Category}))}),
     })
     
     cat.Site = await Category.new({
@@ -197,23 +198,23 @@ async function create_items(cat, Category) {
     item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
     item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     
-    item.filesystem = await cat.FolderLocal.new({path: `${path}`})
-    // item.filesystem = await cat.Folder.new({
-    //     files: C({
-    //         'system':           item.dir_system,
-    //         'tmp':              item.dir_tmp2,
-    //         'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
-    //
-    //         'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
-    //         'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
-    //         'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
-    //         'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
-    //         'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
-    //         'types.js':         await cat.FileLocal.new({path: `${path}/types.js`}),
-    //         'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
-    //         // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
-    //     }),
-    // })
+    // item.filesystem = await cat.FolderLocal.new({path: `${path}`})
+    item.filesystem = await cat.Folder.new({
+        files: C({
+            'system':           item.dir_system,
+            'tmp':              item.dir_tmp2,
+            'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
+
+            'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
+            'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
+            'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
+            'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
+            'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
+            'types.js':         await cat.FileLocal.new({path: `${path}/types.js`}),
+            'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
+            // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
+        }),
+    })
     
     item.app_admin = await cat.AppAdmin.new({name: "Admin"})
     item.app_ajax  = await cat.AppAjax .new({name: "AJAX"})

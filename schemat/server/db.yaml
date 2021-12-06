@@ -24,7 +24,7 @@
           - key: prototype
             value:
               info: Base category from which this one inherits. Multiple prototypes are
-                allowed, the first one overrides settings of subsequent ones.
+                allowed, the first ones have priority over subsequent ones.
               "@": schemat.type.ITEM
           - key: class_name
             value:
@@ -162,7 +162,7 @@
     name:
       "@": schemat.type.STRING
     root_folder:
-      category:
+      category_base:
         =:
           - 0
           - 3
@@ -181,6 +181,11 @@
       "@": schemat.type.STRING
     spaces:
       values:
+        category_exact:
+          =:
+            - 0
+            - 0
+          "@": (item)
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
 - __id:
@@ -196,7 +201,7 @@
     base_url:
       "@": schemat.type.STRING
     filesystem:
-      category:
+      category_base:
         =:
           - 0
           - 3
@@ -273,14 +278,10 @@
 - __id:
     - 2
     - 6
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/styles.css
-- __id:
-    - 2
-    - 7
   path: /home/marcin/Documents/priv/catalog/src/schemat/types.js
 - __id:
     - 2
-    - 8
+    - 7
   path: /home/marcin/Documents/priv/catalog/src/schemat/utils.js
 - __id:
     - 3
@@ -310,15 +311,12 @@
     serialize.js:
       - 2
       - 5
-    styles.css:
-      - 2
-      - 6
     types.js:
       - 2
-      - 7
+      - 6
     utils.js:
       - 2
-      - 8
+      - 7
 - __id:
     - 7
     - 1
@@ -336,21 +334,11 @@
     - 1
   name: Catalog
   spaces:
-    sys.category:
-      - 0
-      - 0
-    sys.item:
-      - 0
-      - 12
-    sys.site:
-      - 0
-      - 11
-    sys.dir:
-      - 0
-      - 3
-    sys.file:
-      - 0
-      - 2
+    sys.category: 0
+    sys.item: 12
+    sys.site: 11
+    sys.dir: 3
+    sys.file: 2
 - __id:
     - 6
     - 1
@@ -373,7 +361,9 @@
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
-  filesystem: 4
+  filesystem:
+    - 3
+    - 4
   application:
     - 6
     - 1
@@ -385,11 +375,3 @@
     - 12
     - 2
   title: ąłęÓŁŻŹŚ
-- __id:
-    - 12
-    - 3
-  name: a
-- __id:
-    - 12
-    - 4
-  name: b

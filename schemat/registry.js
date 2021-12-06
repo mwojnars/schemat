@@ -107,7 +107,7 @@ export class Registry {
         print('init_classpath() started...')
         let classpath = new Classpath
 
-        classpath.set_many("schemat.data", Map, Set)                      // javascript.Map, javascript.Set
+        classpath.set_many("schemat.data", Map)                             // schemat.data.Map
         await classpath.set_module("schemat.data", "./data.js")
         await classpath.set_module("schemat.item", "./item.js")
         await classpath.set_module("schemat.type", "./types.js")
