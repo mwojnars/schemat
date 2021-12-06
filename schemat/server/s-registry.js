@@ -167,7 +167,7 @@ export class ServerRegistry extends Registry {
     }
 
     async set_site(site) {
-        let Site = (await import('../item.js')).Site
+        let Site = (await import('../items.js')).Site
         assert(site instanceof Site)
         assert(site.has_id())
         this.site_id = site.id

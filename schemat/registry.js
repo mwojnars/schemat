@@ -44,7 +44,7 @@ class Classpath {
         }
     }
 
-    async set_module(path, module_url, {symbols, accept, exclude_variables = true} = {})
+    async add_module(path, module_url, {symbols, accept, exclude_variables = true} = {})
         /*
         Add symbols from `module` to a given package `path`.
         If `symbols` is missing, all symbols found in the module are added, excluding:
@@ -108,9 +108,10 @@ export class Registry {
         let classpath = new Classpath
 
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
-        await classpath.set_module("schemat.data", "./data.js")
-        await classpath.set_module("schemat.item", "./item.js")
-        await classpath.set_module("schemat.type", "./type.js")
+        await classpath.add_module("schemat.data", "./data.js")
+        await classpath.add_module("schemat.item", "./item.js")
+        await classpath.add_module("schemat.item", "./items.js")            // files item.js & items.js are merged into one package
+        await classpath.add_module("schemat.type", "./type.js")
 
         this.classpath = classpath
         print('init_classpath() done')

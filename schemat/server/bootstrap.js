@@ -198,23 +198,23 @@ async function create_items(cat, Category) {
     item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
     item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     
-    // item.filesystem = await cat.FolderLocal.new({path: `${path}`})
-    item.filesystem = await cat.Folder.new({
-        files: C({
-            'system':           item.dir_system,
-            'tmp':              item.dir_tmp2,
-            'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
-
-            'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
-            'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
-            'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
-            'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
-            'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
-            'type.js':         await cat.FileLocal.new({path: `${path}/type.js`}),
-            'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
-            // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
-        }),
-    })
+    item.filesystem = await cat.FolderLocal.new({path: `${path}`})
+    // item.filesystem = await cat.Folder.new({
+    //     files: C({
+    //         'system':           item.dir_system,
+    //         'tmp':              item.dir_tmp2,
+    //         'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
+    //
+    //         'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
+    //         'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
+    //         'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
+    //         'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
+    //         'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
+    //         'type.js':         await cat.FileLocal.new({path: `${path}/type.js`}),
+    //         'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
+    //         // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
+    //     }),
+    // })
     
     item.app_admin = await cat.AppAdmin.new({name: "Admin"})
     item.app_ajax  = await cat.AppAjax .new({name: "AJAX"})
