@@ -315,21 +315,13 @@
   title: ąłęÓŁŻŹŚ
 - __id:
     - 12
-    - 3
-  name: a
-- __id:
-    - 12
-    - 4
-  name: b
-- __id:
-    - 12
-    - 5
-  name: c
-- __id:
-    - 12
     - 6
   name: a
 - __id:
     - 12
     - 7
   name: a
+- __id:
+    - 12
+    - 10
+  name: d

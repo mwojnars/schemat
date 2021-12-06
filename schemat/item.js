@@ -330,14 +330,8 @@ export class Item {
     }
     async _handle_delete({res}) {
         /* Web handler to create a new item in this category based on request data. */
-        print('in _handle_delete()...')
-
-        // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         await this.registry.delete(this)
         this.registry.commit()
-        // print('new item.id:', item.id)
-        // print('new item.data:', item.data)
-
         return res.json({error: null})
     }
 
