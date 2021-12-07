@@ -406,7 +406,7 @@ export class ITEM extends Schema {
             let item = value
             let url  = await item.url({raise: false})
             let name = await item.get('name', '')
-            let ciid = HTML(await item.ciid({html: false, brackets: false}))
+            let ciid = HTML(await item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
                 let note = await item.category.get('name', null)

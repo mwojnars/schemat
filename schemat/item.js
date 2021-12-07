@@ -182,27 +182,6 @@ export class Item {
         return this.data
     }
 
-    async ciid({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
-        /*
-        "Category-Item ID" (CIID) string (stamp, emblem) having the form:
-        - [CATEGORY-NAME:IID], if the category of this has a "name" property; or
-        - [CID:IID] otherwise.
-        If html=true, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page
-        (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
-        CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
-        */
-        let cat = await this.category.get('name', this.cid.toString())
-        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
-        if (html) {
-            cat = escape_html(cat)
-            let url = await this.category.url({route: ''})
-            if (url) cat = `<a href=${url}>${cat}</a>`
-        }
-        let stamp = `${cat}:${this.iid}`
-        if (!brackets) return stamp
-        return `[${stamp}]`
-    }
-
     async get(path, default_ = undefined) {
         await this.load()
 
@@ -258,6 +237,30 @@ export class Item {
         //
         // return entries
     }
+
+    async getName(default_) { return this.get('name', default_) }
+
+    async getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+        /*
+        "Category-Item ID" (CIID) string (stamp) of the form:
+        - [CATEGORY-NAME:IID], if the category of this has a "name" property; or
+        - [CID:IID] otherwise.
+        If html=true, the first part (CATEGORY-NAME or CID) is hyperlinked to the category's profile page
+        (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
+        CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
+        */
+        let cat = await this.category.getName(this.cid.toString())
+        if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
+        if (html) {
+            cat = escape_html(cat)
+            let url = await this.category.url({route: ''})
+            if (url) cat = `<a href=${url}>${cat}</a>`
+        }
+        let stamp = `${cat}:${this.iid}`
+        if (!brackets) return stamp
+        return `[${stamp}]`
+    }
+
 
     async temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
@@ -371,7 +374,7 @@ export class Item {
     async _handle_view({req, res, endpoint}) {
 
         let name = await this.get('name', '')
-        let ciid = await this.ciid({html: false})
+        let ciid = await this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
             body:  await this.BOOT(),
@@ -427,8 +430,8 @@ export class Item {
 
     Title({item}) {
         return delayed_render(async () => {
-            let name = await item.get('name', null)
-            let ciid = await item.ciid()
+            let name = await item.getName()
+            let ciid = await item.getStamp()
             if (name)
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
             else
@@ -618,14 +621,12 @@ export class Category extends Item {
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
         if (!items || items.length === 0) return null
-        const remove = async (item) => {
-            print('clicked delete item:', item.id)
-            await item.remote_delete(() => itemRemoved && itemRemoved(item))
-        }
+        const remove = (item) => item.remote_delete(() => itemRemoved && itemRemoved(item))
+
         return delayed_render(async () => {
             let rows = []
             for await (const item of items) {
-                let name = await item.get('name') || item.toString()
+                let name = await item.getName() || await item.getStamp({html:false})
                 let url  = await item.url()
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
