@@ -235,10 +235,10 @@ export class File extends Item {
     async read() {
         return this.get('content')
     }
-    async _handle_download() {
-        /* Return full content of this file, either as <str> or a Response object. */
-        return this.read()
-    }
+    // async _handle_download() {
+    //     /* Return full content of this file, either as <str> or a Response object. */
+    //     return this.read()
+    // }
 }
 
 export class FileLocal extends File {

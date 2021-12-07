@@ -253,14 +253,13 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url({route: ''})
+            let url = await this.category.url()
             if (url) cat = `<a href=${url}>${cat}</a>`
         }
         let stamp = `${cat}:${this.iid}`
         if (!brackets) return stamp
         return `[${stamp}]`
     }
-
 
     async temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
@@ -630,7 +629,7 @@ export class Category extends Item {
                 let url  = await item.url()
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
-                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`),
+                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                     TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
                 ))
             }
