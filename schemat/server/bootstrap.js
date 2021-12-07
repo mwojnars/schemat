@@ -3,7 +3,7 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print} from '../utils.js'
-import {ServerRegistry} from './s-registry.js'
+import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
 //import {Index} from '../item.js'

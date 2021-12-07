@@ -133,6 +133,8 @@ export class Registry {
     get site()  { return this.getItem(this.site_id) }
     get files() { return this.site.then(site => site.get('filesystem')) }
 
+    // get _specializedItemJS() { assert(false) }
+
     async init_classpath() {
         print('init_classpath() started...')
         let classpath = new Classpath
@@ -140,8 +142,19 @@ export class Registry {
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
         await classpath.add_module("schemat.data", "./data.js")
         await classpath.add_module("schemat.item", "./item.js")
+        // await classpath.add_module("schemat.item", this._specializedItemJS)
         await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
+
+        // // amend base class of all Item subclasses from site.js: replace __proto__=Item with ServerItem or ClientItem ...
+        // let mod_item = await import(this._specializedItemJS)
+        // let mod_site = await import("./site.js")
+        // let ItemSpec = mod_item.Item
+        // let ItemBase = Object.getPrototypeOf(ItemSpec)
+        //
+        // for (let cls of Object.values(mod_site))
+        //     if (Object.getPrototypeOf(cls) === ItemBase)
+        //         cls.prototype.__proto__ = ItemSpec.prototype
 
         this.classpath = classpath
         print('init_classpath() done')

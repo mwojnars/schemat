@@ -5,7 +5,7 @@
 import express from 'express'
 
 import {assert, print, T} from './utils.js'
-import {ServerRegistry} from './server/s-registry.js'
+import {ServerRegistry} from './server/registry-s.js'
 
 
 /**********************************************************************************************************************/

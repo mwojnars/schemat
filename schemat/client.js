@@ -69,6 +69,8 @@ class AjaxDB extends Database {
 class ClientRegistry extends Registry {
     /* Client-side registry: getItem() pulls items from server and caches in browser's web storage. */
 
+    // get _specializedItemJS() { return "./client/item-c.js" }
+
     constructor(boot_items, ajax_url) {
         super()
         this.db = new AjaxDB(ajax_url, boot_items)
