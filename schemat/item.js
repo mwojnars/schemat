@@ -10,6 +10,14 @@ import { Catalog, Data } from './data.js'
 export const ROOT_CID = 0
 
 
+class ServerError extends Error {
+    /* Raised on client side when an internal call to the server completed with a not-OK status code. */
+    constructor(response) {
+        super()
+        this.response = response            // an original Response object as returned from fetch()
+    }
+}
+
 /**********************************************************************************************************************
  **
  **  UI COMPONENTS
@@ -24,34 +32,39 @@ function Catalog1({item}) {
         let schemas = await category.getFields()
 
         let rows = entries.map(({key:field, value}, i) => {
-            let schema = schemas.get(field)
-            let color  = (start_color + i) % 2
+            let schema  = schemas.get(field)
+            let color   = (start_color + i) % 2
             return TR({className: `ct-color${color}`},
                       schema instanceof CATALOG
                         ? TD({className: 'ct-nested', colSpan: 2},
                             DIV({className: 'ct-field'}, field),
-                            e(Catalog2, {data: value, schema: schema.values, color})
+                            e(Catalog2, {path: [field], data: value, schema: schema.values, color, item})
                         )
-                        : e(Entry, {field, value, schema})
+                        : e(Entry, {path: [field], field, value, schema, item})
             )
         })
         return TABLE({className: 'catalog-1'}, TBODY(...rows))
     })
 }
 
-function Catalog2({data, schema, color = 0}) {
+function Catalog2({path, data, schema, color = 0, item}) {
     return DIV({className: 'wrap-offset'},
             TABLE({className: 'catalog-2'},
               TBODY(...data.getEntries().map(({key:field, value}) =>
-                TR({className: `ct-color${color}`}, e(Entry, {field, value, schema})))
-           )))
+                TR({className: `ct-color${color}`},
+                  e(Entry, {path: [...path, field], field, value, schema, item}))
+           ))))
 }
 
-function Entry({field, value, schema = generic_schema}) {
+function Entry({path, field, value, schema = generic_schema, item}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
+    const save = async (newValue) => {
+        print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+        // await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
+    }
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
-                TD({className: 'ct-value'}, schema.Widget({value})),
+                TD({className: 'ct-value'}, schema.Widget({value, save})),
            )
 }
 
@@ -304,7 +317,14 @@ export class Item {
         let ajax_url = await (await this.registry.site).ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
-    async url(params = {}) {
+    async url(endpoint, params = {}) {
+        /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
+        if (typeof endpoint === "string")
+            params.endpoint = endpoint
+        else if (endpoint)
+            params = endpoint
+    // }
+    // async url(params = {}) {
         let {raise = true, ...params_} = params
         let site   = await this.registry.site
         let build  = site.buildURL(this, params_)
@@ -380,6 +400,35 @@ export class Item {
         })
     }
 
+    async remote(endpoint, data, {args, params} = {}) {
+        /* Connect from client to an `endpoint` of an internal API; send `data` if any;
+           return a response body parsed from JSON to an object.
+         */
+        let url = await this.url(endpoint)
+        let res = await fetchJson(url, data, params)        // Response object
+        if (!res.ok) throw new ServerError(res)
+        return res.json()
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+    }
+
+    async remote_delete()   { return this.remote('delete') }
+    async remote_set(args)  { return this.remote('set', args) }
+
+    // async remote_delete() {
+    //     /* Remotely delete this item in DB. */
+    //     let url = await this.url('delete')
+    //     let msg = await fetchJson(url)
+    //     if (msg.error) throw new Error(`server-side error: ${msg.error}`)
+    //     return msg
+    // }
+    // async remote_set(path, value) {
+    //     /* Remotely modify a value of a subfield of this.data and write it back to DB. */
+    //     let url = await this.url('set')
+    //     let msg = await fetchJson(url, {path, value})
+    // }
+
     HTML({title, body}) { return `
         <!DOCTYPE html><html>
         <head>
@@ -413,14 +462,6 @@ export class Item {
 
 
     /***  Components (server side & client side)  ***/
-
-    async remote_delete(callback) {
-        /* Remotely delete this item in DB. */
-        let url = `${await this.url()}@delete`
-        let msg = await fetchJson(url)
-        if (msg.error) throw new Error(`server-side error: ${msg.error}`)
-        if (callback) callback(msg)
-    }
 
     display(target) {
         /* Render this item into a `target` HTMLElement. Client side. */
@@ -609,18 +650,20 @@ export class Category extends Item {
         res.sendItem(item)
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }
-    async remote_new(data) {
-        /* Remotely insert a new item with `data` to a DB. */
-        let url = `${await this.url()}@new`
-        let record = await fetchJson(url, data.__getstate__())
-        this.registry.db.keep(record)
-        return record
-    }
+    async remote_new(data)  { return this.remote('new', data) }
+
+    // async remote_new(data) {
+    //     /* Remotely insert a new item with encoded `data` to a DB. */
+    //     let url = await this.url('new')
+    //     let record = await fetchJson(url, data)
+    //     // this.registry.db.keep(record)
+    //     return record
+    // }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
         if (!items || items.length === 0) return null
-        const remove = (item) => item.remote_delete(() => itemRemoved && itemRemoved(item))
+        const remove = (item) => item.remote_delete().then(() => itemRemoved && itemRemoved(item))
 
         return delayed_render(async () => {
             let rows = []
@@ -656,11 +699,13 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await category.remote_new(data)
-            let item   = await category.registry.getItem([record.cid, record.iid])
-            itemAdded(item)
-
-            form.current.reset()            // clear input fields
+            let record = await category.remote_new(data.__getstate__())      // TODO: validate & encode `data` through category's schema
+            if (record) {
+                category.registry.db.keep(record)
+                let item = await category.registry.getItem([record.cid, record.iid])
+                itemAdded(item)
+                form.current.reset()            // clear input fields
+            }
             setFormDisabled(false)
         }
 

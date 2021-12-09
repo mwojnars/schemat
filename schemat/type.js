@@ -76,8 +76,10 @@ export class Schema {
         // return JSON.stringify(this._fields).slice(0, 60)
     }
 
-    Widget({value, edit = true}) {
-        /* A React-compatible component that displays a `value` of an item's field and (possibly) allows its editing. */
+    Widget({value, save, edit = true}) {
+        /* A React-compatible component that displays a `value` of an item's field and (possibly) allows its editing.
+           `save(newValue)` is a callback that should be used when the value has been edited.
+         */
         return value.toString()
     }
 }
@@ -222,18 +224,20 @@ export class Textual extends Primitive {
 
     EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
 
-    Widget({value}) {
+    Widget({value, save}) {
         let [editing, setEditing] = useState(false)
         let [currentValue, setValue] = useState(value)
         let editor = useRef(null)
 
-        const show = (e) => {
-            setEditing(true)
-            // editor.current.focus()
-        }
+        const show = (e) => setEditing(true)    // editor.current.focus()
         const hide = (e) => {
-            setValue(editor.current.value)
+            e.preventDefault()
             setEditing(false)
+            let newValue = editor.current.value
+            if (newValue !== currentValue) {
+                setValue(newValue)
+                save(newValue)
+            }
         }
         return editing ? this.Editor(currentValue, hide, editor) : this.Viewer(currentValue, show)
     }
@@ -246,7 +250,7 @@ export class STRING extends Textual
     }
     Editor(value, hide, ref) {
         return INPUT({defaultValue: value, ref: ref, onBlur: hide,
-                onKeyUp: (e) => this.acceptKey(e) && hide(),
+                onKeyUp: (e) => this.acceptKey(e) && hide(e),
                 autoFocus: true, type: "text", style: {width:"100%"}}
         )
     }
@@ -264,7 +268,7 @@ export class TEXT extends Textual
             defaultValue:   value,
             ref:            ref,
             onBlur:         hide,
-            onKeyUp:        (e) => this.acceptKey(e) && hide(),
+            onKeyUp:        (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             rows:           1,
             wrap:           'off',
@@ -280,7 +284,7 @@ export class CODE extends TEXT
             defaultValue:   value,
             ref:            ref,
             onBlur:         hide,
-            onKeyUp:        (e) => this.acceptKey(e) && hide(),
+            onKeyUp:        (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             className:      "ace-editor",
         })
@@ -304,7 +308,7 @@ export class CODE extends TEXT
         highlightActiveLine:    true,
     };
 
-    Widget({value}) {
+    Widget({value, save}) {
         let [editing, setEditing] = useState(false)
         let [currentValue, setValue] = useState(value)
         let editor_div = useRef(null)
@@ -328,8 +332,12 @@ export class CODE extends TEXT
 
         const show = () => setEditing(true)
         const hide = () => {
-            setValue(editor_ace.session.getValue())
             setEditing(false)
+            let newValue = editor_ace.session.getValue()
+            if (newValue !== currentValue) {
+                setValue(newValue)
+                save(newValue)
+            }
         }
         return editing ? this.Editor(currentValue, hide, editor_div) : this.Viewer(currentValue, show)
     }

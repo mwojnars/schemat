@@ -241,17 +241,18 @@ export function delayed_render(async_fun, deps = [], empty = undefined) {
 
 /*************************************************************************************************/
 
-export async function fetchJson(url, data, params = {}) {
-    /* Send `data` object as JSON through POST (if `data` defined), or request a given `url` through GET;
-       then return the received JSON response parsed into an object.
+export async function fetchJson(url, data, params) {
+    /* Stringify and send the `data` object as JSON through POST (if present), or request a `url` through GET.
+       Return the received JSON response parsed into an object.
      */
-    params = {...params}
+    params = params ? {...params} : {}
     if (data !== undefined) {
         params.body = JSON.stringify(data)
         if (!params.method) params.method = 'POST'
         if (!params.headers) params.headers = {}
         if (!params.headers['Content-Type']) params.headers['Content-Type'] = 'application/json; charset=utf-8'
     }
-    let response = await fetch(url, params)
-    return response.json()
+    return fetch(url, params)
+    // let response = await fetch(url, params)
+    // return response.json()
 }
