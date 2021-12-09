@@ -235,74 +235,63 @@ export class Catalog {
     }
     setEntry(entry) {
         /* Append a new `entry` while deleting all existing occurrencies of the same key. */
-        // entry = this._prepare(entry)
-        // this._entries.push(entry)
-        // let pos = this._entries.push(entry) - 1
-        entry = this._push(entry)
+        this._push(entry)
         if (!missing(entry.key)) {
-            this.delete(entry.key)
+            // this.delete(entry.key)
+            let ids = this._keys.get(entry.key) || []
+            for (const id of ids)
+                this._entries[id] = undefined           // like with standard delete, the remaining entries are NOT moved, only gaps are created
             this._keys.set(entry.key, [entry.id])
         }
         return entry
     }
-
     push(key, value, {label, comment} = {}) {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
         return this.pushEntry({key, value, label, comment})
     }
     pushEntry(entry) {
         /* Append `entry` without deleting existing occurrencies of the key. */
-        // entry = this._prepare(entry)
-        // this._entries.push(entry)
-        // let pos = this._entries.push(entry) - 1
-        entry = this._push(entry)
+        this._push(entry)
         if (!missing(entry.key)) {
-            let poslist = this._keys.get(entry.key) || []
-            if (poslist.push(entry.id) === 1)
-                this._keys.set(entry.key, poslist)
+            let ids = this._keys.get(entry.key) || []
+            if (ids.push(entry.id) === 1)
+                this._keys.set(entry.key, ids)
         }
         return entry
     }
-
     _push(entry) {
-        entry = this._prepare(entry)
-        this._entries.push(entry)
-        return entry
-    }
-    _prepare(entry) {
-        /* Prepare an `entry` object for insertion into this._entries: drop unneeded properties; set entry.id (!). */
+        /* Drop unneeded props in `entry` and insert it into this._entries; assign entry.id. */
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
         assert(entry.value !== undefined)
         if (missing(entry.key)) delete entry.key
         if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
         if (entry.comment === undefined) delete entry.comment
-        entry.id = this._entries.length
-        return entry
+        entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
     }
 
-    delete(key) {
-        /* Delete a single entry at a given position in _entries, if `key` is a number;
-           or delete all 0+ entries that contain a given `key` value. Return true if min. 1 entry deleted.
-         */
-        if (typeof key === 'number') {
-            let pos = key, e = this._entries[key]
-            if (pos < 0 || pos >= this._entries.length) return false
-            this._entries.splice(pos, 1)                        // delete the entry at position `pos`, rearrange the array
-            let poslist = this._keys.get(e.key)
-            assert(poslist.length >= 1 && poslist.includes(pos))
-            T.deleteFirst(poslist, pos)
-            if (poslist.length === 0) this._keys.delete(e.key)
-        } else {
-            let poslist = this._keys.get(key)
-            if (!poslist) return false
-            assert(poslist.length >= 1)
-            for (const pos of poslist)
-                this._entries[pos] = undefined
-            this._entries = this._entries.filter(Boolean)
-            this._keys.delete(key)
-        }
-        return true
-    }
+    // delete(key) {
+    //     /* Delete a single entry at a given position in _entries, if `key` is a number;
+    //        or delete all 0+ entries that contain a given `key` value. Return true if min. 1 entry deleted.
+    //      */
+    //     if (typeof key === 'number') {
+    //         let pos = key, e = this._entries[key]
+    //         if (pos < 0 || pos >= this._entries.length) return false
+    //         this._entries.splice(pos, 1)                        // delete the entry at position `pos`, rearrange the array
+    //         let poslist = this._keys.get(e.key)
+    //         assert(poslist.length >= 1 && poslist.includes(pos))
+    //         T.deleteFirst(poslist, pos)
+    //         if (poslist.length === 0) this._keys.delete(e.key)
+    //     } else {
+    //         let poslist = this._keys.get(key)
+    //         if (!poslist) return false
+    //         assert(poslist.length >= 1)
+    //         for (const pos of poslist)
+    //             this._entries[pos] = undefined
+    //         this._entries = this._entries.filter(Boolean)
+    //         this._keys.delete(key)
+    //     }
+    //     return true
+    // }
 
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
     __getstate__()          { return {entries: [...this._entries]} }
