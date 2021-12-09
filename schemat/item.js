@@ -63,8 +63,8 @@ function Entry({path, field, value, schema = generic_schema, item}) {
         await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
     }
     return FRAGMENT(
-                TH({className: 'ct-field'}, field),
-                TD({className: 'ct-value'}, schema.Widget({value, save})),
+              TH({className: 'ct-field'}, field),
+              TD({className: 'ct-value'}, schema.Widget({value, save})),
            )
 }
 

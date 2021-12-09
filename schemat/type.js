@@ -231,7 +231,7 @@ export class Textual extends Primitive {
 
         const show = (e) => setEditing(true)    // editor.current.focus()
         const hide = (e) => {
-            e.preventDefault()
+            // e.preventDefault()
             setEditing(false)
             let newValue = editor.current.value
             if (newValue !== currentValue) {
@@ -250,7 +250,7 @@ export class STRING extends Textual
     }
     Editor(value, hide, ref) {
         return INPUT({defaultValue: value, ref: ref, onBlur: hide,
-                onKeyUp: (e) => this.acceptKey(e) && hide(e),
+                onKeyDown: (e) => this.acceptKey(e) && hide(e),
                 autoFocus: true, type: "text", style: {width:"100%"}}
         )
     }
@@ -268,7 +268,7 @@ export class TEXT extends Textual
             defaultValue:   value,
             ref:            ref,
             onBlur:         hide,
-            onKeyUp:        (e) => this.acceptKey(e) && hide(e),
+            onKeyDown:      (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             rows:           1,
             wrap:           'off',
@@ -284,7 +284,7 @@ export class CODE extends TEXT
             defaultValue:   value,
             ref:            ref,
             onBlur:         hide,
-            onKeyUp:        (e) => this.acceptKey(e) && hide(e),
+            onKeyDown:      (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             className:      "ace-editor",
         })

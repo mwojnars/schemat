@@ -5,7 +5,7 @@
     - key: name
       value: Category
     - key: info
-      value: Category of items that represent categories
+      value: Category of items that represent categories.
     - key: class_name
       value: schemat.item.Category
     - key: fields
@@ -225,8 +225,8 @@
 - __id:
     - 0
     - 12
-  name: Varia XXX
-  info: YYYxxxCategory of items that do not belong to any specific category
+  name: Varia
+  info: Category of items that do not belong to any specific category
   class_name: schemat.item.Item
   fields:
     name:
