@@ -266,7 +266,9 @@ export class Catalog {
         if (missing(entry.key)) delete entry.key
         if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
         if (entry.comment === undefined) delete entry.comment
+
         entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
+        this.size ++
     }
 
     // delete(key) {
@@ -294,8 +296,8 @@ export class Catalog {
     // }
 
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
-    __getstate__()          { return {entries: [...this._entries]} }
-    // __getstate__()          { return {entries: this._entries.map(e => e.asObject())} }
+    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }
+    // __getstate__()          { return {entries: [...this._entries]} }
 }
 
 
