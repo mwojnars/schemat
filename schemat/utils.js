@@ -155,8 +155,9 @@ export class Types {
         if (obj['__setstate__']) return obj['__setstate__'](state)
         return Object.assign(obj, state)
     }
-
+    static clone          = (obj) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
+
 export class T extends Types {}  // T is an alias for Types
 
 /**********************************************************************************************************************

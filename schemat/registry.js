@@ -174,6 +174,9 @@ export class Registry {
     async get_category(cid) { return await this.getItem([ROOT_CID, cid]) }
 
     async getItem(id, {load = false, version = null} = {}) {
+        /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
+           is taken from this.items, otherwise it is created anew and saved in this.items for future calls.
+         */
         let [cid, iid] = id
         assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
 
@@ -186,7 +189,7 @@ export class Registry {
         if (item) return item
 
         // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
-        // and only later on, the inner code of create_stub() gets executed; in this way, if another caller
+        // and only later the inner code of create_stub() gets executed; in this way, if another caller
         // requests the same item asynchronously, it will receive the same unique item object, eventually, without
         // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
         // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.

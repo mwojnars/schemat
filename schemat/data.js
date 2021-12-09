@@ -57,11 +57,13 @@ export class ItemsMap extends Map {
  */
 
 export class Catalog {
-    /* An Array-like and Map-like collection that keeps a list of values (entries) with optional:
-       - key
-       - label
-       - comment
-       in each entry, or in selected entries. Keys, labels, comments, if present, are strings.
+    /* An Array-like and Map-like collection of entries; each entry contains a value, an id, and an optional:
+       - key,
+       - label,
+       - comment.
+       Keys, labels, comments, if present, are strings. "id" is an integer and is equal
+       to the position of an entry in a list of all entries - even after an entry is deleted,
+       the "id" numbers of following entries stay unchanged (!).
        Keys may repeat. Keys may include all printable characters except ":" and whitespace.
        Labels may include all printable characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.
@@ -73,19 +75,35 @@ export class Catalog {
 
     _entries = []
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs
+    size     = 0                // true number of entries in this._entries, `undefined` elements ignored
 
-    get size()          { return this._entries.length }
-    get length()        { return this._entries.length }
+    get length()        { return this.size }
     has(key)            { return this._keys.has(key) }
     hasKeys()           { return this._keys.size > 0  }
-    hasUniqueKeys()     { return this._keys.size === this._entries.length }
-    hasAnnot()          { return this._entries.filter(e => e.label || e.comment).length > 0 }     // at least one label or comment is present?
+    hasUniqueKeys()     { return this._keys.size === this.size }
+    hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
-    asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
+    asDict()            { return Object.fromEntries(this.map(e => [e.key, e.value])) }
+    // asDict()            { return Object.fromEntries(Array.from(this.entries(), e => [e.key, e.value])) }
+    map(fun)            { return Array.from(this.entries(), fun) }
     *keys()             { return this._keys.keys }
-    *values()           { for (const e of this._entries) yield e.value }
-    *entries()          { for (const e of this._entries) yield e }
-    map(fun)            { return this._entries.map(fun) }
+    *values()           { for (const e of this._entries) if(e) yield e.value }
+    *entries()          { for (const e of this._entries) if(e) yield e }
+    *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
+
+    // get size()          { return this._entries.length }
+    // get length()        { return this._entries.length }
+    // has(key)            { return this._keys.has(key) }
+    // hasKeys()           { return this._keys.size > 0  }
+    // hasUniqueKeys()     { return this._keys.size === this._entries.length }
+    // hasAnnot()          { return this._entries.filter(e => e.label || e.comment).length > 0 }     // at least one label or comment is present?
+    // isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
+    // asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
+    // *keys()             { return this._keys.keys }
+    // *values()           { for (const e of this._entries) yield e.value }
+    // *entries()          { for (const e of this._entries) yield e }
+    // map(fun)            { return this._entries.map(fun) }
+    // *[Symbol.iterator](){ for (const e of this._entries) yield e }      // iterator over entries, same as this.entries()
 
     constructor(data = null) {
         if (!data) return
@@ -101,11 +119,12 @@ export class Catalog {
                 this.pushEntry({key, value})
     }
 
-    _findEntry(key) {
+    _findEntry(key, {unique = false} = {}) {
         if (typeof key === 'number') return this._entries[key]
         if (this._keys.has(key)) {
-            let pos = this._keys.get(key)[0]        // first entry returned if multiple occurrences
-            return this._entries[pos]
+            let poslist = this._keys.get(key)
+            if (unique && poslist.length > 1) throw new Error(`unique Catalog entry expected for '${key}', found ${poslist.length} entries instead`)
+            return this._entries[poslist[0]]            // first entry returned if multiple occurrences
         }
     }
     _findEntries(key) {
@@ -145,38 +164,84 @@ export class Catalog {
         return default_
     }
     getEntries(key = undefined) {
-        if (key === undefined) return [...this._entries]
+        if (key === undefined) return Array.from(this.entries())
         return this._findEntries(key)
     }
 
-    _prepare(entry) {
-        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
-        assert(entry.value !== undefined)
-        if (missing(entry.key)) delete entry.key
-        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
-        if (entry.comment === undefined) delete entry.comment
-    }
-    set(key, value, {label, comment} = {}) {
+    // set(path, value, {label, comment, create_path = false} = {}) {
+    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
+    //        of an existing entry if the last segment of `path` is an integer (a position in this._entries);
+    //        otherwise replace all entries matching `path` with a new one. If create_path is false (default),
+    //        all segments of `path` except the last one must already exist and be unique; otherwise,
+    //        new Catalog() entries are inserted in place of missing path segments (the segments must be strings not integers then).
+    //      */
+    //     if (typeof path === 'string') path = path.split('/')
+    //     assert(path.length >= 1)
+    //
+    //     let step  = path[0]
+    //     let spath = path.join('/')
+    //     let props = {label, comment}
+    //
+    //     if (path.length <= 1)
+    //         return this.setShallow(step, value, props)
+    //
+    //     // make one step forward, then call set() recursively
+    //     let entry = this._findEntry(step, {unique: true})
+    //     if (!entry)
+    //         if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
+    //             this.setEntry({key: step, value: new Catalog()})
+    //         else
+    //             throw new Error(`path not found, missing '${step}' of '${spath}'`)
+    //
+    //     let subcat  = entry.value
+    //     let subpath = path.slice(1)
+    //
+    //     // subcat is a Catalog? make a recursive call
+    //     if (subcat instanceof Catalog)
+    //         return subcat.set(subpath, value, props)
+    //
+    //     // subcat is a Map or object? only go one step deeper
+    //     let key = subpath[0]
+    //     if (subpath.length === 1) {
+    //         if (label   !== undefined) throw new Error(`can't assign a label (${label}) inside a non-catalog (${spath})`)
+    //         if (comment !== undefined) throw new Error(`can't assign a comment (${comment}) inside a non-catalog (${spath})`)
+    //         if (subcat instanceof Map) subcat.set(key, value)        // last step inside a Map
+    //         if (T.isDict(subcat))      subcat[key] = value           // last step inside a plain object
+    //         return {key, value}                 // a "virtual" entry is returned for consistent API, only for reading
+    //     }
+    //
+    //     throw new Error(`path not found: '${subpath.join('/')}'`)
+    // }
+
+    set(...args) { return this.setShallow(...args) }
+
+    setShallow(key, value, {label, comment} = {}) {
         /* If key is a number, an entry at this position in this._entries is modified:
            a new value, label, and/or comment is assigned; pass `undefined` as a value/label/comment to leave
            the old object, or `null` to force its removal (for label/comment).
+           A new entry is returned - should only be used for reading.
          */
-        if (typeof key === 'number') {
-            let e = this._entries[key]
-            if (value !== undefined) e.value = value
-            if (label !== undefined) {if (label) e.label = label; else delete e.label}
-            if (comment !== undefined) {if (comment) e.comment = comment; else delete e.comment}
-            return e
-        }
+        if (typeof key === 'number') return this._overwrite(key, {value, label, comment})
         return this.setEntry({key, value, label, comment})
     }
+    _overwrite(id, {value, label, comment} = {}) {
+        /* Overwrite some or all of the properties of an entry of a given `id` = position in this._entries.
+           Return the modified entry. Passing `null` as a label or comment will delete a corresponding property. */
+        let e = this._entries[id]
+        if (value !== undefined) e.value = value
+        if (label !== undefined) {if (label) e.label = label; else delete e.label}
+        if (comment !== undefined) {if (comment) e.comment = comment; else delete e.comment}
+        return e
+    }
     setEntry(entry) {
-        /* Append an entry while deleting all existing occurrencies of the same key. */
-        this._prepare(entry)
-        let pos = this._entries.push(entry) - 1
+        /* Append a new `entry` while deleting all existing occurrencies of the same key. */
+        // entry = this._prepare(entry)
+        // this._entries.push(entry)
+        // let pos = this._entries.push(entry) - 1
+        entry = this._push(entry)
         if (!missing(entry.key)) {
             this.delete(entry.key)
-            this._keys.set(entry.key, [pos])
+            this._keys.set(entry.key, [entry.id])
         }
         return entry
     }
@@ -187,13 +252,31 @@ export class Catalog {
     }
     pushEntry(entry) {
         /* Append `entry` without deleting existing occurrencies of the key. */
-        this._prepare(entry)
-        let pos = this._entries.push(entry) - 1
+        // entry = this._prepare(entry)
+        // this._entries.push(entry)
+        // let pos = this._entries.push(entry) - 1
+        entry = this._push(entry)
         if (!missing(entry.key)) {
             let poslist = this._keys.get(entry.key) || []
-            if (poslist.push(pos) === 1)
+            if (poslist.push(entry.id) === 1)
                 this._keys.set(entry.key, poslist)
         }
+        return entry
+    }
+
+    _push(entry) {
+        entry = this._prepare(entry)
+        this._entries.push(entry)
+        return entry
+    }
+    _prepare(entry) {
+        /* Prepare an `entry` object for insertion into this._entries: drop unneeded properties; set entry.id (!). */
+        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
+        assert(entry.value !== undefined)
+        if (missing(entry.key)) delete entry.key
+        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
+        if (entry.comment === undefined) delete entry.comment
+        entry.id = this._entries.length
         return entry
     }
 
@@ -221,9 +304,9 @@ export class Catalog {
         return true
     }
 
-    *[Symbol.iterator]()    { for (const e of this._entries) yield e }      // iterator over entries, same as this.entries()
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
     __getstate__()          { return {entries: [...this._entries]} }
+    // __getstate__()          { return {entries: this._entries.map(e => e.asObject())} }
 }
 
 

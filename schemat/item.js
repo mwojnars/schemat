@@ -60,7 +60,7 @@ function Entry({path, field, value, schema = generic_schema, item}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
     const save = async (newValue) => {
         print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-        // await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
+        await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
     }
     return FRAGMENT(
                 TH({className: 'ct-field'}, field),
@@ -101,7 +101,7 @@ class Changes {
 export class Item {
 
     /*
-    TODO: Item's metadata, in this.data.__meta__ OR this.meta (?)
+    TODO: Item.metadata
     >> meta fields are accessible through this.get('#FIELD')
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
     - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
@@ -126,6 +126,8 @@ export class Item {
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
+    metadata        // system properties: current version, category's version, status etc.
+
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
 
@@ -193,6 +195,11 @@ export class Item {
 
         //print(`${this.id_str}.reload() done`)
         return this.data
+    }
+
+    async set(path, value, props) {
+        await this.load()
+        this.data.set(path, value, props)           // TODO: create and use EditableItem instead
     }
 
     async get(path, default_ = undefined) {
@@ -298,7 +305,7 @@ export class Item {
     async encodeSelf(use_schema = true, load = true) {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
         if (load) await this.load()
-        let {registry, category, ...state} = this               // Registry is not serializable, must be removed now and imputed after deserialization
+        let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
         state.data = await this.encodeData(use_schema)
         return state
     }
@@ -385,9 +392,17 @@ export class Item {
             res.send(page)
     }
 
+    async _handle_set({req, res}) {
+        assert(req.method === 'POST')
+        let {path, value} = req.body
+        // let schema = this.getSchema(path)
+        print(`_handle_set: path ${path}, value ${value}`)
+        await this.set(path, value)
+        return res.json({})
+    }
     async _handle_delete({res}) {
         await this.registry.delete(this)
-        return res.json({error: null})
+        return res.json({})
     }
     async _handle_json({res}) { return res.sendItem(this) }
     async _handle_view({req, res, endpoint}) {
@@ -415,19 +430,6 @@ export class Item {
 
     async remote_delete()   { return this.remote('delete') }
     async remote_set(args)  { return this.remote('set', args) }
-
-    // async remote_delete() {
-    //     /* Remotely delete this item in DB. */
-    //     let url = await this.url('delete')
-    //     let msg = await fetchJson(url)
-    //     if (msg.error) throw new Error(`server-side error: ${msg.error}`)
-    //     return msg
-    // }
-    // async remote_set(path, value) {
-    //     /* Remotely modify a value of a subfield of this.data and write it back to DB. */
-    //     let url = await this.url('set')
-    //     let msg = await fetchJson(url, {path, value})
-    // }
 
     HTML({title, body}) { return `
         <!DOCTYPE html><html>
@@ -507,6 +509,14 @@ export class Item {
                                 th .ct-field
                                 td .ct-value
     */
+
+    async makeEditable() {
+        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
+        let item = T.clone(this)
+        // deep-copy special properties: data, (metadata?)
+        if (this.data) item.data = new Data(await this.data)
+        return item
+    }
 }
 
 /**********************************************************************************************************************/
@@ -530,9 +540,7 @@ class EditableItem extends Item {
         /* Shortcut for edit('push', ...) */
         return this.edit('push', {key, value, label, comment})
     }
-    // set(key, value, {label, comment} = {}) {
-    //     this.data.set(key, value, {label, comment})
-    // }
+    set(path, value, props) { this.data.set(path, value, props) }
 
     _edit_push(entry) { return this.data.pushEntry(entry) }
     _edit_set (entry) { return this.data.setEntry (entry) }
@@ -651,14 +659,6 @@ export class Category extends Item {
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }
     async remote_new(data)  { return this.remote('new', data) }
-
-    // async remote_new(data) {
-    //     /* Remotely insert a new item with encoded `data` to a DB. */
-    //     let url = await this.url('new')
-    //     let record = await fetchJson(url, data)
-    //     // this.registry.db.keep(record)
-    //     return record
-    // }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
