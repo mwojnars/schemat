@@ -271,6 +271,36 @@ export class Catalog {
         this.size ++
     }
 
+    delete(key) {
+        /* Delete a single entry at a given position in _entries, if `key` is a number (entry.id);
+           or delete all 0+ entries whose entry.key === key. Return the number of entries deleted.
+         */
+        let count
+        if (typeof key === 'number') {
+            let id = key, e = this._entries[key]
+            if (id < 0 || id >= this._entries.length) return 0
+            this._entries[id] = undefined                       // mark entry at position `id` as deleted
+
+            let ids = this._keys.get(e.key)
+            assert(ids.length >= 1 && ids.includes(id))
+            T.deleteFirst(ids, id)                              // update this._keys & this.size
+            if (ids.length === 0) this._keys.delete(e.key)
+            count = 1
+
+        } else {
+            let ids = this._keys.get(key)
+            if (!ids) return 0
+            assert(ids.length >= 1)
+            for (const id of ids)
+                this._entries[id] = undefined
+            this._keys.delete(key)
+            count = ids.length
+        }
+
+        this.size -= count
+        return count
+    }
+
     // delete(key) {
     //     /* Delete a single entry at a given position in _entries, if `key` is a number;
     //        or delete all 0+ entries that contain a given `key` value. Return true if min. 1 entry deleted.
@@ -296,7 +326,7 @@ export class Catalog {
     // }
 
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
-    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }
+    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
     // __getstate__()          { return {entries: [...this._entries]} }
 }
 
