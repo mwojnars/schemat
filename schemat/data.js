@@ -57,13 +57,13 @@ export class ItemsMap extends Map {
  */
 
 export class Catalog {
-    /* An Array-like and Map-like collection of entries; each entry contains a value, an id, and an optional:
+    /* An Array-like and Map-like collection of entries; each entry contains a `value`, an `id`, and an optional:
        - key,
        - label,
        - comment.
-       Keys, labels, comments, if present, are strings. "id" is an integer and is equal
-       to the position of an entry in a list of all entries - even after an entry is deleted,
-       the "id" numbers of following entries stay unchanged (!).
+       Keys, labels, comments, if present, are strings. "id" is an integer and is equal to the position
+       of an entry in a list of all entries; when an entry is deleted, it's marked as `undefined`,
+       so that ids and positions of following entries stay unchanged (!).
        Keys may repeat. Keys may include all printable characters except ":" and whitespace.
        Labels may include all printable characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.
@@ -75,7 +75,7 @@ export class Catalog {
 
     _entries = []
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs
-    size     = 0                // true number of entries in this._entries, `undefined` elements ignored
+    size     = 0                // the true number of entries in this._entries, `undefined` ignored
 
     get length()        { return this.size }
     has(key)            { return this._keys.has(key) }
@@ -84,26 +84,11 @@ export class Catalog {
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
     asDict()            { return Object.fromEntries(this.map(e => [e.key, e.value])) }
-    // asDict()            { return Object.fromEntries(Array.from(this.entries(), e => [e.key, e.value])) }
     map(fun)            { return Array.from(this.entries(), fun) }
     *keys()             { return this._keys.keys }
     *values()           { for (const e of this._entries) if(e) yield e.value }
     *entries()          { for (const e of this._entries) if(e) yield e }
     *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
-
-    // get size()          { return this._entries.length }
-    // get length()        { return this._entries.length }
-    // has(key)            { return this._keys.has(key) }
-    // hasKeys()           { return this._keys.size > 0  }
-    // hasUniqueKeys()     { return this._keys.size === this._entries.length }
-    // hasAnnot()          { return this._entries.filter(e => e.label || e.comment).length > 0 }     // at least one label or comment is present?
-    // isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
-    // asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
-    // *keys()             { return this._keys.keys }
-    // *values()           { for (const e of this._entries) yield e.value }
-    // *entries()          { for (const e of this._entries) yield e }
-    // map(fun)            { return this._entries.map(fun) }
-    // *[Symbol.iterator](){ for (const e of this._entries) yield e }      // iterator over entries, same as this.entries()
 
     constructor(data = null) {
         if (!data) return
@@ -168,52 +153,52 @@ export class Catalog {
         return this._findEntries(key)
     }
 
-    // set(path, value, {label, comment, create_path = false} = {}) {
-    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
-    //        of an existing entry if the last segment of `path` is an integer (a position in this._entries);
-    //        otherwise replace all entries matching `path` with a new one. If create_path is false (default),
-    //        all segments of `path` except the last one must already exist and be unique; otherwise,
-    //        new Catalog() entries are inserted in place of missing path segments (the segments must be strings not integers then).
-    //      */
-    //     if (typeof path === 'string') path = path.split('/')
-    //     assert(path.length >= 1)
-    //
-    //     let step  = path[0]
-    //     let spath = path.join('/')
-    //     let props = {label, comment}
-    //
-    //     if (path.length <= 1)
-    //         return this.setShallow(step, value, props)
-    //
-    //     // make one step forward, then call set() recursively
-    //     let entry = this._findEntry(step, {unique: true})
-    //     if (!entry)
-    //         if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
-    //             this.setEntry({key: step, value: new Catalog()})
-    //         else
-    //             throw new Error(`path not found, missing '${step}' of '${spath}'`)
-    //
-    //     let subcat  = entry.value
-    //     let subpath = path.slice(1)
-    //
-    //     // subcat is a Catalog? make a recursive call
-    //     if (subcat instanceof Catalog)
-    //         return subcat.set(subpath, value, props)
-    //
-    //     // subcat is a Map or object? only go one step deeper
-    //     let key = subpath[0]
-    //     if (subpath.length === 1) {
-    //         if (label   !== undefined) throw new Error(`can't assign a label (${label}) inside a non-catalog (${spath})`)
-    //         if (comment !== undefined) throw new Error(`can't assign a comment (${comment}) inside a non-catalog (${spath})`)
-    //         if (subcat instanceof Map) subcat.set(key, value)        // last step inside a Map
-    //         if (T.isDict(subcat))      subcat[key] = value           // last step inside a plain object
-    //         return {key, value}                 // a "virtual" entry is returned for consistent API, only for reading
-    //     }
-    //
-    //     throw new Error(`path not found: '${subpath.join('/')}'`)
-    // }
+    set(path, value, {label, comment, create_path = false} = {}) {
+        /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
+           of an existing entry if the last segment of `path` is an integer (a position in this._entries);
+           otherwise replace all entries matching `path` with a new one. If create_path is false (default),
+           all segments of `path` except the last one must already exist and be unique; otherwise,
+           new Catalog() entries are inserted in place of missing path segments (the segments must be strings not integers then).
+         */
+        if (typeof path === 'string') path = path.split('/')
+        assert(path.length >= 1)
 
-    set(...args) { return this.setShallow(...args) }
+        let step  = path[0]
+        let spath = path.join('/')
+        let props = {label, comment}
+
+        if (path.length <= 1)
+            return this.setShallow(step, value, props)
+
+        // make one step forward, then call set() recursively
+        let entry = this._findEntry(step, {unique: true})
+        if (!entry)
+            if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
+                this.setEntry({key: step, value: new Catalog()})
+            else
+                throw new Error(`path not found, missing '${step}' of '${spath}'`)
+
+        let subcat  = entry.value
+        let subpath = path.slice(1)
+
+        // subcat is a Catalog? make a recursive call
+        if (subcat instanceof Catalog)
+            return subcat.set(subpath, value, props)
+
+        // subcat is a Map or object? only go one step deeper
+        let key = subpath[0]
+        if (subpath.length === 1) {
+            if (label   !== undefined) throw new Error(`can't assign a label (${label}) inside a non-catalog (${spath})`)
+            if (comment !== undefined) throw new Error(`can't assign a comment (${comment}) inside a non-catalog (${spath})`)
+            if (subcat instanceof Map) subcat.set(key, value)        // last step inside a Map
+            if (T.isDict(subcat))      subcat[key] = value           // last step inside a plain object
+            return {key, value}                 // a "virtual" entry is returned for consistent API, only for reading
+        }
+
+        throw new Error(`path not found: '${subpath.join('/')}'`)
+    }
+
+    // set(...args) { return this.setShallow(...args) }
 
     setShallow(key, value, {label, comment} = {}) {
         /* If key is a number, an entry at this position in this._entries is modified:
@@ -237,10 +222,10 @@ export class Catalog {
         /* Append a new `entry` while deleting all existing occurrencies of the same key. */
         this._push(entry)
         if (!missing(entry.key)) {
-            // this.delete(entry.key)
             let ids = this._keys.get(entry.key) || []
             for (const id of ids)
                 this._entries[id] = undefined           // like with standard delete, the remaining entries are NOT moved, only gaps are created
+            this.size -= ids.length
             this._keys.set(entry.key, [entry.id])
         }
         return entry
@@ -260,7 +245,7 @@ export class Catalog {
         return entry
     }
     _push(entry) {
-        /* Drop unneeded props in `entry` and insert it into this._entries; assign entry.id. */
+        /* Drop unneeded props in `entry`; insert the entry into this._entries; assign entry.id. */
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
         assert(entry.value !== undefined)
         if (missing(entry.key)) delete entry.key

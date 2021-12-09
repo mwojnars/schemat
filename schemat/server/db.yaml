@@ -225,8 +225,8 @@
 - __id:
     - 0
     - 12
-  name: Varia
-  info: Category of items that do not belong to any specific category
+  name: Varia XXX
+  info: YYYxxxCategory of items that do not belong to any specific category
   class_name: schemat.item.Item
   fields:
     name:
@@ -326,7 +326,3 @@
     "":
       - 10
       - 1
-- __id:
-    - 12
-    - 5
-  name: c

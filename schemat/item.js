@@ -31,16 +31,16 @@ function Catalog1({item}) {
         let entries = await item.getEntries()
         let schemas = await category.getFields()
 
-        let rows = entries.map(({key:field, value}, i) => {
+        let rows = entries.map(({key:field, value, id}, i) => {
             let schema  = schemas.get(field)
             let color   = (start_color + i) % 2
             return TR({className: `ct-color${color}`},
                       schema instanceof CATALOG
                         ? TD({className: 'ct-nested', colSpan: 2},
                             DIV({className: 'ct-field'}, field),
-                            e(Catalog2, {path: [field], data: value, schema: schema.values, color, item})
+                            e(Catalog2, {path: [id], data: value, schema: schema.values, color, item})
                         )
-                        : e(Entry, {path: [field], field, value, schema, item})
+                        : e(Entry, {path: [id], field, value, schema, item})
             )
         })
         return TABLE({className: 'catalog-1'}, TBODY(...rows))
@@ -50,9 +50,9 @@ function Catalog1({item}) {
 function Catalog2({path, data, schema, color = 0, item}) {
     return DIV({className: 'wrap-offset'},
             TABLE({className: 'catalog-2'},
-              TBODY(...data.getEntries().map(({key:field, value}) =>
+              TBODY(...data.getEntries().map(({key:field, value, id}) =>
                 TR({className: `ct-color${color}`},
-                  e(Entry, {path: [...path, field], field, value, schema, item}))
+                  e(Entry, {path: [...path, id], field, value, schema, item}))
            ))))
 }
 
@@ -200,6 +200,7 @@ export class Item {
     async set(path, value, props) {
         await this.load()
         this.data.set(path, value, props)           // TODO: create and use EditableItem instead
+        return this.registry.update(this)
     }
 
     async get(path, default_ = undefined) {
