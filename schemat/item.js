@@ -167,21 +167,13 @@ export class Item {
         /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this object. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
-
-        if (this.data) {
-            await this.data
-            // return this         //field === null ? this.data : T.getOwnProperty(this.data, field)
-        }
-
+        if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
         if (this.category !== this) await this.category.load()
 
         // store and return a Promise that will eventually load this item's data;
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
-        // this.bind()
-
-        await this.data
-        // return this
+        return this.data
     }
     async reload(use_schema = true, record = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
@@ -567,10 +559,16 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    // async load(field = null, use_schema = true) {
-    //     /* Same as Item.load(), but additionally load all prototypes if present. */
-    //     // load prototypes
-    // }
+    async load(field = null, use_schema = true) {
+        /* Same as Item.load(), but additionally loads all prototypes if present. */
+        if (this.data) return this.data
+        let data = await super.load(field, use_schema)
+
+        // load prototypes then return `data`
+        let proto = await data.getAll('prototype')
+        if (!proto.length) return data
+        return Promise.all(proto.map(p => p.load())).then(() => data)
+    }
 
     async new(data = null, stage = true) {
         /*
