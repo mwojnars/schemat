@@ -26,7 +26,7 @@ let root_fields = C({
     prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first ones have priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    handlers     : new CATALOG(new CODE()),
+    handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
 
     //indexes    : new CATALOG(new ITEM(Index)),
@@ -90,12 +90,11 @@ async function create_categories(Category) {
             _is_file    : new BOOLEAN({default: true}),
         }),
         handlers    : C({
-            download    : `
-                async function download() {
-                    /* Return full content of this File, either as <str> or a Response object. */
-                    return this.read()
-                }
-            `
+            download    :
+`async function() {
+    /* Return full content of this File as plain text. */
+    return this.read()
+}`,
         })
     })
     cat.FileLocal = await Category.new({

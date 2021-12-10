@@ -66,9 +66,9 @@
       default: true
       "@": schemat.type.BOOLEAN
   handlers:
-    download: >-
-      async function download() {
-          /* Return full content of this File, either as  or a Response object. */
+    download: |-
+      async function() {
+          /* Return full content of this File as plain text. */
           return this.read()
       }
 - __id:
@@ -321,5 +321,5 @@
       - 1
 - __id:
     - 12
-    - 4
-  name: b
+    - 5
+  name: a

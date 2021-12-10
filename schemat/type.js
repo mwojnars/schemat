@@ -283,6 +283,8 @@ export class CODE extends TEXT
     // keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
     // existing highlighters: https://github.com/ajaxorg/ace/tree/master/lib/ace/mode
     // default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands (-> editor.commands.addCommand() ..removeCommand())
+    // pre-built ACE files: https://github.com/ajaxorg/ace-builds
+    // React-ACE component: https://www.npmjs.com/package/react-ace
 
     Editor(value, hide, ref) {
         return DIV({
@@ -306,13 +308,13 @@ export class CODE extends TEXT
     // };
     static editor_options = {
         // each mode & theme may need a separate mode-*, worker-*, theme-* file (!) - see: https://cdnjs.com/libraries/ace
-        mode:           "ace/mode/javascript",
-        theme:          "ace/theme/textmate",  //dreamweaver crimson_editor
+        //theme:          "ace/theme/textmate",  //textmate dreamweaver crimson_editor
+        mode:                   "ace/mode/javascript",
         showGutter:             true,
         displayIndentGuides:    true,
         showPrintMargin:        true,
         highlightActiveLine:    true,
-        useWorker:              false,      // no code syntax warnings
+        useWorker:              false,      // disable syntax checker and warnings
     };
 
     Widget({value, save}) {

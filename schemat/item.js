@@ -102,7 +102,7 @@ export class Item {
 
     /*
     TODO: Item.metadata
-    >> meta fields are accessible through this.get('#FIELD')
+    >> meta fields are accessible through this.get('#FIELD') or '.FIELD' ?
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
     - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
     - cver     -- version of the category that encoded this item's data; the exact same version must perform decoding
@@ -116,6 +116,7 @@ export class Item {
     - removed  -- undelete during a predefined grace period since updated_at, eg. 1 day; after that, `data` is removed, but id+meta stay
     - moved    -- ID of another item that contains more valid/complete data and replaces this one
     - stopper  -- knowingly invalid item that's kept in DB to prevent re-insertion of the same data again; with a text explanation
+    - boot     -- true for a bootstrap item whose raw edits need to be saved to bootedits.yaml after being applied in DB
     ? status   -- enum, "deleted" for tombstone items
     ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
     ? info     -- a string like `name`, but longer ~300-500 ??
@@ -163,14 +164,16 @@ export class Item {
     }
 
     async load(field = null, use_schema = true) {
-        /* Load this item's data (this.data) from a DB, if not loaded yet. Return this object. */
+        /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this object. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
 
         if (this.data) {
             await this.data
-            return this         //field === null ? this.data : T.getOwnProperty(this.data, field)
+            // return this         //field === null ? this.data : T.getOwnProperty(this.data, field)
         }
+
+        if (this.category !== this) await this.category.load()
 
         // store and return a Promise that will eventually load this item's data;
         // the promise will be replaced in this.data with an actual `data` object when ready
@@ -178,7 +181,7 @@ export class Item {
         // this.bind()
 
         await this.data
-        return this
+        // return this
     }
     async reload(use_schema = true, record = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
@@ -204,6 +207,10 @@ export class Item {
     }
 
     async get(path, default_ = undefined) {
+
+        // TODO: make get() synchronous for efficiency (?); assume load() has been called for `this`,
+        // all parent categories and prototypes, otherwise throw an exception;
+        // OR make a getSync() method and use it internally instead of get()
         await this.load()
 
         // search in this.data
@@ -408,7 +415,7 @@ export class Item {
     async _handle_json({res}) { return res.sendItem(this) }
     async _handle_view({req, res, endpoint}) {
 
-        let name = await this.get('name', '')
+        let name = await this.getName('')
         let ciid = await this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
@@ -447,8 +454,8 @@ export class Item {
             <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-javascript.min.js" integrity="sha512-37ta5K4KVYs+MEmIg2xnZxJrdiQmBSKt+JInvyPrq9uz7aF67lMJT/t91EYoYj520jEcGlih41kCce7BRTmE3Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-base.min.js" integrity="sha512-+nNPckbKGLDhLhi4Gz1Y1Wj5Y+x6l7Qw0EEa7izCznLGTl6CrYBbMUVoIm3OfKW8u82JP0Ow7phPPHdk26Fo5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
             <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-javascript.min.js" integrity="sha512-hwPBZJdHUlQzk8FedQ6S0eqJw/26H3hQ1vjpdAVJLaZU/AJSkhU29Js3/J+INYpxEUbgD3gubC7jBBr+WDqS2w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13")</script>
+<!--            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+            <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
             
             <link href="/files/assets/favicon.ico" rel="icon" type="image/x-icon" />
             <link href="/files/assets/styles.css" rel="stylesheet" />
@@ -560,6 +567,11 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
+    // async load(field = null, use_schema = true) {
+    //     /* Same as Item.load(), but additionally load all prototypes if present. */
+    //     // load prototypes
+    // }
+
     async new(data = null, stage = true) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
@@ -611,7 +623,7 @@ export class Category extends Item {
 
     async mergeInherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
-           It's assumed that the catalogs are dictionaries (unique non-missing keys).
+           It's assumed that the catalogs have unique non-missing keys.
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
          */
         let catalog    = new Catalog()
