@@ -267,7 +267,7 @@ export class TEXT extends Textual
         return PRE(TEXTAREA({
             defaultValue:   value,
             ref:            ref,
-            onBlur:         hide,
+            // onBlur:         hide,
             onKeyDown:      (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             rows:           1,
@@ -279,11 +279,16 @@ export class TEXT extends Textual
 }
 export class CODE extends TEXT
 {
+    // ACE (code editor)
+    // keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
+    // existing highlighters: https://github.com/ajaxorg/ace/tree/master/lib/ace/mode
+    // default commands and shortcuts: https://github.com/ajaxorg/ace/tree/master/lib/ace/commands (-> editor.commands.addCommand() ..removeCommand())
+
     Editor(value, hide, ref) {
         return DIV({
             defaultValue:   value,
             ref:            ref,
-            onBlur:         hide,
+            // onBlur:         hide,
             onKeyDown:      (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
             className:      "ace-editor",
@@ -300,12 +305,14 @@ export class CODE extends TEXT
     //     highlightActiveLine:    false,
     // };
     static editor_options = {
-        mode:           "ace/mode/haml",
-        theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
+        // each mode & theme may need a separate mode-*, worker-*, theme-* file (!) - see: https://cdnjs.com/libraries/ace
+        mode:           "ace/mode/javascript",
+        theme:          "ace/theme/textmate",  //dreamweaver crimson_editor
         showGutter:             true,
         displayIndentGuides:    true,
         showPrintMargin:        true,
         highlightActiveLine:    true,
+        useWorker:              false,      // no code syntax warnings
     };
 
     Widget({value, save}) {
@@ -323,6 +330,8 @@ export class CODE extends TEXT
             let div = editor_div.current
             editor_ace = ace.edit(div, this.constructor.editor_options)
             editor_ace.session.setValue(currentValue)
+            // editor_ace.setTheme("ace/theme/textmate")
+            // editor_ace.session.setMode("ace/mode/javascript")
             new ResizeObserver(() => editor_ace.resize()).observe(div)      // allow resizing of the editor box by a user, must update the Ace widget then
             editor_ace.focus()
             // editor_ace.gotoLine(1)

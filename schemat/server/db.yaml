@@ -66,18 +66,11 @@
       default: true
       "@": schemat.type.BOOLEAN
   handlers:
-    download: "
-
-      \                async function download() {
-
-      \                    /* Return full content of this File, either as
-      <str> or a Response object. */
-
-      \                    return this.read()
-
-      \                }
-
-      \            "
+    download: >-
+      async function download() {
+          /* Return full content of this File, either as  or a Response object. */
+          return this.read()
+      }
 - __id:
     - 0
     - 2
@@ -326,3 +319,7 @@
     "":
       - 10
       - 1
+- __id:
+    - 12
+    - 4
+  name: b
