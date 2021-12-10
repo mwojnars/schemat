@@ -184,7 +184,8 @@ export class ServerRegistry extends Registry {
         let Site = (await import('../site.js')).Site
         assert(site instanceof Site)
         assert(site.has_id())
-        this.site_id = site.id
+        // this.site_id = site.id
+        this.site = site
         await this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         return this.update(this.root)
         // this.stage(this.root)

@@ -157,7 +157,7 @@ export class AppAdmin extends Application {
         return item.handle(request, response, this)
     }
     async _find_item(path) {
-        /* Extract (CID, IID, endpoint) from a raw URL of the form CID:IID@endpoint, return an item, save endpoint to request. */
+        /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
         let id
         try { id = path.slice(1).split(':').map(Number) }
         catch (ex) { throw new Error(`URL path not found: ${path}`) }

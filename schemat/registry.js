@@ -122,16 +122,19 @@ export class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
-    db      = null          // Database instance for accessing items and other data from database servers
-    root    = null          // permanent reference to a singleton root Category object, kept here instead of cache
-    site_id = null          // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
-    items   = new ItemsMap()
+    db                      // Database instance for accessing items and other data from database servers
+    root                    // permanent reference to a singleton root Category object, kept here instead of cache
+    site                    // fully loaded Site instance that will handle all web requests
+    // site_id                 // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
+    items = new ItemsMap()
 
-    current_request = null      // the currently processed web request; is set at the beginning of request processing and cleared at the end
+    current_request         // the currently processed web request; is set at the beginning of request processing and cleared at the end
 
     // the getters below are async functions that return a Promise (!) and should be used with await
-    get site()  { return this.getItem(this.site_id) }
-    get files() { return this.site.then(site => site.get('filesystem')) }
+    //get site()  { return Promise.resolve(this._site) } // this.getItem(this.site_id) }
+    //get files() { return this.site.then(site => site.get('filesystem')) }
+
+    get files() { return this.site.get('filesystem') }
 
     // get _specializedItemJS() { assert(false) }
 
@@ -162,7 +165,9 @@ export class Registry {
 
     async boot() {
         await this.create_root()
-        this.site_id = await this.root.get(Registry.STARTUP_SITE)
+        // this.site_id = await this.root.get(Registry.STARTUP_SITE)
+        let site_id = await this.root.get(Registry.STARTUP_SITE)
+        this.site   = await this.getItem(site_id)
     }
     async create_root() {
         /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
