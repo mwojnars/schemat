@@ -237,11 +237,7 @@ export function delayed_render(async_fun, deps = [], empty = undefined) {
        rendering output through async_fun() and requests re-rendering to return the final result. */
 
     const [output, setOutput] = useState(empty)
-    useEffect(async () => {
-        try { setOutput(await async_fun()) }
-        catch (ex) { console.log('ERROR during delayed_render():', ex) }
-    }, deps)
-    // useEffect(async () => setOutput(await async_fun()), deps)
+    useEffect(async () => setOutput(await async_fun()), deps)
     return (output === empty) ? null : output
 
     // DRAFT to allow deps=null without infinite re-rendering loop:
