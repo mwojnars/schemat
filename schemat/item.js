@@ -701,7 +701,7 @@ export class Category extends Item {
             let rows = []
             for await (const item of items) {
                 let name = await item.getName() || await item.getStamp({html:false})
-                let url  = await item.url()
+                let url  = await item.url({raise: false})
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
