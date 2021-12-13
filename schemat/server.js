@@ -48,7 +48,7 @@ class Server {
         globalThis.registry = this.registry
     }
     async boot() {
-        await registry.init_classpath()
+        await registry.initClasspath()
         await registry.boot()
     }
 

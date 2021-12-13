@@ -165,7 +165,7 @@ export class Item {
     }
 
     async load(field = null, use_schema = true) {
-        /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this object. */
+        /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
         if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
@@ -188,7 +188,7 @@ export class Item {
         //print(`${this.id_str}.reload() started...`)
         if (!record) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            record = await this.registry.load_record(this.id)
+            record = await this.registry.loadRecord(this.id)
         }
         let flat   = record.data
         let schema = use_schema ? await this.category.temp('schema') : generic_schema
@@ -670,7 +670,7 @@ export class Category extends Item {
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
          */
         let items = []
-        for await (const item of this.registry.scan_category(this))
+        for await (const item of this.registry.scanCategory(this))
             items.push(item) //await item.encodeSelf())
         res.sendItems(items)
         // res.json(items)
@@ -749,7 +749,7 @@ export class Category extends Item {
     }
 
     Page({item: category}) {
-        const scan = () => category.registry.scan_category(category)    // returns an async generator that requires "for await"
+        const scan = () => category.registry.scanCategory(category)     // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                      // existing child items; state prevents re-scan after every itemAdded()
 
         const [newItems, setNewItems] = useState([])                    // newly added items

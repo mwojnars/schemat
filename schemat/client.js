@@ -59,7 +59,7 @@ class AjaxDB extends Database {
         print(`ajax download [${cid},${iid}]...`)
         return await $.get(`${this.ajax_url}/${cid}:${iid}`)
     }
-    async *scan_category(cid) {
+    async *scanCategory(cid) {
         print(`ajax category scan [0,${cid}]...`)
         let items = await $.get(`${this.ajax_url}/0:${cid}@scan`)
         for (const item of items) yield item
@@ -97,7 +97,7 @@ export async function boot() {
     print('data-data:', data)
 
     let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
-    await registry.init_classpath()
+    await registry.initClasspath()
     await registry.boot(data.request)
 
     // print('root:', await registry.getItem([0,0], {load: true}))

@@ -137,8 +137,8 @@ export class Registry {
 
     // get _specializedItemJS() { assert(false) }
 
-    async init_classpath() {
-        print('init_classpath() started...')
+    async initClasspath() {
+        print('initClasspath() started...')
         let classpath = new Classpath
 
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
@@ -159,29 +159,44 @@ export class Registry {
         //         cls.prototype.__proto__ = ItemSpec.prototype
 
         this.classpath = classpath
-        print('init_classpath() done')
+        print('initClasspath() done')
     }
 
     async boot() {
-        await this.create_root()
+        await this.createRoot()
         let site_id = await this.root.get(Registry.STARTUP_SITE)
-        this.site   = await this.getLoaded(site_id) //getItem(site_id)
+        this.site   = await this.getLoaded(site_id)
     }
-    async create_root() {
+    async createRoot() {
         /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
         let root = this.root = new RootCategory(this)
         await root.load()
         return root
     }
-    async getCategory(cid) { return this.getLoaded([ROOT_CID, cid])  /* .getItem( */ }
 
-    async getLoaded(id) {
-        let item = this.getItem(id)
-        await item.load()
+    createStub(id, category = null) {
+        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class),
+           unless `category` object was provided. */
+        let [cid, iid] = id
+        if (category) return category.new(null, iid)
+        let item = new Item();
+        item.cid = cid
+        item.iid = iid
+        item.registry = this
+        // item.category = this.getCategory(item.cid)
         return item
     }
+    // async createStub(id, category = null) {
+    //     /* Create and return a "stub" item (no data) with a given ID. */
+    //     let [cid, iid] = id
+    //     category = category || await this.getCategory(cid)
+    //     let itemclass = await category.getClass()
+    //     let item = new itemclass(category)
+    //     item.iid = iid
+    //     return item
+    // }
 
-    getItem(id, {load = false, version = null} = {}) {
+    getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
            is taken from this.items, otherwise it is created anew and saved in this.items for future calls.
          */
@@ -196,68 +211,54 @@ export class Registry {
         let item = this.items.get(id)       // this can be a Promise or an item, see below...
         if (item) return item
 
-        let stub = this.create_stub(id)
+        let stub = this.createStub(id)
         this.items.set(id, stub)
         return stub
 
         // // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
-        // // and only later the inner code of create_stub() gets executed; in this way, if another caller
+        // // and only later the inner code of createStub() gets executed; in this way, if another caller
         // // requests the same item asynchronously, it will receive the same unique item object, eventually, without
         // // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
         // // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
-        // let pending = this.create_stub(id)
+        // let pending = this.createStub(id)
         // // if (load) pending = pending.then(item => item.load())
         // this.items.set(id, pending)
         // pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
         // return pending
     }
 
-    create_stub(id, category = null) {
-        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class),
-           unless `category` object was provided. */
-        let [cid, iid] = id
-        if (category) return category.new(null, iid)
-        let item = new Item();
-        item.cid = cid
-        item.iid = iid
-        item.registry = this
-        // item.category = this.getCategory(item.cid)
+    async getCategory(cid) { return this.getLoaded([ROOT_CID, cid]) }
+
+    async getLoaded(id) {
+        let item = this.getItem(id)
+        await item.load()
         return item
     }
-    // async create_stub(id, category = null) {
-    //     /* Create and return a "stub" item (no data) with a given ID. */
-    //     let [cid, iid] = id
-    //     category = category || await this.getCategory(cid)
-    //     let itemclass = await category.getClass()
-    //     let item = new itemclass(category)
-    //     item.iid = iid
-    //     return item
-    // }
 
-    async load_record(id) {
+    async loadRecord(id) {
         /* Load item's record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
            Note that `data` can either be a JSON-encoded string, or a schema-encoded object
            - the caller must be prepared for both cases!
          */
         return this.db.select(id)
     }
-    async *scan_category(category) {
+    async *scanCategory(category) {
         /* Load from DB all items of a given category ordered by IID. A generator. */
-        let records = this.db.scan_category(category.iid)
+        let records = this.db.scanCategory(category.iid)
         for await (const record of records) {
             let {cid, iid} = record
             assert(!category || cid === category.iid)
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                let item = await this.create_stub([cid, iid], category)
+                let item = await this.createStub([cid, iid], category)
                 await item.reload(undefined, record)
                 yield item
             }
         }
     }
 
-    get_path(cls) {
+    getPath(cls) {
         /*
         Return a dotted module path of a given class or function as stored in a global Classpath.
         `cls` should be either a constructor function, or a prototype with .constructor property.

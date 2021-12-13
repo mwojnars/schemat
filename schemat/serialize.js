@@ -55,7 +55,7 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
         if (T.isClass(obj)) {
-            state = registry.get_path(obj)
+            state = registry.getPath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
@@ -79,7 +79,7 @@ export class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = registry.get_path(t)
+        state[JSONx.ATTR_CLASS] = registry.getPath(t)
 
         return state
     }

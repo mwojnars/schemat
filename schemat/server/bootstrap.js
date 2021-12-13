@@ -275,11 +275,11 @@ async function bootstrap(db) {
     print(`Starting full RESET of DB, core items will be created anew in: ${db}`)
     
     let registry = globalThis.registry = new ServerRegistry(db)
-    await registry.init_classpath()
+    await registry.initClasspath()
 
     // create root category; insert it manually to DB (no staging) because it already has an ID and
     // would get "updated" rather than inserted
-    let Category = await registry.create_root(root_data)
+    let Category = await registry.createRoot(root_data)
     await registry.db.insert(Category)
 
     // create non-root categories & leaf items; while being create with Category.new(),

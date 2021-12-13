@@ -176,7 +176,7 @@ export class CLASS extends Schema {
     /* Accepts any global python type and encodes as a string containing its full package-module name. */
     encode(value) {
         if (value === null) return null
-        return globalThis.registry.get_path(value)
+        return globalThis.registry.getPath(value)
     }
     async decode(value) {
         if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)

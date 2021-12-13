@@ -60,7 +60,7 @@ class FileDB extends ServerDB {
         assert(record.cid === id[0] && record.iid === id[1])
         return record
     }
-    async *scan_category(cid) {
+    async *scanCategory(cid) {
         for (const record of this.records.values())
             if (cid === record.cid) yield record
     }
@@ -170,7 +170,7 @@ export class ServerRegistry extends Registry {
         await this.db.load()
         await super.boot()
     }
-    async create_root(root_data = null) {
+    async createRoot(root_data = null) {
         /*
         Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
         are initialized from there rather than being loaded from DB.
