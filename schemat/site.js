@@ -16,7 +16,7 @@ export class Site extends Item {
 
     async execute(request, response) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
-        let app  = await this.get('application')
+        let app  = await this.getLoaded('application')  //.get(
         let path = request.path, sep = Site.SEP_ENDPOINT;
         [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
         return app.execute(request.ipath, request, response)
@@ -42,6 +42,7 @@ export class Site extends Item {
         // relative URL anchored at the deep-most application's route
         if (route === undefined) {
             let app  = this.registry.current_request.app
+            await app.load()
             let path = await app.url_path(item, {relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
@@ -49,7 +50,7 @@ export class Site extends Item {
         // NOTE: the code below is never used right now, all calls leave route=undefined (??)
 
         // relative URL anchored at `route`
-        let root = await this.get('application')
+        let root = await this.getLoaded('application')  //.get(
         let path = await root.url_path(item, {route, relative})
         if (relative) return path
 
@@ -110,6 +111,7 @@ export class AppRoot extends Application {
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
         let [step, app, subpath] = await this._route(path)
+        await app.load()
         await app.execute(subpath, request, response)
     }
 
@@ -143,6 +145,7 @@ export class AppRoot extends Application {
     async url_path(item, opts = {}) {
 
         let [step, app, path] = await this._route(opts.route)
+        await app.load()
         let subpath = await app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
@@ -162,7 +165,7 @@ export class AppAdmin extends Application {
         let id
         try { id = path.slice(1).split(':').map(Number) }
         catch (ex) { throw new Error(`URL path not found: ${path}`) }
-        return this.registry.getItem(id)
+        return this.registry.getLoaded(id) //getItem(id)
     }
     async url_path(item, opts = {}) {
         assert(item.has_id())
@@ -192,7 +195,7 @@ export class AppFiles extends Application {
         // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
 
         request.app = this
-        let root = await this.get('root_folder') || await this.registry.files
+        let root = await this.getLoaded('root_folder') || await this.registry.files
         return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
     }
 
@@ -346,5 +349,6 @@ export class FolderLocal extends Folder {
 
         response.sendFile(fullpath, {}, (err) => {if(err) response.sendStatus(err.status)})
     }
+    async get_name(item) { return null }
 }
 

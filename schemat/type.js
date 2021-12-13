@@ -390,9 +390,9 @@ export class ITEM extends Schema {
         if (!item.has_id())
             throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
-        // verify inheritance from a base category
+        // verify inheritance from a base category - only for LOADED items !!
         if (this.category_base)
-            if (!item.isinstance(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
+            if (item.has_data() && !item.isinstance(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
 
         // return IID alone if an exact category is known
         if (this.category_exact) {
@@ -417,7 +417,7 @@ export class ITEM extends Schema {
         if (!Number.isInteger(cid)) throw new DataError(`expected CID to be an integer, got ${cid} instead during decoding`)
         if (!Number.isInteger(iid)) throw new DataError(`expected IID to be an integer, got ${iid} instead during decoding`)
 
-        return await globalThis.registry.getItem([cid, iid])
+        return globalThis.registry.getItem([cid, iid])
     }
 
     Widget({value}) {

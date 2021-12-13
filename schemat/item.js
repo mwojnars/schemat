@@ -26,6 +26,7 @@ class ServerError extends Error {
 
 function Catalog1({item}) {
     return delayed_render(async () => {
+        await item.load()
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
         let entries = await item.getEntries()
@@ -170,9 +171,10 @@ export class Item {
         if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
         if (!this.category) {
+            assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
             let itemclass = await this.category.getClass()
-            Object.setPrototypeOf(this, itemclass)
+            Object.setPrototypeOf(this, itemclass.prototype)
         }
         if (this.category !== this) await this.category.load()
 
@@ -234,6 +236,11 @@ export class Item {
         await this.load()
         return this.data.getAll(key)
     }
+    async getLoaded(path, default_ = undefined) {
+        let item = await this.get(path, default_)
+        if (item !== default_) await item.load()
+        return item
+    }
 
     async getEntries(order = 'schema') {
         /*
@@ -279,8 +286,8 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url()
-            if (url) cat = `<a href=${url}>${cat}</a>`
+            let url = await this.category.url({raise: false})
+            if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = `${cat}:${this.iid}`
         if (!brackets) return stamp
@@ -330,7 +337,7 @@ export class Item {
         let ajax_url = await this.registry.site.ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
-    async url(endpoint, params = {}) {
+    async url(endpoint = null, params = {}) {
         /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
         if (typeof endpoint === "string")
             params.endpoint = endpoint
@@ -376,6 +383,7 @@ export class Item {
         req.item = this
         if (app) req.app = app
         let endpoint = req.endpoint || req.endpointDefault || 'view'
+        await this.load()       // needed to have this.category below initialized
 
         let handler
         let handlers = await this.category.getHandlers()
@@ -476,8 +484,9 @@ export class Item {
 
     /***  Components (server side & client side)  ***/
 
-    display(target) {
+    async display(target) {
         /* Render this item into a `target` HTMLElement. Client side. */
+        await this.load()
         ReactDOM.render(e(this.Page, {item: this}), target)
     }
 
@@ -576,14 +585,15 @@ export class Category extends Item {
         return Promise.all(proto.map(p => p.load())).then(() => data)
     }
 
-    async new(data = null, stage = true) {
+    async new(data = null, iid = null) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
-        mark it as pending for insertion to DB if stage=true (default).
+        set its IID, or mark as pending for insertion to DB if no `iid` provided.
         */
         let itemclass = await this.getClass()
         let item = new itemclass(this, data)
-        if (stage) this.registry.stage(item)                    // mark `item` for insertion on the next commit()
+        if (iid !== null) item.iid = iid
+        else this.registry.stage(item)              // mark `item` for insertion on the next commit()
         return item
     }
     async issubcat(category) {

@@ -133,7 +133,7 @@ export class Registry {
     // the getters below are async functions that return a Promise (!) and should be used with await
     //get site()  { return Promise.resolve(this._site) } // this.getItem(this.site_id) }
     //get files() { return this.site.then(site => site.get('filesystem')) }
-    get files() { return this.site.get('filesystem') }
+    get files() { return this.site.getLoaded('filesystem') }
 
     // get _specializedItemJS() { assert(false) }
 
@@ -165,7 +165,7 @@ export class Registry {
     async boot() {
         await this.create_root()
         let site_id = await this.root.get(Registry.STARTUP_SITE)
-        this.site   = await this.getItem(site_id)
+        this.site   = await this.getLoaded(site_id) //getItem(site_id)
     }
     async create_root() {
         /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
@@ -173,10 +173,15 @@ export class Registry {
         await root.load()
         return root
     }
+    async getCategory(cid) { return this.getLoaded([ROOT_CID, cid])  /* .getItem( */ }
 
-    async getCategory(cid) { return await this.getItem([ROOT_CID, cid]) }
+    async getLoaded(id) {
+        let item = this.getItem(id)
+        await item.load()
+        return item
+    }
 
-    async getItem(id, {load = false, version = null} = {}) {
+    getItem(id, {load = false, version = null} = {}) {
         /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
            is taken from this.items, otherwise it is created anew and saved in this.items for future calls.
          */
@@ -188,38 +193,46 @@ export class Registry {
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested was already loaded/created? return the existing instance
-        let item = this.items.get(id)       // this may return a Promise or an item, see below...
+        let item = this.items.get(id)       // this can be a Promise or an item, see below...
         if (item) return item
 
-        // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
-        // and only later the inner code of create_stub() gets executed; in this way, if another caller
-        // requests the same item asynchronously, it will receive the same unique item object, eventually, without
-        // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
-        // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
-        let pending = this.create_stub(id)
-        if (load) pending = pending.then(item => item.load())
-        this.items.set(id, pending)
-        pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
-        return pending
+        let stub = this.create_stub(id)
+        this.items.set(id, stub)
+        return stub
+
+        // // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
+        // // and only later the inner code of create_stub() gets executed; in this way, if another caller
+        // // requests the same item asynchronously, it will receive the same unique item object, eventually, without
+        // // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
+        // // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
+        // let pending = this.create_stub(id)
+        // // if (load) pending = pending.then(item => item.load())
+        // this.items.set(id, pending)
+        // pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
+        // return pending
     }
 
-    async create_stub(id, category = null) {
-        if (category) return category.new(null, false)
-        let item = new Item();
-        [item.cid, item.iid] = id
-        item.registry = this
-        return item
-    }
-
-    async create_stub(id, category = null) {
-        /* Create and return a "stub" item (no data) with a given ID. */
+    create_stub(id, category = null) {
+        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class),
+           unless `category` object was provided. */
         let [cid, iid] = id
-        category = category || await this.getCategory(cid)
-        let itemclass = await category.getClass()
-        let item = new itemclass(category)
+        if (category) return category.new(null, iid)
+        let item = new Item();
+        item.cid = cid
         item.iid = iid
+        item.registry = this
+        // item.category = this.getCategory(item.cid)
         return item
     }
+    // async create_stub(id, category = null) {
+    //     /* Create and return a "stub" item (no data) with a given ID. */
+    //     let [cid, iid] = id
+    //     category = category || await this.getCategory(cid)
+    //     let itemclass = await category.getClass()
+    //     let item = new itemclass(category)
+    //     item.iid = iid
+    //     return item
+    // }
 
     async load_record(id) {
         /* Load item's record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).

@@ -108,5 +108,5 @@ export async function boot() {
     // let item = await (await registry.getItem(config.id)).load()
     // print('main item:', item)
 
-    registry.current_request.item.display(react_root)
+    await registry.current_request.item.display(react_root)
 }
