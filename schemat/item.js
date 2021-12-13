@@ -168,6 +168,12 @@ export class Item {
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
         if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
+
+        if (!this.category) {
+            this.category = await this.registry.getCategory(this.cid)
+            let itemclass = await this.category.getClass()
+            Object.setPrototypeOf(this, itemclass)
+        }
         if (this.category !== this) await this.category.load()
 
         // store and return a Promise that will eventually load this item's data;
@@ -321,7 +327,7 @@ export class Item {
         // let request  = {item: this, app, state}
         let {item, app, state} = this.registry.current_request
         let request  = {item, app, state}
-        let ajax_url = await (await this.registry.site).ajaxURL()
+        let ajax_url = await this.registry.site.ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
     async url(endpoint, params = {}) {
@@ -333,7 +339,7 @@ export class Item {
     // }
     // async url(params = {}) {
         let {raise = true, ...params_} = params
-        let site   = await this.registry.site
+        let site   = this.registry.site
         let build  = site.buildURL(this, params_)
         if (raise) return build
 

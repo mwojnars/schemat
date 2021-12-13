@@ -76,7 +76,7 @@ class Server {
         // print('request body:  ', req.body)
 
         this.start_request(req)
-        let site = await this.registry.site
+        let site = this.registry.site
         await site.execute(req, res)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         this.stop_request()

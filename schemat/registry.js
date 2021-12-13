@@ -2,7 +2,7 @@
 
 import { print, assert } from './utils.js'
 import { ItemsMap } from './data.js'
-import { RootCategory, ROOT_CID } from './item.js'
+import { Item, RootCategory, ROOT_CID } from './item.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -125,15 +125,14 @@ export class Registry {
     db                      // Database instance for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
-    // site_id                 // `site` is a property (below), not attribute, to avoid issues with caching (when an item is reloaded)
-    items = new ItemsMap()
 
+    items = new ItemsMap()
     current_request         // the currently processed web request; is set at the beginning of request processing and cleared at the end
+                            // TODO: only keep `current_route` instead of current_request.app for URL generation - Site.url_path()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
     //get site()  { return Promise.resolve(this._site) } // this.getItem(this.site_id) }
     //get files() { return this.site.then(site => site.get('filesystem')) }
-
     get files() { return this.site.get('filesystem') }
 
     // get _specializedItemJS() { assert(false) }
@@ -165,7 +164,6 @@ export class Registry {
 
     async boot() {
         await this.create_root()
-        // this.site_id = await this.root.get(Registry.STARTUP_SITE)
         let site_id = await this.root.get(Registry.STARTUP_SITE)
         this.site   = await this.getItem(site_id)
     }
@@ -176,7 +174,7 @@ export class Registry {
         return root
     }
 
-    async get_category(cid) { return await this.getItem([ROOT_CID, cid]) }
+    async getCategory(cid) { return await this.getItem([ROOT_CID, cid]) }
 
     async getItem(id, {load = false, version = null} = {}) {
         /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
@@ -206,9 +204,17 @@ export class Registry {
     }
 
     async create_stub(id, category = null) {
+        if (category) return category.new(null, false)
+        let item = new Item();
+        [item.cid, item.iid] = id
+        item.registry = this
+        return item
+    }
+
+    async create_stub(id, category = null) {
         /* Create and return a "stub" item (no data) with a given ID. */
         let [cid, iid] = id
-        category = category || await this.get_category(cid)
+        category = category || await this.getCategory(cid)
         let itemclass = await category.getClass()
         let item = new itemclass(category)
         item.iid = iid

@@ -27,12 +27,11 @@ export class Site extends Item {
         return (await this.get('base_url')) + '/ajax'
     }
 
-    async buildURL(item, {route = null, relative = true, baseURL, endpoint, args} = {}) {
+    async buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
         /*
-        Return a relative URL of `item` as assigned by the deep-most Application (if route=null)
+        Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
         that's processing the current web request; or an absolute or relative URL
         assigned by an application anchored at a given `route`.
-        route=null should only be used during request processing, when the current app is defined.
         */
         let url = await this.url_path(item, {route, relative, baseURL})
         return this.setEndpoint(url, endpoint, args)              // append `endpoint` and `args` to the URL
@@ -41,11 +40,13 @@ export class Site extends Item {
     async url_path(item, {route, relative, baseURL}) {
 
         // relative URL anchored at the deep-most application's route
-        if (route === null) {
+        if (route === undefined) {
             let app  = this.registry.current_request.app
-            let path = await app.url_path(item, {route, relative})
+            let path = await app.url_path(item, {relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
+
+        // NOTE: the code below is never used right now, all calls leave route=undefined (??)
 
         // relative URL anchored at `route`
         let root = await this.get('application')
