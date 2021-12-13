@@ -21,9 +21,9 @@ export class JSONx {
         let state = JSONx.encode(obj, type)
         return JSON.stringify(state)
     }
-    // static async parse(dump, type = null) {
+    // static parse(dump, type = null) {
     //     let state = JSON.parse(dump)
-    //     return await JSONx.decode(state, type)
+    //     return JSONx.decode(state, type)
     // }
 
     static encode(obj, type = null) {
@@ -84,7 +84,7 @@ export class JSONx {
         return state
     }
 
-    static async decode(state, type = null) {
+    static decode(state, type = null) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
@@ -130,15 +130,15 @@ export class JSONx {
         if (T.isPrimitiveCls(cls))  return state
         if (cls === Array)          return JSONx.decode_list(state)
         if (cls === Object)         return JSONx.decode_dict(state)
-        if (cls === Set)            return new Set(await JSONx.decode_list(state))
+        if (cls === Set)            return new Set(JSONx.decode_list(state))
         if (cls === Map)
-            return new Map(Object.entries(await JSONx.decode_dict(state)))
+            return new Map(Object.entries(JSONx.decode_dict(state)))
 
         let Item = registry.getClass(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
             return registry.getItem(state)
 
-        state = await JSONx.decode_dict(state)
+        state = JSONx.decode_dict(state)
         // let obj = JSONx.decode_dict(state)
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
@@ -146,16 +146,17 @@ export class JSONx {
         return T.setstate(cls, state)
     }
 
-    static async encdec(obj)   { return await JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
-    static async decenc(state) { return JSONx.encode(await JSONx.decode(state)) }       // for testing purposes
+    static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
+    static decenc(state) { return JSONx.encode(JSONx.decode(state)) }       // for testing purposes
 
     static encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
         return values.map(v => JSONx.encode(v))
     }
-    static async decode_list(state) {
+    static decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return Promise.all(state.map(async v => await JSONx.decode(v)))
+        return state.map(v => JSONx.decode(v))
+        // return Promise.all(state.map(v => JSONx.decode(v)))
     }
     static encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
@@ -169,10 +170,8 @@ export class JSONx {
         // let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
         // return Object.fromEntries(entries)
     }
-    static async decode_dict(state) {
+    static decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        return T.amapDict(state, async (k, v) => [k, await JSONx.decode(v)])
-        // let entries = await Promise.all(Object.entries(state).map(async ([k, v]) => [k, await JSONx.decode(v)]))
-        // return Object.fromEntries(entries)
+        return T.mapDict(state, (k, v) => [k, JSONx.decode(v)])
     }
 }
