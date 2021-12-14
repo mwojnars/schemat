@@ -199,16 +199,14 @@ export class Item {
             record = await this.registry.loadRecord(this.id)
         }
         let flat   = record.data
-        let schema = use_schema ? await this.category.temp('schema') : generic_schema
+        let schema = use_schema ? this.category.temp('schema') : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
-        let data   = await schema.decode(state)
+        let data   = schema.decode(state)
         let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
         if (after instanceof Promise) await after
 
         this.data = data
         return data
-        // this.data  = await schema.decode(state).then(d => new Data(d))
-        // return this.data
         // TODO: initialize item metadata - the remaining attributes from `record`
     }
 
@@ -324,7 +322,7 @@ export class Item {
 
     async encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
-        let schema = use_schema ? await this.category.temp('schema') : generic_schema
+        let schema = use_schema ? this.category.temp('schema') : generic_schema
         return schema.encode(await this.data)
     }
     async dumpData(use_schema = true, compact = true) {
@@ -680,7 +678,7 @@ export class Category extends Item {
         /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
         return this.mergeInherited('handlers')
     }
-    async _temp_schema() {
+    _temp_schema() {
         let fields = this.getFields()
         return new DATA(fields.asDict())
     }

@@ -78,7 +78,7 @@ class ClientRegistry extends Registry {
     }
     async boot(request) {
         await super.boot()
-        this.current_request = await JSONx.decode(request)
+        this.current_request = JSONx.decode(request)
         // this.current_request.item.load()
     }
 }

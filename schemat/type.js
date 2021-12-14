@@ -51,9 +51,9 @@ export class Schema {
         return JSON.stringify(state, replacer, space)
     }
 
-    async load_json(dump) {
+    load_json(dump) {
         let state = JSON.parse(dump)
-        return await this.decode(state)
+        return this.decode(state)
     }
 
     encode(value) {
@@ -66,9 +66,9 @@ export class Schema {
         return JSONx.encode(value)
     }
 
-    async decode(state) {
+    decode(state) {
         /* Convert a serializable "state" as returned by encode() back to an original custom object. */
-        return await JSONx.decode(state)
+        return JSONx.decode(state)
     }
 
     toString() {
@@ -111,8 +111,8 @@ export class GENERIC extends Schema {
             // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return JSONx.encode(obj)
     }
-    async decode(state) {
-        let obj = await JSONx.decode(state)
+    decode(state) {
+        let obj = JSONx.decode(state)
         if (!this.valid(obj))
             throw new DataError(`invalid object type after decoding, expected an instance of ${this.type}, got ${obj} instead`)
             // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
@@ -178,7 +178,7 @@ export class CLASS extends Schema {
         if (value === null) return null
         return globalThis.registry.getPath(value)
     }
-    async decode(value) {
+    decode(value) {
         if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
         return globalThis.registry.getClass(value)
     }
@@ -200,7 +200,7 @@ export class Primitive extends Schema {
         if (value === undefined) return null
         return value
     }
-    async decode(value) {
+    decode(value) {
         this.check(value)
         return value
     }
@@ -402,7 +402,7 @@ export class ITEM extends Schema {
         }
         return item.id
     }
-    async decode(value) {
+    decode(value) {
         let cid, iid
         if (typeof value === "number") {                                // decoding an IID alone
             let ref_cid = this.category_exact?.iid
@@ -478,7 +478,7 @@ export class MAP extends Schema {
         }
         return state
     }
-    async decode(state) {
+    decode(state) {
 
         if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
@@ -488,9 +488,9 @@ export class MAP extends Schema {
 
         // decode keys & values through predefined field types
         for (let [key, value] of Object.entries(state)) {
-            let k = await schema_keys.decode(key)
+            let k = schema_keys.decode(key)
             if (k in d) throw new DataError(`two different keys of state decoded to the same key (${key}) of output object, one of them: ${k}`)
-            d[k] = await schema_values.decode(value)
+            d[k] = schema_values.decode(value)
         }
         return d
     }
@@ -523,9 +523,10 @@ export class RECORD extends Schema {
 
         return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
     }
-    async decode(state) {
+    decode(state) {
         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
-        let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
+        let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
+        // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
         if (this.type) return T.setstate(this.type, data)
         return data
     }
@@ -587,27 +588,27 @@ export class CATALOG extends Schema {
         })
     }
 
-    async decode(state) {
+    decode(state) {
         if (T.isDict(state))  return this._from_dict(state)
         if (T.isArray(state)) return this._from_list(state)
         throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
     }
-    async _from_dict(state) {
+    _from_dict(state) {
         let cat = new Catalog()
         let schema_keys = this._keys
         for (let [key, value] of Object.entries(state)) {
-            key = await schema_keys.decode(key)
-            value = await this._schema(key).decode(value)
+            key = schema_keys.decode(key)
+            value = this._schema(key).decode(value)
             cat.set(key, value)
         }
         return cat
     }
-    async _from_list(state) {
+    _from_list(state) {
         let cat = new Catalog()
         let schema_keys = this._keys
         for (let [value, key, label, comment] of state) {
-            key = await schema_keys.decode(key)
-            value = await this._schema(key).decode(value)
+            key = schema_keys.decode(key)
+            value = this._schema(key).decode(value)
             cat.pushEntry({key, value, label, comment})
         }
         return cat
