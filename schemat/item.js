@@ -331,18 +331,18 @@ export class Item {
         let state = this.encodeData(use_schema)
         return JSON.stringify(state)
     }
-    async encodeSelf(use_schema = true, load = true) {
+    encodeSelf(use_schema = true) {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
-        if (load) await this.load()
+        // if (load) await this.load()
         let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
         state.data = this.encodeData(use_schema)
         return state
     }
-    async bootItems() {
+    bootItems() {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
         let items = [this, this.category, this.registry.root]
         items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
-        return T.amap(items, async i => i.encodeSelf())
+        return items.map(i => i.encodeSelf())
     }
     bootData() {
         /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
@@ -434,14 +434,15 @@ export class Item {
         await this.registry.delete(this)
         return res.json({})
     }
-    async _handle_json({res}) { return res.sendItem(this) }
+    _handle_json({res}) { res.sendItem(this) }
+
     async _handle_view({req, res, endpoint}) {
 
         let name = this.getName('')
         let ciid = await this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
-            body:  await this.BOOT(),
+            body:  this.BOOT(),
         })
     }
 
@@ -487,8 +488,8 @@ export class Item {
     `}
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 
-    async BOOT() { return `
-        <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
+    BOOT() { return `
+        <p id="data-items" style="display:none">${JSON.stringify(this.bootItems())}</p>
         <p id="data-data" style="display:none">${JSON.stringify(this.bootData())}</p>
         <div id="react-root"></div>
         <script type="module">
@@ -682,10 +683,11 @@ export class Category extends Item {
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
          */
         let items = []
-        for await (const item of this.registry.scanCategory(this))
-            items.push(item) //await item.encodeSelf())
+        for await (const item of this.registry.scanCategory(this)) {
+            await item.load()
+            items.push(item)
+        }
         res.sendItems(items)
-        // res.json(items)
     }
     async _handle_new({req, res}) {
         /* Web handler to create a new item in this category based on request data. */
@@ -696,7 +698,7 @@ export class Category extends Item {
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
         let item = this.new(data)
-        this.registry.commit()
+        await this.registry.commit()
         // print('new item.id:', item.id)
         // print('new item.data:', item.data)
         res.sendItem(item)

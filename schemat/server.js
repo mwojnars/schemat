@@ -17,15 +17,15 @@ const PORT      =  3000
 let RES = express.response          // standard Express' prototype of all response objects;
                                     // we're extending it with higher-level methods for handling items
 
-RES.sendItem = async function(item) {
+RES.sendItem = function(item) {
     /* Send JSON response with a single item: its data (encoded) and metadata. */
     print('sendItem():', item.id)
-    this.json(await item.encodeSelf())
+    this.json(item.encodeSelf())
 }
-RES.sendItems = async function(items) {
+RES.sendItems = function(items) {
     /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
     if (!(items instanceof Array)) items = Array.from(items)
-    let states = await T.amap(items, item => item.encodeSelf())
+    let states = items.map(item => item.encodeSelf())
     this.json(states)
 }
 
