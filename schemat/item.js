@@ -178,11 +178,20 @@ export class Item {
         }
         if (this.category !== this) await this.category.load()
 
-        // store and return a Promise that will eventually load this item's data;
+        // store a Promise that will eventually load this item's data to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
+
         return this.data
     }
+    afterLoad(data) {
+        /* Any extra initialization after item's data is loaded, but NOT yet stored in this.data.
+           This initialization must NOT be implemented by overriding load() or reload(),
+           because the class may NOT yet be determined and attached to `this` when load() is called (!)
+           Subclasses may override this method; a Promise can be returned.
+         */
+    }
+
     async reload(use_schema = true, record = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
         //print(`${this.id_str}.reload() started...`)
@@ -193,11 +202,18 @@ export class Item {
         let flat   = record.data
         let schema = use_schema ? await this.category.temp('schema') : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
-        this.data  = await schema.decode(state).then(d => new Data(d))
-        // TODO: initialize item metadata - the remaining attributes from `record`
+        let data   = await schema.decode(state)
 
-        //print(`${this.id_str}.reload() done`)
-        return this.data
+        data = new Data(data)   // todo: remove?
+
+        // let after = this.afterLoad(data)                    // optional extra initialization after data is loaded
+        // if (after instanceof Promise) await after
+
+        this.data = data
+        return data
+        // this.data  = await schema.decode(state).then(d => new Data(d))
+        // return this.data
+        // TODO: initialize item metadata - the remaining attributes from `record`
     }
 
     async set(path, value, props) {
@@ -211,6 +227,8 @@ export class Item {
         // TODO: make get() synchronous for efficiency (?); assume load() has been called for `this`,
         // all parent categories and prototypes, otherwise throw an exception;
         // OR make a getSync() method and use it internally instead of get()
+
+        // assert(this.has_data(), 'item not loaded, call `await item.load()` first')
         await this.load()
 
         // search in this.data
@@ -237,6 +255,7 @@ export class Item {
         return this.data.getAll(key)
     }
     async getLoaded(path, default_ = undefined) {
+        /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
         let item = await this.get(path, default_)
         if (item !== default_) await item.load()
         return item
@@ -575,13 +594,16 @@ export class Category extends Item {
     */
 
     async load(field = null, use_schema = true) {
-        /* Same as Item.load(), but additionally loads all prototypes if present. */
+    // async afterLoad(data) {
+        /* Load all prototypes if present, so that getDefault() and mergeInherited() can be synchronous. */
         if (this.data) return this.data
         let data = await super.load(field, use_schema)
 
         // load prototypes then return `data`
-        let proto = await data.getAll('prototype')
+        let proto = data.getAll('prototype')
         if (!proto.length) return data
+        // for (let p of proto) await p.load()
+        // return data
         return Promise.all(proto.map(p => p.load())).then(() => data)
     }
 
@@ -643,6 +665,9 @@ export class Category extends Item {
         let catalog    = new Catalog()
         let prototypes = await this.getAll('prototype')
         for (const proto of [this, ...prototypes]) {
+            // await proto.load()
+            // if (!proto.has_data())
+            //     assert(false)
             let cat = await proto.get(field)
             if (!cat) continue
             for (const entry of cat)

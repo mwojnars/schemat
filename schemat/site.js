@@ -16,7 +16,7 @@ export class Site extends Item {
 
     async execute(request, response) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
-        let app  = await this.getLoaded('application')  //.get(
+        let app  = await this.getLoaded('application')
         let path = request.path, sep = Site.SEP_ENDPOINT;
         [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
         return app.execute(request.ipath, request, response)
