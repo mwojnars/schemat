@@ -203,11 +203,10 @@ export class Item {
         let schema = use_schema ? await this.category.temp('schema') : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = await schema.decode(state)
+        // data = new Data(data)   // todo: remove?
 
-        data = new Data(data)   // todo: remove?
-
-        // let after = this.afterLoad(data)                    // optional extra initialization after data is loaded
-        // if (after instanceof Promise) await after
+        let after = this.afterLoad(data)                    // optional extra initialization after data is loaded
+        if (after instanceof Promise) await after
 
         this.data = data
         return data
@@ -593,18 +592,18 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    async load(field = null, use_schema = true) {
-    // async afterLoad(data) {
-        /* Load all prototypes if present, so that getDefault() and mergeInherited() can be synchronous. */
-        if (this.data) return this.data
-        let data = await super.load(field, use_schema)
+    // async load(field = null, use_schema = true) {
+    async afterLoad(data) {
+        /* Load all prototypes if present, so that getDefault() and mergeInherited() can be made synchronous. */
+        // if (this.data) return this.data
+        // let data = await super.load(field, use_schema)
 
         // load prototypes then return `data`
         let proto = data.getAll('prototype')
         if (!proto.length) return data
         // for (let p of proto) await p.load()
         // return data
-        return Promise.all(proto.map(p => p.load())).then(() => data)
+        return Promise.all(proto.map(p => p.load()))   //.then(() => data)
     }
 
     async new(data = null, iid = null) {
