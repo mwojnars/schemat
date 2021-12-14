@@ -135,11 +135,10 @@ export class Item {
 
     temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
-    //loaded = null;    // names of fields that have been loaded so far
-
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
     get newborn()   { return this.iid === null }
+    get loaded()    { return this.has_data() }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
@@ -147,10 +146,10 @@ export class Item {
     }
     has_data() { return !!this.data }
 
-    async isinstance(category) {
+    isinstance(category) {
         /*
         Check whether this item belongs to a category that inherits from `category` via a prototype chain.
-        All comparisons along the way use IDs of category items, not object identity.
+        All comparisons along the way use IDs of category items, not object identity. This item's category must be loaded.
         */
         return this.category.issubcat(category)
     }
@@ -225,7 +224,7 @@ export class Item {
         // all parent categories and prototypes, otherwise throw an exception;
         // OR make a getSync() method and use it internally instead of get()
 
-        assert(this.has_data(), 'item not loaded, call `await item.load()` first')
+        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
         // await this.load()
 
         // search in this.data
@@ -241,11 +240,12 @@ export class Item {
 
         return default_
     }
-    async getAll(key) {
+    getAll(key) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT used.
          */
-        await this.load()
+        // await this.load()
+        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
         return this.data.getAll(key)
     }
     async getLoaded(path, default_ = undefined) {
@@ -307,9 +307,12 @@ export class Item {
         return `[${stamp}]`
     }
 
-    async temp(field) {
+    temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
-           (can be async). The value is computed once and cached in this.temporary for subsequent temp() calls. */
+           (can be async). The value (or a promise) is computed once and cached in this.temporary for subsequent
+           temp() calls. The caller should be aware that a given FIELD may return a promise and handle it appropriately.
+         */
+        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
         if (this.temporary.has(field)) return this.temporary.get(field)
         let fun = this[`_temp_${field}`]
         if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
@@ -612,15 +615,15 @@ export class Category extends Item {
         else this.registry.stage(item)              // mark `item` for insertion on the next commit()
         return item
     }
-    async issubcat(category) {
+    issubcat(category) {
         /*
         Return true if `this` inherits from `category`, or is `category` (by ID comparison).
         Inheritance means that the ID of `category` is present on an item-prototype chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let prototypes = await this.getAll('prototype')
+        let prototypes = this.getAll('prototype')
         for (const proto of prototypes)
-            if (await proto.issubcat(category)) return true
+            if (proto.issubcat(category)) return true
         return false
     }
     async getFields()       { return this.temp('fields_all') }
@@ -646,6 +649,7 @@ export class Category extends Item {
     }
     async getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
+        assert(this.loaded, 'category is not loaded yet, call `await category.load()` first')
         let fields = await this.getFields()
         let schema = fields.get(field)
         return schema ? schema.default : default_
@@ -657,7 +661,7 @@ export class Category extends Item {
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
          */
         let catalog    = new Catalog()
-        let prototypes = await this.getAll('prototype')
+        let prototypes = this.getAll('prototype')
         for (const proto of [this, ...prototypes]) {
             let cat = await proto.get(field)
             if (!cat) continue
