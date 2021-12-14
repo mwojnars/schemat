@@ -425,11 +425,11 @@ export class ITEM extends Schema {
             let item = value
             await item.load()
             let url  = await item.url({raise: false})
-            let name = await item.get('name', '')
+            let name = item.get('name', '')
             let ciid = HTML(await item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
-                let note = await item.category.get('name', null)
+                let note = item.category.get('name', null)
                 return FRAGMENT(
                     url ? A({href: url}, name) : name,
                     SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)

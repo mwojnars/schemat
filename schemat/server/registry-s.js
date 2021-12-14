@@ -113,7 +113,7 @@ class YamlDB extends FileDB {
         assert(item.has_data())
         assert(!this.records.has(item.id), "an item with the same ID already exists")
 
-        this.records.set(item.id, {cid, iid, data: await item.dumpData()})
+        this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
     }
 
@@ -121,7 +121,7 @@ class YamlDB extends FileDB {
         assert(item.has_data())
         assert(item.has_id())
         let [cid, iid] = item.id
-        this.records.set(item.id, {cid, iid, data: await item.dumpData()})
+        this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
     }
     async delete(id) {

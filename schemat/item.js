@@ -282,7 +282,7 @@ export class Item {
         // return entries
     }
 
-    async getName(default_) { return this.get('name', default_) }
+    getName(default_)   { return this.get('name', default_) }
 
     async getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
@@ -293,7 +293,7 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = await this.category.getName(this.cid.toString())
+        let cat = this.category.getName(this.cid.toString())
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
@@ -320,21 +320,21 @@ export class Item {
         return value                            // this may return a promise
     }
 
-    async encodeData(use_schema = true) {
+    encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         let schema = use_schema ? this.category.temp('schema') : generic_schema
-        return schema.encode(await this.data)
+        return schema.encode(this.data)
     }
-    async dumpData(use_schema = true, compact = true) {
+    dumpData(use_schema = true, compact = true) {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
-        let state = await this.encodeData(use_schema)
+        let state = this.encodeData(use_schema)
         return JSON.stringify(state)
     }
     async encodeSelf(use_schema = true, load = true) {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
         if (load) await this.load()
         let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
-        state.data = await this.encodeData(use_schema)
+        state.data = this.encodeData(use_schema)
         return state
     }
     async bootItems() {
@@ -436,7 +436,7 @@ export class Item {
     async _handle_json({res}) { return res.sendItem(this) }
     async _handle_view({req, res, endpoint}) {
 
-        let name = await this.getName('')
+        let name = this.getName('')
         let ciid = await this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
@@ -507,7 +507,7 @@ export class Item {
 
     Title({item}) {
         return delayed_render(async () => {
-            let name = await item.getName()
+            let name = item.getName()
             let ciid = await item.getStamp()
             if (name)
                 return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
@@ -720,7 +720,7 @@ export class Category extends Item {
             let rows = []
             for await (const item of items) {
                 await item.load()
-                let name = await item.getName() || await item.getStamp({html:false})
+                let name = item.getName() || await item.getStamp({html:false})
                 let url  = await item.url({raise: false})
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
