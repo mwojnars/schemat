@@ -164,7 +164,7 @@ export class Registry {
 
     async boot() {
         await this.createRoot()
-        let site_id = await this.root.get(Registry.STARTUP_SITE)
+        let site_id = this.root.get(Registry.STARTUP_SITE)
         this.site   = await this.getLoaded(site_id)
     }
     async createRoot() {

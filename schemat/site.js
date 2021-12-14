@@ -22,9 +22,9 @@ export class Site extends Item {
         return app.execute(request.ipath, request, response)
     }
 
-    async ajaxURL() {
+    ajaxURL() {
         /* Absolute base URL for AJAX calls originating at a client UI. */
-        return (await this.get('base_url')) + '/ajax'
+        return this.get('base_url') + '/ajax'
     }
 
     async buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
@@ -50,7 +50,7 @@ export class Site extends Item {
         // NOTE: the code below is never used right now, all calls leave route=undefined (??)
 
         // relative URL anchored at `route`
-        let root = await this.getLoaded('application')  //.get(
+        let root = await this.getLoaded('application')
         let path = await root.url_path(item, {route, relative})
         if (relative) return path
 
@@ -59,7 +59,7 @@ export class Site extends Item {
         if (!baseURL) return path
 
         // absolute URL with base (protocol+domain+port)
-        let base = (typeof baseURL === 'string') ? baseURL : await this.get('base_url')
+        let base = (typeof baseURL === 'string') ? baseURL : this.get('base_url')
         if (base.endsWith('/')) base = base.slice(-1)
         return base + path
     }
@@ -130,7 +130,7 @@ export class AppRoot extends Application {
         } else
             step = path.split(Application.SEP_ROUTE)[0]
         
-        let apps = await this.get('apps')
+        let apps = this.get('apps')
         let app  = apps.get(step)
         
         if (step && app)                        // non-default (named) route can be followed with / in path

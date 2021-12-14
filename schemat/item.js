@@ -248,7 +248,7 @@ export class Item {
     }
     async getLoaded(path, default_ = undefined) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
-        let item = await this.get(path, default_)
+        let item = this.get(path, default_)
         if (item !== default_) await item.load()
         return item
     }
@@ -344,13 +344,13 @@ export class Item {
         items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
         return T.amap(items, async i => i.encodeSelf())
     }
-    async bootData() {
+    bootData() {
         /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
         // let req = this.registry.current_request
         // let request  = {item: this, app, state}
         let {item, app, state} = this.registry.current_request
         let request  = {item, app, state}
-        let ajax_url = await this.registry.site.ajaxURL()
+        let ajax_url = this.registry.site.ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
     async url(endpoint = null, params = {}) {
@@ -489,7 +489,7 @@ export class Item {
 
     async BOOT() { return `
         <p id="data-items" style="display:none">${JSON.stringify(await this.bootItems())}</p>
-        <p id="data-data" style="display:none">${JSON.stringify(await this.bootData())}</p>
+        <p id="data-data" style="display:none">${JSON.stringify(this.bootData())}</p>
         <div id="react-root"></div>
         <script type="module">
             import { boot } from "/files/client.js"
