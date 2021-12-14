@@ -30,7 +30,7 @@ function Catalog1({item}) {
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
         let entries = await item.getEntries()
-        let schemas = await category.getFields()
+        let schemas = category.getFields()
 
         let rows = entries.map(({key:field, value, id}, i) => {
             let schema  = schemas.get(field)
@@ -218,7 +218,7 @@ export class Item {
         return this.registry.update(this)
     }
 
-    async get(path, default_ = undefined) {
+    get(path, default_ = undefined) {
 
         // TODO: make get() synchronous for efficiency (?); assume load() has been called for `this`,
         // all parent categories and prototypes, otherwise throw an exception;
@@ -233,7 +233,7 @@ export class Item {
 
         // search in category's defaults
         if (this.category !== this) {
-            let cat_default = await this.category.getDefault(path)
+            let cat_default = this.category.getDefault(path)
             if (cat_default !== undefined)
                 return cat_default
         }
@@ -263,7 +263,7 @@ export class Item {
         await this.load()
         return this.data.getEntries()
 
-        // let fields  = await this.category.getFields()
+        // let fields  = this.category.getFields()
         // let entries = []
         //
         // function push(f, v) {
@@ -310,7 +310,8 @@ export class Item {
     temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
            (can be async). The value (or a promise) is computed once and cached in this.temporary for subsequent
-           temp() calls. The caller should be aware that a given FIELD may return a promise and handle it appropriately.
+           temp() calls. Whether the result should be awaited depends on a particular _temp_FIELD() method -
+           the caller should be aware that a given field returns a promise and handle it appropriately.
          */
         assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
         if (this.temporary.has(field)) return this.temporary.get(field)
@@ -402,7 +403,7 @@ export class Item {
         await this.load()       // needed to have this.category below initialized
 
         let handler
-        let handlers = await this.category.getHandlers()
+        let handlers = this.category.getHandlers()
         let source   = handlers.get(endpoint)
 
         // get handler's source code from category's properties?
@@ -626,8 +627,8 @@ export class Category extends Item {
             if (proto.issubcat(category)) return true
         return false
     }
-    async getFields()       { return this.temp('fields_all') }
-    async getHandlers()     { return this.temp('handlers_all') }
+    getFields()       { return this.temp('fields_all') }            // calls _temp_fields_all()
+    getHandlers()     { return this.temp('handlers_all') }          // calls _temp_handlers_all()
 
     async getClass() {
         let name = await this.get('class_name')
@@ -647,15 +648,15 @@ export class Category extends Item {
         */
         return this.registry.getItem([this.iid, iid])
     }
-    async getDefault(field, default_ = undefined) {
+    getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         assert(this.loaded, 'category is not loaded yet, call `await category.load()` first')
-        let fields = await this.getFields()
+        let fields = this.getFields()
         let schema = fields.get(field)
         return schema ? schema.default : default_
     }
 
-    async mergeInherited(field) {
+    mergeInherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
            It's assumed that the catalogs have unique non-missing keys.
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
@@ -663,7 +664,7 @@ export class Category extends Item {
         let catalog    = new Catalog()
         let prototypes = this.getAll('prototype')
         for (const proto of [this, ...prototypes]) {
-            let cat = await proto.get(field)
+            let cat = proto.get(field)
             if (!cat) continue
             for (const entry of cat)
                 if (entry.key !== undefined && !catalog.has(entry.key))
@@ -671,16 +672,16 @@ export class Category extends Item {
         }
         return catalog
     }
-    async _temp_fields_all() {
+    _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
         return this.mergeInherited('fields')
     }
-    async _temp_handlers_all() {
+    _temp_handlers_all() {
         /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
         return this.mergeInherited('handlers')
     }
     async _temp_schema() {
-        let fields = await this.getFields()
+        let fields = this.getFields()
         return new DATA(fields.asDict())
     }
 
