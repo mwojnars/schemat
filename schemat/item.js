@@ -178,17 +178,17 @@ export class Item {
         }
         if (this.category !== this) await this.category.load()
 
-        // store a Promise that will eventually load this item's data to avoid race conditions;
+        // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
 
         return this.data
     }
     afterLoad(data) {
-        /* Any extra initialization after item's data is loaded, but NOT yet stored in this.data.
-           This initialization must NOT be implemented by overriding load() or reload(),
+        /* Any extra initialization after the item's data is loaded but NOT yet stored in this.data.
+           This initialization could NOT be implemented by overriding load() or reload(),
            because the class may NOT yet be determined and attached to `this` when load() is called (!)
-           Subclasses may override this method; a Promise can be returned.
+           Subclasses may override this method, either as sync or async method.
          */
     }
 
@@ -203,9 +203,7 @@ export class Item {
         let schema = use_schema ? await this.category.temp('schema') : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = await schema.decode(state)
-        // data = new Data(data)   // todo: remove?
-
-        let after = this.afterLoad(data)                    // optional extra initialization after data is loaded
+        let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
         if (after instanceof Promise) await after
 
         this.data = data
@@ -227,8 +225,8 @@ export class Item {
         // all parent categories and prototypes, otherwise throw an exception;
         // OR make a getSync() method and use it internally instead of get()
 
-        // assert(this.has_data(), 'item not loaded, call `await item.load()` first')
-        await this.load()
+        assert(this.has_data(), 'item not loaded, call `await item.load()` first')
+        // await this.load()
 
         // search in this.data
         let value = this.data.get(path)
@@ -240,9 +238,6 @@ export class Item {
             if (cat_default !== undefined)
                 return cat_default
         }
-        // // try imputing the value with a call to this._impute_PATH() - for top-level fields
-        // value = await this.impute(path)
-        // if (value !== undefined) return value
 
         return default_
     }
@@ -594,7 +589,7 @@ export class Category extends Item {
 
     // async load(field = null, use_schema = true) {
     async afterLoad(data) {
-        /* Load all prototypes if present, so that getDefault() and mergeInherited() can be made synchronous. */
+        /* Load all prototypes of this category, so that getDefault() and mergeInherited() can work synchronously later on. */
         // if (this.data) return this.data
         // let data = await super.load(field, use_schema)
 
@@ -664,9 +659,6 @@ export class Category extends Item {
         let catalog    = new Catalog()
         let prototypes = await this.getAll('prototype')
         for (const proto of [this, ...prototypes]) {
-            // await proto.load()
-            // if (!proto.has_data())
-            //     assert(false)
             let cat = await proto.get(field)
             if (!cat) continue
             for (const entry of cat)
@@ -724,6 +716,7 @@ export class Category extends Item {
         return delayed_render(async () => {
             let rows = []
             for await (const item of items) {
+                await item.load()
                 let name = await item.getName() || await item.getStamp({html:false})
                 let url  = await item.url({raise: false})
                 rows.push(TR(
