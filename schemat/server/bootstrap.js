@@ -26,7 +26,7 @@ let root_fields = C({
     prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first ones have priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
-    handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),
+    handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
 
     //indexes    : new CATALOG(new ITEM(Index)),
@@ -80,7 +80,7 @@ async function create_categories(Category) {
         get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
     }
 
-    cat.File = await Category.new({
+    cat.File = Category.new({
         name        : "File",
         info        : "File with a text content. Accessible through the web filesystem.",
         class_name  : 'schemat.item.File',
@@ -97,7 +97,7 @@ async function create_categories(Category) {
 }`,
         })
     })
-    cat.FileLocal = await Category.new({
+    cat.FileLocal = Category.new({
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
@@ -107,7 +107,7 @@ async function create_categories(Category) {
             //format: new STRING(),             // file format: pdf, xlsx, ...
         }),
     })
-    cat.Folder = await Category.new({
+    cat.Folder = Category.new({
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         class_name  : 'schemat.item.Folder',
@@ -116,7 +116,7 @@ async function create_categories(Category) {
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
-    cat.FolderLocal = await Category.new({
+    cat.FolderLocal = Category.new({
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path. Gives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
@@ -124,7 +124,7 @@ async function create_categories(Category) {
         fields      : C({path: new STRING()}),
     })
 
-    cat.Application = await Category.new({
+    cat.Application = Category.new({
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class_name  : 'schemat.item.Application',
@@ -133,38 +133,38 @@ async function create_categories(Category) {
                                         // if the app needs to store data items in the directory, it's recommended
                                         // to do this inside a .../data subfolder
     })
-    cat.AppRoot  = await Category.new({
+    cat.AppRoot  = Category.new({
         name        : "AppRoot",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
         class_name  : 'schemat.item.AppRoot',
         prototype   : cat.Application,
         fields      : C({name: new STRING(), apps: new CATALOG(new ITEM())}),  // TODO: restrict apps to sub-categories of Application_ (?)
     })
-    cat.AppAdmin = await Category.new({
+    cat.AppAdmin = Category.new({
         name        : "AppAdmin",
         info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
         class_name  : 'schemat.item.AppAdmin',
         fields      : C({name: new STRING()}),
     })
-    cat.AppAjax = await Category.new({
+    cat.AppAjax = Category.new({
         name        : "AppAjax",
         info        : "Internal application to serve AJAX requests, mainly for pulling additional items by client UI.",
         class_name  : 'schemat.item.AppAjax',
         fields      : C({name: new STRING()}),
     })
-    cat.AppFiles = await Category.new({
+    cat.AppFiles = Category.new({
         name        : "AppFiles",
         class_name  : 'schemat.item.AppFiles',
         fields      : C({name: new STRING(), root_folder: new ITEM(cat.Folder)}),    // if root_folder is missing, Site's main folder is used
     })
-    cat.AppSpaces = await Category.new({
+    cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_name  : 'schemat.item.AppSpaces',
         fields      : C({name: new STRING(), spaces: new CATALOG(new ITEM(null, {exact: Category}))}),
     })
     
-    cat.Site = await Category.new({
+    cat.Site = Category.new({
         name        : "Site",
         info        : "Category of site records. A site contains information about applications, servers, startup",
         class_name  : 'schemat.item.Site',
@@ -175,7 +175,7 @@ async function create_categories(Category) {
             application : new ITEM(),               // Application hosted on this site, typically an AppRoot with multiple subapplications
         }),
     })
-    cat.Varia = await Category.new({
+    cat.Varia = Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
         class_name  : 'schemat.item.Item',
@@ -193,7 +193,7 @@ async function create_items(cat, Category) {
     // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     let path = "/home/marcin/Documents/priv/catalog/src/schemat"
     
-    item.dir_system = await cat.Folder.new({
+    item.dir_system = cat.Folder.new({
         files: C({
             'Site':     cat.Site,
             'File':     cat.File,
@@ -201,33 +201,33 @@ async function create_items(cat, Category) {
         }),
     })
     
-    item.test_txt = await cat.File.new({content: "This is a test file."})
-    item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
-    item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
+    item.test_txt = cat.File.new({content: "This is a test file."})
+    item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
+    item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     
-    item.filesystem = await cat.FolderLocal.new({path: `${path}`})
-    // item.filesystem = await cat.Folder.new({
+    item.filesystem = cat.FolderLocal.new({path: `${path}`})
+    // item.filesystem = cat.Folder.new({
     //     files: C({
     //         'system':           item.dir_system,
     //         'tmp':              item.dir_tmp2,
-    //         'assets':           await cat.FolderLocal.new({path: `${path}/assets`}),
+    //         'assets':           cat.FolderLocal.new({path: `${path}/assets`}),
     //
-    //         'client.js':        await cat.FileLocal.new({path: `${path}/client.js`}),
-    //         'data.js':          await cat.FileLocal.new({path: `${path}/data.js`}),
-    //         'item.js':          await cat.FileLocal.new({path: `${path}/item.js`}),
-    //         'registry.js':      await cat.FileLocal.new({path: `${path}/registry.js`}),
-    //         'serialize.js':     await cat.FileLocal.new({path: `${path}/serialize.js`}),
-    //         'type.js':         await cat.FileLocal.new({path: `${path}/type.js`}),
-    //         'utils.js':         await cat.FileLocal.new({path: `${path}/utils.js`}),
-    //         // 'react.production.min.js': await cat.FileLocal.new({path: `${path}/react.production.min.js`}),
+    //         'client.js':        cat.FileLocal.new({path: `${path}/client.js`}),
+    //         'data.js':          cat.FileLocal.new({path: `${path}/data.js`}),
+    //         'item.js':          cat.FileLocal.new({path: `${path}/item.js`}),
+    //         'registry.js':      cat.FileLocal.new({path: `${path}/registry.js`}),
+    //         'serialize.js':     cat.FileLocal.new({path: `${path}/serialize.js`}),
+    //         'type.js':         cat.FileLocal.new({path: `${path}/type.js`}),
+    //         'utils.js':         cat.FileLocal.new({path: `${path}/utils.js`}),
+    //         // 'react.production.min.js': cat.FileLocal.new({path: `${path}/react.production.min.js`}),
     //     }),
     // })
     
-    item.app_admin = await cat.AppAdmin.new({name: "Admin"})
-    item.app_ajax  = await cat.AppAjax .new({name: "AJAX"})
-    item.app_files = await cat.AppFiles.new({name: "Files"})
+    item.app_admin = cat.AppAdmin.new({name: "Admin"})
+    item.app_ajax  = cat.AppAjax .new({name: "AJAX"})
+    item.app_files = cat.AppFiles.new({name: "Files"})
     
-    item.app_catalog = await cat.AppSpaces.new({
+    item.app_catalog = cat.AppSpaces.new({
         name        : "Catalog",
         spaces      : C({
             'sys.category':     Category,
@@ -237,7 +237,7 @@ async function create_items(cat, Category) {
             'sys.file':         cat.FileLocal,
         }),
     })
-    item.app_root = await cat.AppRoot.new({
+    item.app_root = cat.AppRoot.new({
         name        : "Applications",
         apps        : C({
             'admin':    item.app_admin,
@@ -247,18 +247,18 @@ async function create_items(cat, Category) {
         }),
     })
     
-    item.catalog_wiki = await cat.Site.new({
+    item.catalog_wiki = cat.Site.new({
         name        : "catalog.wiki",
         base_url    : "http://127.0.0.1:3000",
         filesystem  : item.filesystem,
         application : item.app_root,
     })
     
-    item.item_001 = await cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
-    item.item_002 = await cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
+    item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
+    item.item_002 = cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
 
-    // await item.item_002.push('name', "test_item")
-    // await item.item_002.push('name', "duplicate")
+    // item.item_002.push('name', "test_item")
+    // item.item_002.push('name', "duplicate")
 
     return item
 }

@@ -5,7 +5,7 @@
     - key: name
       value: Category
     - key: info
-      value: Category of items that represent categories.
+      value: Category of items that represent categories
     - key: class_name
       value: schemat.item.Category
     - key: fields
@@ -37,6 +37,7 @@
               "@": schemat.type.TEXT
           - key: handlers
             value:
+              info: Methods for server-side handling of web requests.
               values:
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG
@@ -240,6 +241,10 @@
       - 0
       - 3
 - __id:
+    - 1
+    - 1
+  content: This is a test file.
+- __id:
     - 3
     - 2
   files:
@@ -254,9 +259,9 @@
       - 3
       - 2
 - __id:
+    - 4
     - 1
-    - 1
-  content: This is a test file.
+  path: /home/marcin/Documents/priv/catalog/src/schemat
 - __id:
     - 7
     - 1
@@ -280,6 +285,23 @@
     sys.dir: 3
     sys.file: 2
 - __id:
+    - 6
+    - 1
+  name: Applications
+  apps:
+    admin:
+      - 7
+      - 1
+    ajax:
+      - 8
+      - 1
+    files:
+      - 9
+      - 1
+    "":
+      - 10
+      - 1
+- __id:
     - 11
     - 1
   name: catalog.wiki
@@ -298,28 +320,3 @@
     - 12
     - 2
   title: ąłęÓŁŻŹŚ
-- __id:
-    - 4
-    - 1
-  path: /home/marcin/Documents/priv/catalog/src/schemat
-- __id:
-    - 6
-    - 1
-  name: Applications
-  apps:
-    admin:
-      - 7
-      - 1
-    ajax:
-      - 8
-      - 1
-    files:
-      - 9
-      - 1
-    "":
-      - 10
-      - 1
-- __id:
-    - 12
-    - 10
-  name: f

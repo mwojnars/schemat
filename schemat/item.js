@@ -29,7 +29,7 @@ function Catalog1({item}) {
         await item.load()
         let start_color = 0                                   // color of the first row: 0 or 1
         let category = item.category
-        let entries = await item.getEntries()
+        let entries = item.getEntries()
         let schemas = category.getFields()
 
         let rows = entries.map(({key:field, value, id}, i) => {
@@ -172,7 +172,7 @@ export class Item {
         if (!this.category) {
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
-            let itemclass = await this.category.getClass()
+            let itemclass = this.category.getClass()
             Object.setPrototypeOf(this, itemclass.prototype)
         }
         if (this.category !== this) await this.category.load()
@@ -253,12 +253,13 @@ export class Item {
         return item
     }
 
-    async getEntries(order = 'schema') {
+    getEntries(order = 'schema') {
         /*
         Retrieve a list of this item's fields and their values.
         Multiple values for a single field are returned as separate entries.
         */
-        await this.load()
+        // await this.load()
+        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
         return this.data.getEntries()
 
         // let fields  = this.category.getFields()
@@ -589,26 +590,18 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    // async load(field = null, use_schema = true) {
     async afterLoad(data) {
         /* Load all prototypes of this category, so that getDefault() and mergeInherited() can work synchronously later on. */
-        // if (this.data) return this.data
-        // let data = await super.load(field, use_schema)
-
-        // load prototypes then return `data`
         let proto = data.getAll('prototype')
-        if (!proto.length) return data
-        // for (let p of proto) await p.load()
-        // return data
-        return Promise.all(proto.map(p => p.load()))   //.then(() => data)
+        if (proto.length) return Promise.all(proto.map(p => p.load()))
     }
 
-    async new(data = null, iid = null) {
+    new(data = null, iid = null) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         set its IID, or mark as pending for insertion to DB if no `iid` provided.
         */
-        let itemclass = await this.getClass()
+        let itemclass = this.getClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
         else this.registry.stage(item)              // mark `item` for insertion on the next commit()
@@ -628,9 +621,9 @@ export class Category extends Item {
     getFields()       { return this.temp('fields_all') }            // calls _temp_fields_all()
     getHandlers()     { return this.temp('handlers_all') }          // calls _temp_handlers_all()
 
-    async getClass() {
-        let name = await this.get('class_name')
-        let code = await this.get('class_code')
+    getClass() {
+        let name = this.get('class_name')
+        let code = this.get('class_code')
         if (code)
             return eval(code)
             // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
@@ -702,7 +695,7 @@ export class Category extends Item {
 
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
-        let item = await this.new(data)
+        let item = this.new(data)
         this.registry.commit()
         // print('new item.id:', item.id)
         // print('new item.data:', item.data)

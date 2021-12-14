@@ -251,7 +251,7 @@ export class Registry {
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                let item = await this.createStub([cid, iid], category)
+                let item = this.createStub([cid, iid], category)
                 await item.reload(undefined, record)
                 yield item
             }
