@@ -632,9 +632,9 @@ export class Category extends Item {
         assert(name, `no class_name defined for category ${this}: ${name}`)
         return this.registry.getClass(name)
     }
-    async getItem(iid) {
+    getItem(iid) {
         /*
-        Instantiate an Item (a stub) and seed it with IID (the IID being present in DB, presumably, not checked),
+        Instantiate a stub of an Item and seed it with IID (the IID being present in DB, presumably, not checked),
         but do NOT load remaining contents from DB (lazy loading).
         */
         return this.registry.getItem([this.iid, iid])

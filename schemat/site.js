@@ -199,7 +199,7 @@ export class AppFiles extends Application {
         return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
     }
 
-    async url_path(item, opts = {}) {
+    url_path(item, opts = {}) {
         // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
         let state = this.registry.current_request.state
         return state.folder.get_name(item)
@@ -211,20 +211,20 @@ export class AppSpaces extends Application {
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
-    async url_path(item, opts = {}) {
-        let spaces_rev = await this.temp('spaces_rev')
+    url_path(item, opts = {}) {
+        let spaces_rev = this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
         if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
         return `${space}:${item.iid}`
     }
-    async _temp_spaces_rev()    { return ItemsMap.reversed(await this.get('spaces')) }
+    _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async execute(path, request, response) {
+    execute(path, request, response) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = path.slice(1).split(':')
-        category = await this.get(`spaces/${space}`)
+        category = this.get(`spaces/${space}`)
         if (!category) return response.sendStatus(404)
-        let item = await category.getItem(Number(item_id))
+        let item = category.getItem(Number(item_id))
         return item.handle(request, response, this)
     }
 }
@@ -247,16 +247,16 @@ export class File extends Item {
 
 export class FileLocal extends File {
     async read(encoding = 'utf8') {
-        let fs = import('fs')
-        let path = await this.get('path')
+        let fs = await import('fs')
+        let path = this.get('path')
         if (path) return fs.readFileSync(path, {encoding})
     }
-    async _handle_download({res}) {
-        let content = await this.get('content', null)
+    _handle_download({res}) {
+        let content = this.get('content', null)
         if (typeof content === 'string')
             return res.send(content)
         
-        let path = await this.get('path', null)
+        let path = this.get('path', null)
         if (!path) res.sendStatus(404)
 
         res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
@@ -278,17 +278,17 @@ export class Folder extends Item {
         let item = this
 
         if (name) {
-            item = await this.get(`files/${name}`)
+            item = this.get(`files/${name}`)
             if (!item) throw new Error(`URL path not found: ${path}`)
             assert(item instanceof Item, `not an item: ${item}`)
             path = path.slice(name.length+1)
         }
 
-        if (await item.get('_is_file')) {
+        if (item.get('_is_file')) {
             if (path) throw new Error('URL not found')
             request.endpointDefault = 'download'
         }
-        else if (await item.get('_is_folder')) {
+        else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
             if (path) return item.execute(path, request, response)
             else request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
@@ -300,7 +300,7 @@ export class Folder extends Item {
     // exists(path) {
     //     /* Check whether a given path exists in this folder. */
     // }
-    async search(path) {
+    search(path) {
         /*
         Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
         The search is performed recursively in subfolders.
@@ -309,24 +309,24 @@ export class Folder extends Item {
         let item = this
         while (path) {
             let name = path.split(Folder.SEP_FOLDER)[0]
-            item = await item.get(`files/${name}`)
+            item = item.get(`files/${name}`)
             path = path.slice(name.length+1)
         }
         return item
     }
-    async read(path) {
+    read(path) {
         /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
-        let f = await this.search(path)
+        let f = this.search(path)
         if (f instanceof File) return f.read()
         throw new Error(`not a File: ${path}`)
     }
-    async get_name(item) {
+    get_name(item) {
         /* Return a name assigned to a given item. If the same item is assigned multiple names,
         the last one is returned. */
-        let names = await this.temp('names')
+        let names = this.temp('names')
         return names.get(item.id, null)
     }
-    async _temp_names()     { return ItemsMap.reversed(await this.get('files')) }
+    _temp_names()     { return ItemsMap.reversed(this.get('files')) }
 }
 
 export class FolderLocal extends Folder {
@@ -338,7 +338,7 @@ export class FolderLocal extends Folder {
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         if (!path) return this.handle(request, response)        // if no file `path` given, display this folder as an item
 
-        let root = await this.get('path')
+        let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         if (!root.endsWith('/')) root += '/'
 
@@ -349,6 +349,6 @@ export class FolderLocal extends Folder {
 
         response.sendFile(fullpath, {}, (err) => {if(err) response.sendStatus(err.status)})
     }
-    async get_name(item) { return null }
+    get_name(item) { return null }
 }
 
