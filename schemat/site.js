@@ -14,12 +14,13 @@ export class Site extends Item {
 
     static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
-    async execute(request, response) {
+    async execute(session) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
+        let request = session.request
         let app  = await this.getLoaded('application')
         let path = request.path, sep = Site.SEP_ENDPOINT;
         [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        return app.execute(request.ipath, request, response)
+        return app.execute(request.ipath, session)
     }
 
     ajaxURL() {
@@ -76,9 +77,9 @@ export class Application extends Item {
     Some application classes may support nested applications.
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
-    static SEP_ROUTE    = '/'       // separator of route segments in URL, each segment corresponds to another (sub)application
+    static SEP_ROUTE = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
 
-    async execute(action, request, response) {
+    async execute(action, session) {
         /*
         Execute an `action` that originated from a web `request` and emit results to a web `response`.
         Typically, `action` is a URL path or subpath that points to an item and its particular view
@@ -105,14 +106,14 @@ export class Application extends Item {
 export class AppRoot extends Application {
     /* A set of sub-applications, each bound to a different URL prefix. */
 
-    async execute(path, request, response) {
+    async execute(path, session) {
         /*
         Find an application in 'apps' that matches the requested URL path and call its execute().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
         let [step, app, subpath] = this._route(path)
         await app.load()
-        return app.execute(subpath, request, response)
+        return app.execute(subpath, session)
     }
 
     _route(path = '') {
@@ -156,9 +157,9 @@ export class AppRoot extends Application {
 export class AppAdmin extends Application {
     /* Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
-    async execute(path, request, response) {
+    async execute(path, session) {
         let item = await this._find_item(path)
-        return item.handle(request, response, this)
+        return item.handle(session, this)
     }
     async _find_item(path) {
         /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
@@ -175,10 +176,10 @@ export class AppAdmin extends Application {
 }
 
 export class AppAjax extends AppAdmin {
-    async execute(path, request, response) {
-        request.endpointDefault = "json"
+    async execute(path, session) {
+        session.request.endpointDefault = "json"
         let item = await this._find_item(path)
-        return item.handle(request, response, this)
+        return item.handle(session, this)
     }
 }
 
@@ -187,16 +188,17 @@ export class AppFiles extends Application {
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     */
-    async execute(path, request, response) {
+    async execute(path, session) {
         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
 
+        let request = session.request
         if (!path.startsWith('/'))
-            return response.redirect(request.ipath + '/')
+            return session.redirect(request.ipath + '/')
         // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
 
         request.app = this
         let root = await this.getLoaded('root_folder') || await this.registry.files
-        return root.execute(path, request, response)     // `root` must be an item of Folder_ or its subcategory
+        return root.execute(path, session)     // `root` must be an item of Folder_ or its subcategory
     }
 
     url_path(item, opts = {}) {
@@ -219,13 +221,13 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    execute(path, request, response) {
+    execute(path, session) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = path.slice(1).split(':')
         category = this.get(`spaces/${space}`)
-        if (!category) return response.sendStatus(404)
+        if (!category) return session.sendStatus(404)
         let item = category.getItem(Number(item_id))
-        return item.handle(request, response, this)
+        return item.handle(session, this)
     }
 }
 
@@ -269,7 +271,7 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async execute(path, request, response) {
+    async execute(path, session) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its execute() with a truncated path. If the object is an item, call its handle().
          */
@@ -284,17 +286,18 @@ export class Folder extends Item {
             path = path.slice(name.length+1)
         }
 
+        let request = session.request
         if (item.get('_is_file')) {
             if (path) throw new Error('URL not found')
             request.endpointDefault = 'download'
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) return item.execute(path, request, response)
+            if (path) return item.execute(path, session)
             else request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
-        return item.handle(request, response)
+        return item.handle(session)
     }
 
     // exists(path) {
@@ -331,12 +334,12 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async execute(path, request, response) {
+    async execute(path, session) {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        if (!path) return this.handle(request, response)        // if no file `path` given, display this folder as an item
+        if (!path) return this.handle(session)          // if no file `path` given, display this folder as a plain item
 
         let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')
@@ -347,7 +350,7 @@ export class FolderLocal extends Folder {
         if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
             throw new Error(`URL path not found: ${path}`)
 
-        response.sendFile(fullpath, {}, (err) => {if(err) response.sendStatus(err.status)})
+        session.sendFile(fullpath, {}, (err) => {if(err) session.sendStatus(err.status)})
     }
     get_name(item) { return null }
 }

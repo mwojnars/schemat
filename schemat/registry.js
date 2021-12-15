@@ -131,8 +131,6 @@ export class Registry {
                             // TODO: only keep `current_route` instead of current_request.app for URL generation - Site.url_path()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
-    //get site()  { return Promise.resolve(this._site) } // this.getItem(this.site_id) }
-    //get files() { return this.site.then(site => site.get('filesystem')) }
     get files() { return this.site.getLoaded('filesystem') }
 
     // get _specializedItemJS() { assert(false) }
@@ -183,18 +181,8 @@ export class Registry {
         item.cid = cid
         item.iid = iid
         item.registry = this
-        // item.category = this.getCategory(item.cid)
         return item
     }
-    // async createStub(id, category = null) {
-    //     /* Create and return a "stub" item (no data) with a given ID. */
-    //     let [cid, iid] = id
-    //     category = category || await this.getCategory(cid)
-    //     let itemclass = await category.getClass()
-    //     let item = new itemclass(category)
-    //     item.iid = iid
-    //     return item
-    // }
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy

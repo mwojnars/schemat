@@ -383,7 +383,7 @@ export class Item {
 
     /***  Handlers (server side)  ***/
 
-    async handle(req, res, app = null) {
+    async handle(session, app = null) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -395,6 +395,7 @@ export class Item {
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
+        let [req, res] = session.channels
         req.item = this
         if (app) req.app = app
         let endpoint = req.endpoint || req.endpointDefault || 'view'

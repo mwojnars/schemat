@@ -37,16 +37,25 @@ RES.sendItems = function(items) {
  */
 
 class Session {
-    /*
-    Environment and collection of objects that are global to a single request processing:
-     - request
-     - response
-     - registry
+    /* Environment and collection of objects that are global to a single request processing. */
 
-    */
+    request
+    response
+    registry
 
-    get req()   { return this.request  }
-    get res()   { return this.response }
+    get req()       { return this.request  }
+    get res()       { return this.response }
+    get channels()  { return [this.request, this.response] }
+
+    ipath           // like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
+    endpoint        // item's endpoint/view that should be executed; empty string '' if no endpoint
+    endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
+                        // configured by an application that handles the request
+                    // TODO remove/rename:
+    item            // target item that's responsible for actual handling of this request
+    app             // leaf Application object this request is addressed to
+    state           // app-specific temporary data that's written during routing (handle()) and can be used for
+                    // response generation when a specific app's method is called, most typically url_path()
 
     constructor(request, response, registry) {
         this.request  = request
@@ -59,6 +68,7 @@ class Session {
     sendFile(...args)       { this.response.sendFile(...args) }
     sendStatus(...args)     { this.response.sendStatus(...args) }
 }
+
 
 class Server {
     /* Sending & receiving multi-part data (HTML+JSON) in http response:
@@ -99,11 +109,10 @@ class Server {
         // print('request query: ', req.query)
         // print('request body:  ', req.body)
 
-        let session = new Session(req, res, this.registry)
-
         this.start_request(req)
+        let session = new Session(req, res, this.registry)
         let site = this.registry.site
-        await site.execute(req, res)
+        await site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         this.stop_request()
     }
