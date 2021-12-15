@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="./bundle.css" />
+    <script
+      src="https://unpkg.com/react@17/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+    <script src="./Catalog.js"></script>
+  </head>
+  <body>
+    <h1>Catalog test page</h1>
+    <script>
+      const appWrapper = document.createElement("div");
+      document.body.appendChild(appWrapper);
+
+      const testData = [
+        [
+          "item",
+          [
+            ["subitem", "value"],
+            [
+              "subitem 2",
+              [
+                ["sub-subitem", [["sub-sub-subitem", "an so on.."]]],
+                ["sub-subitem 2", "other value"],
+              ],
+            ],
+          ],
+        ],
+        ["item 2", "foo"],
+        ["item 3", "bar"],
+      ];
+
+      ReactDOM.render(
+        React.createElement(Catalog, { data: testData }),
+        appWrapper
+      );
+    </script>
+  </body>
+</html>
