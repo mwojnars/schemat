@@ -25,27 +25,24 @@ class ServerError extends Error {
  */
 
 function Catalog1({item}) {
-    return delayed_render(async () => {
-        await item.load()
-        let start_color = 0                                   // color of the first row: 0 or 1
-        let category = item.category
-        let entries = item.getEntries()
-        let schemas = category.getFields()
+    let start_color = 0                                   // color of the first row: 0 or 1
+    let category = item.category
+    let entries  = item.getEntries()
+    let schemas  = category.getFields()
 
-        let rows = entries.map(({key:field, value, id}, i) => {
-            let schema  = schemas.get(field)
-            let color   = (start_color + i) % 2
-            return TR({className: `ct-color${color}`},
-                      schema instanceof CATALOG
-                        ? TD({className: 'ct-nested', colSpan: 2},
-                            DIV({className: 'ct-field'}, field),
-                            e(Catalog2, {path: [id], data: value, schema: schema.values, color, item})
-                        )
-                        : e(Entry, {path: [id], field, value, schema, item})
-            )
-        })
-        return TABLE({className: 'catalog-1'}, TBODY(...rows))
+    let rows = entries.map(({key:field, value, id}, i) => {
+        let schema  = schemas.get(field)
+        let color   = (start_color + i) % 2
+        return TR({className: `ct-color${color}`},
+                  schema instanceof CATALOG
+                    ? TD({className: 'ct-nested', colSpan: 2},
+                        DIV({className: 'ct-field'}, field),
+                        e(Catalog2, {path: [id], data: value, schema: schema.values, color, item})
+                    )
+                    : e(Entry, {path: [id], field, value, schema, item})
+        )
     })
+    return TABLE({className: 'catalog-1'}, TBODY(...rows))
 }
 
 function Catalog2({path, data, schema, color = 0, item}) {
@@ -437,7 +434,6 @@ export class Item {
     _handle_json({res}) { res.sendItem(this) }
 
     async _handle_view({req, res, endpoint}) {
-
         let name = this.getName('')
         let ciid = await this.getStamp({html: false})
         return this.HTML({
