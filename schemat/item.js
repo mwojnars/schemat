@@ -160,6 +160,8 @@ export class Item {
         }
     }
 
+    loadThen(fun) { return this.load().then(fun) }
+
     async load(field = null, use_schema = true) {
         /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
 

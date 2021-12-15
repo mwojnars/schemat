@@ -36,6 +36,30 @@ RES.sendItems = function(items) {
  **
  */
 
+class Session {
+    /*
+    Environment and collection of objects that are global to a single request processing:
+     - request
+     - response
+     - registry
+
+    */
+
+    get req()   { return this.request  }
+    get res()   { return this.response }
+
+    constructor(request, response, registry) {
+        this.request  = request
+        this.response = response
+        this.registry = registry
+    }
+
+    redirect(...args)       { this.response.redirect(...args) }
+    send(...args)           { this.response.send(...args) }
+    sendFile(...args)       { this.response.sendFile(...args) }
+    sendStatus(...args)     { this.response.sendStatus(...args) }
+}
+
 class Server {
     /* Sending & receiving multi-part data (HTML+JSON) in http response:
        - https://stackoverflow.com/a/50883981/1202674
@@ -55,7 +79,7 @@ class Server {
     async handle(req, res) {
         /*
         During request processing, some additional non-standard attributes are assigned in `request`
-        to carry Hyperweb-specific information for downstream processing functions:
+        to carry specific information for downstream processing functions:
         - request.ipath    = like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
         - request.endpoint = item's endpoint/view that should be executed; empty string '' if no endpoint
         - request.endpointDefault = default endpoint that should be used instead of "view" if `endpoint` is missing;
@@ -74,6 +98,8 @@ class Server {
         // // or an array [val1, val2, ...] if PARAM occurs multiple times
         // print('request query: ', req.query)
         // print('request body:  ', req.body)
+
+        let session = new Session(req, res, this.registry)
 
         this.start_request(req)
         let site = this.registry.site

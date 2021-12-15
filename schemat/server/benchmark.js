@@ -13,7 +13,9 @@ async function timeit(label, repeat, fun) {
     console.time(label)
     for (let i = 0; i < repeat; i++)
         await fun()
+        // fun()
     console.timeEnd(label)
+    // setImmediate(() => console.timeEnd(label))
 }
 function timeitSync(label, repeat, fun) {
     console.time(label)
@@ -55,30 +57,25 @@ function bench001() {
     app.listen(3001, () => console.log('Server started on port 3001'))
 }
 
-async function bench002(M = 20000000, N = 10) {
+async function bench002(M = 1000000, N = 100) {
     /* Based on: https://madelinemiller.dev/blog/javascript-promise-overhead/ */
     function fibonacci_sync(num) {
         let a = 1, b = 0, temp
-        while (num >= 0) {
-            temp = a
-            a = a + b
-            b = temp
-            num--
-        }
+        while (num >= 0) { temp = a; a = a + b; b = temp; num-- }
         return b
     }
     async function fibonacci_async(num) {
         let a = 1, b = 0, temp
-        while (num >= 0) {
-            temp = a
-            a = a + b
-            b = temp
-            num--
-        }
+        while (num >= 0) { temp = a; a = a + b; b = temp; num-- }
         return b
     }
-    timeitSync  ('sync',  M,       () => {for(let i = 0; i < N; i++) fibonacci_sync(i)})
-    await timeit('async', M, async () => {for(let i = 0; i < N; i++) await fibonacci_async(i)})
+    timeitSync  ('sync   ', M,       () => {for(let i = 0; i < N; i++) fibonacci_sync(i)})
+    await timeit('async  ', M, async () => {for(let i = 0; i < N; i++) await fibonacci_async(i)})
+    // await timeit('promise', M, async () => {  // chain of Promises over sync functions with a single "await" at the end
+    //     let p = Promise.resolve()
+    //     for(let i = 0; i < N; i++) p = p.then(()=>fibonacci_sync(i))
+    //     await p
+    // })
 }
 
 /**********************************************************************************************************************/

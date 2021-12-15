@@ -110,12 +110,12 @@ export class AppRoot extends Application {
         Find an application in 'apps' that matches the requested URL path and call its execute().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
-        let [step, app, subpath] = await this._route(path)
+        let [step, app, subpath] = this._route(path)
         await app.load()
-        await app.execute(subpath, request, response)
+        return app.execute(subpath, request, response)
     }
 
-    async _route(path = '') {
+    _route(path = '') {
         /*
         Make one step forward along a URL `path`. Return the extracted route segment (step),
         the associated application object, and the remaining subpath.
@@ -144,7 +144,7 @@ export class AppRoot extends Application {
 
     async url_path(item, opts = {}) {
 
-        let [step, app, path] = await this._route(opts.route)
+        let [step, app, path] = this._route(opts.route)
         await app.load()
         let subpath = await app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`
@@ -165,7 +165,7 @@ export class AppAdmin extends Application {
         let id
         try { id = path.slice(1).split(':').map(Number) }
         catch (ex) { throw new Error(`URL path not found: ${path}`) }
-        return this.registry.getLoaded(id) //getItem(id)
+        return this.registry.getLoaded(id)
     }
     async url_path(item, opts = {}) {
         assert(item.has_id())
