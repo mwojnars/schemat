@@ -34,25 +34,25 @@ export class Site extends Item {
         that's processing the current web request; or an absolute or relative URL
         assigned by an application anchored at a given `route`.
         */
-        let url = await this.url_path(item, {route, relative, baseURL})
+        let url = this.url_path(item, {route, relative, baseURL})
         return this.setEndpoint(url, endpoint, args)              // append `endpoint` and `args` to the URL
     }
 
-    async url_path(item, {route, relative, baseURL}) {
+    url_path(item, {route, relative, baseURL}) {
 
         // relative URL anchored at the deep-most application's route
         if (route === undefined) {
             let app  = this.registry.current_request.app
-            await app.load()
-            let path = await app.url_path(item, {relative})
+            assert(app.loaded)  //await app.load()
+            let path = app.url_path(item, {relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
 
         // NOTE: the code below is never used right now, all calls leave route=undefined (??)
 
         // relative URL anchored at `route`
-        let root = await this.getLoaded('application')
-        let path = await root.url_path(item, {route, relative})
+        let root = this.get('application'); assert(root.loaded)
+        let path = root.url_path(item, {route, relative})
         if (relative) return path
 
         // absolute URL without base?
@@ -91,7 +91,7 @@ export class Application extends Item {
         */
         throw new Error('method not implemented in a subclass')
     }
-    async url_path(item, {route, relative}) {
+    url_path(item, {route, relative}) {
         /*
         Generate URL path (URL fragment after route) for `item`.
         If relative=true, the path is relative to a given application `route`; otherwise,
@@ -143,11 +143,11 @@ export class AppRoot extends Application {
         throw new Error(`URL path not found: ${path}`)
     }
 
-    async url_path(item, opts = {}) {
+    url_path(item, opts = {}) {
 
         let [step, app, path] = this._route(opts.route)
-        await app.load()
-        let subpath = await app.url_path(item, {...opts, route: path})
+        assert(app.loaded)      //await app.load()
+        let subpath = app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
         return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
@@ -168,7 +168,7 @@ export class AppAdmin extends Application {
         catch (ex) { throw new Error(`URL path not found: ${path}`) }
         return this.registry.getLoaded(id)
     }
-    async url_path(item, opts = {}) {
+    url_path(item, opts = {}) {
         assert(item.has_id())
         let [cid, iid] = item.id
         return `${cid}:${iid}`

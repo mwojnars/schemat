@@ -49,6 +49,8 @@ class AjaxDB extends Database {
         }
     }
 
+    // selectSync(id) { return this.records.get(id) }
+
     async select(id) {
         /* Look up this.records for a given `id` and return if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
@@ -57,7 +59,7 @@ class AjaxDB extends Database {
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${cid},${iid}]...`)
-        return await $.get(`${this.ajax_url}/${cid}:${iid}`)
+        return $.get(`${this.ajax_url}/${cid}:${iid}`)
     }
     async *scanCategory(cid) {
         print(`ajax category scan [0,${cid}]...`)
@@ -71,14 +73,16 @@ class ClientRegistry extends Registry {
 
     // get _specializedItemJS() { return "./client/item-c.js" }
 
-    constructor(boot_items, ajax_url) {
+    constructor(items, ajax_url) {
         super()
-        this.db = new AjaxDB(ajax_url, boot_items)
+        this.db = new AjaxDB(ajax_url, items)
         // this.cache = new ClientCache()
     }
-    async boot(request) {
+    async boot(items, request) {
         await super.boot()
         this.current_request = JSONx.decode(request)
+        for (let rec of items)
+            await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
         // this.current_request.item.load()
     }
 }
@@ -98,7 +102,7 @@ export async function boot() {
 
     let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
     await registry.initClasspath()
-    await registry.boot(data.request)
+    await registry.boot(items, data.request)
 
     // print('root:', await registry.getItem([0,0], {load: true}))
     // print('[0,10]:', await registry.getItem([0,10], {load: true}))

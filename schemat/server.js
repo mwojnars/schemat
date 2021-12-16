@@ -79,7 +79,7 @@ class Session {
     bootItems() {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
         let item  = this.targetItem
-        let items = [item, item.category, this.registry.root]
+        let items = [item, item.category, this.registry.root, this.targetApp]
         items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
         return items.map(i => i.encodeSelf())
     }

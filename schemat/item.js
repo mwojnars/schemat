@@ -346,9 +346,13 @@ export class Item {
 
         let {raise = true, ...params_} = params
         let site   = this.registry.site
+        // try {
+        //     site.buildURL(this, params_)
+        // }
+        // catch (ex) { if (raise) throw ex; else return null }
+
         let build  = site.buildURL(this, params_)
         if (raise) return build
-
         try { return await build }
         catch(ex) { return null }
     }
@@ -482,14 +486,16 @@ export class Item {
     /***  Components (server side & client side)  ***/
 
     render(targetElement = null) {
-        /* Render this item into an HTMLElement (client-side) if `targetElement` is given, or to a string (server-side) otherwise. */
+        /* Render this item into an HTMLElement (client-side) if `targetElement` is given,  or to a string
+           (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
+           so only a part of the HTML output is actually rendered. For workaround, see:
+            - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
+            - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
+            - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
+         */
         let elem = e(this.Page, {item: this})
         return targetElement ? ReactDOM.render(elem, targetElement) : ReactDOM.renderToString(elem)
-        // NOTE: might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side;
-        // NOTE: useEffect() & delayed_render() do NOT work server-side; workaround:
-        // - https://github.com/kmoskwiak/useSSE --> useSSE, "use Server-Side Effect" hook
-        // - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
-        // - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
+        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side
     }
 
     Title({item}) {
