@@ -1,5 +1,5 @@
 import {
-    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
+    React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './utils.js'
 import { print, assert, T, escape_html } from './utils.js'
@@ -336,19 +336,7 @@ export class Item {
         state.data = this.encodeData(use_schema)
         return state
     }
-    // bootItems() {
-    //     /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
-    //     let items = [this, this.category, this.registry.root]
-    //     items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
-    //     return items.map(i => i.encodeSelf())
-    // }
-    // bootData() {
-    //     /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
-    //     let {item, app, state} = this.registry.current_request
-    //     let request  = {item, app, state}
-    //     let ajax_url = this.registry.site.ajaxURL()
-    //     return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
-    // }
+
     async url(endpoint = null, params = {}) {
         /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
         if (typeof endpoint === "string")
@@ -483,7 +471,7 @@ export class Item {
     BOOT({session}) { return `
         <p id="data-items" style="display:none">${JSON.stringify(session.bootItems())}</p>
         <p id="data-data" style="display:none">${JSON.stringify(session.bootData())}</p>
-        <div id="react-root"></div>
+        <div id="react-root">${this.render()}</div>
         <script type="module">
             import { boot } from "/files/client.js"
             boot()
@@ -493,10 +481,15 @@ export class Item {
 
     /***  Components (server side & client side)  ***/
 
-    async display(target) {
-        /* Render this item into a `target` HTMLElement. Client side. */
-        await this.load()
-        ReactDOM.render(e(this.Page, {item: this}), target)
+    render(targetElement = null) {
+        /* Render this item into an HTMLElement (client-side) if `targetElement` is given, or to a string (server-side) otherwise. */
+        let elem = e(this.Page, {item: this})
+        return targetElement ? ReactDOM.render(elem, targetElement) : ReactDOM.renderToString(elem)
+        // NOTE: might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side;
+        // NOTE: useEffect() & delayed_render() do NOT work server-side; workaround:
+        // - https://github.com/kmoskwiak/useSSE --> useSSE, "use Server-Side Effect" hook
+        // - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
+        // - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
     }
 
     Title({item}) {

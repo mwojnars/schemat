@@ -181,13 +181,15 @@ export class T extends Types {
  **
  */
 
-let React = globalThis.React                            // on client
-try {
-    React = (await import("react")).default
-}         // on server
-catch (e) {
+let React    = globalThis.React                             // on client...
+let ReactDOM = globalThis.ReactDOM
+
+if (!React) {
+    React    = (await import("react")).default              // on server...
+    ReactDOM = (await import("react-dom/server.js")).default
 }
 
+export { React, ReactDOM }
 export const e = React.createElement
 
 function _e(name) {

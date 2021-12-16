@@ -104,9 +104,10 @@ export async function boot() {
     // print('[0,10]:', await registry.getItem([0,10], {load: true}))
     // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
-    let react_root = document.querySelector("#react-root")
-    // let item = await (await registry.getItem(config.id)).load()
-    // print('main item:', item)
+    let reactRoot  = document.querySelector("#react-root")
+    let targetItem = registry.current_request.item
+    await targetItem.load()
+    // print('main item:', targetItem)
 
-    await registry.current_request.item.display(react_root)
+    targetItem.render(reactRoot)
 }
