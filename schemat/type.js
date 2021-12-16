@@ -420,25 +420,10 @@ export class ITEM extends Schema {
         return globalThis.registry.getItem([cid, iid])
     }
 
-    Widget({value}) {
+    Widget({value: item}) {
 
-        let [missingItems, setMissingItems] = useState([])
-
-        const assertLoaded = (item) => {
-            if (item.loaded) return true
-            if (missingItems.includes(item)) return false
-            setMissingItems(prev => [...prev, item])
-            return false
-        }
-
-        useEffect(async () => {
-            if (!missingItems.length) return
-            for (let item of missingItems) await item.load()
-            setMissingItems([])
-        }, [missingItems])
-
-        let item = value
-        if (!assertLoaded(item)) return "loading..."
+        let loaded = useItemLoading()
+        if (!loaded(item)) return "loading..."
 
         let url  = item.url({raise: false})
         let name = item.get('name', '')
@@ -471,6 +456,29 @@ export class ITEM extends Schema {
     //             return FRAGMENT('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     //     })
     // }
+}
+
+function useItemLoading() {
+    /* Returns a function, assertLoaded(item), that checks whether an `item` is already loaded, and if not,
+       schedules its loading to be executed after the current render completes, then requests re-rendering.
+       assertLoaded(item) returns true if the `item` is loaded, false otherwise; it can be called multiple
+       times during single render: for the same item or for different items.
+     */
+    let [missingItems, setMissingItems] = useState([])
+
+    useEffect(async () => {
+        if (!missingItems.length) return
+        for (let item of missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
+        setMissingItems([])
+    }, [missingItems])
+
+    function assertLoaded(item) {
+        if (item.loaded) return true
+        if (missingItems.includes(item)) return false
+        setMissingItems(prev => [...prev, item])
+        return false
+    }
+    return assertLoaded
 }
 
 /**********************************************************************************************************************
