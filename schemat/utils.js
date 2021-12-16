@@ -183,7 +183,11 @@ export class T extends Types {
  */
 
 export class DataError extends Error {}
-export class ItemNotLoaded extends Error {}
+export class ItemNotLoaded extends Error {
+    constructor(item) {
+        super(`item is not loaded yet, call 'await item.load()' first: ${item}`)
+    }
+}
 export class ServerError extends Error {
     /* Raised on client side when an internal call to the server completed with a not-OK status code. */
     constructor(response) {

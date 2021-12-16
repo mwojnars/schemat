@@ -43,7 +43,7 @@ export class Site extends Item {
         // relative URL anchored at the deep-most application's route
         if (route === undefined) {
             let app  = this.registry.current_request.app
-            assert(app.loaded)  //await app.load()
+            app.assertLoaded()
             let path = app.url_path(item, {relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
@@ -51,7 +51,7 @@ export class Site extends Item {
         // NOTE: the code below is never used right now, all calls leave route=undefined (??)
 
         // relative URL anchored at `route`
-        let root = this.get('application'); assert(root.loaded)
+        let root = this.get('application'); root.assertLoaded()
         let path = root.url_path(item, {route, relative})
         if (relative) return path
 
@@ -99,7 +99,7 @@ export class Application extends Item {
         the path does NOT have a leading separator, or it has a different meaning -
         in any case, a leading separator should be appended by caller if needed.
         */
-        throw new Error()
+        throw new Error('method not implemented in a subclass')
     }
 }
 
@@ -146,7 +146,7 @@ export class AppRoot extends Application {
     url_path(item, opts = {}) {
 
         let [step, app, path] = this._route(opts.route)
-        assert(app.loaded)
+        app.assertLoaded()
         // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
         let subpath = app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`

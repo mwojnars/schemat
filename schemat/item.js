@@ -2,7 +2,7 @@ import {
     React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './utils.js'
-import { print, assert, T, escape_html, ServerError } from './utils.js'
+import { print, assert, T, escape_html, ItemNotLoaded, ServerError } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
@@ -132,7 +132,8 @@ export class Item {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return this.cid !== null && this.iid !== null
     }
-    has_data() { return !!this.data }
+    has_data()      { return !!this.data }
+    assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
 
     isinstance(category) {
         /*
@@ -208,12 +209,7 @@ export class Item {
 
     get(path, default_ = undefined) {
 
-        // TODO: make get() synchronous for efficiency (?); assume load() has been called for `this`,
-        // all parent categories and prototypes, otherwise throw an exception;
-        // OR make a getSync() method and use it internally instead of get()
-
-        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
-        // await this.load()
+        this.assertLoaded()
 
         // search in this.data
         let value = this.data.get(path)
@@ -232,8 +228,7 @@ export class Item {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT used.
          */
-        // await this.load()
-        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
+        this.assertLoaded()
         return this.data.getAll(key)
     }
     async getLoaded(path, default_ = undefined) {
@@ -248,8 +243,7 @@ export class Item {
         Retrieve a list of this item's fields and their values.
         Multiple values for a single field are returned as separate entries.
         */
-        // await this.load()
-        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
+        this.assertLoaded()
         return this.data.getEntries()
 
         // let fields  = this.category.getFields()
@@ -302,7 +296,7 @@ export class Item {
            temp() calls. Whether the result should be awaited depends on a particular _temp_FIELD() method -
            the caller should be aware that a given field returns a promise and handle it appropriately.
          */
-        assert(this.loaded, 'item is not loaded yet, call `await item.load()` first')
+        this.assertLoaded()
         if (this.temporary.has(field)) return this.temporary.get(field)
         let fun = this[`_temp_${field}`]
         if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
@@ -617,7 +611,7 @@ export class Category extends Item {
     }
     getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
-        assert(this.loaded, 'category is not loaded yet, call `await category.load()` first')
+        this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
         return schema ? schema.default : default_
