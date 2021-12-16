@@ -62,7 +62,7 @@ function Entry({path, field, value, schema = generic_schema, item}) {
     }
     return FRAGMENT(
               TH({className: 'ct-field'}, field),
-              TD({className: 'ct-value'}, schema.Widget({value, save})),
+              TD({className: 'ct-value', suppressHydrationWarning:true}, schema.Widget({value, save})),
            )
 }
 
@@ -476,7 +476,7 @@ export class Item {
             boot()
         </script>
     `}
-
+    // <div id="react-root">${this.render()}</div>
 
     /***  Components (server side & client side)  ***/
 

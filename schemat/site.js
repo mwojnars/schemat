@@ -146,7 +146,8 @@ export class AppRoot extends Application {
     url_path(item, opts = {}) {
 
         let [step, app, path] = this._route(opts.route)
-        assert(app.loaded)      //await app.load()
+        assert(app.loaded)
+        // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
         let subpath = app.url_path(item, {...opts, route: path})
         if (opts.relative) return subpath                           // path relative to `route`
         let segments = [step, subpath].filter(Boolean)              // only non-empty segments
