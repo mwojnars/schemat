@@ -104,6 +104,10 @@ export function splitLast(s, sep = ' ') {
     return [left, right]
 }
 
+export function sleep(millis) {
+    return new Promise(resolve => setTimeout(resolve, millis))
+}
+
 /*************************************************************************************************/
 
 export class Types {

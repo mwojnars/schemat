@@ -4,7 +4,8 @@
 // import http from 'http'
 import express from 'express'
 
-import {assert, print, T} from './utils.js'
+import {assert, print, sleep} from './utils.js'
+import {JSONx} from './serialize.js'
 import {ServerRegistry} from './server/registry-s.js'
 
 
@@ -37,7 +38,7 @@ RES.sendItems = function(items) {
  */
 
 class Session {
-    /* Environment and collection of objects that are global to a single request processing. */
+    /* Collection of objects that are global to a single request processing, and an evolving state of the latter. */
 
     request
     response
@@ -47,15 +48,19 @@ class Session {
     get res()       { return this.response }
     get channels()  { return [this.request, this.response] }
 
-    ipath           // like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
-    endpoint        // item's endpoint/view that should be executed; empty string '' if no endpoint
+    get targetApp()     { return this.request.app  }
+    get targetItem()    { return this.request.item }
+
+    ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
+    endpoint            // item's endpoint/view that should be executed; empty string '' if no endpoint
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
-                    // TODO remove/rename:
-    item            // target item that's responsible for actual handling of this request
-    app             // leaf Application object this request is addressed to
-    state           // app-specific temporary data that's written during routing (handle()) and can be used for
-                    // response generation when a specific app's method is called, most typically url_path()
+
+    // site?
+    // app             // leaf Application object this request is addressed to
+    // item            // target item that's responsible for actual handling of this request
+    // state           // app-specific temporary data that's written during routing (handle()) and can be used for
+    //                 // response generation when a specific app's method is called, most typically url_path()
 
     constructor(request, response, registry) {
         this.request  = request
@@ -63,10 +68,28 @@ class Session {
         this.registry = registry
     }
 
+    // get an ultimate endpoint, with falling back to a default when necessary
+    getEndpoint()           { return this.request.endpoint || this.request.endpointDefault || 'view' }
+
     redirect(...args)       { this.response.redirect(...args) }
     send(...args)           { this.response.send(...args) }
     sendFile(...args)       { this.response.sendFile(...args) }
     sendStatus(...args)     { this.response.sendStatus(...args) }
+
+    bootItems() {
+        /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
+        let item  = this.targetItem
+        let items = [item, item.category, this.registry.root]
+        items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
+        return items.map(i => i.encodeSelf())
+    }
+    bootData() {
+        /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
+        let {item, app, state} = this.request
+        let request  = {item, app, state}
+        let ajax_url = this.registry.site.ajaxURL()
+        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
+    }
 }
 
 
@@ -114,6 +137,8 @@ class Server {
         let site = this.registry.site
         await site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
+
+        // await sleep(100)       // for testing
         this.stop_request()
     }
 

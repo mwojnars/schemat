@@ -332,34 +332,30 @@ export class Item {
     }
     encodeSelf(use_schema = true) {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
-        // if (load) await this.load()
         let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
         state.data = this.encodeData(use_schema)
         return state
     }
-    bootItems() {
-        /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
-        let items = [this, this.category, this.registry.root]
-        items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
-        return items.map(i => i.encodeSelf())
-    }
-    bootData() {
-        /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
-        // let req = this.registry.current_request
-        // let request  = {item: this, app, state}
-        let {item, app, state} = this.registry.current_request
-        let request  = {item, app, state}
-        let ajax_url = this.registry.site.ajaxURL()
-        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
-    }
+    // bootItems() {
+    //     /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
+    //     let items = [this, this.category, this.registry.root]
+    //     items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
+    //     return items.map(i => i.encodeSelf())
+    // }
+    // bootData() {
+    //     /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
+    //     let {item, app, state} = this.registry.current_request
+    //     let request  = {item, app, state}
+    //     let ajax_url = this.registry.site.ajaxURL()
+    //     return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
+    // }
     async url(endpoint = null, params = {}) {
         /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
         if (typeof endpoint === "string")
             params.endpoint = endpoint
         else if (endpoint)
             params = endpoint
-    // }
-    // async url(params = {}) {
+
         let {raise = true, ...params_} = params
         let site   = this.registry.site
         let build  = site.buildURL(this, params_)
@@ -368,9 +364,6 @@ export class Item {
         try { return await build }
         catch(ex) { return null }
     }
-
-    // async update() { return this.registry.update(this) }
-    // async delete() { return this.registry.delete(this) }
 
     /***  Client-server communication protocols (operation chains)  ***/
 
@@ -388,7 +381,7 @@ export class Item {
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
 
-           function handler({item, req, res, endpoint})
+           function handler({item, session, req, res, endpoint})
 
         or as methods of a particular Item subclass, named `_handle_{endpoint}`.
         In every case, the function's `this` is bound to `item` (this===item).
@@ -398,7 +391,7 @@ export class Item {
         let [req, res] = session.channels
         req.item = this
         if (app) req.app = app
-        let endpoint = req.endpoint || req.endpointDefault || 'view'
+        let endpoint = session.getEndpoint()
         await this.load()       // needed to have this.category below initialized
 
         let handler
@@ -416,7 +409,7 @@ export class Item {
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
         handler = handler.bind(this)
-        let page = handler({item: this, req, res, endpoint})
+        let page = handler({item: this, req, res, endpoint, session})
         if (page instanceof Promise) page = await page
         if (typeof page === 'string')
             res.send(page)
@@ -436,12 +429,12 @@ export class Item {
     }
     _handle_json({res}) { res.sendItem(this) }
 
-    async _handle_view({req, res, endpoint}) {
+    async _handle_view({session, req, res, endpoint}) {
         let name = this.getName('')
         let ciid = await this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
-            body:  this.BOOT(),
+            body:  this.BOOT({session}),
         })
     }
 
@@ -487,9 +480,9 @@ export class Item {
     `}
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 
-    BOOT() { return `
-        <p id="data-items" style="display:none">${JSON.stringify(this.bootItems())}</p>
-        <p id="data-data" style="display:none">${JSON.stringify(this.bootData())}</p>
+    BOOT({session}) { return `
+        <p id="data-items" style="display:none">${JSON.stringify(session.bootItems())}</p>
+        <p id="data-data" style="display:none">${JSON.stringify(session.bootData())}</p>
         <div id="react-root"></div>
         <script type="module">
             import { boot } from "/files/client.js"
