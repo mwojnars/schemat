@@ -2,21 +2,12 @@ import {
     React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './utils.js'
-import { print, assert, T, escape_html } from './utils.js'
+import { print, assert, T, escape_html, ServerError } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
-import { JSONx } from './serialize.js'
 import { Catalog, Data } from './data.js'
 
 export const ROOT_CID = 0
 
-
-class ServerError extends Error {
-    /* Raised on client side when an internal call to the server completed with a not-OK status code. */
-    constructor(response) {
-        super()
-        this.response = response            // an original Response object as returned from fetch()
-    }
-}
 
 /**********************************************************************************************************************
  **

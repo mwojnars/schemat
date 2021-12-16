@@ -1,13 +1,8 @@
 import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './utils.js'
-import { useState, useRef, useEffect, delayed_render } from './utils.js'
-import { T, truncate } from './utils.js'
+import { useState, useRef, useEffect, useItemLoading, delayed_render } from './utils.js'
+import { T, truncate, DataError } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
-
-export class DataError extends Error {}
-
-
-export class multiple {}
 
 
 /**********************************************************************************************************************
@@ -456,29 +451,6 @@ export class ITEM extends Schema {
     //             return FRAGMENT('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     //     })
     // }
-}
-
-function useItemLoading() {
-    /* Returns a function, assertLoaded(item), that checks whether an `item` is already loaded, and if not,
-       schedules its loading to be executed after the current render completes, then requests re-rendering.
-       assertLoaded(item) returns true if the `item` is loaded, false otherwise; it can be called multiple
-       times during single render: for the same item or for different items.
-     */
-    let [missingItems, setMissingItems] = useState([])
-
-    useEffect(async () => {
-        if (!missingItems.length) return
-        for (let item of missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
-        setMissingItems([])
-    }, [missingItems])
-
-    function assertLoaded(item) {
-        if (item.loaded) return true
-        if (missingItems.includes(item)) return false
-        setMissingItems(prev => [...prev, item])
-        return false
-    }
-    return assertLoaded
 }
 
 /**********************************************************************************************************************

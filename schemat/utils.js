@@ -175,6 +175,23 @@ export class Types {
 export class T extends Types {
 }  // T is an alias for Types
 
+
+/**********************************************************************************************************************
+ **
+ **  ERRORS
+ **
+ */
+
+export class DataError extends Error {}
+export class ItemNotLoaded extends Error {}
+export class ServerError extends Error {
+    /* Raised on client side when an internal call to the server completed with a not-OK status code. */
+    constructor(response) {
+        super()
+        this.response = response            // an original Response object as returned from fetch()
+    }
+}
+
 /**********************************************************************************************************************
  **
  **  REACT
@@ -236,7 +253,7 @@ export const useEffect = React.useEffect
 export const useState = React.useState
 export const useRef = React.useRef
 
-/*************************************************************************************************/
+/**********************************************************************************************************************/
 
 export function delayed_render(async_fun, deps = [], empty = undefined) {
     /* Delayed rendering: returns null on initial rendering attempt, then asynchronously calculates
@@ -259,6 +276,32 @@ export function delayed_render(async_fun, deps = [], empty = undefined) {
     //     updating.current = false
     //
     // return (output === empty) ? null : output
+}
+
+export function useItemLoading(raise = false) {
+    /* Returns a function, assertLoaded(item), that checks whether an `item` is already loaded, and if not,
+       schedules its loading to be executed after the current render completes, then requests re-rendering.
+       If raise=false, assertLoaded(item) returns true if the `item` is loaded, false otherwise;
+       if raise=true, an ItemNotLoaded exception is raised in the latter case, unless the item
+       has already been encountered. The assertLoaded() function can be called multiple times during a single render:
+       with the same or different item as an argument.
+     */
+    let [missingItems, setMissingItems] = useState([])
+
+    useEffect(async () => {
+        if (!missingItems.length) return
+        for (let item of missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
+        setMissingItems([])
+    }, [missingItems])
+
+    function assertLoaded(item) {
+        if (item.loaded) return true
+        if (missingItems.includes(item)) return false
+        setMissingItems(prev => [...prev, item])
+        if (raise) throw new ItemNotLoaded()
+        return false
+    }
+    return assertLoaded
 }
 
 
