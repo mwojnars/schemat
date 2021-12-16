@@ -28,7 +28,7 @@ export class Site extends Item {
         return this.get('base_url') + '/ajax'
     }
 
-    async buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
+    buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
         /*
         Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
         that's processing the current web request; or an absolute or relative URL

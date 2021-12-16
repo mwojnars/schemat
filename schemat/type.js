@@ -424,9 +424,9 @@ export class ITEM extends Schema {
         return delayed_render(async () => {
             let item = value
             await item.load()
-            let url  = await item.url({raise: false})
+            let url  = item.url({raise: false})
             let name = item.get('name', '')
-            let ciid = HTML(await item.getStamp({html: false, brackets: false}))
+            let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
             if (name && url) {
                 let note = item.category.get('name', null)

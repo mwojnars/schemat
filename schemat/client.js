@@ -110,7 +110,7 @@ export async function boot() {
 
     let reactRoot  = document.querySelector("#react-root")
     let targetItem = registry.current_request.item
-    await targetItem.load()
+    assert(targetItem.loaded)
     // print('main item:', targetItem)
 
     targetItem.render(reactRoot)

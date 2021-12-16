@@ -284,7 +284,7 @@ export class Item {
 
     getName(default_)   { return this.get('name', default_) }
 
-    async getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
+    getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*
         "Category-Item ID" (CIID) string (stamp) of the form:
         - [CATEGORY-NAME:IID], if the category of this has a "name" property; or
@@ -297,7 +297,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = await this.category.url({raise: false})
+            let url = this.category.url({raise: false})
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = `${cat}:${this.iid}`
@@ -337,24 +337,19 @@ export class Item {
         return state
     }
 
-    async url(endpoint = null, params = {}) {
+    url(endpoint = null, params = {}) {
         /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
-        if (typeof endpoint === "string")
-            params.endpoint = endpoint
-        else if (endpoint)
-            params = endpoint
+        if (typeof endpoint === "string") params.endpoint = endpoint
+        else if (endpoint) params = endpoint
 
-        let {raise = true, ...params_} = params
-        let site   = this.registry.site
-        // try {
-        //     site.buildURL(this, params_)
-        // }
-        // catch (ex) { if (raise) throw ex; else return null }
-
-        let build  = site.buildURL(this, params_)
-        if (raise) return build
-        try { return await build }
-        catch(ex) { return null }
+        let {raise = true, warn = true, ...params_} = params
+        let  site  = this.registry.site
+        try {return site.buildURL(this, params_)}
+        catch (ex) {
+            if (raise) throw ex
+            if (warn) console.log(`WARNING: exception raised in .url() of item ${this}`)
+            return null
+        }
     }
 
     /***  Client-server communication protocols (operation chains)  ***/
@@ -421,9 +416,9 @@ export class Item {
     }
     _handle_json({res}) { res.sendItem(this) }
 
-    async _handle_view({session, req, res, endpoint}) {
+    _handle_view({session, req, res, endpoint}) {
         let name = this.getName('')
-        let ciid = await this.getStamp({html: false})
+        let ciid = this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
             body:  this.BOOT({session}),
@@ -434,7 +429,7 @@ export class Item {
         /* Connect from client to an `endpoint` of an internal API; send `data` if any;
            return a response body parsed from JSON to an object.
          */
-        let url = await this.url(endpoint)
+        let url = this.url(endpoint)
         let res = await fetchJson(url, data, params)        // Response object
         if (!res.ok) throw new ServerError(res)
         return res.json()
@@ -499,14 +494,12 @@ export class Item {
     }
 
     Title({item}) {
-        return delayed_render(async () => {
-            let name = item.getName()
-            let ciid = await item.getStamp()
-            if (name)
-                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
-            else
-                return H1(HTML(ciid))
-        })
+        let name = item.getName()
+        let ciid = item.getStamp()
+        if (name)
+            return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+        else
+            return H1(HTML(ciid))
     }
 
     Page({item, extra = null}) {                                  // React functional component
@@ -706,8 +699,8 @@ export class Category extends Item {
             let rows = []
             for await (const item of items) {
                 await item.load()
-                let name = item.getName() || await item.getStamp({html:false})
-                let url  = await item.url({raise: false})
+                let name = item.getName() || item.getStamp({html:false})
+                let url  = item.url({raise: false})
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
