@@ -1,5 +1,5 @@
-import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './utils.js'
-import { useState, useRef, useEffect, useItemLoading, delayed_render } from './utils.js'
+import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
+import { useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
 import { T, truncate, DataError } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'

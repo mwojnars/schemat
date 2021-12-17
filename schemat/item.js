@@ -1,7 +1,7 @@
 import {
     React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
-} from './utils.js'
+} from './react-utils.js'
 import { print, assert, T, escape_html, ItemNotLoaded, ServerError } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
