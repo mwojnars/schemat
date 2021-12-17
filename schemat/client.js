@@ -80,7 +80,7 @@ class ClientRegistry extends Registry {
     }
     async boot(items, request) {
         await super.boot()
-        this.current_request = JSONx.decode(request)
+        this.current_request = new JSONx(this).decode(request)  //JSONx.decode(request)
         for (let rec of items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
         // this.current_request.item.load()

@@ -313,21 +313,25 @@ export class Session {
     sendFile(...args)       { this.response.sendFile(...args) }
     sendStatus(...args)     { this.response.sendStatus(...args) }
 
-    getItem(id) {
-        /* Return an item from this.items if present, or create a new one that inherits prototypically from
-           an original base Item instance (shared between requests) as returned by the Registry;
-           the sub-instance has the `session` property pointing to this Session object.
-         */
-        let item = this.items.get(id)
-        if (item) return item
+    getPath(cls)    { return this.registry.getPath(cls)   }
+    getClass(path)  { return this.registry.getClass(path) }
+    getItem(id)     { return this.registry.getItem(id)    }
 
-        let baseItem = this.registry.getItem(id)
-        item = Object.create(baseItem)
-        item.session = this
-
-        this.items.set(id, item)
-        return item
-    }
+    // getItem(id) {
+    //     /* Return an item from this.items if present, or create a new one that inherits prototypically from
+    //        an original base Item instance (shared between requests) as returned by the Registry;
+    //        the sub-instance has the `session` property pointing to this Session object.
+    //      */
+    //     let item = this.items.get(id)
+    //     if (item) return item
+    //
+    //     let baseItem = this.registry.getItem(id)
+    //     item = Object.create(baseItem)
+    //     item.session = this
+    //
+    //     this.items.set(id, item)
+    //     return item
+    // }
 
     bootItems() {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
@@ -341,7 +345,7 @@ export class Session {
         let {item, app, state} = this.request
         let request  = {item, app, state}
         let ajax_url = this.registry.site.ajaxURL()
-        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
+        return {'ajax_url': ajax_url, 'request': new JSONx(this).encode(request)}  //JSONx.encode(request)}
     }
 
     // dump() -- same as bootData()

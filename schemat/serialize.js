@@ -17,16 +17,23 @@ export class JSONx {
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     static PATH_ITEM  = "schemat.item.Item"
 
-    static stringify(obj, type = null) {
-        let state = JSONx.encode(obj, type)
-        return JSON.stringify(state)
+    constructor(session) {
+        this.session = session || globalThis.registry
     }
-    // static parse(dump, type = null) {
+
+    // stringify(obj, type = null) {
+    //     let state = this.encode(obj, type)
+    //     return JSON.stringify(state)
+    // }
+    // parse(dump, type = null) {
     //     let state = JSON.parse(dump)
-    //     return JSONx.decode(state, type)
+    //     return this.decode(state, type)
     // }
 
-    static encode(obj, type = null) {
+    static encode(obj, type = null)     { return new JSONx().encode(obj, type) }
+    static decode(state, type = null)   { return new JSONx().decode(state, type) }
+
+    encode(obj, type = null) {
         /*
         Return a `state` that carries all the information needed for reconstruction of `obj` with decode(),
         yet it contains only JSON-compatible values and collections (possibly nested).
@@ -34,39 +41,39 @@ export class JSONx {
         with a special attribute "@" added to hold the class name. Nested objects are encoded recursively.
         Optional `type` constraint is a class (constructor function).
         */
-        let registry = globalThis.registry
+        let session = this.session
         let of_type = T.ofType(obj, type)
         let state
 
         if (obj === undefined)      throw "Can't encode an `undefined` value"
         if (T.isPrimitiveObj(obj))  return obj
-        if (T.isArray(obj))         return JSONx.encode_list(obj)
+        if (T.isArray(obj))         return this.encode_list(obj)
 
         if (T.isDict(obj)) {
-            obj = JSONx.encode_dict(obj)
+            obj = this.encode_dict(obj)
             if (!(JSONx.ATTR_CLASS in obj)) return obj
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        let Item = registry.getClass(JSONx.PATH_ITEM)
+        let Item = session.getClass(JSONx.PATH_ITEM)
         if (obj instanceof Item) {
             if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
         if (T.isClass(obj)) {
-            state = registry.getPath(obj)
+            state = session.getPath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
-            state = JSONx.encode_list(Array.from(obj))
+            state = this.encode_list(Array.from(obj))
         else if (obj instanceof Map)
-            state = JSONx.encode_dict(Object.fromEntries(obj.entries()))
+            state = this.encode_dict(Object.fromEntries(obj.entries()))
         else {
             state = T.getstate(obj)
-            // if (obj !== state) state = JSONx.encode(state)
+            // if (obj !== state) state = this.encode(state)
             // if (T.isDict(obj))
-            state = JSONx.encode_dict(state)                // TODO: allow non-dict state from getstate()
+            state = this.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
         }
@@ -79,18 +86,18 @@ export class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = registry.getPath(t)
+        state[JSONx.ATTR_CLASS] = session.getPath(t)
 
         return state
     }
 
-    static decode(state, type = null) {
+    decode(state, type = null) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
         This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
         */
-        let registry = globalThis.registry
+        let session = this.session
         let isdict = T.isDict(state)
         let cls
 
@@ -98,7 +105,7 @@ export class JSONx {
         if (isdict && (state[JSONx.ATTR_CLASS] === JSONx.FLAG_DICT)) {
             if (JSONx.ATTR_STATE in state)
                 state = state[JSONx.ATTR_STATE]
-            return JSONx.decode_dict(state)
+            return this.decode_dict(state)
         }
 
         // determine the expected class (constructor function) for the output object
@@ -119,8 +126,8 @@ export class JSONx {
                 state = state_attr
             }
             if (classname === JSONx.FLAG_ITEM)
-                return registry.getItem(state)
-            cls = registry.getClass(classname)
+                return session.getItem(state)
+            cls = session.getClass(classname)
         }
         else cls = Object
 
@@ -128,37 +135,37 @@ export class JSONx {
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
-        if (cls === Array)          return JSONx.decode_list(state)
-        if (cls === Object)         return JSONx.decode_dict(state)
-        if (cls === Set)            return new Set(JSONx.decode_list(state))
+        if (cls === Array)          return this.decode_list(state)
+        if (cls === Object)         return this.decode_dict(state)
+        if (cls === Set)            return new Set(this.decode_list(state))
         if (cls === Map)
-            return new Map(Object.entries(JSONx.decode_dict(state)))
+            return new Map(Object.entries(this.decode_dict(state)))
 
-        let Item = registry.getClass(JSONx.PATH_ITEM)
+        let Item = session.getClass(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
-            return registry.getItem(state)
+            return session.getItem(state)
 
-        state = JSONx.decode_dict(state)
-        // let obj = JSONx.decode_dict(state)
+        state = this.decode_dict(state)
+        // let obj = this.decode_dict(state)
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
 
         return T.setstate(cls, state)
     }
 
-    static encdec(obj)   { return JSONx.decode(JSONx.encode(obj))   }       // for testing purposes
-    static decenc(state) { return JSONx.encode(JSONx.decode(state)) }       // for testing purposes
+    // static encdec(obj)   { return this.decode(this.encode(obj))   }       // for testing purposes
+    // static decenc(state) { return this.encode(this.decode(state)) }       // for testing purposes
 
-    static encode_list(values) {
+    encode_list(values) {
         /* Encode recursively all non-primitive objects inside a list. */
-        return values.map(v => JSONx.encode(v))
+        return values.map(v => this.encode(v))
     }
-    static decode_list(state) {
+    decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
-        return state.map(v => JSONx.decode(v))
-        // return Promise.all(state.map(v => JSONx.decode(v)))
+        return state.map(v => this.decode(v))
+        // return Promise.all(state.map(v => this.decode(v)))
     }
-    static encode_dict(obj) {
+    encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
         for (let [key, value] of Object.entries(obj)) {
             if (typeof key !== "string")
@@ -166,12 +173,12 @@ export class JSONx {
             if (value === undefined)
                 delete obj[key]
         }
-        return T.mapDict(obj, (k, v) => [k, JSONx.encode(v)])
-        // let entries = Object.entries(obj).map(([k, v]) => [k, JSONx.encode(v)])
+        return T.mapDict(obj, (k, v) => [k, this.encode(v)])
+        // let entries = Object.entries(obj).map(([k, v]) => [k, this.encode(v)])
         // return Object.fromEntries(entries)
     }
-    static decode_dict(state) {
+    decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
-        return T.mapDict(state, (k, v) => [k, JSONx.decode(v)])
+        return T.mapDict(state, (k, v) => [k, this.decode(v)])
     }
 }
