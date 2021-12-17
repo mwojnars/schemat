@@ -129,8 +129,9 @@ export class Types {
         return x
     }
     static getPrototype = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj)
-    static getClass = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
     static getClassName = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor.name
+    static getClass     = (obj) => (obj == null) ? null : Object.getPrototypeOf(obj).constructor      // reading constructor from prototype is slightly safer than directly from obj
+    static setClass     = (obj,cls) => Object.setPrototypeOf(obj, cls.prototype)
 
     static isPrimitiveObj = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)

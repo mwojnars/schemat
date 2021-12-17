@@ -94,7 +94,7 @@ class Session {
 
 
 class Server {
-    /* Sending & receiving multi-part data (HTML+JSON) in http response:
+    /* For sending & receiving multi-part data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
@@ -133,7 +133,7 @@ class Server {
         // print('request body:  ', req.body)
 
         this.start_request(req)
-        let session = new Session(req, res, this.registry)
+        let session = globalThis.session = new Session(req, res, this.registry)
         let site = this.registry.site
         await site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures

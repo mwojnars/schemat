@@ -177,7 +177,7 @@ export class Registry {
            unless `category` object was provided. */
         let [cid, iid] = id
         if (category) return category.new(null, iid)
-        let item = new Item();
+        let item = new Item()
         item.cid = cid
         item.iid = iid
         item.registry = this

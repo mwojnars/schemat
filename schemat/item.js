@@ -164,7 +164,7 @@ export class Item {
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
             let itemclass = this.category.getClass()
-            Object.setPrototypeOf(this, itemclass.prototype)
+            T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
         }
         if (this.category !== this) await this.category.load()
 
@@ -303,6 +303,14 @@ export class Item {
         let value = fun.bind(this)()
         this.temporary.set(field, value)        // this may store a promise
         return value                            // this may return a promise
+    }
+
+    async getEditable() {
+        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
+        return this.registry.getEditable(this.id)
+        // let item = T.clone(this)
+        // if (this.data) item.data = new Data(await this.data)
+        // return item
     }
 
     encodeData(use_schema = true) {
@@ -515,14 +523,6 @@ export class Item {
                                 th .ct-field
                                 td .ct-value
     */
-
-    async makeEditable() {
-        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
-        let item = T.clone(this)
-        // deep-copy special properties: data, (metadata?)
-        if (this.data) item.data = new Data(await this.data)
-        return item
-    }
 }
 
 /**********************************************************************************************************************/
