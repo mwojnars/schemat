@@ -80,5 +80,84 @@ async function bench002(M = 1000000, N = 100) {
 
 /**********************************************************************************************************************/
 
-await bench002()
+function bench003(playCount = 30) {
+    /* Results @node.js v16.13.1:
+       1) playCount=0 (pure create() vs pure setPrototypeOf(), no object manipulation):
+            create() is ~100x faster than setPrototypeOf()
+       2) playCount=1:
+            Object.create:           689.4
+            Object.setPrototypeOf:   844.2      <-- slowdown is visible, but comparable to a one-iteration loop
+       3) playCount=10:
+            Object.create:           4244.4
+            Object.setPrototypeOf:   4323.8     <-- slowdown is negligible
+       4) playCount=30:
+            Object.create:           13869.4
+            Object.setPrototypeOf:   13919.2
+     */
+    function A() {
+        return Object.create(A.prototype)
+    }
+    A.prototype.yes = function () { return true }
+
+    function B() {
+        let subB = {}
+        Object.setPrototypeOf(subB, B.prototype)
+        return subB
+    }
+    B.prototype.yes = function () { return true }
+
+    function playwith(x) {
+        if (!playCount) return
+        for(let i = 0; i < playCount; i++) {
+            x[`attr_${i}`] = i
+            x.yes()
+        }
+        for(let i = 0; i < playCount; i++) {
+            delete x[`attr_${i}`]
+            x.yes()
+        }
+    }
+
+    let runs = 5
+    let iterations = [10e5, 10e6] //, 10e7]
+    let results = {}
+
+    iterations.forEach(function (iterate) {
+        let i, start
+
+        if (!results[iterate]) results[iterate] = { a: 0, b: 0 }
+        start = new Date()
+
+        for(i = 0; i < iterate; i++) {
+            let a = new A()
+            if (a.yes() !== true) throw new Error('incorrect output @ ' + i)
+            playwith(a)
+        }
+        results[iterate].a += new Date() - start
+        start = new Date()
+
+        for(i = 0; i < iterate; i++) {
+            let b = new B()
+            if (b.yes() !== true) throw new Error('incorrect output @ ' + i)
+            playwith(b)
+        }
+        results[iterate].b += new Date() - start
+    })
+
+    iterations.forEach(function (iterate) {
+        let a = results[iterate].a / runs
+        let b = results[iterate].b / runs
+
+        console.log('Iteration(s):           ', iterate)
+        console.log('==================================')
+        console.log('Object.create:          ', a)
+        console.log('Object.setPrototypeOf:  ', b)
+        console.log('')
+    })
+}
+
+/**********************************************************************************************************************/
+
+// await bench002()
+bench003()
 
