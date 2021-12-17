@@ -80,31 +80,35 @@ async function bench002(M = 1000000, N = 100) {
 
 /**********************************************************************************************************************/
 
-function bench003(playCount = 30) {
+function bench003(playCount = 0) {
     /* Results @node.js v16.13.1:
        1) playCount=0 (pure create() vs pure setPrototypeOf(), no object manipulation):
-            create() is ~100x faster than setPrototypeOf()
+            Object.create:             4.8
+            Object.setPrototypeOf:   129.8
        2) playCount=1:
-            Object.create:           689.4
-            Object.setPrototypeOf:   844.2      <-- slowdown is visible, but comparable to a one-iteration loop
+            Object.create:           819.0
+            Object.setPrototypeOf:   945.8      <-- slowdown is visible, but comparable to a one-iteration loop
        3) playCount=10:
-            Object.create:           4244.4
-            Object.setPrototypeOf:   4323.8     <-- slowdown is negligible
+            Object.create:           4656.4
+            Object.setPrototypeOf:   4828.6     <-- slowdown is negligible
        4) playCount=30:
             Object.create:           13869.4
             Object.setPrototypeOf:   13919.2
      */
     function A() {
-        return Object.create(A.prototype)
+        let obj = Object.create(A.prototype)
+        obj.value = true
+        return obj
     }
-    A.prototype.yes = function () { return true }
+    A.prototype.yes = function () { return this.value }
 
     function B() {
-        let subB = {}
-        Object.setPrototypeOf(subB, B.prototype)
-        return subB
+        let obj = {}
+        Object.setPrototypeOf(obj, B.prototype)
+        obj.value = true
+        return obj
     }
-    B.prototype.yes = function () { return true }
+    B.prototype.yes = function () { return this.value }
 
     function playwith(x) {
         if (!playCount) return

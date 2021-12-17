@@ -5,8 +5,8 @@
 import express from 'express'
 
 import {assert, print, sleep} from './utils.js'
-import {JSONx} from './serialize.js'
 import {ServerRegistry} from './server/registry-s.js'
+import {Session} from './registry.js'
 
 
 /**********************************************************************************************************************/
@@ -36,62 +36,6 @@ RES.sendItems = function(items) {
  **  APP SERVER
  **
  */
-
-class Session {
-    /* Collection of objects that are global to a single request processing, and an evolving state of the latter. */
-
-    request
-    response
-    registry
-
-    get req()       { return this.request  }
-    get res()       { return this.response }
-    get channels()  { return [this.request, this.response] }
-
-    get targetApp()     { return this.request.app  }
-    get targetItem()    { return this.request.item }
-
-    ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
-    endpoint            // item's endpoint/view that should be executed; empty string '' if no endpoint
-    endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
-                        // configured by an application that handles the request
-
-    // site?
-    // app             // leaf Application object this request is addressed to
-    // item            // target item that's responsible for actual handling of this request
-    // state           // app-specific temporary data that's written during routing (handle()) and can be used for
-    //                 // response generation when a specific app's method is called, most typically url_path()
-
-    constructor(request, response, registry) {
-        this.request  = request
-        this.response = response
-        this.registry = registry
-    }
-
-    // get an ultimate endpoint, with falling back to a default when necessary
-    getEndpoint()           { return this.request.endpoint || this.request.endpointDefault || 'view' }
-
-    redirect(...args)       { this.response.redirect(...args) }
-    send(...args)           { this.response.send(...args) }
-    sendFile(...args)       { this.response.sendFile(...args) }
-    sendStatus(...args)     { this.response.sendStatus(...args) }
-
-    bootItems() {
-        /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
-        let item  = this.targetItem
-        let items = [item, item.category, this.registry.root, this.targetApp]
-        items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
-        return items.map(i => i.encodeSelf())
-    }
-    bootData() {
-        /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
-        let {item, app, state} = this.request
-        let request  = {item, app, state}
-        let ajax_url = this.registry.site.ajaxURL()
-        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
-    }
-}
-
 
 class Server {
     /* For sending & receiving multi-part data (HTML+JSON) in http response, see:
@@ -133,7 +77,7 @@ class Server {
         // print('request body:  ', req.body)
 
         this.start_request(req)
-        let session = globalThis.session = new Session(req, res, this.registry)
+        let session = globalThis.session = new Session(this.registry, req, res)
         let site = this.registry.site
         await site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures

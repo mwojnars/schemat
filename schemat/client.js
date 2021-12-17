@@ -101,6 +101,10 @@ export async function boot() {
     print('data-data:', data)
 
     let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
+
+    // let session  = globalThis.session  = Session.load(registry, data)     //new Session(registry).load(data)
+    // registry.current_request = new JSONx(session).decode(data.request)
+
     await registry.initClasspath()
     await registry.boot(items, data.request)
 
