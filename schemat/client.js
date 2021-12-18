@@ -73,15 +73,15 @@ class ClientRegistry extends Registry {
 
     // get _specializedItemJS() { return "./client/item-c.js" }
 
-    constructor(items, ajax_url) {
+    constructor(data) {
         super()
-        this.db = new AjaxDB(ajax_url, items)
+        this.db = new AjaxDB(data.ajax_url, data.items)
         // this.cache = new ClientCache()
     }
-    async boot(items, sessionData) {
+    async boot(data) {
         await super.boot()
-        this.session = Session.load(this, sessionData)
-        for (let rec of items)
+        this.session = Session.load(this, data.session)
+        for (let rec of data.items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
     }
 }
@@ -94,21 +94,11 @@ class ClientRegistry extends Registry {
 
 export async function boot() {
 
-    // let items  = read_data('#data-items') //, 'json+base64')
-    // let data   = read_data('#data-data') //, 'json+base64')
-    // print('data-items: ', items)
-    // print('data-data:', data)
+    let data = read_data('#data-session')   //'json+base64'
 
-    let data  = read_data('#data-session')   //'json+base64'
-    let items = data.items
-
-    let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
-
-    // let session  = globalThis.session  = Session.load(registry, data)     //new Session(registry).load(data)
-    // registry.current_request = new JSONx(session).decode(data.request)
-
+    let registry = globalThis.registry = new ClientRegistry(data)
     await registry.initClasspath()
-    await registry.boot(items, data.session)
+    await registry.boot(data)
 
     // print('root:', await registry.getItem([0,0], {load: true}))
     // print('[0,10]:', await registry.getItem([0,10], {load: true}))
