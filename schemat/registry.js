@@ -126,15 +126,11 @@ export class Registry {
     db                      // Database instance for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
+    session                 // current web Session, or undefined; max. one session is active at a given moment
+    items = new ItemsMap()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
     get files() { return this.site.getLoaded('filesystem') }
-
-    items = new ItemsMap()
-    //current_request       // the currently processed web request; is set at the beginning of request processing and cleared at the end
-
-    session                 // the current web Session, or null; at most one session is active at a given moment
-
     // get _specializedItemJS() { assert(false) }
 
     async initClasspath() {
@@ -163,6 +159,8 @@ export class Registry {
     }
 
     async boot() {
+        /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
+        await this.initClasspath()
         await this.createRoot()
         let site_id = this.root.get(Registry.STARTUP_SITE)
         this.site   = await this.getLoaded(site_id)
@@ -204,17 +202,6 @@ export class Registry {
         let stub = this.createStub(id)
         this.items.set(id, stub)
         return stub
-
-        // // Store and return a Promise that will eventually create an item stub; the promise is FIRST saved to cache,
-        // // and only later the inner code of createStub() gets executed; in this way, if another caller
-        // // requests the same item asynchronously, it will receive the same unique item object, eventually, without
-        // // the creation of duplicate items which might lead to data inconsistency if any of these objects is modified.
-        // // Creation of a stub and data loading are done as separate steps to ensure proper handling of circular relationships between items.
-        // let pending = this.createStub(id)
-        // // if (load) pending = pending.then(item => item.load())
-        // this.items.set(id, pending)
-        // pending.then(item => this.items.set(id, item))      // for efficiency, replace the proxy promise in cache with an actual item when it's ready
-        // return pending
     }
 
     async getCategory(cid) { return this.getLoaded([ROOT_CID, cid]) }
@@ -284,18 +271,25 @@ export class Session {
     get res()           { return this.response }
     get channels()      { return [this.request, this.response] }
 
-    app                 // leaf Application object the request is addressed to
-    item                // target item that's responsible for actual handling of this request
-    state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
-                        // response generation when a specific app's method is called, most typically url_path()
-                        // TODO: only keep `route` instead of `app` for URL generation - Site.url_path()
+    // context of request processing; built gradually by the application(s) that process the request...
 
     ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
     endpoint            // item's endpoint/view that should be executed; empty string '' if no endpoint
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
 
-    // items = new ItemsMap()      // all the items requested during this session, as sub-objects of base (shared) Item instances
+    app                 // leaf Application object the request is addressed to
+    item                // target item that's responsible for actual handling of the request
+    state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
+                        // response generation when a specific app's method is called, most typically url_path()
+                        // TODO: only keep `route` instead of `app` for URL generation - Site.url_path()
+
+    // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
+    // // or an array [val1, val2, ...] if PARAM occurs multiple times
+    // print('request query: ', req.query)
+    // print('request body:  ', req.body)
+
+    // items = new ItemsMap()      // items requested through registry.getItem() during this session; for compiling the bootstrap items list
 
     constructor(registry, request, response) {
         this.registry = registry
@@ -311,35 +305,16 @@ export class Session {
         assert(this.registry.session, 'trying to stop a web session when none was started')
         // this.registry.commit()
         // this.registry.cache.evict()
-        this.registry.session = null
+        delete this.registry.session
     }
-
-    // get an ultimate endpoint, with falling back to a default when necessary
-    getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }
 
     redirect(...args)       { this.response.redirect(...args) }
     send(...args)           { this.response.send(...args) }
     sendFile(...args)       { this.response.sendFile(...args) }
     sendStatus(...args)     { this.response.sendStatus(...args) }
 
-    getPath(cls)    { return this.registry.getPath(cls)   }
-    getClass(path)  { return this.registry.getClass(path) }
-    getItem(id)     { return this.registry.getItem(id)    }
-
-    // bootItems() {
-    //     /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
-    //     let item  = this.item
-    //     let items = [item, item.category, this.registry.root, this.app]
-    //     items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-    //     return items.map(i => i.encodeSelf())
-    // }
-    // bootData() {
-    //     /* Session data to be embedded in HTML response, state-encoded. */
-    //     let {app, item, state} = this
-    //     let session  = {app, item, state}                       // truncated representation of the current session
-    //     let ajax_url = this.registry.site.ajaxURL()
-    //     return {'ajax_url': ajax_url, 'session': JSONx.encode(session)}
-    // }
+    // get an ultimate endpoint, fall back to a default when necessary
+    getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
@@ -355,7 +330,7 @@ export class Session {
     }
 
     static load(registry, sessionData) {
-        /* Create a Session instance client-side from state-encoded .session data sent by dump(). */
+        /* Create a Session instance, client-side, from state-encoded data.session as generated by dump(). */
         let session = new Session(registry)
         let {app, item, state} = JSONx.decode(sessionData)
         Object.assign(session, {app, item, state})

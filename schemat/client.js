@@ -94,20 +94,18 @@ class ClientRegistry extends Registry {
 
 export async function boot() {
 
-    let data = read_data('#data-session')   //'json+base64'
-
+    let data     = read_data('#data-session')   //'json+base64'
     let registry = globalThis.registry = new ClientRegistry(data)
-    await registry.initClasspath()
     await registry.boot(data)
 
     // print('root:', await registry.getItem([0,0], {load: true}))
     // print('[0,10]:', await registry.getItem([0,10], {load: true}))
     // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
-    let reactRoot  = document.querySelector("#react-root")
-    let targetItem = registry.session.item
-    assert(targetItem.loaded)
-    // print('main item:', targetItem)
+    let root = document.querySelector("#react-root")
+    let item = registry.session.item
+    assert(item.loaded)
+    // print('main item:', item)
 
-    targetItem.render(reactRoot)
+    item.render(root)
 }

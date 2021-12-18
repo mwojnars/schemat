@@ -17,9 +17,9 @@ export class JSONx {
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     static PATH_ITEM  = "schemat.item.Item"
 
-    constructor(session) {
+    constructor(registry) {
         // for now, this constructor is only used internally in static encode() & static decode()
-        this.session = session || globalThis.registry
+        this.registry = registry || globalThis.registry
     }
 
     // stringify(obj, type = null) {
@@ -42,8 +42,8 @@ export class JSONx {
         with a special attribute "@" added to hold the class name. Nested objects are encoded recursively.
         Optional `type` constraint is a class (constructor function).
         */
-        let session = this.session
-        let of_type = T.ofType(obj, type)
+        let registry = this.registry
+        let of_type  = T.ofType(obj, type)
         let state
 
         if (obj === undefined)      throw "Can't encode an `undefined` value"
@@ -56,14 +56,14 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        let Item = session.getClass(JSONx.PATH_ITEM)
+        let Item = registry.getClass(JSONx.PATH_ITEM)
         if (obj instanceof Item) {
             if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
         if (T.isClass(obj)) {
-            state = session.getPath(obj)
+            state = registry.getPath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
         }
         else if (obj instanceof Set)
@@ -87,7 +87,7 @@ export class JSONx {
             state = {[JSONx.ATTR_STATE]: state}
 
         let t = T.getPrototype(obj)
-        state[JSONx.ATTR_CLASS] = session.getPath(t)
+        state[JSONx.ATTR_CLASS] = registry.getPath(t)
 
         return state
     }
@@ -98,7 +98,7 @@ export class JSONx {
         Optional `type` constraint is a class (constructor function).
         This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
         */
-        let session = this.session
+        let registry = this.registry
         let isdict = T.isDict(state)
         let cls
 
@@ -127,8 +127,8 @@ export class JSONx {
                 state = state_attr
             }
             if (classname === JSONx.FLAG_ITEM)
-                return session.getItem(state)
-            cls = session.getClass(classname)
+                return registry.getItem(state)
+            cls = registry.getClass(classname)
         }
         else cls = Object
 
@@ -142,9 +142,9 @@ export class JSONx {
         if (cls === Map)
             return new Map(Object.entries(this.decode_dict(state)))
 
-        let Item = session.getClass(JSONx.PATH_ITEM)
+        let Item = registry.getClass(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item))            // all Item instances must be created/loaded through the Registry
-            return session.getItem(state)
+            return registry.getItem(state)
 
         state = this.decode_dict(state)
         // let obj = this.decode_dict(state)

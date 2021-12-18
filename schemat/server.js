@@ -43,41 +43,16 @@ class Server {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    registry = new ServerRegistry(DB_YAML)
-
     constructor() {
-        globalThis.registry = this.registry
+        this.registry = globalThis.registry = new ServerRegistry(DB_YAML)
     }
-    async boot() {
-        await registry.initClasspath()
-        await registry.boot()
-    }
+    async boot() { return this.registry.boot() }
 
     async handle(req, res) {
-        /*
-        During request processing, some additional non-standard attributes are assigned in `request`
-        to carry specific information for downstream processing functions:
-        - request.ipath    = like request.path, but with trailing @endpoint removed; usually identifies an item ("item path")
-        - request.endpoint = item's endpoint/view that should be executed; empty string '' if no endpoint
-        - request.endpointDefault = default endpoint that should be used instead of "view" if `endpoint` is missing;
-                                    configured by an application that handles the request
-        TODO remove/rename:
-        - request.item  = target item that's responsible for actual handling of this request
-        - request.app   = leaf Application object this request is addressed to
-        - request.state = app-specific temporary data that's written during routing (handle()) and can be used for
-                          response generation when a specific app's method is called, most typically url_path()
-        */
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
-
         // print('Server.handle() start')
 
-        // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
-        // // or an array [val1, val2, ...] if PARAM occurs multiple times
-        // print('request query: ', req.query)
-        // print('request body:  ', req.body)
-
-        // this.start_request(req)
-        let session = globalThis.session = new Session(this.registry, req, res)
+        let session = new Session(this.registry, req, res)
         session.start()
 
         let site = this.registry.site
@@ -86,18 +61,6 @@ class Server {
         // await sleep(100)       // for testing
         session.stop()
     }
-
-    // start_request(req) {
-    //     assert(!this.registry.current_request, 'trying to start a new request when another one is still open')
-    //     this.registry.current_request = req
-    //     req.state = {}
-    // }
-    // stop_request() {
-    //     assert(this.registry.current_request, 'trying to stop a request when none was started')
-    //     // this.registry.commit()
-    //     // this.registry.cache.evict()
-    //     this.registry.current_request = null
-    // }
 }
 
 
