@@ -127,12 +127,16 @@ export class Registry {
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
 
-    items = new ItemsMap()
-    current_request         // the currently processed web request; is set at the beginning of request processing and cleared at the end
-                            // TODO: only keep `current_route` instead of current_request.app for URL generation - Site.url_path()
-
     // the getters below are async functions that return a Promise (!) and should be used with await
     get files() { return this.site.getLoaded('filesystem') }
+
+    items = new ItemsMap()
+    //current_request       // the currently processed web request; is set at the beginning of request processing and cleared at the end
+                            // TODO: only keep `current_route` instead of current_request.app for URL generation - Site.url_path()
+
+    session                 // the current web Session; only one session is active at a given moment
+
+    get current_request()   { return this.session.request }
 
     // get _specializedItemJS() { assert(false) }
 
@@ -305,6 +309,18 @@ export class Session {
         this.response = response
     }
 
+    start() {
+        assert(!this.registry.session, 'trying to process a new web request when another session is still open')
+        this.registry.session = this
+        this.request.state = {}
+    }
+    stop() {
+        assert(this.registry.session, 'trying to stop a web session when none was started')
+        // this.registry.commit()
+        // this.registry.cache.evict()
+        this.registry.session = null
+    }
+
     // get an ultimate endpoint, with falling back to a default when necessary
     getEndpoint()           { return this.request.endpoint || this.request.endpointDefault || 'view' }
 
@@ -345,7 +361,7 @@ export class Session {
         let {item, app, state} = this.request
         let request  = {item, app, state}
         let ajax_url = this.registry.site.ajaxURL()
-        return {'ajax_url': ajax_url, 'request': new JSONx(this).encode(request)}  //JSONx.encode(request)}
+        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
     }
 
     // dump() -- same as bootData()

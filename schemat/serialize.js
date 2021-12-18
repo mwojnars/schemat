@@ -18,6 +18,7 @@ export class JSONx {
     static PATH_ITEM  = "schemat.item.Item"
 
     constructor(session) {
+        // for now, this constructor is only used internally in static encode() & static decode()
         this.session = session || globalThis.registry
     }
 

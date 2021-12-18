@@ -76,27 +76,28 @@ class Server {
         // print('request query: ', req.query)
         // print('request body:  ', req.body)
 
-        this.start_request(req)
+        // this.start_request(req)
         let session = globalThis.session = new Session(this.registry, req, res)
+        session.start()
+
         let site = this.registry.site
         await site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
-
         // await sleep(100)       // for testing
-        this.stop_request()
+        session.stop()
     }
 
-    start_request(req) {
-        assert(!this.registry.current_request, 'trying to start a new request when another one is still open')
-        this.registry.current_request = req
-        req.state = {}
-    }
-    stop_request() {
-        assert(this.registry.current_request, 'trying to stop a request when none was started')
-        // this.registry.commit()
-        // this.registry.cache.evict()
-        this.registry.current_request = null
-    }
+    // start_request(req) {
+    //     assert(!this.registry.current_request, 'trying to start a new request when another one is still open')
+    //     this.registry.current_request = req
+    //     req.state = {}
+    // }
+    // stop_request() {
+    //     assert(this.registry.current_request, 'trying to stop a request when none was started')
+    //     // this.registry.commit()
+    //     // this.registry.cache.evict()
+    //     this.registry.current_request = null
+    // }
 }
 
 

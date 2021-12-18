@@ -1,7 +1,7 @@
 import { print, assert } from './utils.js'
 import { ItemsMap } from './data.js'
 import { JSONx } from './serialize.js'
-import { Database, Registry } from './registry.js'
+import { Database, Registry, Session } from './registry.js'
 
 
 /**********************************************************************************************************************/
@@ -80,7 +80,9 @@ class ClientRegistry extends Registry {
     }
     async boot(items, request) {
         await super.boot()
-        this.current_request = new JSONx(this).decode(request)  //JSONx.decode(request)
+        request = JSONx.decode(request)
+        this.session = new Session(this, request)
+        // this.current_request = request
         for (let rec of items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
         // this.current_request.item.load()
