@@ -94,10 +94,13 @@ class ClientRegistry extends Registry {
 
 export async function boot() {
 
-    let items  = read_data('#data-items') //, 'json+base64')
-    let data   = read_data('#data-data') //, 'json+base64')
-    print('data-items: ', items)
-    print('data-data:', data)
+    // let items  = read_data('#data-items') //, 'json+base64')
+    // let data   = read_data('#data-data') //, 'json+base64')
+    // print('data-items: ', items)
+    // print('data-data:', data)
+
+    let data  = read_data('#data-session')   //'json+base64'
+    let items = data.items
 
     let registry = globalThis.registry = new ClientRegistry(items, data.ajax_url)
 

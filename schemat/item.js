@@ -461,15 +461,15 @@ export class Item {
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 
     BOOT({session}) { return `
-        <p id="data-items" style="display:none">${JSON.stringify(session.bootItems())}</p>
-        <p id="data-data" style="display:none">${JSON.stringify(session.bootData())}</p>
+        <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
         <div id="react-root">${this.render()}</div>
         <script type="module">
             import { boot } from "/files/client.js"
             boot()
         </script>
     `}
-    // <div id="react-root">${this.render()}</div>
+        // <p id="data-items" style="display:none">${JSON.stringify(session.bootItems())}</p>
+        // <p id="data-data" style="display:none">${JSON.stringify(session.bootData())}</p>
 
     /***  Components (server side & client side)  ***/
 

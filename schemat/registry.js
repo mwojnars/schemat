@@ -351,27 +351,35 @@ export class Session {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
         let item  = this.item
         let items = [item, item.category, this.registry.root, this.app]
-        items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
+        items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         return items.map(i => i.encodeSelf())
     }
     bootData() {
         /* Session data to be embedded in HTML response, state-encoded. */
         let {app, item, state} = this
-        let session  = {app, item, state}               // truncated representation of the current session
+        let session  = {app, item, state}                       // truncated representation of the current session
         let ajax_url = this.registry.site.ajaxURL()
         return {'ajax_url': ajax_url, 'session': JSONx.encode(session)}
     }
 
-    // dump() -- same as bootData()
+    dump() {
+        /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
+        let items = [this.item, this.item.category, this.registry.root, this.app]
+        items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
+        items = items.map(i => i.encodeSelf())
 
-    static load(registry, data) {
+        let {app, item, state} = this
+        let session  = {app, item, state}                       // truncated representation of the current session
+        let ajax_url = this.registry.site.ajaxURL()
+
+        return {'ajax_url': ajax_url, 'session': JSONx.encode(session), 'items': items}
+    }
+
+    static load(registry, sessionData) {
+        /* Create a Session instance client-side from state-encoded .session data sent by dump(). */
         let session = new Session(registry)
-        // let {item, app, state, ajax_url} = new JSONx(session).decode(data)
-        let {app, item, state} = JSONx.decode(data)
+        let {app, item, state} = JSONx.decode(sessionData)
         Object.assign(session, {app, item, state})
-        // session.app   = data.app
-        // session.item  = data.item
-        // session.state = data.state
         return session
     }
 }
