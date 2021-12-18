@@ -1,6 +1,8 @@
 // Run:
 // $ node server.js
 
+import os from 'os'
+import cluster from 'cluster'
 // import http from 'http'
 import express from 'express'
 
@@ -14,6 +16,8 @@ import {Session} from './registry.js'
 const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
+const WORKERS   =  Math.floor(os.cpus().length / 2)
+
 
 let RES = express.response          // standard Express' prototype of all response objects;
                                     // we're extending it with higher-level methods for handling items
@@ -43,21 +47,20 @@ class Server {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor() {
-        this.registry = globalThis.registry = new ServerRegistry(DB_YAML)
-    }
-    async boot() { return this.registry.boot() }
+    constructor()   { this.registry = globalThis.registry = new ServerRegistry(DB_YAML) }
+    async boot()    { return this.registry.boot() }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
-        print('Server.handle():', req.path)
+        print(`Server.handle() worker ${process.pid}:`, req.path)
 
         let session = new Session(this.registry, req, res)
         await session.start()
 
         await this.registry.site.execute(session)
+
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
-        // await sleep(500)       // for testing
+        // await sleep(200)                 // for testing
         session.stop()
     }
 }
@@ -87,7 +90,6 @@ class Server {
 // }
 
 async function serve_express() {
-    // const express = require('express')
     const app = express()
     const server = new Server()
     await server.boot()
@@ -106,11 +108,20 @@ async function serve_express() {
     //     res.send('Hello World!')
     // })
 
-    app.listen(PORT, HOSTNAME, () => {
-        console.log(`Example app listening at http://${HOSTNAME}:${PORT}`)
-    });
+    app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
+}
+
+async function serve_cluster(workers) {
+    if (workers && workers > 1 && cluster.isMaster) {
+        print(`primary ${process.pid} is starting ${workers} workers...`)
+        for (let i = 0; i < workers; i++) cluster.fork()
+        cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
+        return
+    }
+    await serve_express()
 }
 
 /**********************************************************************************************************************/
 
-await serve_express()
+// await serve_express()
+await serve_cluster(WORKERS)

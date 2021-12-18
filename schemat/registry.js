@@ -135,7 +135,7 @@ export class Registry {
     // get _specializedItemJS() { assert(false) }
 
     async initClasspath() {
-        print('initClasspath() started...')
+        // print('initClasspath() started...')
         let classpath = new Classpath
 
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
@@ -156,7 +156,7 @@ export class Registry {
         //         cls.prototype.__proto__ = ItemSpec.prototype
 
         this.classpath = classpath
-        print('initClasspath() done')
+        // print('initClasspath() done')
     }
 
     async boot() {
@@ -299,23 +299,15 @@ export class Session {
         this.response = response
     }
 
-    async start() {
-        this.releaseMutex = await this.registry.startSession(this)
-        // this.releaseMutex = await this.registry.sessionMutex.acquire()
-        // assert(!this.registry.session, 'trying to process a new web request when another one is still open')
-        // this.registry.session = this
-    }
-    stop() {
-        this.registry.stopSession(this.releaseMutex)
-        // assert(this.registry.session, 'trying to stop a web session when none was started')
-        // delete this.registry.session
-        // this.releaseMutex()
-    }
+    async start()   { this.releaseMutex = await this.registry.startSession(this) }
+    stop()          { this.registry.stopSession(this.releaseMutex) }
 
-    redirect(...args)       { this.response.redirect(...args) }
-    send(...args)           { this.response.send(...args) }
-    sendFile(...args)       { this.response.sendFile(...args) }
+    redirect(...args)       { this.response.redirect(...args)   }
+    send(...args)           { this.response.send(...args)       }
+    sendFile(...args)       { this.response.sendFile(...args)   }
     sendStatus(...args)     { this.response.sendStatus(...args) }
+    sendItem(...args)       { this.response.sendItem(...args)   }
+    sendItems(...args)      { this.response.sendItems(...args)  }
 
     // get an ultimate endpoint, fall back to a default when necessary
     getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }

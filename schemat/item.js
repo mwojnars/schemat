@@ -315,6 +315,7 @@ export class Item {
 
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
+        this.assertLoaded()
         let schema = use_schema ? this.category.temp('schema') : generic_schema
         return schema.encode(this.data)
     }
@@ -371,7 +372,6 @@ export class Item {
         session.item = this
         if (app) session.app = app
         let endpoint = session.getEndpoint()
-        let [req, res] = session.channels
         await this.load()       // needed to have this.category below initialized
 
         let handler
@@ -389,6 +389,7 @@ export class Item {
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
         handler = handler.bind(this)
+        let [req, res] = session.channels
         let page = handler({item: this, req, res, endpoint, session})
         if (page instanceof Promise) page = await page
         if (typeof page === 'string')

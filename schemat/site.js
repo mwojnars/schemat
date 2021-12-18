@@ -220,10 +220,10 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    execute(path, session) {
+    async execute(path, session) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = path.slice(1).split(':')
-        category = this.get(`spaces/${space}`)
+        category = await this.getLoaded(`spaces/${space}`)
         if (!category) return session.sendStatus(404)
         let item = category.getItem(Number(item_id))
         return item.handle(session, this)
