@@ -127,6 +127,7 @@ export class Registry {
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
+
     items = new ItemsMap()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
@@ -289,6 +290,7 @@ export class Session {
     // print('request query: ', req.query)
     // print('request body:  ', req.body)
 
+    releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
     // items = new ItemsMap()      // items requested through registry.getItem() during this session; for compiling the bootstrap items list
 
     constructor(registry, request, response) {
@@ -297,15 +299,17 @@ export class Session {
         this.response = response
     }
 
-    start() {
-        assert(!this.registry.session, 'trying to process a new web request when another one is still open')
-        this.registry.session = this
+    async start() {
+        this.releaseMutex = await this.registry.startSession(this)
+        // this.releaseMutex = await this.registry.sessionMutex.acquire()
+        // assert(!this.registry.session, 'trying to process a new web request when another one is still open')
+        // this.registry.session = this
     }
     stop() {
-        assert(this.registry.session, 'trying to stop a web session when none was started')
-        // this.registry.commit()
-        // this.registry.cache.evict()
-        delete this.registry.session
+        this.registry.stopSession(this.releaseMutex)
+        // assert(this.registry.session, 'trying to stop a web session when none was started')
+        // delete this.registry.session
+        // this.releaseMutex()
     }
 
     redirect(...args)       { this.response.redirect(...args) }

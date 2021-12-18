@@ -20,7 +20,7 @@ let RES = express.response          // standard Express' prototype of all respon
 
 RES.sendItem = function(item) {
     /* Send JSON response with a single item: its data (encoded) and metadata. */
-    print('sendItem():', item.id)
+    // print('sendItem():', item.id)
     this.json(item.encodeSelf())
 }
 RES.sendItems = function(items) {
@@ -50,15 +50,14 @@ class Server {
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
-        // print('Server.handle() start')
+        print('Server.handle():', req.path)
 
         let session = new Session(this.registry, req, res)
-        session.start()
+        await session.start()
 
-        let site = this.registry.site
-        await site.execute(session)
+        await this.registry.site.execute(session)
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
-        // await sleep(100)       // for testing
+        // await sleep(500)       // for testing
         session.stop()
     }
 }

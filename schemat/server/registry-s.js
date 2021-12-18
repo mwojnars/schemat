@@ -1,5 +1,6 @@
 import fs from 'fs'
 import YAML from 'yaml'
+import { Mutex } from 'async-mutex'
 
 import { assert, print, T } from '../utils.js'
 import { ItemsMap } from '../data.js'
@@ -150,6 +151,9 @@ class YamlDB extends FileDB {
 
 export class ServerRegistry extends Registry {
 
+    sessionMutex = new Mutex()  // a mutex to ensure that only one session is using this Registry at a given moment;
+                                // new requests wait on this mutex until the current session is completed, see Session.start()
+
     // staging area...
     inserts = []                // a list of newly created items scheduled for insertion to DB
     edits   = new ItemsMap()    // a list of edits per each item scheduled for write to DB: item.id -> edits;
@@ -190,7 +194,21 @@ export class ServerRegistry extends Registry {
         // this.stage(this.root)
         // return this.commit()
     }
-    
+
+    async startSession(session) {
+        let release = await this.sessionMutex.acquire()
+        assert(!this.session, 'trying to process a new web request when another one is still open')
+        this.session = session
+        return release
+    }
+    stopSession(releaseMutex) {
+        assert(this.session, 'trying to stop a web session when none was started')
+        // this.commit()
+        // this.cache.evict()
+        delete this.session
+        releaseMutex()
+    }
+
     /***  DB modifications  ***/
 
     async update(item) {
