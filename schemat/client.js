@@ -78,18 +78,11 @@ class ClientRegistry extends Registry {
         this.db = new AjaxDB(ajax_url, items)
         // this.cache = new ClientCache()
     }
-    async boot(items, request) {
+    async boot(items, sessionData) {
         await super.boot()
-        request = JSONx.decode(request)
-        this.session = new Session(this, request)
-
-        this.session.app   = request.app
-        this.session.item  = request.item
-        this.session.state = request.state
-
+        this.session = Session.load(this, sessionData)
         for (let rec of items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
-        // this.current_request.item.load()
     }
 }
 
@@ -112,7 +105,7 @@ export async function boot() {
     // registry.current_request = new JSONx(session).decode(data.request)
 
     await registry.initClasspath()
-    await registry.boot(items, data.request)
+    await registry.boot(items, data.session)
 
     // print('root:', await registry.getItem([0,0], {load: true}))
     // print('[0,10]:', await registry.getItem([0,10], {load: true}))

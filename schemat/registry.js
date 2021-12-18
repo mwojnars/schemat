@@ -355,22 +355,23 @@ export class Session {
         return items.map(i => i.encodeSelf())
     }
     bootData() {
-        /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
-        // let {item, app, state} = this.request
-        let app   = this.app
-        let item  = this.item
-        let state = this.state
-        let request  = {item, app, state}
+        /* Session data to be embedded in HTML response, state-encoded. */
+        let {app, item, state} = this
+        let session  = {app, item, state}               // truncated representation of the current session
         let ajax_url = this.registry.site.ajaxURL()
-        return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}
+        return {'ajax_url': ajax_url, 'session': JSONx.encode(session)}
     }
 
     // dump() -- same as bootData()
 
-    load(registry, data) {
+    static load(registry, data) {
         let session = new Session(registry)
         // let {item, app, state, ajax_url} = new JSONx(session).decode(data)
-        // Object.assign(session, {item, app, state, ajax_url})
+        let {app, item, state} = JSONx.decode(data)
+        Object.assign(session, {app, item, state})
+        // session.app   = data.app
+        // session.item  = data.item
+        // session.state = data.state
         return session
     }
 }
