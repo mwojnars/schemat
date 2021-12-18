@@ -132,11 +132,8 @@ export class Registry {
 
     items = new ItemsMap()
     //current_request       // the currently processed web request; is set at the beginning of request processing and cleared at the end
-                            // TODO: only keep `current_route` instead of current_request.app for URL generation - Site.url_path()
 
-    session                 // the current web Session; only one session is active at a given moment
-
-    get current_request()   { return this.session.request }
+    session                 // the current web Session, or null; at most one session is active at a given moment
 
     // get _specializedItemJS() { assert(false) }
 
@@ -279,40 +276,41 @@ export class Registry {
 export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
-    registry
-    request
-    response
+    registry            // instance of Registry
+    request             // instance of node.js express' Request (server-side)
+    response            // instance of node.js express' Response (server-side)
 
-    get req()       { return this.request  }
-    get res()       { return this.response }
-    get channels()  { return [this.request, this.response] }
+    get req()           { return this.request  }
+    get res()           { return this.response }
+    get channels()      { return [this.request, this.response] }
 
-    get targetApp()     { return this.request.app  }
-    get targetItem()    { return this.request.item }
+    // get targetApp()     { return this.request.app  }
+    // get targetItem()    { return this.request.item }
+    // get state()         { return this.request.state }
+                        // TODO: only keep targetRoute instead of targetApp for URL generation - Site.url_path()
+
+    app                 // leaf Application object the request is addressed to
+    item                // target item that's responsible for actual handling of this request
+    state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
+                        // response generation when a specific app's method is called, most typically url_path()
 
     ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
     endpoint            // item's endpoint/view that should be executed; empty string '' if no endpoint
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
 
-    // site?
-    // app             // leaf Application object this request is addressed to
-    // item            // target item that's responsible for actual handling of this request
-    // state           // app-specific temporary data that's written during routing (handle()) and can be used for
-    //                 // response generation when a specific app's method is called, most typically url_path()
-
-    items = new ItemsMap()      // all the items requested during this session, as sub-objects of base (shared) Item instances
+    // items = new ItemsMap()      // all the items requested during this session, as sub-objects of base (shared) Item instances
 
     constructor(registry, request, response) {
         this.registry = registry
         this.request  = request
-        this.response = response
+        this.response = response            // only present server-side
     }
 
     start() {
-        assert(!this.registry.session, 'trying to process a new web request when another session is still open')
+        assert(!this.registry.session, 'trying to process a new web request when another one is still open')
         this.registry.session = this
-        this.request.state = {}
+        // this.request.state = {}
     }
     stop() {
         assert(this.registry.session, 'trying to stop a web session when none was started')
@@ -322,7 +320,7 @@ export class Session {
     }
 
     // get an ultimate endpoint, with falling back to a default when necessary
-    getEndpoint()           { return this.request.endpoint || this.request.endpointDefault || 'view' }
+    getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }
 
     redirect(...args)       { this.response.redirect(...args) }
     send(...args)           { this.response.send(...args) }
@@ -351,14 +349,17 @@ export class Session {
 
     bootItems() {
         /* List of state-encoded items to be sent over to a client to bootstrap client-side item cache. */
-        let item  = this.targetItem
-        let items = [item, item.category, this.registry.root, this.targetApp]
+        let item  = this.item
+        let items = [item, item.category, this.registry.root, this.app]
         items = [...new Set(items)].filter(Boolean)                 // remove duplicates and nulls
         return items.map(i => i.encodeSelf())
     }
     bootData() {
         /* Request and configuration data to be embedded in HTML response; .request is state-encoded. */
-        let {item, app, state} = this.request
+        // let {item, app, state} = this.request
+        let app   = this.app
+        let item  = this.item
+        let state = this.state
         let request  = {item, app, state}
         let ajax_url = this.registry.site.ajaxURL()
         return {'ajax_url': ajax_url, 'request': JSONx.encode(request)}

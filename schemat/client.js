@@ -82,7 +82,11 @@ class ClientRegistry extends Registry {
         await super.boot()
         request = JSONx.decode(request)
         this.session = new Session(this, request)
-        // this.current_request = request
+
+        this.session.app   = request.app
+        this.session.item  = request.item
+        this.session.state = request.state
+
         for (let rec of items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
         // this.current_request.item.load()
@@ -115,7 +119,7 @@ export async function boot() {
     // print('[10,1]:', await registry.getItem([10,1], {load: true}))
 
     let reactRoot  = document.querySelector("#react-root")
-    let targetItem = registry.current_request.item
+    let targetItem = registry.session.item
     assert(targetItem.loaded)
     // print('main item:', targetItem)
 

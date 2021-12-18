@@ -16,11 +16,10 @@ export class Site extends Item {
 
     async execute(session) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
-        let request = session.request
         let app  = await this.getLoaded('application')
-        let path = request.path, sep = Site.SEP_ENDPOINT;
-        [request.ipath, request.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        return app.execute(request.ipath, session)
+        let path = session.request.path, sep = Site.SEP_ENDPOINT;
+        [session.ipath, session.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        return app.execute(session.ipath, session)
     }
 
     ajaxURL() {
@@ -42,7 +41,7 @@ export class Site extends Item {
 
         // relative URL anchored at the deep-most application's route
         if (route === undefined) {
-            let app  = this.registry.current_request.app
+            let app  = this.registry.session.app
             app.assertLoaded()
             let path = app.url_path(item, {relative})
             return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
@@ -178,7 +177,7 @@ export class AppAdmin extends Application {
 
 export class AppAjax extends AppAdmin {
     async execute(path, session) {
-        session.request.endpointDefault = "json"
+        session.endpointDefault = "json"
         let item = await this._find_item(path)
         return item.handle(session, this)
     }
@@ -192,19 +191,18 @@ export class AppFiles extends Application {
     async execute(path, session) {
         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
 
-        let request = session.request
         if (!path.startsWith('/'))
-            return session.redirect(request.ipath + '/')
+            return session.redirect(session.ipath + '/')
         // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
 
-        request.app = this
+        session.app = this
         let root = await this.getLoaded('root_folder') || await this.registry.files
         return root.execute(path, session)     // `root` must be an item of Folder_ or its subcategory
     }
 
     url_path(item, opts = {}) {
         // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
-        let state = this.registry.current_request.state
+        let state = this.registry.session.state
         return state.folder.get_name(item)
     }
 }
@@ -287,15 +285,14 @@ export class Folder extends Item {
             path = path.slice(name.length+1)
         }
 
-        let request = session.request
         if (item.get('_is_file')) {
             if (path) throw new Error('URL not found')
-            request.endpointDefault = 'download'
+            session.endpointDefault = 'download'
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
             if (path) return item.execute(path, session)
-            else request.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
+            else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
         return item.handle(session)

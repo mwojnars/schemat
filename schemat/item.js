@@ -368,10 +368,10 @@ export class Item {
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
-        let [req, res] = session.channels
-        req.item = this
-        if (app) req.app = app
+        session.item = this
+        if (app) session.app = app
         let endpoint = session.getEndpoint()
+        let [req, res] = session.channels
         await this.load()       // needed to have this.category below initialized
 
         let handler
