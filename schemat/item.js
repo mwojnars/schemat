@@ -187,7 +187,7 @@ export class Item {
         //print(`${this.id_str}.reload() started...`)
         if (!record) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            record = await this.registry.loadRecord(this.id)
+            record = await this.registry.loadData(this.id)
         }
         let flat   = record.data
         let schema = use_schema ? this.category.temp('schema') : generic_schema
@@ -196,6 +196,7 @@ export class Item {
         let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
         if (after instanceof Promise) await after
 
+        // this.registry.setExpiry(this.id, this.category.get('cache_ttl', 1.0))
         this.data = data
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
@@ -388,9 +389,8 @@ export class Item {
 
         if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
 
-        handler = handler.bind(this)
         let [req, res] = session.channels
-        let page = handler({item: this, req, res, endpoint, session})
+        let page = handler.call(this, {item: this, req, res, endpoint, session})
         if (page instanceof Promise) page = await page
         if (typeof page === 'string')
             res.send(page)
@@ -469,8 +469,6 @@ export class Item {
             boot()
         </script>
     `}
-        // <p id="data-items" style="display:none">${JSON.stringify(session.bootItems())}</p>
-        // <p id="data-data" style="display:none">${JSON.stringify(session.bootData())}</p>
 
     /***  Components (server side & client side)  ***/
 
@@ -482,6 +480,8 @@ export class Item {
             - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
          */
+        // TODO: use server-side caching of this function, like with temp() and temporary variables,
+        //       to avoid repeated SSR rendering of the same item in consecutive requests
         let elem = e(this.Page, {item: this})
         return targetElement ? ReactDOM.render(elem, targetElement) : ReactDOM.renderToString(elem)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side

@@ -62,6 +62,7 @@ class Server {
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
         session.stop()
+        session.printCounts()
     }
 }
 
@@ -112,6 +113,7 @@ async function serve_express() {
 }
 
 async function serve_cluster(workers) {
+    /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
     if (workers && workers > 1 && cluster.isMaster) {
         print(`primary ${process.pid} is starting ${workers} workers...`)
         for (let i = 0; i < workers; i++) cluster.fork()

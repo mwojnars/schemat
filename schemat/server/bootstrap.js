@@ -290,7 +290,7 @@ async function bootstrap(db) {
     // insert all items to DB; the insertion order is important: if item A is referenced by item B,
     // the A must be inserted first so that its ID is available before B gets inserted
     await registry.commit()                             // insert items to DB and assign an ID to each of them
-    await registry.set_site(items.catalog_wiki)
+    await registry.setSite(items.catalog_wiki)
 }
 
 /**********************************************************************************************************************/

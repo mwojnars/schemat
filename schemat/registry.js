@@ -2,7 +2,7 @@
 
 import { print, assert } from './utils.js'
 import { JSONx } from './serialize.js'
-import { ItemsMap } from './data.js'
+import { ItemsMap, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID } from './item.js'
 
 // import * as mod_types from './type.js'
@@ -129,6 +129,7 @@ export class Registry {
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
     items = new ItemsMap()
+    // cache = new ItemsCache()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
     get files() { return this.site.getLoaded('filesystem') }
@@ -190,10 +191,11 @@ export class Registry {
            is taken from this.items, otherwise it is created anew and saved in this.items for future calls.
          */
         let [cid, iid] = id
-        assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
-
         if (cid === null) throw new Error('missing CID')
         if (iid === null) throw new Error('missing IID')
+        assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
+
+        this.session?.countRequested(id)
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested was already loaded/created? return the existing instance
@@ -202,6 +204,7 @@ export class Registry {
 
         let stub = this.createStub(id)
         this.items.set(id, stub)
+        // this.items.set(id, stub, 0)    // the stub, until loaded, is scheduled for immediate removal (ttl=0) at the end of session
         return stub
     }
 
@@ -213,11 +216,12 @@ export class Registry {
         return item
     }
 
-    async loadRecord(id) {
-        /* Load item's record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
+    async loadData(id) {
+        /* Load item's full data record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
            Note that `data` can either be a JSON-encoded string, or a schema-encoded object
            - the caller must be prepared for both cases!
          */
+        this.session?.countLoaded(id)
         return this.db.select(id)
     }
     async *scanCategory(category) {
@@ -291,7 +295,9 @@ export class Session {
     // print('request body:  ', req.body)
 
     releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
-    // items = new ItemsMap()      // items requested through registry.getItem() during this session; for compiling the bootstrap items list
+
+    itemsRequested = new ItemsCount()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
+    itemsLoaded    = new ItemsCount()       // for each item ID: no. of times the item data was loaded through registry.loadData()
 
     constructor(registry, request, response) {
         this.registry = registry
@@ -301,6 +307,8 @@ export class Session {
 
     async start()   { this.releaseMutex = await this.registry.startSession(this) }
     stop()          { this.registry.stopSession(this.releaseMutex) }
+    printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
+                      print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
 
     redirect(...args)       { this.response.redirect(...args)   }
     send(...args)           { this.response.send(...args)       }
@@ -311,6 +319,9 @@ export class Session {
 
     // get an ultimate endpoint, fall back to a default when necessary
     getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }
+
+    countRequested(id)      { this.itemsRequested.add(id) }
+    countLoaded(id)         { this.itemsLoaded.add(id)    }
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */

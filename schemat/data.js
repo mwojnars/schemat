@@ -1,3 +1,4 @@
+// import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
 
 
@@ -21,11 +22,11 @@ function missing(key) {
  */
 
 export class ItemsMap extends Map {
-    /* A Map that keeps objects (items, records, promises) indexed by item ID converted to a string.
+    /* A Map that keeps objects of arbitrary type (items, records, promises) indexed by item ID converted to a string.
        Item ID is an array that must be converted to a string for equality comparisons inside Map.
      */
 
-    constructor(pairs) {
+    constructor(pairs = null) {
         super()
         if (pairs)
             for (const [id, obj] of pairs) this.set(id, obj)
@@ -48,6 +49,32 @@ export class ItemsMap extends Map {
     get(id)        { return super.get(this._key(id)) }
     has(id)        { return super.has(this._key(id)) }
     delete(id)     { return super.delete(this._key(id)) }
+}
+
+export class ItemsCount extends ItemsMap {
+    /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
+    add(id, increment = 1) {
+        let proto = Map.prototype           // accessing get/set() of a super-super class must be done manually through a prototype
+        let key   = this._key(id)
+        let count = proto.get.call(this, key) || 0
+        count += increment
+        proto.set.call(this, key, count)
+        return count
+    }
+    total() { let t = 0; this.forEach(v => t += v); return t }
+}
+
+export class ItemsCache extends ItemsMap {
+    /* An ItemsMap that additionally provides manually-invoked eviction by LRU and per-item TTL.
+       Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
+       For larger
+     */
+
+    expirations = new ItemsMap()            // map: ID -> expiration time
+    immediate   = new ItemsMap()            // set of items scheduled for immediate removal (ttl=0) upon evict(); for unloaded stubs
+    //upcoming  = new BTree()               // sorted set of upcoming expiration times and corresponding IDs, provides O(1) random insertion
+
+    setExpiry(id, ttl) {}
 }
 
 /**********************************************************************************************************************

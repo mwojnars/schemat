@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt'
 
 /**********************************************************************************************************************/
 
-async function timeit(label, repeat, fun) {
+async function timeitAsync(label, repeat, fun) {
     // assert(typeof label === 'string')
     console.time(label)
     for (let i = 0; i < repeat; i++)
@@ -17,7 +17,7 @@ async function timeit(label, repeat, fun) {
     console.timeEnd(label)
     // setImmediate(() => console.timeEnd(label))
 }
-function timeitSync(label, repeat, fun) {
+function timeit(label, repeat, fun) {
     console.time(label)
     for (let i = 0; i < repeat; i++)
         fun()
@@ -69,9 +69,9 @@ async function bench002(M = 1000000, N = 100) {
         while (num >= 0) { temp = a; a = a + b; b = temp; num-- }
         return b
     }
-    timeitSync  ('sync   ', M,       () => {for(let i = 0; i < N; i++) fibonacci_sync(i)})
-    await timeit('async  ', M, async () => {for(let i = 0; i < N; i++) await fibonacci_async(i)})
-    // await timeit('promise', M, async () => {  // chain of Promises over sync functions with a single "await" at the end
+          timeit     ('sync   ', M,       () => {for(let i = 0; i < N; i++) fibonacci_sync(i)})
+    await timeitAsync('async  ', M, async () => {for(let i = 0; i < N; i++) await fibonacci_async(i)})
+    // await timeitAsync('promise', M, async () => {  // chain of Promises over sync functions with a single "await" at the end
     //     let p = Promise.resolve()
     //     for(let i = 0; i < N; i++) p = p.then(()=>fibonacci_sync(i))
     //     await p
@@ -162,6 +162,36 @@ function bench003(playCount = 0) {
 
 /**********************************************************************************************************************/
 
-// await bench002()
-bench003()
+function bench004(M = 10, N = 1000000) {
+    /*
+        map set-get: 1.671s
+        map set-del(front): 2.544s
+        map set-del(back): 2.551s
+        map set-del(back)-set: 3.475s
+    */
+    timeit('map set-get', M, () => {
+        let map = new Map()
+        for (let i = 0; i < N; i++) map.set(`${i}`, i)
+        for (let i = 0; i < N; i++) map.get(`${i}`)
+    })
+    timeit('map set-del(front)', M, () => {
+        let map = new Map()
+        for (let i = 0; i < N; i++) map.set(`${i}`, i)
+        for (let i = 0; i < N; i++) map.delete(`${N-i-1}`)
+    })
+    timeit('map set-del(back)', M, () => {
+        let map = new Map()
+        for (let i = 0; i < N; i++) map.set(`${i}`, i)
+        for (let i = 0; i < N; i++) map.delete(`${i}`)
+    })
+    timeit('map set-del(back)-set', M, () => {
+        let map = new Map()
+        for (let i = 0; i < N; i++) map.set(`${i}`, i)
+        for (let i = 0; i < N; i++) { map.delete(`${i}`); map.set(`${i}`, i) }
+    })
+}
 
+/**********************************************************************************************************************/
+
+// await bench002()
+bench004()

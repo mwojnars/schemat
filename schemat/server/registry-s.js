@@ -151,8 +151,8 @@ class YamlDB extends FileDB {
 
 export class ServerRegistry extends Registry {
 
-    sessionMutex = new Mutex()  // a mutex to ensure that only one session is using this Registry at a given moment;
-                                // new requests wait on this mutex until the current session is completed, see Session.start()
+    sessionMutex = new Mutex()  // a mutex to lock Registry for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
+                                // new requests wait until the current session completes, see Session.start()
 
     // staging area...
     inserts = []                // a list of newly created items scheduled for insertion to DB
@@ -184,7 +184,7 @@ export class ServerRegistry extends Registry {
         return root
     }
 
-    async set_site(site) {
+    async setSite(site) {
         let Site = (await import('../site.js')).Site
         assert(site instanceof Site)
         assert(site.has_id() && site.has_data())
@@ -194,6 +194,8 @@ export class ServerRegistry extends Registry {
         // this.stage(this.root)
         // return this.commit()
     }
+
+    setExpiry(id, ttl)  { this.cache.setExpiry(id, ttl) }
 
     async startSession(session) {
         let release = await this.sessionMutex.acquire()
