@@ -1,9 +1,58 @@
 import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
-import { useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
+import { React, useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
 import { T, truncate, DataError } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
+
+/**********************************************************************************************************************
+ **
+ **  WIDGETS
+ **
+ */
+
+class ValueWidget extends React.Component {
+    /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
+}
+
+class GenericValue extends ValueWidget {
+    /*  */
+}
+
+class StringValue extends React.Component {
+
+    EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
+
+    View(value, show) {
+        return DIV({onDoubleClick: show}, value || this.EmptyValue())
+    }
+
+    Edit(value, hide, ref) {
+        return INPUT({defaultValue: value, ref: ref, onBlur: hide,
+                onKeyDown: (e) => this.acceptKey(e) && hide(e),
+                autoFocus: true, type: "text", style: {width:"100%"}}
+        )
+    }
+    acceptKey(event) { return ["Enter","Escape"].includes(event.key) }      // return true if a given key (or combination) accepts a new value after changes
+
+    render({value, save}) {
+        let [editing, setEditing] = useState(false)
+        let [currentValue, setValue] = useState(value)
+        let editor = useRef(null)
+
+        const show = (e) => setEditing(true)    // editor.current.focus()
+        const hide = (e) => {
+            // e.preventDefault()
+            setEditing(false)
+            let newValue = editor.current.value
+            if (newValue !== currentValue) {
+                setValue(newValue)
+                save(newValue)
+            }
+        }
+        return editing ? this.Edit(currentValue, hide, editor) : this.View(currentValue, show)
+    }
+}
 
 /**********************************************************************************************************************
  **
@@ -71,9 +120,11 @@ export class Schema {
         // return JSON.stringify(this._fields).slice(0, 60)
     }
 
-    Widget({value, save, edit = true}) {
-        /* A React-compatible component that displays a `value` of an item's field and (possibly) allows its editing.
-           `save(newValue)` is a callback that should be used when the value has been edited.
+    display(props) { return e(this.Widget.bind(this), props) }
+
+    Widget({value, save}) {
+        /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
+           `save(newValue)` is a callback that is called after the value has been edited.
          */
         return value.toString()
     }
@@ -234,16 +285,16 @@ export class Textual extends Primitive {
                 save(newValue)
             }
         }
-        return editing ? this.Editor(currentValue, hide, editor) : this.Viewer(currentValue, show)
+        return editing ? this.Edit(currentValue, hide, editor) : this.View(currentValue, show)
     }
 }
 
 export class STRING extends Textual
 {
-    Viewer(value, show) {
+    View(value, show) {
         return DIV({onDoubleClick: show}, value || this.EmptyValue())
     }
-    Editor(value, hide, ref) {
+    Edit(value, hide, ref) {
         return INPUT({defaultValue: value, ref: ref, onBlur: hide,
                 onKeyDown: (e) => this.acceptKey(e) && hide(e),
                 autoFocus: true, type: "text", style: {width:"100%"}}
@@ -253,12 +304,12 @@ export class STRING extends Textual
 }
 export class TEXT extends Textual
 {
-    Viewer(value, show) {
+    View(value, show) {
         return PRE(DIV({className: 'scroll', onDoubleClick: show},
             value || this.EmptyValue()
         ))
     }
-    Editor(value, hide, ref) {
+    Edit(value, hide, ref) {
         return PRE(TEXTAREA({
             defaultValue:   value,
             ref:            ref,
@@ -281,7 +332,7 @@ export class CODE extends TEXT
     // pre-built ACE files: https://github.com/ajaxorg/ace-builds
     // React-ACE component: https://www.npmjs.com/package/react-ace
 
-    Editor(value, hide, ref) {
+    Edit(value, hide, ref) {
         return DIV({
             defaultValue:   value,
             ref:            ref,
@@ -345,7 +396,7 @@ export class CODE extends TEXT
                 save(newValue)
             }
         }
-        return editing ? this.Editor(currentValue, hide, editor_div) : this.Viewer(currentValue, show)
+        return editing ? this.Edit(currentValue, hide, editor_div) : this.View(currentValue, show)
     }
     // ACE editor methods/props:
     //  editor.renderer.setAnnotations()

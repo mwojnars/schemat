@@ -52,8 +52,8 @@
             value:
               info: Time To Live (TTL). Determines for how long (in seconds) an item of this
                 category is kept in a server-side cache after being loaded from
-                DB. Can be a real number. The value of zero means items are
-                evicted after each request.
+                DB, for reuse by subsequent requests. A real number. If zero,
+                the items are evicted immediately after each request.
               default: 3
               "@": schemat.type.NUMBER
         "@": schemat.data.Catalog

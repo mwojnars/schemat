@@ -53,7 +53,7 @@ function Entry({path, field, value, schema = generic_schema, item}) {
     }
     return FRAGMENT(
               TH({className: 'ct-field'}, field),
-              TD({className: 'ct-value', suppressHydrationWarning:true}, schema.Widget({value, save})),
+              TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
            )
 }
 
@@ -73,11 +73,12 @@ class Changes {
         print('Submit clicked')
     }
 
-    Buttons = ({changes}) =>
-        DIV({style: {textAlign:'right', paddingTop:'20px'}},
-            BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: changes.reset,  disabled: false}, 'Reset'), ' ',
-            BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: changes.submit, disabled: false}, 'Submit'),
+    Buttons() {
+        return DIV({style: {textAlign:'right', paddingTop:'20px'}},
+            BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
+            BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
         )
+    }
 }
 
 
@@ -486,27 +487,27 @@ export class Item {
          */
         // TODO: use server-side caching of this function, like with temp() and temporary variables,
         //       to avoid repeated SSR rendering of the same item in consecutive requests
-        let elem = e(this.Page, {item: this})
+        let elem = e(this.Page.bind(this))
         return targetElement ? ReactDOM.render(elem, targetElement) : ReactDOM.renderToString(elem)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side
     }
 
-    Title({item}) {
-        let name = item.getName()
-        let ciid = item.getStamp()
+    Title() {
+        let name = this.getName()
+        let ciid = this.getStamp()
         if (name)
             return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
         else
             return H1(HTML(ciid))
     }
 
-    Page({item, extra = null}) {                                  // React functional component
-        let changes = new Changes(item)
+    Page({extra = null}) {                                  // React functional component
+        let changes = new Changes(this)
         return DIV(
-            e(item.Title, {item}),
+            e(this.Title.bind(this)),
             H2('Properties'),                               //{style: {color:'blue'}}
-            e(Catalog1, {item, changes}),
-            e(changes.Buttons, {changes}),
+            e(Catalog1, {item: this, changes}),
+            e(changes.Buttons.bind(changes)),
             extra,
         )
     }
@@ -700,16 +701,16 @@ export class Category extends Item {
             return TABLE(TBODY(...rows))
         }, [items])
     }
-    NewItem({category, itemAdded}) {
+    NewItem({itemAdded}) {
 
         let form  = useRef(null)
 
-        function setFormDisabled(disabled) {
+        const setFormDisabled = (disabled) => {
             let fieldset = form.current?.getElementsByTagName('fieldset')[0]
             if (fieldset) fieldset.disabled = disabled
         }
 
-        async function submit(e) {
+        const submit = async (e) => {
             e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
             let fdata = new FormData(form.current)
             setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
@@ -720,10 +721,10 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await category.remote_new(data.__getstate__())      // TODO: validate & encode `data` through category's schema
+            let record = await this.remote_new(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
-                category.registry.db.keep(record)
-                let item = await category.registry.getItem([record.cid, record.iid])
+                this.registry.db.keep(record)
+                let item = await this.registry.getItem([record.cid, record.iid])
                 itemAdded(item)
                 form.current.reset()            // clear input fields
             }
@@ -737,20 +738,21 @@ export class Category extends Item {
         ))
     }
 
-    Page({item: category}) {
-        const scan = () => category.registry.scanCategory(category)     // returns an async generator that requires "for await"
-        const [items, setItems] = useState(scan())                      // existing child items; state prevents re-scan after every itemAdded()
+    Page({extra = null}) {
+        const scan = () => this.registry.scanCategory(this)         // returns an async generator that requires "for await"
+        const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
-        const [newItems, setNewItems] = useState([])                    // newly added items
+        const [newItems, setNewItems] = useState([])                // newly added items
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return Item.prototype.Page({item: category, extra: FRAGMENT(
+        return super.Page({item: this, extra: FRAGMENT(
             H2('Items'),
-            e(category.Items, {items: items, itemRemoved: () => setItems(scan())}),
+            e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),
-            e(category.Items, {items: newItems, itemRemoved}),
-            e(category.NewItem, {category, itemAdded}),
+            e(this.Items, {items: newItems, itemRemoved}),
+            e(this.NewItem.bind(this), {itemAdded}),
+            extra,
         )})
     }
 }

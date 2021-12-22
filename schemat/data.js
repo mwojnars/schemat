@@ -81,8 +81,8 @@ export class ItemsCache extends ItemsMap {
         let now   = Date.now()
         for (let [key, item] of this.entries())
             if (!item.expiry || item.expiry <= now) {
-                proto.delete.call(this, key)            // since we pass a key, not ID, here, we need to call a super-super method
-                print('item evicted:', key, item.loaded ? '' : '(stub)' )
+                proto.delete.call(this, key)            // since we pass a key, not an ID, we need to call a super-super method here
+                // print('item evicted:', key, item.loaded ? '' : '(stub)' )
             }
     }
 }
