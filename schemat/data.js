@@ -61,20 +61,30 @@ export class ItemsCount extends ItemsMap {
         proto.set.call(this, key, count)
         return count
     }
-    total() { let t = 0; this.forEach(v => t += v); return t }
+    total()     { let t = 0; this.forEach(v => t += v); return t }
 }
 
 export class ItemsCache extends ItemsMap {
-    /* An ItemsMap that additionally provides manually-invoked eviction by LRU and per-item TTL.
+    /* An ItemsMap that keeps Item instances and additionally provides manually-invoked eviction by LRU and per-item TTL.
+       Eviction timestamps are stored in items (item.evict) and can be modified externally by the Item or Registry.
        Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
-       For larger
+       For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
      */
 
-    expirations = new ItemsMap()            // map: ID -> expiration time
-    immediate   = new ItemsMap()            // set of items scheduled for immediate removal (ttl=0) upon evict(); for unloaded stubs
-    //upcoming  = new BTree()               // sorted set of upcoming expiration times and corresponding IDs, provides O(1) random insertion
-
-    setExpiry(id, ttl) {}
+    set(id, item, ttl_ms = null) {
+        /* If ttl_ms=null or 0, the item is scheduled for immediate removal upon evict(). */
+        if (ttl_ms) item.expiry = Date.now() + ttl_ms
+        super.set(id, item)
+    }
+    evict() {
+        let proto = Map.prototype           // accessing delete() of a super-super class must be done manually through a prototype
+        let now   = Date.now()
+        for (let [key, item] of this.entries())
+            if (!item.expiry || item.expiry <= now) {
+                proto.delete.call(this, key)            // since we pass a key, not ID, here, we need to call a super-super method
+                print('item evicted:', key, item.loaded ? '' : '(stub)' )
+            }
+    }
 }
 
 /**********************************************************************************************************************

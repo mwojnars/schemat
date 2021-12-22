@@ -16,7 +16,7 @@ import {Session} from './registry.js'
 const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
-const WORKERS   =  Math.floor(os.cpus().length / 2)
+const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 
 
 let RES = express.response          // standard Express' prototype of all response objects;
@@ -61,8 +61,8 @@ class Server {
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
-        session.stop()
         session.printCounts()
+        session.stop()
     }
 }
 

@@ -195,8 +195,6 @@ export class ServerRegistry extends Registry {
         // return this.commit()
     }
 
-    setExpiry(id, ttl)  { this.cache.setExpiry(id, ttl) }
-
     async startSession(session) {
         let release = await this.sessionMutex.acquire()
         assert(!this.session, 'trying to process a new web request when another one is still open')
@@ -206,7 +204,7 @@ export class ServerRegistry extends Registry {
     stopSession(releaseMutex) {
         assert(this.session, 'trying to stop a web session when none was started')
         // this.commit()
-        // this.cache.evict()
+        this.cache.evict()
         delete this.session
         releaseMutex()
     }

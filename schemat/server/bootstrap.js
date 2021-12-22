@@ -4,7 +4,7 @@ Creating core items from scratch and storing them as initial items in DB.
 
 import {print} from '../utils.js'
 import {ServerRegistry} from './registry-s.js'
-import {GENERIC, SCHEMA, BOOLEAN, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
+import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
 //import {Index} from '../item.js'
 
@@ -28,6 +28,8 @@ let root_fields = C({
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
+
+    cache_ttl    : new NUMBER({default: 3.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB. Can be a real number. The value of zero means items are evicted after each request."})
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -66,6 +68,7 @@ let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
     class_name  : 'schemat.item.Category',
+    cache_ttl   : 60.0,
     fields      : root_fields,
 }
 

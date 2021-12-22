@@ -2,7 +2,7 @@
 
 import { print, assert } from './utils.js'
 import { JSONx } from './serialize.js'
-import { ItemsMap, ItemsCount } from './data.js'
+import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID } from './item.js'
 
 // import * as mod_types from './type.js'
@@ -128,8 +128,7 @@ export class Registry {
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
-    items = new ItemsMap()
-    // cache = new ItemsCache()
+    cache = new ItemsCache()
 
     // the getters below are async functions that return a Promise (!) and should be used with await
     get files() { return this.site.getLoaded('filesystem') }
@@ -188,7 +187,7 @@ export class Registry {
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
-           is taken from this.items, otherwise it is created anew and saved in this.items for future calls.
+           is taken from this.cache, otherwise it is created anew and saved in this.cache for future calls.
          */
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')
@@ -199,12 +198,11 @@ export class Registry {
         if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested was already loaded/created? return the existing instance
-        let item = this.items.get(id)
+        let item = this.cache.get(id)
         if (item) return item
 
         let stub = this.createStub(id)
-        this.items.set(id, stub)
-        // this.items.set(id, stub, 0)    // the stub, until loaded, is scheduled for immediate removal (ttl=0) at the end of session
+        this.cache.set(id, stub)            // a stub, until loaded, is scheduled for immediate removal (ttl=0) at the end of session
         return stub
     }
 

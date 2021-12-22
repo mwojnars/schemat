@@ -120,6 +120,7 @@ export class Item {
 
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
+    expiry          // timestamp when this item instance should be considered expired in Ragistry.cache; managed by registry
 
     temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
@@ -195,9 +196,12 @@ export class Item {
         let data   = schema.decode(state)
         let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
         if (after instanceof Promise) await after
+        this.data  = data
 
-        // this.registry.setExpiry(this.id, this.category.get('cache_ttl', 1.0))
-        this.data = data
+        let ttl_ms  = this.category.get('cache_ttl') * 1000
+        this.expiry = Date.now() + ttl_ms
+        // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
+
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
     }
