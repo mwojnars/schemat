@@ -15,68 +15,44 @@ export const ROOT_CID = 0
  **
  */
 
-function DataTable({item}) {
-    /* React component that displays a table containing entries of nested Catalog objects. */
-    item.assertLoaded()
-    // let entries = item.data.getEntries()    // item.getEntries()
-    // let start_color = 0
-    // let category = item.category
-    // let schemas  = category.getFields()
-
-    return e(Catalog1, {
-        item,
-        path:           [],
-        catalog:        item.data,
-        schemas:        item.category.getFields(),
-        start_color:    1,                                      // color of the first row: 1 or 2
-    })
-}
-
-function Catalog1({item, path, catalog, schema, schemas, color, start_color}) {
-    /* If `schemas` is provided, it should be a Map or a Catalog, and `schema` of a value is retrieved
-       for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is applied to all entries.
-       If `start_color` is undefined, the same `color` is used for all rows.
-     */
-    let entries = catalog.getEntries()
-    let rows    = entries.map(({key:field, value, id}, i) =>
-    {
-        if (start_color) color = 1 + (start_color + i - 1) % 2
-        if (schemas) schema = schemas.get(field)
-        let props = {item, path: [...path, id]}
-
-        return TR({className: `is-row${color}`},
-                  schema instanceof CATALOG
-                    ? TD({className: 'ct-nested', colSpan: 2},
-                        DIV({className: 'ct-field'}, field),
-                        e(Catalog1, {...props, catalog: value, schema: schema.values, color})
-                    )
-                    : e(Entry, {...props, field, value, schema})
-        )
-    })
-    let table = TABLE({className: path.length ? 'catalog2' : 'catalog1'}, TBODY(...rows))
-    return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
-}
-
-// function Catalog2({item, path, catalog, schema, color}) {
-//     return DIV({className: 'wrap-offset'},
-//             TABLE({className: 'catalog2'},
-//               TBODY(...catalog.getEntries().map(({key:field, value, id}) =>
-//                 TR({className: `is-row${color}`},
-//                   e(Entry, {path: [...path, id], field, value, schema, item}))
-//            ))))
+// function Catalog1({item, path, catalog, schema, schemas, color, start_color}) {
+//     /* If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
+//        for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
+//        If `start_color` is undefined, the same `color` is used for all rows.
+//      */
+//     let entries = catalog.getEntries()
+//     let rows    = entries.map(({key, value, id}, i) =>
+//     {
+//         if (start_color) color = 1 + (start_color + i - 1) % 2
+//         if (schemas) schema = schemas.get(key)
+//         let props = {item, path: [...path, id]}
+//
+//         return TR({className: `is-row${color}`},
+//                   schema instanceof CATALOG
+//                     ? TD({className: 'ct-nested', colSpan: 2},
+//                         DIV({className: 'ct-field'}, key),
+//                         e(Catalog1, {...props, catalog: value, schema: schema.values, color})
+//                     )
+//                     : e(Entry, {...props, key_:key, value, schema}))
+//     })
+//     let depth = 1 + path.length
+//     let table = TABLE({className: `catalog${depth}`}, TBODY(...rows))
+//     return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
 // }
-
-function Entry({path, field, value, schema = generic_schema, item}) {
-    /* A table row containing an atomic value of a data field (not a subcatalog). */
-    const save = async (newValue) => {
-        // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-        await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
-    }
-    return FRAGMENT(
-              TH({className: 'ct-field'}, field),
-              TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
-           )
-}
+//
+// function Entry({path, key_, value, schema, item}) {
+//     /* A table row containing an atomic entry: a key and its value (not a subcatalog).
+//        The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+//      */
+//     const save = async (newValue) => {
+//         // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+//         await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
+//     }
+//     return FRAGMENT(
+//               TH({className: 'ct-field'}, key_),
+//               TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
+//            )
+// }
 
 /**********************************************************************************************************************/
 
@@ -513,6 +489,15 @@ export class Item {
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side
     }
 
+    Page({extra = null}) {                                  // React functional component
+        return DIV(
+            e(this.Title.bind(this)),
+            H2('Properties'),                               //{style: {color:'blue'}}
+            e(this.DataTable.bind(this)),
+            extra,
+        )
+    }
+
     Title() {
         let name = this.getName()
         let ciid = this.getStamp()
@@ -522,15 +507,18 @@ export class Item {
             return H1(HTML(ciid))
     }
 
-    Page({extra = null}) {                                  // React functional component
+    DataTable() {
+        /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
+        this.assertLoaded()
+        let data = this.data
         let changes = new Changes(this)
-        return DIV(
-            e(this.Title.bind(this)),
-            H2('Properties'),                               //{style: {color:'blue'}}
-            e(DataTable, {item: this, changes}),
-            e(changes.Buttons.bind(changes)),
-            extra,
-        )
+        let catalog = e(data.Table.bind(data), {
+            item:           this,
+            schemas:        this.category.getFields(),
+            path:           [],
+            start_color:    1,                                      // color of the first row: 1 or 2
+        })
+        return DIV({className: 'DataTable'}, catalog, e(changes.Buttons.bind(changes)))
     }
 
     // box model of a catalog of item properties:

@@ -711,6 +711,8 @@ export class RECORD extends Schema {
 
 export class CATALOG extends Schema {
 
+    isCatalog = true
+
     static keys_default   = new STRING({blank: true})
     static values_default = new GENERIC({multi: true})
 

@@ -1,5 +1,6 @@
 // import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
+import { React, e, DIV, TABLE, TH, TR, TD, TBODY, FRAGMENT } from './react-utils.js'
 
 
 /**********************************************************************************************************************
@@ -350,6 +351,50 @@ export class Catalog {
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
     __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
     // __getstate__()          { return {entries: [...this._entries]} }
+
+
+    /***  React widgets  ***/
+
+    Table({item, path, schema, schemas, color, start_color}) {
+        /* If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
+           for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
+           If `start_color` is undefined, the same `color` is used for all rows.
+         */
+        let entries = this.getEntries()
+        let rows    = entries.map(({key, value, id}, i) =>
+        {
+            if (start_color) color = 1 + (start_color + i - 1) % 2
+            if (schemas) schema = schemas.get(key)
+            let entry, props = {item, path: [...path, id]}
+
+            if (schema.isCatalog) {
+                assert(value instanceof Catalog)
+                entry = TD({className: 'ct-nested', colSpan: 2},
+                          DIV({className: 'ct-field'}, key),
+                          e(value.Table.bind(value), {...props, schema: schema.values, color}))
+            }
+            else entry = e(this.Entry, {...props, key_:key, value, schema})
+            return TR({className: `is-row${color}`}, entry)
+        })
+
+        let depth = 1 + path.length
+        let table = TABLE({className: `catalog${depth}`}, TBODY(...rows))
+        return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
+    }
+
+    Entry({item, path, key_, value, schema}) {
+        /* A table row containing an atomic entry: a key and its value (not a subcatalog).
+           The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+         */
+        const save = async (newValue) => {
+            // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+            await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
+        }
+        return FRAGMENT(
+                  TH({className: 'ct-field'}, key_),
+                  TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
+               )
+    }
 }
 
 
