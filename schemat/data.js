@@ -367,7 +367,7 @@ export class Catalog {
             if (schemas) schema = schemas.get(key)
             let props = {item, path: [...path, id], key_: key, value, color}
             let entry = schema.isCatalog ?
-                e(this.EntryComplex, {...props, schema: schema.values}) :
+                e(this.EntrySubcat, {...props, schema: schema.values}) :
                 e(this.EntryAtomic, {...props, schema})
             return TR({className: `Entry is-row${color}`}, entry)
         })
@@ -376,10 +376,10 @@ export class Catalog {
         return DIV({className: `Catalog ${flags}`}, TABLE({className: `Catalog_table catalog${depth}`}, TBODY(...rows)))
     }
 
-    EntryComplex({item, path, key_, value, schema, color}) {
+    EntrySubcat({item, path, key_, value, schema, color}) {
         assert(value instanceof Catalog)
-        return TD({className: 'EntryComplex Cell', colSpan: 2},
-                  DIV({className: 'ct-field Entry_key'}, key_),
+        return TD({className: 'cell cell-subcat', colSpan: 2},
+                  DIV({className: 'Entry_key'}, key_),
                   e(value.Table.bind(value), {item, path, schema, color}))
     }
 
@@ -392,8 +392,9 @@ export class Catalog {
             await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
         }
         return FRAGMENT(
-                  TH({className: 'ct-field Cell CellKey Entry_key'}, key_),
-                  TD({className: 'ct-value Cell', suppressHydrationWarning:true}, schema.display({value, save})),
+                  TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)),
+                  TD({className: 'cell', suppressHydrationWarning:true},
+                      DIV({className: 'Entry_value'}, schema.display({value, save}))),
                )
     }
 }

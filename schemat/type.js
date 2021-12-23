@@ -1,4 +1,4 @@
-import {e, A,I,P, PRE, DIV, SPAN, INPUT, TABLE, TH, TR, TD, TBODY, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
+import {e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
 import { React, useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
 import { T, truncate, DataError } from './utils.js'
 import { JSONx } from './serialize.js'
@@ -171,7 +171,9 @@ export class Schema {
     multi           // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
-    
+
+    css             // optional CSS styling for Widget
+
     constructor(params = {}) {
         let {default_, info, multi, blank, type} = params || {}         // params=null is valid
         if (info  !== undefined)    this.info  = info
@@ -222,7 +224,11 @@ export class Schema {
         // return JSON.stringify(this._fields).slice(0, 60)
     }
 
-    display(props) { return e(this.Widget.bind(this), props) }
+    display(props) {
+        let widget = e(this.Widget.bind(this), props)
+        if (!this.css) return widget
+        return FRAGMENT(STYLE(this.css), widget)        // TODO: move STYLE() to the caller and only insert `css` once per page
+    }
 
     Widget({value, save}) {
         /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
@@ -280,10 +286,15 @@ export let generic_schema = new GENERIC()
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
+    css = `
+        .Schema.SCHEMA .default {color: #888;}
+        .Schema.SCHEMA .info {font-style: italic;}
+    `
+
     Widget({value}) {
         let schema = value
         let defalt = `${schema.default}`
-        return SPAN({className: 'field'},
+        return SPAN({className: 'Schema SCHEMA'},
                 `${schema}`,
                 schema.default !== undefined &&
                     SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
@@ -438,9 +449,9 @@ export class CODE extends TEXT
         return DIV({
             defaultValue:   value,
             ref:            ref,
-            // onBlur:         hide,
-            onKeyDown:      (e) => this.acceptKey(e) && hide(e),
             autoFocus:      true,
+            onKeyDown:      (e) => this.acceptKey(e) && hide(e),
+            // onBlur:         hide,
             className:      "ace-editor",
         })
     }

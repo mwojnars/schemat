@@ -89,13 +89,13 @@ a:visited { color: #00427a }
 /*.catalog1 .ct-field         { font-weight: bold;   font-size: 15px; }*/
 /*.catalog2 .ct-field         { font-weight: normal; font-style: italic; }*/
 
-.ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
-.ct-value .field .default   { color: #888; }
-.ct-value .field .info      { font-style: italic; }
-.ct-value pre               { margin-bottom: 0; font-size: 13px; font-family: monospace; }
+/*.ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; !* courier *! }*/
+/*.ct-value pre               { margin-bottom: 0; font-size: 13px; font-family: monospace; }*/
+/*.ct-value .field .default   { color: #888; }*/
+/*.ct-value .field .info      { font-style: italic; }*/
 
 /*****/
-                                /* alternating colors of rows in a table (DataTable) */
+                                /* alternating colors of rows in a DataTable */
 .is-row1                        { background: #e2eef9; }   /* #D0E4F5 */
 .is-row2                        { background: #f6f6f6; }
 
@@ -108,15 +108,26 @@ a:visited { color: #00427a }
 
 .Catalog .Catalog_table         { width: 100%; min-width: 100%; max-width: 100%; }
 
-.Catalog .Cell                  { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-.Catalog .CellKey               { border-right: 1px solid #fff; }
-.Catalog .CellKey               { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-.Catalog.is-nested .CellKey     { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+.Catalog .Entry                 {}
+.Catalog .Entry:not(:last-child){ border-bottom: 1px solid #fff; }
 
-.Catalog .Entry                  {}
-.Catalog .EntryComplex           { padding-right: 0; padding-bottom: 0; }
-.Catalog .Entry:not(:last-child) { border-bottom: 1px solid #fff; }
-/*.Catalog .EntryAtomic          {}*/
+.Catalog .cell                  { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+.Catalog .cell-subcat           { padding-right: 0; padding-bottom: 0; }
+
+.Catalog .cell-key              { border-right: 1px solid #fff; }
+.Catalog .cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+.Catalog.is-nested .cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
 
 .Catalog .Entry_key             { font-weight: bold;   font-size: 15px; }
 .Catalog.is-nested .Entry_key   { font-weight: normal; font-style: italic; }
+
+.Catalog .Entry_value,
+.Catalog .Entry_value > *       { font-size: 14px; font-family: monospace; /* courier */ }
+.Catalog .Entry_value pre       { margin-bottom: 0; font-size: 13px; font-family: monospace; }
+
+/*
+    Naming conventions:
+    - PascalCase (e.g., DataTable) for classes that correspond to same-named React components
+    - "_" (underscore) denotes a part of a larger element, e.g, "Entry_key" denotes a "key" element inside an "Entry" element
+    - "-" (dash) is a subclass or modifier, e.g., "cell-key" is a special type of "cell" that displays a key
+*/
