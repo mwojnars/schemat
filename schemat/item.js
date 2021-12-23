@@ -15,32 +15,46 @@ export const ROOT_CID = 0
  **
  */
 
-function Catalog1({item}) {
-    let start_color = 0                                   // color of the first row: 0 or 1
-    let category = item.category
-    let entries  = item.getEntries()
-    let schemas  = category.getFields()
+function DataTable({item}) {
+    /* React component that displays a table containing entries of nested Catalog objects. */
+    item.assertLoaded()
+    // let entries = item.data.getEntries()    // item.getEntries()
+    // let start_color = 0                                   // color of the first row: 0 or 1
+    // let category = item.category
+    // let schemas  = category.getFields()
 
-    let rows = entries.map(({key:field, value, id}, i) => {
+    return e(Catalog1, {
+        item,
+        path:           [],
+        catalog:        item.data,
+        schemas:        item.category.getFields(),
+        start_color:    0,
+    })
+}
+
+function Catalog1({item, path, catalog, schemas, start_color}) {
+    let entries = catalog.getEntries()
+    let rows    = entries.map(({key:field, value, id}, i) => {
         let schema  = schemas.get(field)
-        let color   = (start_color + i) % 2
-        return TR({className: `ct-color${color}`},
+        let color   = 1 + (start_color + i) % 2
+        let props   = {item, path: [...path, id], }
+        return TR({className: `is-row${color}`},
                   schema instanceof CATALOG
                     ? TD({className: 'ct-nested', colSpan: 2},
                         DIV({className: 'ct-field'}, field),
-                        e(Catalog2, {path: [id], data: value, schema: schema.values, color, item})
+                        e(Catalog2, {...props, catalog: value, schema: schema.values, color})
                     )
-                    : e(Entry, {path: [id], field, value, schema, item})
+                    : e(Entry, {...props, field, value, schema})
         )
     })
-    return TABLE({className: 'catalog-1'}, TBODY(...rows))
+    return TABLE({className: 'catalog1'}, TBODY(...rows))
 }
 
-function Catalog2({path, data, schema, color = 0, item}) {
+function Catalog2({item, path, catalog, schema, color = 1}) {
     return DIV({className: 'wrap-offset'},
-            TABLE({className: 'catalog-2'},
-              TBODY(...data.getEntries().map(({key:field, value, id}) =>
-                TR({className: `ct-color${color}`},
+            TABLE({className: 'catalog2'},
+              TBODY(...catalog.getEntries().map(({key:field, value, id}) =>
+                TR({className: `is-row${color}`},
                   e(Entry, {path: [...path, id], field, value, schema, item}))
            ))))
 }
@@ -244,34 +258,34 @@ export class Item {
         return item
     }
 
-    getEntries(order = 'schema') {
-        /*
-        Retrieve a list of this item's fields and their values.
-        Multiple values for a single field are returned as separate entries.
-        */
-        this.assertLoaded()
-        return this.data.getEntries()
-
-        // let fields  = this.category.getFields()
-        // let entries = []
-        //
-        // function push(f, v) {
-        //     if (v instanceof multiple)
-        //         for (w of v.values()) entries.push([f, w])
-        //     else
-        //         entries.push([f, v])
-        // }
-        // // retrieve entries by their order in category's schema
-        // for (const f in fields) {
-        //     let v = T.getOwnProperty(data, f)
-        //     if (v !== undefined) push(f, v)
-        // }
-        // // add out-of-schema entries, in their natural order (of insertion)
-        // for (const f in data)
-        //     if (!fields.hasOwnProperty(f)) push(f, data[f])
-        //
-        // return entries
-    }
+    // getEntries(order = 'schema') {
+    //     /*
+    //     Retrieve a list of this item's fields and their values.
+    //     Multiple values for a single field are returned as separate entries.
+    //     */
+    //     this.assertLoaded()
+    //     return this.data.getEntries()
+    //
+    //     // let fields  = this.category.getFields()
+    //     // let entries = []
+    //     //
+    //     // function push(f, v) {
+    //     //     if (v instanceof multiple)
+    //     //         for (w of v.values()) entries.push([f, w])
+    //     //     else
+    //     //         entries.push([f, v])
+    //     // }
+    //     // // retrieve entries by their order in category's schema
+    //     // for (const f in fields) {
+    //     //     let v = T.getOwnProperty(data, f)
+    //     //     if (v !== undefined) push(f, v)
+    //     // }
+    //     // // add out-of-schema entries, in their natural order (of insertion)
+    //     // for (const f in data)
+    //     //     if (!fields.hasOwnProperty(f)) push(f, data[f])
+    //     //
+    //     // return entries
+    // }
 
     getName(default_)   { return this.get('name', default_) }
 
@@ -506,7 +520,7 @@ export class Item {
         return DIV(
             e(this.Title.bind(this)),
             H2('Properties'),                               //{style: {color:'blue'}}
-            e(Catalog1, {item: this, changes}),
+            e(DataTable, {item: this, changes}),
             e(changes.Buttons.bind(changes)),
             extra,
         )
@@ -515,17 +529,17 @@ export class Item {
     // box model of a catalog of item properties:
     /*
         hw-item-properties
-            table .catalog-1
-                tr .ct-colorX                              // X = 0 or 1
+            table .catalog1
+                tr .is-rowX                              // X = 1 or 2
                     // field with an atomic value:
                     th .ct-field
                     td .ct-value
-                tr .ct-colorX
+                tr .is-rowX
                     // field with a catalog of sub-fields:
                     td .ct-nested colspan=2
                         div .ct-field
-                        div .wrap-offset : table .catalog-2
-                            tr .ct-colorX
+                        div .wrap-offset : table .catalog2
+                            tr .is-rowX
                                 th .ct-field
                                 td .ct-value
     */

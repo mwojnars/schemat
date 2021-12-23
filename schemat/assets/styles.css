@@ -39,14 +39,14 @@ a:visited { color: #00427a }
 
 /*** UTILITIES */
 
-.scroll {
+.use-scroll {
     overflow: scroll;
     max-height: var(--textarea-height);
     border-bottom: 1px solid rgba(0,0,0,0.1);
     border-right:  1px solid rgba(0,0,0,0.1);
     resize: vertical;
 }
-.scroll[style*="height"] {
+.use-scroll[style*="height"] {
     max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
 }
 
@@ -69,28 +69,28 @@ a:visited { color: #00427a }
 
 /*** ITEM PAGE */
 
-.ct-color0                      { background: #e2eef9; }   /* #D0E4F5 */
-.ct-color1                      { background: #f6f6f6; }
+.is-row1                        { background: #e2eef9; }   /* #D0E4F5 */
+.is-row2                        { background: #f6f6f6; }
 
-.catalog-1 th, .catalog-1 td    { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+.catalog1 th, .catalog1 td      { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
 .wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
 td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
-td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }
+/*td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }*/
 
-.catalog-1, .catalog-2          { border-collapse: collapse; table-layout: fixed; }
-.catalog-1 th, .catalog-2 th    { border-right: 1px solid #fff; }
-.catalog-1 tr:not(:last-child)  { border-bottom: 1px solid #fff; }
+.catalog1, .catalog2            { border-collapse: collapse; table-layout: fixed; }
+.catalog1 th, .catalog2 th      { border-right: 1px solid #fff; }
+.catalog1 tr:not(:last-child)   { border-bottom: 1px solid #fff; }
 
-.catalog-1                      { width: 100%; min-width: 100%; max-width: 100%; }
-.catalog-1 th                   { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+.catalog1                       { width: 100%; min-width: 100%; max-width: 100%; }
+.catalog1 th                    { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
 
 /* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
-.catalog-2                  { width: 100%; }
-.catalog-2 th               { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
-/*.catalog-2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
+.catalog2                   { width: 100%; }
+.catalog2 th                { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+/*.catalog2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
 
-.catalog-1 .ct-field        { font-weight: bold;   font-size: 15px; }
-.catalog-2 .ct-field        { font-weight: normal; font-style: italic; }
+.catalog1 .ct-field         { font-weight: bold;   font-size: 15px; }
+.catalog2 .ct-field         { font-weight: normal; font-style: italic; }
 
 .ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; /* courier */ }
 .ct-value .field .default   { color: #888; }
