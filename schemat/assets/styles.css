@@ -73,8 +73,17 @@ a:visited { color: #00427a }
 .is-row1                        { background: #e2eef9; }   /* #D0E4F5 */
 .is-row2                        { background: #f6f6f6; }
 
+.is-top                         {}      /* marks a top-level Catalog */
+.is-nested                      {}      /* marks a sub-Catalog */
+
+.DataTable                      {}
+.Catalog                        {}
+.Entry                          {}
+
+.Catalog.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+
 .catalog1 th, .catalog1 td      { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-.wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+/*.wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }*/
 td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }
 /*td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }*/
 

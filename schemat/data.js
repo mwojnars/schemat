@@ -365,21 +365,33 @@ export class Catalog {
         {
             if (start_color) color = 1 + (start_color + i - 1) % 2
             if (schemas) schema = schemas.get(key)
-            let entry, props = {item, path: [...path, id]}
+            let entry, props = {item, path: [...path, id], key_: key, value}
 
             if (schema.isCatalog) {
-                assert(value instanceof Catalog)
-                entry = TD({className: 'ct-nested', colSpan: 2},
-                          DIV({className: 'ct-field'}, key),
-                          e(value.Table.bind(value), {...props, schema: schema.values, color}))
+                entry = e(this.EntryNested, {...props, schema: schema.values})
+                // assert(value instanceof Catalog)
+                // entry = TD({className: 'ct-nested', colSpan: 2},
+                //           DIV({className: 'ct-field'}, key),
+                //           e(value.Table.bind(value), {...props, schema: schema.values, color}))
             }
-            else entry = e(this.Entry, {...props, key_:key, value, schema})
+            else entry = e(this.Entry, {...props, schema})
             return TR({className: `is-row${color}`}, entry)
         })
 
+        let flags = path.length ? 'is-nested' : 'is-top'
         let depth = 1 + path.length
-        let table = TABLE({className: `catalog${depth}`}, TBODY(...rows))
-        return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
+        return DIV({className: `Catalog ${flags}`}, TABLE({className: `catalog${depth}`}, TBODY(...rows)))
+
+        // let props = path.length ? {className: 'wrap-offset'} : {}               // nested catalogs need a .wrap-offset class
+        // let table = DIV(props, TABLE({className: `Catalog ${flags} catalog${depth}`}, TBODY(...rows)))
+        // if (path.length) table = DIV({className: 'wrap-offset'}, table)         // nested catalogs need a <div.wrap-offset> wrapper
+    }
+
+    EntryNested({item, path, key_, value, schema, color}) {
+        assert(value instanceof Catalog)
+        return TD({className: 'ct-nested', colSpan: 2},
+                  DIV({className: 'ct-field'}, key_),
+                  e(value.Table.bind(value), {item, path, schema, color}))
     }
 
     Entry({item, path, key_, value, schema}) {
