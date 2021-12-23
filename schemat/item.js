@@ -19,7 +19,7 @@ function DataTable({item}) {
     /* React component that displays a table containing entries of nested Catalog objects. */
     item.assertLoaded()
     // let entries = item.data.getEntries()    // item.getEntries()
-    // let start_color = 0                                   // color of the first row: 0 or 1
+    // let start_color = 0
     // let category = item.category
     // let schemas  = category.getFields()
 
@@ -28,36 +28,43 @@ function DataTable({item}) {
         path:           [],
         catalog:        item.data,
         schemas:        item.category.getFields(),
-        start_color:    0,
+        start_color:    1,                                      // color of the first row: 1 or 2
     })
 }
 
-function Catalog1({item, path, catalog, schemas, start_color}) {
+function Catalog1({item, path, catalog, schema, schemas, color, start_color}) {
+    /* If `schemas` is provided, it should be a Map or a Catalog, and `schema` of a value is retrieved
+       for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is applied to all entries.
+       If `start_color` is undefined, the same `color` is used for all rows.
+     */
     let entries = catalog.getEntries()
-    let rows    = entries.map(({key:field, value, id}, i) => {
-        let schema  = schemas.get(field)
-        let color   = 1 + (start_color + i) % 2
-        let props   = {item, path: [...path, id], }
+    let rows    = entries.map(({key:field, value, id}, i) =>
+    {
+        if (start_color) color = 1 + (start_color + i - 1) % 2
+        if (schemas) schema = schemas.get(field)
+        let props = {item, path: [...path, id]}
+
         return TR({className: `is-row${color}`},
                   schema instanceof CATALOG
                     ? TD({className: 'ct-nested', colSpan: 2},
                         DIV({className: 'ct-field'}, field),
-                        e(Catalog2, {...props, catalog: value, schema: schema.values, color})
+                        e(Catalog1, {...props, catalog: value, schema: schema.values, color})
                     )
                     : e(Entry, {...props, field, value, schema})
         )
     })
-    return TABLE({className: 'catalog1'}, TBODY(...rows))
+    let table = TABLE({className: path.length ? 'catalog2' : 'catalog1'}, TBODY(...rows))
+    return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
 }
 
-function Catalog2({item, path, catalog, schema, color = 1}) {
-    return DIV({className: 'wrap-offset'},
-            TABLE({className: 'catalog2'},
-              TBODY(...catalog.getEntries().map(({key:field, value, id}) =>
-                TR({className: `is-row${color}`},
-                  e(Entry, {path: [...path, id], field, value, schema, item}))
-           ))))
-}
+// function Catalog2({item, path, catalog, schema, color}) {
+//     return DIV({className: 'wrap-offset'},
+//             TABLE({className: 'catalog2'},
+//               TBODY(...catalog.getEntries().map(({key:field, value, id}) =>
+//                 TR({className: `is-row${color}`},
+//                   e(Entry, {path: [...path, id], field, value, schema, item}))
+//            ))))
+// }
 
 function Entry({path, field, value, schema = generic_schema, item}) {
     /* A table row containing an atomic value of a data field (not a subcatalog). */
