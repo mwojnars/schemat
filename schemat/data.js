@@ -365,36 +365,25 @@ export class Catalog {
         {
             if (start_color) color = 1 + (start_color + i - 1) % 2
             if (schemas) schema = schemas.get(key)
-            let entry, props = {item, path: [...path, id], key_: key, value}
-
-            if (schema.isCatalog) {
-                entry = e(this.EntryNested, {...props, schema: schema.values})
-                // assert(value instanceof Catalog)
-                // entry = TD({className: 'ct-nested', colSpan: 2},
-                //           DIV({className: 'ct-field'}, key),
-                //           e(value.Table.bind(value), {...props, schema: schema.values, color}))
-            }
-            else entry = e(this.Entry, {...props, schema})
-            return TR({className: `is-row${color}`}, entry)
+            let props = {item, path: [...path, id], key_: key, value, color}
+            let entry = schema.isCatalog ?
+                e(this.EntryComplex, {...props, schema: schema.values}) :
+                e(this.EntryAtomic, {...props, schema})
+            return TR({className: `Entry is-row${color}`}, entry)
         })
-
         let flags = path.length ? 'is-nested' : 'is-top'
         let depth = 1 + path.length
-        return DIV({className: `Catalog ${flags}`}, TABLE({className: `catalog${depth}`}, TBODY(...rows)))
-
-        // let props = path.length ? {className: 'wrap-offset'} : {}               // nested catalogs need a .wrap-offset class
-        // let table = DIV(props, TABLE({className: `Catalog ${flags} catalog${depth}`}, TBODY(...rows)))
-        // if (path.length) table = DIV({className: 'wrap-offset'}, table)         // nested catalogs need a <div.wrap-offset> wrapper
+        return DIV({className: `Catalog ${flags}`}, TABLE({className: `Catalog_table catalog${depth}`}, TBODY(...rows)))
     }
 
-    EntryNested({item, path, key_, value, schema, color}) {
+    EntryComplex({item, path, key_, value, schema, color}) {
         assert(value instanceof Catalog)
-        return TD({className: 'ct-nested', colSpan: 2},
-                  DIV({className: 'ct-field'}, key_),
+        return TD({className: 'EntryComplex Cell', colSpan: 2},
+                  DIV({className: 'ct-field Entry_key'}, key_),
                   e(value.Table.bind(value), {item, path, schema, color}))
     }
 
-    Entry({item, path, key_, value, schema}) {
+    EntryAtomic({item, path, key_, value, schema}) {
         /* A table row containing an atomic entry: a key and its value (not a subcatalog).
            The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
          */
@@ -403,8 +392,8 @@ export class Catalog {
             await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
         }
         return FRAGMENT(
-                  TH({className: 'ct-field'}, key_),
-                  TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
+                  TH({className: 'ct-field Cell CellKey Entry_key'}, key_),
+                  TD({className: 'ct-value Cell', suppressHydrationWarning:true}, schema.display({value, save})),
                )
     }
 }
