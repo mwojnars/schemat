@@ -1,26 +1,32 @@
 /*** GENERAL STYLES */
 
 /*html {
-  font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  color: #333;
+    font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
 }*/
 
+* {
+    box-sizing: border-box;
+}
 html {
-  --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
-  --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
-  --ct-th1-width: 300px;
-  --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
-  --textarea-height: 12rem;
+    --ct-cell-pad: 35px;          /* default left & right padding of all table cells */
+    --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
+    --ct-th1-width: 300px;
+    --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+    --textarea-height: 12rem;
 }
 body {
-  width: 1120px;
-  margin: 0 auto;
-  padding-bottom: 50px;
-  font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    width: 1120px;
+    margin: 0 auto;
+    padding-bottom: 50px;
+    font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    color: #212529;
 }
 
-h1, h2, h3      { margin-top: 1.4rem; margin-bottom: 0.6em; }
+h1, h2, h3      { margin-top: 1.4rem; margin-bottom: 0.6em; font-weight: normal; }
+h1              { font-size: 2.5rem; }
 h2              { font-size: 1.4rem; text-transform: uppercase; }
 h2:first-letter { font-size: 1.8rem; }
 h3              { font-size: 1.1rem; text-transform: uppercase; } /*font-weight: bold; }*/
@@ -40,7 +46,7 @@ a:visited { color: #00427a }
 /*** UTILITIES */
 
 .use-scroll {
-    overflow: scroll;
+    overflow: auto;   /*scroll*/
     max-height: var(--textarea-height);
     border-bottom: 1px solid rgba(0,0,0,0.1);
     border-right:  1px solid rgba(0,0,0,0.1);
@@ -103,15 +109,15 @@ a:visited { color: #00427a }
 .is-nested                      {}      /* marks a sub-Catalog */
 
 .DataTable                      {}
-.Catalog                        { border-collapse: collapse; table-layout: fixed; }
+.Catalog                        { table-layout: fixed; }
 .Catalog.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
 
-.Catalog .Catalog_table         { width: 100%; min-width: 100%; max-width: 100%; }
+.Catalog .Catalog_table         { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
 
 .Catalog .Entry                 {}
 .Catalog .Entry:not(:last-child){ border-bottom: 1px solid #fff; }
 
-.Catalog .cell                  { padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+.Catalog .cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
 .Catalog .cell-subcat           { padding-right: 0; padding-bottom: 0; }
 
 .Catalog .cell-key              { border-right: 1px solid #fff; }
@@ -128,6 +134,8 @@ a:visited { color: #00427a }
 /*
     Naming conventions:
     - PascalCase (e.g., DataTable) for classes that correspond to same-named React components
-    - "_" (underscore) denotes a part of a larger element, e.g, "Entry_key" denotes a "key" element inside an "Entry" element
+    - "_" (underscore) denotes a part of a larger element, e.g, "Entry_key" is a "key" element inside an "Entry"
     - "-" (dash) is a subclass or modifier, e.g., "cell-key" is a special type of "cell" that displays a key
+    - use-* prefix for utilities
+    - is-* prefix for state indicators
 */

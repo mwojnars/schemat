@@ -5,8 +5,48 @@
     <title>Title</title>
 </head>
 <body>
-<pre>&#10;Ala ma&#10; kota&#10; i psa</pre>
-<textarea>&#10;Ala ma&#10; kota&#10; i psa</textarea>
+
+    <!-- test CSS Grid -->
+    <style>
+        .Page {
+            display: grid;
+            gap: 10px 20px;
+            grid-template-columns: 1fr 150px 800px 1fr;
+            grid-template-rows: 100px 1500px 80px;
+            grid-template-areas:
+                ". head head ."
+                ". side main ."
+                ". foot foot .";
+        }
+        .Page_Header  { grid-area: head; background-color: blue; }
+        .Page_Content { grid-area: main; background-color: yellow; }
+        .Page_Footer  { grid-area: foot; background-color: blue; }
+        .Page_Sidebar { grid-area: side; background-color: red; height:300px; top:5px; position:sticky; }
+
+        .Page_Navigat { background-color: orange; min-height: 100px; }
+        .Page_Adverts { background-color: pink;   min-height: 100px; }
+        /*
+            Other tricks:
+            - .Page_Sidebar {margin-left:-30px; margin-right:30px;}  -- moves Sidebar by 30px outside the grid without changing its size
+        */
+    </style>
+
+    <div class="Page">
+
+        <div class="Page_Header">HEADER</div>
+        <div class="Page_Sidebar">SIDEBAR
+            <div class="Page_Navigat">NAGIVATION</div>
+            <div class="Page_Adverts">ADVERTS</div>
+        </div>
+        <div class="Page_Footer">FOOTER</div>
+
+        <div class="Page_Content">
+            CONTENT<br/>
+            <p>Paragraph...</p>
+            <pre>&#10;Ala ma&#10; kota&#10; i psa</pre>
+            <textarea>&#10;Ala ma&#10; kota&#10; i psa</textarea>
+        </div>
+    </div>
 
 </body>
 </html>

@@ -11,6 +11,20 @@ import { Catalog } from './data.js'
  **
  */
 
+class Widget extends React.Component {
+    css(path) {
+        /* Optional CSS styling that should be included at least once in a page along with the widget. */
+    }
+}
+
+class Layout extends Widget {
+    render({blocks}) {
+        /* Takes a number of named blocks, e.g.: head, foot, main, side ... and places them in predefined
+           positions on page.
+         */
+    }
+}
+
 class ValueWidget extends React.Component {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
 }

@@ -371,9 +371,8 @@ export class Catalog {
                 e(this.EntryAtomic, {...props, schema})
             return TR({className: `Entry is-row${color}`}, entry)
         })
-        let flags = path.length ? 'is-nested' : 'is-top'
-        let depth = 1 + path.length
-        return DIV({className: `Catalog ${flags}`}, TABLE({className: `Catalog_table catalog${depth}`}, TBODY(...rows)))
+        let flag = path.length ? 'is-nested' : 'is-top'
+        return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
     }
 
     EntrySubcat({item, path, key_, value, schema, color}) {

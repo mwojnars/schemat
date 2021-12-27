@@ -8,6 +8,9 @@ import { Catalog, Data } from './data.js'
 
 export const ROOT_CID = 0
 
+// import styles from "./assets/styles.css";
+// print("styles:", styles)
+
 
 /**********************************************************************************************************************
  **
@@ -442,6 +445,8 @@ export class Item {
         <head>
             <title>${title}</title>
             <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+            <!-- Bootstrap should only be used for widgets and in-block layout, not for page layout -->
             <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         
@@ -636,6 +641,9 @@ export class Category extends Item {
         /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
            It's assumed that the catalogs have unique non-missing keys.
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
+           A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
+           https://en.wikipedia.org/wiki/C3_linearization
+           http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let catalog    = new Catalog()
         let prototypes = this.getAll('prototype')
