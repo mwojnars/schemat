@@ -40,12 +40,23 @@
           - key: handlers
             value:
               info: Methods for server-side handling of web requests.
+              isCatalog: true
               values:
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG
           - key: fields
             value:
+              isCatalog: true
               values:
+                css: "
+
+                  \        .Schema.SCHEMA .default {color:
+                  #888;}
+
+                  \        .Schema.SCHEMA .info {font-style:
+                  italic;}
+
+                  \    "
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
           - key: cache_ttl
@@ -54,7 +65,7 @@
                 category is kept in a server-side cache after being loaded from
                 DB, for reuse by subsequent requests. A real number. If zero,
                 the items are evicted immediately after each request.
-              default: 3
+              default: 5
               "@": schemat.type.NUMBER
         "@": schemat.data.Catalog
     - key: startup_site
@@ -103,6 +114,7 @@
   class_name: schemat.item.Folder
   fields:
     files:
+      isCatalog: true
       keys:
         "@": schemat.type.FILENAME
       values:
@@ -147,6 +159,7 @@
     name:
       "@": schemat.type.STRING
     apps:
+      isCatalog: true
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
@@ -197,6 +210,7 @@
     name:
       "@": schemat.type.STRING
     spaces:
+      isCatalog: true
       values:
         category_exact:
           =:

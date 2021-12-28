@@ -61,7 +61,7 @@ class Server {
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
-        session.printCounts()
+        // session.printCounts()
         session.stop()
     }
 }

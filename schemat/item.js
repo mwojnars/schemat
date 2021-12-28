@@ -300,6 +300,11 @@ export class Item {
         assert(this.category)
         return this.category.temp('schema')                         // calls _temp_schema() of this.category
     }
+    getStyles() {
+        /* Return CSS styles, as a Styles instance, that are needed to display data through this item's schema. */
+        assert(this.category)
+        return this.category.temp('styles')                         // calls _temp_styles() of this.category
+    }
 
     temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
@@ -475,7 +480,7 @@ export class Item {
 
     BOOT({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
-        <div id="react-root">${this.render()}</div>
+        <div id="react-root">${this.temp('render')}</div>
         <script type="module">
             import { boot } from "/files/client.js"
             boot()
@@ -483,6 +488,8 @@ export class Item {
     `}
 
     /***  Components (server side & client side)  ***/
+
+    _temp_render()      { return this.render() }            // cached server-side render() (SSR) of this item
 
     render(targetElement = null) {
         /* Render this item into an HTMLElement (client-side) if `targetElement` is given,  or to a string
@@ -494,9 +501,10 @@ export class Item {
          */
         // TODO: use server-side caching of this function, like with temp() and temporary variables,
         //       to avoid repeated SSR rendering of the same item in consecutive requests
-        let elem = e(this.Page.bind(this))
-        return targetElement ? ReactDOM.render(elem, targetElement) : ReactDOM.renderToString(elem)
-        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side
+        if (!targetElement) print(`SSR render() of ${this.id_str}`)
+        let page = e(this.Page.bind(this))
+        return targetElement ? ReactDOM.render(page, targetElement) : ReactDOM.renderToString(page)
+        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
 
     Page({extra = null}) {                                  // React functional component
@@ -521,7 +529,7 @@ export class Item {
         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
         this.assertLoaded()
         let data = this.data
-        let styles = this.getSchema().getStyles()
+        let styles = this.getStyles()
         let changes = new Changes(this)
         let catalog = e(data.Table.bind(data), {
             item:           this,
@@ -650,6 +658,10 @@ export class Category extends Item {
     _temp_schema() {
         let fields = this.getFields()
         return new DATA(fields.asDict())
+    }
+    _temp_styles() {
+        let schema = this.temp('schema')
+        return schema.getStyles()
     }
     _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */

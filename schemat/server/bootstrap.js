@@ -29,7 +29,7 @@ let root_fields = C({
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
 
-    cache_ttl    : new NUMBER({default: 3.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."})
+    cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."})
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
