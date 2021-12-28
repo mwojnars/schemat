@@ -192,7 +192,7 @@ export class Item {
             record = await this.registry.loadData(this.id)
         }
         let flat   = record.data
-        let schema = use_schema ? this.category.temp('schema') : generic_schema
+        let schema = use_schema ? this.getSchema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = schema.decode(state)
         let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
@@ -295,6 +295,11 @@ export class Item {
         if (!brackets) return stamp
         return `[${stamp}]`
     }
+    getSchema() {
+        /* Return schema of this item as defined in its category. The schema is an instance of DATA (subclass of Schema). */
+        assert(this.category)
+        return this.category.temp('schema')                         // calls _temp_schema() of this.category
+    }
 
     temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
@@ -322,7 +327,7 @@ export class Item {
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         this.assertLoaded()
-        let schema = use_schema ? this.category.temp('schema') : generic_schema
+        let schema = use_schema ? this.getSchema() : generic_schema
         return schema.encode(this.data)
     }
     dumpData(use_schema = true, compact = true) {
@@ -523,6 +528,7 @@ export class Item {
             path:           [],
             start_color:    1,                                      // color of the first row: 1 or 2
         })
+        // let styles = this.getSchema().getStyles()
         return DIV({className: 'DataTable'}, catalog, e(changes.Buttons.bind(changes)))
     }
 
@@ -656,6 +662,11 @@ export class Category extends Item {
         }
         return catalog
     }
+
+    _temp_schema() {
+        let fields = this.getFields()
+        return new DATA(fields.asDict())
+    }
     _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
         return this.mergeInherited('fields')
@@ -663,10 +674,6 @@ export class Category extends Item {
     _temp_handlers_all() {
         /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
         return this.mergeInherited('handlers')
-    }
-    _temp_schema() {
-        let fields = this.getFields()
-        return new DATA(fields.asDict())
     }
 
     async _handle_scan({res}) {

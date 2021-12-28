@@ -12,7 +12,7 @@ import { Catalog } from './data.js'
  */
 
 class Widget extends React.Component {
-    css(path) {
+    css(basePath, props = {}) {
         /* Optional CSS styling that should be included at least once in a page along with the widget. */
     }
 }
@@ -20,10 +20,11 @@ class Widget extends React.Component {
 class Layout extends Widget {
     render({blocks}) {
         /* Takes a number of named blocks, e.g.: head, foot, main, side ... and places them in predefined
-           positions on page.
+           positions on a page.
          */
     }
 }
+
 
 class ValueWidget extends React.Component {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
@@ -238,6 +239,12 @@ export class Schema {
         // return JSON.stringify(this._fields).slice(0, 60)
     }
 
+    // display(propsAll) {
+    //     let {addStyle, ...props} = propsAll
+    //     addStyle(this.css)
+    //     return e(this.Widget.bind(this), props)
+    // }
+
     display(props) {
         let widget = e(this.Widget.bind(this), props)
         if (!this.css) return widget
@@ -299,6 +306,9 @@ export let generic_schema = new GENERIC()
 
 export class SCHEMA extends GENERIC {
     static types = [Schema]
+
+    // display(props) {
+    // }
 
     css = `
         .Schema.SCHEMA .default {color: #888;}

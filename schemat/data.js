@@ -1,6 +1,6 @@
 // import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
-import { React, e, DIV, TABLE, TH, TR, TD, TBODY, FRAGMENT } from './react-utils.js'
+import { React, e, DIV, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
 
 
 /**********************************************************************************************************************
@@ -14,6 +14,19 @@ function isstring(s) {
 }
 function missing(key) {
     return key === null || key === undefined
+}
+
+class Styles {
+    /* Collection of CSS snippets that are added one by one with add() and then deduplicated
+       and converted to a single snippet in get().
+     */
+
+    styles = new Set()
+
+    get size()      { return this.styles.size }
+
+    add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
+    get()           { return [...this.styles].join() }
 }
 
 /**********************************************************************************************************************
@@ -355,34 +368,44 @@ export class Catalog {
 
     /***  React widgets  ***/
 
-    Table({item, path, schema, schemas, color, start_color}) {
-        /* If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
+    Table({item, path, schema, schemas, color, start_color, addStyle}) {
+        /* React component that displays this catalog's data in tabular form.
+           If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
            If `start_color` is undefined, the same `color` is used for all rows.
          */
+
+        // let [stylesState, setStyles] = useState(null)
+        // if (!addStyle) {
+        //     styles = new Styles()                     // Styles are created in top-level Table only
+        //     addStyle = (css) => styles.add(css)
+        // }
+
         let entries = this.getEntries()
         let rows    = entries.map(({key, value, id}, i) =>
         {
             if (start_color) color = 1 + (start_color + i - 1) % 2
             if (schemas) schema = schemas.get(key)
-            let props = {item, path: [...path, id], key_: key, value, color}
+            let props = {item, path: [...path, id], key_: key, value, color, addStyle}
             let entry = schema.isCatalog ?
                 e(this.EntrySubcat, {...props, schema: schema.values}) :
                 e(this.EntryAtomic, {...props, schema})
             return TR({className: `Entry is-row${color}`}, entry)
         })
         let flag = path.length ? 'is-nested' : 'is-top'
-        return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
+        return DIV({className: `Catalog ${flag}`},
+                 // styles && !!styles.size && STYLE(styles.get()),
+                 TABLE({className: `Catalog_table`}, TBODY(...rows)))
     }
 
-    EntrySubcat({item, path, key_, value, schema, color}) {
+    EntrySubcat({item, path, key_, value, schema, color, addStyle}) {
         assert(value instanceof Catalog)
         return TD({className: 'cell cell-subcat', colSpan: 2},
                   DIV({className: 'Entry_key'}, key_),
-                  e(value.Table.bind(value), {item, path, schema, color}))
+                  e(value.Table.bind(value), {item, path, schema, color, addStyle}))
     }
 
-    EntryAtomic({item, path, key_, value, schema}) {
+    EntryAtomic({item, path, key_, value, schema, addStyle}) {
         /* A table row containing an atomic entry: a key and its value (not a subcatalog).
            The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
          */
@@ -393,7 +416,7 @@ export class Catalog {
         return FRAGMENT(
                   TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)),
                   TD({className: 'cell', suppressHydrationWarning:true},
-                      DIV({className: 'Entry_value'}, schema.display({value, save}))),
+                      DIV({className: 'Entry_value'}, schema.display({value, save, addStyle}))),
                )
     }
 }
