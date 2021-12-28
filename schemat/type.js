@@ -618,7 +618,8 @@ export class ITEM extends Schema {
     Widget({value: item}) {
 
         let loaded = useItemLoading()
-        if (!loaded(item)) return "loading..."
+        if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+            return SPAN({suppressHydrationWarning: true}, "loading...")
 
         let url  = item.url({raise: false})
         let name = item.get('name', '')
@@ -626,31 +627,13 @@ export class ITEM extends Schema {
 
         if (name && url) {
             let note = item.category.get('name', null)
-            return FRAGMENT(
+            return SPAN(
                 url ? A({href: url}, name) : name,
                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
             )
         } else
-            return FRAGMENT('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+            return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     }
-    // Widget({value}) {
-    //     return delayed_render(async () => {
-    //         let item = value
-    //         await item.load()
-    //         let url  = item.url({raise: false})
-    //         let name = item.get('name', '')
-    //         let ciid = HTML(item.getStamp({html: false, brackets: false}))
-    //
-    //         if (name && url) {
-    //             let note = item.category.get('name', null)
-    //             return FRAGMENT(
-    //                 url ? A({href: url}, name) : name,
-    //                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-    //             )
-    //         } else
-    //             return FRAGMENT('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-    //     })
-    // }
 }
 
 /**********************************************************************************************************************

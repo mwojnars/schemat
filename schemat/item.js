@@ -521,6 +521,7 @@ export class Item {
         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
         this.assertLoaded()
         let data = this.data
+        let styles = this.getSchema().getStyles()
         let changes = new Changes(this)
         let catalog = e(data.Table.bind(data), {
             item:           this,
@@ -528,11 +529,6 @@ export class Item {
             path:           [],
             start_color:    1,                                      // color of the first row: 1 or 2
         })
-
-        let styles = this.getSchema().getStyles()
-        print('DataTable() styles:', styles.styles)
-        print('DataTable() styles CSS:\n', styles.getCSS())
-
         return DIV({className: 'DataTable'},
                     !!styles.size && STYLE(styles.getCSS()),
                     catalog, e(changes.Buttons.bind(changes)))

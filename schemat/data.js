@@ -354,7 +354,7 @@ export class Catalog {
 
     /***  React widgets  ***/
 
-    Table({item, path, schema, schemas, color, start_color, addStyle}) {
+    Table({item, path, schema, schemas, color, start_color}) {
         /* React component that displays this catalog's data in tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
@@ -366,7 +366,7 @@ export class Catalog {
         {
             if (start_color) color = 1 + (start_color + i - 1) % 2
             if (schemas) schema = schemas.get(key)
-            let props = {item, path: [...path, id], key_: key, value, color, addStyle}
+            let props = {item, path: [...path, id], key_: key, value, color}
             let entry = schema.isCatalog ?
                 e(this.EntrySubcat, {...props, schema: schema.values}) :
                 e(this.EntryAtomic, {...props, schema})
@@ -376,14 +376,14 @@ export class Catalog {
         return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
     }
 
-    EntrySubcat({item, path, key_, value, schema, color, addStyle}) {
+    EntrySubcat({item, path, key_, value, schema, color}) {
         assert(value instanceof Catalog)
         return TD({className: 'cell cell-subcat', colSpan: 2},
                   DIV({className: 'Entry_key'}, key_),
-                  e(value.Table.bind(value), {item, path, schema, color, addStyle}))
+                  e(value.Table.bind(value), {item, path, schema, color}))
     }
 
-    EntryAtomic({item, path, key_, value, schema, addStyle}) {
+    EntryAtomic({item, path, key_, value, schema}) {
         /* A table row containing an atomic entry: a key and its value (not a subcatalog).
            The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
          */
@@ -393,8 +393,7 @@ export class Catalog {
         }
         return FRAGMENT(
                   TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)),
-                  TD({className: 'cell', suppressHydrationWarning:true},
-                      DIV({className: 'Entry_value'}, schema.display({value, save, addStyle}))),
+                  TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value, save}))),
                )
     }
 }
