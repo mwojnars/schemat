@@ -16,19 +16,6 @@ function missing(key) {
     return key === null || key === undefined
 }
 
-class Styles {
-    /* Collection of CSS snippets that are added one by one with add() and then deduplicated
-       and converted to a single snippet in get().
-     */
-
-    styles = new Set()
-
-    get size()      { return this.styles.size }
-
-    add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
-    get()           { return [...this.styles].join() }
-}
-
 /**********************************************************************************************************************
  **
  **  ITEMS MAP
@@ -363,7 +350,6 @@ export class Catalog {
 
     __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
     __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
-    // __getstate__()          { return {entries: [...this._entries]} }
 
 
     /***  React widgets  ***/
@@ -374,12 +360,6 @@ export class Catalog {
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
            If `start_color` is undefined, the same `color` is used for all rows.
          */
-
-        // let [stylesState, setStyles] = useState(null)
-        // if (!addStyle) {
-        //     styles = new Styles()                     // Styles are created in top-level Table only
-        //     addStyle = (css) => styles.add(css)
-        // }
 
         let entries = this.getEntries()
         let rows    = entries.map(({key, value, id}, i) =>
@@ -393,9 +373,7 @@ export class Catalog {
             return TR({className: `Entry is-row${color}`}, entry)
         })
         let flag = path.length ? 'is-nested' : 'is-top'
-        return DIV({className: `Catalog ${flag}`},
-                 // styles && !!styles.size && STYLE(styles.get()),
-                 TABLE({className: `Catalog_table`}, TBODY(...rows)))
+        return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
     }
 
     EntrySubcat({item, path, key_, value, schema, color, addStyle}) {

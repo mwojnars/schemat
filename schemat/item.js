@@ -1,6 +1,6 @@
 import {
     React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
-    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
+    TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
 import { print, assert, T, escape_html, ItemNotLoaded, ServerError } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
@@ -528,27 +528,15 @@ export class Item {
             path:           [],
             start_color:    1,                                      // color of the first row: 1 or 2
         })
-        // let styles = this.getSchema().getStyles()
-        return DIV({className: 'DataTable'}, catalog, e(changes.Buttons.bind(changes)))
-    }
 
-    // box model of a catalog of item properties:
-    /*
-        hw-item-properties
-            table .catalog1
-                tr .is-rowX                              // X = 1 or 2
-                    // field with an atomic value:
-                    th .ct-field
-                    td .ct-value
-                tr .is-rowX
-                    // field with a catalog of sub-fields:
-                    td .ct-nested colspan=2
-                        div .ct-field
-                        div .wrap-offset : table .catalog2
-                            tr .is-rowX
-                                th .ct-field
-                                td .ct-value
-    */
+        let styles = this.getSchema().getStyles()
+        print('DataTable() styles:', styles.styles)
+        print('DataTable() styles CSS:\n', styles.getCSS())
+
+        return DIV({className: 'DataTable'},
+                    !!styles.size && STYLE(styles.getCSS()),
+                    catalog, e(changes.Buttons.bind(changes)))
+    }
 }
 
 /**********************************************************************************************************************/

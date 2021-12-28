@@ -1,3 +1,13 @@
+/*
+Naming conventions:
+  - PascalCase (e.g., DataTable) for classes that correspond to same-named React components
+  - "_" (underscore) denotes a part of a larger element, e.g, "Entry_key" is a "key" element inside an "Entry"
+  - "-" (dash) is a subclass or modifier, e.g., "cell-key" is a special type of "cell" that displays a key
+  - use-* prefix for utilities
+  - is-* prefix for state indicators
+*/
+
+
 /*** GENERAL STYLES */
 
 /*html {
@@ -131,11 +141,22 @@ a:visited { color: #00427a }
 .Catalog .Entry_value > *       { font-size: 14px; font-family: monospace; /* courier */ }
 .Catalog .Entry_value pre       { margin-bottom: 0; font-size: 13px; font-family: monospace; }
 
+
 /*
-    Naming conventions:
-    - PascalCase (e.g., DataTable) for classes that correspond to same-named React components
-    - "_" (underscore) denotes a part of a larger element, e.g, "Entry_key" is a "key" element inside an "Entry"
-    - "-" (dash) is a subclass or modifier, e.g., "cell-key" is a special type of "cell" that displays a key
-    - use-* prefix for utilities
-    - is-* prefix for state indicators
+Box model of a catalog of item properties (OUT OF DATE):
+
+    hw-item-properties
+        table .catalog1
+            tr .is-rowX                              // X = 1 or 2
+                // field with an atomic value:
+                th .ct-field
+                td .ct-value
+            tr .is-rowX
+                // field with a catalog of sub-fields:
+                td .ct-nested colspan=2
+                    div .ct-field
+                    div .wrap-offset : table .catalog2
+                        tr .is-rowX
+                            th .ct-field
+                            td .ct-value
 */

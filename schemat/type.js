@@ -11,6 +11,19 @@ import { Catalog } from './data.js'
  **
  */
 
+class Styles {
+    /* Collection of CSS snippets that are added one by one with add() and then deduplicated
+       and converted to a single snippet in get().
+     */
+    styles = new Set()
+
+    get size()      { return this.styles.size }
+    add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
+    getCSS()        { return [...this.styles].join() }
+}
+
+/**********************************************************************************************************************/
+
 class Widget extends React.Component {
     css(basePath, props = {}) {
         /* Optional CSS styling that should be included at least once in a page along with the widget. */
@@ -25,6 +38,7 @@ class Layout extends Widget {
     }
 }
 
+/**********************************************************************************************************************/
 
 class ValueWidget extends React.Component {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
@@ -234,22 +248,20 @@ export class Schema {
         return JSONx.decode(state)
     }
 
-    toString() {
-        return this.constructor.name
-        // return JSON.stringify(this._fields).slice(0, 60)
+    getStyles() {
+        /* Walk through all nested schema objects and collect their CSS styles to be returned as a Styles instance. */
+        let styles = new Styles()
+        this.collectStyles(styles)
+        return styles
+    }
+    collectStyles(styles) {
+        /* Override in subclasses to provide a custom way of collecting CSS styles, esp. in compound classes with nested schemas. */
+        let css = this.css
+        if (css) styles.add(css)
     }
 
-    // display(propsAll) {
-    //     let {addStyle, ...props} = propsAll
-    //     addStyle(this.css)
-    //     return e(this.Widget.bind(this), props)
-    // }
-
-    display(props) {
-        let widget = e(this.Widget.bind(this), props)
-        if (!this.css) return widget
-        return FRAGMENT(STYLE(this.css), widget)        // TODO: move STYLE() to the caller and only insert `css` once per page
-    }
+    toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
+    display(props)      { return e(this.Widget.bind(this), props) }
 
     Widget({value, save}) {
         /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
@@ -331,27 +343,27 @@ export class SCHEMA extends GENERIC {
     }
 }
 
-export class FIELD extends SCHEMA {
-
-    unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
-    //repeated        // if true, the field can occur multiple times in an item
-
-    virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
-
-    derived         // if true, the field's value can be automatically imputed, if missing,
-                    // through a call to item._get_XYZ(); only available when multi=false
-    // .persistent
-    // .editable
-    // .hidden
-
-    /*
-      1) derived: transient non-editable hidden; refreshed on item's data change
-      2) imputed: persistent editable displayed; not refreshed ??
-
-      1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
-      2) impute on write
-    */
-}
+// export class FIELD extends SCHEMA {
+//
+//     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
+//     //repeated        // if true, the field can occur multiple times in an item
+//
+//     virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
+//
+//     derived         // if true, the field's value can be automatically imputed, if missing,
+//                     // through a call to item._get_XYZ(); only available when multi=false
+//     // .persistent
+//     // .editable
+//     // .hidden
+//
+//     /*
+//       1) derived: transient non-editable hidden; refreshed on item's data change
+//       2) imputed: persistent editable displayed; not refreshed ??
+//
+//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
+//       2) impute on write
+//     */
+// }
 
 /**********************************************************************************************************************/
 
@@ -658,6 +670,9 @@ export class MAP extends Schema {
     static keys_default   = new STRING()
     static values_default = generic_schema
 
+    get _keys()     { return this.keys || this.constructor.keys_default }
+    get _values()   { return this.values || this.constructor.values_default }
+
     constructor(values, keys, params = {}) {
         super(params)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
@@ -667,8 +682,8 @@ export class MAP extends Schema {
         let type = this.type || Object
         if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
 
-        let schema_keys   = this.keys || this.constructor.keys_default
-        let schema_values = this.values || this.constructor.values_default
+        let schema_keys   = this._keys
+        let schema_values = this._values
         let state = {}
 
         // encode keys & values through predefined field types
@@ -683,8 +698,8 @@ export class MAP extends Schema {
 
         if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
-        let schema_keys   = this.keys || this.constructor.keys_default
-        let schema_values = this.values || this.constructor.values_default
+        let schema_keys   = this._keys
+        let schema_values = this._values
         let d = new (this.type || Object)
 
         // decode keys & values through predefined field types
@@ -695,11 +710,14 @@ export class MAP extends Schema {
         }
         return d
     }
+    collectStyles(styles) {
+        this._keys.collectStyles(styles)
+        this._values.collectStyles(styles)
+    }
+
     toString() {
         let name   = this.constructor.name
-        let keys   = this.keys || this.constructor.keys_default
-        let values = this.values || this.constructor.values_default
-        return `${name}(${values}, ${keys})`
+        return `${name}(${this._values}, ${this._keys})`
     }
 }
 
@@ -736,6 +754,10 @@ export class RECORD extends Schema {
             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[name] || generic_schema
     }
+    collectStyles(styles) {
+        for (let schema of Object.values(this.fields))
+            schema.collectStyles(styles)
+    }
 }
 
 /**********************************************************************************************************************
@@ -755,6 +777,7 @@ export class CATALOG extends Schema {
     values      // common schema of values of an input catalog
 
     get _keys() { return this.keys || this.constructor.keys_default }
+    _schema()   { return this.values || this.constructor.values_default }
 
     constructor(values = null, keys = null, params = {}) {
         super(params)
@@ -816,7 +839,11 @@ export class CATALOG extends Schema {
         }
         return cat
     }
-    _schema() { return this.values || this.constructor.values_default }
+
+    collectStyles(styles) {
+        this._keys.collectStyles(styles)
+        this._schema().collectStyles(styles)
+    }
 
     toString() {
         let name   = this.constructor.name
@@ -826,7 +853,7 @@ export class CATALOG extends Schema {
             return `${name}(${values})`
         else
             return `${name}(${values}, ${keys})`
-        }
+    }
 }
 
 export class DATA extends CATALOG {
@@ -843,6 +870,10 @@ export class DATA extends CATALOG {
         if (!this.fields.hasOwnProperty(key))
             throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[key] || this.constructor.values_default
+    }
+    collectStyles(styles) {
+        for (let schema of Object.values(this.fields))
+            schema.collectStyles(styles)
     }
 }
 
