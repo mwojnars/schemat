@@ -582,58 +582,57 @@ export class FILENAME extends STRING {}
 
 /**********************************************************************************************************************/
 
-// class _ItemWidget extends ValueWidget {
-//
-//     render() {
-//         /* `loaded` function is provided by a HOC wrapper, ItemLoadingHOC. */
-//         let {value: item, loaded} = this.props
-//         if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-//             return SPAN({suppressHydrationWarning: true}, "loading...")
-//
-//         let url  = item.url({raise: false})
-//         let name = item.get('name', '')
-//         let ciid = HTML(item.getStamp({html: false, brackets: false}))
-//
-//         if (name && url) {
-//             let note = item.category.get('name', null)
-//             return SPAN(
-//                 url ? A({href: url}, name) : name,
-//                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-//             )
-//         } else
-//             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-//     }
-// }
-//
-// const ItemLoadingHOC = (component, config = {}) =>
-//     class ItemLoadingWrapper extends React.Component {
-//         constructor(props) {
-//             super(props)
-//             this.state = {missingItems: []}
-//         }
-//         async componentDidMount()  { return this._load() }
-//         async componentDidUpdate() { return this._load() }
-//         async _load() {
-//             if (!this.state.missingItems.length) return
-//             for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
-//             this.setState({missingItems: []})
-//         }
-//         render() {
-//             const loaded = (item) => {
-//                 if (item.loaded) return true
-//                 if (!this.state.missingItems.includes(item))
-//                     this.setState((prev) => ({missingItems: [...prev.missingItems, item]}))
-//                 if (config.raise) throw new ItemNotLoaded()
-//                 return false
-//             }
-//             return e(component, {loaded, ...this.props})
-//         }
-//     }
-//
-// // NOTE: the delayed loading with ItemLoadingHOC() works fine, except it raises a React warning:
-// //   Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
-// //   - likely due to setState() call being passed down to another component and thus leaking outside render() (?)
-// const ItemWidget = ItemLoadingHOC(_ItemWidget)
+class _ItemWidget extends ValueWidget {
+
+    render() {
+        /* `loaded` function is provided by a HOC wrapper, ItemLoadingHOC. */
+        let {value: item, loaded} = this.props
+        if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+            return SPAN({suppressHydrationWarning: true}, "loading...")
+
+        let url  = item.url({raise: false})
+        let name = item.get('name', '')
+        let ciid = HTML(item.getStamp({html: false, brackets: false}))
+
+        if (name && url) {
+            let note = item.category.get('name', null)
+            return SPAN(
+                url ? A({href: url}, name) : name,
+                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+            )
+        } else
+            return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    }
+}
+
+const ItemLoadingHOC = (component, config = {}) =>
+    class ItemLoadingWrapper extends React.Component {
+        constructor(props) {
+            super(props)
+            this.state = {missingItems: []}
+        }
+        async componentDidMount()  { return this._load() }
+        async componentDidUpdate() { return this._load() }
+        async _load() {
+            if (!this.state.missingItems.length) return
+            for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
+            this.setState({missingItems: []})
+        }
+        render() {
+            const loaded = (item) => {
+                if (item.loaded) return true
+                if (!this.state.missingItems.includes(item))
+                    setTimeout(() => this.setState((prev) => ({missingItems: [...prev.missingItems, item]})))
+                    // NOTE: setState() calls must be delayed until after render(), otherwise a React warning is produced:
+                    // Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
+                if (config.raise) throw new ItemNotLoaded()
+                return false
+            }
+            return e(component, {loaded, ...this.props})
+        }
+    }
+
+const ItemWidget = ItemLoadingHOC(_ItemWidget)
 
 
 export class ITEM extends Schema {
@@ -687,27 +686,27 @@ export class ITEM extends Schema {
         return globalThis.registry.getItem([cid, iid])
     }
 
-    widget({value: item}) {
+    // widget({value: item}) {
+    //
+    //     let loaded = useItemLoading()
+    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+    //         return SPAN({suppressHydrationWarning: true}, "loading...")
+    //
+    //     let url  = item.url({raise: false})
+    //     let name = item.get('name', '')
+    //     let ciid = HTML(item.getStamp({html: false, brackets: false}))
+    //
+    //     if (name && url) {
+    //         let note = item.category.get('name', null)
+    //         return SPAN(
+    //             url ? A({href: url}, name) : name,
+    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+    //         )
+    //     } else
+    //         return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    // }
 
-        let loaded = useItemLoading()
-        if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-            return SPAN({suppressHydrationWarning: true}, "loading...")
-
-        let url  = item.url({raise: false})
-        let name = item.get('name', '')
-        let ciid = HTML(item.getStamp({html: false, brackets: false}))
-
-        if (name && url) {
-            let note = item.category.get('name', null)
-            return SPAN(
-                url ? A({href: url}, name) : name,
-                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-            )
-        } else
-            return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-    }
-
-    // static Widget = ItemWidget
+    static Widget = ItemWidget
 }
 
 
