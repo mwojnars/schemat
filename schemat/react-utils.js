@@ -114,6 +114,33 @@ export function useItemLoading(raise = false) {
     return assertLoaded
 }
 
+export const ItemLoadingHOC = (component, config = {}) =>
+    /* ItemLoadingHOC() is a counterpart of useItemLoading() but for class components */
+    class ItemLoadingWrapper extends React.Component {
+        constructor(props) {
+            super(props)
+            this.state = {missingItems: []}
+        }
+        async componentDidMount()  { return this._load() }
+        async componentDidUpdate() { return this._load() }
+        async _load() {
+            if (!this.state.missingItems.length) return
+            for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
+            this.setState({missingItems: []})
+        }
+        render() {
+            const loaded = (item) => {
+                if (item.loaded) return true
+                if (!this.state.missingItems.includes(item))
+                    setTimeout(() => this.setState((prev) => ({missingItems: [...prev.missingItems, item]})))
+                    // NOTE: setState() calls must be delayed until after render(), otherwise a React warning is produced:
+                    // Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
+                if (config.raise) throw new ItemNotLoaded()
+                return false
+            }
+            return e(component, {loaded, ...this.props})
+        }
+    }
 
 /*************************************************************************************************/
 
