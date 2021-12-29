@@ -1,6 +1,6 @@
 import {e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
-import { React, useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
-import { T, truncate, DataError } from './utils.js'
+import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render } from './react-utils.js'
+import {T, truncate, DataError, ItemNotLoaded} from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
@@ -12,8 +12,8 @@ import { Catalog } from './data.js'
  */
 
 class Styles {
-    /* Collection of CSS snippets that are added one by one with add() and then deduplicated
-       and converted to a single snippet in get().
+    /* Collection of CSS snippets that are appended one by one with add() and then deduplicated
+       and converted to a single snippet in getCSS().
      */
     styles = new Set()
 
@@ -50,33 +50,37 @@ class GenericValue extends ValueWidget {
 
 class StringValue extends React.Component {
 
-    empty()             { return  I({style: {opacity: 0.3}}, "(empty)") }
-    view(value, show)   { return DIV({onDoubleClick: show}, value || this.empty()) }
+    constructor(props) {
+        super(props)
+        this.state  = {editing: false, currentValue: props.value}
+        this.editor = createRef()
+    }
 
-    edit(value, hide, ref) {
-        return INPUT({defaultValue: value, ref: ref, onBlur: hide,
+    empty()         { return I({style: {opacity: 0.3}}, "(empty)") }
+    view(show)      { return DIV({onDoubleClick: show}, this.state.value || this.empty()) }
+
+    edit(hide) {
+        return INPUT({defaultValue: this.state.value, ref: this.editor, onBlur: hide,
                 onKeyDown: (e) => this.acceptKey(e) && hide(e),
                 autoFocus: true, type: "text", style: {width:"100%"}}
         )
     }
-    acceptKey(event) { return ["Enter","Escape"].includes(event.key) }      // returns true if a given event.key should accept a new value after changes
+
+    // returns true if a given event.key should accept a new value after changes
+    acceptKey(event)    { return ["Enter","Escape"].includes(event.key) }
 
     render({value, save}) {
-        let [editing, setEditing] = useState(false)
-        let [currentValue, setValue] = useState(value)
-        let editor = useRef(null)
-
-        const show = (e) => setEditing(true)    // editor.current.focus()
+        const show = (e) => this.setState({editing: true})    // editor.current.focus()
         const hide = (e) => {
             // e.preventDefault()
-            setEditing(false)
-            let newValue = editor.current.value
-            if (newValue !== currentValue) {
-                setValue(newValue)
+            this.setState({editing: false})
+            let newValue = this.editor.current.value
+            if (newValue !== this.state.value) {
+                this.setState({value: newValue})
                 save(newValue)
             }
         }
-        return editing ? this.edit(currentValue, hide, editor) : this.view(currentValue, show)
+        return this.state.editing ? this.edit(hide) : this.view(show)
     }
 }
 
@@ -201,7 +205,6 @@ export class Schema {
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
 
-    css             // optional CSS styling for Widget
 
     constructor(params = {}) {
         let {default_, info, multi, blank, type} = params || {}         // params=null is valid
@@ -248,26 +251,38 @@ export class Schema {
         return JSONx.decode(state)
     }
 
-    getStyles() {
-        /* Walk through all nested schema objects and collect their CSS styles to be returned as a Styles instance. */
+    toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
+
+    /***  UI  ***/
+
+    static css      // optional CSS styling for widget()
+    static Widget   // optional reference to a subclass of ValueWidget; if present, it's used instead of widget() method;
+                    // either a `Widget` or `widget()` should be provided by each schema class unless inherited from a base class
+
+    display(props) {
+        let Widget = this.constructor.Widget || this.widget.bind(this)
+        return e(Widget, props)
+    }
+
+    widget({value, save}) {
+        /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
+           `save(newValue)` is a callback that is called after the value has been edited.
+           Subclasses may assume `this` is bound when this function is called.
+         */
+        return value.toString()
+    }
+
+    getStyle() {
+        /* Walk through all nested schema objects and collect their CSS styles to be returned as a Styles instance.
+           Calls this.collectStyles() internally - the latter should be overriden in subclasses instead of this method.
+         */
         let styles = new Styles()
         this.collectStyles(styles)
         return styles
     }
     collectStyles(styles) {
         /* Override in subclasses to provide a custom way of collecting CSS styles, esp. in compound classes with nested schemas. */
-        let css = this.css
-        if (css) styles.add(css)
-    }
-
-    toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
-    display(props)      { return e(this.Widget.bind(this), props) }
-
-    Widget({value, save}) {
-        /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
-           `save(newValue)` is a callback that is called after the value has been edited.
-         */
-        return value.toString()
+        styles.add(this.constructor.css)
     }
 }
 
@@ -305,7 +320,7 @@ export class GENERIC extends Schema {
             // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return obj
     }
-    Widget({value}) {
+    widget({value}) {
         let state = this.encode(value)
         return JSON.stringify(state)            // GENERIC displays raw JSON representation of a value
     }
@@ -319,15 +334,12 @@ export let generic_schema = new GENERIC()
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
-    // display(props) {
-    // }
-
-    css = `
+    static css = `
         .Schema.SCHEMA .default {color: #888;}
         .Schema.SCHEMA .info {font-style: italic;}
     `
 
-    Widget({value}) {
+    widget({value}) {
         let schema = value
         let defalt = `${schema.default}`
         return SPAN({className: 'Schema SCHEMA'},
@@ -352,9 +364,15 @@ export class SCHEMA extends GENERIC {
 //
 //     derived         // if true, the field's value can be automatically imputed, if missing,
 //                     // through a call to item._get_XYZ(); only available when multi=false
-//     // .persistent
-//     // .editable
-//     // .hidden
+//     persistent
+//     editable
+//     hidden
+//
+//     slow             // 1 means the field is stored in a separate "slow" column group #1 to allow faster loading
+//                      // of remaining fields stored in group #0 ("core" group, "fast" group);
+//                      // with large fields moved out to a "slow" group, these operations may become faster:
+//                      // - (partial) loading of an item's core fields, but only when slow fields are large: ~2x disk block size or more
+//                      // - category scan inside each table-partition; important for mapsort pipelines (!)
 //
 //     /*
 //       1) derived: transient non-editable hidden; refreshed on item's data change
@@ -417,9 +435,9 @@ export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
 
-    EmptyValue() { return  I({style: {opacity: 0.3}}, "(empty)") }
+    EmptyValue() { return I({style: {opacity: 0.3}}, "(empty)") }
 
-    Widget({value, save}) {
+    widget({value, save}) {
         let [editing, setEditing] = useState(false)
         let [currentValue, setValue] = useState(value)
         let editor = useRef(null)
@@ -512,7 +530,7 @@ export class CODE extends TEXT
         useWorker:              false,      // disable syntax checker and warnings
     };
 
-    Widget({value, save}) {
+    widget({value, save}) {
         let [editing, setEditing] = useState(false)
         let [currentValue, setValue] = useState(value)
         let editor_div = useRef(null)
@@ -563,6 +581,60 @@ export class FILENAME extends STRING {}
 
 
 /**********************************************************************************************************************/
+
+// class _ItemWidget extends ValueWidget {
+//
+//     render() {
+//         /* `loaded` function is provided by a HOC wrapper, ItemLoadingHOC. */
+//         let {value: item, loaded} = this.props
+//         if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+//             return SPAN({suppressHydrationWarning: true}, "loading...")
+//
+//         let url  = item.url({raise: false})
+//         let name = item.get('name', '')
+//         let ciid = HTML(item.getStamp({html: false, brackets: false}))
+//
+//         if (name && url) {
+//             let note = item.category.get('name', null)
+//             return SPAN(
+//                 url ? A({href: url}, name) : name,
+//                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+//             )
+//         } else
+//             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+//     }
+// }
+//
+// const ItemLoadingHOC = (component, config = {}) =>
+//     class ItemLoadingWrapper extends React.Component {
+//         constructor(props) {
+//             super(props)
+//             this.state = {missingItems: []}
+//         }
+//         async componentDidMount()  { return this._load() }
+//         async componentDidUpdate() { return this._load() }
+//         async _load() {
+//             if (!this.state.missingItems.length) return
+//             for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
+//             this.setState({missingItems: []})
+//         }
+//         render() {
+//             const loaded = (item) => {
+//                 if (item.loaded) return true
+//                 if (!this.state.missingItems.includes(item))
+//                     this.setState((prev) => ({missingItems: [...prev.missingItems, item]}))
+//                 if (config.raise) throw new ItemNotLoaded()
+//                 return false
+//             }
+//             return e(component, {loaded, ...this.props})
+//         }
+//     }
+//
+// // NOTE: the delayed loading with ItemLoadingHOC() works fine, except it raises a React warning:
+// //   Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
+// //   - likely due to setState() call being passed down to another component and thus leaking outside render() (?)
+// const ItemWidget = ItemLoadingHOC(_ItemWidget)
+
 
 export class ITEM extends Schema {
     /*
@@ -615,7 +687,7 @@ export class ITEM extends Schema {
         return globalThis.registry.getItem([cid, iid])
     }
 
-    Widget({value: item}) {
+    widget({value: item}) {
 
         let loaded = useItemLoading()
         if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
@@ -634,7 +706,10 @@ export class ITEM extends Schema {
         } else
             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     }
+
+    // static Widget = ItemWidget
 }
+
 
 /**********************************************************************************************************************
  **

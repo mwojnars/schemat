@@ -102,7 +102,7 @@ class Classpath {
         under different names (paths), the most recently assigned path is returned.
         */
         let path = this.inverse.get(obj)
-        if (path === undefined) throw new Error(`Not in classpath: ${obj.name ?? obj}`)
+        if (path === undefined) throw new Error(`Not in classpath: ${obj.name || obj}`)
         return path
     }
     decode(path) {

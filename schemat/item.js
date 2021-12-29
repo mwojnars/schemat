@@ -300,7 +300,7 @@ export class Item {
         assert(this.category)
         return this.category.temp('schema')                         // calls _temp_schema() of this.category
     }
-    getStyles() {
+    getStyle() {
         /* Return CSS styles, as a Styles instance, that are needed to display data through this item's schema. */
         assert(this.category)
         return this.category.temp('styles')                         // calls _temp_styles() of this.category
@@ -529,7 +529,7 @@ export class Item {
         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
         this.assertLoaded()
         let data = this.data
-        let styles = this.getStyles()
+        let styles = this.getStyle()
         let changes = new Changes(this)
         let catalog = e(data.Table.bind(data), {
             item:           this,
@@ -661,7 +661,7 @@ export class Category extends Item {
     }
     _temp_styles() {
         let schema = this.temp('schema')
-        return schema.getStyles()
+        return schema.getStyle()
     }
     _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
