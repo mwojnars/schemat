@@ -48,6 +48,10 @@ class Layout extends Widget {
 
 class ValueWidget extends Widget {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
+    static defaultProps = {
+        value: undefined,           // value object to be displayed by render()
+        save:  undefined,           // function save(newValue) called after edit
+    }
 }
 
 class GenericValue extends ValueWidget {
@@ -263,18 +267,9 @@ export class Schema {
 
     // Clients should use getStyle() and display(), the other methods & attrs are internal ...
 
-    static Widget       // subclass of ValueWidget to display and edit values of this schema; used instead of widget() if present;
-                        // either a `Widget` or `widget()` is needed in each schema class unless inherited from a base class
-
-    static get style()    {
-        /* CSS styling of this schema's widget, as a string; can be replaced with: static css = ... */
-        return this.Widget?.style()
-    }
-
-    display(props) {
-        let Widget = this.constructor.Widget || this.widget.bind(this)
-        return e(Widget, props)
-    }
+    static Widget       // subclass of ValueWidget to display and edit values of this schema; if missing, widget() is used instead;
+                        // either a `Widget` or `widget()` is needed in each schema class unless inherited from a base class;
+                        // a Widget defined in one Schema class can be reused in another, or in a different context whatsoever
 
     widget({value, save}) {
         /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
@@ -282,6 +277,16 @@ export class Schema {
            Subclasses may assume `this` is bound when this function is called.
          */
         return value.toString()
+    }
+
+    display(props) {
+        let Widget = this.constructor.Widget || this.widget.bind(this)
+        return e(Widget, props)
+    }
+
+    static get style()    {
+        /* CSS styling of this schema's widget, as a string; can be replaced with: static css = ... */
+        return this.Widget?.style()
     }
 
     getStyle() {
@@ -347,26 +352,6 @@ export let generic_schema = new GENERIC()
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
-    // static style = `
-    //     .Schema.SCHEMA .default {color: #888;}
-    //     .Schema.SCHEMA .info {font-style: italic;}
-    // `
-    //
-    // widget({value}) {
-    //     let schema = value
-    //     let defalt = `${schema.default}`
-    //     return SPAN({className: 'Schema SCHEMA'},
-    //             `${schema}`,
-    //             schema.default !== undefined &&
-    //                 SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
-    //                     ` (${truncate(defalt,100)})`),
-    //             schema.info &&
-    //                 SPAN({className: 'info'}, ` • ${schema.info}`),
-    //                 // smaller dot: &middot;
-    //                 // larger dot: •
-    //     )
-    // }
-
     static Widget = class extends ValueWidget {
         static style(scope = '.Schema.SCHEMA') {
             return `
@@ -389,6 +374,26 @@ export class SCHEMA extends GENERIC {
             )
         }
     }
+
+    // static style = `
+    //     .Schema.SCHEMA .default {color: #888;}
+    //     .Schema.SCHEMA .info {font-style: italic;}
+    // `
+    //
+    // widget({value}) {
+    //     let schema = value
+    //     let defalt = `${schema.default}`
+    //     return SPAN({className: 'Schema SCHEMA'},
+    //             `${schema}`,
+    //             schema.default !== undefined &&
+    //                 SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
+    //                     ` (${truncate(defalt,100)})`),
+    //             schema.info &&
+    //                 SPAN({className: 'info'}, ` • ${schema.info}`),
+    //                 // smaller dot: &middot;
+    //                 // larger dot: •
+    //     )
+    // }
 }
 
 // export class FIELD extends SCHEMA {
