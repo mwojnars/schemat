@@ -48,15 +48,6 @@
             value:
               isCatalog: true
               values:
-                css: "
-
-                  \        .Schema.SCHEMA .default {color:
-                  #888;}
-
-                  \        .Schema.SCHEMA .info {font-style:
-                  italic;}
-
-                  \    "
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
           - key: cache_ttl

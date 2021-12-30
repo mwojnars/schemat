@@ -318,29 +318,25 @@ export class Schema {
  */
 
 export class GENERIC extends Schema {
-    /* Accept objects of any class, optionally restricted to the objects whose class constructor is this.type. */
+    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
 
-    // constructor(params = {}) {
-    //     super(params)
-    //     let types = params.type ? [params.type] : []
-    //     if (T.isClass(types)) types = [types]           // wrap up a singleton type in an array
-    //     if (types.length) this.types = types            // base type(s) for inheritance checks: obj instanceof T
-    // }
+    get _type() { return this.type || this.constructor.type }
+
     valid(obj) {
-        return !this.type || obj instanceof this.type
+        return !this._type || obj instanceof this._type
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
     encode(obj) {
         if (!this.valid(obj))
-            throw new DataError(`invalid object type, expected an instance of ${this.type}, got ${obj} instead`)
+            throw new DataError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
             // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return JSONx.encode(obj)
     }
     decode(state) {
         let obj = JSONx.decode(state)
         if (!this.valid(obj))
-            throw new DataError(`invalid object type after decoding, expected an instance of ${this.type}, got ${obj} instead`)
+            throw new DataError(`invalid object type after decoding, expected an instance of ${this._type}, got ${obj} instead`)
             // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return obj
     }
@@ -353,10 +349,11 @@ export class GENERIC extends Schema {
 // the most generic schema for encoding/decoding of objects of any types
 export let generic_schema = new GENERIC()
 
+
 /**********************************************************************************************************************/
 
 export class SCHEMA extends GENERIC {
-    static types = [Schema]
+    static type = Schema
 
     static Widget = class extends GENERIC.Widget {
         static style(scope = '.Schema.SCHEMA') {
