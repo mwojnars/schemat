@@ -46,15 +46,7 @@ class Layout extends Widget {
 
 /**********************************************************************************************************************/
 
-class ValueWidget extends Widget {
-    /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
-    static defaultProps = {
-        value: undefined,           // value object to be displayed by render()
-        save:  undefined,           // function save(newValue) to be called after edit
-    }
-}
-
-class StringValue extends ValueWidget {
+class StringValue extends Widget {
 
     constructor(props) {
         super(props)
@@ -502,16 +494,51 @@ export class Textual extends Primitive {
 
 export class STRING extends Textual
 {
-    View(value, show) {
-        return DIV({onDoubleClick: show}, value || this.EmptyValue())
+    static Widget = class extends Textual.Widget {
+
+        constructor(props) {
+            super(props)
+            this.state  = {editing: false, value: props.value}
+            this.editor = createRef()
+        }
+
+        empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
+        view()      { return DIV({onDoubleClick: (e) => this.show(e)}, this.state.value || this.empty()) }
+
+        edit() {
+            let hide = (e) => this.hide(e)
+            return INPUT({defaultValue: this.state.value, ref: this.editor, onBlur: hide,
+                    onKeyDown: (e) => this.acceptKey(e) && hide(e),
+                    autoFocus: true, type: "text", style: {width:"100%"}}
+            )
+        }
+
+        // returns true if a given event.key should accept a new value after changes
+        acceptKey(event)    { return ["Enter","Escape"].includes(event.key) }
+
+        show(e) { this.setState({editing: true}) }      //editor.current.focus()
+        hide(e) {
+            // e.preventDefault()
+            this.setState({editing: false})
+            let newValue = this.editor.current.value
+            if (newValue !== this.state.value) {
+                this.setState({value: newValue})
+                this.props.save(newValue)
+            }
+        }
+        render() { return this.state.editing ? this.edit() : this.view() }
     }
-    Edit(value, hide, ref) {
-        return INPUT({defaultValue: value, ref: ref, onBlur: hide,
-                onKeyDown: (e) => this.acceptKey(e) && hide(e),
-                autoFocus: true, type: "text", style: {width:"100%"}}
-        )
-    }
-    acceptKey(event) { return ["Enter","Escape"].includes(event.key) }
+
+    // View(value, show) {
+    //     return DIV({onDoubleClick: show}, value || this.EmptyValue())
+    // }
+    // Edit(value, hide, ref) {
+    //     return INPUT({defaultValue: value, ref: ref, onBlur: hide,
+    //             onKeyDown: (e) => this.acceptKey(e) && hide(e),
+    //             autoFocus: true, type: "text", style: {width:"100%"}}
+    //     )
+    // }
+    // acceptKey(event) { return ["Enter","Escape"].includes(event.key) }
 }
 
 export class TEXT extends Textual
