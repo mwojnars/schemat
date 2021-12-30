@@ -723,7 +723,7 @@ export class Category extends Item {
     }
     NewItem({itemAdded}) {
 
-        let form  = useRef(null)
+        let form = useRef(null)
 
         const setFormDisabled = (disabled) => {
             let fieldset = form.current?.getElementsByTagName('fieldset')[0]
@@ -743,10 +743,10 @@ export class Category extends Item {
 
             let record = await this.remote_new(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
+                form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
                 let item = await this.registry.getItem([record.cid, record.iid])
                 itemAdded(item)
-                form.current.reset()            // clear input fields
             }
             setFormDisabled(false)
         }
