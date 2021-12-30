@@ -50,7 +50,7 @@ class ValueWidget extends Widget {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
     static defaultProps = {
         value: undefined,           // value object to be displayed by render()
-        save:  undefined,           // function save(newValue) called after edit
+        save:  undefined,           // function save(newValue) to be called after edit
     }
 }
 
@@ -265,23 +265,38 @@ export class Schema {
 
     /***  UI  ***/
 
-    // Clients should use getStyle() and display(), the other methods & attrs are internal ...
+    // Clients should call getStyle() and display(), other methods & attrs are for internal use ...
 
-    static Widget       // subclass of ValueWidget to display and edit values of this schema; if missing, widget() is used instead;
+    //static Widget     // subclass of ValueWidget to display and edit values of this schema; if missing, widget() is used instead;
                         // either a `Widget` or `widget()` is needed in each schema class unless inherited from a base class;
                         // a Widget defined in one Schema class can be reused in another, or in a different context whatsoever
 
+    static Widget = class extends Widget {
+        /* Base class for UI widgets that display and let users edit atomic (non-catalog) values of a particular schema.
+           The default implementation falls back to a functional implementation, schema.widget().
+         */
+        static defaultProps = {
+            schema: undefined,          // parent Schema instance
+            value:  undefined,          // value object to be displayed by render()
+            save:   undefined,          // function save(newValue) to be called after edit
+        }
+        render() {
+            let {schema, ...props} = this.props
+            return e(schema.widget.bind(schema), props)
+        }
+    }
+
     widget({value, save}) {
-        /* React functional component that displays a `value` of an item's field and (possibly) allows its editing.
-           `save(newValue)` is a callback that is called after the value has been edited.
+        /* Functional component that is used in place of Widget if the latter is missing in a subclass.
            Subclasses may assume `this` is bound when this function is called.
          */
         return value.toString()
     }
 
     display(props) {
-        let Widget = this.constructor.Widget || this.widget.bind(this)
-        return e(Widget, props)
+        return e(this.constructor.Widget, {schema: this, ...props})
+        // let Widget = this.constructor.Widget || this.widget.bind(this)
+        // return e(Widget, props)
     }
 
     static get style()    {
@@ -499,8 +514,6 @@ export class Textual extends Primitive {
 
 export class STRING extends Textual
 {
-
-
     View(value, show) {
         return DIV({onDoubleClick: show}, value || this.EmptyValue())
     }
