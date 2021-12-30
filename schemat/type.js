@@ -54,11 +54,7 @@ class ValueWidget extends Widget {
     }
 }
 
-class GenericValue extends ValueWidget {
-    /*  */
-}
-
-class StringValue extends React.Component {
+class StringValue extends ValueWidget {
 
     constructor(props) {
         super(props)
@@ -267,10 +263,6 @@ export class Schema {
 
     // Clients should call getStyle() and display(), other methods & attrs are for internal use ...
 
-    //static Widget     // subclass of ValueWidget to display and edit values of this schema; if missing, widget() is used instead;
-                        // either a `Widget` or `widget()` is needed in each schema class unless inherited from a base class;
-                        // a Widget defined in one Schema class can be reused in another, or in a different context whatsoever
-
     static Widget = class extends Widget {
         /* Base class for UI widgets that display and let users edit atomic (non-catalog) values of a particular schema.
            The default implementation falls back to a functional implementation, schema.widget().
@@ -278,7 +270,7 @@ export class Schema {
         static defaultProps = {
             schema: undefined,          // parent Schema instance
             value:  undefined,          // value object to be displayed by render()
-            save:   undefined,          // function save(newValue) to be called after edit
+            save:   undefined,          // function save(newValue) to be called after `value` was edited by user
         }
         render() {
             let {schema, ...props} = this.props
@@ -286,11 +278,11 @@ export class Schema {
         }
     }
 
-    widget({value, save}) {
+    widget(props) {
         /* Functional component that is used in place of Widget if the latter is missing in a subclass.
            Subclasses may assume `this` is bound when this function is called.
          */
-        return value.toString()
+        return props.value.toString()
     }
 
     display(props) {
@@ -326,8 +318,7 @@ export class Schema {
  */
 
 export class GENERIC extends Schema {
-    /* Accepts objects of any class, optionally restricted to objects whose class constructor is this.type. */
-    // get _types() { return this.types || this.constructor.types || [] }
+    /* Accept objects of any class, optionally restricted to the objects whose class constructor is this.type. */
 
     // constructor(params = {}) {
     //     super(params)
@@ -367,7 +358,7 @@ export let generic_schema = new GENERIC()
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
-    static Widget = class extends ValueWidget {
+    static Widget = class extends GENERIC.Widget {
         static style(scope = '.Schema.SCHEMA') {
             return `
             ${scope} .default { color: #888; }
@@ -710,7 +701,7 @@ export class ITEM extends Schema {
             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     }
 
-    // static Widget = ItemLoadingHOC(class extends ValueWidget {
+    // static Widget = ItemLoadingHOC(class extends React.Component {
     //     render() {
     //         let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
     //         if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
@@ -729,7 +720,7 @@ export class ITEM extends Schema {
     //         } else
     //             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
     //     }
-    // }, {class: ValueWidget})
+    // }, {class: Schema.Widget})
 }
 
 
