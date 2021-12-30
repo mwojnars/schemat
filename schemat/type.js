@@ -1,6 +1,6 @@
 import {e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
 import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
-import {T, truncate, DataError, ItemNotLoaded} from './utils.js'
+import {T, assert, truncate, DataError, ItemNotLoaded} from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
@@ -25,22 +25,28 @@ class Styles {
 /**********************************************************************************************************************/
 
 class Widget extends React.Component {
-    css(basePath, props = {}) {
-        /* Optional CSS styling that should be included at least once in a page along with the widget. */
+    static style(scope = null, props = {}) {
+        /* Optional CSS styling that should be included at least once in a page along with the widget.
+           Parameterized by the CSS `scope`: a string that's prepended to all selectors for better scoping.
+         */
     }
 }
 
 class Layout extends Widget {
-    render({blocks}) {
-        /* Takes a number of named blocks, e.g.: head, foot, main, side ... and places them in predefined
-           positions on a page.
-         */
+    /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
+       positions on a page.
+     */
+    static defaultProps = {
+        blocks: {},             // named blocks, e.g.: head, foot, main, side ... to be placed on a page
+    }
+    render() {
+        let {blocks} = this.props
     }
 }
 
 /**********************************************************************************************************************/
 
-class ValueWidget extends React.Component {
+class ValueWidget extends Widget {
     /* Base class for UI widgets that display and let users edit an atomic value of a particular schema. */
 }
 
@@ -255,9 +261,15 @@ export class Schema {
 
     /***  UI  ***/
 
-    static css      // optional CSS styling for widget()
-    static Widget   // optional reference to a subclass of ValueWidget; if present, it's used instead of widget() method;
-                    // either a `Widget` or `widget()` should be provided by each schema class unless inherited from a base class
+    // Clients should use getStyle() and display(), the other methods & attrs are internal ...
+
+    static Widget       // subclass of ValueWidget to display and edit values of this schema; used instead of widget() if present;
+                        // either a `Widget` or `widget()` is needed in each schema class unless inherited from a base class
+
+    static get style()    {
+        /* CSS styling of this schema's widget, as a string; can be replaced with: static css = ... */
+        return this.Widget?.style()
+    }
 
     display(props) {
         let Widget = this.constructor.Widget || this.widget.bind(this)
@@ -273,16 +285,17 @@ export class Schema {
     }
 
     getStyle() {
-        /* Walk through all nested schema objects and collect their CSS styles to be returned as a Styles instance.
-           Calls this.collectStyles() internally - the latter should be overriden in subclasses instead of this method.
+        /* Walk through all nested schema objects, collect their CSS styles and return as a Styles instance.
+           this.collectStyles() is called internally - it should be overriden in subclasses instead of this method.
          */
-        let styles = new Styles()
-        this.collectStyles(styles)
-        return styles
+        let style = new Styles()
+        this.collectStyles(style)
+        return style
     }
     collectStyles(styles) {
-        /* Override in subclasses to provide a custom way of collecting CSS styles, esp. in compound classes with nested schemas. */
-        styles.add(this.constructor.css)
+        /* Internal method. Override in subclasses to provide a custom way of collecting CSS styles,
+           esp. in compound classes with nested schemas. */
+        styles.add(this.constructor.style)
     }
 }
 
@@ -334,24 +347,47 @@ export let generic_schema = new GENERIC()
 export class SCHEMA extends GENERIC {
     static types = [Schema]
 
-    static css = `
-        .Schema.SCHEMA .default {color: #888;}
-        .Schema.SCHEMA .info {font-style: italic;}
-    `
+    // static style = `
+    //     .Schema.SCHEMA .default {color: #888;}
+    //     .Schema.SCHEMA .info {font-style: italic;}
+    // `
+    //
+    // widget({value}) {
+    //     let schema = value
+    //     let defalt = `${schema.default}`
+    //     return SPAN({className: 'Schema SCHEMA'},
+    //             `${schema}`,
+    //             schema.default !== undefined &&
+    //                 SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
+    //                     ` (${truncate(defalt,100)})`),
+    //             schema.info &&
+    //                 SPAN({className: 'info'}, ` • ${schema.info}`),
+    //                 // smaller dot: &middot;
+    //                 // larger dot: •
+    //     )
+    // }
 
-    widget({value}) {
-        let schema = value
-        let defalt = `${schema.default}`
-        return SPAN({className: 'Schema SCHEMA'},
-                `${schema}`,
-                schema.default !== undefined &&
-                    SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
-                        ` (${truncate(defalt,100)})`),
-                schema.info &&
-                    SPAN({className: 'info'}, ` • ${schema.info}`),
-                    // smaller dot: &middot;
-                    // larger dot: •
-        )
+    static Widget = class extends ValueWidget {
+        static style(scope = '.Schema.SCHEMA') {
+            return `
+            ${scope} .default { color: #888; }
+            ${scope} .info { font-style: italic; }
+        `}
+
+        render() {
+            let {value: schema} = this.props
+            let defalt = `${schema.default}`
+            return SPAN({className: 'Schema SCHEMA'},
+                    `${schema}`,
+                    schema.default !== undefined &&
+                        SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
+                            ` (${truncate(defalt,100)})`),
+                    schema.info &&
+                        SPAN({className: 'info'}, ` • ${schema.info}`),
+                        // smaller dot: &middot;
+                        // larger dot: •
+            )
+        }
     }
 }
 
@@ -458,6 +494,8 @@ export class Textual extends Primitive {
 
 export class STRING extends Textual
 {
+
+
     View(value, show) {
         return DIV({onDoubleClick: show}, value || this.EmptyValue())
     }
@@ -469,6 +507,7 @@ export class STRING extends Textual
     }
     acceptKey(event) { return ["Enter","Escape"].includes(event.key) }
 }
+
 export class TEXT extends Textual
 {
     View(value, show) {
@@ -582,29 +621,6 @@ export class FILENAME extends STRING {}
 
 /**********************************************************************************************************************/
 
-const ItemWidget = ItemLoadingHOC(
-    class extends ValueWidget {
-        render() {
-            let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
-            if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-                return SPAN({suppressHydrationWarning: true}, "loading...")
-
-            let url  = item.url({raise: false})
-            let name = item.get('name', '')
-            let ciid = HTML(item.getStamp({html: false, brackets: false}))
-
-            if (name && url) {
-                let note = item.category.get('name', null)
-                return SPAN(
-                    url ? A({href: url}, name) : name,
-                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-                )
-            } else
-                return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-        }
-    })
-
-
 export class ITEM extends Schema {
     /*
     Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
@@ -656,27 +672,46 @@ export class ITEM extends Schema {
         return globalThis.registry.getItem([cid, iid])
     }
 
-    // widget({value: item}) {
-    //
-    //     let loaded = useItemLoading()
-    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-    //         return SPAN({suppressHydrationWarning: true}, "loading...")
-    //
-    //     let url  = item.url({raise: false})
-    //     let name = item.get('name', '')
-    //     let ciid = HTML(item.getStamp({html: false, brackets: false}))
-    //
-    //     if (name && url) {
-    //         let note = item.category.get('name', null)
-    //         return SPAN(
-    //             url ? A({href: url}, name) : name,
-    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-    //         )
-    //     } else
-    //         return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-    // }
+    widget({value: item}) {
 
-    static Widget = ItemWidget
+        let loaded = useItemLoading()
+        if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+            return SPAN({suppressHydrationWarning: true}, "loading...")
+
+        let url  = item.url({raise: false})
+        let name = item.get('name', '')
+        let ciid = HTML(item.getStamp({html: false, brackets: false}))
+
+        if (name && url) {
+            let note = item.category.get('name', null)
+            return SPAN(
+                url ? A({href: url}, name) : name,
+                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+            )
+        } else
+            return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    }
+
+    // static Widget = ItemLoadingHOC(class extends ValueWidget {
+    //     render() {
+    //         let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
+    //         if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+    //             return SPAN({suppressHydrationWarning: true}, "loading...")
+    //
+    //         let url  = item.url({raise: false})
+    //         let name = item.get('name', '')
+    //         let ciid = HTML(item.getStamp({html: false, brackets: false}))
+    //
+    //         if (name && url) {
+    //             let note = item.category.get('name', null)
+    //             return SPAN(
+    //                 url ? A({href: url}, name) : name,
+    //                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+    //             )
+    //         } else
+    //             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    //     }
+    // }, {class: ValueWidget})
 }
 
 

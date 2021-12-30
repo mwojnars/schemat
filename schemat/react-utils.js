@@ -114,9 +114,9 @@ export function useItemLoading(raise = false) {
     return assertLoaded
 }
 
-export const ItemLoadingHOC = (component, config = {}) =>
+export const ItemLoadingHOC = (component, config = {raise: false, class: React.Component}) =>
     /* ItemLoadingHOC() is a counterpart of useItemLoading() but for class components */
-    class ItemLoadingWrapper extends React.Component {
+    class ItemLoadingWrapper extends (config.class) {
         constructor(props) {
             super(props)
             this.state = {missingItems: []}
