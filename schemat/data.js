@@ -387,13 +387,15 @@ export class Catalog {
         /* A table row containing an atomic entry: a key and its value (not a subcatalog).
            The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
          */
+        let [current, setCurrent] = useState(value)
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
             await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
+            setCurrent(newValue)
         }
         return FRAGMENT(
                   TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)),
-                  TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value, save}))),
+                  TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
                )
     }
 }

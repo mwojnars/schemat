@@ -1,6 +1,6 @@
-import {e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML} from './react-utils.js'
+import { e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML } from './react-utils.js'
 import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
-import {T, assert, truncate, DataError, ItemNotLoaded} from './utils.js'
+import { T, assert, print, truncate, DataError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
@@ -331,33 +331,45 @@ export class Textual extends Primitive {
     static Widget = class extends Primitive.Widget {
         constructor(props) {
             super(props)
-            this.state  = {editing: false, value: props.value}
-            this.editor = createRef()
-        }
-        empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
-        view()      { return DIV({onDoubleClick: e => this.show(e)}, this.state.value || this.empty()) }
-        edit() {
-            let hide = (e) => this.hide(e)
-            return INPUT({defaultValue: this.state.value, ref: this.editor, onBlur: hide,
-                    onKeyDown: e => this.acceptKey(e) && hide(e),
-                    autoFocus: true, type: "text", style: {width:"100%"}}
-            )
-        }
-
-        // returns true if a given event.key should accept a new value after changes
-        acceptKey(e)    { return ["Enter","Escape"].includes(e.key) }
-
-        show(e) { this.setState({editing: true}) }      //editor.current.focus()
-        hide(e) {
-            // e.preventDefault()
-            this.setState({editing: false})
-            let newValue = this.editor.current.value
-            if (newValue !== this.state.value) {
-                this.setState({value: newValue})
-                this.props.save(newValue)
+            this.input = createRef()
+            this.state = {
+                editing: false,
+                value:   props.value,       // internal state of the editor preserved by close() even after rejection (!)
             }
         }
-        render() { return this.state.editing ? this.edit() : this.view() }
+        empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
+        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.props.value || this.empty()) }
+        editor()    { return INPUT({
+                        defaultValue:   this.state.value, 
+                        ref:            this.input, 
+                        onKeyDown:      e => this.key(e),
+                        onBlur:         e => this.reject(e),
+                        autoFocus:      true,
+                        type:           "text", 
+                        style:          {width: "100%"},
+                        })
+                    }
+
+        key(e)          { if(this.keyAccept(e)) this.accept(e); else if(this.keyReject(e)) this.reject(e) }
+        keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
+        keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
+
+        // confirm()
+        accept(e) {
+            // e.preventDefault()
+            let value = this.value()
+            this.close(value)
+            this.save(value)
+            print("accepted")
+        }
+        reject(e)       { this.close(this.value()); print("rejected") }     // rejected value is still preserved in state.value and reused on next open()
+
+        open(e)         { this.setState({editing: true})  }                             // activate the editor and editing mode
+        close(value)    { this.setState({editing: false, value}) }                      // close the editor and editing mode
+        save(value)     { if (value !== this.props.value) this.props.save(value) }      // notify a new value to the parent
+        value()         { return this.input.current.value }                             // retrieve an edited value from the editor
+
+        render()        { return this.state.editing ? this.editor() : this.viewer() }
     }
 }
 
@@ -366,24 +378,25 @@ export class STRING extends Textual {}
 export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
-        view() {
-            return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.show(e)},
-                this.state.value || this.empty()
+        viewer() {
+            return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)},
+                this.props.value || this.empty()
             ))
         }
-        edit() {
+        editor() {
             return PRE(TEXTAREA({
                 defaultValue:   this.state.value,
-                ref:            this.editor,
-                // onBlur:         e => this.hide(e),
-                onKeyDown:      e => this.acceptKey(e) && this.hide(e),
+                ref:            this.input,
+                onKeyDown:      e => this.key(e),
+                onBlur:         e => this.reject(e),
                 autoFocus:      true,
                 rows:           1,
                 wrap:           'off',
                 style:          {width:'100%', height:'10em'}
             }))
         }
-        acceptKey(e)    { return e.key === "Escape" || (e.key === "Enter" && e.shiftKey) }
+        keyAccept(e)    { return e.key === "Enter" && (e.shiftKey || e.ctrlKey) }
+        keyReject(e)    { return e.key === "Escape" }
     }
 }
 export class CODE extends TEXT
@@ -430,55 +443,49 @@ export class CODE extends TEXT
             useWorker:              false,      // disable syntax checker and warnings
         }
 
-        editor_ace                              // an object of the ACE editor
+        editorAce                               // an ACE editor object
         observer                                // a ResizeObserver to watch for user resizing the editor box
 
-        edit() {
+        editor() {
             return DIV({
                 defaultValue:   this.state.value,
-                ref:            this.editor,
+                ref:            this.input,
                 autoFocus:      true,
-                onKeyDown:      e => this.acceptKey(e) && this.hide(e),
-                // onBlur:         e => this.hide(e),
+                onKeyDown:      e => this.key(e),
+                onBlur:         e => this.reject(e),
                 className:      "ace-editor",
             })
         }
 
         componentDidUpdate(prevProps, prevState) {
-            /* Create an ACE editor after show(). */
+            /* Create an ACE editor after open(). */
             if (!this.state.editing || this.state.editing === prevState.editing) return
 
-            // viewer_ace = this.create_editor("#view", this.view_options);
-            // viewer_ace.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
-            // viewer_ace.session.setValue(currentValue)
+            // viewerAce = this.create_editor("#view", this.view_options);
+            // viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
+            // viewerAce.session.setValue(currentValue)
 
-            let div = this.editor.current
-            let editor_ace = this.editor_ace = ace.edit(div, this.constructor.editor_options)
-            editor_ace.session.setValue(this.state.value)
-            // editor_ace.setTheme("ace/theme/textmate")
-            // editor_ace.session.setMode("ace/mode/javascript")
+            let div = this.input.current
+            let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
+            editorAce.session.setValue(this.state.value)
+            // editorAce.setTheme("ace/theme/textmate")
+            // editorAce.session.setMode("ace/mode/javascript")
 
-            this.observer = new ResizeObserver(() => editor_ace.resize())
+            this.observer = new ResizeObserver(() => editorAce.resize())
             this.observer.observe(div)                   // allow resizing of the editor box by a user, must update the Ace widget then
 
-            editor_ace.focus()
-            // editor_ace.gotoLine(1)
-            // editor_ace.session.setScrollTop(1)
+            editorAce.focus()
+            // editorAce.gotoLine(1)
+            // editorAce.session.setScrollTop(1)
         }
 
-        hide(e) {
-            this.setState({editing: false})
-            let newValue = this.editor_ace.session.getValue()
-
-            this.editor_ace.destroy()                       // destroy the ACE editor to free up resources
+        value()      { return this.editorAce.session.getValue() }
+        close(value) {
+            super.close(value)
+            this.editorAce.destroy()                   // destroy the ACE editor to free up resources
             this.observer.disconnect()
-            delete this.editor_ace
+            delete this.editorAce
             delete this.observer
-
-            if (newValue !== this.state.value) {            // notify a new value to the parent
-                this.setState({value: newValue})
-                this.props.save(newValue)
-            }
         }
     }
 }
