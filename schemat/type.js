@@ -125,7 +125,7 @@ export class Schema {
     // Clients should call getStyle() and display(), other methods & attrs are for internal use ...
 
     static Widget = class extends Widget {
-        /* Base class for UI widgets that display and let users edit atomic (non-catalog) values of a particular schema.
+        /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values of a specific schema.
            The default implementation falls back to a functional implementation, schema.widget(),
            or utilizes predefined methods, viewer() & editor(), of the subclass.
          */
@@ -156,7 +156,7 @@ export class Schema {
 
         editor() { throw new Error("not implemented") }
         viewer() {
-            /* By default, calls .widget() of a parent schema. Override in subclasses this with a custom viewer implementation. */
+            /* By default, calls .widget() of a parent schema. Override in subclasses with a custom viewer implementation. */
             let {schema, ...props} = this.props
             return e(schema.widget.bind(schema), props)
         }
@@ -176,6 +176,10 @@ export class Schema {
         }
 
         // confirm()
+        key(e) {
+                 if (this.keyAccept(e)) this.accept(e)
+            else if (this.keyReject(e)) this.reject(e)
+        }
         accept(e) {
             // e.preventDefault()
             let value = this.value()
@@ -228,6 +232,23 @@ export class Schema {
     }
 }
 
+class TextWidget extends Schema.Widget {
+    /* Universal text widget that can be configured to display and edit:
+       - strings (one line),
+       - plain text (multiline),
+       - source code (with syntax highlighting),
+       - rich text.
+     */
+    // this.props.editorType = 'string', 'text', 'code' (Ace), 'rich' (~Word)
+    // this.props.editorMode = 'plain', 'json', 'yaml', 'markdown' ...
+    // NOTE: re-mount after props change can be enforced by changing props.key - https://stackoverflow.com/a/48451229/1202674
+}
+
+class ObjectWidget extends Schema.Widget {
+    /* Universal widget for structured data. The viewer displays a css-styled text summary,
+       while the editor is a web form corresponding to the object's schema, displayed inline or in a modal box. */
+}
+
 /**********************************************************************************************************************
  **
  **  ATOMIC schema types
@@ -257,9 +278,13 @@ export class GENERIC extends Schema {
             // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
         return obj
     }
-    widget({value}) {
-        let state = this.encode(value)
-        return JSON.stringify(state)            // GENERIC displays raw JSON representation of a value
+
+    static Widget = class extends Schema.Widget {
+        viewer() {
+            let {value, schema} = this.props
+            let state = schema.encode(value)
+            return JSON.stringify(state)            // GENERIC displays raw JSON representation of a value
+        }
     }
 }
 
@@ -392,7 +417,6 @@ export class Textual extends Primitive {
                         })
                     }
 
-        key(e)          { if(this.keyAccept(e)) this.accept(e); else if(this.keyReject(e)) this.reject(e) }
         keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
         keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
         value()         { return this.input.current.value }     // retrieve an edited value from the editor
@@ -568,46 +592,46 @@ export class ITEM extends Schema {
         return globalThis.registry.getItem([cid, iid])
     }
 
-    widget({value: item}) {
+    static Widget = ItemLoadingHOC(class extends Schema.Widget {
+        viewer() {
+            let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
+            if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+                return SPAN({suppressHydrationWarning: true}, "loading...")
 
-        let loaded = useItemLoading()
-        if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-            return SPAN({suppressHydrationWarning: true}, "loading...")
+            let url  = item.url({raise: false})
+            let name = item.get('name', '')
+            let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
-        let url  = item.url({raise: false})
-        let name = item.get('name', '')
-        let ciid = HTML(item.getStamp({html: false, brackets: false}))
+            if (name && url) {
+                let note = item.category.get('name', null)
+                return SPAN(
+                    url ? A({href: url}, name) : name,
+                    SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+                )
+            } else
+                return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+        }
+    })
 
-        if (name && url) {
-            let note = item.category.get('name', null)
-            return SPAN(
-                url ? A({href: url}, name) : name,
-                SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-            )
-        } else
-            return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-    }
-
-    // static Widget = ItemLoadingHOC(class extends React.Component {
-    //     render() {
-    //         let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
-    //         if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
-    //             return SPAN({suppressHydrationWarning: true}, "loading...")
+    // widget({value: item}) {
     //
-    //         let url  = item.url({raise: false})
-    //         let name = item.get('name', '')
-    //         let ciid = HTML(item.getStamp({html: false, brackets: false}))
+    //     let loaded = useItemLoading()
+    //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
+    //         return SPAN({suppressHydrationWarning: true}, "loading...")
     //
-    //         if (name && url) {
-    //             let note = item.category.get('name', null)
-    //             return SPAN(
-    //                 url ? A({href: url}, name) : name,
-    //                 SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
-    //             )
-    //         } else
-    //             return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
-    //     }
-    // }, {class: Schema.Widget})
+    //     let url  = item.url({raise: false})
+    //     let name = item.get('name', '')
+    //     let ciid = HTML(item.getStamp({html: false, brackets: false}))
+    //
+    //     if (name && url) {
+    //         let note = item.category.get('name', null)
+    //         return SPAN(
+    //             url ? A({href: url}, name) : name,
+    //             SPAN({style: {fontSize:'80%', paddingLeft:'3px'}, ...(note ? {} : ciid)}, note)
+    //         )
+    //     } else
+    //         return SPAN('[', url ? A({href: url, ...ciid}) : SPAN(ciid), ']')
+    // }
 }
 
 

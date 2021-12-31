@@ -27,6 +27,9 @@ export function cssPrepend(scope, css) {
           cssPrepend(scope)`css`
 
        WARNING: this function is only slightly tested, watch out for corner cases.
+       In particular, it may work incorrectly with some "at-rules" other than @media:
+       https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
+
        Inspired by: https://stackoverflow.com/a/54077142/1202674
      */
 
@@ -184,15 +187,18 @@ export function useItemLoading(raise = false) {
     return assertLoaded
 }
 
-export const ItemLoadingHOC = (component, config = {raise: false, class: React.Component}) =>
-    /* ItemLoadingHOC() is a counterpart of useItemLoading() but for class components */
-    class ItemLoadingWrapper extends (config.class) {
+export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
+    /* Create a subclass of `classComponent` that tracks missing (unloaded) items during render() and loads them in .componentDid*().
+       ItemLoadingHOC() does a similar thing as useItemLoading(), but for class components.
+     */
+    class ItemLoadingWrapper extends classComponent {
         constructor(props) {
             super(props)
-            this.state = {missingItems: []}
+            assert(this.state.missingItems === undefined)
+            this.state = {...this.state, missingItems: []}
         }
-        async componentDidMount()  { return this._load() }
-        async componentDidUpdate() { return this._load() }
+        async componentDidMount()  { await super.componentDidMount();  return this._load() }
+        async componentDidUpdate() { await super.componentDidUpdate(); return this._load() }
         async _load() {
             if (!this.state.missingItems.length) return
             for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O
@@ -208,7 +214,7 @@ export const ItemLoadingHOC = (component, config = {raise: false, class: React.C
                 if (config.raise) throw new ItemNotLoaded()
                 return false
             }
-            return e(component, {loaded, ...this.props})
+            return e(classComponent, {loaded, ...this.props})
         }
     }
 
