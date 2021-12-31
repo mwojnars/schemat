@@ -1,4 +1,70 @@
-import { ItemNotLoaded } from './utils.js'
+import { assert, print, ItemNotLoaded } from './utils.js'
+
+
+/**********************************************************************************************************************
+ **
+ **  CSS UTILITIES
+ **
+ */
+
+function stringInterpolate(strings, values) {
+    /* Concatenate `strings` with `values` inserted between each pair of neighboring strings, for tagged templates.
+       Both arguments are arrays; `strings` must be +1 longer than `values`.
+     */
+    // assert(strings.length === values.length + 1)
+    values.push('')
+    let out = ''
+    strings.forEach((s, i) => {out += s + values[i]})
+    return out
+}
+
+function cssPrepend(scope, css) {
+    /* Prepend a `scope` string and a space to all css selectors in `css`.
+       Also, drop comments, trim whitespace in each line, join lines.
+       Rules inside @media {...} and @charset {...} are correctly prepended, too.
+       Can be called as a 2nd-order function:
+          cssPrepend(scope)(css)   OR
+          cssPrepend(scope)`css`
+
+       WARNING: this function is only slightly tested, watch out for corner cases.
+       Inspired by: https://stackoverflow.com/a/54077142/1202674
+     */
+
+    if (css === undefined)              // return a partial function if `css` is missing
+        return (css, ...values) => cssPrepend(scope, typeof css === 'string' ? css : stringInterpolate(css, values))
+
+    let scopeLen = scope.length, char, next, media, block, suffix, pos = 0
+    scope += ' '            // make sure `scope` will not concatenate the selector
+
+    css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments
+    css = css.replace(/(\s*\n\s*)/g,'\n').replace(/(^\s+|\s+$)/g,'')     // trim leading/trailing whitespace in each line, join lines
+    css = css.replace(/}(\s*)@/g, '}@')                     // make sure `next` will not target a space
+    css = css.replace(/}(\s*)}/g, '}}')
+
+    while (pos < css.length-2) {                            // scan all characters of `css`, one by one
+        char = css[pos]
+        next = css[++pos]
+
+        if (char === '@' && next !== 'f') media = true
+        if (!media && char === '{') block = true
+        if ( block && char === '}') block = false
+
+        // a rule ends here? skip the terminating character and spaces, then insert the `scope`
+        if (!block && next !== '@' && next !== '}' &&
+            (char === '}' || char === ',' || ((char === '{' || char === ';') && media)))
+        {
+            while(next === ' ' || next === '\n') next = css[++pos]
+            css = css.slice(0, pos) + scope + css.slice(pos)
+            pos += scope.length
+            media = false
+        }
+    }
+
+    // prefix the first select if it is not `@media` and if it is not yet prefixed
+    if (css.indexOf(scope) !== 0 && css.indexOf('@') !== 0) css = scope + css
+
+    return css
+}
 
 
 /**********************************************************************************************************************
@@ -161,3 +227,18 @@ export async function fetchJson(url, data, params) {
     // let response = await fetch(url, params)
     // return response.json()
 }
+
+
+/**********************************************************************************************************************
+ **
+ **  TESTS
+ **
+ */
+
+// cssPrepend() tests:
+print(cssPrepend('.page', 'div { width: 100%; }'), '\n')
+print(cssPrepend('.page', 'div { width: 100%; } /* long \n\n comment */  \n\n  p {}    a{}  \n'), '\n')
+print(cssPrepend('.page', '@charset "utf-8"; div { width: 100%; }'), '\n')
+print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { size: 1.2rem; } } @media only print { p { size: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
+print(cssPrepend('.page', '@font-face { font-family: "Open Sans"; src: url("/fonts/OpenSans-Regular-webfont.woff2") format("woff2"); } div { width: 100%; }'), '\n')
+
