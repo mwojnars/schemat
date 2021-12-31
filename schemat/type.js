@@ -19,7 +19,7 @@ class Styles {
 
     get size()      { return this.styles.size }
     add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
-    getCSS()        { return [...this.styles].join() }
+    getCSS()        { return [...this.styles].join('') }
 }
 
 /**********************************************************************************************************************/
@@ -329,16 +329,29 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
+        static style(scope) { return `
+            .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; }
+            .flash-good { background-color: green; transition: 0.2s; }
+            .flash-warn { background-color: salmon; transition: 0.2s; }
+            .flash-stop { opacity: 0; transition-property: opacity, background-color; transition-duration: 8s; }
+        `}
+
         constructor(props) {
             super(props)
+            this.flashRef = createRef()
             this.input = createRef()
             this.state = {
                 editing: false,
                 value:   props.value,       // internal state of the editor preserved by close() even after rejection (!)
+                // flash:   undefined,         // flash message displayed after accept/reject, as a pair {msg, class}
+                flashMsg: null,             // flash message displayed after accept/reject
+                flashCls: null,             // css class to be applied to flashMsg
             }
         }
+
+        init()      { return this.props.value || this.empty() }
         empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
-        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.props.value || this.empty()) }
+        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.init()) }
         editor()    { return INPUT({
                         defaultValue:   this.state.value, 
                         ref:            this.input, 
@@ -348,6 +361,13 @@ export class Textual extends Primitive {
                         type:           "text", 
                         style:          {width: "100%"},
                         })
+                    }
+       flash()      { return DIV({
+                        ref:              this.flashRef,
+                        className:        'flash ' + (this.state.flashCls || 'flash-stop'),
+                        onTransitionEnd:  () => this.setState({flashCls: null}),
+                        },
+                        this.state.flashMsg)
                     }
 
         key(e)          { if(this.keyAccept(e)) this.accept(e); else if(this.keyReject(e)) this.reject(e) }
@@ -360,16 +380,32 @@ export class Textual extends Primitive {
             let value = this.value()
             this.close(value)
             this.save(value)
-            print("accepted")
+            this.notify("SAVED")
+            // print("accepted")
         }
-        reject(e)       { this.close(this.value()); print("rejected") }     // rejected value is still preserved in state.value and reused on next open()
+        reject(e) {
+            /* rejected value is still preserved in state.value and reused on next open() */
+            let value = this.value()
+            this.close(value)
+            if (value !== this.props.value) this.notify("NOT SAVED", false)
+            //print("rejected")
+        }
 
         open(e)         { this.setState({editing: true})  }                             // activate the editor and editing mode
         close(value)    { this.setState({editing: false, value}) }                      // close the editor and editing mode
         save(value)     { if (value !== this.props.value) this.props.save(value) }      // notify a new value to the parent
         value()         { return this.input.current.value }                             // retrieve an edited value from the editor
 
-        render()        { return this.state.editing ? this.editor() : this.viewer() }
+        notify(msg, positive = true) {
+            // this.flashRef.current.style.visible = true                                     // terminate an ongoing css transition
+            // this.setState({flash: {msg, class: positive ? 'flash-good' : 'flash-warn'}})
+            this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
+        }
+
+        render()        {
+            let block = this.state.editing ? this.editor() : this.viewer()
+            return DIV({style: {position: 'relative'}}, this.flash(), block)
+        }
     }
 }
 
@@ -378,11 +414,7 @@ export class STRING extends Textual {}
 export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
-        viewer() {
-            return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)},
-                this.props.value || this.empty()
-            ))
-        }
+        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.init())) }
         editor() {
             return PRE(TEXTAREA({
                 defaultValue:   this.state.value,

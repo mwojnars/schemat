@@ -9,10 +9,12 @@ import { ItemNotLoaded } from './utils.js'
 
 let React    = globalThis.React                             // on client...
 let ReactDOM = globalThis.ReactDOM
+// let CSSTransition = globalThis.CSSTransition
 
 if (!React) {
     React    = (await import("react")).default              // on server...
     ReactDOM = (await import("react-dom/server.js")).default
+    // CSSTransition = (await import("react-transition-group")).CSSTransition
 }
 
 export { React, ReactDOM }
