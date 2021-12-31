@@ -1,4 +1,4 @@
-import { e, A,I,P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML } from './react-utils.js'
+import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
 import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
@@ -19,16 +19,28 @@ class Styles {
 
     get size()      { return this.styles.size }
     add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
-    getCSS()        { return [...this.styles].join('') }
+    getCSS()        { return '\n' + [...this.styles].join('') }
 }
 
 /**********************************************************************************************************************/
 
 class Widget extends React.Component {
-    static style(scope = null, props = {}) {
+    /* A React class-based component that defines API for defining and collecting CSS styles of the component. */
+
+    static style(scope = undefined) {
         /* Optional CSS styling that should be included at least once in a page along with the widget.
-           Parameterized by the CSS `scope` path: a string that's prepended to all selectors for better scoping.
+           Parameterized by the CSS `scope`: a path string that's prepended to all selectors for better scoping.
+           In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
          */
+    }
+    static collectStyles(styles, scope = undefined) {
+        /* Walk through a prototype chain of `this` (a subclass) to collect .style() of all base classes into a Styles() object. */
+        let proto = this
+        while (proto && proto !== Widget) {
+            if (!proto.style) continue
+            styles.add(proto.style(scope))
+            proto = Object.getPrototypeOf(proto)
+        }
     }
 }
 
@@ -114,22 +126,83 @@ export class Schema {
 
     static Widget = class extends Widget {
         /* Base class for UI widgets that display and let users edit atomic (non-catalog) values of a particular schema.
-           The default implementation falls back to a functional implementation, schema.widget().
+           The default implementation falls back to a functional implementation, schema.widget(),
+           or utilizes predefined methods, viewer() & editor(), of the subclass.
          */
+        static style(scope = ".Schema") {           // TODO: make `scope` a class-level attribute
+            /* */
+            return cssPrepend(scope) `
+            .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
+            .flash-good { background-color: mediumseagreen; transition: 0.2s; }
+            .flash-warn { background-color: salmon; transition: 0.2s; }
+            .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+        `}
+
         static defaultProps = {
             schema: undefined,          // parent Schema instance
             value:  undefined,          // value object to be displayed by render()
             save:   undefined,          // function save(newValue) to be called after `value` was edited by user
         }
-        render() {
+        constructor(props) {
+            super(props)
+            this.input = createRef()
+            this.state = { ...this.state,
+                editing:  false,
+                value:    props.value,      // internal state of the editor preserved by close() even after rejection (!)
+                flashMsg: null,             // flash message displayed after accept/reject
+                flashCls: null,             // css class to be applied to flash box
+            }
+        }
+
+        editor() { throw new Error("not implemented") }
+        viewer() {
+            /* By default, calls .widget() of a parent schema. Override in subclasses this with a custom viewer implementation. */
             let {schema, ...props} = this.props
             return e(schema.widget.bind(schema), props)
+        }
+
+        open(e)         { this.setState({editing: true})  }                 // activate the editor and editing mode
+        close(value)    { this.setState({editing: false, value}) }          // close the editor, store `value` internally but don't send to parent
+
+        flash() {
+            return DIV({
+                    className: 'flash ' + (this.state.flashCls || 'flash-stop'),
+                    onTransitionEnd: () => this.setState({flashCls: null}),
+                },
+                this.state.flashMsg)
+        }
+        notify(msg, positive = true) {
+            this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
+        }
+
+        // confirm()
+        accept(e) {
+            // e.preventDefault()
+            let value = this.value()
+            this.close(value)
+            this.save(value)
+        }
+        reject(e) {                                         // rejected value is still preserved in state.value and reused on next open()
+            let value = this.value()
+            this.close(value)
+            if (value !== this.props.value) this.notify("NOT SAVED", false)
+        }
+        save(value) {                                       // notify a new value to the parent
+            if (value === this.props.value) return
+            this.props.save(value)
+            this.notify("SAVED")
+        }
+
+        render() {
+            let block = this.state.editing ? this.editor() : this.viewer()
+            return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flash())
         }
     }
 
     widget(props) {
-        /* Functional component that is used in place of Widget if the latter is missing in a subclass.
-           Subclasses may assume `this` is bound when this function is called.
+        /* Functional component that is used as a .viewer() inside Widget if the latter is missing in a subclass.
+           Does NOT provide a way to define css styles, unlike Widget.
+           Subclasses may assume `this` is bound when this method is called.
          */
         return props.value.toString()
     }
@@ -138,11 +211,6 @@ export class Schema {
         return e(this.constructor.Widget, {schema: this, ...props})
         // let Widget = this.constructor.Widget || this.widget.bind(this)
         // return e(Widget, props)
-    }
-
-    static get style()    {
-        /* CSS styling of this schema's widget, as a string; can be replaced with: static css = ... */
-        return this.Widget?.style()
     }
 
     getStyle() {
@@ -154,9 +222,9 @@ export class Schema {
         return style
     }
     collectStyles(styles) {
-        /* Internal method. Override in subclasses to provide a custom way of collecting CSS styles,
-           esp. in compound classes with nested schemas. */
-        styles.add(this.constructor.style)
+        /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles from all nested schemas. */
+        styles.add(this.constructor.Widget.collectStyles(styles))
+        // styles.add(this.constructor.Widget.style())
     }
 }
 
@@ -205,16 +273,16 @@ export class SCHEMA extends GENERIC {
     static type = Schema
 
     static Widget = class extends GENERIC.Widget {
-        static style(scope = '.Schema.SCHEMA') {
-            return `
-            ${scope} .default { color: #888; }
-            ${scope} .info { font-style: italic; }
+        static style(scope = '.Schema .SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
+            return cssPrepend(scope) `
+            .default { color: #888; }
+            .info { font-style: italic; }
         `}
 
-        render() {
+        viewer() {
             let {value: schema} = this.props
             let defalt = `${schema.default}`
-            return SPAN({className: 'Schema SCHEMA'},
+            return SPAN({className: 'SCHEMA'},
                     `${schema}`,
                     schema.default !== undefined &&
                         SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
@@ -226,26 +294,6 @@ export class SCHEMA extends GENERIC {
             )
         }
     }
-
-    // static style = `
-    //     .Schema.SCHEMA .default {color: #888;}
-    //     .Schema.SCHEMA .info {font-style: italic;}
-    // `
-    //
-    // widget({value}) {
-    //     let schema = value
-    //     let defalt = `${schema.default}`
-    //     return SPAN({className: 'Schema SCHEMA'},
-    //             `${schema}`,
-    //             schema.default !== undefined &&
-    //                 SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
-    //                     ` (${truncate(defalt,100)})`),
-    //             schema.info &&
-    //                 SPAN({className: 'info'}, ` • ${schema.info}`),
-    //                 // smaller dot: &middot;
-    //                 // larger dot: •
-    //     )
-    // }
 }
 
 // export class FIELD extends SCHEMA {
@@ -329,25 +377,6 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
-        static style(scope) { return `
-            .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; }
-            .flash-good { background-color: green; transition: 0.2s; }
-            .flash-warn { background-color: salmon; transition: 0.2s; }
-            .flash-stop { opacity: 0; transition-property: opacity, background-color; transition-duration: 8s; }
-        `}
-
-        constructor(props) {
-            super(props)
-            this.flashRef = createRef()
-            this.input = createRef()
-            this.state = {
-                editing: false,
-                value:   props.value,       // internal state of the editor preserved by close() even after rejection (!)
-                // flash:   undefined,         // flash message displayed after accept/reject, as a pair {msg, class}
-                flashMsg: null,             // flash message displayed after accept/reject
-                flashCls: null,             // css class to be applied to flashMsg
-            }
-        }
 
         init()      { return this.props.value || this.empty() }
         empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
@@ -362,50 +391,11 @@ export class Textual extends Primitive {
                         style:          {width: "100%"},
                         })
                     }
-       flash()      { return DIV({
-                        ref:              this.flashRef,
-                        className:        'flash ' + (this.state.flashCls || 'flash-stop'),
-                        onTransitionEnd:  () => this.setState({flashCls: null}),
-                        },
-                        this.state.flashMsg)
-                    }
 
         key(e)          { if(this.keyAccept(e)) this.accept(e); else if(this.keyReject(e)) this.reject(e) }
         keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
         keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
-
-        // confirm()
-        accept(e) {
-            // e.preventDefault()
-            let value = this.value()
-            this.close(value)
-            this.save(value)
-            this.notify("SAVED")
-            // print("accepted")
-        }
-        reject(e) {
-            /* rejected value is still preserved in state.value and reused on next open() */
-            let value = this.value()
-            this.close(value)
-            if (value !== this.props.value) this.notify("NOT SAVED", false)
-            //print("rejected")
-        }
-
-        open(e)         { this.setState({editing: true})  }                             // activate the editor and editing mode
-        close(value)    { this.setState({editing: false, value}) }                      // close the editor and editing mode
-        save(value)     { if (value !== this.props.value) this.props.save(value) }      // notify a new value to the parent
-        value()         { return this.input.current.value }                             // retrieve an edited value from the editor
-
-        notify(msg, positive = true) {
-            // this.flashRef.current.style.visible = true                                     // terminate an ongoing css transition
-            // this.setState({flash: {msg, class: positive ? 'flash-good' : 'flash-warn'}})
-            this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
-        }
-
-        render()        {
-            let block = this.state.editing ? this.editor() : this.viewer()
-            return DIV({style: {position: 'relative'}}, this.flash(), block)
-        }
+        value()         { return this.input.current.value }     // retrieve an edited value from the editor
     }
 }
 
@@ -427,7 +417,7 @@ export class TEXT extends Textual
                 style:          {width:'100%', height:'10em'}
             }))
         }
-        keyAccept(e)    { return e.key === "Enter" && (e.shiftKey || e.ctrlKey) }
+        keyAccept(e)    { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
         keyReject(e)    { return e.key === "Escape" }
     }
 }

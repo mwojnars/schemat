@@ -7,20 +7,20 @@ import { assert, print, ItemNotLoaded } from './utils.js'
  **
  */
 
-function stringInterpolate(strings, values) {
+export function stringInterpolate(strings, values) {
     /* Concatenate `strings` with `values` inserted between each pair of neighboring strings, for tagged templates.
        Both arguments are arrays; `strings` must be +1 longer than `values`.
      */
-    // assert(strings.length === values.length + 1)
+    assert(strings.length === values.length + 1)
     values.push('')
     let out = ''
     strings.forEach((s, i) => {out += s + values[i]})
     return out
 }
 
-function cssPrepend(scope, css) {
+export function cssPrepend(scope, css) {
     /* Prepend a `scope` string and a space to all css selectors in `css`.
-       Also, drop comments, trim whitespace in each line, join lines.
+       Also, drop comments, drop empty lines, and trim whitespace in each line.
        Rules inside @media {...} and @charset {...} are correctly prepended, too.
        Can be called as a 2nd-order function:
           cssPrepend(scope)(css)   OR
@@ -33,15 +33,17 @@ function cssPrepend(scope, css) {
     if (css === undefined)              // return a partial function if `css` is missing
         return (css, ...values) => cssPrepend(scope, typeof css === 'string' ? css : stringInterpolate(css, values))
 
-    let scopeLen = scope.length, char, next, media, block, suffix, pos = 0
-    scope += ' '            // make sure `scope` will not concatenate the selector
-
     css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments
-    css = css.replace(/(\s*\n\s*)/g,'\n').replace(/(^\s+|\s+$)/g,'')     // trim leading/trailing whitespace in each line, join lines
-    css = css.replace(/}(\s*)@/g, '}@')                     // make sure `next` will not target a space
+    css = css.replace(/(\s*\n\s*)/g,'\n').replace(/(^\s+|\s+$)/g,'')    // trim leading/trailing whitespace in each line
+    css = css.replace(/}(\s*)@/g, '}@')                                 // make sure `next` will not target a space
     css = css.replace(/}(\s*)}/g, '}}')
 
-    while (pos < css.length-2) {                            // scan all characters of `css`, one by one
+    if (!scope) return css                  // if `scope` is missing stay with compaction only: trimming lines etc.
+    scope += ' '                            // make sure `scope` will not get concatenated with the original selector
+
+    let char, next, media, block, pos = 0
+
+    while (pos < css.length-2) {                                        // scan all characters of `css`, one by one
         char = css[pos]
         next = css[++pos]
 
@@ -49,7 +51,7 @@ function cssPrepend(scope, css) {
         if (!media && char === '{') block = true
         if ( block && char === '}') block = false
 
-        // a rule ends here? skip the terminating character and spaces, then insert the `scope`
+        // a css rule ends here? skip the terminating character and spaces, then insert the `scope`
         if (!block && next !== '@' && next !== '}' &&
             (char === '}' || char === ',' || ((char === '{' || char === ';') && media)))
         {
@@ -235,10 +237,10 @@ export async function fetchJson(url, data, params) {
  **
  */
 
-// cssPrepend() tests:
-print(cssPrepend('.page', 'div { width: 100%; }'), '\n')
-print(cssPrepend('.page', 'div { width: 100%; } /* long \n\n comment */  \n\n  p {}    a{}  \n'), '\n')
-print(cssPrepend('.page', '@charset "utf-8"; div { width: 100%; }'), '\n')
-print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { size: 1.2rem; } } @media only print { p { size: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
-print(cssPrepend('.page', '@font-face { font-family: "Open Sans"; src: url("/fonts/OpenSans-Regular-webfont.woff2") format("woff2"); } div { width: 100%; }'), '\n')
+// // cssPrepend() tests:
+// print(cssPrepend('.page', 'div { width: 100%; }'), '\n')
+// print(cssPrepend('.page', 'div { width: 100%; } /* long \n\n comment */  \n\n  p {}    a{}  \n'), '\n')
+// print(cssPrepend('.page', '@charset "utf-8"; div { width: 100%; }'), '\n')
+// print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { size: 1.2rem; } } @media only print { p { size: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
+// print(cssPrepend('.page', '@font-face { font-family: "Open Sans"; src: url("/fonts/OpenSans-Regular-webfont.woff2") format("woff2"); } div { width: 100%; }'), '\n')
 

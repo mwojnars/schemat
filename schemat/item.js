@@ -470,9 +470,6 @@ export class Item {
 <!--            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
             <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
             
-            <!-- Watch out for version changes on server to avoid version mismatch between client and server
-            <script src="https://unpkg.com/react-transition-group@4.4.2/dist/react-transition-group.js"></script> -->
-            
             <link href="/files/assets/favicon.ico" rel="icon" type="image/x-icon" />
             <link href="/files/assets/styles.css" rel="stylesheet" />
         </head>

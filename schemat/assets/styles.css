@@ -76,7 +76,7 @@ a:visited { color: #00427a }
     width: 100%;
     line-height: 1.4;
     font-family: var(--bs-font-monospace);
-    font-size: 13px;
+    font-size: 1em;
     resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
     /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
     /*border-left: 8px solid var(--bk-color);*/
@@ -139,7 +139,7 @@ a:visited { color: #00427a }
 
 .Catalog .Entry_value,
 .Catalog .Entry_value > *       { font-size: 14px; font-family: monospace; /* courier */ }
-.Catalog .Entry_value pre       { margin-bottom: 0; font-size: 13px; font-family: monospace; }
+.Catalog .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: monospace; }
 
 
 /*
