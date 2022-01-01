@@ -5,6 +5,8 @@
  */
 
 export function toString() {
+    /* Replacement for the standard Object.toString(). Improves the output by printing more detailed information. */
+
     // let json = trycatch(() => JSON.stringify(this), null)    -- this does NOT work due to circular call to toString() in stringify()
     if (this === undefined) return "undefined"
     const value = (v) => typeof v === 'object' ? `[${v.constructor.name}]` : JSON.stringify(v)

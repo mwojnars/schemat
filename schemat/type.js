@@ -179,24 +179,35 @@ Schema.Widget = class extends Widget {
     }
     constructor(props) {
         super(props)
-        this.input = createRef()
-        this.state = { ...this.state,
+        this.input   = createRef()
+        this.initial = undefined        // initial flat (encoded) value for the editor; stored here for change detection in close()
+        this.state   = { ...this.state,
             editing:  false,
             flashMsg: null,             // flash message displayed after accept/reject
             flashCls: null,             // css class to be applied to flashMsg box
         }
     }
 
+    value()       { return undefined }                                          // retrieve an edited flat value (encoded) from the editor
+    encode(value) { return JSON.stringify(this.props.schema.encode(value)) }    // convert `value` to its editable representation
+    decode(value) { return this.props.schema.decode(JSON.parse(value)) }
+
     editor() { throw new Error("not implemented") }
     viewer() {
+        // return this.encode(this.props.value)
         return this.props.value.toString()
         /* By default, calls .widget() of a parent schema. Override in subclasses with a custom viewer implementation. */
         // let {schema, ...props} = this.props
         // return e(schema.widget.bind(schema), props)
     }
 
-    open(e) { this.setState({editing: true})  }                     // activate the editor and editing mode
-    close() { this.setState({editing: false}); return undefined }   // close the editor; return a new value after edits (in subclasses)
+    open(e) { this.setState({editing: true})  }         // activate the editor and editing mode
+    close() {                                           // close the editor; return the edited flat value, and a "changed" flag
+        let current = this.value()
+        let changed = (current !== this.initial)
+        this.setState({editing: false})
+        return [current, changed]
+    }
 
     flash() {
         return DIV({
@@ -211,24 +222,29 @@ Schema.Widget = class extends Widget {
 
     // confirm()
     key(e) {
-             if (this.keyAccept(e)) this.accept(e)
+             if (this.keyAccept(e)) this.accept(e).then()
         else if (this.keyReject(e)) this.reject(e)
     }
-    accept(e) {
+    async accept(e) {
         // e.preventDefault()
-        let value = this.close()
-        if (value === this.props.value) return
-        this.props.save(value)                          // notify a new value to the parent
-        this.notify("SAVED")
+        let [value, changed] = this.close()
+        if (!changed) return
+        try {
+            value = this.decode(value)
+            this.notify("SAVING...")
+            await this.props.save(value)                    // push the new decoded value to the parent
+            this.notify("SAVED")
+        }
+        catch (ex) { this.error(ex) }
     }
     reject(e) {
-        let value = this.close()
-        if (value === this.props.value) return
-        this.notify("NOT SAVED", false)
+        let [value, changed] = this.close()
+        if (changed) this.notify("NOT SAVED", false)
     }
 
     render() {
-        let block = this.state.editing ? this.editor() : this.viewer()
+        this.initial = this.state.editing ? this.encode(this.props.value) : undefined
+        let block    = this.state.editing ? this.editor() : this.viewer()
         return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flash())
     }
 }
@@ -296,7 +312,7 @@ export class Textual extends Primitive {
         empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
         viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.init()) }
         editor()    { return INPUT({
-                        defaultValue:   this.props.value,
+                        defaultValue:   this.initial,
                         ref:            this.input, 
                         onKeyDown:      e => this.key(e),
                         onBlur:         e => this.reject(e),
@@ -305,9 +321,12 @@ export class Textual extends Primitive {
                         style:          {width: "100%"},
                         })
                     }
-        keyAccept(e) { return e.key === "Enter"  }          // return true if the key pressed accepts the edits
-        keyReject(e) { return e.key === "Escape" }          // return true if the key pressed rejects the edits
-        close()      { super.close(); return this.input.current.value }       // retrieve an edited value from the editor
+        keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
+        keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
+
+        value()         { return this.input.current.value }
+        encode(value)   { return value }
+        decode(value)   { return value }
     }
 }
 
@@ -324,7 +343,7 @@ export class TEXT extends Textual
         viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.init())) }
         editor() {
             return PRE(TEXTAREA({
-                defaultValue:   this.props.value,
+                defaultValue:   this.initial,
                 ref:            this.input,
                 onKeyDown:      e => this.key(e),
                 onBlur:         e => this.reject(e),
@@ -335,7 +354,6 @@ export class TEXT extends Textual
             }))
         }
         keyAccept(e) { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
-        keyReject(e) { return e.key === "Escape" }
     }
 }
 export class CODE extends TEXT
@@ -405,7 +423,7 @@ export class CODE extends TEXT
 
             let div = this.input.current
             let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
-            editorAce.session.setValue(this.props.value)
+            editorAce.session.setValue(this.initial)
             // editorAce.setTheme("ace/theme/textmate")
             // editorAce.session.setMode("ace/mode/javascript")
 
@@ -417,14 +435,15 @@ export class CODE extends TEXT
             // editorAce.session.setScrollTop(1)
         }
 
+        value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
         close() {
-            super.close()
-            let value = this.editorAce.session.getValue()
-            this.editorAce.destroy()                   // destroy the ACE editor to free up resources
-            this.observer.disconnect()
-            delete this.editorAce
-            delete this.observer
-            return value
+            try { return super.close() }
+            finally {
+                this.editorAce.destroy()                        // destroy the ACE editor to free up resources
+                this.observer.disconnect()
+                delete this.editorAce
+                delete this.observer
+            }
         }
     }
 }
@@ -483,6 +502,13 @@ export class GENERIC extends Schema {
             let {value, schema} = this.props
             let flat = schema.encode(value)
             return JSON.stringify(flat)
+        }
+        encode(value) {
+            /* Convert `value` to its flat, editable representation. */
+            return JSON.stringify(this.props.schema.encode(value))
+        }
+        decode(value) {
+            return this.props.schema.decode(JSON.parse(value))
         }
     }
 }
