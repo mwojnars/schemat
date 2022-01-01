@@ -87,7 +87,8 @@ export class Schema {
         /* Validate and normalize an app-layer `value` before encoding.
            Return a normalized value, or throw ValueError.
          */
-        throw new ValueError(value)
+        return value
+        // throw new ValueError(value)
     }
 
     // dump_json(value, format = {}) {
@@ -190,7 +191,7 @@ Schema.Widget = class extends Widget {
 
     value()       { return undefined }                                          // retrieve an edited flat value (encoded) from the editor
     encode(value) { return JSON.stringify(this.props.schema.encode(value)) }    // convert `value` to its editable representation
-    decode(value) { return this.props.schema.decode(JSON.parse(value)) }
+    decode(value) { return this.props.schema.decode(JSON.parse(value)) }        // ...and back
 
     editor() { throw new Error("not implemented") }
     viewer() {
@@ -231,6 +232,7 @@ Schema.Widget = class extends Widget {
         if (!changed) return
         try {
             value = this.decode(value)
+            value = this.props.schema.valid(value)          // validate and normalize the decoded value; exception is raised on error
             this.notify("SAVING...")
             await this.props.save(value)                    // push the new decoded value to the parent
             this.notify("SAVED")
@@ -241,6 +243,7 @@ Schema.Widget = class extends Widget {
         let [value, changed] = this.close()
         if (changed) this.notify("NOT SAVED", false)
     }
+    error(ex) { throw ex }
 
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
@@ -249,22 +252,22 @@ Schema.Widget = class extends Widget {
     }
 }
 
-class TextWidget extends Schema.Widget {
-    /* Universal text widget that can be configured to display and edit:
-       - strings (one line),
-       - plain text (multiline),
-       - source code (with syntax highlighting),
-       - rich text.
-     */
-    // this.props.editorType = 'string', 'text', 'code' (Ace), 'rich' (~Word)
-    // this.props.editorMode = 'plain', 'json', 'yaml', 'markdown' ...
-    // NOTE: re-mount after props change can be enforced by changing props.key - https://stackoverflow.com/a/48451229/1202674
-}
-
-class ObjectWidget extends Schema.Widget {
-    /* Universal widget for structured data. The viewer displays a css-styled text summary,
-       while the editor is a web form corresponding to the object's schema, displayed inline or in a modal box. */
-}
+// class TextWidget extends Schema.Widget {
+//     /* Universal text widget that can be configured to display and edit:
+//        - strings (one line),
+//        - plain text (multiline),
+//        - source code (with syntax highlighting),
+//        - rich text.
+//      */
+//     // this.props.editorType = 'string', 'text', 'code' (Ace), 'rich' (~Word)
+//     // this.props.editorMode = 'plain', 'json', 'yaml', 'markdown' ...
+//     // NOTE: re-mount after props change can be enforced by changing props.key - https://stackoverflow.com/a/48451229/1202674
+// }
+//
+// class ObjectWidget extends Schema.Widget {
+//     /* Universal widget for structured data. The viewer displays a css-styled text summary,
+//        while the editor is a web form corresponding to the object's schema, displayed inline or in a modal box. */
+// }
 
 /**********************************************************************************************************************
  **
@@ -308,9 +311,9 @@ export class Textual extends Primitive {
 
     static Widget = class extends Primitive.Widget {
 
-        init()      { return this.props.value || this.empty() }
+        viewValue() { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
         empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
-        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.init()) }
+        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.viewValue()) }
         editor()    { return INPUT({
                         defaultValue:   this.initial,
                         ref:            this.input, 
@@ -334,13 +337,14 @@ export class STRING extends Textual {
     valid(value) {
         /* Trim leading/trailing whitespace. Replace with `null` if empty string. */
         value = super.valid(value)
+        return value.trim()
     }
 }
 
 export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
-        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.init())) }
+        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.viewValue())) }
         editor() {
             return PRE(TEXTAREA({
                 defaultValue:   this.initial,
@@ -463,62 +467,23 @@ export class GENERIC extends Schema {
     get _type() { return this.type || this.constructor.type }
 
     valid(obj) {
-        return !this._type || obj instanceof this._type
+        if (this._type && !(obj instanceof this._type))
+            throw new ValueError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
+        return obj
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
-    encode(obj) {
-        if (!this.valid(obj))
-            throw new DataError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
-            // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
-        return JSONx.encode(obj)
-    }
-    decode(state) {
-        let obj = JSONx.decode(state)
-        if (!this.valid(obj))
-            throw new DataError(`invalid object type after decoding, expected an instance of ${this._type}, got ${obj} instead`)
-            // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
-        return obj
-    }
+    encode(obj)   { return JSONx.encode(obj) }
+    decode(state) { return JSONx.decode(state) }
 
-    // display(props) {
-    //     let {value, save, ...rest} = props
-    //     let valueEncoded = this.displayEncode(value)
-    //     let  saveDecoded = newValue => save(this.displayDecode(newValue))
-    //     return e(TEXT.Widget, {schema: this, value: valueEncoded, save: saveDecoded, ...rest})
-    // }
-    //
-    // displayEncode(value) {
-    //     /* Convert `value` to its editable representation for display(). */
-    //     return JSON.stringify(this.encode(value))
-    // }
-    // displayDecode(value) {
-    //     return this.decode(JSON.parse(value))
-    // }
-    
-    static Widget = class extends Schema.Widget {
-        // GENERIC displays raw JSON representation of a value using a standard text editor
-        viewer() {
-            let {value, schema} = this.props
-            let flat = schema.encode(value)
-            return JSON.stringify(flat)
-        }
-        encode(value) {
-            /* Convert `value` to its flat, editable representation. */
-            return JSON.stringify(this.props.schema.encode(value))
-        }
-        decode(value) {
-            return this.props.schema.decode(JSON.parse(value))
-        }
+    static Widget = class extends TEXT.Widget {
+        /* Displays raw JSON representation of a value using a standard text editor */
+        viewValue()   { return this.encode(this.props.value) }
+        encode(value) { return JSON.stringify(this.props.schema.encode(value)) }
+        decode(value) { return this.props.schema.decode(JSON.parse(value)) }
     }
 }
 
-// export const ValueEncodedHOC = (classComponent, config = {raise: false}) =>
-//     /* Create .
-//      */
-//     class ItemLoadingWrapper extends classComponent {
-//     }
-    
 // the most generic schema for encoding/decoding of objects of any types
 export let generic_schema = new GENERIC()
 
