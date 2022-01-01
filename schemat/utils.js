@@ -183,6 +183,8 @@ export class T extends Types {}     // T is an alias for Types
  */
 
 export class DataError extends Error {}
+export class ValueError extends DataError {}
+
 export class ItemNotLoaded extends Error {
     constructor(item) {
         super(`item is not loaded yet, call 'await item.load()' first: ${item}`)

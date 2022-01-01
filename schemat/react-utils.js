@@ -197,8 +197,8 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
             assert(this.state.missingItems === undefined)
             this.state = {...this.state, missingItems: []}
         }
-        async componentDidMount()  { await super.componentDidMount();  return this._load() }
-        async componentDidUpdate() { await super.componentDidUpdate(); return this._load() }
+        async componentDidMount()  { if(super.componentDidMount)  await super.componentDidMount();  return this._load() }
+        async componentDidUpdate() { if(super.componentDidUpdate) await super.componentDidUpdate(); return this._load() }
         async _load() {
             if (!this.state.missingItems.length) return
             for (let item of this.state.missingItems) await item.load()        // TODO: use batch loading of all items at once to reduce I/O

@@ -1,6 +1,6 @@
 import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
 import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
-import { T, assert, print, truncate, DataError, ItemNotLoaded } from './utils.js'
+import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
@@ -83,20 +83,24 @@ export class Schema {
         if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
     }
 
-    check(value) { if (!this.valid(value)) throw new DataError("Invalid") }
-    valid(value) { return false }
-
-    dump_json(value, format = {}) {
-        /*
-        JSON-encoding proceeds in two phases:
-        1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
-           type information that's available; the flat object may still contain nested non-primitive objects;
-        2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
-        */
-        let {replacer, space} = json_format
-        let state = this.encode(value)
-        return JSON.stringify(state, replacer, space)
+    valid(value) {
+        /* Validate and normalize an app-layer `value` before encoding.
+           Return a normalized value, or throw ValueError.
+         */
+        throw new ValueError(value)
     }
+
+    // dump_json(value, format = {}) {
+    //     /*
+    //     JSON-encoding proceeds in two phases:
+    //     1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
+    //        type information that's available; the flat object may still contain nested non-primitive objects;
+    //     2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
+    //     */
+    //     let {replacer, space} = json_format
+    //     let state = this.encode(value)
+    //     return JSON.stringify(state, replacer, space)
+    // }
 
     load_json(dump) {
         let state = JSON.parse(dump)
@@ -124,92 +128,15 @@ export class Schema {
 
     // Clients should call getStyle() and display(), other methods & attrs are for internal use ...
 
-    static Widget = class extends Widget {
-        /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values of a specific schema.
-           The default implementation falls back to a functional implementation, schema.widget(),
-           or utilizes predefined methods, viewer() & editor(), of the subclass.
-         */
-        static style(scope = ".Schema") {           // TODO: make `scope` a class-level attribute
-            /* */
-            return cssPrepend(scope) `
-            .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
-            .flash-good { background-color: mediumseagreen; transition: 0.2s; }
-            .flash-warn { background-color: salmon; transition: 0.2s; }
-            .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
-        `}
+    static Widget       // "view-edit" widget that displays and lets users edit values of this schema
 
-        static defaultProps = {
-            schema: undefined,          // parent Schema instance
-            value:  undefined,          // value object to be displayed by render()
-            save:   undefined,          // function save(newValue) to be called after `value` was edited by user
-        }
-        constructor(props) {
-            super(props)
-            this.input = createRef()
-            this.state = { ...this.state,
-                editing:  false,
-                value:    props.value,      // internal state of the editor preserved by close() even after rejection (!)
-                flashMsg: null,             // flash message displayed after accept/reject
-                flashCls: null,             // css class to be applied to flash box
-            }
-        }
-
-        editor() { throw new Error("not implemented") }
-        viewer() {
-            /* By default, calls .widget() of a parent schema. Override in subclasses with a custom viewer implementation. */
-            let {schema, ...props} = this.props
-            return e(schema.widget.bind(schema), props)
-        }
-
-        open(e)         { this.setState({editing: true})  }                 // activate the editor and editing mode
-        close(value)    { this.setState({editing: false, value}) }          // close the editor, store `value` internally but don't send to parent
-
-        flash() {
-            return DIV({
-                    className: 'flash ' + (this.state.flashCls || 'flash-stop'),
-                    onTransitionEnd: () => this.setState({flashCls: null}),
-                },
-                this.state.flashMsg)
-        }
-        notify(msg, positive = true) {
-            this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
-        }
-
-        // confirm()
-        key(e) {
-                 if (this.keyAccept(e)) this.accept(e)
-            else if (this.keyReject(e)) this.reject(e)
-        }
-        accept(e) {
-            // e.preventDefault()
-            let value = this.value()
-            this.close(value)
-            this.save(value)
-        }
-        reject(e) {                                         // rejected value is still preserved in state.value and reused on next open()
-            let value = this.value()
-            this.close(value)
-            if (value !== this.props.value) this.notify("NOT SAVED", false)
-        }
-        save(value) {                                       // notify a new value to the parent
-            if (value === this.props.value) return
-            this.props.save(value)
-            this.notify("SAVED")
-        }
-
-        render() {
-            let block = this.state.editing ? this.editor() : this.viewer()
-            return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flash())
-        }
-    }
-
-    widget(props) {
-        /* Functional component that is used as a .viewer() inside Widget if the latter is missing in a subclass.
-           Does NOT provide a way to define css styles, unlike Widget.
-           Subclasses may assume `this` is bound when this method is called.
-         */
-        return props.value.toString()
-    }
+    // widget(props) {
+    //     /* Functional component that is used as a .viewer() inside Widget if the latter is missing in a subclass.
+    //        Does NOT provide a way to define css styles, unlike Widget.
+    //        Subclasses may assume `this` is bound when this method is called.
+    //      */
+    //     return props.value.toString()
+    // }
 
     display(props) {
         return e(this.constructor.Widget, {schema: this, ...props})
@@ -227,8 +154,87 @@ export class Schema {
     }
     collectStyles(styles) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles from all nested schemas. */
-        styles.add(this.constructor.Widget.collectStyles(styles))
+        this.constructor.Widget.collectStyles(styles)
         // styles.add(this.constructor.Widget.style())
+    }
+}
+
+Schema.Widget = class extends Widget {
+    /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
+       values matching a particular schema.
+     */
+    static style(scope = ".Schema") {           // TODO: make `scope` a class-level attribute
+        /* */
+        return cssPrepend(scope) `
+        .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
+        .flash-good { background-color: mediumseagreen; transition: 0.2s; }
+        .flash-warn { background-color: salmon; transition: 0.2s; }
+        .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+    `}
+
+    static defaultProps = {
+        schema: undefined,          // parent Schema instance
+        value:  undefined,          // value object to be displayed by render()
+        save:   undefined,          // function save(newValue) to be called after `value` was edited by user
+    }
+    constructor(props) {
+        super(props)
+        this.input = createRef()
+        this.state = { ...this.state,
+            editing:  false,
+            value:    props.value,      // internal state of the editor preserved by close() even after rejection (!)
+            flashMsg: null,             // flash message displayed after accept/reject
+            flashCls: null,             // css class to be applied to flashMsg box
+        }
+    }
+
+    editor() { throw new Error("not implemented") }
+    viewer() {
+        return this.props.value.toString()
+        /* By default, calls .widget() of a parent schema. Override in subclasses with a custom viewer implementation. */
+        // let {schema, ...props} = this.props
+        // return e(schema.widget.bind(schema), props)
+    }
+
+    open(e)         { this.setState({editing: true})  }                 // activate the editor and editing mode
+    close(value)    { this.setState({editing: false, value}) }          // close the editor, store `value` internally but don't send to parent
+
+    flash() {
+        return DIV({
+                className: 'flash ' + (this.state.flashCls || 'flash-stop'),
+                onTransitionEnd: () => this.setState({flashCls: null}),
+            },
+            this.state.flashMsg)
+    }
+    notify(msg, positive = true) {
+        this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
+    }
+
+    // confirm()
+    key(e) {
+             if (this.keyAccept(e)) this.accept(e)
+        else if (this.keyReject(e)) this.reject(e)
+    }
+    accept(e) {
+        // e.preventDefault()
+        let value = this.current()
+        this.close(value)
+        this.save(value)
+    }
+    reject(e) {                                         // rejected value is still preserved in state.value and reused on next open()
+        let value = this.current()
+        this.close(value)
+        if (value !== this.props.value) this.notify("NOT SAVED", false)
+    }
+    save(value) {                                       // notify a new value to the parent
+        if (value === this.props.value) return
+        this.props.save(value)
+        this.notify("SAVED")
+    }
+
+    render() {
+        let block = this.state.editing ? this.editor() : this.viewer()
+        return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flash())
     }
 }
 
@@ -251,138 +257,26 @@ class ObjectWidget extends Schema.Widget {
 
 /**********************************************************************************************************************
  **
- **  ATOMIC schema types
+ **  PRIMITIVE schema types
  **
  */
-
-export class GENERIC extends Schema {
-    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
-
-    get _type() { return this.type || this.constructor.type }
-
-    valid(obj) {
-        return !this._type || obj instanceof this._type
-        // let types = this._types
-        // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
-    }
-    encode(obj) {
-        if (!this.valid(obj))
-            throw new DataError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
-            // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
-        return JSONx.encode(obj)
-    }
-    decode(state) {
-        let obj = JSONx.decode(state)
-        if (!this.valid(obj))
-            throw new DataError(`invalid object type after decoding, expected an instance of ${this._type}, got ${obj} instead`)
-            // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
-        return obj
-    }
-
-    static Widget = class extends Schema.Widget {
-        viewer() {
-            let {value, schema} = this.props
-            let state = schema.encode(value)
-            return JSON.stringify(state)            // GENERIC displays raw JSON representation of a value
-        }
-    }
-}
-
-// the most generic schema for encoding/decoding of objects of any types
-export let generic_schema = new GENERIC()
-
-
-/**********************************************************************************************************************/
-
-export class SCHEMA extends GENERIC {
-    static type = Schema
-
-    static Widget = class extends GENERIC.Widget {
-        static style(scope = '.Schema .SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
-            return cssPrepend(scope) `
-            .default { color: #888; }
-            .info { font-style: italic; }
-        `}
-
-        viewer() {
-            let {value: schema} = this.props
-            let defalt = `${schema.default}`
-            return SPAN({className: 'SCHEMA'},
-                    `${schema}`,
-                    schema.default !== undefined &&
-                        SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
-                            ` (${truncate(defalt,100)})`),
-                    schema.info &&
-                        SPAN({className: 'info'}, ` • ${schema.info}`),
-                        // smaller dot: &middot;
-                        // larger dot: •
-            )
-        }
-    }
-}
-
-// export class FIELD extends SCHEMA {
-//
-//     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
-//     //repeated        // if true, the field can occur multiple times in an item
-//
-//     virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
-//
-//     derived         // if true, the field's value can be automatically imputed, if missing,
-//                     // through a call to item._get_XYZ(); only available when multi=false
-//     persistent
-//     editable
-//     hidden
-//
-//     slow             // 1 means the field is stored in a separate "slow" column group #1 to allow faster loading
-//                      // of remaining fields stored in group #0 ("core" group, "fast" group);
-//                      // with large fields moved out to a "slow" group, these operations may become faster:
-//                      // - (partial) loading of an item's core fields, but only when slow fields are large: ~2x disk block size or more
-//                      // - category scan inside each table-partition; important for mapsort pipelines (!)
-//
-//     /*
-//       1) derived: transient non-editable hidden; refreshed on item's data change
-//       2) imputed: persistent editable displayed; not refreshed ??
-//
-//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
-//       2) impute on write
-//     */
-// }
-
-/**********************************************************************************************************************/
-
-export class CLASS extends Schema {
-    /* Accepts any global python type and encodes as a string containing its full package-module name. */
-    encode(value) {
-        if (value === null) return null
-        return globalThis.registry.getPath(value)
-    }
-    decode(value) {
-        if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
-        return globalThis.registry.getClass(value)
-    }
-}
 
 export class Primitive extends Schema {
     /* Base class for schemas of primitive JSON-serializable python types. */
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
-    check(value) {
+    valid(value) {
         let t = this.constructor.stype
         if (typeof value === t || (this.blank && (value === null || value === undefined)))
-            return true
-        throw new DataError(`expected a primitive value of type "${t}", got ${value} instead`)
+            return value
+        throw new ValueError(`expected a primitive value of type "${t}", got ${value} instead`)
     }
     encode(value) {
-        this.check(value)
         if (value === undefined) return null
         return value
     }
-    decode(value) {
-        this.check(value)
-        return value
-    }
+    decode(value) { return value }
 }
 
 export class BOOLEAN extends Primitive {
@@ -419,11 +313,16 @@ export class Textual extends Primitive {
 
         keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
         keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
-        value()         { return this.input.current.value }     // retrieve an edited value from the editor
+        current()       { return this.input.current.value }     // retrieve an edited value from the editor
     }
 }
 
-export class STRING extends Textual {}
+export class STRING extends Textual {
+    valid(value) {
+        /* Trim leading/trailing whitespace. Replace with `null` if empty string. */
+        value = super.valid(value)
+    }
+}
 
 export class TEXT extends Textual
 {
@@ -525,7 +424,7 @@ export class CODE extends TEXT
             // editorAce.session.setScrollTop(1)
         }
 
-        value()      { return this.editorAce.session.getValue() }
+        current()    { return this.editorAce.session.getValue() }
         close(value) {
             super.close(value)
             this.editorAce.destroy()                   // destroy the ACE editor to free up resources
@@ -538,6 +437,142 @@ export class CODE extends TEXT
 
 export class FILENAME extends STRING {}
 
+
+/**********************************************************************************************************************
+ **
+ **  ATOMIC schema types
+ **
+ */
+
+export class GENERIC extends Schema {
+    /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
+
+    get _type() { return this.type || this.constructor.type }
+
+    valid(obj) {
+        return !this._type || obj instanceof this._type
+        // let types = this._types
+        // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
+    }
+    encode(obj) {
+        if (!this.valid(obj))
+            throw new DataError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
+            // throw new DataError(`invalid object type, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
+        return JSONx.encode(obj)
+    }
+    decode(state) {
+        let obj = JSONx.decode(state)
+        if (!this.valid(obj))
+            throw new DataError(`invalid object type after decoding, expected an instance of ${this._type}, got ${obj} instead`)
+            // throw new DataError(`invalid object type after decoding, expected one of [${this._types.map(t => t.name)}], got ${obj} instead`)
+        return obj
+    }
+
+    // display(props) {
+    //     let {value, save, ...rest} = props
+    //     let valueEncoded = this.displayEncode(value)
+    //     let  saveDecoded = newValue => save(this.displayDecode(newValue))
+    //     return e(TEXT.Widget, {schema: this, value: valueEncoded, save: saveDecoded, ...rest})
+    // }
+    //
+    // displayEncode(value) {
+    //     /* Convert `value` to its editable representation for display(). */
+    //     return JSON.stringify(this.encode(value))
+    // }
+    // displayDecode(value) {
+    //     return this.decode(JSON.parse(value))
+    // }
+    
+    static Widget = class extends Schema.Widget {
+        // GENERIC displays raw JSON representation of a value using a standard text editor
+        viewer() {
+            let {value, schema} = this.props
+            let flat = schema.encode(value)
+            return JSON.stringify(flat)
+        }
+    }
+}
+
+// export const ValueEncodedHOC = (classComponent, config = {raise: false}) =>
+//     /* Create .
+//      */
+//     class ItemLoadingWrapper extends classComponent {
+//     }
+    
+// the most generic schema for encoding/decoding of objects of any types
+export let generic_schema = new GENERIC()
+
+
+/**********************************************************************************************************************/
+
+export class SCHEMA extends GENERIC {
+    static type = Schema
+
+    static Widget = class extends GENERIC.Widget {
+        static style(scope = '.Schema .SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
+            return cssPrepend(scope) `
+            .default { color: #888; }
+            .info { font-style: italic; }
+        `}
+
+        viewer() {
+            let {value: schema} = this.props
+            let defalt = `${schema.default}`
+            return SPAN({className: 'SCHEMA'},
+                    `${schema}`,
+                    schema.default !== undefined &&
+                        SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
+                            ` (${truncate(defalt,100)})`),
+                    schema.info &&
+                        SPAN({className: 'info'}, ` • ${schema.info}`),
+                        // smaller dot: &middot;
+                        // larger dot: •
+            )
+        }
+    }
+}
+
+// export class FIELD extends SCHEMA {
+//
+//     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
+//     //repeated        // if true, the field can occur multiple times in an item
+//
+//     virtual         // the field is not stored in DB, only imputed upon request through a call to _impute_XYZ()
+//
+//     derived         // if true, the field's value can be automatically imputed, if missing,
+//                     // through a call to item._get_XYZ(); only available when multi=false
+//     persistent
+//     editable
+//     hidden
+//
+//     slow             // 1 means the field is stored in a separate "slow" column group #1 to allow faster loading
+//                      // of remaining fields stored in group #0 ("core" group, "fast" group);
+//                      // with large fields moved out to a "slow" group, these operations may become faster:
+//                      // - (partial) loading of an item's core fields, but only when slow fields are large: ~2x disk block size or more
+//                      // - category scan inside each table-partition; important for mapsort pipelines (!)
+//
+//     /*
+//       1) derived: transient non-editable hidden; refreshed on item's data change
+//       2) imputed: persistent editable displayed; not refreshed ??
+//
+//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
+//       2) impute on write
+//     */
+// }
+
+/**********************************************************************************************************************/
+
+export class CLASS extends Schema {
+    /* Accepts any global python type and encodes as a string containing its full package-module name. */
+    encode(value) {
+        if (value === null) return null
+        return globalThis.registry.getPath(value)
+    }
+    decode(value) {
+        if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
+        return globalThis.registry.getClass(value)
+    }
+}
 
 /**********************************************************************************************************************/
 
