@@ -91,23 +91,6 @@ export class Schema {
         // throw new ValueError(value)
     }
 
-    // dump_json(value, format = {}) {
-    //     /*
-    //     JSON-encoding proceeds in two phases:
-    //     1) reduction of the original `value` (with nested objects) to a smaller `flat` object using any external
-    //        type information that's available; the flat object may still contain nested non-primitive objects;
-    //     2) encoding of the `flat` object through json.dumps(); external type information is no longer used.
-    //     */
-    //     let {replacer, space} = json_format
-    //     let state = this.encode(value)
-    //     return JSON.stringify(state, replacer, space)
-    // }
-
-    load_json(dump) {
-        let state = JSON.parse(dump)
-        return this.decode(state)
-    }
-
     encode(value) {
         /*
         Convert `value` - a possibly composite object matching the current schema (this) -
@@ -123,6 +106,11 @@ export class Schema {
         return JSONx.decode(state)
     }
 
+    encodeJson(value, replacer, space) {
+        /* Encode and JSON-stringify a `value` with configurable JSON format. */
+        return JSON.stringify(this.encode(value), replacer, space)
+    }
+    decodeJson(dump)    { return this.decode(JSON.parse(dump)) }
     toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
 
     /***  UI  ***/
@@ -189,9 +177,9 @@ Schema.Widget = class extends Widget {
         }
     }
 
-    value()       { return undefined }                                          // retrieve an edited flat value (encoded) from the editor
-    encode(value) { return JSON.stringify(this.props.schema.encode(value)) }    // convert `value` to its editable representation
-    decode(value) { return this.props.schema.decode(JSON.parse(value)) }        // ...and back
+    value()       { return undefined }                                  // retrieve an edited flat value (encoded) from the editor
+    encode(value) { return this.props.schema.encodeJson(value) }        // convert `value` to its editable representation
+    decode(value) { return this.props.schema.decodeJson(value) }        // ...and back
 
     editor() { throw new Error("not implemented") }
     viewer() {
@@ -478,9 +466,9 @@ export class GENERIC extends Schema {
 
     static Widget = class extends TEXT.Widget {
         /* Displays raw JSON representation of a value using a standard text editor */
-        viewValue()   { return this.encode(this.props.value) }
-        encode(value) { return JSON.stringify(this.props.schema.encode(value)) }
-        decode(value) { return this.props.schema.decode(JSON.parse(value)) }
+        viewValue()   { return this.props.schema.encodeJson(this.props.value) }
+        encode(value) { return this.props.schema.encodeJson(value, null, 2) }   // for editing the JSON string is pretty-printed
+        decode(value) { return this.props.schema.decodeJson(value) }
     }
 }
 
@@ -503,7 +491,7 @@ export class SCHEMA extends GENERIC {
         viewer() {
             let {value: schema} = this.props
             let defalt = `${schema.default}`
-            return SPAN({className: 'SCHEMA'},
+            return DIV({onDoubleClick: e => this.open(e)}, SPAN({className: 'SCHEMA'},
                     `${schema}`,
                     schema.default !== undefined &&
                         SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
@@ -512,7 +500,7 @@ export class SCHEMA extends GENERIC {
                         SPAN({className: 'info'}, ` • ${schema.info}`),
                         // smaller dot: &middot;
                         // larger dot: •
-            )
+                    ))
         }
     }
 }
