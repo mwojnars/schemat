@@ -182,7 +182,6 @@ Schema.Widget = class extends Widget {
         this.input = createRef()
         this.state = { ...this.state,
             editing:  false,
-            value:    props.value,      // internal state of the editor preserved by close() even after rejection (!)
             flashMsg: null,             // flash message displayed after accept/reject
             flashCls: null,             // css class to be applied to flashMsg box
         }
@@ -196,8 +195,8 @@ Schema.Widget = class extends Widget {
         // return e(schema.widget.bind(schema), props)
     }
 
-    open(e)         { this.setState({editing: true})  }                 // activate the editor and editing mode
-    close(value)    { this.setState({editing: false, value}) }          // close the editor, store `value` internally but don't send to parent
+    open(e) { this.setState({editing: true})  }                     // activate the editor and editing mode
+    close() { this.setState({editing: false}); return undefined }   // close the editor; return a new value after edits (in subclasses)
 
     flash() {
         return DIV({
@@ -217,19 +216,15 @@ Schema.Widget = class extends Widget {
     }
     accept(e) {
         // e.preventDefault()
-        let value = this.current()
-        this.close(value)
-        this.save(value)
-    }
-    reject(e) {                                         // rejected value is still preserved in state.value and reused on next open()
-        let value = this.current()
-        this.close(value)
-        if (value !== this.props.value) this.notify("NOT SAVED", false)
-    }
-    save(value) {                                       // notify a new value to the parent
+        let value = this.close()
         if (value === this.props.value) return
-        this.props.save(value)
+        this.props.save(value)                          // notify a new value to the parent
         this.notify("SAVED")
+    }
+    reject(e) {
+        let value = this.close()
+        if (value === this.props.value) return
+        this.notify("NOT SAVED", false)
     }
 
     render() {
@@ -301,7 +296,7 @@ export class Textual extends Primitive {
         empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
         viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.init()) }
         editor()    { return INPUT({
-                        defaultValue:   this.state.value, 
+                        defaultValue:   this.props.value,
                         ref:            this.input, 
                         onKeyDown:      e => this.key(e),
                         onBlur:         e => this.reject(e),
@@ -310,10 +305,9 @@ export class Textual extends Primitive {
                         style:          {width: "100%"},
                         })
                     }
-
-        keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
-        keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
-        current()       { return this.input.current.value }     // retrieve an edited value from the editor
+        keyAccept(e) { return e.key === "Enter"  }          // return true if the key pressed accepts the edits
+        keyReject(e) { return e.key === "Escape" }          // return true if the key pressed rejects the edits
+        close()      { super.close(); return this.input.current.value }       // retrieve an edited value from the editor
     }
 }
 
@@ -330,7 +324,7 @@ export class TEXT extends Textual
         viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.init())) }
         editor() {
             return PRE(TEXTAREA({
-                defaultValue:   this.state.value,
+                defaultValue:   this.props.value,
                 ref:            this.input,
                 onKeyDown:      e => this.key(e),
                 onBlur:         e => this.reject(e),
@@ -340,8 +334,8 @@ export class TEXT extends Textual
                 style:          {width:'100%', height:'10em'}
             }))
         }
-        keyAccept(e)    { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
-        keyReject(e)    { return e.key === "Escape" }
+        keyAccept(e) { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
+        keyReject(e) { return e.key === "Escape" }
     }
 }
 export class CODE extends TEXT
@@ -388,12 +382,11 @@ export class CODE extends TEXT
             useWorker:              false,      // disable syntax checker and warnings
         }
 
-        editorAce                               // an ACE editor object
-        observer                                // a ResizeObserver to watch for user resizing the editor box
+        editorAce           // an ACE editor object
+        observer            // a ResizeObserver to watch for user resizing the editor box
 
         editor() {
             return DIV({
-                defaultValue:   this.state.value,
                 ref:            this.input,
                 autoFocus:      true,
                 onKeyDown:      e => this.key(e),
@@ -412,7 +405,7 @@ export class CODE extends TEXT
 
             let div = this.input.current
             let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
-            editorAce.session.setValue(this.state.value)
+            editorAce.session.setValue(this.props.value)
             // editorAce.setTheme("ace/theme/textmate")
             // editorAce.session.setMode("ace/mode/javascript")
 
@@ -424,13 +417,14 @@ export class CODE extends TEXT
             // editorAce.session.setScrollTop(1)
         }
 
-        current()    { return this.editorAce.session.getValue() }
-        close(value) {
-            super.close(value)
+        close() {
+            super.close()
+            let value = this.editorAce.session.getValue()
             this.editorAce.destroy()                   // destroy the ACE editor to free up resources
             this.observer.disconnect()
             delete this.editorAce
             delete this.observer
+            return value
         }
     }
 }
