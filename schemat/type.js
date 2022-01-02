@@ -467,7 +467,7 @@ export class GENERIC extends Schema {
     static Widget = class extends TEXT.Widget {
         /* Displays raw JSON representation of a value using a standard text editor */
         viewValue()   { return this.props.schema.encodeJson(this.props.value) }
-        encode(value) { return this.props.schema.encodeJson(value, null, 2) }   // for editing the JSON string is pretty-printed
+        encode(value) { return this.props.schema.encodeJson(value, null, 2) }   // JSON string is pretty-printed for edit
         decode(value) { return this.props.schema.decodeJson(value) }
     }
 }
@@ -766,8 +766,8 @@ export class CATALOG extends Schema {
     keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
     values      // common schema of values of an input catalog
 
-    get _keys() { return this.keys || this.constructor.keys_default }
-    _schema()   { return this.values || this.constructor.values_default }
+    get _keys()  { return this.keys || this.constructor.keys_default }
+    _schema(key) { return this.values || this.constructor.values_default }
 
     constructor(values = null, keys = null, params = {}) {
         super(params)
@@ -844,13 +844,27 @@ export class CATALOG extends Schema {
         else
             return `${name}(${values}, ${keys})`
     }
+
+    get(path, default_ = undefined, sep = '/') {
+        /* Return a nested schema object at a given `path`, or `this` if `path` is empty.
+           The path is either an array of keys on subsequent levels of nesting, or a '/'-concatenated string.
+           The path may span nested CATALOGs at arbitrary depths. This method is a counterpart of Catalog.get().
+         */
+        if (!path || !path.length) return this
+        if (typeof path === 'string') path = path.split(sep)
+        let schema  = this._schema(path[0])             // make one step forward, then call get() recursively
+        let subpath = path.slice(1)
+        if (!subpath.length)            return schema
+        if (schema instanceof CATALOG)  return schema.get(subpath, default_)
+        return default_
+    }
 }
 
 export class DATA extends CATALOG {
     /* Like CATALOG, but provides distinct value schemas for different predefined keys (fields) of a catalog.
        Primarily used for encoding Item.data. Not intended for other uses.
      */
-    fields         // dict of field names and their schema; null for a key means a default schema should be used
+    fields         // dict of field names and their schemas; null means a default schema should be used for a given field
 
     constructor(fields, keys = null, params = {}) {
         super(null, keys, params)

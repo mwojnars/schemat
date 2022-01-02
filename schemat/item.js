@@ -18,47 +18,6 @@ export const ROOT_CID = 0
  **
  */
 
-// function Catalog1({item, path, catalog, schema, schemas, color, start_color}) {
-//     /* If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
-//        for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
-//        If `start_color` is undefined, the same `color` is used for all rows.
-//      */
-//     let entries = catalog.getEntries()
-//     let rows    = entries.map(({key, value, id}, i) =>
-//     {
-//         if (start_color) color = 1 + (start_color + i - 1) % 2
-//         if (schemas) schema = schemas.get(key)
-//         let props = {item, path: [...path, id]}
-//
-//         return TR({className: `is-row${color}`},
-//                   schema instanceof CATALOG
-//                     ? TD({className: 'ct-nested', colSpan: 2},
-//                         DIV({className: 'ct-field'}, key),
-//                         e(Catalog1, {...props, catalog: value, schema: schema.values, color})
-//                     )
-//                     : e(Entry, {...props, key_:key, value, schema}))
-//     })
-//     let depth = 1 + path.length
-//     let table = TABLE({className: `catalog${depth}`}, TBODY(...rows))
-//     return path.length ? DIV({className: 'wrap-offset'}, table) : table         // nested catalogs need a <div.wrap-offset> wrapper
-// }
-//
-// function Entry({path, key_, value, schema, item}) {
-//     /* A table row containing an atomic entry: a key and its value (not a subcatalog).
-//        The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
-//      */
-//     const save = async (newValue) => {
-//         // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-//         await item.remote_set({path, value: schema.encode(newValue)})        // TODO: validate newValue
-//     }
-//     return FRAGMENT(
-//               TH({className: 'ct-field'}, key_),
-//               TD({className: 'ct-value', suppressHydrationWarning:true}, schema.display({value, save})),
-//            )
-// }
-
-/**********************************************************************************************************************/
-
 class Changes {
     /* List of changes to item's data that have been made by a user and can be submitted
        to the server and applied in DB. Multiple edits of the same data entry are merged into one.
@@ -207,9 +166,9 @@ export class Item {
         // TODO: initialize item metadata - the remaining attributes from `record`
     }
 
-    async set(path, value, props) {
+    async edit(path, props = {}) {
         await this.load()
-        this.data.set(path, value, props)           // TODO: create and use EditableItem instead
+        this.data.edit(path, props)           // TODO: use EditableItem instead
         return this.registry.update(this)
     }
 
@@ -295,10 +254,11 @@ export class Item {
         if (!brackets) return stamp
         return `[${stamp}]`
     }
-    getSchema() {
-        /* Return schema of this item as defined in its category. The schema is an instance of DATA (subclass of Schema). */
+    getSchema(path = null) {
+        /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
+           as defined in this item's category's `fields` property. */
         assert(this.category)
-        return this.category.temp('schema')                         // calls _temp_schema() of this.category
+        return this.category.temp('schema').get(path)               // calls _temp_schema() of this.category
     }
     getStyle() {
         /* Return CSS styles, as a Styles instance, that are needed to display data through this item's schema. */
@@ -411,12 +371,15 @@ export class Item {
             res.send(page)
     }
 
-    async _handle_set({req, res}) {
+    async _handle_edit({req, res}) {
+        /* Web endpoint for editing an existing (sub)entry inside this.data. */
         assert(req.method === 'POST')
         let {path, value} = req.body
-        // let schema = this.getSchema(path)
+        let schema = this.getSchema(path)
+        assert(schema)
+        value = schema.decode(value)
         // print(`_handle_set: path ${path}, value ${value}`)
-        await this.set(path, value)
+        await this.edit(path, {value})
         return res.json({})
     }
     async _handle_delete({res}) {
@@ -448,7 +411,7 @@ export class Item {
     }
 
     async remote_delete()   { return this.remote('delete') }
-    async remote_set(args)  { return this.remote('set', args) }
+    async remote_edit(args) { return this.remote('edit', args) }
 
     HTML({title, body}) { return `
         <!DOCTYPE html><html>
