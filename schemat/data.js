@@ -140,11 +140,22 @@ export class Catalog {
                 this.pushEntry({key, value})
     }
 
+    _findPosition(key, {unique = false} = {}) {
+        /* Find a (unique) position of a `key`, the key being a string or a number. Return undefined if not found.
+           Raise an exception if multiple occurrences.
+         */
+        if (Number.isInteger(key)) return this._entries[key] ? key : undefined
+        if (this._keys.has(key)) {
+            let poslist = this._keys.get(key)
+            if (poslist.length > 1) throw new Error(`unique entry expected for '${key}', found ${poslist.length} entries instead`)
+            return poslist[0]
+        }
+    }
     _findEntry(key, {unique = false} = {}) {
         if (typeof key === 'number') return this._entries[key]
         if (this._keys.has(key)) {
             let poslist = this._keys.get(key)
-            if (unique && poslist.length > 1) throw new Error(`unique Catalog entry expected for '${key}', found ${poslist.length} entries instead`)
+            if (unique && poslist.length > 1) throw new Error(`unique entry expected for '${key}', found ${poslist.length} entries instead`)
             return this._entries[poslist[0]]            // first entry returned if multiple occurrences
         }
     }
@@ -189,9 +200,27 @@ export class Catalog {
         return this._findEntries(key)
     }
 
-    edit(path, {key, value, label, comment}, context = {}) {
+    edit(path, {key, value, label, comment}, context = {}, sep = '/') {
         /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications. */
-        return this.set(path, value, {key, label, comment})     // TODO: reimplement without a call to set()
+
+        if (typeof path === 'string') path = path.split('/')
+        assert(path.length >= 1)
+
+        let step = path[0]
+        let pos  = this._findPosition(step, {unique: true})
+        if (pos === undefined) throw new Error(`path not found: ${step}`)
+
+        let props = {key, value, label, comment}
+        let subpath = path.slice(1)
+        if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
+
+        let subcat = this._entries[pos].value
+        if (subcat instanceof Catalog)                              // subcat is a Catalog? make a recursive call
+            return subcat.edit(subpath, props)
+
+        throw new Error(`path not found: ${subpath.join('/')}`)
+
+        // return this.set(path, value, {key, label, comment})     // TODO: reimplement without a call to set()
     }
 
     set(path, value, {key, label, comment, create_path = false} = {}) {
