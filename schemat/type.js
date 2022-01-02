@@ -810,14 +810,12 @@ export class CATALOG extends Schema {
         throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
     }
     _from_dict(state) {
-        let cat = new Catalog()
         let schema_keys = this._keys
-        for (let [key, value] of Object.entries(state)) {
-            key = schema_keys.decode(key)
-            value = this._schema(key).decode(value)
-            cat.set(key, value)
-        }
-        return cat
+        let entries = Object.entries(state).map(([key, value]) => ({
+            key:   schema_keys.decode(key),
+            value: this._schema(key).decode(value),
+        }))
+        return new Catalog(entries)
     }
     _from_list(state) {
         let cat = new Catalog()
