@@ -168,7 +168,7 @@ export class Item {
 
     async edit(path, props = {}) {
         await this.load()
-        this.data.edit(path, props)           // TODO: use EditableItem instead
+        this.data.edit(path, props)                 // TODO: use EditableItem instead
         return this.registry.update(this)
     }
 

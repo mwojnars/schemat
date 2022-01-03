@@ -159,6 +159,7 @@ Schema.Widget = class extends Widget {
         .flash-good { background-color: mediumseagreen; transition: 0.2s; }
         .flash-warn { background-color: salmon; transition: 0.2s; }
         .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+        .error { padding-top:5px; color:red; }
     `}
 
     static defaultProps = {
@@ -172,41 +173,25 @@ Schema.Widget = class extends Widget {
         this.initial = undefined        // initial flat (encoded) value for the editor; stored here for change detection in close()
         this.state   = { ...this.state,
             editing:  false,
+            errorMsg: null,             // error message
             flashMsg: null,             // flash message displayed after accept/reject
             flashCls: null,             // css class to be applied to flashMsg box
         }
     }
 
-    value()       { return undefined }                                  // retrieve an edited flat value (encoded) from the editor
-    encode(value) { return this.props.schema.encodeJson(value) }        // convert `value` to its editable representation
-    decode(value) { return this.props.schema.decodeJson(value) }        // ...and back
-
     editor() { throw new Error("not implemented") }
-    viewer() {
-        // return this.encode(this.props.value)
-        return this.props.value.toString()
-        /* By default, calls .widget() of a parent schema. Override in subclasses with a custom viewer implementation. */
-        // let {schema, ...props} = this.props
-        // return e(schema.widget.bind(schema), props)
-    }
+    viewer() { return this.encode(this.props.value) }
 
-    open(e) { this.setState({editing: true})  }         // activate the editor and editing mode
-    close() {                                           // close the editor; return the edited flat value, and a "changed" flag
+    value()       { return undefined }                              // retrieve an edited flat value (encoded) from the editor
+    encode(value) { return this.props.schema.encodeJson(value) }    // convert `value` to its editable representation
+    decode(value) { return this.props.schema.decodeJson(value) }    // ...and back
+
+    open(e) { this.setState({editing: true})  }                     // activate the editor and editing mode
+    close() { this.setState({editing: false, errorMsg: null}) }     // close the editor and editing mode
+    read()  {                                                       // read the edited flat value, return this value and a "changed" flag
         let current = this.value()
         let changed = (current !== this.initial)
-        this.setState({editing: false})
         return [current, changed]
-    }
-
-    flash() {
-        return DIV({
-                className: 'flash ' + (this.state.flashCls || 'flash-stop'),
-                onTransitionEnd: () => this.setState({flashCls: null}),
-            },
-            this.state.flashMsg)
-    }
-    notify(msg, positive = true) {
-        this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
     }
 
     // confirm()
@@ -216,27 +201,47 @@ Schema.Widget = class extends Widget {
     }
     async accept(e) {
         // e.preventDefault()
-        let [value, changed] = this.close()
-        if (!changed) return
+        let [value, changed] = this.read()
+        if (!changed) return this.close()
         try {
             value = this.decode(value)
             value = this.props.schema.valid(value)          // validate and normalize the decoded value; exception is raised on error
-            this.notify("SAVING...")
+            this.flash("SAVING...")
             await this.props.save(value)                    // push the new decoded value to the parent
-            this.notify("SAVED")
+            this.flash("SAVED")
+            this.close()
         }
         catch (ex) { this.error(ex) }
     }
     reject(e) {
-        let [value, changed] = this.close()
-        if (changed) this.notify("NOT SAVED", false)
+        let [value, changed] = this.read()
+        if (changed) this.flash("NOT SAVED", false)
+        this.close()
     }
-    error(ex) { throw ex }
+
+    flashBox() {
+        return DIV({
+                className: 'flash ' + (this.state.flashCls || 'flash-stop'),
+                onTransitionEnd: () => this.setState({flashCls: null}),
+            },
+            this.state.flashMsg)
+    }
+    flash(msg, positive = true) {
+        this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
+    }
+
+    errorBox() {
+        return this.state.errorMsg ? DIV({className: 'error'}, this.state.errorMsg) : null
+    }
+    error(ex) {
+        this.setState({errorMsg: ex.toString()})
+        // throw ex
+    }
 
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
         let block    = this.state.editing ? this.editor() : this.viewer()
-        return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flash())
+        return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flashBox(), this.errorBox())
     }
 }
 
