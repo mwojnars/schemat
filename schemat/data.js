@@ -1,6 +1,6 @@
 // import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
-import { React, e, DIV, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
+import { React, e, DIV, SPAN, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
 
 
 /**********************************************************************************************************************
@@ -457,7 +457,7 @@ export class Catalog {
             setCurrent(newValue)
         }
         return FRAGMENT(
-                  TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)),
+                  TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)), //' ', SPAN({className:'material-icons'}, 'help_center'))),
                   TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
                )
     }

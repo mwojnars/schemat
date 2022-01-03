@@ -156,7 +156,7 @@ Schema.Widget = class extends Widget {
         /* */
         return cssPrepend(scope) `
         .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
-        .flash-good { background-color: mediumseagreen; transition: 0.2s; }
+        .flash-info { background-color: mediumseagreen; transition: 0.2s; }
         .flash-warn { background-color: salmon; transition: 0.2s; }
         .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
         .error { padding-top:5px; color:red; }
@@ -179,10 +179,26 @@ Schema.Widget = class extends Widget {
         }
     }
 
-    editor() { throw new Error("not implemented") }
-    viewer() { return this.encode(this.props.value) }
+    prepare()   { return this.encode(this.props.value) }            // value to be shown in the viewer()
+    viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.prepare()) }
+    editor()    { return INPUT({
+                    defaultValue:   this.initial,
+                    ref:            this.input,
+                    onKeyDown:      e => this.key(e),
+                    onBlur:         e => this.reject(e),
+                    autoFocus:      true,
+                    type:           "text",
+                    style:          {width: "100%"},
+                    })
+                }
+    // viewer() { return this.encode(this.props.value) }
+    // editor() { throw new Error("not implemented") }
 
-    value()       { return undefined }                              // retrieve an edited flat value (encoded) from the editor
+    keyAccept(e)  { return e.key === "Enter"  }             // return true if the key pressed accepts the edits
+    keyReject(e)  { return e.key === "Escape" }             // return true if the key pressed rejects the edits
+
+    // value()       { return undefined }
+    value()       { return this.input.current.value }               // retrieve an edited flat value (encoded) from the editor
     encode(value) { return this.props.schema.encodeJson(value) }    // convert `value` to its editable representation
     decode(value) { return this.props.schema.decodeJson(value) }    // ...and back
 
@@ -221,22 +237,17 @@ Schema.Widget = class extends Widget {
 
     flashBox() {
         return DIV({
-                className: 'flash ' + (this.state.flashCls || 'flash-stop'),
+                key: 'flash', className: 'flash ' + (this.state.flashCls || 'flash-stop'),
                 onTransitionEnd: () => this.setState({flashCls: null}),
             },
             this.state.flashMsg)
     }
     flash(msg, positive = true) {
-        this.setState({flashMsg: msg, flashCls: positive ? 'flash-good' : 'flash-warn'})
+        this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
     }
 
-    errorBox() {
-        return this.state.errorMsg ? DIV({className: 'error'}, this.state.errorMsg) : null
-    }
-    error(ex) {
-        this.setState({errorMsg: ex.toString()})
-        // throw ex
-    }
+    errorBox() { return this.state.errorMsg ? DIV({key: 'error', className: 'error'}, this.state.errorMsg) : null }
+    error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
@@ -277,7 +288,7 @@ export class Primitive extends Schema {
         let t = this.constructor.stype
         if (typeof value === t || (this.blank && (value === null || value === undefined)))
             return value
-        throw new ValueError(`expected a primitive value of type "${t}", got ${value} instead`)
+        throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
     }
     encode(value) {
         if (value === undefined) return null
@@ -303,24 +314,8 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
-
-        viewValue() { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
-        empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
-        viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.viewValue()) }
-        editor()    { return INPUT({
-                        defaultValue:   this.initial,
-                        ref:            this.input, 
-                        onKeyDown:      e => this.key(e),
-                        onBlur:         e => this.reject(e),
-                        autoFocus:      true,
-                        type:           "text", 
-                        style:          {width: "100%"},
-                        })
-                    }
-        keyAccept(e)    { return e.key === "Enter"  }           // return true if the key pressed accepts the edits
-        keyReject(e)    { return e.key === "Escape" }           // return true if the key pressed rejects the edits
-
-        value()         { return this.input.current.value }
+        // prepare() { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
+        // empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
         encode(value)   { return value }
         decode(value)   { return value }
     }
@@ -337,7 +332,7 @@ export class STRING extends Textual {
 export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
-        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.viewValue())) }
+        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.prepare())) }
         editor() {
             return PRE(TEXTAREA({
                 defaultValue:   this.initial,
@@ -471,7 +466,7 @@ export class GENERIC extends Schema {
 
     static Widget = class extends TEXT.Widget {
         /* Displays raw JSON representation of a value using a standard text editor */
-        viewValue()   { return this.props.schema.encodeJson(this.props.value) }
+        prepare()     { return this.props.schema.encodeJson(this.props.value) }
         encode(value) { return this.props.schema.encodeJson(value, null, 2) }   // JSON string is pretty-printed for edit
         decode(value) { return this.props.schema.decodeJson(value) }
     }

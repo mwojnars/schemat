@@ -1,6 +1,6 @@
-import Resources from './resources.js'
+import { Resources, React, ReactDOM, MaterialUI } from './resources.js'
 import {
-    React, ReactDOM, e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
+    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
 import { print, assert, T, escape_html, ItemNotLoaded, ServerError } from './utils.js'
@@ -423,7 +423,6 @@ export class Item {
         <body>${body}</body>
         </html>
     `}
-    // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 
     BOOT({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
@@ -456,11 +455,19 @@ export class Item {
 
     Page({extra = null}) {                                  // React functional component
         return DIV(
+            // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+            // e(this._mui_test),
+            // e(this._mui_test),
             e(this.Title.bind(this)),
             H2('Properties'),                               //{style: {color:'blue'}}
             e(this.DataTable.bind(this)),
             extra,
         )
+    }
+    _mui_test() {
+        return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
+        // OBSERV: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
+        //         A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
     }
 
     Title() {

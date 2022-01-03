@@ -1,4 +1,6 @@
 import { assert, print, ItemNotLoaded } from './utils.js'
+import { React, ReactDOM } from './resources.js'
+export { React, ReactDOM }
 
 
 /**********************************************************************************************************************
@@ -78,17 +80,6 @@ export function cssPrepend(scope, css) {
  **
  */
 
-let React    = globalThis.React                             // on client...
-let ReactDOM = globalThis.ReactDOM
-// let CSSTransition = globalThis.CSSTransition
-
-if (!React) {
-    React    = (await import("react")).default              // on server...
-    ReactDOM = (await import("react-dom/server.js")).default
-    // CSSTransition = (await import("react-transition-group")).CSSTransition
-}
-
-export { React, ReactDOM }
 export const e = React.createElement
 
 function _e(name) {
