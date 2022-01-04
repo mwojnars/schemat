@@ -417,7 +417,7 @@ export class Catalog {
 
     /***  React widgets  ***/
 
-    Table({item, path, schema, schemas, color, start_color}) {
+    Table({item, path = [], schema, schemas, color, start_color}) {
         /* React component that displays this catalog's data in tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.

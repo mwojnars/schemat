@@ -27,15 +27,16 @@ html {
     --textarea-height: 12rem;
 }
 body {
+    /*font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;*/
+    font-family: 'Nunito', sans-serif;
     width: 1120px;
     margin: 0 auto;
     padding-bottom: 50px;
-    font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.5;
     color: #212529;
 }
 
-h1, h2, h3      { margin-top: 1.4rem; margin-bottom: 0.6em; font-weight: normal; }
+h1, h2, h3      { font-family: 'Raleway', sans-serif; font-weight: normal; margin-top: 1.4rem; margin-bottom: 0.6em; }
 h1              { font-size: 2.5rem; }
 h2              { font-size: 1.4rem; text-transform: uppercase; }
 h2:first-letter { font-size: 1.8rem; }
@@ -75,7 +76,7 @@ a:visited { color: #00427a }
     height: var(--textarea-height);
     width: 100%;
     line-height: 1.4;
-    font-family: var(--bs-font-monospace);
+    font-family: 'Noto Sans Mono';  /*var(--bs-font-monospace);*/
     font-size: 1em;
     resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
     /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
@@ -138,8 +139,8 @@ a:visited { color: #00427a }
 .Catalog.is-nested .Entry_key   { font-weight: normal; font-style: italic; }
 
 .Catalog .Entry_value,
-.Catalog .Entry_value > *       { font-size: 14px; font-family: monospace; /* courier */ }
-.Catalog .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: monospace; }
+.Catalog .Entry_value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+.Catalog .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
 
 
 /*

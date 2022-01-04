@@ -466,8 +466,8 @@ export class Item {
     }
     _mui_test() {
         return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
-        // OBSERV: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
-        //         A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
+        // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
+        //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
     }
 
     Title() {
@@ -483,16 +483,15 @@ export class Item {
         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
         this.assertLoaded()
         let data = this.data
-        let styles = this.getStyle()
+        let style = this.getStyle()
         let changes = new Changes(this)
         let catalog = e(data.Table.bind(data), {
             item:           this,
             schemas:        this.category.getFields(),
-            path:           [],
             start_color:    1,                                      // color of the first row: 1 or 2
         })
         return DIV({className: 'DataTable'},
-                    !!styles.size && STYLE(styles.getCSS()),
+                    !!style.size && STYLE(style.getCSS()),
                     catalog, e(changes.Buttons.bind(changes)))
     }
 }
