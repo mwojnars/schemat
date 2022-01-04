@@ -1,5 +1,5 @@
 import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
-import { React, createRef, useState, useRef, useEffect, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import { React, createRef, useState, useRef, useEffect, createContext, useContext, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -11,16 +11,20 @@ import { Catalog } from './data.js'
  **
  */
 
-class Styles {
+export class Styles {
     /* Collection of CSS snippets that are appended one by one with add() and then deduplicated
        and converted to a single snippet in getCSS().
      */
     styles = new Set()
 
     get size()      { return this.styles.size }
-    add(style)      { if (style) this.styles.add(style.trimEnd() + '\n') }
+    add(style)      { if (style && style.trim()) this.styles.add(style.trimEnd() + '\n') }
     getCSS()        { return '\n' + [...this.styles].join('') }
 }
+
+// // CollectStyles: keeps a Styles instance that collects all CSS styles from a given subtree
+// export const CollectStyles = createContext()
+
 
 /**********************************************************************************************************************/
 
@@ -191,8 +195,6 @@ Schema.Widget = class extends Widget {
                     style:          {width: "100%"},
                     })
                 }
-    // viewer() { return this.encode(this.props.value) }
-    // editor() { throw new Error("not implemented") }
 
     keyAccept(e)  { return e.key === "Enter"  }             // return true if the key pressed accepts the edits
     keyReject(e)  { return e.key === "Escape" }             // return true if the key pressed rejects the edits
@@ -856,6 +858,18 @@ export class CATALOG extends Schema {
         if (schema instanceof CATALOG)  return schema.get(subpath, default_)
         return default_
     }
+
+    // static Widget = class extends Schema.Widget {
+    //     static defaultProps = {
+    //         item:    undefined,         // the item whose .data will be displayed
+    //         schema:  undefined,         // parent Schema instance (CATALOG)
+    //     }
+    //     static style(scope = '.Schema .CATALOG') {
+    //         return cssPrepend(scope) `
+    //     `}
+    //
+    //     render() {
+    //     }
 }
 
 export class DATA extends CATALOG {
@@ -876,6 +890,25 @@ export class DATA extends CATALOG {
     collectStyles(styles) {
         for (let schema of Object.values(this.fields))
             schema.collectStyles(styles)
+    }
+
+    static Widget = class extends CATALOG.Widget {
+        static defaultProps = {
+            item:    undefined,         // the item whose .data will be displayed
+            schema:  undefined,         // parent Schema instance (DATA)
+        }
+        render() {
+            /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
+            print('DATA.Widget.render() ...')
+            let item = this.props.item
+            let data = item.data
+            let catalog = e(data.Table.bind(data), {
+                item:           item,
+                schemas:        item.category.getFields(),
+                start_color:    1,                                      // color of the first row: 1 or 2
+            })
+            return DIV({className: 'Schema DATA'}, catalog)
+        }
     }
 }
 

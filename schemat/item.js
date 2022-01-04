@@ -264,7 +264,7 @@ export class Item {
     getStyle() {
         /* Return CSS styles, as a Styles instance, that are needed to display data through this item's schema. */
         assert(this.category)
-        return this.category.temp('styles')                         // calls _temp_styles() of this.category
+        return this.category.temp('style' )                         // calls _temp_styles() of this.category
     }
 
     temp(field) {
@@ -447,6 +447,7 @@ export class Item {
          */
         // TODO: use server-side caching of this function, like with temp() and temporary variables,
         //       to avoid repeated SSR rendering of the same item in consecutive requests
+        this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
         let page = e(this.Page.bind(this))
         return targetElement ? ReactDOM.render(page, targetElement) : ReactDOM.renderToString(page)
@@ -481,18 +482,28 @@ export class Item {
 
     DataTable() {
         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
-        this.assertLoaded()
-        let data = this.data
         let style = this.getStyle()
         let changes = new Changes(this)
-        let catalog = e(data.Table.bind(data), {
-            item:           this,
-            schemas:        this.category.getFields(),
-            start_color:    1,                                      // color of the first row: 1 or 2
-        })
-        return DIV({className: 'DataTable'},
-                    !!style.size && STYLE(style.getCSS()),
-                    catalog, e(changes.Buttons.bind(changes)))
+        return FRAGMENT(
+                !!style.size && STYLE(style.getCSS()),
+                this.getSchema().display({item: this}),
+                e(changes.Buttons.bind(changes)),
+            )
+
+        // let catalog = e(data.Table.bind(data), {
+        //     item:           this,
+        //     schemas:        this.category.getFields(),
+        //     start_color:    1,                                      // color of the first row: 1 or 2
+        // })
+        // return DIV({className: 'DataTable'},
+        //             !!style.size && STYLE(style.getCSS()),
+        //             catalog, e(changes.Buttons.bind(changes)))
+
+        // let cstyle = new Styles()
+        // return e(CollectStyles.Provider, {value: cstyle}, DIV({className: 'DataTable'},
+        //             !!style.size && STYLE(style.getCSS()),
+        //             !!cstyle.size && STYLE(cstyle.getCSS()),
+        //             catalog, e(changes.Buttons.bind(changes))))
     }
 }
 
@@ -612,7 +623,7 @@ export class Category extends Item {
         let fields = this.getFields()
         return new DATA(fields.asDict())
     }
-    _temp_styles() {
+    _temp_style() {
         let schema = this.temp('schema')
         return schema.getStyle()
     }

@@ -1,6 +1,6 @@
 // import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
-import { React, e, DIV, SPAN, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
+import { React, e, I, DIV, SPAN, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
 
 
 /**********************************************************************************************************************
@@ -456,8 +456,10 @@ export class Catalog {
             await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
             setCurrent(newValue)
         }
+        // let info = SPAN({className: 'material-icons'}, 'info')
+        let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
         return FRAGMENT(
-                  TH({className: 'cell cell-key'}, DIV({className: 'Entry_key'}, key_)), //' ', SPAN({className:'material-icons'}, 'help_center'))),
+                  TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
                   TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
                )
     }
