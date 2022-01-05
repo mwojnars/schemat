@@ -857,6 +857,8 @@ export class CATALOG extends Schema {
         return default_
     }
 
+    displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
+
     static Table = class extends Schema.Widget {
         /* Displays this catalog's data in tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
@@ -895,7 +897,7 @@ export class CATALOG extends Schema {
             assert(schema instanceof CATALOG)
             return TD({className: 'cell cell-subcat', colSpan: 2},
                       DIV({className: 'Entry_key'}, key_),
-                      e(CATALOG.Table, {value, schema, item, path, color}))
+                      schema.displayTable({value, item, path, color}))
         }
 
         EntryAtomic({item, path, key_, value, schema}) {
@@ -941,29 +943,8 @@ export class DATA extends CATALOG {
 
     displayTable(props) {
         let {item} = props
-        return DIV({className: 'Schema DATA'},
-                e(this.constructor.Table, {item, value: item.data, schema: this, start_color: 1}))
+        return DIV({className: 'Schema DATA'}, super.displayTable({item, value: item.data, start_color: 1}))
     }
-
-    // displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
-    //
-    // static Table = class extends CATALOG.Table {
-    //     static defaultProps = {
-    //         item:   undefined,          // the parent item whose .data will be displayed
-    //         schema: undefined,          // parent Schema object (instance of DATA)
-    //     }
-    //     render() {
-    //         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
-    //         let {item, schema} = this.props
-    //         let catalog = e(CATALOG.Table, {
-    //             item,
-    //             schema,
-    //             value:        item.data,
-    //             start_color:  1,
-    //         })
-    //         return DIV({className: 'Schema DATA'}, catalog)
-    //     }
-    // }
 }
 
 
