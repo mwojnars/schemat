@@ -35,7 +35,7 @@ class Widget extends React.Component {
            In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
          */
     }
-    static collectStyles(styles, scope = undefined) {
+    static collect(styles, scope = undefined) {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() of all base classes into a Styles() object. */
         let proto = this
         while (proto && proto !== Widget) {
@@ -137,15 +137,15 @@ export class Schema {
 
     getStyle() {
         /* Walk through all nested schema objects, collect their CSS styles and return as a Styles instance.
-           this.collectStyles() is called internally - it should be overriden in subclasses instead of this method.
+           this.collect() is called internally - it should be overriden in subclasses instead of this method.
          */
         let style = new Styles()
-        this.collectStyles(style)
+        this.collect(style)
         return style
     }
-    collectStyles(styles) {
+    collect(styles) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles from all nested schemas. */
-        this.constructor.Widget.collectStyles(styles)
+        this.constructor.Widget.collect(styles)
     }
 }
 
@@ -699,9 +699,9 @@ export class MAP extends Schema {
         }
         return d
     }
-    collectStyles(styles) {
-        this._keys.collectStyles(styles)
-        this._values.collectStyles(styles)
+    collect(styles) {
+        this._keys.collect(styles)
+        this._values.collect(styles)
     }
 
     toString() {
@@ -743,9 +743,9 @@ export class RECORD extends Schema {
             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[name] || generic_schema
     }
-    collectStyles(styles) {
+    collect(styles) {
         for (let schema of Object.values(this.fields))
-            schema.collectStyles(styles)
+            schema.collect(styles)
     }
 }
 
@@ -827,10 +827,10 @@ export class CATALOG extends Schema {
         return cat
     }
 
-    collectStyles(styles) {
-        this._keys.collectStyles(styles)
-        this._schema().collectStyles(styles)
-        this.constructor.Table.collectStyles(styles)
+    collect(styles) {
+        this._keys.collect(styles)
+        this._schema().collect(styles)
+        this.constructor.Table.collect(styles)
     }
 
     toString() {
@@ -935,10 +935,10 @@ export class DATA extends CATALOG {
             throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[key] || this.constructor.values_default
     }
-    collectStyles(styles) {
+    collect(styles) {
         for (let schema of Object.values(this.fields))
-            schema.collectStyles(styles)
-        this.constructor.Table.collectStyles(styles)
+            schema.collect(styles)
+        this.constructor.Table.collect(styles)
     }
 
     displayTable(props) {
