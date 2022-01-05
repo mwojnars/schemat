@@ -830,6 +830,7 @@ export class CATALOG extends Schema {
     collectStyles(styles) {
         this._keys.collectStyles(styles)
         this._schema().collectStyles(styles)
+        this.constructor.Table.collectStyles(styles)
     }
 
     toString() {
@@ -863,13 +864,11 @@ export class CATALOG extends Schema {
            If `start_color` is undefined, the same `color` is used for all rows.
          */
         static defaultProps = {
-            item:    undefined,         // the parent item of the data displayed
-            value:   undefined,
-            schema:  undefined,         // parent schema (CATALOG object)
-            valueSchema:  undefined,         // schema of values in each entry
-            schemas: undefined,
-            path:    [],
-            color:   undefined,
+            item:        undefined,             // the parent item of the data displayed
+            value:       undefined,
+            schema:      undefined,             // parent schema (a CATALOG)
+            path:        [],
+            color:       undefined,
             start_color: undefined,
         }
         static style(scope = '.Schema .CATALOG') {
@@ -877,17 +876,14 @@ export class CATALOG extends Schema {
         `}
 
         render() {
-            let {item, value: catalog, path, schema, valueSchema, schemas, color, start_color} = this.props
+            let {item, value: catalog, schema, path, color, start_color} = this.props
             let entries = catalog.getEntries()
             let rows    = entries.map(({key, value, idx}, i) =>
             {
                 if (start_color) color = 1 + (start_color + i - 1) % 2
-                // if (schemas) valueSchema = schemas.get(key)
-                valueSchema = schema._schema(key)
-                let props = {item, path: [...path, key], key_: key, value, color}
-                let entry = valueSchema.isCatalog ?
-                    e(this.EntrySubcat, {...props, schema: valueSchema}) : //valueSchema.values}) :
-                    e(this.EntryAtomic, {...props, valueSchema})
+                let valueSchema = schema._schema(key)
+                let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
+                let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return TR({className: `Entry is-row${color}`}, entry)
             })
             let flag = path.length ? 'is-nested' : 'is-top'
@@ -900,24 +896,23 @@ export class CATALOG extends Schema {
             return TD({className: 'cell cell-subcat', colSpan: 2},
                       DIV({className: 'Entry_key'}, key_),
                       e(CATALOG.Table, {value, schema, item, path, color}))
-                      // e(value.Table.bind(value), {item, path, schema, color}))
         }
 
-        EntryAtomic({item, path, key_, value, valueSchema}) {
+        EntryAtomic({item, path, key_, value, schema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
                The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
              */
             let [current, setCurrent] = useState(value)
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-                await item.remote_edit({path, value: valueSchema.encode(newValue)})        // TODO: validate newValue
+                await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
                 setCurrent(newValue)
             }
             // let info = SPAN({className: 'material-icons'}, 'info')
             let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
             return FRAGMENT(
                       TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
-                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, valueSchema.display({value: current, save}))),
+                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
                    )
         }
     }
@@ -944,37 +939,31 @@ export class DATA extends CATALOG {
         this.constructor.Table.collectStyles(styles)
     }
 
-    displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
-
-    // displayTable(props) {
-    //     let {item} = props
-    //     return DIV({className: 'Schema DATA'}, this.constructor.Table, {
-    //         item,
-    //         value:        item.data,
-    //         schema:       this,
-    //         schemas:      item.category.getFields(),
-    //         start_color:  1,
-    //     })
-    // }
-
-    static Table = class extends CATALOG.Table {
-        static defaultProps = {
-            item:   undefined,          // the parent item whose .data will be displayed
-            schema: undefined,          // parent Schema object (instance of DATA)
-        }
-        render() {
-            /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
-            let {item, schema} = this.props
-            let catalog = e(CATALOG.Table, {
-                item,
-                schema,
-                value:        item.data,
-                schemas:      this.fields, //item.category.getFields(),
-                start_color:  1,
-            })
-            return DIV({className: 'Schema DATA'}, catalog)
-        }
+    displayTable(props) {
+        let {item} = props
+        return DIV({className: 'Schema DATA'},
+                e(this.constructor.Table, {item, value: item.data, schema: this, start_color: 1}))
     }
+
+    // displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
+    //
+    // static Table = class extends CATALOG.Table {
+    //     static defaultProps = {
+    //         item:   undefined,          // the parent item whose .data will be displayed
+    //         schema: undefined,          // parent Schema object (instance of DATA)
+    //     }
+    //     render() {
+    //         /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
+    //         let {item, schema} = this.props
+    //         let catalog = e(CATALOG.Table, {
+    //             item,
+    //             schema,
+    //             value:        item.data,
+    //             start_color:  1,
+    //         })
+    //         return DIV({className: 'Schema DATA'}, catalog)
+    //     }
+    // }
 }
 
 
