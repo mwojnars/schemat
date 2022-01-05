@@ -486,7 +486,7 @@ export class Item {
         let changes = new Changes(this)
         return FRAGMENT(
                 style.display(),
-                this.getSchema().display({item: this, value: this.data}),
+                this.getSchema().displayTable({item: this}),
                 e(changes.Buttons.bind(changes)),
             )
     }

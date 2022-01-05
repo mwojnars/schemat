@@ -130,7 +130,7 @@ export class Schema {
     // }
 
     display(props) {
-        return e(this.constructor.Widget, {schema: this, ...props})
+        return e(this.constructor.Widget, {...props, schema: this})
         // let Widget = this.constructor.Widget || this.widget.bind(this)
         // return e(Widget, props)
     }
@@ -164,7 +164,7 @@ Schema.Widget = class extends Widget {
     `}
 
     static defaultProps = {
-        schema: undefined,          // parent Schema instance
+        schema: undefined,          // parent Schema object
         value:  undefined,          // value object to be displayed by render()
         save:   undefined,          // function save(newValue) to be called after `value` was edited by user
     }
@@ -856,7 +856,7 @@ export class CATALOG extends Schema {
         return default_
     }
 
-    static Widget = class extends Schema.Widget {
+    static Table = class extends Schema.Widget {
         /* Displays this catalog's data in tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
@@ -865,7 +865,8 @@ export class CATALOG extends Schema {
         static defaultProps = {
             item:    undefined,         // the parent item of the data displayed
             value:   undefined,
-            schema:  undefined,         // schema of values in the catalog displayed
+            schema:  undefined,         // parent schema (CATALOG object)
+            valueSchema:  undefined,         // schema of values in each entry
             schemas: undefined,
             path:    [],
             color:   undefined,
@@ -876,16 +877,17 @@ export class CATALOG extends Schema {
         `}
 
         render() {
-            let {item, value: catalog, path, schema, schemas, color, start_color} = this.props
+            let {item, value: catalog, path, schema, valueSchema, schemas, color, start_color} = this.props
             let entries = catalog.getEntries()
             let rows    = entries.map(({key, value, idx}, i) =>
             {
                 if (start_color) color = 1 + (start_color + i - 1) % 2
-                if (schemas) schema = schemas.get(key)
+                // if (schemas) valueSchema = schemas.get(key)
+                valueSchema = schema._schema(key)
                 let props = {item, path: [...path, key], key_: key, value, color}
-                let entry = schema.isCatalog ?
-                    e(this.EntrySubcat, {...props, schema: schema.values}) :
-                    e(this.EntryAtomic, {...props, schema})
+                let entry = valueSchema.isCatalog ?
+                    e(this.EntrySubcat, {...props, schema: valueSchema}) : //valueSchema.values}) :
+                    e(this.EntryAtomic, {...props, valueSchema})
                 return TR({className: `Entry is-row${color}`}, entry)
             })
             let flag = path.length ? 'is-nested' : 'is-top'
@@ -893,28 +895,29 @@ export class CATALOG extends Schema {
         }
 
         EntrySubcat({item, path, key_, value, schema, color}) {         // function component
-            assert(value instanceof Catalog)
+            assert(value  instanceof Catalog)
+            assert(schema instanceof CATALOG)
             return TD({className: 'cell cell-subcat', colSpan: 2},
                       DIV({className: 'Entry_key'}, key_),
-                      e(CATALOG.Widget, {value, schema, item, path, color}))
+                      e(CATALOG.Table, {value, schema, item, path, color}))
                       // e(value.Table.bind(value), {item, path, schema, color}))
         }
 
-        EntryAtomic({item, path, key_, value, schema}) {
+        EntryAtomic({item, path, key_, value, valueSchema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
                The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
              */
             let [current, setCurrent] = useState(value)
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-                await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
+                await item.remote_edit({path, value: valueSchema.encode(newValue)})        // TODO: validate newValue
                 setCurrent(newValue)
             }
             // let info = SPAN({className: 'material-icons'}, 'info')
             let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
             return FRAGMENT(
                       TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
-                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
+                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, valueSchema.display({value: current, save}))),
                    )
         }
     }
@@ -938,24 +941,37 @@ export class DATA extends CATALOG {
     collectStyles(styles) {
         for (let schema of Object.values(this.fields))
             schema.collectStyles(styles)
+        this.constructor.Table.collectStyles(styles)
     }
 
-    static Widget = class extends CATALOG.Widget {
+    displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
+
+    // displayTable(props) {
+    //     let {item} = props
+    //     return DIV({className: 'Schema DATA'}, this.constructor.Table, {
+    //         item,
+    //         value:        item.data,
+    //         schema:       this,
+    //         schemas:      item.category.getFields(),
+    //         start_color:  1,
+    //     })
+    // }
+
+    static Table = class extends CATALOG.Table {
         static defaultProps = {
-            value:   undefined,         // item.data
-            schema:  undefined,         // parent Schema instance (DATA)
-            item:    undefined,         // the parent item whose .data is displayed
+            item:   undefined,          // the parent item whose .data will be displayed
+            schema: undefined,          // parent Schema object (instance of DATA)
         }
         render() {
             /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
-            print('DATA.Widget.render() ...')
-            let {item} = this.props
-            let catalog = e(CATALOG.Widget, {...this.props, schemas: item.category.getFields(), start_color: 1})
-            // let catalog = e(data.Table.bind(data), {
-            //     item:           item,
-            //     schemas:        item.category.getFields(),
-            //     start_color:    1,                                      // color of the first row: 1 or 2
-            // })
+            let {item, schema} = this.props
+            let catalog = e(CATALOG.Table, {
+                item,
+                schema,
+                value:        item.data,
+                schemas:      this.fields, //item.category.getFields(),
+                start_color:  1,
+            })
             return DIV({className: 'Schema DATA'}, catalog)
         }
     }
