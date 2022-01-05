@@ -82,11 +82,28 @@ export function cssPrepend(scope, css) {
 
 export const e = React.createElement
 
+export function cl(...classes) { return {className: classes.join(' ')} }    // shorthand for setting css classes of a React component
+export function st(styles)     { return {style: styles} }                   // shorthand for setting a `style` of a React component
+
+// function _e(name) {
+//     return (...args) =>
+//         args[0]?.$$typeof || typeof args[0] === 'string' ?      // if the 1st arg is a React element or string, no props are present
+//             e(name, null, ...args) :
+//             e(name, args[0], ...args.slice(1))
+// }
+
 function _e(name) {
-    return (...args) =>
-        args[0]?.$$typeof || typeof args[0] === 'string' ?      // if the 1st arg is a React element or string, no props are present
-            e(name, null, ...args) :
-            e(name, args[0], ...args.slice(1))
+    return (...args) => {
+        /* Return a React element for an HTML tag, `name`. All initial plain objects
+           (not strings, not React elements) are treated as `props` and merged. */
+        let props = {}, skip = 0
+        for (let arg of args)
+            if (arg && !arg.$$typeof && typeof arg !== 'string') {
+                props = {...props, ...arg}
+                skip ++
+            } else break
+        return e(name, skip ? props : null, ...(skip ? args.slice(skip) : args))
+    }
 }
 
 export const NBSP = '\u00A0'       // plain character equivalent of &nbsp; entity

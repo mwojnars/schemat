@@ -1,4 +1,5 @@
-import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
+import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML, cssPrepend, cl, st}
+    from './react-utils.js'
 import { React, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
@@ -886,17 +887,17 @@ export class CATALOG extends Schema {
                 let valueSchema = schema._schema(key)
                 let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return TR({className: `Entry is-row${color}`}, entry)
+                return TR(cl(`Entry is-row${color}`), entry)
             })
             let flag = path.length ? 'is-nested' : 'is-top'
-            return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
+            return DIV(cl(`Catalog ${flag}`), TABLE(cl(`Catalog_table`), TBODY(...rows)))
         }
 
         EntrySubcat({item, path, key_, value, schema, color}) {         // function component
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
-            return TD({className: 'cell cell-subcat', colSpan: 2},
-                      DIV({className: 'Entry_key'}, key_), schema.displayTable({value, item, path, color}))
+            return TD(cl('cell cell-subcat'), {colSpan: 2},
+                      DIV(cl('Entry_key'), key_), schema.displayTable({value, item, path, color}))
         }
 
         EntryAtomic({item, path, key_, value, schema}) {
@@ -909,11 +910,11 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            // let info = SPAN({className: 'material-icons'}, 'info')
-            let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
+            // let info = SPAN(cl('material-icons'), 'info')
+            let info = I(cl("bi bi-info-circle"), st({marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}))
             return FRAGMENT(
-                      TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
-                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
+                      TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), ' ', info),
+                      TD(cl('cell'),          DIV (cl('Entry_value'), schema.display({value: current, save}))),
                    )
         }
     }
