@@ -859,7 +859,7 @@ export class CATALOG extends Schema {
 
     displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
 
-    static Table = class extends Schema.Widget {
+    static Table = class extends Widget {
         /* Displays this catalog's data in tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
@@ -896,8 +896,7 @@ export class CATALOG extends Schema {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             return TD({className: 'cell cell-subcat', colSpan: 2},
-                      DIV({className: 'Entry_key'}, key_),
-                      schema.displayTable({value, item, path, color}))
+                      DIV({className: 'Entry_key'}, key_), schema.displayTable({value, item, path, color}))
         }
 
         EntryAtomic({item, path, key_, value, schema}) {
@@ -907,7 +906,7 @@ export class CATALOG extends Schema {
             let [current, setCurrent] = useState(value)
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-                await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
+                await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
             // let info = SPAN({className: 'material-icons'}, 'info')
@@ -940,11 +939,7 @@ export class DATA extends CATALOG {
             schema.collect(styles)
         this.constructor.Table.collect(styles)
     }
-
-    displayTable(props) {
-        let {item} = props
-        return DIV({className: 'Schema DATA'}, super.displayTable({item, value: item.data, start_color: 1}))
-    }
+    displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
 

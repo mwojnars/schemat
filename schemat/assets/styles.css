@@ -86,32 +86,6 @@ a:visited { color: #00427a }
 
 /*** ITEM PAGE */
 
-/*.catalog1 th, .catalog1 td      { padding: 14px var(--ct-cell-pad) 11px; !*border-right: none;*! }*/
-/*.wrap-offset                    { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }*/
-/*td.ct-nested                    { padding-right: 0px; padding-bottom: 0px; }*/
-/*td.ct-flags                     { width: 30px; padding-left:20px; padding-right:20px; }*/
-
-/*.catalog1, .catalog2            { border-collapse: collapse; table-layout: fixed; }*/
-/*.catalog1 th, .catalog2 th      { border-right: 1px solid #fff; }*/
-/*.catalog1 tr:not(:last-child)   { border-bottom: 1px solid #fff; }*/
-
-/*.catalog1                       { min-width: 100%; max-width: 100%; }*/
-/*.catalog1 th                    { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }*/
-
-/* th widths get reduced by 55px when nesting a subcatalog to account for paddings of outer td + div */
-/*.catalog2                   { width: 100%; }*/
-/*.catalog2 th                { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }*/
-/*.catalog2 th               { width: 195px; min-width: 195px; max-width: 195px; padding-left: 15px; }*/
-
-/*.catalog1 .ct-field         { font-weight: bold;   font-size: 15px; }*/
-/*.catalog2 .ct-field         { font-weight: normal; font-style: italic; }*/
-
-/*.ct-value, .ct-value > *    { font-size: 14px; font-family: monospace; !* courier *! }*/
-/*.ct-value pre               { margin-bottom: 0; font-size: 13px; font-family: monospace; }*/
-/*.ct-value .field .default   { color: #888; }*/
-/*.ct-value .field .info      { font-style: italic; }*/
-
-/*****/
                                 /* alternating colors of rows in a DataTable */
 .is-row1                        { background: #e2eef9; }   /* #D0E4F5 */
 .is-row2                        { background: #f6f6f6; }
@@ -119,7 +93,6 @@ a:visited { color: #00427a }
 .is-top                         {}      /* marks a top-level Catalog */
 .is-nested                      {}      /* marks a sub-Catalog */
 
-.DataTable                      {}
 .Catalog                        { table-layout: fixed; }
 .Catalog.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
 
