@@ -1,6 +1,6 @@
 // import BTree from 'sorted-btree'
 import { print, assert, T } from './utils.js'
-import { React, e, I, DIV, SPAN, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
+// import { React, e, I, DIV, SPAN, STYLE, TABLE, TH, TR, TD, TBODY, FRAGMENT, useState } from './react-utils.js'
 
 
 /**********************************************************************************************************************
@@ -417,52 +417,52 @@ export class Catalog {
 
     /***  React widgets  ***/
 
-    Table({item, path = [], schema, schemas, color, start_color}) {
-        /* React component that displays this catalog's data in tabular form.
-           If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
-           for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
-           If `start_color` is undefined, the same `color` is used for all rows.
-         */
-
-        let entries = this.getEntries()
-        let rows    = entries.map(({key, value, idx}, i) =>
-        {
-            if (start_color) color = 1 + (start_color + i - 1) % 2
-            if (schemas) schema = schemas.get(key)
-            let props = {item, path: [...path, key], key_: key, value, color}
-            let entry = schema.isCatalog ?
-                e(this.EntrySubcat, {...props, schema: schema.values}) :
-                e(this.EntryAtomic, {...props, schema})
-            return TR({className: `Entry is-row${color}`}, entry)
-        })
-        let flag = path.length ? 'is-nested' : 'is-top'
-        return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
-    }
-
-    EntrySubcat({item, path, key_, value, schema, color}) {
-        assert(value instanceof Catalog)
-        return TD({className: 'cell cell-subcat', colSpan: 2},
-                  DIV({className: 'Entry_key'}, key_),
-                  e(value.Table.bind(value), {item, path, schema, color}))
-    }
-
-    EntryAtomic({item, path, key_, value, schema}) {
-        /* A table row containing an atomic entry: a key and its value (not a subcatalog).
-           The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
-         */
-        let [current, setCurrent] = useState(value)
-        const save = async (newValue) => {
-            // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-            await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
-            setCurrent(newValue)
-        }
-        // let info = SPAN({className: 'material-icons'}, 'info')
-        let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
-        return FRAGMENT(
-                  TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
-                  TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
-               )
-    }
+    // Table({item, path = [], schema, schemas, color, start_color}) {
+    //     /* React component that displays this catalog's data in tabular form.
+    //        If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
+    //        for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
+    //        If `start_color` is undefined, the same `color` is used for all rows.
+    //      */
+    //
+    //     let entries = this.getEntries()
+    //     let rows    = entries.map(({key, value, idx}, i) =>
+    //     {
+    //         if (start_color) color = 1 + (start_color + i - 1) % 2
+    //         if (schemas) schema = schemas.get(key)
+    //         let props = {item, path: [...path, key], key_: key, value, color}
+    //         let entry = schema.isCatalog ?
+    //             e(this.EntrySubcat, {...props, schema: schema.values}) :
+    //             e(this.EntryAtomic, {...props, schema})
+    //         return TR({className: `Entry is-row${color}`}, entry)
+    //     })
+    //     let flag = path.length ? 'is-nested' : 'is-top'
+    //     return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
+    // }
+    //
+    // EntrySubcat({item, path, key_, value, schema, color}) {
+    //     assert(value instanceof Catalog)
+    //     return TD({className: 'cell cell-subcat', colSpan: 2},
+    //               DIV({className: 'Entry_key'}, key_),
+    //               e(value.Table.bind(value), {item, path, schema, color}))
+    // }
+    //
+    // EntryAtomic({item, path, key_, value, schema}) {
+    //     /* A table row containing an atomic entry: a key and its value (not a subcatalog).
+    //        The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+    //      */
+    //     let [current, setCurrent] = useState(value)
+    //     const save = async (newValue) => {
+    //         // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+    //         await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
+    //         setCurrent(newValue)
+    //     }
+    //     // let info = SPAN({className: 'material-icons'}, 'info')
+    //     let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
+    //     return FRAGMENT(
+    //               TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
+    //               TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
+    //            )
+    // }
 }
 
 

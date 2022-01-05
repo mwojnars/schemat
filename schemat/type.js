@@ -1,5 +1,5 @@
-import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
-import { React, createRef, useState, useRef, useEffect, createContext, useContext, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML, cssPrepend} from './react-utils.js'
+import { React, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -20,10 +20,8 @@ export class Styles {
     get size()      { return this.styles.size }
     add(style)      { if (style && style.trim()) this.styles.add(style.trimEnd() + '\n') }
     getCSS()        { return '\n' + [...this.styles].join('') }
+    display()       { return this.size ? STYLE(this.getCSS()) : null }
 }
-
-// // CollectStyles: keeps a Styles instance that collects all CSS styles from a given subtree
-// export const CollectStyles = createContext()
 
 
 /**********************************************************************************************************************/
@@ -148,7 +146,6 @@ export class Schema {
     collectStyles(styles) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles from all nested schemas. */
         this.constructor.Widget.collectStyles(styles)
-        // styles.add(this.constructor.Widget.style())
     }
 }
 
@@ -859,17 +856,68 @@ export class CATALOG extends Schema {
         return default_
     }
 
-    // static Widget = class extends Schema.Widget {
-    //     static defaultProps = {
-    //         item:    undefined,         // the item whose .data will be displayed
-    //         schema:  undefined,         // parent Schema instance (CATALOG)
-    //     }
-    //     static style(scope = '.Schema .CATALOG') {
-    //         return cssPrepend(scope) `
-    //     `}
-    //
-    //     render() {
-    //     }
+    static Widget = class extends Schema.Widget {
+        /* Displays this catalog's data in tabular form.
+           If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
+           for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
+           If `start_color` is undefined, the same `color` is used for all rows.
+         */
+        static defaultProps = {
+            item:    undefined,         // the parent item of the data displayed
+            value:   undefined,
+            schema:  undefined,         // schema of values in the catalog displayed
+            schemas: undefined,
+            path:    [],
+            color:   undefined,
+            start_color: undefined,
+        }
+        static style(scope = '.Schema .CATALOG') {
+            return cssPrepend(scope) `
+        `}
+
+        render() {
+            let {item, value: catalog, path, schema, schemas, color, start_color} = this.props
+            let entries = catalog.getEntries()
+            let rows    = entries.map(({key, value, idx}, i) =>
+            {
+                if (start_color) color = 1 + (start_color + i - 1) % 2
+                if (schemas) schema = schemas.get(key)
+                let props = {item, path: [...path, key], key_: key, value, color}
+                let entry = schema.isCatalog ?
+                    e(this.EntrySubcat, {...props, schema: schema.values}) :
+                    e(this.EntryAtomic, {...props, schema})
+                return TR({className: `Entry is-row${color}`}, entry)
+            })
+            let flag = path.length ? 'is-nested' : 'is-top'
+            return DIV({className: `Catalog ${flag}`}, TABLE({className: `Catalog_table`}, TBODY(...rows)))
+        }
+
+        EntrySubcat({item, path, key_, value, schema, color}) {         // function component
+            assert(value instanceof Catalog)
+            return TD({className: 'cell cell-subcat', colSpan: 2},
+                      DIV({className: 'Entry_key'}, key_),
+                      e(CATALOG.Widget, {value, schema, item, path, color}))
+                      // e(value.Table.bind(value), {item, path, schema, color}))
+        }
+
+        EntryAtomic({item, path, key_, value, schema}) {
+            /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
+               The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+             */
+            let [current, setCurrent] = useState(value)
+            const save = async (newValue) => {
+                // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+                await item.remote_edit({path, value: schema.encode(newValue)})        // TODO: validate newValue
+                setCurrent(newValue)
+            }
+            // let info = SPAN({className: 'material-icons'}, 'info')
+            let info = I({className: "bi bi-info-circle", style: {marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}})
+            return FRAGMENT(
+                      TH({className: 'cell cell-key'}, SPAN({className: 'Entry_key'}, key_), ' ', info),
+                      TD({className: 'cell'}, DIV({className: 'Entry_value'}, schema.display({value: current, save}))),
+                   )
+        }
+    }
 }
 
 export class DATA extends CATALOG {
@@ -894,19 +942,20 @@ export class DATA extends CATALOG {
 
     static Widget = class extends CATALOG.Widget {
         static defaultProps = {
-            item:    undefined,         // the item whose .data will be displayed
+            value:   undefined,         // item.data
             schema:  undefined,         // parent Schema instance (DATA)
+            item:    undefined,         // the parent item whose .data is displayed
         }
         render() {
             /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
             print('DATA.Widget.render() ...')
-            let item = this.props.item
-            let data = item.data
-            let catalog = e(data.Table.bind(data), {
-                item:           item,
-                schemas:        item.category.getFields(),
-                start_color:    1,                                      // color of the first row: 1 or 2
-            })
+            let {item} = this.props
+            let catalog = e(CATALOG.Widget, {...this.props, schemas: item.category.getFields(), start_color: 1})
+            // let catalog = e(data.Table.bind(data), {
+            //     item:           item,
+            //     schemas:        item.category.getFields(),
+            //     start_color:    1,                                      // color of the first row: 1 or 2
+            // })
             return DIV({className: 'Schema DATA'}, catalog)
         }
     }

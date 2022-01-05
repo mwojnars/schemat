@@ -481,29 +481,14 @@ export class Item {
     }
 
     DataTable() {
-        /* Display this item's data as a Catalog.Table with possibly nested Catalog objects. */
+        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
         let style = this.getStyle()
         let changes = new Changes(this)
         return FRAGMENT(
-                !!style.size && STYLE(style.getCSS()),
-                this.getSchema().display({item: this}),
+                style.display(),
+                this.getSchema().display({item: this, value: this.data}),
                 e(changes.Buttons.bind(changes)),
             )
-
-        // let catalog = e(data.Table.bind(data), {
-        //     item:           this,
-        //     schemas:        this.category.getFields(),
-        //     start_color:    1,                                      // color of the first row: 1 or 2
-        // })
-        // return DIV({className: 'DataTable'},
-        //             !!style.size && STYLE(style.getCSS()),
-        //             catalog, e(changes.Buttons.bind(changes)))
-
-        // let cstyle = new Styles()
-        // return e(CollectStyles.Provider, {value: cstyle}, DIV({className: 'DataTable'},
-        //             !!style.size && STYLE(style.getCSS()),
-        //             !!cstyle.size && STYLE(cstyle.getCSS()),
-        //             catalog, e(changes.Buttons.bind(changes))))
     }
 }
 
