@@ -911,31 +911,33 @@ export class CATALOG extends Schema {
             color:       undefined,
             start_color: undefined,
         }
-        static style = (root = '.Schema.CATALOG') => css(root)
+        static style = (root = '.Schema.CATALOG', prefix = '.C_') => css({'&': root, '?': prefix})
         `
-            &                        { table-layout: fixed; }
+            &                   { table-layout: fixed; }
+            & ?table            { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
+            & ?entry:not(:last-child){ border-bottom: 1px solid #fff; }
+            
+            & ?cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+            & ?cell-key              { border-right: 1px solid #fff; }
+            & ?cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+            & ?cell-value            { width: 100%; }
+            & ?cell-subcat           { padding-right: 0; padding-bottom: 0; }
+            
+            & ?key             { font-weight: bold; font-size: 15px; }
+            & ?value,
+            & ?value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            & ?value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
+
             &.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-            
-            & .CATALOG_table         { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
-            
-            & .Entry                 {}
-            & .Entry:not(:last-child){ border-bottom: 1px solid #fff; }
-            
-            & .cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-            & .cell-subcat           { padding-right: 0; padding-bottom: 0; }
-            
-            & .cell-key              { border-right: 1px solid #fff; }
-            & .cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-            &.is-nested .cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
-            
-            & .Entry_key             { font-weight: bold;   font-size: 15px; }
-            &.is-nested .Entry_key   { font-weight: normal; font-style: italic; }
-            
-            & .cell-value            { width: 100%; }
-            & .Entry_value,
-            & .Entry_value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-            & .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
+            &.is-nested ?cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+            &.is-nested ?key   { font-weight: normal; font-style: italic; }
         `
+        /*
+        Classes:
+          .C_entry    -- <TR> of a table, top-level or nested
+          .C_key      -- deep-most element containing just a key label
+          .C_value    -- deep-most element containing just a rendered value component
+         */
 
         constructor(props) {
             super(props)
@@ -965,8 +967,8 @@ export class CATALOG extends Schema {
                 setCurrent(newValue)
             }
             return TD({colSpan: 2}, FLEX(
-                      DIV(cl('cell cell-key'),  SPAN(cl('Entry_key'),   key_), this.info(schema)),
-                      DIV(cl('cell cell-value'), DIV(cl('Entry_value'), schema.display({value: current, save}))),
+                      DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'),   key_), this.info(schema)),
+                      DIV(cl('C_cell C_cell-value'), DIV(cl('C_value'), schema.display({value: current, save}))),
                    ))
             // return FRAGMENT(
             //           TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), this.info(schema)),
@@ -977,8 +979,8 @@ export class CATALOG extends Schema {
         EntrySubcat({item, path, key_, value, schema, color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
-            return TD(cl('cell cell-subcat'), {colSpan: 2},
-                      DIV(cl('Entry_key'), key_), schema.displayTable({value, item, path, color}))
+            return TD(cl('C_cell C_cell-subcat'), {colSpan: 2},
+                      DIV(cl('C_key'), key_), schema.displayTable({value, item, path, color}))
         }
 
         render() {
@@ -990,10 +992,10 @@ export class CATALOG extends Schema {
                 let valueSchema = schema._schema(key)
                 let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return TR(cl(`Entry is-row${color}`), entry)
+                return TR(cl(`C_entry is-row${color}`), entry)
             })
             let flag = path.length ? 'is-nested' : 'is-top'
-            return DIV(cl(`Schema CATALOG ${flag}`), TABLE(cl(`CATALOG_table`), TBODY(...rows)))
+            return DIV(cl(`Schema CATALOG ${flag}`), TABLE(cl(`C_table`), TBODY(...rows)))
         }
     }
 }
