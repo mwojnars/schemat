@@ -61,6 +61,11 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
+export function dedent(text) {
+    /* Remove all leading whitespace in each line of `text` and drop empty lines. */
+    return text.trimLeft().replace(/\n\s+/g, '\n')
+}
+
 export function truncate(s, length = 255, {end = '...', killwords = false, maxdrop = null, leeway = 0} = {}) {
     /*
     Truncate a string `s` to a given maximum length, with ellipsis.

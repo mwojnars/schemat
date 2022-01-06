@@ -2,6 +2,9 @@ import { assert, print, ItemNotLoaded } from './utils.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 
+let cssValidator
+try { cssValidator = await import('csstree-validator') } catch(ex) {}
+
 
 /**********************************************************************************************************************
  **
@@ -9,7 +12,7 @@ export { React, ReactDOM }
  **
  */
 
-export function stringInterpolate(strings, values) {
+export function interpolate(strings, values) {
     /* Concatenate `strings` with `values` inserted between each pair of neighboring strings, for tagged templates.
        Both arguments are arrays; `strings` must be +1 longer than `values`.
      */
@@ -36,7 +39,14 @@ export function cssPrepend(scope, css) {
      */
 
     if (css === undefined)              // return a partial function if `css` is missing
-        return (css, ...values) => cssPrepend(scope, typeof css === 'string' ? css : stringInterpolate(css, values))
+        return (css, ...values) => cssPrepend(scope, typeof css === 'string' ? css : interpolate(css, values))
+
+    if (!css || !css.trim()) return ''                                  // empty `css`? return empty string
+
+    if (cssValidator) {
+        let errors = cssValidator.validate(css)
+        if (errors && errors.length) throw new Error(`invalid CSS snippet:\n${css.trimEnd()}\nerrors: ${errors}`)
+    }
 
     css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments
     css = css.replace(/(\s*\n\s*)/g,'\n').replace(/(^\s+|\s+$)/g,'')    // trim leading/trailing whitespace in each line

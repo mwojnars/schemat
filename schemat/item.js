@@ -3,7 +3,7 @@ import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
-import { print, assert, T, escape_html, ItemNotLoaded, ServerError } from './utils.js'
+import { print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
@@ -261,11 +261,6 @@ export class Item {
         assert(this.category)
         return this.category.temp('schema').get(path)               // calls _temp_schema() of this.category
     }
-    getStyle() {
-        /* Return CSS styles, as a Styles instance, that are needed to display data through this item's schema. */
-        assert(this.category)
-        return this.category.temp('style' )                         // calls _temp_styles() of this.category
-    }
 
     temp(field) {
         /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
@@ -394,7 +389,8 @@ export class Item {
         let ciid = this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
-            body:  this.BOOT({session}),
+            head:  this.category.temp('assets').display(),
+            body:  this.BODY({session}),
         })
     }
 
@@ -414,23 +410,21 @@ export class Item {
     async remote_delete()   { return this.remote('delete') }
     async remote_edit(args) { return this.remote('edit', args) }
 
-    HTML({title, body}) { return `
-        <!DOCTYPE html><html>
-        <head>
-            <title>${title}</title>
-            ${Resources.clientAssets}
-        </head>
-        <body>${body}</body>
-        </html>
-    `}
+    HTML({title, head, body} = {}) {
+        return dedent(`
+            <!DOCTYPE html><html>
+            <head>
+                <title>${title}</title>
+                ${Resources.clientAssets}
+                ${head}
+            </head>`) +
+            `<body>${body}</body></html>`
+    }
 
-    BOOT({session}) { return `
+    BODY({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
         <div id="react-root">${this.temp('render')}</div>
-        <script type="module">
-            import { boot } from "/files/client.js"
-            boot()
-        </script>
+        <script type="module"> import {boot} from "/files/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/
@@ -445,8 +439,6 @@ export class Item {
             - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
          */
-        // TODO: use server-side caching of this function, like with temp() and temporary variables,
-        //       to avoid repeated SSR rendering of the same item in consecutive requests
         this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
         let page = e(this.Page.bind(this))
@@ -482,10 +474,8 @@ export class Item {
 
     DataTable() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        let style = this.getStyle()
         let changes = new Changes(this)
         return FRAGMENT(
-                style.display(),
                 this.getSchema().displayTable({item: this}),
                 e(changes.Buttons.bind(changes)),
             )
@@ -494,30 +484,30 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-class EditableItem extends Item {
-    /* A set of methods appended through monkey-patching to an item object to make it editable (see Item.editable()).
-       Edit methods should be synchronous. They can assume this.data is already loaded, no need for awaiting.
-     */
-
-    actions         // list of edit actions executed on this item so far; submitted to DB on commit for DB-side replay
-
-    edit(action, args) {
-        let method = this[`_edit_${action}`]
-        if (!method) throw new Error(`edit action "${action}" not found in ${this}`)
-        let result = method.bind(this)(args)
-        this.edits.push([action, args])
-        return result
-    }
-
-    push(key, value, {label, comment} = {}) {
-        /* Shortcut for edit('push', ...) */
-        return this.edit('push', {key, value, label, comment})
-    }
-    set(path, value, props) { this.data.set(path, value, props) }
-
-    _edit_push(entry) { return this.data.pushEntry(entry) }
-    _edit_set (entry) { return this.data.setEntry (entry) }
-}
+// class EditableItem extends Item {
+//     /* A set of methods appended through monkey-patching to an item object to make it editable (see Item.editable()).
+//        Edit methods should be synchronous. They can assume this.data is already loaded, no need for awaiting.
+//      */
+//
+//     actions         // list of edit actions executed on this item so far; submitted to DB on commit for DB-side replay
+//
+//     edit(action, args) {
+//         let method = this[`_edit_${action}`]
+//         if (!method) throw new Error(`edit action "${action}" not found in ${this}`)
+//         let result = method.bind(this)(args)
+//         this.edits.push([action, args])
+//         return result
+//     }
+//
+//     push(key, value, {label, comment} = {}) {
+//         /* Shortcut for edit('push', ...) */
+//         return this.edit('push', {key, value, label, comment})
+//     }
+//     set(path, value, props) { this.data.set(path, value, props) }
+//
+//     _edit_push(entry) { return this.data.pushEntry(entry) }
+//     _edit_set (entry) { return this.data.setEntry (entry) }
+// }
 
 /**********************************************************************************************************************/
 
@@ -608,9 +598,9 @@ export class Category extends Item {
         let fields = this.getFields()
         return new DATA(fields.asDict())
     }
-    _temp_style() {
-        let schema = this.temp('schema')
-        return schema.getStyle()
+    _temp_assets() {
+        /* Web assets: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
+        return this.temp('schema').getAssets()
     }
     _temp_fields_all() {
         /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */

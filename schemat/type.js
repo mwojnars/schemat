@@ -1,6 +1,7 @@
+import { React, MaterialUI, styled } from './resources.js'
 import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML, cssPrepend, cl, st}
     from './react-utils.js'
-import { React, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import { createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -12,23 +13,46 @@ import { Catalog } from './data.js'
  **
  */
 
-export class Styles {
+export class Assets {
     /* Collection of CSS snippets that are appended one by one with add() and then deduplicated
-       and converted to a single snippet in getCSS().
+       and converted to a single snippet in display().
      */
+    assets = new Set()
     styles = new Set()
 
-    get size()      { return this.styles.size }
-    add(style)      { if (style && style.trim()) this.styles.add(style.trimEnd() + '\n') }
-    getCSS()        { return '\n' + [...this.styles].join('') }
-    display()       { return this.size ? STYLE(this.getCSS()) : null }
+    addStyle(st)    { if (st && st.trim()) this.styles.add(st.trim()) }
+    addAsset(asset) {
+        if (typeof asset !== 'string') {
+            if (asset.__asset__ === undefined) throw new Error(`missing __asset__ property in ${asset}`)
+            asset = asset.__asset__
+        }
+        if (asset && asset.trim()) this.assets.add(asset.trim())
+    }
+    addAssets(assets) {
+        /* `assets` can be an array of assets, or a single asset, or be empty/undefined. */
+        if (!assets) return
+        if (T.isArray(assets))
+            for (let asset of assets)
+                this.addAsset(asset)
+        else
+            this.addAsset(assets)
+    }
+
+    display()       { return `${this._allAssets()}\n${this.displayStyles()}` }
+    displayStyles() { return this.styles.size ? `<style>\n${this._allStyles()}\n</style>` : '' }
+
+    _allStyles()    { return [...this.styles].join('\n') }
+    _allAssets()    { return [...this.assets].join('\n') }
 }
 
 
 /**********************************************************************************************************************/
 
 class Widget extends React.Component {
-    /* A React class-based component that defines API for defining and collecting CSS styles of the component. */
+    /* A React class component extended with an API for defining and collecting dependencies and CSS styles. */
+
+    static assets       // list of assets this widget depends on; each asset should be an object with an obj.__asset__
+                        // property defined, or a plain html string to be pasted into the <head> section of a page
 
     static style(scope = undefined) {
         /* Optional CSS styling that should be included at least once in a page along with the widget.
@@ -36,15 +60,22 @@ class Widget extends React.Component {
            In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
          */
     }
-    static collect(styles, scope = undefined) {
-        /* Walk through a prototype chain of `this` (a subclass) to collect .style() of all base classes into a Styles() object. */
+    static collect(assets, scope = undefined) {
+        /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
+           of all base classes into an Assets() object. */
         let proto = this
         while (proto && proto !== Widget) {
             if (!proto.style) continue
-            styles.add(proto.style(scope))
+            assets.addAssets(proto.assets)
+            assets.addStyle(proto.style(scope))
             proto = Object.getPrototypeOf(proto)
         }
     }
+}
+
+function widget(attrs = {}, fun) {
+    /* Create a functional React widget with `attrs` assigned: these are typically `style` and `assets`. */
+    return Object.assign(fun, attrs)
 }
 
 class Layout extends Widget {
@@ -118,7 +149,7 @@ export class Schema {
 
     /***  UI  ***/
 
-    // Clients should call getStyle() and display(), other methods & attrs are for internal use ...
+    // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
 
     static Widget       // "view-edit" widget that displays and lets users edit values of this schema
 
@@ -136,17 +167,17 @@ export class Schema {
         // return e(Widget, props)
     }
 
-    getStyle() {
-        /* Walk through all nested schema objects, collect their CSS styles and return as a Styles instance.
+    getAssets() {
+        /* Walk through all nested schema objects, collect their CSS styles and assets and return as an Assets instance.
            this.collect() is called internally - it should be overriden in subclasses instead of this method.
          */
-        let style = new Styles()
-        this.collect(style)
-        return style
+        let assets = new Assets()
+        this.collect(assets)
+        return assets
     }
-    collect(styles) {
-        /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles from all nested schemas. */
-        this.constructor.Widget.collect(styles)
+    collect(assets) {
+        /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles & assets from all nested schemas. */
+        this.constructor.Widget.collect(assets)
     }
 }
 
@@ -700,9 +731,9 @@ export class MAP extends Schema {
         }
         return d
     }
-    collect(styles) {
-        this._keys.collect(styles)
-        this._values.collect(styles)
+    collect(assets) {
+        this._keys.collect(assets)
+        this._values.collect(assets)
     }
 
     toString() {
@@ -744,9 +775,9 @@ export class RECORD extends Schema {
             throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[name] || generic_schema
     }
-    collect(styles) {
+    collect(assets) {
         for (let schema of Object.values(this.fields))
-            schema.collect(styles)
+            schema.collect(assets)
     }
 }
 
@@ -828,10 +859,10 @@ export class CATALOG extends Schema {
         return cat
     }
 
-    collect(styles) {
-        this._keys.collect(styles)
-        this._schema().collect(styles)
-        this.constructor.Table.collect(styles)
+    collect(assets) {
+        this._keys.collect(assets)
+        this._schema().collect(assets)
+        this.constructor.Table.collect(assets)
     }
 
     toString() {
@@ -874,9 +905,15 @@ export class CATALOG extends Schema {
             color:       undefined,
             start_color: undefined,
         }
-        static style(scope = '.Schema .CATALOG') {
-            return cssPrepend(scope) `
-        `}
+        // static style(scope = '.Schema.CATALOG') {
+        //     return cssPrepend(scope) `
+        // `}
+
+        constructor(props) {
+            super(props)
+            this.EntryAtomic = this.EntryAtomic.bind(this)
+            this.EntrySubcat = this.EntrySubcat.bind(this)
+        }
 
         render() {
             let {item, value: catalog, schema, path, color, start_color} = this.props
@@ -910,13 +947,22 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            // let info = SPAN(cl('material-icons'), 'info')
-            let info = I(cl("bi bi-info-circle"), st({marginLeft:'9px', color:'#aaa', fontSize:'0.9em'}))
             return FRAGMENT(
-                      TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), ' ', info),
+                      TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), this.info(schema)),
                       TD(cl('cell'),          DIV (cl('Entry_value'), schema.display({value: current, save}))),
                    )
         }
+
+        info(schema) {
+            if (!schema.info) return null
+            // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
+            // return e(MaterialUI.Tooltip, {title: text},
+            //            I(cl("bi bi-info-circle"), st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
+            return I(cl("bi bi-info-circle"), st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'}), {title: schema.info})
+            // return SPAN(cl('material-icons'), {title: schema.info}, 'info')
+            // styled.i.attrs(cl("bi bi-info-circle")) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
+        }
+
     }
 }
 
@@ -935,10 +981,10 @@ export class DATA extends CATALOG {
             throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[key] || this.constructor.values_default
     }
-    collect(styles) {
+    collect(assets) {
         for (let schema of Object.values(this.fields))
-            schema.collect(styles)
-        this.constructor.Table.collect(styles)
+            schema.collect(assets)
+        this.constructor.Table.collect(assets)
     }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }

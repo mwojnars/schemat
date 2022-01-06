@@ -12,10 +12,12 @@
     "@testing-library/user-event": "^12.6.2",
     "async-mutex": "^0.3.2",
     "bcrypt": "^5.0.1",
+    "csstree-validator": "^3.0.0",
     "express": "^4.17.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.1",
+    "styled-components": "^5.3.3",
     "web-vitals": "^0.2.4",
     "yaml": "^1.10.2"
   },
