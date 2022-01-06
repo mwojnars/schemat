@@ -24,6 +24,25 @@ export function interpolate(strings, values) {
     return out
 }
 
+export function css(selector, stylesheet) {
+    /* Replace every occurence of '&` in a `stylesheet` string with `selector`.
+       `selector` is a string, or an object whose own properties are substrings to be replaced
+       instead of '&' and their substitutions: {SYMBOL: substitution, ...}
+       Can be called as a partial function that receives a tagged template:  css(selector)`stylesheet...`
+     */
+    if (stylesheet === undefined)              // return a partial function if `stylesheet` is missing
+        return (sheet, ...values) => css(selector, typeof sheet === 'string' ? sheet : interpolate(sheet, values))
+
+    if (typeof selector === 'string')
+        selector = {'&': selector}
+
+    for (const [symbol, insert] of Object.entries(selector))
+        stylesheet = stylesheet.replaceAll(symbol, insert)
+
+    return stylesheet
+    // return stylesheet.replaceAll(symbol, selector)
+}
+
 export function cssPrepend(scope, css) {
     /* Prepend a `scope` string and a space to all css selectors in `css`.
        Also, drop comments, drop empty lines, and trim whitespace in each line.

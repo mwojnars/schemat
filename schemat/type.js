@@ -1,7 +1,7 @@
 import { React, MaterialUI, styled } from './resources.js'
-import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cssPrepend, cl, st}
+import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st}
     from './react-utils.js'
-import { createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import { css, cssPrepend, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -43,8 +43,8 @@ export class Assets {
     display(mini)       { return `${this._allAssets()}\n${this.displayStyles(mini)}` }
     displayStyles(mini) { return this.styles.size ? `<style>\n${this._allStyles(mini)}\n</style>` : '' }
 
-    _allAssets()    { return [...this.assets].join('\n') }
-    _allStyles(mini = true) {
+    _allAssets()        { return [...this.assets].join('\n') }
+    _allStyles(mini = false) {
         let css = [...this.styles].join('\n')
         return mini && csso ? csso.minify(css).css : css
     }
@@ -911,37 +911,31 @@ export class CATALOG extends Schema {
             color:       undefined,
             start_color: undefined,
         }
-        static style = () => (
-            cssPrepend('')
-                `
-                .Schema.CATALOG                 { table-layout: fixed; }
-                .Schema.CATALOG.is-nested       { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-                ` + '\n' +
-            cssPrepend('.Schema.CATALOG')
-                `
-                .CATALOG_table      { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
-                
-                .Entry:not(:last-child)  { border-bottom: 1px solid #fff; }
-                
-                .cell               { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-                .cell-subcat        { padding-right: 0; padding-bottom: 0; }
-                
-                .cell-key           { border-right: 1px solid #fff; }
-                .cell-key           { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-                
-                .Entry_key          { font-weight: bold;   font-size: 15px; }
-                
-                .cell-value         { width: 100%; }
-                .Entry_value,
-                .Entry_value > *    { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-                .Entry_value pre    { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
-                ` + '\n' +
-            cssPrepend('.Schema.CATALOG.is-nested')
-                `
-                .cell-key           { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
-                .Entry_key          { font-weight: normal; font-style: italic; }
-                `
-        )
+        static style = (root = '.Schema.CATALOG') => css(root)
+        `
+            &                        { table-layout: fixed; }
+            &.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+            
+            & .CATALOG_table         { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
+            
+            & .Entry                 {}
+            & .Entry:not(:last-child){ border-bottom: 1px solid #fff; }
+            
+            & .cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
+            & .cell-subcat           { padding-right: 0; padding-bottom: 0; }
+            
+            & .cell-key              { border-right: 1px solid #fff; }
+            & .cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+            &.is-nested .cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+            
+            & .Entry_key             { font-weight: bold;   font-size: 15px; }
+            &.is-nested .Entry_key   { font-weight: normal; font-style: italic; }
+            
+            & .cell-value            { width: 100%; }
+            & .Entry_value,
+            & .Entry_value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            & .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
+        `
 
         constructor(props) {
             super(props)
