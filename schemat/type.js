@@ -36,15 +36,6 @@ export class Assets {
         }
         else if (asset && asset.trim()) this.assets.add(asset.trim())
     }
-    // addAssets(assets) {
-    //     /* `assets` can be an array of assets, or a single asset, or be empty/undefined. */
-    //     if (!assets) return
-    //     if (T.isArray(assets))
-    //         for (let asset of assets)
-    //             this.addAsset(asset)
-    //     else
-    //         this.addAsset(assets)
-    // }
 
     display()       { return `${this._allAssets()}\n${this.displayStyles()}` }
     displayStyles() { return this.styles.size ? `<style>\n${this._allStyles()}\n</style>` : '' }
@@ -56,14 +47,15 @@ export class Assets {
 
 /**********************************************************************************************************************/
 
-class Widget extends React.Component {
-    /* A React class component extended with an API for defining and collecting dependencies and CSS styles. */
-
+class Component extends React.Component {
+    /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.
+       A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
+     */
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
                         // property defined, or a plain html string to be pasted into the <head> section of a page
 
     static style(scope = undefined) {
-        /* Optional CSS styling that should be included at least once in a page along with the widget.
+        /* Override in subclasses to provide CSS styling that will be included (deduplicated) in a page along with the widget.
            Parameterized by the CSS `scope`: a path string that's prepended to all selectors for better scoping.
            In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
          */
@@ -77,8 +69,8 @@ class Widget extends React.Component {
         }
     }
     static _prototypes() {
-        /* Array of all prototypes of `this` from below `Widget` (exluded) down to `this` (included), in this order. */
-        if (this === Widget) return []
+        /* Array of all prototypes of `this` from below `Component` (exluded) down to `this` (included), in this order. */
+        if (this === Component) return []
         let proto = Object.getPrototypeOf(this)
         let chain = proto._prototypes()
         chain.push(this)
@@ -86,12 +78,14 @@ class Widget extends React.Component {
     }
 }
 
+class Widget extends Component {}
+
 function widget(attrs = {}, fun) {
     /* Create a functional React widget with `attrs` assigned: these are typically `style` and `assets`. */
     return Object.assign(fun, attrs)
 }
 
-class Layout extends Widget {
+class Layout extends Component {
     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
        positions on a page.
      */
@@ -299,23 +293,6 @@ Schema.Widget = class extends Widget {
         return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flashBox(), this.errorBox())
     }
 }
-
-// class TextWidget extends Schema.Widget {
-//     /* Universal text widget that can be configured to display and edit:
-//        - strings (one line),
-//        - plain text (multiline),
-//        - source code (with syntax highlighting),
-//        - rich text.
-//      */
-//     // this.props.editorType = 'string', 'text', 'code' (Ace), 'rich' (~Word)
-//     // this.props.editorMode = 'plain', 'json', 'yaml', 'markdown' ...
-//     // NOTE: re-mount after props change can be enforced by changing props.key - https://stackoverflow.com/a/48451229/1202674
-// }
-//
-// class ObjectWidget extends Schema.Widget {
-//     /* Universal widget for structured data. The viewer displays a css-styled text summary,
-//        while the editor is a web form corresponding to the object's schema, displayed inline or in a modal box. */
-// }
 
 /**********************************************************************************************************************
  **
@@ -914,8 +891,8 @@ export class CATALOG extends Schema {
 
     displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
 
-    static Table = class extends Widget {
-        /* Displays this catalog's data in tabular form.
+    static Table = class extends Component {
+        /* Displays this catalog's data in a tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
            for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
            If `start_color` is undefined, the same `color` is used for all rows.
