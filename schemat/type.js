@@ -23,10 +23,10 @@ export class Assets {
     addStyle(st)    { if (st && st.trim()) this.styles.add(st.trim()) }
     addAsset(asset) {
         if (typeof asset !== 'string') {
-            if (asset.__asset__ === undefined) throw new Error(`missing __asset__ property in ${asset}`)
-            asset = asset.__asset__
+            if (asset.__assets__ === undefined) throw new Error(`missing __assets__ property in ${asset}`)
+            this.addAssets(asset.__assets__)        // __assets__ may contain nested objects with __assets__ attr
         }
-        if (asset && asset.trim()) this.assets.add(asset.trim())
+        else if (asset && asset.trim()) this.assets.add(asset.trim())
     }
     addAssets(assets) {
         /* `assets` can be an array of assets, or a single asset, or be empty/undefined. */
@@ -51,7 +51,7 @@ export class Assets {
 class Widget extends React.Component {
     /* A React class component extended with an API for defining and collecting dependencies and CSS styles. */
 
-    static assets       // list of assets this widget depends on; each asset should be an object with an obj.__asset__
+    static assets       // list of assets this widget depends on; each asset should be an object with an obj.__assets__
                         // property defined, or a plain html string to be pasted into the <head> section of a page
 
     static style(scope = undefined) {
@@ -63,13 +63,21 @@ class Widget extends React.Component {
     static collect(assets, scope = undefined) {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
            of all base classes into an Assets() object. */
-        let proto = this
-        while (proto && proto !== Widget) {
-            if (!proto.style) continue
-            assets.addAssets(proto.assets)
-            assets.addStyle(proto.style(scope))
-            proto = Object.getPrototypeOf(proto)
+        // let proto = this
+        // while (proto && proto !== Widget) {
+        for (let proto of this._prototypes()) {
+            if (proto.style)  assets.addStyle(proto.style(scope))
+            if (proto.assets) assets.addAssets(proto.assets)
+            // proto = Object.getPrototypeOf(proto)
         }
+    }
+    static _prototypes() {
+        /* Array of all prototypes of `this` from below `Widget` (exluded) down to `this` (included), in this order. */
+        if (this === Widget) return []
+        let proto = Object.getPrototypeOf(this)
+        let chain = proto._prototypes()
+        chain.push(this)
+        return chain
     }
 }
 
