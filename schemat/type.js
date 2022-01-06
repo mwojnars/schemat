@@ -1,5 +1,5 @@
 import { React, MaterialUI, styled } from './resources.js'
-import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FRAGMENT, HTML, cssPrepend, cl, st}
+import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cssPrepend, cl, st}
     from './react-utils.js'
 import { createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
@@ -14,8 +14,8 @@ import { Catalog } from './data.js'
  */
 
 export class Assets {
-    /* Collection of CSS snippets that are appended one by one with add() and then deduplicated
-       and converted to a single snippet in display().
+    /* Collection of assets and CSS styles that are appended one by one with addStyle() or addAsset(),
+       and then deduplicated (!) and merged to a single HTML snippet in display().
      */
     assets = new Set()
     styles = new Set()
@@ -192,7 +192,7 @@ Schema.Widget = class extends Widget {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
        values matching a particular schema.
      */
-    static style(scope = ".Schema") {           // TODO: make `scope` a class-level attribute
+    static style(scope = ".SchemaWidget") {           // TODO: make `scope` a class-level attribute
         /* */
         return cssPrepend(scope) `
         .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
@@ -290,7 +290,7 @@ Schema.Widget = class extends Widget {
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
         let block    = this.state.editing ? this.editor() : this.viewer()
-        return DIV({className: 'Schema', style: {position: 'relative'}}, block, this.flashBox(), this.errorBox())
+        return DIV({className: 'SchemaWidget', style: {position: 'relative'}}, block, this.flashBox(), this.errorBox())
     }
 }
 
@@ -513,7 +513,7 @@ export class SCHEMA extends GENERIC {
     static type = Schema
 
     static Widget = class extends GENERIC.Widget {
-        static style(scope = '.Schema .SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
+        static style(scope = '.Schema.SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
             return cssPrepend(scope) `
             .default { color: #888; }
             .info { font-style: italic; }
@@ -522,7 +522,7 @@ export class SCHEMA extends GENERIC {
         viewer() {
             let {value: schema} = this.props
             let defalt = `${schema.default}`
-            return DIV({onDoubleClick: e => this.open(e)}, SPAN({className: 'SCHEMA'},
+            return DIV({onDoubleClick: e => this.open(e)}, SPAN({className: 'Schema SCHEMA'},
                     `${schema}`,
                     schema.default !== undefined &&
                         SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
@@ -905,14 +905,54 @@ export class CATALOG extends Schema {
             color:       undefined,
             start_color: undefined,
         }
-        // static style(scope = '.Schema.CATALOG') {
-        //     return cssPrepend(scope) `
-        // `}
+        static style(scope = '.Schema.CATALOG') {
+            return cssPrepend(scope)
+                `
+                `
+        }
 
         constructor(props) {
             super(props)
             this.EntryAtomic = this.EntryAtomic.bind(this)
             this.EntrySubcat = this.EntrySubcat.bind(this)
+        }
+
+        info(schema) {
+            if (!schema.info) return null
+            let cls = cl("bi bi-info-circle")
+            return I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'}), {title: schema.info})
+            // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
+            // return e(MaterialUI.Tooltip, {title: text},
+            //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
+            // return SPAN(cl('material-icons'), {title: schema.info}, 'info')
+            // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
+        }
+
+        EntryAtomic({item, path, key_, value, schema}) {
+            /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
+               The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+             */
+            let [current, setCurrent] = useState(value)
+            const save = async (newValue) => {
+                // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+                await item.remote_edit({path, value: schema.encode(newValue)})
+                setCurrent(newValue)
+            }
+            return TD({colSpan: 2}, FLEX(
+                      DIV(cl('cell cell-key'),  SPAN(cl('Entry_key'),   key_), this.info(schema)),
+                      DIV(cl('cell cell-value'), DIV(cl('Entry_value'), schema.display({value: current, save}))),
+                   ))
+            // return FRAGMENT(
+            //           TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), this.info(schema)),
+            //           TD(cl('cell'),          DIV (cl('Entry_value'), schema.display({value: current, save}))),
+            //        )
+        }
+
+        EntrySubcat({item, path, key_, value, schema, color}) {
+            assert(value  instanceof Catalog)
+            assert(schema instanceof CATALOG)
+            return TD(cl('cell cell-subcat'), {colSpan: 2},
+                      DIV(cl('Entry_key'), key_), schema.displayTable({value, item, path, color}))
         }
 
         render() {
@@ -927,42 +967,8 @@ export class CATALOG extends Schema {
                 return TR(cl(`Entry is-row${color}`), entry)
             })
             let flag = path.length ? 'is-nested' : 'is-top'
-            return DIV(cl(`Catalog ${flag}`), TABLE(cl(`Catalog_table`), TBODY(...rows)))
+            return DIV(cl(`Schema CATALOG ${flag}`), TABLE(cl(`CATALOG_table`), TBODY(...rows)))
         }
-
-        EntrySubcat({item, path, key_, value, schema, color}) {         // function component
-            assert(value  instanceof Catalog)
-            assert(schema instanceof CATALOG)
-            return TD(cl('cell cell-subcat'), {colSpan: 2},
-                      DIV(cl('Entry_key'), key_), schema.displayTable({value, item, path, color}))
-        }
-
-        EntryAtomic({item, path, key_, value, schema}) {
-            /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
-               The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
-             */
-            let [current, setCurrent] = useState(value)
-            const save = async (newValue) => {
-                // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-                await item.remote_edit({path, value: schema.encode(newValue)})
-                setCurrent(newValue)
-            }
-            return FRAGMENT(
-                      TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), this.info(schema)),
-                      TD(cl('cell'),          DIV (cl('Entry_value'), schema.display({value: current, save}))),
-                   )
-        }
-
-        info(schema) {
-            if (!schema.info) return null
-            // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
-            // return e(MaterialUI.Tooltip, {title: text},
-            //            I(cl("bi bi-info-circle"), st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
-            return I(cl("bi bi-info-circle"), st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'}), {title: schema.info})
-            // return SPAN(cl('material-icons'), {title: schema.info}, 'info')
-            // styled.i.attrs(cl("bi bi-info-circle")) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
-        }
-
     }
 }
 

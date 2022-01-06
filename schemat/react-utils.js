@@ -1,4 +1,4 @@
-import { assert, print, ItemNotLoaded } from './utils.js'
+import { assert, print, T, ItemNotLoaded } from './utils.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 
@@ -104,14 +104,19 @@ export function st(styles)     { return {style: styles} }                   // s
 
 function _e(name) {
     return (...args) => {
-        /* Return a React element for an HTML tag, `name`. All initial plain objects
-           (not strings, not React elements) are treated as `props` and merged. */
-        let props = {}, skip = 0
+        /* Return a React element for an HTML tag, `name`. All leading plain objects in `args`
+           (not strings, not React elements) are treated as props and merged.
+           The `style` prop is merged separately to allow merging individual style entries.
+         */
+        let props = {}, styles = {}, skip = 0, style
         for (let arg of args)
             if (arg && !arg.$$typeof && typeof arg !== 'string') {
-                props = {...props, ...arg}
+                ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
+                if (arg)   props  = {...props, ...arg}
+                if (style) styles = {...styles, ...style}
                 skip ++
             } else break
+        if (T.notEmpty(styles)) props.style = styles
         return e(name, skip ? props : null, ...(skip ? args.slice(skip) : args))
     }
 }
@@ -143,6 +148,8 @@ export const LABEL = _e('label')
 export const BUTTON = _e('button')
 export const TEXTAREA = _e('textarea')
 export const FIELDSET = _e('fieldset')
+
+export const FLEX = (...args) => DIV(st({display: 'flex'}), ...args)        // shorthand for DIV(...) with display=flex
 
 export const HTML = (html) => {
     return {dangerouslySetInnerHTML: {__html: html}}

@@ -452,7 +452,7 @@ export class Item {
             // e(this._mui_test),
             // e(this._mui_test),
             e(this.Title.bind(this)),
-            H2('Properties'),                               //{style: {color:'blue'}}
+            H2('Properties'),
             e(this.DataTable.bind(this)),
             extra,
         )

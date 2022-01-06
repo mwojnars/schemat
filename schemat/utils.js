@@ -128,8 +128,8 @@ export class Types {
     // getClass(null) returns null, getClass(3) returns Number, etc.
 
     static getOwnProperty = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined
-    static get = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined      // alias for getOwnProperty()
-    static pop = (obj, prop) => {                         // pop() = get() own property of `obj`, delete, return value
+    static get            = (obj, prop) => obj.hasOwnProperty(prop) ? obj[prop] : undefined      // alias for getOwnProperty()
+    static pop            = (obj, prop) => {                         // pop() = get() own property of `obj`, delete, return value
         if (!obj.hasOwnProperty(prop)) return undefined
         let x = obj[prop];
         delete obj[prop];
@@ -142,15 +142,15 @@ export class Types {
 
     static isPrimitiveObj = (obj) => ["number", "string", "boolean"].includes(typeof obj) || obj === null
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
-    static isNumber = (obj) => (typeof obj === 'number' && !isNaN(obj))               // test if obj is a valid number, not NaN
-    static isArray = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isDict = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a pure object (dict), no class assigned
-    static ofType = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)   // test if x is an object of class T exactly (NOT of a subclass)
-    static isClass = (C) => (typeof C === "function" && C.prototype !== undefined)   // test if C is a class (a constructor function with .prototype); false for arrays
-    static isSubclass = (C, B) => (C === B || C.prototype instanceof B)              // test if C is subclass of B, including C===B
-    static isMissing = (obj) => (obj === null || obj === undefined)                  // test if obj is null or undefined (two cases of "missingness")
-    static isEmpty = (obj) => (!obj || Object.keys(obj).length === 0)
-    static notEmpty = (obj) => (obj && Object.keys(obj).length > 0)
+    static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // test if obj is a valid number, not NaN
+    static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
+    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a pure object (dict), no class assigned
+    static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // test if x is an object of class T exactly (NOT of a subclass)
+    static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // test if C is a class (a constructor function with .prototype); false for arrays
+    static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)             // test if C is subclass of B, including C===B
+    static isMissing      = (obj) => (obj === null || obj === undefined)                // test if obj is null or undefined (two cases of "missingness")
+    static isEmpty        = (obj) => (!obj || Object.keys(obj).length === 0)
+    static notEmpty       = (obj) => (obj && Object.keys(obj).length > 0)
 
     static deleteFirst = (arr, x) => {
         let i = arr.indexOf(x);
