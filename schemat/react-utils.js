@@ -2,6 +2,7 @@ import { assert, print, T, ItemNotLoaded } from './utils.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 
+
 let cssValidator
 try { cssValidator = await import('csstree-validator') } catch(ex) {}
 
@@ -48,7 +49,7 @@ export function cssPrepend(scope, css) {
         if (errors && errors.length) throw new Error(`invalid CSS snippet:\n${css.trimEnd()}\nerrors: ${errors}`)
     }
 
-    css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments
+    css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments and some whitespace
     css = css.replace(/(\s*\n\s*)/g,'\n').replace(/(^\s+|\s+$)/g,'')    // trim leading/trailing whitespace in each line
     css = css.replace(/}(\s*)@/g, '}@')                                 // make sure `next` will not target a space
     css = css.replace(/}(\s*)}/g, '}}')
@@ -81,6 +82,7 @@ export function cssPrepend(scope, css) {
     if (css.indexOf(scope) !== 0 && css.indexOf('@') !== 0) css = scope + css
 
     return css
+    // return csso ? csso.minify(css).css : css
 }
 
 
