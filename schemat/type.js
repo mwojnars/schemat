@@ -22,21 +22,29 @@ export class Assets {
 
     addStyle(st)    { if (st && st.trim()) this.styles.add(st.trim()) }
     addAsset(asset) {
-        if (typeof asset !== 'string') {
-            if (asset.__assets__ === undefined) throw new Error(`missing __assets__ property in ${asset}`)
-            this.addAssets(asset.__assets__)        // __assets__ may contain nested objects with __assets__ attr
+        /* `asset` can be a plain string to be inserted in the <head> section, or a list of assets,
+           or an object with .__assets__ or .assets property. The assets can be nested. */
+        if (!asset) return
+        if (T.isArray(asset))
+            for (let a of asset) this.addAsset(a)
+
+        else if (typeof asset !== 'string') {
+            if (asset.__assets__ !== undefined)  asset = asset.__assets__
+            else if (asset.assets !== undefined) asset = asset.assets
+            else throw new Error(`missing .__assets__ or .assets in ${asset}`)
+            this.addAsset(asset)            // `asset` may contain nested objects with .__assets__/assets properties
         }
         else if (asset && asset.trim()) this.assets.add(asset.trim())
     }
-    addAssets(assets) {
-        /* `assets` can be an array of assets, or a single asset, or be empty/undefined. */
-        if (!assets) return
-        if (T.isArray(assets))
-            for (let asset of assets)
-                this.addAsset(asset)
-        else
-            this.addAsset(assets)
-    }
+    // addAssets(assets) {
+    //     /* `assets` can be an array of assets, or a single asset, or be empty/undefined. */
+    //     if (!assets) return
+    //     if (T.isArray(assets))
+    //         for (let asset of assets)
+    //             this.addAsset(asset)
+    //     else
+    //         this.addAsset(assets)
+    // }
 
     display()       { return `${this._allAssets()}\n${this.displayStyles()}` }
     displayStyles() { return this.styles.size ? `<style>\n${this._allStyles()}\n</style>` : '' }
@@ -51,7 +59,7 @@ export class Assets {
 class Widget extends React.Component {
     /* A React class component extended with an API for defining and collecting dependencies and CSS styles. */
 
-    static assets       // list of assets this widget depends on; each asset should be an object with an obj.__assets__
+    static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
                         // property defined, or a plain html string to be pasted into the <head> section of a page
 
     static style(scope = undefined) {
@@ -63,12 +71,9 @@ class Widget extends React.Component {
     static collect(assets, scope = undefined) {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
            of all base classes into an Assets() object. */
-        // let proto = this
-        // while (proto && proto !== Widget) {
         for (let proto of this._prototypes()) {
             if (proto.style)  assets.addStyle(proto.style(scope))
-            if (proto.assets) assets.addAssets(proto.assets)
-            // proto = Object.getPrototypeOf(proto)
+            if (proto.assets) assets.addAsset(proto.assets)
         }
     }
     static _prototypes() {
@@ -410,6 +415,16 @@ export class CODE extends TEXT
     */
 
     static Widget = class extends TEXT.Widget {
+        static assets =                                             // import ACE Editor
+        `
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-javascript.min.js" integrity="sha512-37ta5K4KVYs+MEmIg2xnZxJrdiQmBSKt+JInvyPrq9uz7aF67lMJT/t91EYoYj520jEcGlih41kCce7BRTmE3Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-base.min.js" integrity="sha512-+nNPckbKGLDhLhi4Gz1Y1Wj5Y+x6l7Qw0EEa7izCznLGTl6CrYBbMUVoIm3OfKW8u82JP0Ow7phPPHdk26Fo5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-javascript.min.js" integrity="sha512-hwPBZJdHUlQzk8FedQ6S0eqJw/26H3hQ1vjpdAVJLaZU/AJSkhU29Js3/J+INYpxEUbgD3gubC7jBBr+WDqS2w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+        <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
+        `
+
         // static viewer_options = {
         //     mode:           "ace/mode/haml",
         //     theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
