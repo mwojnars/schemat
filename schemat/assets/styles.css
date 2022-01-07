@@ -87,8 +87,8 @@ a:visited { color: #00427a }
 /*** ITEM PAGE */
 
                                 /* alternating colors of rows in a DataTable */
-.is-row1                        { background: #e2eef9; }   /* #D0E4F5 */
-.is-row2                        { background: #f6f6f6; }
+/*.is-row1                        { background: #e2eef9; }   !* #D0E4F5 *!*/
+/*.is-row2                        { background: #f6f6f6; }*/
 
 .is-top                         {}      /* marks a top-level CATALOG */
 .is-nested                      {}      /* marks a sub-CATALOG */

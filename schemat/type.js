@@ -911,35 +911,49 @@ export class CATALOG extends Schema {
             color:       undefined,
             start_color: undefined,
         }
-        static style = (root = '.Schema.CATALOG', prefix = '.C_') => css({'&': root, '?': prefix})
+
+        static style = (root = '.Schema.CATALOG', prefix = '.C_') =>
+
+            css({'&': root + prefix + 'd0', '?': prefix})       // general rules anchored at a top-level CATALOG (depth=0)
         `
             &                   { table-layout: fixed; }
             & ?table            { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
-            & ?entry:not(:last-child){ border-bottom: 1px solid #fff; }
+            & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             
-            & ?cell                  { text-align: left; padding: 14px 10px 11px var(--ct-cell-pad); /*border-right: none;*/ }
-            & ?cell-key              { display: flex; border-right: 1px solid #fff; }
-            & ?cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-            & ?cell-value            { width: 100%; }
-            & ?cell-subcat           { padding-right: 0; padding-bottom: 0; }
+            & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
+            & ?entry2           { background: #f6f6f6; }
             
-            & ?key             { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; }
+            & ?cell             { text-align: left; padding: 14px 10px 11px var(--ct-cell-pad); /*border-right: none;*/ }
+            & ?cell-key         { display: flex; border-right: 1px solid #fff; }
+            & ?cell-key         { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
+            & ?cell-value       { width: 100%; }
+            & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
+            
+            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; }
             & ?value,
-            & ?value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-            & ?value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
+            & ?value > *        { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
 
-            &.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-            &.is-nested ?cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
-            &.is-nested ?key   { font-weight: normal; font-style: italic; }
-            
-            & ?infoIcon        { color: #aaa; font-size: 0.9em; margin: 0 5px; float: right; }
-            & ?infoIcon:hover  { color: unset; }
+            & ?icon-info        { color: #aaa; font-size: 0.9em; margin: 0 5px; }
+            & ?icon-info:hover  { color: unset; }
         `
-        /*
-        Classes:
-          .C_entry    -- <TR> of a table, top-level or nested
-          .C_key      -- deep-most element containing just a key label
-          .C_value    -- deep-most element containing just a rendered value component
+            + '\n' + css({'&': root + prefix + 'd1', '?': prefix})      // override rules for nested elements (depth >= 1)
+        `
+            &             { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
+            & ?cell-key   { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+            & ?key        { font-weight: normal; font-style: italic; }
+        `
+
+        /* Main elements:
+           .C_entry     -- <TR> of a table, top-level or nested
+           .C_cell-*    -- <DIV> box inside a C_entry that holds a key/value/subcatalog
+           .C_key       -- deep-most element containing just a key label
+           .C_value     -- deep-most element containing just a rendered value component
+           Flags:
+           .C_dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
+           .C_entryK    -- alternating colors of rows, K = 1 or 2
+           Other elements:
+           .C_icon-*    -- fixed-sized icons for control elements
          */
 
         constructor(props) {
@@ -950,7 +964,7 @@ export class CATALOG extends Schema {
 
         info(schema) {
             if (!schema.info) return null
-            let cls = cl("bi bi-info-circle C_infoIcon")
+            let cls = cl("bi bi-info-circle C_icon-info")
             return I(cls, {title: schema.info})
             // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
             // return e(MaterialUI.Tooltip, {title: text},
@@ -995,10 +1009,10 @@ export class CATALOG extends Schema {
                 let valueSchema = schema._schema(key)
                 let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return TR(cl(`C_entry is-row${color}`), entry)
+                return TR(cl(`C_entry C_entry${color}`), entry)
             })
-            let flag = path.length ? 'is-nested' : 'is-top'
-            return DIV(cl(`Schema CATALOG ${flag}`), TABLE(cl(`C_table`), TBODY(...rows)))
+            let depth = path.length
+            return DIV(cl(`Schema CATALOG C_d${depth}`), TABLE(cl(`C_table`), TBODY(...rows)))
         }
     }
 }
