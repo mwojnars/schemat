@@ -917,13 +917,13 @@ export class CATALOG extends Schema {
             & ?table            { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
             & ?entry:not(:last-child){ border-bottom: 1px solid #fff; }
             
-            & ?cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; /*border-right: none;*/ }
-            & ?cell-key              { border-right: 1px solid #fff; }
+            & ?cell                  { text-align: left; padding: 14px 10px 11px var(--ct-cell-pad); /*border-right: none;*/ }
+            & ?cell-key              { display: flex; border-right: 1px solid #fff; }
             & ?cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
             & ?cell-value            { width: 100%; }
             & ?cell-subcat           { padding-right: 0; padding-bottom: 0; }
             
-            & ?key             { font-weight: bold; font-size: 15px; }
+            & ?key             { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; }
             & ?value,
             & ?value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
             & ?value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
@@ -931,6 +931,9 @@ export class CATALOG extends Schema {
             &.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
             &.is-nested ?cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
             &.is-nested ?key   { font-weight: normal; font-style: italic; }
+            
+            & ?infoIcon        { color: #aaa; font-size: 0.9em; margin: 0 5px; float: right; }
+            & ?infoIcon:hover  { color: unset; }
         `
         /*
         Classes:
@@ -947,8 +950,8 @@ export class CATALOG extends Schema {
 
         info(schema) {
             if (!schema.info) return null
-            let cls = cl("bi bi-info-circle")
-            return I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'}), {title: schema.info})
+            let cls = cl("bi bi-info-circle C_infoIcon")
+            return I(cls, {title: schema.info})
             // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
             // return e(MaterialUI.Tooltip, {title: text},
             //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
