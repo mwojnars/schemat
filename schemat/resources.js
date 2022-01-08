@@ -55,6 +55,7 @@ class Resources {
         <script src="/files/assets/libs/material-ui_v5.2.6.development.min.js" crossorigin></script>
         <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>    
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>    
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>    
         <!--<script src="https://unpkg.com/@mui/material@5.2.6/umd/material-ui.development.js" crossorigin></script>-->
     
         <!-- local resources... -->
@@ -64,6 +65,18 @@ class Resources {
     `
     // inlined favicon:  <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmYh3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBABAQEBAQEBARAQEBAQEBAQAQEBAQEBAQEQEBAQEBAQEAEBAQEBAQEBEBAQEBAQEBCqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAAqqoAAFVVAACqqgAAVVUAAKqqAABVVQAA" rel="icon" type="image/x-icon" />
 }
+
+/*
+Global CSS class names introduced by the assets above. Watch for name collissions with the styles of Schemat components:
+
+Material Icons -- two classes:
+  .material-icons
+  .material-icons-outlined
+
+Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this dependency!
+  .bi row ....
+
+*/
 
 
 let {                                                               // on client...

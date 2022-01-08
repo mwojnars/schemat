@@ -1,5 +1,5 @@
 import { React, MaterialUI, styled } from './resources.js'
-import {e, A, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st}
+import {e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st}
     from './react-utils.js'
 import { css, cssPrepend, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
@@ -922,8 +922,10 @@ export class CATALOG extends Schema {
             
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
+
+            /* & ?entry:not(.CATALOG?d1 *)  { background: red; }  -- rule with a "stop-at" criterion */
             
-            & ?cell             { text-align: left; padding: 14px 10px 11px var(--ct-cell-pad); /*border-right: none;*/ }
+            & ?cell             { text-align: left; padding: 14px 15px 11px var(--ct-cell-pad); /*border-right: none;*/ }
             & ?cell-key         { display: flex; border-right: 1px solid #fff; }
             & ?cell-key         { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
             & ?cell-value       { width: 100%; }
@@ -934,26 +936,33 @@ export class CATALOG extends Schema {
             & ?value > *        { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
             & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
 
-            & ?icon-info        { color: #aaa; font-size: 0.9em; margin: 0 5px; }
-            & ?icon-info:hover  { color: unset; }
+            /*& ?icon-info        { color: #aaa; margin: 0 5px; }
+              & ?icon-info:hover  { color: unset; }
+
+            & ?icon-info        { color:white; background-color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; 
+                                  font-weight:bold; font-style:normal; flex-shrink:0; border-radius:3px; text-align:center; box-shadow: 1px 1px 1px #555; }
+            & ?icon-info:hover  { background-color: #777; font-style: italic; }
+            */
+
+            & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px; 
+                                  font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
+            & ?icon-info:hover  { color:white; background-color: #888; }
         `
-            + '\n' + css({'&': root + prefix + 'd1', '?': prefix})      // override rules for nested elements (depth >= 1)
+            + '\n' + css({'&': root + prefix + 'd1', '?': prefix})      // special rules for nested elements (depth >= 1)
         `
             &             { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
             & ?cell-key   { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
             & ?key        { font-weight: normal; font-style: italic; }
         `
-
-        /* Main elements:
-           .C_entry     -- <TR> of a table, top-level or nested
-           .C_cell-*    -- <DIV> box inside a C_entry that holds a key/value/subcatalog
-           .C_key       -- deep-most element containing just a key label
-           .C_value     -- deep-most element containing just a rendered value component
-           Flags:
-           .C_dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
-           .C_entryK    -- alternating colors of rows, K = 1 or 2
-           Other elements:
-           .C_icon-*    -- fixed-sized icons for control elements
+        /* CSS elements:
+            .C_dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
+            .C_entry     -- <TR> of a table, top-level or nested
+            .C_entryK    -- alternating colors of rows, K = 1 or 2
+            .C_cell-*    -- <DIV> box inside a C_entry that holds a key/value/subcatalog
+            .C_key       -- deep-most element containing just a key label
+            .C_value     -- deep-most element containing just a rendered value component
+           Other:
+            .C_icon-*    -- fixed-sized icons for control elements
          */
 
         constructor(props) {
@@ -964,12 +973,13 @@ export class CATALOG extends Schema {
 
         info(schema) {
             if (!schema.info) return null
-            let cls = cl("bi bi-info-circle C_icon-info")
-            return I(cls, {title: schema.info})
+            return I(cl('C_icon-info'), {title: schema.info}, '?')
+            // return I(cl('C_icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
+            // return I(cl("bi bi-info-circle C_icon-info"), {title: schema.info})
+            // return I(cl("C_icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
             // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
             // return e(MaterialUI.Tooltip, {title: text},
             //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
-            // return SPAN(cl('material-icons'), {title: schema.info}, 'info')
             // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
         }
 
