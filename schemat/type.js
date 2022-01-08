@@ -916,8 +916,8 @@ export class CATALOG extends Schema {
 
             css({'&': root + prefix + 'd0', '?': prefix})       // general rules anchored at a top-level CATALOG (depth=0)
         `
-            &                   { table-layout: fixed; }
-            & ?table            { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
+            /*&                   { table-layout: fixed; }*/
+            &                   { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
             & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
@@ -926,7 +926,7 @@ export class CATALOG extends Schema {
             /* & ?entry:not(.CATALOG?d1 *)  { background: red; }  -- rule with a "stop-at" criterion */
             
             & ?cell             { text-align: left; padding: 14px 15px 11px var(--ct-cell-pad); /*border-right: none;*/ }
-            & ?cell-key         { display: flex; border-right: 1px solid #fff; }
+            & ?cell-key         { display: flex; align-items: center; border-right: 1px solid #fff; }
             & ?cell-key         { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
             & ?cell-value       { width: 100%; }
             & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
@@ -996,16 +996,16 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            return DIV(FLEX(
+            return FLEX(
                       DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'), this.info(schema), key_)),
                       DIV(cl('C_cell C_cell-value'), DIV(cl('C_value'), schema.display({value: current, save}))),
-                   ))
+                   )
         }
 
         EntrySubcat({item, path, key_, value, schema, color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
-            return DIV(cl('C_cell C_cell-subcat'), //{colSpan: 2},
+            return DIV(cl('C_cell C_cell-subcat'),
                       DIV(cl('C_key'), this.info(schema), key_), schema.displayTable({value, item, path, color}))
         }
 
@@ -1021,7 +1021,7 @@ export class CATALOG extends Schema {
                 return DIV(cl(`C_entry C_entry${color}`), entry)
             })
             let depth = path.length
-            return DIV(cl(`Schema CATALOG C_d${depth}`), DIV(cl(`C_table`), ...rows))
+            return DIV(cl(`Schema CATALOG C_d${depth}`), ...rows)
             // return DIV(cl(`Schema CATALOG C_d${depth}`), TABLE(cl(`C_table`), TBODY(...rows)))
         }
     }
