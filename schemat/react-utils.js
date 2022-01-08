@@ -125,20 +125,19 @@ export function st(styles)     { return {style: styles} }                   // s
 
 function _e(name) {
     return (...args) => {
-        /* Return a React element for an HTML tag, `name`. All leading plain objects in `args`
+        /* Return a React element for an HTML tag, `name`. All plain objects in `args`
            (not strings, not React elements) are treated as props and merged.
-           The `style` prop is merged separately to allow merging individual style entries.
+           The `style` prop is merged separately to allow merging of individual style entries.
          */
-        let props = {}, styles = {}, skip = 0, style
+        let props = {}, styles = {}, elements = [], style
         for (let arg of args)
             if (arg && !arg.$$typeof && typeof arg !== 'string') {
                 ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
                 if (arg)   props  = {...props, ...arg}
                 if (style) styles = {...styles, ...style}
-                skip ++
-            } else break
+            } else elements.push(arg)
         if (T.notEmpty(styles)) props.style = styles
-        return e(name, skip ? props : null, ...(skip ? args.slice(skip) : args))
+        return e(name, T.notEmpty(props) ? props : null, ...elements) //(skip ? args.slice(skip) : args))
     }
 }
 

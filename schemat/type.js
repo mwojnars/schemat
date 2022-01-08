@@ -973,7 +973,8 @@ export class CATALOG extends Schema {
 
         info(schema) {
             if (!schema.info) return null
-            return I(cl('C_icon-info'), {title: schema.info}, '?')
+            return {title: schema.info, style: {textDecorationLine: 'underline', textDecorationStyle: 'dotted'}}
+            // return I(cl('C_icon-info'), {title: schema.info}, '?')
             // return I(cl('C_icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
             // return I(cl("bi bi-info-circle C_icon-info"), {title: schema.info})
             // return I(cl("C_icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
@@ -994,7 +995,7 @@ export class CATALOG extends Schema {
                 setCurrent(newValue)
             }
             return TD({colSpan: 2}, FLEX(
-                      DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'),   key_), this.info(schema)),
+                      DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'), this.info(schema), key_)),
                       DIV(cl('C_cell C_cell-value'), DIV(cl('C_value'), schema.display({value: current, save}))),
                    ))
             // return FRAGMENT(
@@ -1007,7 +1008,7 @@ export class CATALOG extends Schema {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             return TD(cl('C_cell C_cell-subcat'), {colSpan: 2},
-                      DIV(cl('C_key'), key_), schema.displayTable({value, item, path, color}))
+                      DIV(cl('C_key'), this.info(schema), key_), schema.displayTable({value, item, path, color}))
         }
 
         render() {

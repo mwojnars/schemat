@@ -27,7 +27,7 @@ let root_fields = C({
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
-    fields       : new CATALOG(new SCHEMA()),   // fields must have unique names, so a CATALOG is better than a multivalued "field"
+    fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."})
 

@@ -189,7 +189,7 @@ export class ServerRegistry extends Registry {
         assert(site instanceof Site)
         assert(site.has_id() && site.has_data())
         this.site = site
-        await this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
+        this.root.data.push(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         return this.update(this.root)
         // this.stage(this.root)
         // return this.commit()

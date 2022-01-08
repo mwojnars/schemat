@@ -46,6 +46,7 @@
               "@": schemat.type.CATALOG
           - key: fields
             value:
+              info: Fields must have unique names.
               isCatalog: true
               values:
                 "@": schemat.type.SCHEMA
