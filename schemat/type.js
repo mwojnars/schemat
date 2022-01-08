@@ -996,20 +996,16 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            return TD({colSpan: 2}, FLEX(
+            return DIV(FLEX(
                       DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'), this.info(schema), key_)),
                       DIV(cl('C_cell C_cell-value'), DIV(cl('C_value'), schema.display({value: current, save}))),
                    ))
-            // return FRAGMENT(
-            //           TH(cl('cell cell-key'), SPAN(cl('Entry_key'),   key_), this.info(schema)),
-            //           TD(cl('cell'),          DIV (cl('Entry_value'), schema.display({value: current, save}))),
-            //        )
         }
 
         EntrySubcat({item, path, key_, value, schema, color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
-            return TD(cl('C_cell C_cell-subcat'), {colSpan: 2},
+            return DIV(cl('C_cell C_cell-subcat'), //{colSpan: 2},
                       DIV(cl('C_key'), this.info(schema), key_), schema.displayTable({value, item, path, color}))
         }
 
@@ -1022,10 +1018,11 @@ export class CATALOG extends Schema {
                 let valueSchema = schema._schema(key)
                 let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return TR(cl(`C_entry C_entry${color}`), entry)
+                return DIV(cl(`C_entry C_entry${color}`), entry)
             })
             let depth = path.length
-            return DIV(cl(`Schema CATALOG C_d${depth}`), TABLE(cl(`C_table`), TBODY(...rows)))
+            return DIV(cl(`Schema CATALOG C_d${depth}`), DIV(cl(`C_table`), ...rows))
+            // return DIV(cl(`Schema CATALOG C_d${depth}`), TABLE(cl(`C_table`), TBODY(...rows)))
         }
     }
 }
