@@ -931,7 +931,9 @@ export class CATALOG extends Schema {
             & ?cell-value       { width: 100%; }
             & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
             
-            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; }
+            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; text-decoration-line: underline; text-decoration-style: dotted; } 
+            & ?key:not([title]) { text-decoration-line: none; }
+            
             & ?value,
             & ?value > *        { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
             & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
@@ -971,18 +973,18 @@ export class CATALOG extends Schema {
             this.EntrySubcat = this.EntrySubcat.bind(this)
         }
 
-        info(schema) {
-            if (!schema.info) return null
-            return {title: schema.info, style: {textDecorationLine: 'underline', textDecorationStyle: 'dotted'}}
-            // return I(cl('C_icon-info'), {title: schema.info}, '?')
-            // return I(cl('C_icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
-            // return I(cl("bi bi-info-circle C_icon-info"), {title: schema.info})
-            // return I(cl("C_icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
-            // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
-            // return e(MaterialUI.Tooltip, {title: text},
-            //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
-            // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
-        }
+        info(schema) { return schema.info ? {title: schema.info} : null }
+        //     if (!schema.info) return null
+        //     return {title: schema.info, style: {textDecorationLine: 'underline', textDecorationStyle: 'dotted'}}
+        //     // return I(cl('C_icon-info'), {title: schema.info}, '?')
+        //     // return I(cl('C_icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
+        //     // return I(cl("bi bi-info-circle C_icon-info"), {title: schema.info})
+        //     // return I(cl("C_icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
+        //     // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
+        //     // return e(MaterialUI.Tooltip, {title: text},
+        //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
+        //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
+        // }
 
         EntryAtomic({item, path, key_, value, schema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
