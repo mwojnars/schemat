@@ -58,7 +58,7 @@ class Component extends React.Component {
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
-                        // property defined, or a plain html string to be pasted into the <head> section of a page
+                        // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
 
     static style(scope = undefined) {
         /* Override in subclasses to provide CSS styling that will be included (deduplicated) in a page along with the widget.
@@ -75,13 +75,46 @@ class Component extends React.Component {
         }
     }
     static _prototypes() {
-        /* Array of all prototypes of `this` from below `Component` (exluded) down to `this` (included), in this order. */
+        /* Array of all prototypes of `this` from below `Component` (excluded) down to `this` (included), in this order. */
         if (this === Component) return []
         let proto = Object.getPrototypeOf(this)
         let chain = proto._prototypes()
         chain.push(this)
         return chain
     }
+
+    // static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
+    //
+    // constructor(props) {
+    //     super(props)
+    //     this._renderOriginal_ = this.render.bind(this)
+    //     this.render = this._renderReplacement_.bind(this)
+    // }
+    //
+    // embed(component, ...args) {
+    //     /* Embed another `component` into this one by wrapping up the React element created from the `component`
+    //        in a "stop-at" <div> with an appropriate css class for reliable scoping.
+    //        Also, check if `this` declares the `component` in its assets and throw an exception if not.
+    //        IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
+    //        the only exception are top-level Components, as they do not have parent scopes where to embed into.
+    //        Calling createElement() directly may result in `this` styles leaking down into the `component`.
+    //      */
+    //     // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
+    //     // let embedDisplay ...
+    //     let scope = this.constructor.scope
+    //     return DIV(cl(`scope-end-${scope}`), e(component, ...args))
+    // }
+    //
+    // _renderReplacement_() {
+    //     /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class.
+    //        This method is assigned to this.render in the constuctor, so that subclasses can still
+    //        override the render() as usual, but that React calls this wrapper instead.
+    //      */
+    //     let elem = this._renderOriginal_()
+    //     if (elem === null || typeof elem === 'string') return elem
+    //     let scope = this.constructor.scope
+    //     return DIV(cl(`scope-begin-${scope}`), elem)
+    // }
 }
 
 class Widget extends Component {}
@@ -174,12 +207,6 @@ export class Schema {
     //     return props.value.toString()
     // }
 
-    display(props) {
-        return e(this.constructor.Widget, {...props, schema: this})
-        // let Widget = this.constructor.Widget || this.widget.bind(this)
-        // return e(Widget, props)
-    }
-
     getAssets() {
         /* Walk through all nested schema objects, collect their CSS styles and assets and return as an Assets instance.
            this.collect() is called internally - it should be overriden in subclasses instead of this method.
@@ -191,6 +218,10 @@ export class Schema {
     collect(assets) {
         /* For internal use. Override in subclasses to provide a custom way of collecting CSS styles & assets from all nested schemas. */
         this.constructor.Widget.collect(assets)
+    }
+
+    display(props) {
+        return e(this.constructor.Widget, {...props, schema: this})
     }
 }
 
