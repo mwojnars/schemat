@@ -912,12 +912,12 @@ export class CATALOG extends Schema {
             start_color: undefined,
         }
 
-        static style = (root = '.Schema.CATALOG', prefix = '.C_') =>
+        static style = (root = '.Schema.CATALOG', prefix = '.C_', stop = ':not(.CATALOG_stop *)') =>
 
-            css({'&': root + prefix + 'd0', '?': prefix})       // general rules anchored at a top-level CATALOG (depth=0)
+            css({'&': root + prefix + 'd0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
         `
             /*&                   { table-layout: fixed; }*/
-            &                   { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }
+            &                   { width: 100%; } /*border-collapse: collapse; min-width:100%; max-width:100%;*/
             & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
@@ -926,9 +926,9 @@ export class CATALOG extends Schema {
             /* & ?entry:not(.CATALOG?d1 *)  { background: red; }  -- rule with a "stop-at" criterion */
             
             & ?cell             { text-align: left; padding: 14px 15px 11px var(--ct-cell-pad); /*border-right: none;*/ }
-            & ?cell-key         { display: flex; align-items: center; border-right: 1px solid #fff; }
-            & ?cell-key         { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }
-            & ?cell-value       { width: 100%; }
+            & ?cell-key         { align-items: center; border-right: 1px solid #fff; display: flex; flex-grow: 1; }
+            /*& ?cell-key         { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }*/
+            & ?cell-value       { width: 800px; }  /*width:100%*/
             & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
             
             & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; text-decoration-line: underline; text-decoration-style: dotted; } 
@@ -940,20 +940,23 @@ export class CATALOG extends Schema {
 
             /*& ?icon-info        { color: #aaa; margin: 0 5px; }
               & ?icon-info:hover  { color: unset; }
-
+            
             & ?icon-info        { color:white; background-color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; 
                                   font-weight:bold; font-style:normal; flex-shrink:0; border-radius:3px; text-align:center; box-shadow: 1px 1px 1px #555; }
             & ?icon-info:hover  { background-color: #777; font-style: italic; }
-            */
-
+            
             & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px; 
                                   font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
             & ?icon-info:hover  { color:white; background-color: #888; }
+            */
+            
+            & .move|                    { margin-right: 10px; }
+            & :is(.moveup,.movedown)|   { font-size: 0.7em; line-height: 1em; cursor: pointer; } 
         `
-            + '\n' + css({'&': root + prefix + 'd1', '?': prefix})      // special rules for nested elements (depth >= 1)
+            + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
         `
             &             { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-            & ?cell-key   { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }
+            & ?cell-key   { padding-left: 5px; }  /*width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width);/*
             & ?key        { font-weight: normal; font-style: italic; }
         `
         /* CSS elements:
@@ -975,8 +978,7 @@ export class CATALOG extends Schema {
 
         info(schema) { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
-        //     return {title: schema.info, style: {textDecorationLine: 'underline', textDecorationStyle: 'dotted'}}
-        //     // return I(cl('C_icon-info'), {title: schema.info}, '?')
+        //     return I(cl('C_icon-info'), {title: schema.info}, '?')
         //     // return I(cl('C_icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
         //     // return I(cl("bi bi-info-circle C_icon-info"), {title: schema.info})
         //     // return I(cl("C_icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
@@ -985,6 +987,13 @@ export class CATALOG extends Schema {
         //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
         //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
         // }
+
+        arrows() {
+            return DIV(cl('move'), DIV(cl('moveup'), '\u25b2'), DIV(cl('movedown'), '\u25bc'))
+            // drag-handle (double ellipsis):  "\u22ee\u22ee"
+        }
+
+        key(key_, schema)   { return FRAGMENT(this.arrows(), DIV(cl('C_key'), key_, this.info(schema))) }
 
         EntryAtomic({item, path, key_, value, schema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
@@ -997,16 +1006,16 @@ export class CATALOG extends Schema {
                 setCurrent(newValue)
             }
             return FLEX(
-                      DIV(cl('C_cell C_cell-key'),  SPAN(cl('C_key'), this.info(schema), key_)),
-                      DIV(cl('C_cell C_cell-value'), DIV(cl('C_value'), schema.display({value: current, save}))),
+                      DIV(cl('C_cell C_cell-key'),   this.key(key_, schema)),
+                      DIV(cl('C_cell C_cell-value'), DIV(cl('C_value CATALOG_stop'), schema.display({value: current, save}))),
                    )
         }
 
         EntrySubcat({item, path, key_, value, schema, color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
-            return DIV(cl('C_cell C_cell-subcat'),
-                      DIV(cl('C_key'), this.info(schema), key_), schema.displayTable({value, item, path, color}))
+            return DIV(cl('C_cell C_cell-subcat'), DIV(cl('C_cell-key'), this.key(key_, schema)),
+                       schema.displayTable({value, item, path, color}))
         }
 
         render() {
