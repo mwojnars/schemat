@@ -1,7 +1,6 @@
 import { React, MaterialUI, styled } from './resources.js'
-import {e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st}
-    from './react-utils.js'
-import { css, cssPrepend, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st } from './react-utils.js'
+import { css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -57,6 +56,10 @@ class Component extends React.Component {
     /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
+    static SCOPE_PROLOG() { return `begin-${this.scope}` }
+    static SCOPE_EPILOG() { return `end-${this.scope}` }
+
+    static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
                         // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
 
@@ -66,6 +69,15 @@ class Component extends React.Component {
            In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
          */
     }
+
+    constructor(props) {
+        super(props)
+        if (this.constructor.scope) {
+            this._renderOriginal_ = this.render.bind(this)
+            this.render = this._renderReplacement_.bind(this)
+        }
+    }
+
     static collect(assets, scope = undefined) {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
            of all base classes into an Assets() object. */
@@ -83,38 +95,51 @@ class Component extends React.Component {
         return chain
     }
 
-    // static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
-    //
-    // constructor(props) {
-    //     super(props)
-    //     this._renderOriginal_ = this.render.bind(this)
-    //     this.render = this._renderReplacement_.bind(this)
-    // }
-    //
-    // embed(component, ...args) {
-    //     /* Embed another `component` into this one by wrapping up the React element created from the `component`
-    //        in a "stop-at" <div> with an appropriate css class for reliable scoping.
-    //        Also, check if `this` declares the `component` in its assets and throw an exception if not.
-    //        IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
-    //        the only exception are top-level Components, as they do not have parent scopes where to embed into.
-    //        Calling createElement() directly may result in `this` styles leaking down into the `component`.
-    //      */
-    //     // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
-    //     // let embedDisplay ...
-    //     let scope = this.constructor.scope
-    //     return DIV(cl(`scope-end-${scope}`), e(component, ...args))
-    // }
-    //
-    // _renderReplacement_() {
-    //     /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class.
-    //        This method is assigned to this.render in the constuctor, so that subclasses can still
-    //        override the render() as usual, but that React calls this wrapper instead.
-    //      */
-    //     let elem = this._renderOriginal_()
-    //     if (elem === null || typeof elem === 'string') return elem
-    //     let scope = this.constructor.scope
-    //     return DIV(cl(`scope-begin-${scope}`), elem)
-    // }
+    _wrap(elem, prolog = true) {
+        if (!this.constructor.scope) return elem
+        let name = (prolog ? this.constructor.SCOPE_PROLOG() : this.constructor.SCOPE_EPILOG())
+        return DIV({className: name}, elem)
+    }
+
+    embed(component, ...args) {
+        /* Embed another `component` into this one by wrapping up the React element created from the `component`
+           in a "stop-at" <div> with an appropriate css class for reliable scoping.
+           Also, check if `this` declares the `component` in its assets and throw an exception if not.
+           IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
+           the only exceptions are top-level Components, as they do not have parent scopes where to embed into,
+           and the components that may include components of the same type (recursive inclusion, direct OR indirect!).
+           Calling createElement() directly without embed() may result in `this` styles leaking down into the `component`.
+         */
+        // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
+        // let embedDisplay ...
+        return this._wrap(e(component, ...args), false)
+    }
+    _renderReplacement_() {
+        /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class.
+           This method is assigned to this.render in the constuctor, so that subclasses can still
+           override the render() as usual, but that React calls this wrapper instead.
+         */
+        let elem = this._renderOriginal_()
+        if (elem === null || typeof elem === 'string') return elem
+        return this._wrap(elem, true)
+    }
+
+    static safeCSS(params, css) {
+        /* Extend all the rules in  the `css` stylesheet with reliable scoping by a SCOPE_PROLOG() (from above)
+           and a SCOPE_EPILOG() (from below) classes.
+         */
+        if (css === undefined)              // return a partial function if `css` is missing
+            return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
+
+        if (!this.scope) return css
+        let {stopper = '|'} = params
+        css = cssPrepend(`.${this.SCOPE_PROLOG()}`, css)
+        if (stopper) {
+            let insert = `:not(.${this.SCOPE_EPILOG()} *)`      // exclude all the DOM nodes located below the SCOPE_EPILOG() class
+            css = css.replaceAll(stopper, insert)
+        }
+        return css
+    }
 }
 
 class Widget extends Component {}
@@ -229,15 +254,26 @@ Schema.Widget = class extends Widget {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
        values matching a particular schema.
      */
-    static style(scope = ".SchemaWidget") {           // TODO: make `scope` a class-level attribute
-        /* */
-        return cssPrepend(scope) `
-        .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:-20px; z-index:10; }
-        .flash-info { background-color: mediumseagreen; transition: 0.2s; }
-        .flash-warn { background-color: salmon; transition: 0.2s; }
-        .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
-        .error { padding-top:5px; color:red; }
-    `}
+    static scope = 'SchemaWidget'
+
+    // in the future, Schema.Widget may include itself recursively (through RECORD, for instance);
+    // for this reason, it will have to define global styles, no safeCSS() !!
+    static style = () => this.safeCSS({stopper: '|'})
+    `
+        .flash|      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
+        .flash-info| { background-color: mediumseagreen; transition: 0.2s; }
+        .flash-warn| { background-color: salmon; transition: 0.2s; }
+        .flash-stop| { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+        .error|      { padding-top:5px; color:red; }
+    `
+    // static style = (scope = ".SchemaWidget") => cssPrepend(scope)
+    // `
+    //     .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:0px; z-index:10; }
+    //     .flash-info { background-color: mediumseagreen; transition: 0.2s; }
+    //     .flash-warn { background-color: salmon; transition: 0.2s; }
+    //     .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+    //     .error { padding-top:5px; color:red; }
+    // `
 
     static defaultProps = {
         schema: undefined,          // parent Schema object
@@ -953,8 +989,6 @@ export class CATALOG extends Schema {
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
 
-            /* & ?entry:not(.CATALOG?d1 *)  { background: red; }  -- rule with a "stop-at" criterion */
-            
             & ?cell             { text-align: left; padding: 14px 15px 11px var(--ct-cell-pad); /*border-right: none;*/ }
             & ?cell-key         { align-items: center; border-right: 1px solid #fff; display: flex; flex-grow: 1; }
             & ?cell-value       { width: 800px; }
@@ -988,6 +1022,8 @@ export class CATALOG extends Schema {
             .icon-*    -- fixed-sized icons for control elements
          */
         /* DRAFTS:
+            & ?entry:not(.CATALOG?d1 *)  { background: red; }    -- rule with a "stop-at" criterion
+
             & ?icon-info        { color: #aaa; margin: 0 5px; }
             & ?icon-info:hover  { color: unset; }
 
