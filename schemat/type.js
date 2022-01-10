@@ -439,20 +439,20 @@ export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
 
-        // static scope = 'Widget-TEXT'
-        // static style = () => this.safeCSS()
-        // `
-        //     .use-scroll {
-        //         overflow: auto;   /*scroll*/
-        //         max-height: 12rem;
-        //         border-bottom: 1px solid rgba(0,0,0,0.1);
-        //         border-right:  1px solid rgba(0,0,0,0.1);
-        //         resize: vertical;
-        //     }
-        //     .use-scroll[style*="height"] {
-        //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-        //     }
-        // `
+        static scope = 'Widget-TEXT'
+        static style = () => this.safeCSS()
+        `
+            .use-scroll {
+                overflow: auto;   /*scroll*/
+                max-height: 12rem;
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+                border-right:  1px solid rgba(0,0,0,0.1);
+                resize: vertical;
+            }
+            .use-scroll[style*="height"] {
+                max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+            }
+        `
 
         viewer() { return PRE(DIV(cl('use-scroll'), {onDoubleClick: e => this.open(e)}, this.prepare())) }
         editor() {

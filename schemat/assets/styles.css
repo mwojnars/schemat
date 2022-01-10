@@ -57,16 +57,16 @@ pre         { display: block; margin-top: 0; overflow: auto; }      /* copied fr
 
 /*** UTILITIES */
 
-.use-scroll {
-    overflow: auto;   /*scroll*/
-    max-height: 12rem;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    border-right:  1px solid rgba(0,0,0,0.1);
-    resize: vertical;
-}
-.use-scroll[style*="height"] {
-    max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-}
+/*.use-scroll {*/
+/*    overflow: auto;   !*scroll*!*/
+/*    max-height: 12rem;*/
+/*    border-bottom: 1px solid rgba(0,0,0,0.1);*/
+/*    border-right:  1px solid rgba(0,0,0,0.1);*/
+/*    resize: vertical;*/
+/*}*/
+/*.use-scroll[style*="height"] {*/
+/*    max-height: unset;              !* this allows manual resizing (resize:vertical) to exceed predefined max-height *!*/
+/*}*/
 
 
 /*** WIDGETS */
