@@ -20,10 +20,10 @@ Naming conventions:
     box-sizing: border-box;
 }
 html {
-    --ct-cell-pad: 25px;          /* default left & right padding of all table cells */
-    --ct-nested-offset: 50px;     /* distance between left edges of a nested catalog and its container catalog */
-    --ct-th1-width: 300px;
-    --ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));
+    /*--ct-cell-pad: 25px;          !* default left & right padding of all table cells *!*/
+    /*--ct-nested-offset: 50px;     !* distance between left edges of a nested catalog and its container catalog *!*/
+    /*--ct-th1-width: 300px;*/
+    /*--ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));*/
     --textarea-height: 12rem;
 }
 body {
@@ -90,9 +90,6 @@ pre         { display: block; margin-top: 0; overflow: auto; }      /* copied fr
                                 /* alternating colors of rows in a DataTable */
 /*.is-row1                        { background: #e2eef9; }   !* #D0E4F5 *!*/
 /*.is-row2                        { background: #f6f6f6; }*/
-
-.is-top                         {}      /* marks a top-level CATALOG */
-.is-nested                      {}      /* marks a sub-CATALOG */
 
 /*.CATALOG                        { table-layout: fixed; }*/
 /*.CATALOG.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }*/

@@ -975,6 +975,9 @@ export class CATALOG extends Schema {
             start_color: undefined,
         }
 
+        // static INDENT_TOP    = 15     // [px] left padding of top-level entries
+        // static INDENT_NESTED = 25     // [px] increase of left padding of nested entries
+
         static style = (root = '.Schema.CATALOG', prefix = '.', stop = ':not(.CATALOG_stop *)') =>
 
             css({'&': root + prefix + 'd0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
@@ -982,11 +985,12 @@ export class CATALOG extends Schema {
             &                   { width: 100%; }
             & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             
+            & ?entry            { padding-left: 15px; }
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
 
-            & ?cell             { padding: 14px 15px 11px 20px; }           /* var(--ct-cell-pad) */
-            & ?cell-key         { align-items: center; border-right: 1px solid #fff; display: flex; flex-grow: 1; }
+            & ?cell             { padding: 14px 15px 11px; }
+            & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
             & ?cell-value       { width: 800px; }
             & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
             
@@ -1007,8 +1011,8 @@ export class CATALOG extends Schema {
         `
             + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
         `
-            &             { margin-top: -10px; }
-            & ?cell-key   { padding-left: 2px; }
+            &             { padding-left: 25px; margin-top: -10px; }
+            & ?entry      { padding-left: 2px; }
             & ?key        { font-weight: normal; font-style: italic; }
         `
         /* CSS elements:
@@ -1095,8 +1099,8 @@ export class CATALOG extends Schema {
                 return DIV(cl(`entry entry${color}`), entry)
             })
             let depth  = path.length
-            let indent = depth ? 20 + depth * 25 : 0   // [px]
-            return DIV(cl(`Schema CATALOG d${depth}`), st({paddingLeft: `${indent}px`}), ...rows)
+            // let indent = depth * 25 // [px]  //depth ? 15 + depth * 25 : 0
+            return DIV(cl(`Schema CATALOG d${depth}`), ...rows)   //st({paddingLeft: `${indent}px`})
         }
 
         render()    { return e(this.Catalog.bind(this), this.props) }
