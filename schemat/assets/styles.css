@@ -24,7 +24,7 @@ html {
     /*--ct-nested-offset: 50px;     !* distance between left edges of a nested catalog and its container catalog *!*/
     /*--ct-th1-width: 300px;*/
     /*--ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));*/
-    --textarea-height: 12rem;
+    /*--textarea-height: 12rem;*/
 }
 body {
     /*font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;*/
@@ -59,7 +59,7 @@ pre         { display: block; margin-top: 0; overflow: auto; }      /* copied fr
 
 .use-scroll {
     overflow: auto;   /*scroll*/
-    max-height: var(--textarea-height);
+    max-height: 12rem;
     border-bottom: 1px solid rgba(0,0,0,0.1);
     border-right:  1px solid rgba(0,0,0,0.1);
     resize: vertical;
@@ -74,7 +74,7 @@ pre         { display: block; margin-top: 0; overflow: auto; }      /* copied fr
 .ace-editor {
     --bk-color: rgba(255,255,255,0.3);
     background-color: var(--bk-color);
-    height: var(--textarea-height);
+    height: 12rem;
     width: 100%;
     line-height: 1.4;
     font-family: 'Noto Sans Mono';  /*var(--bs-font-monospace);*/

@@ -58,7 +58,7 @@ class Component extends React.Component {
      */
     static SCOPE_PROLOG() { return `begin-${this.scope}` }
     static SCOPE_EPILOG() { return `end-${this.scope}`   }
-    static SCOPE_PREFIX() { return `${this.scope}_`      }
+    // static SCOPE_PREFIX() { return `${this.scope}_`      }
 
     static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
@@ -76,16 +76,17 @@ class Component extends React.Component {
         }
     }
 
-    static collect(assets, scope = undefined) {
+    static collect(assets) {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
            of all base classes into an Assets() object. */
         for (let proto of this._prototypes()) {
-            if (proto.style)  assets.addStyle(proto.style(scope))
-            if (proto.assets) assets.addAsset(proto.assets)
+            let names = Object.getOwnPropertyNames(proto)
+            if (names.includes('style'))  assets.addStyle(proto.style())
+            if (names.includes('assets')) assets.addAsset(proto.assets)
         }
     }
     static _prototypes() {
-        /* Array of all prototypes of `this` from below `Component` (excluded) down to `this` (included), in this order. */
+        /* Array of all prototypes of `this` from below `Component` (excluded) down to `this` (included), in top-down order. */
         if (this === Component) return []
         let proto = Object.getPrototypeOf(this)
         let chain = proto._prototypes()
@@ -99,7 +100,7 @@ class Component extends React.Component {
         return DIV({className: name}, elem)
     }
 
-    prefix(className) { return this.constructor.SCOPE_PREFIX() + className }
+    // prefix(className) { return this.constructor.SCOPE_PREFIX() + className }
 
     embed(component, ...args) {
         /* Embed another `component` into this one by wrapping up the React element created from the `component`
@@ -124,7 +125,7 @@ class Component extends React.Component {
         return this._wrap(elem, true)
     }
 
-    static safeCSS(params, css) {
+    static safeCSS(params = {}, css) {
         /* Extend all the rules in  the `css` stylesheet with reliable scoping by a SCOPE_PROLOG() (from above)
            and a SCOPE_EPILOG() (from below) classes.
            WARNING: appending the epilog may NOT work in some cases:
@@ -136,13 +137,17 @@ class Component extends React.Component {
             return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
 
         if (!this.scope) return css
-        let {stopper = '|', prefix = null} = params
+        let {stopper = '|', replace = {}} = params
 
-        if (prefix) css = css.replaceAll(prefix, this.SCOPE_PREFIX())
+        // if (prefix) css = css.replaceAll(prefix, this.SCOPE_PREFIX())
+        for (const [symbol, insert] of Object.entries(replace))
+            css = css.replaceAll(symbol, insert)
+
         if (stopper) {
             let insert = `:not(.${this.SCOPE_EPILOG()} *)`      // exclude all DOM nodes located below the SCOPE_EPILOG() class
             css = css.replaceAll(stopper, insert)
         }
+
         return cssPrepend(`.${this.SCOPE_PROLOG()}`, css)
     }
 }
@@ -262,8 +267,8 @@ Schema.Widget = class extends Widget {
     static scope = 'Schema'
 
     // Schema.Widget may include itself recursively (through RECORD, for instance);
-    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and a global class prefix is inserted instead
-    static style = () => this.safeCSS({stopper: null, prefix: '~'})
+    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and prefixes are inserted instead
+    static style = () => this.safeCSS({stopper: null, replace: {'~': 'Schema_'}})
     `
         .~flash      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
         .~flash-info { background-color: mediumseagreen; transition: 0.2s; }
@@ -345,7 +350,7 @@ Schema.Widget = class extends Widget {
 
     flashBox() {
         return DIV(
-                cl(this.prefix('flash'), this.prefix(this.state.flashCls || 'flash-stop')),
+                cl('Schema_flash', `Schema_${this.state.flashCls || 'flash-stop'}`),
                 {key: 'flash', onTransitionEnd: () => this.setState({flashCls: null})},
                 this.state.flashMsg)
     }
@@ -353,7 +358,7 @@ Schema.Widget = class extends Widget {
         this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
     }
 
-    errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl(this.prefix('error')), this.state.errorMsg) : null }
+    errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
     error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
     render() {
@@ -404,8 +409,8 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
-        // prepare() { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
-        // empty()     { return I({style: {opacity: 0.3}}, "(empty)") }
+        // prepare()    { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
+        // empty()      { return I({style: {opacity: 0.3}}, "(empty)") }
         encode(value)   { return value }
         decode(value)   { return value }
     }
@@ -422,7 +427,23 @@ export class STRING extends Textual {
 export class TEXT extends Textual
 {
     static Widget = class extends Textual.Widget {
-        viewer() { return PRE(DIV({className: 'use-scroll', onDoubleClick: e => this.open(e)}, this.prepare())) }
+
+        // static scope = 'Widget-TEXT'
+        // static style = () => this.safeCSS()
+        // `
+        //     .use-scroll {
+        //         overflow: auto;   /*scroll*/
+        //         max-height: 12rem;
+        //         border-bottom: 1px solid rgba(0,0,0,0.1);
+        //         border-right:  1px solid rgba(0,0,0,0.1);
+        //         resize: vertical;
+        //     }
+        //     .use-scroll[style*="height"] {
+        //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+        //     }
+        // `
+
+        viewer() { return PRE(DIV(cl('use-scroll'), {onDoubleClick: e => this.open(e)}, this.prepare())) }
         editor() {
             return PRE(TEXTAREA({
                 defaultValue:   this.initial,
@@ -502,6 +523,8 @@ export class CODE extends TEXT
                 onKeyDown:      e => this.key(e),
                 onBlur:         e => this.reject(e),
                 className:      "ace-editor",
+                width:  '100px',
+                height: '100px',
             })
         }
 
@@ -979,22 +1002,22 @@ export class CATALOG extends Schema {
 
             css({'&': root + prefix + 'd0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
         `
-            &                   { width: 100%; }
+            &                   { width: 100%; font-size: 1rem; }
             
-            & ?entry            { padding-left: 15px; }
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
+            & ?entry            { padding-left: 15px; }
             & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
 
             & ?cell             { padding: 14px 20px 11px; }
             & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
             & ?cell-value       { width: 800px; }
             
-            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; } 
+            & ?key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; } 
             & ?key:not([title]) { text-decoration-line: none; }
             
             & ?value,
-            & ?value > *        { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            & ?value > *        { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
             & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
 
             & ?move|                        { margin-right: 10px; visibility: hidden; }
@@ -1076,6 +1099,9 @@ export class CATALOG extends Schema {
         EntrySubcat({item, path, key_, value, schema, color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
+            let [folded, setFolded] = useState(false)
+            let toggleFolded = () => setFolded(f => !f)
+
             return FRAGMENT(
                 FLEX(DIV(cl('cell cell-key'), st({borderRight:'none'}), this.key(key_, schema)), DIV(cl('cell cell-value'))),
                 e(this.Catalog.bind(this), {item, path, value, schema, color})
