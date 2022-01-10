@@ -221,7 +221,7 @@ export class Catalog {
     }
 
     _overwrite(id, {key, value, label, comment} = {}) {
-        /* Overwrite some or all of the properties of an entry of a given `id` = position in this._entries.
+        /* Overwrite in place some or all of the properties of an entry of a given `id` = position in this._entries.
            Return the modified entry. Passing `null` as a key/label/comment will delete a corresponding property. */
         let e = this._entries[id]
         let prevKey = e.key
@@ -251,8 +251,73 @@ export class Catalog {
         this._keys[key] = ids.filter(Number).sort()
     }
 
+    set(path, value, {label, comment} = {}, create_path = false) {
+        /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
+           of an existing entry - the entry must be unique (!). If create_path is false (default),
+           all segments of `path` except the last one must already exist and be unique; otherwise,
+           new Catalog() entries are inserted in place of missing path segments.
+         */
+        if (typeof path === 'string') path = path.split('/')
+        assert(path.length >= 1)
+
+        let step  = path[0]
+        let spath = path.join('/')
+        let props = {value, label, comment}
+
+        if (path.length <= 1)
+            if (T.isNumber(step)) return this._overwrite(step, props)
+            else return this.setShallow(step, props)
+
+        // make one step forward, then call set() recursively
+        let entry = this._findEntry(step, {unique: true})
+        if (!entry)
+            if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
+                this.setShallow({key: step, value: new Catalog()})
+            else
+                throw new Error(`path not found, missing '${step}' of '${spath}'`)
+
+        let subcat  = entry.value
+        let subpath = path.slice(1)
+
+        // subcat is a Catalog? make a recursive call
+        if (subcat instanceof Catalog)
+            return subcat.set(subpath, value, {label, comment}, create_path)
+
+        let key = subpath[0]
+
+        // subcat is a Map, Array, or plain object? go forward one more step, but no deeper
+        if (subpath.length === 1) {
+            if (label   !== undefined) throw new Error(`can't assign a label (${label}) at '${spath}' inside a non-catalog, ${subcat}`)
+            if (comment !== undefined) throw new Error(`can't assign a comment (${comment}) at '${spath}' inside a non-catalog, ${subcat}`)
+
+            if (subcat instanceof Map)              // last step inside a Map
+                subcat.set(key, value)
+            else if (T.isDict(subcat) || (T.isArray(subcat) && T.isNumber(key)))
+                subcat[key] = value                 // last step inside a plain object or array
+            else
+                throw new Error(`can't write an entry at '${path}' inside a non-catalog object, ${subcat}`)
+
+            return {key, value}                     // a "virtual" entry is returned for consistent API, only for reading
+        }
+
+        throw new Error(`path not found: '${subpath.join('/')}'`)
+    }
+
+    setShallow(key, props = {}) {
+        /* If `key` is present in the catalog, modify its value/label/comment in place; the entry must be unique (!).
+           Push a new entry otherwise.
+         */
+        assert(!T.isMissing(key))
+        if (!this.has(key)) return this.pushEntry({key, ...props})
+
+        let ids = this._keys.get(key)
+        if (ids.length > 1) throw new Error(`multiple entries (${ids.length}) for a key, '${key}'`)
+
+        return this._overwrite(ids[0], props)
+    }
+
     // set(path, value, {key, label, comment, create_path = false} = {}) {
-    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite key/value/label/comment
+    //     /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
     //        of an existing entry if the last segment of `path` is an integer (a position in this._entries);
     //        otherwise replace all entries matching `path` with a new one. If create_path is false (default),
     //        all segments of `path` except the last one must already exist and be unique; otherwise,
@@ -306,16 +371,14 @@ export class Catalog {
     //
     //     throw new Error(`path not found: '${subpath.join('/')}'`)
     // }
-    //
-    // setShallow(currentKey, value, {key, label, comment} = {}) {
-    //     /* If `currentKey` is a number, an entry at this position in this._entries is modified:
-    //        a new key/value/label/comment is assigned; pass `undefined` to leave a property unchanged,
+    // setShallow(key, value, {label, comment} = {}) {
+    //     /* If `key` is a number, an entry at this position in this._entries is modified:
+    //        a new value/label/comment is assigned; pass `undefined` to leave a property unchanged,
     //        or `null` to force its removal. Return the modified entry, which should only be used for reading.
-    //        If `currentKey` is a string, this.setEntry() is called.
+    //        If `key` is a string, this.setEntry() is called.
     //      */
-    //     if (T.isNumber(currentKey)) return this._overwrite(currentKey, {key, value, label, comment})
-    //     assert(key === undefined)
-    //     return this.setEntry({key: currentKey, value, label, comment})
+    //     if (T.isNumber(key)) return this._overwrite(key, {value, label, comment})
+    //     return this.setEntry({key, value, label, comment})
     // }
     // setEntry(entry) {
     //     /* Append a new `entry` while deleting all existing occurrencies of the same key. */
@@ -334,9 +397,24 @@ export class Catalog {
         /* Create and append a new entry without deleting existing occurrencies of the key. */
         return this.pushEntry({key, value, label, comment})
     }
+
     pushEntry(entry) {
-        /* Append `entry` without deleting existing occurrencies of the key. */
-        this._push(entry)
+        /* Append `entry` without deleting existing occurrencies of the key:
+           Drop unneeded props in `entry`, insert into this._entries, assign entry.id, update this._keys.
+         */
+        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
+        assert(entry.value !== undefined)
+
+        // clean up the entry's properties
+        if (T.isMissing(entry.key)) delete entry.key
+        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
+        if (entry.comment === undefined) delete entry.comment
+
+        // insert to this._entries
+        entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
+        this.size ++
+
+        // update this._keys
         if (!T.isMissing(entry.key)) {
             let ids = this._keys.get(entry.key) || []
             if (ids.push(entry.id) === 1)
@@ -344,17 +422,18 @@ export class Catalog {
         }
         return entry
     }
-    _push(entry) {
-        /* Drop unneeded props in `entry`; insert the entry into this._entries; assign entry.id. */
-        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
-        assert(entry.value !== undefined)
-        if (T.isMissing(entry.key)) delete entry.key
-        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
-        if (entry.comment === undefined) delete entry.comment
-
-        entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
-        this.size ++
-    }
+    // _push(entry) {
+    //     /* Drop unneeded props in `entry`; insert the entry into this._entries; assign entry.id. */
+    //     assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
+    //     assert(entry.value !== undefined)
+    //     if (T.isMissing(entry.key)) delete entry.key
+    //     if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
+    //     if (entry.comment === undefined) delete entry.comment
+    //
+    //     entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
+    //     this.size ++
+    //     return entry
+    // }
 
     // delete(key) {
     //     /* Delete a single entry at a given position in _entries, if `key` is a number (entry.id);

@@ -258,7 +258,7 @@ Schema.Widget = class extends Widget {
     static scope = 'Schema'
 
     // Schema.Widget may include itself recursively (through RECORD, for instance);
-    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and a class prefix is inserted instead
+    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and a global class prefix is inserted instead
     static style = () => this.safeCSS({stopper: null, prefix: '~'})
     `
         .~flash      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
