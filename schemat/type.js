@@ -57,8 +57,7 @@ class Component extends React.Component {
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
     static SCOPE_PROLOG() { return `begin-${this.scope}` }
-    static SCOPE_EPILOG() { return `end-${this.scope}`   }
-    // static SCOPE_PREFIX() { return `${this.scope}_`      }
+    static SCOPE_EPILOG() { return   `end-${this.scope}` }
 
     static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
@@ -80,9 +79,9 @@ class Component extends React.Component {
         /* Walk through a prototype chain of `this` (a subclass) to collect .style() and .assets
            of all base classes into an Assets() object. */
         for (let proto of this._prototypes()) {
-            let names = Object.getOwnPropertyNames(proto)
-            if (names.includes('style'))  assets.addStyle(proto.style())
-            if (names.includes('assets')) assets.addAsset(proto.assets)
+            let props = Object.keys(proto)
+            if (props.includes('style'))  assets.addStyle(proto.style())
+            if (props.includes('assets')) assets.addAsset(proto.assets)
         }
     }
     static _prototypes() {
@@ -96,11 +95,24 @@ class Component extends React.Component {
 
     _wrap(elem, prolog = true) {
         if (!this.constructor.scope) return elem
-        let name = (prolog ? this.constructor.SCOPE_PROLOG() : this.constructor.SCOPE_EPILOG())
-        return DIV({className: name}, elem)
+        let names = this._collectScopes(prolog)
+        return DIV({className: names.join(' ')}, elem)
+        // let name = (prolog ? this.constructor.SCOPE_PROLOG(scopes) : this.constructor.SCOPE_EPILOG(scopes))
+        // return DIV({className: name}, elem)
     }
 
-    // prefix(className) { return this.constructor.SCOPE_PREFIX() + className }
+    _collectScopes(prolog = true) {
+        /* Collect all distinct `scope` properties of this's class and its base classes,
+           and then translate them into prolog/epilog class names. Return an array of names.
+         */
+        let names = []
+        for (const proto of this.constructor._prototypes()) {
+            if (!proto.scope) continue
+            let name = (prolog ? proto.SCOPE_PROLOG() : proto.SCOPE_EPILOG())
+            if (name && !names.includes(name)) names.push(name)
+        }
+        return names
+    }
 
     embed(component, ...args) {
         /* Embed another `component` into this one by wrapping up the React element created from the `component`
@@ -116,7 +128,7 @@ class Component extends React.Component {
         return this._wrap(e(component, ...args), false)
     }
     _renderReplacement_() {
-        /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class.
+        /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class(es).
            This method is assigned to this.render in the constuctor, so that subclasses can still
            override the render() as usual, but that React calls this wrapper instead.
          */
@@ -131,7 +143,7 @@ class Component extends React.Component {
            WARNING: appending the epilog may NOT work in some cases:
            - when a rule ends with a pseudo-element, like ::before, ::after (or :before, :after) - the epilog (:not...)
              would have to preceed the pseudo-element in such case, which is not implemented right now;
-           - when a component may contain nested copies of itself, then the copies will NOT receive the styling.
+           - when a component may contain nested copies of itself, then the copies will NOT receive styling if epilog is used.
          */
         if (css === undefined)              // return a partial function if `css` is missing
             return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
@@ -139,7 +151,6 @@ class Component extends React.Component {
         if (!this.scope) return css
         let {stopper = '|', replace = {}} = params
 
-        // if (prefix) css = css.replaceAll(prefix, this.SCOPE_PREFIX())
         for (const [symbol, insert] of Object.entries(replace))
             css = css.replaceAll(symbol, insert)
 
