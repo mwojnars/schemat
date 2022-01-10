@@ -975,26 +975,22 @@ export class CATALOG extends Schema {
             start_color: undefined,
         }
 
-        // static INDENT_TOP    = 15     // [px] left padding of top-level entries
-        // static INDENT_NESTED = 25     // [px] increase of left padding of nested entries
-
         static style = (root = '.Schema.CATALOG', prefix = '.', stop = ':not(.CATALOG_stop *)') =>
 
             css({'&': root + prefix + 'd0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
         `
             &                   { width: 100%; }
-            & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             
             & ?entry            { padding-left: 15px; }
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
+            & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
 
-            & ?cell             { padding: 14px 15px 11px; }
+            & ?cell             { padding: 14px 20px 11px; }
             & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
             & ?cell-value       { width: 800px; }
-            & ?cell-subcat      { padding-right: 0; padding-bottom: 0; }
             
-            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; width: 100%; text-decoration-line: underline; text-decoration-style: dotted; } 
+            & ?key              { font-weight: bold; font-size: 15px; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; } 
             & ?key:not([title]) { text-decoration-line: none; }
             
             & ?value,
@@ -1084,8 +1080,6 @@ export class CATALOG extends Schema {
                 FLEX(DIV(cl('cell cell-key'), st({borderRight:'none'}), this.key(key_, schema)), DIV(cl('cell cell-value'))),
                 e(this.Catalog.bind(this), {item, path, value, schema, color})
             )
-            // return DIV(cl('cell cell-subcat'), DIV(cl('cell-key'), this.key(key_, schema)),
-            //            e(this.Catalog.bind(this), {item, path, value, schema, color}))
         }
 
         Catalog({item, value, schema, path, color, start_color}) {
@@ -1098,9 +1092,7 @@ export class CATALOG extends Schema {
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), entry)
             })
-            let depth  = path.length
-            // let indent = depth * 25 // [px]  //depth ? 15 + depth * 25 : 0
-            return DIV(cl(`Schema CATALOG d${depth}`), ...rows)   //st({paddingLeft: `${indent}px`})
+            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows)       // depth class: d0, d1, ...
         }
 
         render()    { return e(this.Catalog.bind(this), this.props) }
