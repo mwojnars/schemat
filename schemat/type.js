@@ -57,17 +57,15 @@ class Component extends React.Component {
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
     static SCOPE_PROLOG() { return `begin-${this.scope}` }
-    static SCOPE_EPILOG() { return `end-${this.scope}` }
+    static SCOPE_EPILOG() { return `end-${this.scope}`   }
+    static SCOPE_PREFIX() { return `${this.scope}_`      }
 
     static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
                         // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
 
-    static style(scope = undefined) {
-        /* Override in subclasses to provide CSS styling that will be included (deduplicated) in a page along with the widget.
-           Parameterized by the CSS `scope`: a path string that's prepended to all selectors for better scoping.
-           In subclasses, it's recommended to use cssPrepend() function for prepending the `scope`.
-         */
+    static style() {
+        /* Override in subclasses to provide CSS styles that will be included (deduplicated) in a page along with the widget. */
     }
 
     constructor(props) {
@@ -101,6 +99,8 @@ class Component extends React.Component {
         return DIV({className: name}, elem)
     }
 
+    prefix(className) { return this.constructor.SCOPE_PREFIX() + className }
+
     embed(component, ...args) {
         /* Embed another `component` into this one by wrapping up the React element created from the `component`
            in a "stop-at" <div> with an appropriate css class for reliable scoping.
@@ -132,13 +132,14 @@ class Component extends React.Component {
             return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
 
         if (!this.scope) return css
-        let {stopper = '|'} = params
-        css = cssPrepend(`.${this.SCOPE_PROLOG()}`, css)
+        let {stopper = '|', prefix = null} = params
+
+        if (prefix) css = css.replaceAll(prefix, this.SCOPE_PREFIX())
         if (stopper) {
-            let insert = `:not(.${this.SCOPE_EPILOG()} *)`      // exclude all the DOM nodes located below the SCOPE_EPILOG() class
+            let insert = `:not(.${this.SCOPE_EPILOG()} *)`      // exclude all DOM nodes located below the SCOPE_EPILOG() class
             css = css.replaceAll(stopper, insert)
         }
-        return css
+        return cssPrepend(`.${this.SCOPE_PROLOG()}`, css)
     }
 }
 
@@ -254,19 +255,19 @@ Schema.Widget = class extends Widget {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
        values matching a particular schema.
      */
-    static scope = 'SchemaWidget'
+    static scope = 'Schema'
 
-    // in the future, Schema.Widget may include itself recursively (through RECORD, for instance);
-    // for this reason, it will have to define global styles, no safeCSS() !!
-    static style = () => this.safeCSS({stopper: '|'})
+    // Schema.Widget may include itself recursively (through RECORD, for instance);
+    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and a class prefix is inserted instead
+    static style = () => this.safeCSS({stopper: null, prefix: '~'})
     `
-        .flash|      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
-        .flash-info| { background-color: mediumseagreen; transition: 0.2s; }
-        .flash-warn| { background-color: salmon; transition: 0.2s; }
-        .flash-stop| { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
-        .error|      { padding-top:5px; color:red; }
+        .~flash      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
+        .~flash-info { background-color: mediumseagreen; transition: 0.2s; }
+        .~flash-warn { background-color: salmon; transition: 0.2s; }
+        .~flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+        .~error      { padding-top:5px; color:red; }
     `
-    // static style = (scope = ".SchemaWidget") => cssPrepend(scope)
+    // static style = (scope = ".Schema") => cssPrepend(scope)
     // `
     //     .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:0px; z-index:10; }
     //     .flash-info { background-color: mediumseagreen; transition: 0.2s; }
@@ -347,23 +348,22 @@ Schema.Widget = class extends Widget {
     }
 
     flashBox() {
-        return DIV({
-                key: 'flash', className: 'flash ' + (this.state.flashCls || 'flash-stop'),
-                onTransitionEnd: () => this.setState({flashCls: null}),
-            },
-            this.state.flashMsg)
+        return DIV(
+                cl(this.prefix('flash'), this.prefix(this.state.flashCls || 'flash-stop')),
+                {key: 'flash', onTransitionEnd: () => this.setState({flashCls: null})},
+                this.state.flashMsg)
     }
     flash(msg, positive = true) {
         this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
     }
 
-    errorBox() { return this.state.errorMsg ? DIV({key: 'error', className: 'error'}, this.state.errorMsg) : null }
+    errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl(this.prefix('error')), this.state.errorMsg) : null }
     error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
         let block    = this.state.editing ? this.editor() : this.viewer()
-        return DIV({className: 'SchemaWidget', style: {position: 'relative'}}, block, this.flashBox(), this.errorBox())
+        return DIV(st({position: 'relative'}), block, this.flashBox(), this.errorBox())
     }
 }
 
