@@ -127,6 +127,10 @@ class Component extends React.Component {
     static safeCSS(params, css) {
         /* Extend all the rules in  the `css` stylesheet with reliable scoping by a SCOPE_PROLOG() (from above)
            and a SCOPE_EPILOG() (from below) classes.
+           WARNING: appending the epilog may NOT work in some cases:
+           - when a rule ends with a pseudo-element, like ::before, ::after (or :before, :after) - the epilog (:not...)
+             would have to preceed the pseudo-element in such case, which is not implemented right now;
+           - when a component may contain nested copies of itself, then the copies will NOT receive the styling.
          */
         if (css === undefined)              // return a partial function if `css` is missing
             return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
@@ -267,14 +271,6 @@ Schema.Widget = class extends Widget {
         .~flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
         .~error      { padding-top:5px; color:red; }
     `
-    // static style = (scope = ".Schema") => cssPrepend(scope)
-    // `
-    //     .flash { padding:5px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-7px; right:0px; z-index:10; }
-    //     .flash-info { background-color: mediumseagreen; transition: 0.2s; }
-    //     .flash-warn { background-color: salmon; transition: 0.2s; }
-    //     .flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
-    //     .error { padding-top:5px; color:red; }
-    // `
 
     static defaultProps = {
         schema: undefined,          // parent Schema object
@@ -285,7 +281,7 @@ Schema.Widget = class extends Widget {
         super(props)
         this.input   = createRef()
         this.initial = undefined        // initial flat (encoded) value for the editor; stored here for change detection in close()
-        this.state   = { ...this.state,
+        this.state   = {...this.state,
             editing:  false,
             errorMsg: null,             // error message
             flashMsg: null,             // flash message displayed after accept/reject
@@ -1001,14 +997,18 @@ export class CATALOG extends Schema {
             & ?value > *        { font-size: 14px; font-family: 'Noto Sans Mono', monospace; /* courier */ }
             & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
 
-            & ?move|                        { margin-right: 10px; }
+            & ?move|                        { margin-right: 10px; visibility: hidden; }
+            & ?entry:hover ?move|           { visibility: visible; }
             & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
-            & :is(?moveup,?movedown):hover| { color: blue; }
+            & ?moveup|::before              { content: "△"; }
+            & ?movedown|::before            { content: "▽"; }
+            & ?moveup:hover|::before        { content: "▲"; } 
+            & ?movedown:hover|::before      { content: "▼"; } 
         `
             + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
         `
             &             { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }
-            & ?cell-key   { padding-left: 5px; }
+            & ?cell-key   { padding-left: 2px; }
             & ?key        { font-weight: normal; font-style: italic; }
         `
         /* CSS elements:
@@ -1042,7 +1042,8 @@ export class CATALOG extends Schema {
             this.EntrySubcat = this.EntrySubcat.bind(this)
         }
 
-        info(schema) { return schema.info ? {title: schema.info} : null }
+        arrows()        { return DIV(cl('move'), DIV(cl('moveup')), DIV(cl('movedown'))) }    // drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
+        info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
         //     // return I(cl('icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
@@ -1053,11 +1054,6 @@ export class CATALOG extends Schema {
         //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
         //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
         // }
-
-        arrows() {
-            return DIV(cl('move'), DIV(cl('moveup'), '\u25b2'), DIV(cl('movedown'), '\u25bc'))
-            // drag-handle (double ellipsis):  "\u22ee\u22ee"
-        }
 
         key(key_, schema)   { return FRAGMENT(this.arrows(), DIV(cl('key'), key_, this.info(schema))) }
 
@@ -1081,12 +1077,11 @@ export class CATALOG extends Schema {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             return DIV(cl('cell cell-subcat'), DIV(cl('cell-key'), this.key(key_, schema)),
-                       schema.displayTable({value, item, path, color}))
+                       e(this.Catalog.bind(this), {item, path, value, schema, color}))
         }
 
-        render() {
-            let {item, value: catalog, schema, path, color, start_color} = this.props
-            let entries = catalog.getEntries()
+        Catalog({item, value, schema, path, color, start_color}) {
+            let entries = value.getEntries()
             let rows    = entries.map(({key, value, idx}, i) =>
             {
                 if (start_color) color = 1 + (start_color + i - 1) % 2
@@ -1095,10 +1090,10 @@ export class CATALOG extends Schema {
                 let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), entry)
             })
-            let depth = path.length
-            return DIV(cl(`Schema CATALOG d${depth}`), ...rows)
-            // return DIV(cl(`Schema CATALOG d${depth}`), TABLE(cl(`table`), TBODY(...rows)))
+            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows)       // depth class: d0, d1, d2, ...
         }
+
+        render()    { return e(this.Catalog.bind(this), this.props) }
     }
 }
 
