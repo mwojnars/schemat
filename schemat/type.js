@@ -503,6 +503,23 @@ export class CODE extends TEXT
         <script>ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/")</script>
         `
 
+        static scope = 'Widget-CODE'
+        static style = () => this.safeCSS()
+        `
+        .ace-editor {
+            --bk-color: rgba(255,255,255,0.3);
+            background-color: var(--bk-color);
+            height: 12rem;
+            width: 100%;
+            line-height: 1.4;
+            font-family: 'Noto Sans Mono';  /*var(--bs-font-monospace);*/
+            font-size: 1em;
+            resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
+            /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
+            /*border-left: 8px solid var(--bk-color);*/
+        }
+        `
+
         // static viewer_options = {
         //     mode:           "ace/mode/haml",
         //     theme:          "ace/theme/textmate",     // dreamweaver crimson_editor

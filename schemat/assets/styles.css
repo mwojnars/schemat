@@ -19,13 +19,6 @@ Naming conventions:
 * {
     box-sizing: border-box;
 }
-html {
-    /*--ct-cell-pad: 25px;          !* default left & right padding of all table cells *!*/
-    /*--ct-nested-offset: 50px;     !* distance between left edges of a nested catalog and its container catalog *!*/
-    /*--ct-th1-width: 300px;*/
-    /*--ct-th2-width: calc(var(--ct-th1-width) - var(--ct-nested-offset));*/
-    /*--textarea-height: 12rem;*/
-}
 body {
     /*font-family: 'Quattrocento Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;*/
     font-family: 'Lato', sans-serif;
@@ -55,65 +48,7 @@ pre         { display: block; margin-top: 0; overflow: auto; }      /* copied fr
 .btn-secondary, .btn-secondary.disabled, .btn-secondary:disabled { background-color: #7e8993; }
 
 
-/*** UTILITIES */
-
-/*.use-scroll {*/
-/*    overflow: auto;   !*scroll*!*/
-/*    max-height: 12rem;*/
-/*    border-bottom: 1px solid rgba(0,0,0,0.1);*/
-/*    border-right:  1px solid rgba(0,0,0,0.1);*/
-/*    resize: vertical;*/
-/*}*/
-/*.use-scroll[style*="height"] {*/
-/*    max-height: unset;              !* this allows manual resizing (resize:vertical) to exceed predefined max-height *!*/
-/*}*/
-
-
 /*** WIDGETS */
-
-.ace-editor {
-    --bk-color: rgba(255,255,255,0.3);
-    background-color: var(--bk-color);
-    height: 12rem;
-    width: 100%;
-    line-height: 1.4;
-    font-family: 'Noto Sans Mono';  /*var(--bs-font-monospace);*/
-    font-size: 1em;
-    resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
-    /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
-    /*border-left: 8px solid var(--bk-color);*/
-}
-
-
-/*** ITEM PAGE */
-
-                                /* alternating colors of rows in a DataTable */
-/*.is-row1                        { background: #e2eef9; }   !* #D0E4F5 *!*/
-/*.is-row2                        { background: #f6f6f6; }*/
-
-/*.CATALOG                        { table-layout: fixed; }*/
-/*.CATALOG.is-nested              { padding-left: calc(var(--ct-nested-offset) - var(--ct-cell-pad)); }*/
-
-/*.CATALOG .CATALOG_table         { width: 100%; min-width: 100%; max-width: 100%; border-collapse: collapse; }*/
-
-/*.CATALOG .Entry                 {}*/
-/*.CATALOG .Entry:not(:last-child){ border-bottom: 1px solid #fff; }*/
-
-/*.CATALOG .cell                  { text-align: left; padding: 14px var(--ct-cell-pad) 11px; !*border-right: none;*! }*/
-/*.CATALOG .cell-subcat           { padding-right: 0; padding-bottom: 0; }*/
-
-/*.CATALOG .cell-key              { border-right: 1px solid #fff; }*/
-/*.CATALOG .cell-key              { width: var(--ct-th1-width); min-width: var(--ct-th1-width); max-width: var(--ct-th1-width); }*/
-/*.CATALOG.is-nested .cell-key    { padding-left: 15px; width: var(--ct-th2-width); min-width: var(--ct-th2-width); max-width: var(--ct-th2-width); }*/
-
-/*.CATALOG .Entry_key             { font-weight: bold;   font-size: 15px; }*/
-/*.CATALOG.is-nested .Entry_key   { font-weight: normal; font-style: italic; }*/
-
-/*.CATALOG .cell-value            { width: 100%; }*/
-/*.CATALOG .Entry_value,*/
-/*.CATALOG .Entry_value > *       { font-size: 14px; font-family: 'Noto Sans Mono', monospace; !* courier *! }*/
-/*.CATALOG .Entry_value pre       { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }*/
-
 
 /*
 Box model of a catalog of item properties (OUT OF DATE):
