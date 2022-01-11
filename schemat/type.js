@@ -311,7 +311,7 @@ Schema.Widget = class extends Widget {
                     defaultValue:   this.initial,
                     ref:            this.input,
                     onKeyDown:      e => this.key(e),
-                    onBlur:         e => this.reject(e),
+                    // onBlur:         e => this.reject(e),
                     autoFocus:      true,
                     type:           "text",
                     style:          {width: "100%"},
@@ -512,8 +512,6 @@ export class CODE extends TEXT
             height: 12rem;
             width: 100%;
             line-height: 1.4;
-            font-family: 'Noto Sans Mono';  /*var(--bs-font-monospace);*/
-            font-size: 1em;
             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
             /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
             /*border-left: 8px solid var(--bk-color);*/
@@ -1044,9 +1042,10 @@ export class CATALOG extends Schema {
             & ?key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; } 
             & ?key:not([title]) { text-decoration-line: none; }
             
-            & ?value,
-            & ?value > *        { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-            & ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }
+            & ?value, & ?value :is(input, pre, textarea, .ace-editor)        
+                                { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            
+            /*& ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }*/
 
             & ?move|                        { margin-right: 10px; visibility: hidden; }
             & ?entry:hover ?move|           { visibility: visible; }
