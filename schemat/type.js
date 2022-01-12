@@ -1034,6 +1034,7 @@ export class CATALOG extends Schema {
             & ?entry2           { background: #f6f6f6; }
             & ?entry            { padding-left: 15px; }
             & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
+            & ?entry-head       { display: flex; }
 
             & ?cell             { padding: 14px 20px 11px; }
             & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
@@ -1048,7 +1049,7 @@ export class CATALOG extends Schema {
             /*& ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }*/
 
             & ?move|                        { margin-right: 10px; visibility: hidden; }
-            & ?entry:hover ?move|           { visibility: visible; }
+            & ?entry-head:hover ?move|      { visibility: visible; }
             & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
             & ?moveup|::before              { content: "△"; }
             & ?movedown|::before            { content: "▽"; }
@@ -1065,6 +1066,7 @@ export class CATALOG extends Schema {
             .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
             .entry     -- <TR> of a table, top-level or nested
             .entryK    -- alternating colors of rows, K = 1 or 2
+            .entry-head-- wrapper around key-value block, or the key block alone if it preceeds an unfolded subcatalog
             .cell-*    -- <DIV> box inside a entry that holds a key/value/subcatalog
             .key       -- deep-most element containing just a key label
             .value     -- deep-most element containing just a rendered value component
@@ -1117,7 +1119,7 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            return FLEX(
+            return DIV(cl('entry-head'),
                       DIV(cl('cell cell-key'),   this.key(key_, schema)),
                       DIV(cl('cell cell-value'), DIV(cl('value CATALOG_stop'), schema.display({value: current, save}))),
                    )
@@ -1130,7 +1132,10 @@ export class CATALOG extends Schema {
             let toggleFolded = () => setFolded(f => !f)
 
             return FRAGMENT(
-                FLEX(DIV(cl('cell cell-key'), st({borderRight:'none'}), this.key(key_, schema)), DIV(cl('cell cell-value'))),
+                DIV(cl('entry-head'),
+                    DIV(cl('cell cell-key'), st({borderRight:'none'}), this.key(key_, schema)),
+                    DIV(cl('cell cell-value'))
+                ),
                 e(this.Catalog.bind(this), {item, path, value, schema, color})
             )
         }
