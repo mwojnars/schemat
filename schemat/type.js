@@ -139,11 +139,18 @@ class Component extends React.Component {
 
     static safeCSS(params = {}, css) {
         /* Extend all the rules in  the `css` stylesheet with reliable scoping by a SCOPE_PROLOG() (from above)
-           and a SCOPE_EPILOG() (from below) classes.
-           WARNING: appending the epilog may NOT work in some cases:
-           - when a rule ends with a pseudo-element, like ::before, ::after (or :before, :after) - the epilog (:not...)
-             would have to preceed the pseudo-element in such case, which is not implemented right now;
-           - when a component may contain nested copies of itself, then the copies will NOT receive styling if epilog is used.
+           and a SCOPE_EPILOG() (from below) classes. Parameters:
+           - params.stopper: a character or substring (default: '|') that marks the places in `css` where
+                             the scope prolog should be inserted;
+           - params.replace: a plain object (default: {}) whose own properties define key-value replacement rules,
+                             of the form css.replaceAll(key, value); typically a key is a special character rarely
+                             occuring in CSS, like '&' or '?'.
+
+           WARNINGS:
+           - when an original CSS rule ends with a pseudo-element, like ::before, ::after (or :before, :after), the epilog
+             must be inserted *before* the pseudo-element and the stopper character must be placed accordingly;
+           - the epilog-based scoping cannot be used for recursive components (containing nested copies of themselves,
+             directly or indirectly), as the nested components would *not* receive their styling.
          */
         if (css === undefined)              // return a partial function if `css` is missing
             return (css, ...values) => this.safeCSS(params, typeof css === 'string' ? css : interpolate(css, values))
@@ -1033,28 +1040,31 @@ export class CATALOG extends Schema {
             & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
             & ?entry2           { background: #f6f6f6; }
             & ?entry            { padding-left: 15px; }
-            & ?entry:not(:last-child) { border-bottom: 1px solid #fff; }
             & ?entry-head       { display: flex; }
+            & ?entry-head:hover :is(?move, ?delete)|    { visibility: visible; }        /* show up all icons when hovering over the entry */
+            & ?entry:not(:last-child)                   { border-bottom: 1px solid #fff; }
 
             & ?cell             { padding: 14px 20px 11px; }
             & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
             & ?cell-value       { width: 800px; }
             
-            & ?key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; } 
+            & ?key              { font-weight: bold; flex-grow: 1; overflow-wrap: anywhere; 
+                                  text-decoration-line: underline; text-decoration-style: dotted; } 
             & ?key:not([title]) { text-decoration-line: none; }
             
             & ?value, & ?value :is(input, pre, textarea, .ace-editor)        
                                 { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-            
-            /*& ?value pre        { margin-bottom: 0; font-size: 1em; font-family: 'Noto Sans Mono', monospace; }*/
 
             & ?move|                        { margin-right: 10px; visibility: hidden; }
-            & ?entry-head:hover ?move|      { visibility: visible; }
             & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
             & ?moveup|::before              { content: "△"; }
             & ?movedown|::before            { content: "▽"; }
-            & ?moveup:hover|::before        { content: "▲"; } 
-            & ?movedown:hover|::before      { content: "▼"; } 
+            & ?moveup:hover|::before        { content: "▲"; color: mediumblue; } 
+            & ?movedown:hover|::before      { content: "▼"; color: mediumblue; }
+            
+            & ?delete|::before              { content: "✖"; }
+            & ?delete|                      { color: #777; flex-shrink:0; font-size:1.3em; line-height:1em; visibility: hidden; }
+            & ?delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
         `
             + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
         `
@@ -1086,6 +1096,9 @@ export class CATALOG extends Schema {
             & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px;
                                   font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
             & ?icon-info:hover  { color:white; background-color: #888; }
+
+            drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
+            undelete: ↺ U+21BA
         */
 
         constructor(props) {
@@ -1094,7 +1107,8 @@ export class CATALOG extends Schema {
             this.EntrySubcat = this.EntrySubcat.bind(this)
         }
 
-        arrows()        { return DIV(cl('move'), DIV(cl('moveup')), DIV(cl('movedown'))) }    // drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
+        move()          { return DIV(cl('move'), DIV(cl('moveup'), {title: "Move up"}), DIV(cl('movedown'), {title: "Move down"})) }
+        delete()        { return DIV(cl('delete'), {title: "Delete entry"}) }
         info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
@@ -1107,7 +1121,7 @@ export class CATALOG extends Schema {
         //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
         // }
 
-        key(key_, schema)   { return FRAGMENT(this.arrows(), DIV(cl('key'), key_, this.info(schema))) }
+        key(key_, schema)   { return FRAGMENT(this.move(), DIV(cl('key'), key_, this.info(schema)), this.delete()) }
 
         EntryAtomic({item, path, key_, value, schema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
