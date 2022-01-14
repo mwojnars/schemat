@@ -1,5 +1,5 @@
 import { React, MaterialUI, styled } from './resources.js'
-import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, TABLE, TH, TR, TD, TBODY, FLEX, FRAGMENT, HTML, cl, st } from './react-utils.js'
+import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, cl, st } from './react-utils.js'
 import { css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
@@ -318,7 +318,7 @@ Schema.Widget = class extends Widget {
                     defaultValue:   this.initial,
                     ref:            this.input,
                     onKeyDown:      e => this.key(e),
-                    // onBlur:         e => this.reject(e),
+                    onBlur:         e => this.reject(e),
                     autoFocus:      true,
                     type:           "text",
                     style:          {width: "100%"},
@@ -1046,23 +1046,28 @@ export class CATALOG extends Schema {
 
             & ?cell             { padding: 14px 20px 11px; }
             & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-            & ?cell-value       { width: 800px; }
+            & ?cell-value       { width: 700px; }
             
-            & ?key              { font-weight: bold; flex-grow: 1; overflow-wrap: anywhere; 
-                                  text-decoration-line: underline; text-decoration-style: dotted; } 
-            & ?key:not([title]) { text-decoration-line: none; }
+            & ?key              { font-weight: bold; overflow-wrap: anywhere; }
+            & ?key-title        { text-decoration-line: underline; text-decoration-style: dotted; } 
+            & ?key-title:not([title]) { text-decoration-line: none; }
             
             & ?value, & ?value :is(input, pre, textarea, .ace-editor)        
                                 { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+            & ?spacer           { flex-grow: 1; }
 
             & ?move|                        { margin-right: 10px; visibility: hidden; }
             & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
-            & ?moveup|::before              { content: "△"; }
-            & ?movedown|::before            { content: "▽"; }
-            & ?moveup:hover|::before        { content: "▲"; color: mediumblue; } 
-            & ?movedown:hover|::before      { content: "▼"; color: mediumblue; }
+            & ?moveup|::after               { content: "△"; }
+            & ?movedown|::after             { content: "▽"; }
+            & ?moveup:hover|::after         { content: "▲"; color: darkblue; } 
+            & ?movedown:hover|::after       { content: "▼"; color: darkblue; }
             
-            & ?delete|::before              { content: "✖"; }
+            & ?expand                       { padding-left: 10px; cursor: pointer; }
+            & ?expand.is-folded|::after     { content: "▸"; }
+            & ?expand.is-expanded|::after   { content: "▾"; }
+            
+            & ?delete|::after               { content: "✖"; }
             & ?delete|                      { color: #777; flex-shrink:0; font-size:1.3em; line-height:1em; visibility: hidden; }
             & ?delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
         `
@@ -1108,7 +1113,7 @@ export class CATALOG extends Schema {
         }
 
         move()          { return DIV(cl('move'), DIV(cl('moveup'), {title: "Move up"}), DIV(cl('movedown'), {title: "Move down"})) }
-        delete()        { return DIV(cl('delete'), {title: "Delete entry"}) }
+        delete()        { return DIV(cl('delete'), {title: "Delete this entry"}) }
         info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
@@ -1121,7 +1126,24 @@ export class CATALOG extends Schema {
         //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
         // }
 
-        key(key_, schema)   { return FRAGMENT(this.move(), DIV(cl('key'), key_, this.info(schema)), this.delete()) }
+        expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
+
+        insert(color = 1) {
+            return null
+            // return DIV(cl(`entry entry${color}`),
+            //             DIV(cl('cell cell-key'), INPUT()),
+            //     )
+        }
+
+        key(key_, schema, folded, toggle) {
+            return FRAGMENT(
+                        this.move(),
+                        DIV(cl('key'), key_, this.info(schema)),
+                        toggle ? this.expand(folded, toggle) : null,
+                        DIV(cl('spacer')),
+                        this.delete(),
+            )
+        }
 
         EntryAtomic({item, path, key_, value, schema}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
@@ -1143,28 +1165,32 @@ export class CATALOG extends Schema {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             let [folded, setFolded] = useState(false)
-            let toggleFolded = () => setFolded(f => !f)
+            let toggle = () => setFolded(f => !f)
 
             return FRAGMENT(
                 DIV(cl('entry-head'),
-                    DIV(cl('cell cell-key'), st({borderRight:'none'}), this.key(key_, schema)),
+                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, folded, toggle)),
                     DIV(cl('cell cell-value'))
                 ),
-                e(this.Catalog.bind(this), {item, path, value, schema, color})
+                folded ? null : e(this.Catalog.bind(this), {item, path, value, schema, color}),
             )
         }
 
         Catalog({item, value, schema, path, color, start_color}) {
-            let entries = value.getEntries()
-            let rows    = entries.map(({key, value, idx}, i) =>
+            let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
+            let entries  = value.getEntries()
+            let rows     = entries.map(({key, value, idx}, i) =>
             {
-                if (start_color) color = 1 + (start_color + i - 1) % 2
-                let valueSchema = schema._schema(key)
-                let props = {item, value, schema: valueSchema, path: [...path, key], key_: key, color}
-                let entry = e(valueSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
+                // if (start_color) color = 1 + (start_color + i - 1) % 2
+                let vSchema = schema._schema(key)
+                let color = getColor(i)
+                let props = {item, value, schema: vSchema, path: [...path, key], key_: key, color}
+                let entry = e(vSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), entry)
             })
-            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows)       // depth class: d0, d1, ...
+            if (start_color) color = 1 + (start_color + entries.length - 1) % 2
+            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows,       // depth class: d0, d1, ...
+                       this.insert({color: getColor(entries.length)}))
         }
 
         render()    { return e(this.Catalog.bind(this), this.props) }

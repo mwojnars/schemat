@@ -477,7 +477,7 @@ export class Item {
         let changes = new Changes(this)
         return FRAGMENT(
                 this.getSchema().displayTable({item: this}),
-                e(changes.Buttons.bind(changes)),
+                // e(changes.Buttons.bind(changes)),
             )
     }
 }
