@@ -293,8 +293,9 @@ export async function fetchJson(url, data, params) {
 
 // // cssPrepend() tests:
 // print(cssPrepend('.page', 'div { width: 100%; }'), '\n')
+// print(cssPrepend('.page', 'div, p,ul { width: 100%; }'), '\n')
 // print(cssPrepend('.page', 'div { width: 100%; } /* long \n\n comment */  \n\n  p {}    a{}  \n'), '\n')
 // print(cssPrepend('.page', '@charset "utf-8"; div { width: 100%; }'), '\n')
-// print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { size: 1.2rem; } } @media only print { p { size: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
+// print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { width: 1.2rem; } } @media only print { p { width: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
 // print(cssPrepend('.page', '@font-face { font-family: "Open Sans"; src: url("/fonts/OpenSans-Regular-webfont.woff2") format("woff2"); } div { width: 100%; }'), '\n')
 

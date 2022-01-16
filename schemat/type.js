@@ -1041,7 +1041,6 @@ export class CATALOG extends Schema {
             & ?entry2           { background: #f6f6f6; }
             & ?entry            { padding-left: 15px; }
             & ?entry-head       { display: flex; }
-            & ?entry-head:hover :is(?move, ?delete)|    { visibility: visible; }        /* show up all icons when hovering over the entry */
             & ?entry:not(:last-child)                   { border-bottom: 1px solid #fff; }
 
             & ?cell             { padding: 14px 20px 11px; }
@@ -1060,16 +1059,24 @@ export class CATALOG extends Schema {
             & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
             & ?moveup|::after               { content: "△"; }
             & ?movedown|::after             { content: "▽"; }
-            & ?moveup:hover|::after         { content: "▲"; color: darkblue; } 
-            & ?movedown:hover|::after       { content: "▼"; color: darkblue; }
+            & ?moveup:hover|::after         { content: "▲"; color: mediumblue; } 
+            & ?movedown:hover|::after       { content: "▼"; color: mediumblue; }
             
             & ?expand                       { padding-left: 10px; cursor: pointer; }
             & ?expand.is-folded|::after     { content: "▸"; }
             & ?expand.is-expanded|::after   { content: "▾"; }
             
+            & ?insert|::after               { content: "✖"; }
+            & ?insert|                      { transform: rotate(45deg); }
+            & ?insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+            
             & ?delete|::after               { content: "✖"; }
-            & ?delete|                      { color: #777; flex-shrink:0; font-size:1.3em; line-height:1em; visibility: hidden; }
+            & ?delete|                      { padding-left: 10px; }
+            & ?delete|, & ?insert|          { color: #777; flex-shrink:0; font-size:1.3em; line-height:1em; visibility: hidden; }
             & ?delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+
+            /* show up all icons when hovering over the entry */
+            & ?entry-head:hover :is(?move, ?delete, ?insert)|       { visibility: visible; }        
         `
             + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
         `
@@ -1127,13 +1134,13 @@ export class CATALOG extends Schema {
         // }
 
         expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
+        insert(path, pos)       { return DIV(cl('insert')) }
 
-        insert(color = 1) {
-            return null
-            // return DIV(cl(`entry entry${color}`),
-            //             DIV(cl('cell cell-key'), INPUT()),
-            //     )
-        }
+        // insert(color = 1) {
+        //     return DIV(cl(`entry entry${color}`),
+        //                 DIV(cl('cell cell-key'), INPUT()),
+        //         )
+        // }
 
         key(key_, schema, folded, toggle) {
             return FRAGMENT(
@@ -1141,6 +1148,7 @@ export class CATALOG extends Schema {
                         DIV(cl('key'), key_, this.info(schema)),
                         toggle ? this.expand(folded, toggle) : null,
                         DIV(cl('spacer')),
+                        this.insert(),
                         this.delete(),
             )
         }
@@ -1189,8 +1197,8 @@ export class CATALOG extends Schema {
                 return DIV(cl(`entry entry${color}`), entry)
             })
             if (start_color) color = 1 + (start_color + entries.length - 1) % 2
-            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows,       // depth class: d0, d1, ...
-                       this.insert({color: getColor(entries.length)}))
+            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows,)       // depth class: d0, d1, ...
+                       // this.insert({color: getColor(entries.length)}))
         }
 
         render()    { return e(this.Catalog.bind(this), this.props) }
