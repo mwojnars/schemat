@@ -1,12 +1,11 @@
 import { React, MaterialUI, styled } from './resources.js'
 import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, cl, st } from './react-utils.js'
 import { css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
-import { T, assert, print, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
+import { T, assert, print, tryimport, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
-let csso
-try { csso = await import('csso') } catch(ex) {}
+let csso = await tryimport('csso')
 
 
 /**********************************************************************************************************************
@@ -56,10 +55,13 @@ class Component extends React.Component {
     /* A React component with an API for defining and collecting dependencies (assets) and CSS styles.
        A Component subclass itself can be listed as a dependency (in .__assets__ or .assets) of another object.
      */
-    static SCOPE_PROLOG() { return `begin-${this.scope}` }
-    static SCOPE_EPILOG() { return   `end-${this.scope}` }
+    static SCOPE_PROLOG() { return  `in-${this.scope}` }
+    static SCOPE_EPILOG() { return `out-${this.scope}` }
 
-    static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping
+    static scope        // app-wide unique name of this component for the purpose of reliable CSS scoping in safeCSS();
+                        // NOTE: whenever a `scope` is defined for a subclass, the element returned by render() is wrapped up
+                        // in a container of a proper css class - see _wrap() and _renderReplacement_()
+
     static assets       // list of assets this widget depends on; each asset should be an object with .__assets__ or .assets
                         // property defined, or a Component, or a plain html string to be pasted into the <head> section of a page
 
@@ -125,7 +127,8 @@ class Component extends React.Component {
          */
         // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
         // let embedDisplay ...
-        return this._wrap(e(component, ...args), false)
+        if (typeof component === 'function') component = e(component, ...args)
+        return this._wrap(component, false)
     }
     _renderReplacement_() {
         /* Wrap up the element returned by this.render() in a <div> of an appropriate "start-at" css class(es).
@@ -139,7 +142,9 @@ class Component extends React.Component {
 
     static safeCSS(params = {}, css) {
         /* Extend all the rules in  the `css` stylesheet with reliable scoping by a SCOPE_PROLOG() (from above)
-           and a SCOPE_EPILOG() (from below) classes. Parameters:
+           and a SCOPE_EPILOG() (from below) classes. The class must have a static `scope` attribute defined.
+
+           Parameters:
            - params.stopper: a character or substring (default: '|') that marks the places in `css` where
                              the scope prolog should be inserted;
            - params.replace: a plain object (default: {}) whose own properties define key-value replacement rules,
@@ -1031,59 +1036,115 @@ export class CATALOG extends Schema {
             start_color: undefined,
         }
 
-        static style = (root = '.Schema.CATALOG', prefix = '.', stop = ':not(.CATALOG_stop *)') =>
-
-            css({'&': root + prefix + 'd0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
+        static scope = 'Schema-CATALOG'
+        static style = () => this.safeCSS({stopper: '|'})
         `
-            &                   { width: 100%; font-size: 1rem; }
+            .catalog-d0       { width: 100%; font-size: 1rem; }
             
-            & ?entry1           { background: #e2eef9; }   /* #D0E4F5 */
-            & ?entry2           { background: #f6f6f6; }
-            & ?entry            { padding-left: 15px; }
-            & ?entry-head       { display: flex; }
-            & ?entry:not(:last-child)                   { border-bottom: 1px solid #fff; }
+            .entry1           { background: #e2eef9; }   /* #D0E4F5 */
+            .entry2           { background: #f6f6f6; }
+            .entry            { padding-left: 15px; }
+            .entry-head       { display: flex; }
+            .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
+            .spacer           { flex-grow: 1; }
 
-            & ?cell             { padding: 14px 20px 11px; }
-            & ?cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-            & ?cell-value       { width: 700px; }
+            .cell             { padding: 14px 20px 11px; }
+            .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
+            .cell-value       { width: 700px; }
             
-            & ?key              { font-weight: bold; overflow-wrap: anywhere; }
-            & ?key-title        { text-decoration-line: underline; text-decoration-style: dotted; } 
-            & ?key-title:not([title]) { text-decoration-line: none; }
+            .key              { font-weight: bold; overflow-wrap: anywhere; }
+            .key-title        { text-decoration-line: underline; text-decoration-style: dotted; } 
+            .key-title:not([title]) { text-decoration-line: none; }
             
-            & ?value, & ?value :is(input, pre, textarea, .ace-editor)        
-                                { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-            & ?spacer           { flex-grow: 1; }
+            .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
+            .cell-value| 
+                              { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
 
-            & ?move|                        { margin-right: 10px; visibility: hidden; }
-            & :is(?moveup,?movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
-            & ?moveup|::after               { content: "△"; }
-            & ?movedown|::after             { content: "▽"; }
-            & ?moveup:hover|::after         { content: "▲"; color: mediumblue; } 
-            & ?movedown:hover|::after       { content: "▼"; color: mediumblue; }
+            .move|                        { margin-right: 10px; visibility: hidden; }
+            :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
+            .moveup|::after               { content: "△"; }
+            .movedown|::after             { content: "▽"; }
+            .moveup:hover|::after         { content: "▲"; color: mediumblue; } 
+            .movedown:hover|::after       { content: "▼"; color: mediumblue; }
             
-            & ?expand                       { padding-left: 10px; cursor: pointer; }
-            & ?expand.is-folded|::after     { content: "▸"; }
-            & ?expand.is-expanded|::after   { content: "▾"; }
+            .expand                       { padding-left: 10px; cursor: pointer; }
+            .expand.is-folded|::after     { content: "▸"; }
+            .expand.is-expanded|::after   { content: "▾"; }
             
-            & ?insert|::after               { content: "✖"; }
-            & ?insert|                      { transform: rotate(45deg); }
-            & ?insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+            .insert|::after               { content: "✖"; }
+            .insert|                      { transform: rotate(45deg); }
+            .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
             
-            & ?delete|::after               { content: "✖"; }
-            & ?delete|                      { padding-left: 10px; }
-            & ?delete|, & ?insert|          { color: #777; flex-shrink:0; font-size:1.3em; line-height:1em; visibility: hidden; }
-            & ?delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+            .delete|::after               { content: "✖"; }
+            .delete|                      { padding-left: 10px; }
+            .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
+            .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
 
             /* show up all icons when hovering over the entry */
-            & ?entry-head:hover :is(?move, ?delete, ?insert)|       { visibility: visible; }        
+            .entry-head:hover :is(.move, .delete, .insert)|       { visibility: visible; }        
+
+            .catalog-d1               { padding-left: 25px; margin-top: -10px; }
+            .catalog-d1 .entry        { padding-left: 2px; }
+            .catalog-d1 .key          { font-weight: normal; font-style: italic; }
         `
-            + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
-        `
-            &             { padding-left: 25px; margin-top: -10px; }
-            & ?entry      { padding-left: 2px; }
-            & ?key        { font-weight: normal; font-style: italic; }
-        `
+
+        // static style = (root = '.Schema-CATALOG', prefix = '.', stop = ':not(.CATALOG_stop *)') =>
+        //
+        //     css({'&': root + prefix + 'catalog-d0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
+        // `
+        //     &                   { width: 100%; font-size: 1rem; }
+        //
+        //     & .entry1           { background: #e2eef9; }   /* #D0E4F5 */
+        //     & .entry2           { background: #f6f6f6; }
+        //     & .entry            { padding-left: 15px; }
+        //     & .entry-head       { display: flex; }
+        //     & .entry:not(:last-child)                   { border-bottom: 1px solid #fff; }
+        //
+        //     & .cell             { padding: 14px 20px 11px; }
+        //     & .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
+        //     & .cell-value       { width: 700px; }
+        //
+        //     & .key              { font-weight: bold; overflow-wrap: anywhere; }
+        //     & .key-title        { text-decoration-line: underline; text-decoration-style: dotted; }
+        //     & .key-title:not([title]) { text-decoration-line: none; }
+        //
+        //     & .value, & .value :is(input, pre, textarea, .ace-editor)
+        //                         { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+        //     & .spacer           { flex-grow: 1; }
+        //
+        //     & .move|                        { margin-right: 10px; visibility: hidden; }
+        //     & :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; }
+        //     & .moveup|::after               { content: "△"; }
+        //     & .movedown|::after             { content: "▽"; }
+        //     & .moveup:hover|::after         { content: "▲"; color: mediumblue; }
+        //     & .movedown:hover|::after       { content: "▼"; color: mediumblue; }
+        //
+        //     & .expand                       { padding-left: 10px; cursor: pointer; }
+        //     & .expand.is-folded|::after     { content: "▸"; }
+        //     & .expand.is-expanded|::after   { content: "▾"; }
+        //
+        //     & .insert|::after               { content: "✖"; }
+        //     & .insert|                      { transform: rotate(45deg); }
+        //     & .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+        //
+        //     & .delete|::after               { content: "✖"; }
+        //     & .delete|                      { padding-left: 10px; }
+        //     & .delete|, & .insert|          { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
+        //     & .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+        //
+        //     /* show up all icons when hovering over the entry */
+        //     & .entry-head:hover :is(.move, .delete, .insert)|       { visibility: visible; }
+        //
+        //     & .catalog-d1               { padding-left: 25px; margin-top: -10px; }
+        //     & .catalog-d1 .entry        { padding-left: 2px; }
+        //     & .catalog-d1 .key          { font-weight: normal; font-style: italic; }
+        // `
+        //     + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
+        // `
+        //     &             { padding-left: 25px; margin-top: -10px; }
+        //     & .entry      { padding-left: 2px; }
+        //     & .key        { font-weight: normal; font-style: italic; }
+        // `
         /* CSS elements:
             .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
             .entry     -- <TR> of a table, top-level or nested
@@ -1165,7 +1226,7 @@ export class CATALOG extends Schema {
             }
             return DIV(cl('entry-head'),
                       DIV(cl('cell cell-key'),   this.key(key_, schema)),
-                      DIV(cl('cell cell-value'), DIV(cl('value CATALOG_stop'), schema.display({value: current, save}))),
+                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save}))),
                    )
         }
 
@@ -1197,7 +1258,7 @@ export class CATALOG extends Schema {
                 return DIV(cl(`entry entry${color}`), entry)
             })
             if (start_color) color = 1 + (start_color + entries.length - 1) % 2
-            return DIV(cl(`Schema CATALOG d${path.length}`), ...rows,)       // depth class: d0, d1, ...
+            return DIV(cl(`catalog-d${path.length}`), ...rows,)       // depth class: catalog-d0, catalog-d1, ...
                        // this.insert({color: getColor(entries.length)}))
         }
 
