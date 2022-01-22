@@ -62,6 +62,8 @@ class Resources {
         <!--<script src="https://unpkg.com/@mui/material@5.2.6/umd/material-ui.development.js" crossorigin></script>-->
     
         <!-- local resources... -->
+        <script src="/files/assets/libs/peg-0.10.0.min.js" crossorigin></script>
+
         <!--<script src="/files/assets/libs/popper.min.js" crossorigin></script>-->
         <link href="/files/assets/favicon.ico" rel="icon" type="image/x-icon" />
         <link href="/files/assets/styles.css" rel="stylesheet" />

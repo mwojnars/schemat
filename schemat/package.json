@@ -16,6 +16,7 @@
     "csso": "^5.0.2",
     "csstree-validator": "^3.0.0",
     "express": "^4.17.1",
+    "pegjs": "^0.10.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.1",

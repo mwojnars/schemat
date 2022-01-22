@@ -47,6 +47,15 @@ export function trycatch(func, fail = null) {
     }
 }
 
+export async function tryimport(path, property = null) {
+    /* Same as `await import(path)`, but returns undefined if the import fails. */
+    try {
+        let module = await import(path)
+        if (property) return module[property]
+        return module
+    } catch(ex) {}
+}
+
 const htmlEscapes = {
     '&': '&amp',
     '<': '&lt',

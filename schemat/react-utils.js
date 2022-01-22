@@ -1,10 +1,9 @@
-import { assert, print, T, ItemNotLoaded } from './utils.js'
+import { assert, print, tryimport, T, ItemNotLoaded } from './utils.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 
-
-let cssValidator
-try { cssValidator = await import('csstree-validator') } catch(ex) {}
+let peg = await tryimport('pegjs', 'default')
+let cssValidator = await tryimport('csstree-validator')
 
 
 /**********************************************************************************************************************
@@ -78,11 +77,13 @@ export function cssPrepend(scope, css) {
 
     let char, next, media, block, pos = 0
 
+    let [RULE, NESTED, BLOCK, MEDIA] = [1,2,3,4]
+
     while (pos < css.length-2) {                                        // scan all characters of `css`, one by one
         char = css[pos]
         next = css[++pos]
 
-        if (char === '@' && next !== 'f') media = true
+        if (char === '@' && next !== 'f') { assert(!block); media = true }
         if (!media && char === '{') block = true
         if ( block && char === '}') block = false
 
@@ -101,7 +102,58 @@ export function cssPrepend(scope, css) {
     if (css.indexOf(scope) !== 0 && css.indexOf('@') !== 0) css = scope + css
 
     return css
-    // return csso ? csso.minify(css).css : css
+}
+
+
+// The grammar below is written in PEG.js language:   https://pegjs.org/documentation
+//     Online PEG.js editor:                          https://pegjs.org/online
+//     CSS Grammar Spec:                              https://www.w3.org/TR/CSS21/grammar.html
+
+const _cssPrepend_grammar =
+    `
+    { let prefix = options.scope + ' ' }
+    
+    stylesheet = list:ruleset* _    { return list.join('\\n') }
+    ruleset    = head:selector tail:(sep selector)* '{' body: [^}]* '}' nl
+                 { return tail.reduce((res,t) => res+t[0]+t[1], head) + '{' + body.join('') + '}' }
+                 
+    // only top-level selectors are detected, while nested ones in :is :not etc. are treated as plain text (not prepended)
+    selector = [^,{]+                  { return prefix + text() }
+    
+    sep = _','_                        { return text() }
+    nl "newlines"  = ([ \\t]*'\\n')*   { return text() }
+    _ "whitespace" = [ \\t\\n\\r]*     { return text() }
+    `
+let _cssPrepend_parser = peg ? peg.generate(_cssPrepend_grammar) : undefined
+
+export function cssPrepend__(scope, css) {
+    /* Prepend a `scope` string and a space to all css selectors in `css`.
+       Also, drop comments and empty lines. Can only be called server-side.
+
+       Can be called as a 2nd-order function:
+          cssPrepend(scope)(css)   OR
+          cssPrepend(scope)`css`
+
+       WARNING: The grammar is simplified and requires further development.
+       The function may incorrectly handle advanced cases, like some "at-rules":
+       https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
+     */
+
+    if (css === undefined)              // return a partial function if `css` is missing
+        return (css, ...values) => cssPrepend(scope, typeof css === 'string' ? css : interpolate(css, values))
+
+    if (!peg) throw new Error('pegjs module is missing; cssPrepend() is a server-side only function and cannot be called client-side')
+    if (!css || !css.trim()) return ''      // empty `css`? return empty string
+    if (!scope) return css                  // no `scope` defined? return `css` without changes
+
+    css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\//g, '')       // remove comments
+
+    if (cssValidator) {
+        let errors = cssValidator.validate(css)
+        if (errors && errors.length) throw new Error(`invalid CSS snippet:\n${css.trimEnd()}\nerrors: ${errors}`)
+    }
+
+    return _cssPrepend_parser.parse(css, {scope})
 }
 
 
@@ -292,10 +344,11 @@ export async function fetchJson(url, data, params) {
  */
 
 // // cssPrepend() tests:
-// print(cssPrepend('.page', 'div { width: 100%; }'), '\n')
-// print(cssPrepend('.page', 'div, p,ul { width: 100%; }'), '\n')
+// print(cssPrepend('.page', 'div { width: 100%; }   '), '\n')
+// print(cssPrepend('.page', 'div, p:hover,i::after,ul { width: 100%; }'), '\n')
 // print(cssPrepend('.page', 'div { width: 100%; } /* long \n\n comment */  \n\n  p {}    a{}  \n'), '\n')
 // print(cssPrepend('.page', '@charset "utf-8"; div { width: 100%; }'), '\n')
 // print(cssPrepend('.page', '@media only screen { div { width: 100%; } p { width: 1.2rem; } } @media only print { p { width: 1.2rem; } } div { height: 100%; font-family: "Arial", Times; }'), '\n')
 // print(cssPrepend('.page', '@font-face { font-family: "Open Sans"; src: url("/fonts/OpenSans-Regular-webfont.woff2") format("woff2"); } div { width: 100%; }'), '\n')
+// print(cssPrepend('.page', ':is(.up,.down)  { font-size: 0.8em; } '), '\n')
 
