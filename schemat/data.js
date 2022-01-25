@@ -96,9 +96,9 @@ export class Catalog {
        - key,
        - label,
        - comment.
-       Keys, labels, comments, if present, are strings. "id" is an integer and is equal to the position
-       of an entry in a list of all entries; when an entry is deleted, it gets marked as `undefined`,
-       so that ids and positions of following entries stay unchanged (!).
+       Keys, labels, comments, if present, are strings. `id` is an integer and is equal to the position
+       of an entry in a list of all entries; when an entry is deleted, it gets marked as undefined,
+       so that ids and positions of following entries stay unchanged (!). `id` is excluded from serialization in CATALOG.
        Keys may repeat. Keys may include all printable characters except ":" and whitespace.
        Labels may include all printable characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.

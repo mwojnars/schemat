@@ -117,9 +117,9 @@ class Component extends React.Component {
     }
 
     embed(component, ...args) {
-        /* Embed another `component` into this one by wrapping up the React element created from the `component`
+        /* Embed another React `component` (can be an element) into this one by wrapping it up
            in a "stop-at" <div> with an appropriate css class for reliable scoping.
-           Also, check if `this` declares the `component` in its assets and throw an exception if not.
+           Also, check if `this` declares the `component` in its assets and throw an exception if not (TODO).
            IMPORTANT: clients should always use this method instead of createElement() to insert Components into a document;
            the only exceptions are top-level Components, as they do not have parent scopes where to embed into,
            and the components that may include components of the same type (recursive inclusion, direct OR indirect!).
@@ -127,7 +127,7 @@ class Component extends React.Component {
          */
         // let embedStyle = T.pop(props, 'embedStyle')  // for styling the wrapper DIV, e.g., display:inline
         // let embedDisplay ...
-        if (typeof component === 'function') component = e(component, ...args)
+        if (typeof component === 'function') component = e(component, ...args)      // convert a component (class/function) to an element
         return this._wrap(component, false)
     }
     _renderReplacement_() {
@@ -1087,64 +1087,6 @@ export class CATALOG extends Schema {
             .catalog-d1 .entry        { padding-left: 2px; }
             .catalog-d1 .key          { font-weight: normal; font-style: italic; }
         `
-
-        // static style = (root = '.Schema-CATALOG', prefix = '.', stop = ':not(.CATALOG_stop *)') =>
-        //
-        //     css({'&': root + prefix + 'catalog-d0', '?': prefix, '|': stop})       // general rules anchored at a top-level CATALOG (depth=0)
-        // `
-        //     &                   { width: 100%; font-size: 1rem; }
-        //
-        //     & .entry1           { background: #e2eef9; }   /* #D0E4F5 */
-        //     & .entry2           { background: #f6f6f6; }
-        //     & .entry            { padding-left: 15px; }
-        //     & .entry-head       { display: flex; }
-        //     & .entry:not(:last-child)                   { border-bottom: 1px solid #fff; }
-        //
-        //     & .cell             { padding: 14px 20px 11px; }
-        //     & .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-        //     & .cell-value       { width: 700px; }
-        //
-        //     & .key              { font-weight: bold; overflow-wrap: anywhere; }
-        //     & .key-title        { text-decoration-line: underline; text-decoration-style: dotted; }
-        //     & .key-title:not([title]) { text-decoration-line: none; }
-        //
-        //     & .value, & .value :is(input, pre, textarea, .ace-editor)
-        //                         { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-        //     & .spacer           { flex-grow: 1; }
-        //
-        //     & .move|                        { margin-right: 10px; visibility: hidden; }
-        //     & :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; }
-        //     & .moveup|::after               { content: "△"; }
-        //     & .movedown|::after             { content: "▽"; }
-        //     & .moveup:hover|::after         { content: "▲"; color: mediumblue; }
-        //     & .movedown:hover|::after       { content: "▼"; color: mediumblue; }
-        //
-        //     & .expand                       { padding-left: 10px; cursor: pointer; }
-        //     & .expand.is-folded|::after     { content: "▸"; }
-        //     & .expand.is-expanded|::after   { content: "▾"; }
-        //
-        //     & .insert|::after               { content: "✖"; }
-        //     & .insert|                      { transform: rotate(45deg); }
-        //     & .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-        //
-        //     & .delete|::after               { content: "✖"; }
-        //     & .delete|                      { padding-left: 10px; }
-        //     & .delete|, & .insert|          { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
-        //     & .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-        //
-        //     /* show up all icons when hovering over the entry */
-        //     & .entry-head:hover :is(.move, .delete, .insert)|       { visibility: visible; }
-        //
-        //     & .catalog-d1               { padding-left: 25px; margin-top: -10px; }
-        //     & .catalog-d1 .entry        { padding-left: 2px; }
-        //     & .catalog-d1 .key          { font-weight: normal; font-style: italic; }
-        // `
-        //     + '\n' + css({'&': root + prefix + 'd1', '?': prefix, '|': stop})      // special rules for nested elements (depth >= 1)
-        // `
-        //     &             { padding-left: 25px; margin-top: -10px; }
-        //     & .entry      { padding-left: 2px; }
-        //     & .key        { font-weight: normal; font-style: italic; }
-        // `
         /* CSS elements:
             .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
             .entry     -- <TR> of a table, top-level or nested
@@ -1180,7 +1122,10 @@ export class CATALOG extends Schema {
             this.EntrySubcat = this.EntrySubcat.bind(this)
         }
 
-        move()          { return DIV(cl('move'), DIV(cl('moveup'), {title: "Move up"}), DIV(cl('movedown'), {title: "Move down"})) }
+        move(move)      { return DIV(cl('move'),
+                                    DIV(cl('moveup'),   {onClick: e => move(-1), title: "Move up"}),
+                                    DIV(cl('movedown'), {onClick: e => move(+1), title: "Move down"}))
+                        }
         delete()        { return DIV(cl('delete'), {title: "Delete this entry"}) }
         info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
@@ -1203,9 +1148,9 @@ export class CATALOG extends Schema {
         //         )
         // }
 
-        key(key_, schema, folded, toggle) {
+        key(key_, schema, ops, folded, toggle) {
             return FRAGMENT(
-                        this.move(),
+                        this.move(ops.move),
                         DIV(cl('key'), key_, this.info(schema)),
                         toggle ? this.expand(folded, toggle) : null,
                         DIV(cl('spacer')),
@@ -1214,7 +1159,7 @@ export class CATALOG extends Schema {
             )
         }
 
-        EntryAtomic({item, path, key_, value, schema}) {
+        EntryAtomic({item, path, key_, value, schema, ops}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
                The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
              */
@@ -1225,12 +1170,12 @@ export class CATALOG extends Schema {
                 setCurrent(newValue)
             }
             return DIV(cl('entry-head'),
-                      DIV(cl('cell cell-key'),   this.key(key_, schema)),
+                      DIV(cl('cell cell-key'),   this.key(key_, schema, ops)),
                       DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save}))),
                    )
         }
 
-        EntrySubcat({item, path, key_, value, schema, color}) {
+        EntrySubcat({item, path, key_, value, schema, color, ops}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             let [folded, setFolded] = useState(false)
@@ -1238,7 +1183,7 @@ export class CATALOG extends Schema {
 
             return FRAGMENT(
                 DIV(cl('entry-head'),
-                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, folded, toggle)),
+                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, ops, folded, toggle)),
                     DIV(cl('cell cell-value'))
                 ),
                 folded ? null : e(this.Catalog.bind(this), {item, path, value, schema, color}),
@@ -1247,15 +1192,27 @@ export class CATALOG extends Schema {
 
         Catalog({item, value, schema, path, color, start_color}) {
             let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
-            let entries  = value.getEntries()
-            let rows     = entries.map(({key, value, idx}, i) =>
+
+            // below, we assign a new `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
+            let [entries, setEntries] = useState(value.getEntries().map((ent, pos) => ({...ent, id: pos})))
+
+            let move = (pos, delta) => setEntries(prev => {
+                // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
+                if (pos+delta < 0 || pos+delta >= prev.length) return prev
+                entries = [...prev];
+                [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+                return entries
+            })
+
+            let rows = entries.map(({key, value, id}, pos) =>
             {
                 // if (start_color) color = 1 + (start_color + i - 1) % 2
                 let vSchema = schema._schema(key)
-                let color = getColor(i)
-                let props = {item, value, schema: vSchema, path: [...path, key], key_: key, color}
+                let color = getColor(pos)
+                let ops   = {move: d => move(pos,d)}
+                let props = {item, value, schema: vSchema, path: [...path, key], key_: key, color, ops}
                 let entry = e(vSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return DIV(cl(`entry entry${color}`), entry)
+                return DIV(cl(`entry entry${color}`), {key: id}, entry)
             })
             if (start_color) color = 1 + (start_color + entries.length - 1) % 2
             return DIV(cl(`catalog-d${path.length}`), ...rows,)       // depth class: catalog-d0, catalog-d1, ...
