@@ -1126,7 +1126,7 @@ export class CATALOG extends Schema {
                                     DIV(cl('moveup'),   {onClick: e => move(-1), title: "Move up"}),
                                     DIV(cl('movedown'), {onClick: e => move(+1), title: "Move down"}))
                         }
-        delete()        { return DIV(cl('delete'), {title: "Delete this entry"}) }
+        delete(del)     { return DIV(cl('delete'), {onClick: del, title: "Delete this entry"}) }
         info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
@@ -1155,7 +1155,7 @@ export class CATALOG extends Schema {
                         toggle ? this.expand(folded, toggle) : null,
                         DIV(cl('spacer')),
                         this.insert(),
-                        this.delete(),
+                        this.delete(ops.del),
             )
         }
 
@@ -1203,13 +1203,17 @@ export class CATALOG extends Schema {
                 [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
                 return entries
             })
+            let del = (pos) => setEntries(prev => {
+                // delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete
+                return [...prev.slice(0,pos), ...prev.slice(pos+1)]
+            })
 
             let rows = entries.map(({key, value, id}, pos) =>
             {
                 // if (start_color) color = 1 + (start_color + i - 1) % 2
                 let vSchema = schema._schema(key)
                 let color = getColor(pos)
-                let ops   = {move: d => move(pos,d)}
+                let ops   = {move: d => move(pos,d), del: () => del(pos)}
                 let props = {item, value, schema: vSchema, path: [...path, key], key_: key, color, ops}
                 let entry = e(vSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), {key: id}, entry)
