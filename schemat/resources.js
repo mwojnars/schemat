@@ -87,22 +87,23 @@ Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this
 let {                                                               // on client...
     React,
     ReactDOM,
-    ReactBootstrap,
+    // ReactBootstrap,
     MaterialUI,
-    styled,
+    // styled,
     // CSSTransition,
 } = globalThis
 
 if (!React) {                                                       // on server...
     React      = (await import("react")).default
     ReactDOM   = (await import("react-dom/server.js")).default
-    MaterialUI  = (await import("@mui/material")).default
-    ReactBootstrap = (await import("@mui/material")).default
-    styled     = (await import("styled-components")).default
-        styled = {...(styled.default || {}), ...styled}             // there's a bug in current distribution that requires such unpacking of double-nested .default
+    MaterialUI = (await import("@mui/material")).default
+    // MIcons     = (await import("@mui/icons-material")).default
+    // ReactBootstrap = (await import("@mui/material")).default
+    // styled     = (await import("styled-components")).default
+    //     styled = {...(styled.default || {}), ...styled}             // there's a bug in current distribution that requires such unpacking of double-nested .default
     // console.log("styled:", styled)
     // CSSTransition = (await import("react-transition-group")).CSSTransition
 }
 
-export { Resources, React, ReactDOM, ReactBootstrap, MaterialUI, styled }
+export { Resources, React, ReactDOM, MaterialUI }
 export default Resources

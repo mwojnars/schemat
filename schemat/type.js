@@ -1,4 +1,4 @@
-import { React, MaterialUI, styled } from './resources.js'
+import { React, MaterialUI } from './resources.js'
 import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, cl, st } from './react-utils.js'
 import { css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, tryimport, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
@@ -1083,9 +1083,14 @@ export class CATALOG extends Schema {
             /* show up all icons when hovering over the entry */
             .entry-head:hover :is(.move, .delete, .insert)|       { visibility: visible; }        
 
-            .catalog-d1               { padding-left: 25px; margin-top: -10px; }
-            .catalog-d1 .entry        { padding-left: 2px; }
-            .catalog-d1 .key          { font-weight: normal; font-style: italic; }
+            .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
+            .catalog-d1 .entry            { padding-left: 2px; }
+            .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+        ` +
+        `   /* The rules below are UNSCOPED (global), so they can apply to the components placed at the top level 
+               (below body) of the DOM by MUI/Popper.  
+             */
+            /*.MuiTooltip-tooltip.CATALOG-insert-menu    { margin: 0px !important; background: white; color: black }*/
         `
         /* CSS elements:
             .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
@@ -1122,11 +1127,11 @@ export class CATALOG extends Schema {
             this.EntrySubcat = this.EntrySubcat.bind(this)
         }
 
-        move(move)      { return DIV(cl('move'),
-                                    DIV(cl('moveup'),   {onClick: e => move(-1), title: "Move up"}),
-                                    DIV(cl('movedown'), {onClick: e => move(+1), title: "Move down"}))
+        move(handle)    { return DIV(cl('move'),
+                                    DIV(cl('moveup'),   {onClick: e => handle(-1), title: "Move up"}),
+                                    DIV(cl('movedown'), {onClick: e => handle(+1), title: "Move down"}))
                         }
-        delete(del)     { return DIV(cl('delete'), {onClick: del, title: "Delete this entry"}) }
+        delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
         info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
@@ -1140,7 +1145,24 @@ export class CATALOG extends Schema {
         // }
 
         expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
-        insert(path, pos)       { return DIV(cl('insert')) }
+        insert(path, pos)       {
+            let menu = [
+                ['Add above', () => null],
+                ['Add below', () => null],
+            ]
+            // return e(MaterialUI.Button, "+")
+            return e(MaterialUI.Tooltip,
+                        {//classes: {tooltip: 'insert-menu'},
+                         // sx: [{m:0, width:'123px'}],
+                         leaveDelay: 1000000,
+                         componentsProps: {tooltip: {className: 'CATALOG-insert-menu', sx: {background: 'white', color: 'black', m:'0 !important', p:'-20px', padding:'-20px'}},
+                             popper: {className: 'insert-menu', sx: {mt:-20, margin:-20, p:-20}}},
+                         PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
+                         placement: "bottom-end",
+                         title: FRAGMENT(...menu.map(cmd => e(MaterialUI.MenuItem, cmd[0], {onClick: cmd[1]})))},
+                        DIV(cl('insert')),
+                    )
+        }
 
         // insert(color = 1) {
         //     return DIV(cl(`entry entry${color}`),
@@ -1148,11 +1170,11 @@ export class CATALOG extends Schema {
         //         )
         // }
 
-        key(key_, schema, ops, folded, toggle) {
+        key(key_, schema, ops, folded) {
             return FRAGMENT(
                         this.move(ops.move),
                         DIV(cl('key'), key_, this.info(schema)),
-                        toggle ? this.expand(folded, toggle) : null,
+                        ops.toggle ? this.expand(folded, ops.toggle) : null,
                         DIV(cl('spacer')),
                         this.insert(),
                         this.delete(ops.del),
@@ -1179,11 +1201,11 @@ export class CATALOG extends Schema {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
             let [folded, setFolded] = useState(false)
-            let toggle = () => setFolded(f => !f)
+            ops.toggle = () => setFolded(f => !f)
 
             return FRAGMENT(
                 DIV(cl('entry-head'),
-                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, ops, folded, toggle)),
+                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, ops, folded)),
                     DIV(cl('cell cell-value'))
                 ),
                 folded ? null : e(this.Catalog.bind(this), {item, path, value, schema, color}),

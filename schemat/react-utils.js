@@ -64,7 +64,7 @@ export function cssPrepend(scope, css) {
 
     if (cssValidator) {
         let errors = cssValidator.validate(css)
-        if (errors && errors.length) throw new Error(`invalid CSS snippet:\n${css.trimEnd()}\nerrors: ${errors}`)
+        if (errors && errors.length) throw new Error(`invalid CSS snippet: ${errors}\n${css.trimEnd()}`)
     }
 
     css = css.replace(/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\t]+/g, '')       // remove comments and some whitespace
