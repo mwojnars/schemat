@@ -163,35 +163,38 @@ export function cssPrepend__(scope, css) {
  **
  */
 
-export const e = React.createElement
-
 export function cl(...classes) { return {className: classes.join(' ')} }    // shorthand for setting css classes of a React component
 export function st(styles)     { return {style: styles} }                   // shorthand for setting a `style` of a React component
 
-// function _e(name) {
-//     return (...args) =>
-//         args[0]?.$$typeof || typeof args[0] === 'string' ?      // if the 1st arg is a React element or string, no props are present
-//             e(name, null, ...args) :
-//             e(name, args[0], ...args.slice(1))
-// }
+function _sortReactArgs(args) {
+    /* Sort and merge the arguments to be passed to React.createElement().
+       All plain objects in `args` (not strings, not React elements) are treated as props and merged.
+       The `style` prop is merged separately to allow merging of individual style entries.
+     */
+    let props = {}, styles = {}, elements = [], style
+    for (let arg of args)
+        if (arg && !arg.$$typeof && typeof arg !== 'string') {
+            ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
+            if (arg)   props  = {...props, ...arg}
+            if (style) styles = {...styles, ...style}
+        } else elements.push(arg)
+    if (T.notEmpty(styles)) props.style = styles
+    return [props, elements]
+}
+
+export const e = (type, ...args) => {
+    /* Shorthand for React.createElement(), with the extension that props can be placed at an arbitrary position in `args`,
+       and can be split into multiple objects that will be merged automatically.
+     */
+    let [props, elements] = _sortReactArgs(args)
+    return React.createElement(type, T.notEmpty(props) ? props : null, ...elements)
+}
 
 function _e(name) {
-    return (...args) => {
-        /* Return a React element for an HTML tag, `name`. All plain objects in `args`
-           (not strings, not React elements) are treated as props and merged.
-           The `style` prop is merged separately to allow merging of individual style entries.
-         */
-        let props = {}, styles = {}, elements = [], style
-        for (let arg of args)
-            if (arg && !arg.$$typeof && typeof arg !== 'string') {
-                ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
-                if (arg)   props  = {...props, ...arg}
-                if (style) styles = {...styles, ...style}
-            } else elements.push(arg)
-        if (T.notEmpty(styles)) props.style = styles
-        return e(name, T.notEmpty(props) ? props : null, ...elements) //(skip ? args.slice(skip) : args))
-    }
+    /* Return a function that will create React elements for an HTML tag, `name`. */
+    return (...args) => e(name, ...args)
 }
+
 
 export const NBSP = '\u00A0'       // plain character equivalent of &nbsp; entity
 export const A = _e('a')
