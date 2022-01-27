@@ -289,13 +289,6 @@ Schema.Widget = class extends Widget {
      */
     static scope = 'Schema'
 
-    // Schema.Widget may include itself recursively (through RECORD, for instance);
-    // for this reason, a "stop-at" criterion is NOT used (stopper=null), but prefixes are inserted instead
-    static style = () => this.safeCSS({stopper: null, replace: {'~': 'Schema_'}})
-    `
-        .~error      { padding-top:5px; color:red; }
-    `
-
     static defaultProps = {
         schema: undefined,          // parent Schema object
         value:  undefined,          // value object to be displayed by render()
@@ -366,17 +359,13 @@ Schema.Widget = class extends Widget {
     reject(e) {
         let [value, changed] = this.read()
         if (changed) this.props.flash("NOT SAVED", false)
+        this.props.error(null)
         this.close()
     }
 
-    // errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
-    // error(ex)  { this.setState({errorMsg: ex.toString()}) }
-
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
-        let block    = this.state.editing ? this.editor() : this.viewer()
-        return block
-        // return DIV(st({position: 'relative'}), block, this.errorBox())
+        return this.state.editing ? this.editor() : this.viewer()
     }
 }
 
@@ -1156,7 +1145,19 @@ export class CATALOG extends Schema {
         //         )
         // }
 
+        flash() {
+            let [msg, setMsg] = useState()
+            let [cls, setCls] = useState()
+            let action = (msg, ok = true) => setMsg(msg) || setCls(ok ? 'flash-info' : 'flash-warn')
+            let box = DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: () => setCls(null)})
+            return [action, box]
+        }
+
+        // flash(msg, cls, hide) { return DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: hide}) }
+        error(msg)            { return msg ? DIV(cl('error'), {key: 'error'}, msg) : null }
+
         key(key_, schema, ops, folded) {
+            /* Displays key of an entry, be it an atomatic entry or a subcatalog. */
             let [current, setCurrent] = useState(key_)
             const save = async (newKey) => {
                 // await item.remote_edit({path, value: schema.encode(newValue)})
@@ -1165,6 +1166,9 @@ export class CATALOG extends Schema {
             let info = schema.info ? {title: schema.info} : null
             let keySchema = new STRING()
             // let widget = STRING.Widget              // widget for editing key
+
+            // let flashBox = this.flash(flashMsg, flashCls, () => setFlashCls(null))
+            // let flash    = (msg, ok = true) => setFlashMsg(msg) || setFlashCls(ok ? 'flash-info' : 'flash-warn')
 
             return FRAGMENT(
                         this.move(ops.move),
@@ -1176,10 +1180,6 @@ export class CATALOG extends Schema {
                         this.delete(ops.del),
             )
         }
-        flash(msg, cls, hide) { return DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: hide}) }
-        error(msg)            { return DIV(cl('error'), {key: 'error'}, msg) }
-        // error() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
-        // error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
         EntryAtomic({item, path, key_, value, schema, ops}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
@@ -1195,10 +1195,10 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            // flash box for value editing; the one for key editing is created in key()
-            let flashBox = this.flash(flashMsg, flashCls, () => setFlashCls(null))
-            let errorBox = errorMsg ? this.error(errorMsg) : null
-            let flash    = (msg, ok = true) => setFlashMsg(msg) || setFlashCls(ok ? 'flash-info' : 'flash-warn')
+            let [flash, flashBox] = this.flash()        // flash box for value editing; the one for key editing is created in key()
+            // let flashBox = this.flash(flashMsg, flashCls, () => setFlashCls(null))
+            // let flash    = (msg, ok = true) => setFlashMsg(msg) || setFlashCls(ok ? 'flash-info' : 'flash-warn')
+            let errorBox = this.error(errorMsg)
             let error    = (msg) => setErrorMsg(msg)
 
             return DIV(cl('entry-head'),
