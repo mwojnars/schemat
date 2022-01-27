@@ -293,18 +293,15 @@ Schema.Widget = class extends Widget {
     // for this reason, a "stop-at" criterion is NOT used (stopper=null), but prefixes are inserted instead
     static style = () => this.safeCSS({stopper: null, replace: {'~': 'Schema_'}})
     `
-        .~flash      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
-        .~flash-info { background-color: mediumseagreen; transition: 0.2s; }
-        .~flash-warn { background-color: salmon; transition: 0.2s; }
-        .~flash-stop { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
         .~error      { padding-top:5px; color:red; }
     `
 
     static defaultProps = {
         schema: undefined,          // parent Schema object
         value:  undefined,          // value object to be displayed by render()
-        save:   undefined,          // callback save(newValue) to be called after `value` was edited by user
+        save:   undefined,          // callback save(newValue), called after `value` was edited by user
         flash:  undefined,          // callback flash(message, positive) for displaying confirmation messages after edits
+        error:  undefined,          // callback error(message) for displaying error messages, typically related to validation after edit
     }
     constructor(props) {
         super(props)
@@ -359,55 +356,27 @@ Schema.Widget = class extends Widget {
         try {
             value = this.decode(value)
             value = this.props.schema.valid(value)          // validate and normalize the decoded value; exception is raised on error
-            this.flash("SAVING...")
+            this.props.flash("SAVING...")
             await this.props.save(value)                    // push the new decoded value to the parent
-            this.flash("SAVED")
+            this.props.flash("SAVED")
             this.close()
         }
-        catch (ex) { this.error(ex) }
+        catch (ex) { this.props.error(ex.toString()) }
     }
     reject(e) {
         let [value, changed] = this.read()
-        if (changed) this.flash("NOT SAVED", false)
+        if (changed) this.props.flash("NOT SAVED", false)
         this.close()
     }
 
-    // flashBox() {
-    //     return DIV(
-    //             cl('Schema_flash', `Schema_${this.state.flashCls || 'flash-stop'}`),
-    //             {key: 'flash', onTransitionEnd: () => this.setState({flashCls: null})},
-    //             this.state.flashMsg)
-    // }
-    flash(msg, positive = true) {
-        // this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
-        this.props.flash(msg, positive)
-    }
-
-    errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
-    error(ex)  { this.setState({errorMsg: ex.toString()}) }
-
-    // render() {
-    //     this.initial = this.state.editing ? this.encode(this.props.value) : undefined
-    //     let block    = this.state.editing ? this.editor() : this.viewer()
-    //     return DIV(st({position: 'relative'}), block, this.flashBox(), this.errorBox())
-    // }
-
-
-    // flashBox({msg, cls, hide}) {
-    //     return DIV(msg, cl('Schema_flash', `Schema_${cls || 'flash-stop'}`), {key: 'Schema_flash', onTransitionEnd: hide})
-    // }
+    // errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
+    // error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
         let block    = this.state.editing ? this.editor() : this.viewer()
-
-        // let flashBox = e(this.flashBox, {
-        //     msg:  this.state.flashMsg,
-        //     cls:  this.state.flashCls,
-        //     hide: () => this.setState({flashCls: null}),
-        // })
-
-        return DIV(st({position: 'relative'}), block, /*flashBox,*/ this.errorBox())
+        return block
+        // return DIV(st({position: 'relative'}), block, this.errorBox())
     }
 }
 
@@ -1207,9 +1176,10 @@ export class CATALOG extends Schema {
                         this.delete(ops.del),
             )
         }
-        flashBox({msg, cls, hide}) {
-            return DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: hide})
-        }
+        flash(msg, cls, hide) { return DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: hide}) }
+        error(msg)            { return DIV(cl('error'), {key: 'error'}, msg) }
+        // error() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
+        // error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
         EntryAtomic({item, path, key_, value, schema, ops}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
@@ -1218,6 +1188,7 @@ export class CATALOG extends Schema {
             let [current, setCurrent] = useState(value)
             let [flashMsg, setFlashMsg] = useState()
             let [flashCls, setFlashCls] = useState()
+            let [errorMsg, setErrorMsg] = useState()
 
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
@@ -1225,13 +1196,14 @@ export class CATALOG extends Schema {
                 setCurrent(newValue)
             }
             // flash box for value editing; the one for key editing is created in key()
-            let flashBox = e(this.flashBox, { msg: flashMsg, cls: flashCls, hide: () => setFlashCls(null)})
-            let flash    = (msg, positive = true) =>
-                setFlashMsg(msg) || setFlashCls(positive ? 'flash-info' : 'flash-warn')
+            let flashBox = this.flash(flashMsg, flashCls, () => setFlashCls(null))
+            let errorBox = errorMsg ? this.error(errorMsg) : null
+            let flash    = (msg, ok = true) => setFlashMsg(msg) || setFlashCls(ok ? 'flash-info' : 'flash-warn')
+            let error    = (msg) => setErrorMsg(msg)
 
             return DIV(cl('entry-head'),
                       DIV(cl('cell cell-key'),   this.key(key_, schema, ops)),
-                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save, flash})), flashBox),
+                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save, flash, error})), flashBox, errorBox),
                    )
         }
 
