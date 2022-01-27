@@ -290,7 +290,7 @@ Schema.Widget = class extends Widget {
     static scope = 'Schema'
 
     // Schema.Widget may include itself recursively (through RECORD, for instance);
-    // for this reason, a "stop-at" criterion is NOT used (stopper=null), and prefixes are inserted instead
+    // for this reason, a "stop-at" criterion is NOT used (stopper=null), but prefixes are inserted instead
     static style = () => this.safeCSS({stopper: null, replace: {'~': 'Schema_'}})
     `
         .~flash      { padding:6px 15px; border-radius: 3px; color:white; opacity:1; position: absolute; top:-5px; right:0px; z-index:10; }
@@ -303,7 +303,8 @@ Schema.Widget = class extends Widget {
     static defaultProps = {
         schema: undefined,          // parent Schema object
         value:  undefined,          // value object to be displayed by render()
-        save:   undefined,          // function save(newValue) to be called after `value` was edited by user
+        save:   undefined,          // callback save(newValue) to be called after `value` was edited by user
+        flash:  undefined,          // callback flash(message, positive) for displaying confirmation messages after edits
     }
     constructor(props) {
         super(props)
@@ -371,23 +372,42 @@ Schema.Widget = class extends Widget {
         this.close()
     }
 
-    flashBox() {
-        return DIV(
-                cl('Schema_flash', `Schema_${this.state.flashCls || 'flash-stop'}`),
-                {key: 'flash', onTransitionEnd: () => this.setState({flashCls: null})},
-                this.state.flashMsg)
-    }
+    // flashBox() {
+    //     return DIV(
+    //             cl('Schema_flash', `Schema_${this.state.flashCls || 'flash-stop'}`),
+    //             {key: 'flash', onTransitionEnd: () => this.setState({flashCls: null})},
+    //             this.state.flashMsg)
+    // }
     flash(msg, positive = true) {
-        this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
+        // this.setState({flashMsg: msg, flashCls: positive ? 'flash-info' : 'flash-warn'})
+        this.props.flash(msg, positive)
     }
 
     errorBox() { return this.state.errorMsg ? DIV({key: 'error'}, cl('Schema_error'), this.state.errorMsg) : null }
     error(ex)  { this.setState({errorMsg: ex.toString()}) }
 
+    // render() {
+    //     this.initial = this.state.editing ? this.encode(this.props.value) : undefined
+    //     let block    = this.state.editing ? this.editor() : this.viewer()
+    //     return DIV(st({position: 'relative'}), block, this.flashBox(), this.errorBox())
+    // }
+
+
+    // flashBox({msg, cls, hide}) {
+    //     return DIV(msg, cl('Schema_flash', `Schema_${cls || 'flash-stop'}`), {key: 'Schema_flash', onTransitionEnd: hide})
+    // }
+
     render() {
         this.initial = this.state.editing ? this.encode(this.props.value) : undefined
         let block    = this.state.editing ? this.editor() : this.viewer()
-        return DIV(st({position: 'relative'}), block, this.flashBox(), this.errorBox())
+
+        // let flashBox = e(this.flashBox, {
+        //     msg:  this.state.flashMsg,
+        //     cls:  this.state.flashCls,
+        //     hide: () => this.setState({flashCls: null}),
+        // })
+
+        return DIV(st({position: 'relative'}), block, /*flashBox,*/ this.errorBox())
     }
 }
 
@@ -1048,13 +1068,12 @@ export class CATALOG extends Schema {
             .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
             .spacer           { flex-grow: 1; }
 
-            .cell             { padding: 14px 20px 11px; }
+            .cell             { padding: 14px 20px 11px; position: relative; }
             .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
             .cell-value       { width: 700px; }
             
-            .key              { font-weight: bold; overflow-wrap: anywhere; }
-            .key-title        { text-decoration-line: underline; text-decoration-style: dotted; } 
-            .key-title:not([title]) { text-decoration-line: none; }
+            .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
+            .key:not([title]) { text-decoration-line: none; }
             
             .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
             .cell-value| 
@@ -1086,6 +1105,12 @@ export class CATALOG extends Schema {
             .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
             .catalog-d1 .entry            { padding-left: 2px; }
             .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+
+            .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
+            .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
+            .flash-warn|    { background-color: salmon; transition: 0.2s; }
+            .flash-stop|    { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+            .error|         { padding-top:5px; color:red; }
         `
         /* CSS elements:
             .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
@@ -1127,7 +1152,8 @@ export class CATALOG extends Schema {
                                     DIV(cl('movedown'), {onClick: e => handle(+1), title: "Move down"}))
                         }
         delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
-        info(schema)    { return schema.info ? {title: schema.info} : null }
+
+        // info(schema)    { return schema.info ? {title: schema.info} : null }
         //     if (!schema.info) return null
         //     return I(cl('icon-info'), {title: schema.info}, '?')
         //     // return I(cl('icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
@@ -1140,22 +1166,21 @@ export class CATALOG extends Schema {
         // }
 
         expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
-        insert(path, pos)       {
+        insert(path, pos, subcat)       {
             let menu = [
-                ['Add above', () => null],
-                ['Add below', () => null],
+                ['Add before', () => null],
+                ['Add after',  () => null],
+                ['Add inside', () => null],
             ]
-            // return e(MaterialUI.Button, "+")
+            if (!subcat) menu = menu.slice(0,-1)
             return e(MaterialUI.Tooltip,
-                        {// leaveDelay: 1000000,
-                         // PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
+                        {// leaveDelay: 1000000, PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
                          componentsProps: {tooltip: {sx: {background: 'white', color: 'black', m:'0 !important'}}},
                          placement: "bottom-end",
                          title: FRAGMENT(...menu.map(cmd => e(MaterialUI.MenuItem, cmd[0], {onClick: cmd[1]})))},
                         DIV(cl('insert')),
                     )
         }
-
         // insert(color = 1) {
         //     return DIV(cl(`entry entry${color}`),
         //                 DIV(cl('cell cell-key'), INPUT()),
@@ -1163,14 +1188,27 @@ export class CATALOG extends Schema {
         // }
 
         key(key_, schema, ops, folded) {
+            let [current, setCurrent] = useState(key_)
+            const save = async (newKey) => {
+                // await item.remote_edit({path, value: schema.encode(newValue)})
+                setCurrent(newKey)
+            }
+            let info = schema.info ? {title: schema.info} : null
+            let keySchema = new STRING()
+            // let widget = STRING.Widget              // widget for editing key
+
             return FRAGMENT(
                         this.move(ops.move),
-                        DIV(cl('key'), key_, this.info(schema)),
+                        DIV(cl('key'), info, this.embed(keySchema.display({value: current, save}))),
+                        // DIV(cl('key'), info, this.embed(widget, {value: current, save})),
                         ops.toggle ? this.expand(folded, ops.toggle) : null,
                         DIV(cl('spacer')),
                         this.insert(),
                         this.delete(ops.del),
             )
+        }
+        flashBox({msg, cls, hide}) {
+            return DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: hide})
         }
 
         EntryAtomic({item, path, key_, value, schema, ops}) {
@@ -1178,20 +1216,26 @@ export class CATALOG extends Schema {
                The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
              */
             let [current, setCurrent] = useState(value)
+            let [flashMsg, setFlashMsg] = useState()
+            let [flashCls, setFlashCls] = useState()
+
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
+            // flash box for value editing; the one for key editing is created in key()
+            let flashBox = e(this.flashBox, { msg: flashMsg, cls: flashCls, hide: () => setFlashCls(null)})
+            let flash    = (msg, positive = true) =>
+                setFlashMsg(msg) || setFlashCls(positive ? 'flash-info' : 'flash-warn')
+
             return DIV(cl('entry-head'),
                       DIV(cl('cell cell-key'),   this.key(key_, schema, ops)),
-                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save}))),
+                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save, flash})), flashBox),
                    )
         }
 
         EntrySubcat({item, path, key_, value, schema, color, ops}) {
-            assert(value  instanceof Catalog)
-            assert(schema instanceof CATALOG)
             let [folded, setFolded] = useState(false)
             ops.toggle = () => setFolded(f => !f)
 
@@ -1205,10 +1249,14 @@ export class CATALOG extends Schema {
         }
 
         Catalog({item, value, schema, path, color, start_color}) {
+            assert(value  instanceof Catalog)
+            assert(schema instanceof CATALOG)
+
+            let catalog  = value
             let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
             // below, we assign a new `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
-            let [entries, setEntries] = useState(value.getEntries().map((ent, pos) => ({...ent, id: pos})))
+            let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
             let move = (pos, delta) => setEntries(prev => {
                 // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
@@ -1228,7 +1276,7 @@ export class CATALOG extends Schema {
                 let vSchema = schema._schema(key)
                 let color = getColor(pos)
                 let ops   = {move: d => move(pos,d), del: () => del(pos)}
-                let props = {item, value, schema: vSchema, path: [...path, key], key_: key, color, ops}
+                let props = {item, path: [...path, key], key_: key, value, schema: vSchema, color, ops}
                 let entry = e(vSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), {key: id}, entry)
             })
