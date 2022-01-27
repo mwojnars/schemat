@@ -1067,7 +1067,7 @@ export class CATALOG extends Schema {
             .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
             .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
             .flash-warn|    { background-color: salmon; transition: 0.2s; }
-            .flash-stop|    { opacity: 0; z-index: -1; transition: 5s linear; transition-property: opacity, background-color, z-index; }
+            .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
             .error|         { padding-top:5px; color:red; }
         `
         /* CSS elements:
@@ -1157,7 +1157,6 @@ export class CATALOG extends Schema {
             let box = msg ? DIV(cl('error'), {key: 'error'}, msg) : null
             return [setMsg, box]
         }
-        // error(msg)            { return msg ? DIV(cl('error'), {key: 'error'}, msg) : null }
 
         key(key_, schema, ops, folded) {
             /* Displays key of an entry, be it an atomatic entry or a subcatalog. */
@@ -1169,16 +1168,17 @@ export class CATALOG extends Schema {
             let info = schema.info ? {title: schema.info} : null
             let keySchema = new STRING()
             // let widget = STRING.Widget              // widget for editing key
-
+            let [flash, flashBox] = this.flash()
 
             return FRAGMENT(
                         this.move(ops.move),
-                        DIV(cl('key'), info, this.embed(keySchema.display({value: current, save}))),
+                        DIV(cl('key'), info, this.embed(keySchema.display({value: current, save, flash}))),
                         // DIV(cl('key'), info, this.embed(widget, {value: current, save})),
                         ops.toggle ? this.expand(folded, ops.toggle) : null,
                         DIV(cl('spacer')),
                         this.insert(),
                         this.delete(ops.del),
+                        flashBox,
             )
         }
 
@@ -1193,9 +1193,8 @@ export class CATALOG extends Schema {
                 await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newValue)
             }
-            let [flash, flashBox] = this.flash()        // flash messages for value editing; for key editing are created in key()
+            let [flash, flashBox] = this.flash()        // components for value editing; for key editing, created in key()
             let [error, errorBox] = this.error()
-            // let errorBox = this.error(errorMsg)
 
             return DIV(cl('entry-head'),
                       DIV(cl('cell cell-key'),   this.key(key_, schema, ops)),
