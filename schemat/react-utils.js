@@ -173,7 +173,8 @@ function _sortReactArgs(args) {
      */
     let props = {}, styles = {}, elements = [], style
     for (let arg of args)
-        if (arg && !arg.$$typeof && typeof arg !== 'string') {
+        if (arg === undefined || arg === false) {}
+        else if (arg && !arg.$$typeof && typeof arg !== 'string') {
             ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
             if (arg)   props  = {...props, ...arg}
             if (style) styles = {...styles, ...style}

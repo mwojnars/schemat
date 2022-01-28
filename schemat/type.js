@@ -257,14 +257,6 @@ export class Schema {
 
     static Widget       // "view-edit" widget that displays and lets users edit values of this schema
 
-    // widget(props) {
-    //     /* Functional component that is used as a .viewer() inside Widget if the latter is missing in a subclass.
-    //        Does NOT provide a way to define css styles, unlike Widget.
-    //        Subclasses may assume `this` is bound when this method is called.
-    //      */
-    //     return props.value.toString()
-    // }
-
     getAssets() {
         /* Walk through all nested schema objects, collect their CSS styles and assets and return as an Assets instance.
            this.collect() is called internally - it should be overriden in subclasses instead of this method.
@@ -290,21 +282,19 @@ Schema.Widget = class extends Widget {
     static scope = 'Schema'
 
     static defaultProps = {
-        schema: undefined,          // parent Schema object
-        value:  undefined,          // value object to be displayed by render()
-        save:   undefined,          // callback save(newValue), called after `value` was edited by user
-        flash:  undefined,          // callback flash(message, positive) for displaying confirmation messages after edits
-        error:  undefined,          // callback error(message) for displaying error messages, typically related to validation after edit
+        schema: undefined,      // parent Schema object
+        value:  undefined,      // value object to be displayed by render()
+        save:   undefined,      // callback save(newValue), called after `value` was edited by user
+        flash:  undefined,      // callback flash(message, positive) for displaying confirmation messages after edits
+        error:  undefined,      // callback error(message) for displaying error messages, typically related to validation after edit
+        editing:    false,      // initial state.editing; is true, for instance, in CATALOG.NewKeyWidget
     }
     constructor(props) {
         super(props)
         this.input   = createRef()
         this.initial = undefined        // initial flat (encoded) value for the editor; stored here for change detection in close()
         this.state   = {...this.state,
-            editing:  false,
-            errorMsg: null,             // error message
-            flashMsg: null,             // flash message displayed after accept/reject
-            flashCls: null,             // css class to be applied to flashMsg box
+            editing: props.editing,
         }
     }
 
@@ -330,7 +320,7 @@ Schema.Widget = class extends Widget {
     decode(value) { return this.props.schema.decodeJson(value) }    // ...and back
 
     open(e) { this.setState({editing: true})  }                     // activate the editor and editing mode
-    close() { this.setState({editing: false, errorMsg: null}) }     // close the editor and editing mode
+    close() { this.setState({editing: false}); this.props.error(null) }     // close the editor and editing mode
     read()  {                                                       // read the edited flat value, return this value and a "changed" flag
         let current = this.value()
         let changed = (current !== this.initial)
@@ -353,13 +343,13 @@ Schema.Widget = class extends Widget {
             await this.props.save(value)                    // push the new decoded value to the parent
             this.props.flash("SAVED")
             this.close()
+            return value
         }
         catch (ex) { this.props.error(ex.toString()) }
     }
     reject(e) {
         let [value, changed] = this.read()
         if (changed) this.props.flash("NOT SAVED", false)
-        this.props.error(null)
         this.close()
     }
 
@@ -410,8 +400,6 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
-        // prepare()    { return this.props.value || this.empty() }         // preprocessed props.value to be shown in the viewer()
-        // empty()      { return I({style: {opacity: 0.3}}, "(empty)") }
         encode(value)   { return value }
         decode(value)   { return value }
     }
@@ -999,6 +987,22 @@ export class CATALOG extends Schema {
 
     displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
 
+    // static KEY = class extends STRING {
+    //     /* Schema that represents keys inside a CATALOG.Table. Provides special UI functionality for managing keys. */
+    static KeyWidget = class extends STRING.Widget {
+        prepare()   { return super.prepare() || this.empty() }
+        empty()     { return SPAN(cl('key-missing'), "(missing)") }
+    }
+    static NewKeyWidget = class extends CATALOG.KeyWidget {
+        static defaultProps = {
+            editing: true,
+            initkey: undefined,     // initkey(key) is called when the user has typed in and accepted an initial key
+                                    // of a newly created entry; undefined for existing (not new) entries
+        }
+        async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
+        reject(e)       { this.props.initkey() }
+    }
+
     static Table = class extends Component {
         /* Displays this catalog's data in a tabular form.
            If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
@@ -1032,6 +1036,7 @@ export class CATALOG extends Schema {
             
             .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
             .key:not([title]) { text-decoration-line: none; }
+            .key-missing      { opacity: 0.3; visibility: hidden; }
             
             .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
             .cell-value| 
@@ -1058,7 +1063,8 @@ export class CATALOG extends Schema {
             .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
 
             /* show up all icons when hovering over the entry */
-            .entry-head:hover :is(.move, .delete, .insert)|       { visibility: visible; }        
+            .cell-key:hover :is(.move, .delete, .insert, .key-missing)|       
+                                          { visibility: visible; }        
 
             .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
             .catalog-d1 .entry            { padding-left: 2px; }
@@ -1103,6 +1109,7 @@ export class CATALOG extends Schema {
             super(props)
             this.EntryAtomic = this.EntryAtomic.bind(this)
             this.EntrySubcat = this.EntrySubcat.bind(this)
+            this.Catalog = this.Catalog.bind(this)
         }
 
         move(handle)    { return DIV(cl('move'),
@@ -1124,11 +1131,11 @@ export class CATALOG extends Schema {
         // }
 
         expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
-        insert(path, pos, subcat)       {
+        insert(handle, subcat)       {
             let menu = [
-                ['Add before', () => null],
-                ['Add after',  () => null],
-                ['Add inside', () => null],
+                ['Add before', () => handle(-1)],
+                ['Add after',  () => handle(+1)],
+                ['Add inside', () => handle(0)],
             ]
             if (!subcat) menu = menu.slice(0,-1)
             return e(MaterialUI.Tooltip,
@@ -1158,35 +1165,36 @@ export class CATALOG extends Schema {
             return [setMsg, box]
         }
 
-        key(key_, schema, ops, folded) {
+        key(key_, info, ops, folded) {
             /* Displays key of an entry, be it an atomatic entry or a subcatalog. */
             let [current, setCurrent] = useState(key_)
             const save = async (newKey) => {
                 // await item.remote_edit({path, value: schema.encode(newValue)})
                 setCurrent(newKey)
             }
-            let info = schema.info ? {title: schema.info} : null
-            let keySchema = new STRING()
-            // let widget = STRING.Widget              // widget for editing key
             let [flash, flashBox] = this.flash()
+            // let kschema = new CATALOG.KEY()
+
+            let widget = ops.initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
+            let key = e(widget, {value: current, save, flash, schema: new STRING(), initkey: ops.initkey})
 
             return FRAGMENT(
                         this.move(ops.move),
-                        DIV(cl('key'), info, this.embed(keySchema.display({value: current, save, flash}))),
-                        // DIV(cl('key'), info, this.embed(widget, {value: current, save})),
-                        ops.toggle ? this.expand(folded, ops.toggle) : null,
+                        DIV(cl('key'), key, info && {title: info}),
+                        // DIV(cl('key'), kschema.display({value: current, save, flash}), info && {title: info}),
+                        ops.toggle && this.expand(folded, ops.toggle),
                         DIV(cl('spacer')),
-                        this.insert(),
+                        this.insert(ops.ins),
                         this.delete(ops.del),
                         flashBox,
             )
         }
 
-        EntryAtomic({item, path, key_, value, schema, ops}) {
+        EntryAtomic({item, path, entry, schema, ops}) {
             /* Function component. A table row containing an atomic entry: a key and its value (not a subcatalog).
                The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
              */
-            let [current, setCurrent] = useState(value)
+            let [current, setCurrent] = useState(entry.value)
 
             const save = async (newValue) => {
                 // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
@@ -1197,21 +1205,23 @@ export class CATALOG extends Schema {
             let [error, errorBox] = this.error()
 
             return DIV(cl('entry-head'),
-                      DIV(cl('cell cell-key'),   this.key(key_, schema, ops)),
-                      DIV(cl('cell cell-value'), this.embed(schema.display({value: current, save, flash, error})), flashBox, errorBox),
+                      DIV(cl('cell cell-key'),   this.key(entry.key, schema.info, ops)),
+                      DIV(cl('cell cell-value'), (current!==undefined) && this.embed(schema.display({value: current, save, flash, error})),
+                          flashBox, errorBox),
                    )
         }
 
-        EntrySubcat({item, path, key_, value, schema, color, ops}) {
+        EntrySubcat({item, path, entry, schema, color, ops}) {
             let [folded, setFolded] = useState(false)
             ops.toggle = () => setFolded(f => !f)
+            let key = this.key(entry.key, schema.info, ops, folded)
 
             return FRAGMENT(
                 DIV(cl('entry-head'),
-                    DIV(cl('cell cell-key'), folded ? null : st({borderRight:'none'}), this.key(key_, schema, ops, folded)),
+                    DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
                     DIV(cl('cell cell-value'))
                 ),
-                folded ? null : e(this.Catalog.bind(this), {item, path, value, schema, color}),
+                folded ? null : e(this.Catalog, {item, path, value: entry.value, schema, color}),
             )
         }
 
@@ -1222,7 +1232,7 @@ export class CATALOG extends Schema {
             let catalog  = value
             let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
-            // below, we assign a new `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
+            // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
             let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
             let move = (pos, delta) => setEntries(prev => {
@@ -1236,23 +1246,38 @@ export class CATALOG extends Schema {
                 // delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete
                 return [...prev.slice(0,pos), ...prev.slice(pos+1)]
             })
+            let ins = (pos, rel) => setEntries(prev => {
+                // `rel` is -1 (add before), +1 (add after), or 0 (add first inside a subcatalog)
+                if (rel === +1) pos++
+                return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
+            })
+            let initkey = (pos, key) => setEntries(prev => {
+                assert(prev[pos].id === 'new')
+                if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
+                let maxid = Math.max(-1, ...prev.map(e => e.id))
+                let entries = [...prev]
+                entries[pos] = {id: maxid + 1, key}
+                return entries
+            })
 
-            let rows = entries.map(({key, value, id}, pos) =>
+            let rows = entries.map((entry, pos) =>
             {
                 // if (start_color) color = 1 + (start_color + i - 1) % 2
-                let vSchema = schema._schema(key)
-                let color = getColor(pos)
-                let ops   = {move: d => move(pos,d), del: () => del(pos)}
-                let props = {item, path: [...path, key], key_: key, value, schema: vSchema, color, ops}
-                let entry = e(vSchema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return DIV(cl(`entry entry${color}`), {key: id}, entry)
+                let {key}   = entry
+                let vschema = schema._schema(key)
+                let color   = getColor(pos)
+                let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel)}
+                if(entry.id === 'new') ops.initkey = key => initkey(pos,key)
+                let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
+                let row     = e(vschema.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
+                return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
             })
             if (start_color) color = 1 + (start_color + entries.length - 1) % 2
             return DIV(cl(`catalog-d${path.length}`), ...rows,)       // depth class: catalog-d0, catalog-d1, ...
                        // this.insert({color: getColor(entries.length)}))
         }
 
-        render()    { return e(this.Catalog.bind(this), this.props) }
+        render()    { return e(this.Catalog, this.props) }
     }
 }
 
