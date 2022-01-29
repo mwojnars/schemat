@@ -389,7 +389,7 @@ export class Item {
         let ciid = this.getStamp({html: false})
         return this.HTML({
             title: `${name} ${ciid}`,
-            head:  this.category.temp('assets').display(),
+            head:  this.category.temp('assets').renderAll(),
             body:  this.BODY({session}),
         })
     }
