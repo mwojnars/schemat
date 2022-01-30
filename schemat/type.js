@@ -204,20 +204,29 @@ export class Schema {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
-    default         // default value to be assumed when none was provided by a user (in a web form etc.)
     info            // human-readable description of this schema: what values are accepted and how they are interpreted
-    multi           // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+    default         // default value to be assumed when none was provided by a user (in a web form etc.)
+    initial         // initial value assigned to a newly created data element of this schema
+    unique          // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
+    // multi        // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
     constructor(params = {}) {
-        let {default_, info, multi, blank, type} = params || {}         // params=null is valid
+        let {default_, info, blank, type} = params || {}         // params=null is valid
         if (info  !== undefined)    this.info  = info
-        if (multi !== undefined)    this.multi = multi
         if (blank !== undefined)    this.blank = blank
         if (type  !== undefined)    this.type  = type
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
         if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
+        // if (multi !== undefined)    this.multi = multi
+    }
+
+    param(name) {
+        /* Return the value of a given parameter as defined in `this` or in the constructor (class-level default). */
+        let p = this[name]
+        if (p === undefined) p = this.constructor[name]
+        return p
     }
 
     valid(value) {
@@ -389,6 +398,7 @@ export class BOOLEAN extends Primitive {
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
+    static initial = 0
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -598,6 +608,7 @@ export class GENERIC extends Schema {
         decode (value)  { return this.props.schema.decodeJson(value) }
         encode (value)  { return this.props.schema.encodeJson(value, null, 2) }   // JSON string is pretty-printed for edit
         display(value)  { return this.props.schema.encodeJson(value) }
+        empty  (value)  { return value === undefined && "undefined" }
     }
 }
 
@@ -896,8 +907,9 @@ export class CATALOG extends Schema {
     keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
     values      // common schema of values of an input catalog
 
-    get _keys()  { return this.keys || this.constructor.keys_default }
-    _schema(key) { return this.values || this.constructor.values_default }
+    get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
+    subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
+                                                                                // an exception or return undefined if `key` is not allowed
 
     constructor(values = null, keys = null, params = {}) {
         super(params)
@@ -916,7 +928,7 @@ export class CATALOG extends Schema {
         let state = {}
         let encode_key = (k) => this._keys.encode(k)
         for (const e of cat.entries())
-            state[encode_key(e.key)] = this._schema(e.key).encode(e.value)
+            state[encode_key(e.key)] = this.subschema(e.key).encode(e.value)
         return state
     }
     _to_list(cat) {
@@ -925,7 +937,7 @@ export class CATALOG extends Schema {
          */
         let encode_key = (k) => this._keys.encode(k)
         return cat.getEntries().map(e => {
-            let value = this._schema(e.key).encode(e.value)
+            let value = this.subschema(e.key).encode(e.value)
             let tuple = [value, encode_key(e.key), e.label, e.comment]
             tuple.slice(2).forEach(s => {if(!(T.isMissing(s) || typeof s === 'string')) throw new DataError(`expected a string, got ${s}`)})
             while (tuple.length >= 2 && !tuple[tuple.length-1])
@@ -943,7 +955,7 @@ export class CATALOG extends Schema {
         let schema_keys = this._keys
         let entries = Object.entries(state).map(([key, value]) => ({
             key:   schema_keys.decode(key),
-            value: this._schema(key).decode(value),
+            value: this.subschema(key).decode(value),
         }))
         return new Catalog(entries)
     }
@@ -952,7 +964,7 @@ export class CATALOG extends Schema {
         let schema_keys = this._keys
         for (let [value, key, label, comment] of state) {
             key = schema_keys.decode(key)
-            value = this._schema(key).decode(value)
+            value = this.subschema(key).decode(value)
             cat.pushEntry({key, value, label, comment})
         }
         return cat
@@ -960,7 +972,7 @@ export class CATALOG extends Schema {
 
     collect(assets) {
         this._keys.collect(assets)
-        this._schema().collect(assets)
+        this.subschema().collect(assets)
         this.constructor.Table.collect(assets)
     }
 
@@ -981,7 +993,7 @@ export class CATALOG extends Schema {
          */
         if (!path || !path.length) return this
         if (typeof path === 'string') path = path.split(sep)
-        let schema  = this._schema(path[0])             // make one step forward, then call get() recursively
+        let schema  = this.subschema(path[0])             // make one step forward, then call get() recursively
         let subpath = path.slice(1)
         if (!subpath.length)            return schema
         if (schema instanceof CATALOG)  return schema.get(subpath, default_)
@@ -992,7 +1004,7 @@ export class CATALOG extends Schema {
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
-        empty(value)   { return !value && SPAN(cl('key-missing'), "(missing)") }
+        empty(value)   { return !value && SPAN(cl('key-missing'), "undefined") }
     }
     static NewKeyWidget = class extends CATALOG.KeyWidget {
         static defaultProps = {
@@ -1223,6 +1235,22 @@ export class CATALOG extends Schema {
             )
         }
 
+        validKey(pos, key, entries, schema) {
+            /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
+               according to the `schema`; return true, or alert the user and raise an exception. */
+
+            // verify that a `key` name is allowed by the catalog's schema
+            let subschema = trycatch(() => schema.subschema(key))
+            if (!subschema) {
+                let msg = `The name "${key}" for a key is not permitted by the schema.`
+                alert(msg); throw new Error(msg)
+            }
+            // check against duplicate names, if duplicates are not allowed
+            if (subschema.unique)
+                for (let ent of entries) {}
+            return true
+        }
+
         Catalog({item, value, schema, path, color, start_color}) {
             assert(value  instanceof Catalog)
             assert(schema instanceof CATALOG)
@@ -1251,9 +1279,9 @@ export class CATALOG extends Schema {
             })
             let initkey = (pos, key) => {
                 // verify that a `key` name is allowed by the catalog's schema
-                let subschema = trycatch(() => schema._schema(key))
+                let subschema = trycatch(() => schema.subschema(key))
                 if (key !== undefined && !subschema) {
-                    console.error(`key name not allowed by schema: ${key}`)
+                    alert(`The name "${key}" for a key is not permitted by the schema.`)
                     key = undefined
                 }
                 setEntries(prev => {
@@ -1261,16 +1289,17 @@ export class CATALOG extends Schema {
                     if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                     let maxid = Math.max(-1, ...prev.map(e => e.id))
                     let entries = [...prev]
-                    entries[pos] = {key, id: maxid + 1}
+                    entries[pos] = {key, id: maxid + 1, value: subschema.param('initial')}
                     return entries
                 })
             }
+            // let changeKey = (pos, key) => {}
 
             let rows = entries.map((entry, pos) =>
             {
                 let {key}   = entry
                 let isnew   = (entry.id === 'new')
-                let vschema = isnew ? undefined : schema._schema(key)
+                let vschema = isnew ? undefined : schema.subschema(key)
                 let color   = getColor(pos)
                 let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel)}
                 if (isnew) ops.initkey = key => initkey(pos,key)
@@ -1278,9 +1307,8 @@ export class CATALOG extends Schema {
                 let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
                 return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
             })
-            if (start_color) color = 1 + (start_color + entries.length - 1) % 2
-            return DIV(cl(`catalog-d${path.length}`), ...rows,)       // depth class: catalog-d0, catalog-d1, ...
-                       // this.insert({color: getColor(entries.length)}))
+
+            return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
         }
 
         render()    { return e(this.Catalog, this.props) }
@@ -1297,7 +1325,7 @@ export class DATA extends CATALOG {
         super(null, keys, params)
         this.fields = fields
     }
-    _schema(key) {
+    subschema(key) {
         if (!this.fields.hasOwnProperty(key))
             throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
         return this.fields[key] || this.constructor.values_default
