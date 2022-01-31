@@ -1027,31 +1027,34 @@ export class CATALOG extends Schema {
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
-        empty(value)   { return !value && SPAN(cl('key-missing'), "undefined") }
+        static defaultProps = {
+            keynames: undefined,    // array of predefined key names to choose from
+        }
+        empty(value)   { return !value && I(cl('key-missing'), "(undefined)") }
+        editor() {
+            let {keynames} = this.props
+            if (!keynames) return super.editor()
+            // let options = keynames.map(key => OPTION({value: key}, key))
+            let options = [OPTION("select key ...", {value: ""}), ...keynames.map(key => OPTION({value: key}, key))]
+            return SELECT({
+                    defaultValue:   this.initial,
+                    ref:            this.input,
+                    onKeyDown:      e => this.key(e),
+                    onChange:       e => e.target.value === "" ?  this.reject(e) : this.accept(e),
+                    onBlur:         e => this.reject(e),
+                    autoFocus:      true,
+                    // size:           5,                  // enforces a list box instead of a dropdown, no need for "select key..." pseudo-option
+                    }, options)
+        }
     }
     static NewKeyWidget = class extends CATALOG.KeyWidget {
         static defaultProps = {
             editing:  true,         // this widget starts in edit mode
-            keynames: undefined,    // array of predefined key names to choose from
             initkey:  undefined,    // initkey(key) is called when the user has typed in and accepted an initial key
                                     // of a newly created entry; undefined for existing (not new) entries
         }
         async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
         reject(e)       { this.props.initkey() }
-
-        editor() {
-            let {keynames} = this.props
-            if (!keynames) return super.editor()
-            let options = [OPTION("select key..."), ...keynames.map(key => OPTION({value: key}, key))]
-            return SELECT({
-                    // defaultValue:   this.initial,
-                    ref:            this.input,
-                    onChange:       e => this.accept(e),
-                    onBlur:         e => this.reject(e),
-                    autoFocus:      true,
-                    style:          {width: "100%"},
-                }, options)
-        }
     }
 }
 
@@ -1333,6 +1336,7 @@ CATALOG.Table = class extends Component {
             })
         }
         // let changeKey = (pos, key) => {}
+        let keynames = schema.getValidKeys()
 
         if (!entries.length) entries = [{id: 'new'}]            // "new entry" row auto-added inside an empty catalog
 
@@ -1342,10 +1346,9 @@ CATALOG.Table = class extends Component {
             let isnew   = (entry.id === 'new')
             let vschema = isnew ? undefined : schema.subschema(key)
             let color   = getColor(pos)
-            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel)}
+            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames}
             if (isnew) {
-                ops.initkey  = key => initkey(pos,key)
-                ops.keynames = schema.getValidKeys()
+                ops.initkey = key => initkey(pos,key)
             }
             let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
