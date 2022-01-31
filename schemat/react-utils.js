@@ -167,13 +167,14 @@ export function cl(...classes) { return {className: classes.join(' ')} }    // s
 export function st(styles)     { return {style: styles} }                   // shorthand for setting a `style` of a React component
 
 function _sortReactArgs(args) {
-    /* Sort and merge the arguments to be passed to React.createElement().
+    /* Unpack, sort, and merge the arguments to be passed to React.createElement().
        All plain objects in `args` (not strings, not React elements) are treated as props and merged.
        The `style` prop is merged separately to allow merging of individual style entries.
      */
     let props = {}, styles = {}, elements = [], style
     for (let arg of args)
         if (arg === undefined || arg === false) {}
+        else if (T.isArray(arg)) { elements.push(...arg) }      // arrays get unpacked
         else if (arg && !arg.$$typeof && typeof arg !== 'string') {
             ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
             if (arg)   props  = {...props, ...arg}
@@ -221,6 +222,8 @@ export const TD = _e('td')
 export const FORM = _e('form')
 export const INPUT = _e('input')
 export const LABEL = _e('label')
+export const SELECT = _e('select')
+export const OPTION = _e('option')
 export const BUTTON = _e('button')
 export const TEXTAREA = _e('textarea')
 export const FIELDSET = _e('fieldset')

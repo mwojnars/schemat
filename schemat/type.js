@@ -1,6 +1,7 @@
 import { React, MaterialUI } from './resources.js'
-import { e, A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP, cl, st } from './react-utils.js'
-import { css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render, ItemLoadingHOC } from './react-utils.js'
+import { e, cl, st, css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
+import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
+import { ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
@@ -346,11 +347,12 @@ Schema.Widget = class extends Widget {
         let [value, changed] = this.read()
         if (!changed) return this.close()
         try {
+            let {schema, flash, save} = this.props
             value = this.decode(value)
-            value = this.props.schema.valid(value)          // validate and normalize the decoded value; exception is raised on error
-            this.props.flash("SAVING...")
-            await this.props.save(value)                    // push the new decoded value to the parent
-            this.props.flash("SAVED")
+            value = schema.valid(value)         // validate and normalize the decoded value; exception is raised on error
+            flash("SAVING...")
+            await save(value)                   // push the new decoded value to the parent
+            flash("SAVED")
             this.close()
             return value
         }
@@ -898,8 +900,27 @@ export class RECORD extends Schema {
  */
 
 export class CATALOG extends Schema {
+    /*
+    Schema of an object of the Catalog class or its subclass.
+    Validates each `value` of a catalog's entry through a particular "subschema" - the subschema may depend
+    on the entry's key, or be shared by all entries regardless of the key.
+
+    The schema may restrict the set of permitted keys in different ways:
+    - require that a key name belongs to a predefined set of "fields"
+    - no duplicate key names (across all non-missing names)
+    - no duplicates for a particular key name -- encoded in the key's subschema, subschema.unique=true
+    other constraints:
+    - obligatory keys (empty key='' allowed)
+    - empty key not allowed (by default key_empty_allowed=false)
+    - keys not allowed (what about labels then?)
+     */
 
     isCatalog = true
+
+    // static keys_obligatory = false
+    // static keys_forbidden  = false
+    // static keys_unique     = false
+    // static keys_empty_allowed = false
 
     static keys_default   = new STRING({blank: true})
     static values_default = new GENERIC({multi: true})
@@ -910,6 +931,8 @@ export class CATALOG extends Schema {
     get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
     subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
                                                                                 // an exception or return undefined if `key` is not allowed
+    getValidKeys()  { return undefined }
+
 
     constructor(values = null, keys = null, params = {}) {
         super(params)
@@ -1008,318 +1031,341 @@ export class CATALOG extends Schema {
     }
     static NewKeyWidget = class extends CATALOG.KeyWidget {
         static defaultProps = {
-            editing: true,          // this widget starts in edit mode ON
-            initkey: undefined,     // initkey(key) is called when the user has typed in and accepted an initial key
+            editing:  true,         // this widget starts in edit mode
+            keynames: undefined,    // array of predefined key names to choose from
+            initkey:  undefined,    // initkey(key) is called when the user has typed in and accepted an initial key
                                     // of a newly created entry; undefined for existing (not new) entries
         }
         async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
         reject(e)       { this.props.initkey() }
+
+        editor() {
+            let {keynames} = this.props
+            if (!keynames) return super.editor()
+            let options = [OPTION("select key..."), ...keynames.map(key => OPTION({value: key}, key))]
+            return SELECT({
+                    // defaultValue:   this.initial,
+                    ref:            this.input,
+                    onChange:       e => this.accept(e),
+                    onBlur:         e => this.reject(e),
+                    autoFocus:      true,
+                    style:          {width: "100%"},
+                }, options)
+        }
+    }
+}
+
+CATALOG.Table = class extends Component {
+    /* Display catalog's data in a tabular form. */
+    static defaultProps = {
+        item:        undefined,             // the parent item of the data displayed
+        value:       undefined,
+        schema:      undefined,             // parent schema (a CATALOG)
+        path:        [],
+        color:       undefined,
+        start_color: undefined,
     }
 
-    static Table = class extends Component {
-        /* Displays this catalog's data in a tabular form.
-           If `schemas` is provided, it should be a Map or a Catalog, from which a `schema` will be retrieved
-           for each entry using: schema=schemas.get(key); otherwise, the `schema` argument is used for all entries.
-           If `start_color` is undefined, the same `color` is used for all rows.
+    static scope = 'Schema-CATALOG'
+    static style = () => this.safeCSS({stopper: '|'})
+    `
+        .catalog-d0       { width: 100%; font-size: 1rem; }
+        
+        .entry1           { background: #e2eef9; }   /* #D0E4F5 */
+        .entry2           { background: #f6f6f6; }
+        .entry            { padding-left: 15px; }
+        .entry-head       { display: flex; }
+        .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
+        .spacer           { flex-grow: 1; }
+
+        .cell             { padding: 14px 20px 11px; position: relative; }
+        .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
+        .cell-value       { width: 700px; }
+        
+        .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
+        .key:not([title]) { text-decoration-line: none; }
+        .key-missing      { opacity: 0.3; visibility: hidden; }
+        
+        .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
+        .cell-value| 
+                          { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+
+        .move|                        { margin-right: 10px; visibility: hidden; }
+        :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
+        .moveup|::after               { content: "△"; }
+        .movedown|::after             { content: "▽"; }
+        .moveup:hover|::after         { content: "▲"; color: mediumblue; } 
+        .movedown:hover|::after       { content: "▼"; color: mediumblue; }
+        
+        .expand                       { padding-left: 10px; cursor: pointer; }
+        .expand.is-folded|::after     { content: "▸"; }
+        .expand.is-expanded|::after   { content: "▾"; }
+        
+        .insert|::after               { content: "✖"; }
+        .insert|                      { transform: rotate(45deg); }
+        .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+        
+        .delete|::after               { content: "✖"; }
+        .delete|                      { padding-left: 10px; }
+        .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
+        .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+
+        /* show up all icons when hovering over the entry */
+        .cell-key:hover :is(.move, .delete, .insert, .key-missing)|       
+                                      { visibility: visible; }        
+
+        .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
+        .catalog-d1 .entry            { padding-left: 2px; }
+        .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+
+        .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
+        .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
+        .flash-warn|    { background-color: salmon; transition: 0.2s; }
+        .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
+        .error|         { padding-top:5px; color:red; }
+    `
+    /* CSS elements:
+        .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
+        .entry     -- <TR> of a table, top-level or nested
+        .entryK    -- alternating colors of rows, K = 1 or 2
+        .entry-head-- wrapper around key-value block, or the key block alone if it preceeds an unfolded subcatalog
+        .cell-*    -- <DIV> box inside a entry that holds a key/value/subcatalog
+        .key       -- deep-most element containing just a key label
+        .value     -- deep-most element containing just a rendered value component
+       Other:
+        .icon-*    -- fixed-sized icons for control elements
+     */
+    /* DRAFTS:
+        & ?entry:not(.CATALOG?d1 *)  { background: red; }    -- rule with a "stop-at" criterion
+
+        & ?icon-info        { color: #aaa; margin: 0 5px; }
+        & ?icon-info:hover  { color: unset; }
+
+        & ?icon-info        { color:white; background-color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px;
+                              font-weight:bold; font-style:normal; flex-shrink:0; border-radius:3px; text-align:center; box-shadow: 1px 1px 1px #555; }
+        & ?icon-info:hover  { background-color: #777; font-style: italic; }
+
+        & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px;
+                              font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
+        & ?icon-info:hover  { color:white; background-color: #888; }
+
+        drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
+        undelete: ↺ U+21BA
+    */
+
+    constructor(props) {
+        super(props)
+        this.EntryAtomic = this.EntryAtomic.bind(this)
+        this.EntrySubcat = this.EntrySubcat.bind(this)
+        this.Catalog = this.Catalog.bind(this)
+    }
+
+    move(handle)    { return DIV(cl('move'),
+                                DIV(cl('moveup'),   {onClick: e => handle(-1), title: "Move up"}),
+                                DIV(cl('movedown'), {onClick: e => handle(+1), title: "Move down"}))
+                    }
+    delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
+
+    // info(schema)    { return schema.info ? {title: schema.info} : null }
+    //     if (!schema.info) return null
+    //     return I(cl('icon-info'), {title: schema.info}, '?')
+    //     // return I(cl('icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
+    //     // return I(cl("bi bi-info-circle icon-info"), {title: schema.info})
+    //     // return I(cl("icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
+    //     // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
+    //     // return e(MaterialUI.Tooltip, {title: text},
+    //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
+    //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
+    // }
+
+    expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
+    insert(handle, subcat)  {
+        let menu = [
+            ['Add before', () => handle(-1)],
+            ['Add after',  () => handle(+1)],
+        ]
+        // if (!subcat) menu = menu.slice(0,-1)
+        return e(MaterialUI.Tooltip,
+                    {// PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
+                     componentsProps: {tooltip: {sx: {background: 'white', color: 'black', m:'0 !important'}}},
+                     title: FRAGMENT(...menu.map(cmd => e(MaterialUI.MenuItem, cmd[0], {onClick: cmd[1]}))),
+                     placement: "bottom-end", enterDelay: 1500, enterTouchDelay: 500, leaveTouchDelay: 500,
+                    },
+                    DIV(cl('insert'), {onClick: () => handle(+1)}),
+                )
+    }
+
+    flash() {
+        let [msg, setMsg] = useState()
+        let [cls, setCls] = useState()
+        let action = (msg, ok = true) => setMsg(msg) || setCls(ok ? 'flash-info' : 'flash-warn')
+        let box = DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: () => setCls(null)})
+        return [action, box]
+    }
+    error() {
+        let [msg, setMsg] = useState()
+        let box = msg ? DIV(cl('error'), {key: 'error'}, msg) : null
+        return [setMsg, box]
+    }
+
+    key(key_, info, ops, folded) {
+        /* Display key of an entry, be it an atomatic entry or a subcatalog. */
+        let [current, setCurrent] = useState(key_)
+        const save = async (newKey) => {
+            // await item.remote_edit({path, value: schema.encode(newValue)})
+            setCurrent(newKey)
+        }
+        let [flash, flashBox] = this.flash()
+        let [error, errorBox] = this.error()
+
+        // the presence of `ops.initkey` indicates this is an "add new entry" row
+        let {initkey, keynames} = ops
+        let widget = initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
+        let props  = {value: current, save, flash, error, initkey, keynames, schema: generic_string}
+
+        return FRAGMENT(
+                    this.move(ops.move),
+                    DIV(cl('key'), e(widget, props), info && {title: info}),
+                    ops.toggle && this.expand(folded, ops.toggle),
+                    DIV(cl('spacer')),
+                    this.insert(ops.ins),
+                    this.delete(ops.del),
+                    flashBox, errorBox,
+        )
+    }
+
+    EntryAtomic({item, path, entry, schema, ops}) {
+        /* A table row containing an atomic entry: a key and its value (not a subcatalog).
+           The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
+           `entry.value` and `schema` can be undefined for a newly created entry, then no value widget is displayed.
+           If value is undefined, but schema is present, the value is displayed as "missing".
          */
-        static defaultProps = {
-            item:        undefined,             // the parent item of the data displayed
-            value:       undefined,
-            schema:      undefined,             // parent schema (a CATALOG)
-            path:        [],
-            color:       undefined,
-            start_color: undefined,
+        let [value, setValue] = useState(entry.value)
+        let isnew = (value === undefined)
+
+        const save = async (newValue) => {
+            // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
+            await item.remote_edit({path, value: schema.encode(newValue)})
+            setValue(newValue)
         }
+        let [flash, flashBox] = this.flash()            // components for value editing; for key editing, created in key()
+        let [error, errorBox] = this.error()
+        let props = {value:   isnew ? schema?.param('initial') : value,
+                     editing: isnew,                    // a newly created entry (no value) starts in edit mode
+                     save, flash, error}
 
-        static scope = 'Schema-CATALOG'
-        static style = () => this.safeCSS({stopper: '|'})
-        `
-            .catalog-d0       { width: 100%; font-size: 1rem; }
-            
-            .entry1           { background: #e2eef9; }   /* #D0E4F5 */
-            .entry2           { background: #f6f6f6; }
-            .entry            { padding-left: 15px; }
-            .entry-head       { display: flex; }
-            .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
-            .spacer           { flex-grow: 1; }
+        return DIV(cl('entry-head'),
+                  DIV(cl('cell cell-key'),   this.key(entry.key, schema?.info, ops)),
+                  DIV(cl('cell cell-value'), schema && this.embed(schema.display(props)), flashBox, errorBox),
+               )
+    }
 
-            .cell             { padding: 14px 20px 11px; position: relative; }
-            .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-            .cell-value       { width: 700px; }
-            
-            .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
-            .key:not([title]) { text-decoration-line: none; }
-            .key-missing      { opacity: 0.3; visibility: hidden; }
-            
-            .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
-            .cell-value| 
-                              { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+    EntrySubcat({item, path, entry, schema, color, ops}) {
+        let [folded, setFolded] = useState(false)
+        ops.toggle = () => setFolded(f => !f)
+        let key = this.key(entry.key, schema?.info, ops, folded)
 
-            .move|                        { margin-right: 10px; visibility: hidden; }
-            :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
-            .moveup|::after               { content: "△"; }
-            .movedown|::after             { content: "▽"; }
-            .moveup:hover|::after         { content: "▲"; color: mediumblue; } 
-            .movedown:hover|::after       { content: "▼"; color: mediumblue; }
-            
-            .expand                       { padding-left: 10px; cursor: pointer; }
-            .expand.is-folded|::after     { content: "▸"; }
-            .expand.is-expanded|::after   { content: "▾"; }
-            
-            .insert|::after               { content: "✖"; }
-            .insert|                      { transform: rotate(45deg); }
-            .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-            
-            .delete|::after               { content: "✖"; }
-            .delete|                      { padding-left: 10px; }
-            .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
-            .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
+        return FRAGMENT(
+            DIV(cl('entry-head'),
+                DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
+                DIV(cl('cell cell-value'))
+            ),
+            folded ? null : e(this.Catalog, {item, path, value: entry.value, schema, color}),
+        )
+    }
 
-            /* show up all icons when hovering over the entry */
-            .cell-key:hover :is(.move, .delete, .insert, .key-missing)|       
-                                          { visibility: visible; }        
+    // validKey(pos, key, entries, schema) {
+    //     /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
+    //        according to the `schema`; return true, or alert the user and raise an exception. */
+    //     // verify that a `key` name is allowed by the catalog's schema
+    //     let subschema = trycatch(() => schema.subschema(key))
+    //     if (!subschema) {
+    //         let msg = `The name "${key}" for a key is not permitted by the schema.`
+    //         alert(msg); throw new Error(msg)
+    //     }
+    //     // check against duplicate names, if duplicates are not allowed
+    //     if (subschema.unique)
+    //         for (let ent of entries) {}
+    //     return true
+    // }
 
-            .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
-            .catalog-d1 .entry            { padding-left: 2px; }
-            .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+    Catalog({item, value, schema, path, color, start_color}) {
+        /* If `start_color` is undefined, the same `color` is used for all rows. */
+        assert(value  instanceof Catalog)
+        assert(schema instanceof CATALOG)
 
-            .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
-            .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
-            .flash-warn|    { background-color: salmon; transition: 0.2s; }
-            .flash-stop|    { opacity: 0; z-index: -1; transition: 2s linear 1s; transition-property: opacity, background-color, z-index; }
-            .error|         { padding-top:5px; color:red; }
-        `
-        /* CSS elements:
-            .dX        -- nesting level (depth) of a CATALOG, X = 0,1,2,...
-            .entry     -- <TR> of a table, top-level or nested
-            .entryK    -- alternating colors of rows, K = 1 or 2
-            .entry-head-- wrapper around key-value block, or the key block alone if it preceeds an unfolded subcatalog
-            .cell-*    -- <DIV> box inside a entry that holds a key/value/subcatalog
-            .key       -- deep-most element containing just a key label
-            .value     -- deep-most element containing just a rendered value component
-           Other:
-            .icon-*    -- fixed-sized icons for control elements
-         */
-        /* DRAFTS:
-            & ?entry:not(.CATALOG?d1 *)  { background: red; }    -- rule with a "stop-at" criterion
+        let catalog  = value
+        let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
-            & ?icon-info        { color: #aaa; margin: 0 5px; }
-            & ?icon-info:hover  { color: unset; }
+        // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
+        let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
-            & ?icon-info        { color:white; background-color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px;
-                                  font-weight:bold; font-style:normal; flex-shrink:0; border-radius:3px; text-align:center; box-shadow: 1px 1px 1px #555; }
-            & ?icon-info:hover  { background-color: #777; font-style: italic; }
-
-            & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px;
-                                  font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
-            & ?icon-info:hover  { color:white; background-color: #888; }
-
-            drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
-            undelete: ↺ U+21BA
-        */
-
-        constructor(props) {
-            super(props)
-            this.EntryAtomic = this.EntryAtomic.bind(this)
-            this.EntrySubcat = this.EntrySubcat.bind(this)
-            this.Catalog = this.Catalog.bind(this)
-        }
-
-        move(handle)    { return DIV(cl('move'),
-                                    DIV(cl('moveup'),   {onClick: e => handle(-1), title: "Move up"}),
-                                    DIV(cl('movedown'), {onClick: e => handle(+1), title: "Move down"}))
-                        }
-        delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
-
-        // info(schema)    { return schema.info ? {title: schema.info} : null }
-        //     if (!schema.info) return null
-        //     return I(cl('icon-info'), {title: schema.info}, '?')
-        //     // return I(cl('icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
-        //     // return I(cl("bi bi-info-circle icon-info"), {title: schema.info})
-        //     // return I(cl("icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
-        //     // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
-        //     // return e(MaterialUI.Tooltip, {title: text},
-        //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
-        //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
-        // }
-
-        expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
-        insert(handle, subcat)       {
-            let menu = [
-                ['Add before', () => handle(-1)],
-                ['Add after',  () => handle(+1)],
-                ['Add inside', () => handle(0)],
-            ]
-            if (!subcat) menu = menu.slice(0,-1)
-            return e(MaterialUI.Tooltip,
-                        {// PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
-                         componentsProps: {tooltip: {sx: {background: 'white', color: 'black', m:'0 !important'}}},
-                         title: FRAGMENT(...menu.map(cmd => e(MaterialUI.MenuItem, cmd[0], {onClick: cmd[1]}))),
-                         placement: "bottom-end", leaveDelay: 500,
-                        },
-                        DIV(cl('insert')),
-                    )
-        }
-
-        flash() {
-            let [msg, setMsg] = useState()
-            let [cls, setCls] = useState()
-            let action = (msg, ok = true) => setMsg(msg) || setCls(ok ? 'flash-info' : 'flash-warn')
-            let box = DIV(msg, cl('flash', cls || 'flash-stop'), {key: 'flash', onTransitionEnd: () => setCls(null)})
-            return [action, box]
-        }
-        error() {
-            let [msg, setMsg] = useState()
-            let box = msg ? DIV(cl('error'), {key: 'error'}, msg) : null
-            return [setMsg, box]
-        }
-
-        key(key_, info, ops, folded) {
-            /* Displays key of an entry, be it an atomatic entry or a subcatalog. */
-            let [current, setCurrent] = useState(key_)
-            const save = async (newKey) => {
-                // await item.remote_edit({path, value: schema.encode(newValue)})
-                setCurrent(newKey)
-            }
-            let [flash, flashBox] = this.flash()
-            let [error, errorBox] = this.error()
-
-            let widget = ops.initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
-            let key = e(widget, {value: current, save, flash, error, initkey: ops.initkey, schema: generic_string})
-
-            return FRAGMENT(
-                        this.move(ops.move),
-                        DIV(cl('key'), key, info && {title: info}),
-                        ops.toggle && this.expand(folded, ops.toggle),
-                        DIV(cl('spacer')),
-                        this.insert(ops.ins),
-                        this.delete(ops.del),
-                        flashBox, errorBox,
-            )
-        }
-
-        EntryAtomic({item, path, entry, schema, ops}) {
-            /* A table row containing an atomic entry: a key and its value (not a subcatalog).
-               The argument `key_` must have a "_" in its name to avoid collision with React's special prop, "key".
-               `entry.value` and `schema` can be undefined for a newly created entry, then no value widget is displayed.
-               If value is undefined, but schema is present, the value is displayed as "missing".
-             */
-            let [current, setCurrent] = useState(entry.value)
-
-            const save = async (newValue) => {
-                // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-                await item.remote_edit({path, value: schema.encode(newValue)})
-                setCurrent(newValue)
-            }
-            let [flash, flashBox] = this.flash()        // components for value editing; for key editing, created in key()
-            let [error, errorBox] = this.error()
-
-            return DIV(cl('entry-head'),
-                      DIV(cl('cell cell-key'),   this.key(entry.key, schema?.info, ops)),
-                      DIV(cl('cell cell-value'), schema && this.embed(schema.display({value: current, save, flash, error})),
-                          flashBox, errorBox),
-                   )
-        }
-
-        EntrySubcat({item, path, entry, schema, color, ops}) {
-            let [folded, setFolded] = useState(false)
-            ops.toggle = () => setFolded(f => !f)
-            let key = this.key(entry.key, schema?.info, ops, folded)
-
-            return FRAGMENT(
-                DIV(cl('entry-head'),
-                    DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
-                    DIV(cl('cell cell-value'))
-                ),
-                folded ? null : e(this.Catalog, {item, path, value: entry.value, schema, color}),
-            )
-        }
-
-        validKey(pos, key, entries, schema) {
-            /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
-               according to the `schema`; return true, or alert the user and raise an exception. */
-
+        let move = (pos, delta) => setEntries(prev => {
+            // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
+            if (pos+delta < 0 || pos+delta >= prev.length) return prev
+            entries = [...prev];
+            [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+            return entries
+        })
+        let del = (pos) => setEntries(prev => {
+            // delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete
+            return [...prev.slice(0,pos), ...prev.slice(pos+1)]
+        })
+        let ins = (pos, rel) => setEntries(prev => {
+            // `rel` is -1 (add before), or +1 (add after)
+            if (rel === +1) pos++
+            return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
+        })
+        let initkey = (pos, key) => {
             // verify that a `key` name is allowed by the catalog's schema
             let subschema = trycatch(() => schema.subschema(key))
-            if (!subschema) {
-                let msg = `The name "${key}" for a key is not permitted by the schema.`
-                alert(msg); throw new Error(msg)
+            if (key !== undefined && !subschema) {
+                alert(`The name "${key}" for a key is not permitted by the schema.`)
+                key = undefined
             }
-            // check against duplicate names, if duplicates are not allowed
-            if (subschema.unique)
-                for (let ent of entries) {}
-            return true
-        }
-
-        Catalog({item, value, schema, path, color, start_color}) {
-            assert(value  instanceof Catalog)
-            assert(schema instanceof CATALOG)
-
-            let catalog  = value
-            let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
-
-            // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
-            let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
-
-            let move = (pos, delta) => setEntries(prev => {
-                // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
-                if (pos+delta < 0 || pos+delta >= prev.length) return prev
-                entries = [...prev];
-                [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+            setEntries(prev => {
+                assert(prev[pos].id === 'new')
+                if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
+                let maxid = Math.max(-1, ...prev.map(e => e.id))
+                let entries = [...prev]
+                entries[pos] = {id: maxid + 1, key}
                 return entries
             })
-            let del = (pos) => setEntries(prev => {
-                // delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete
-                return [...prev.slice(0,pos), ...prev.slice(pos+1)]
-            })
-            let ins = (pos, rel) => setEntries(prev => {
-                // `rel` is -1 (add before), +1 (add after), or 0 (add first inside a subcatalog)
-                if (rel === +1) pos++
-                return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
-            })
-            let initkey = (pos, key) => {
-                // verify that a `key` name is allowed by the catalog's schema
-                let subschema = trycatch(() => schema.subschema(key))
-                if (key !== undefined && !subschema) {
-                    alert(`The name "${key}" for a key is not permitted by the schema.`)
-                    key = undefined
-                }
-                setEntries(prev => {
-                    assert(prev[pos].id === 'new')
-                    if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
-                    let maxid = Math.max(-1, ...prev.map(e => e.id))
-                    let entries = [...prev]
-                    entries[pos] = {key, id: maxid + 1, value: subschema.param('initial')}
-                    return entries
-                })
-            }
-            // let changeKey = (pos, key) => {}
-
-            let rows = entries.map((entry, pos) =>
-            {
-                let {key}   = entry
-                let isnew   = (entry.id === 'new')
-                let vschema = isnew ? undefined : schema.subschema(key)
-                let color   = getColor(pos)
-                let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel)}
-                if (isnew) ops.initkey = key => initkey(pos,key)
-                let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
-                let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
-                return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
-            })
-
-            return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
         }
+        // let changeKey = (pos, key) => {}
 
-        render()    { return e(this.Catalog, this.props) }
+        if (!entries.length) entries = [{id: 'new'}]            // "new entry" row auto-added inside an empty catalog
+
+        let rows = entries.map((entry, pos) =>
+        {
+            let {key}   = entry
+            let isnew   = (entry.id === 'new')
+            let vschema = isnew ? undefined : schema.subschema(key)
+            let color   = getColor(pos)
+            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel)}
+            if (isnew) {
+                ops.initkey  = key => initkey(pos,key)
+                ops.keynames = schema.getValidKeys()
+            }
+            let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
+            let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
+            return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
+        })
+
+        return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
     }
+
+    render()    { return e(this.Catalog, this.props) }
 }
 
 export class DATA extends CATALOG {
     /* Like CATALOG, but provides distinct value schemas for different predefined keys (fields) of a catalog.
        Primarily used for encoding Item.data. Not intended for other uses.
      */
-    fields         // dict of field names and their schemas; null means a default schema should be used for a given field
+
+    // static keys_obligatory = true
+
+    fields         // plain object with field names and their schemas; null means a default schema should be used for a given field
 
     constructor(fields, keys = null, params = {}) {
         super(null, keys, params)
@@ -1335,6 +1381,7 @@ export class DATA extends CATALOG {
             schema.collect(assets)
         this.constructor.Table.collect(assets)
     }
+    getValidKeys()          { return Object.getOwnPropertyNames(this.param('fields')).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
