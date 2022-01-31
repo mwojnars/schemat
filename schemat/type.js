@@ -1090,6 +1090,7 @@ CATALOG.Table = class extends Component {
         .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
         .spacer           { flex-grow: 1; }
 
+        .onhover          { width: 20%; height: 20px; margin-top: -20px; position: absolute; top:0; }
         .addnew           { max-height: 0; padding-left: 20px; margin-top:-1px; overflow-y: hidden; visibility: hidden; transition: max-height 0.2s linear; }
         .addnew:hover, .onhover:hover + .addnew   
                           { max-height: 100px; visibility: visible; transition: max-height 0.3s linear; margin-top:0; }
@@ -1132,6 +1133,7 @@ CATALOG.Table = class extends Component {
         .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
         .catalog-d1 .entry            { padding-left: 2px; }
         .catalog-d1 .key              { font-weight: normal; font-style: italic; }
+        .catalog-d1.is-empty          { margin-top: 0; }
 
         .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
         .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
@@ -1296,7 +1298,7 @@ CATALOG.Table = class extends Component {
     }
     EntryAddNew() {
         return FRAGMENT(
-            DIV(cl('onhover'), st({width: '100%', height: '20px', marginTop: '-20px', position: 'absolute', top: 0})),
+            DIV(cl('onhover')),
             DIV(cl('entry-head addnew'),
                 DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ..."),
                 DIV(cl('cell cell-value'))
@@ -1395,7 +1397,8 @@ CATALOG.Table = class extends Component {
         let pos = rows.length
         rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, e(this.EntryAddNew), st({position: 'relative'})))
 
-        return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
+        let empty = !entries.length
+        return DIV(cl(`catalog-d${path.length}`), empty && cl('is-empty'), ...rows)        // depth class: catalog-d0, catalog-d1, ...
     }
 
     render()    { return e(this.Catalog, this.props) }
