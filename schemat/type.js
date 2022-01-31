@@ -1085,10 +1085,14 @@ CATALOG.Table = class extends Component {
         
         .entry1           { background: #e2eef9; }   /* #D0E4F5 */
         .entry2           { background: #f6f6f6; }
-        .entry            { padding-left: 15px; }
+        .entry            { padding-left: 15px; }   /* border-collapse: collapse; */
         .entry-head       { display: flex; }
         .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
         .spacer           { flex-grow: 1; }
+
+        .addnew           { max-height: 0; padding-left: 20px; margin-top:-1px; overflow-y: hidden; visibility: hidden; transition: max-height 0.2s linear; }
+        .addnew:hover, .onhover:hover + .addnew   
+                          { max-height: 100px; visibility: visible; transition: max-height 0.3s linear; margin-top:0; }
 
         .cell             { padding: 14px 20px 11px; position: relative; }
         .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
@@ -1098,9 +1102,12 @@ CATALOG.Table = class extends Component {
         .key:not([title]) { text-decoration-line: none; }
         .key-missing      { opacity: 0.3; visibility: hidden; }
         
+        /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
+        .cell-key:hover *|            { visibility: visible; }
+                
         .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
         .cell-value| 
-                          { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+                                      { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
 
         .move|                        { margin-right: 10px; visibility: hidden; }
         :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
@@ -1114,18 +1121,13 @@ CATALOG.Table = class extends Component {
         .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
         .expand.is-empty|::after      { content: "▿"; }
         
-        .insert|::after               { content: "✖"; }
-        .insert|                      { transform: rotate(45deg); }
+        .insert|::after               { content: "✚"; }
         .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
         
         .delete|::after               { content: "✖"; }
         .delete|                      { padding-left: 10px; }
         .delete|, .insert|            { color: #777; flex-shrink:0; font-size:1.1em; line-height:1em; visibility: hidden; }
         .delete:hover|                { color: firebrick; text-shadow: 1px 1px 1px #777; cursor: pointer; }
-
-        /* show up all icons when hovering over the entry */
-        .cell-key:hover :is(.move, .delete, .insert, .key-missing)|       
-                                      { visibility: visible; }        
 
         .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
         .catalog-d1 .entry            { padding-left: 2px; }
@@ -1233,17 +1235,19 @@ CATALOG.Table = class extends Component {
 
         // the presence of `ops.initkey` indicates this is a newly added row: the key is displayed in edit mode
         // and saved through `initkey()` after edit
+
+        // let {isnew, save, names} = ops.key   // ops.key.isnew, ops.key.save, ops.key.names
         let {initkey, keynames} = ops
         let widget = initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
         let props  = {value: current, flash, error, save: initkey || save, keynames, schema: generic_string}
 
         return FRAGMENT(
-                    this.move(ops.move),
+                    ops?.move && this.move(ops.move),
                     DIV(cl('key'), e(widget, props), info && {title: info}),
                     expand && this.expand(expand),
                     DIV(cl('spacer')),
-                    this.insert(ops.ins),
-                    this.delete(ops.del),
+                    ops?.ins && this.insert(ops.ins),
+                    ops?.del && this.delete(ops.del),
                     flashBox, errorBox,
         )
     }
@@ -1291,7 +1295,13 @@ CATALOG.Table = class extends Component {
         )
     }
     EntryAddNew() {
-        return DIV(cl('entry-head'), DIV(cl('cell cell-key'), "Add new entry..."))
+        return FRAGMENT(
+            DIV(cl('onhover'), st({width: '100%', height: '20px', marginTop: '-20px', position: 'absolute', top: 0})),
+            DIV(cl('entry-head addnew'),
+                DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ..."),
+                DIV(cl('cell cell-value'))
+            )
+        )
     }
 
     // validKey(pos, key, entries, schema) {
@@ -1320,9 +1330,9 @@ CATALOG.Table = class extends Component {
         // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
-        function token(id, props = {}) {
+        function special(id, props = {}) {
             // an artificial entry that marks a place along the list of entries where a UI operation was/will be performed
-            return {id, ...props, _special_: true}
+            return {id, ...props, special: true}
         }
 
         let move = (pos, delta) => setEntries(prev => {
@@ -1340,10 +1350,11 @@ CATALOG.Table = class extends Component {
             /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
             // `rel` is -1 (add before), or +1 (add after)
             if (rel === +1) pos++
-            return [...prev.slice(0,pos), token('new'), ...prev.slice(pos)]
+            return [...prev.slice(0,pos), special('new'), ...prev.slice(pos)]
         })
         let initkey = (pos, key) => {
-            /* store the new key of a newly created entry materializing the entry for the 1st time in this way */
+            /* confirm creation of a new entry with a given key (or value?); assign an ID to it; */
+            /* store an initial value of a key after new entry creation */
             let subschema = trycatch(() => schema.subschema(key))
             if (key !== undefined && !subschema) {          // verify that a `key` name is allowed by the catalog's schema
                 alert(`The name "${key}" for a key is not permitted by the schema.`)
@@ -1362,17 +1373,17 @@ CATALOG.Table = class extends Component {
         let keynames = schema.getValidKeys()
 
         // if (!entries.length) entries = token('new')            // "new entry" row auto-added inside an empty catalog
-
-        let addnew = token('add', {key: 'add new entry...'})
+        // let addnew = special('add', {key: '✚ Add new entry ...'})
 
         let rows = entries.map((entry, pos) =>
         {
             let {key}   = entry
-            let special = entry._special_  //(entry.id === 'new')
+            let special = entry.special  //(entry.id === 'new')
             let vschema = special ? undefined : schema.subschema(key)
             let color   = getColor(pos)
-            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames}
-
+            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames,
+                key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
+            }
             if (entry.id === 'new') {
                 ops.initkey = key => initkey(pos,key)
             }
@@ -1381,8 +1392,8 @@ CATALOG.Table = class extends Component {
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 
-        // let pos = rows.length
-        // rows.push(DIV(cl('entry entry-addnew'), this.EntryAddNew({ops: {ins: () => ins(pos)}, keynames})))
+        let pos = rows.length
+        rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, e(this.EntryAddNew), st({position: 'relative'})))
 
         return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
     }
