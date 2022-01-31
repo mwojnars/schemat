@@ -183,6 +183,7 @@ async function create_categories(Category) {
         info        : "Category of items that do not belong to any specific category",
         class_name  : 'schemat.item.Item',
         fields      : C({name: new STRING(), title: new STRING()}),
+        handlers    : C({}),
     })
     
     return cat

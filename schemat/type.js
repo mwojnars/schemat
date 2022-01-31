@@ -1100,9 +1100,10 @@ CATALOG.Table = class extends Component {
         .moveup:hover|::after         { content: "▲"; color: mediumblue; } 
         .movedown:hover|::after       { content: "▼"; color: mediumblue; }
         
-        .expand                       { padding-left: 10px; cursor: pointer; }
-        .expand.is-folded|::after     { content: "▸"; }
-        .expand.is-expanded|::after   { content: "▾"; }
+        .expand                       { padding-left: 10px; }
+        .expand.is-folded|::after     { content: "▸"; cursor: pointer; }
+        .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
+        .expand.is-empty|::after      { content: "▿"; }
         
         .insert|::after               { content: "✖"; }
         .insert|                      { transform: rotate(45deg); }
@@ -1181,7 +1182,7 @@ CATALOG.Table = class extends Component {
     //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
     // }
 
-    expand(folded, toggle)  { return DIV(cl(`expand ${folded ? 'is-folded' : 'is-expanded'}`), {onClick: toggle}) }
+    expand({state, toggle}) { return DIV(cl(`expand is-${state}`), {onClick: toggle}) }
     insert(handle, subcat)  {
         let menu = [
             ['Add before', () => handle(-1)],
@@ -1211,7 +1212,7 @@ CATALOG.Table = class extends Component {
         return [setMsg, box]
     }
 
-    key(key_, info, ops, folded) {
+    key(key_, info, ops, expand) {
         /* Display key of an entry, be it an atomatic entry or a subcatalog. */
         let [current, setCurrent] = useState(key_)
         const save = async (newKey) => {
@@ -1229,7 +1230,7 @@ CATALOG.Table = class extends Component {
         return FRAGMENT(
                     this.move(ops.move),
                     DIV(cl('key'), e(widget, props), info && {title: info}),
-                    ops.toggle && this.expand(folded, ops.toggle),
+                    expand && this.expand(expand),
                     DIV(cl('spacer')),
                     this.insert(ops.ins),
                     this.delete(ops.del),
@@ -1265,15 +1266,18 @@ CATALOG.Table = class extends Component {
 
     EntrySubcat({item, path, entry, schema, color, ops}) {
         let [folded, setFolded] = useState(false)
-        ops.toggle = () => setFolded(f => !f)
-        let key = this.key(entry.key, schema?.info, ops, folded)
+        let subcat = entry.value
+        let empty  = !subcat.length
+        let toggle = () => !empty && setFolded(f => !f)
+        let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
+        let key    = this.key(entry.key, schema?.info, ops, expand)
 
         return FRAGMENT(
             DIV(cl('entry-head'),
                 DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
                 DIV(cl('cell cell-value'))
             ),
-            folded ? null : e(this.Catalog, {item, path, value: entry.value, schema, color}),
+            folded ? null : e(this.Catalog, {item, path, value: subcat, schema, color}),
         )
     }
 
@@ -1338,7 +1342,7 @@ CATALOG.Table = class extends Component {
         // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
 
-        if (!entries.length) entries = [{id: 'new'}]            // "new entry" row auto-added inside an empty catalog
+        // if (!entries.length) entries = [{id: 'new'}]            // "new entry" row auto-added inside an empty catalog
 
         let rows = entries.map((entry, pos) =>
         {
