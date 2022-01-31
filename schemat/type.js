@@ -206,11 +206,11 @@ export class Schema {
     // common properties of schemas; can be utilized by subclasses or callers:
 
     info            // human-readable description of this schema: what values are accepted and how they are interpreted
-    default         // default value to be assumed when none was provided by a user (in a web form etc.)
-    initial         // initial value assigned to a newly created data element of this schema
+    default         // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
     unique          // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
+    //initial       // initial value assigned to a newly created data element of this schema
     // multi        // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
     constructor(params = {}) {
@@ -300,21 +300,22 @@ Schema.Widget = class extends Widget {
     }
     constructor(props) {
         super(props)
+        this.initial = undefined        // in edit mode: initial value (encoded) that came through props, stored for change detection
+        this.default = undefined        // in edit mode: default value the editor should start with; if this.initial is missing, schema.default is used
         this.input   = createRef()
-        this.initial = undefined        // initial flat (encoded) value for the editor; stored here for change detection in close()
         this.state   = {...this.state,
             editing: props.editing,
         }
     }
 
-    empty(v)    { return false }                                // detect an empty value and display it in a custom way
+    empty(v)    { return v === undefined && I('none') }         // detect an empty value and display it in a custom way
     display(v)  { return this.empty(v) || this.encode(v) }      // convert a value to a UI element for display in viewer()
     encode(v)   { return this.props.schema.encodeJson(v) }      // convert a value to its editable representation
     decode(v)   { return this.props.schema.decodeJson(v) }      // ...and back
 
     viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
-                    defaultValue:   this.initial,
+                    defaultValue:   this.default,
                     ref:            this.input,
                     onKeyDown:      e => this.key(e),
                     onBlur:         e => this.reject(e),
@@ -327,11 +328,11 @@ Schema.Widget = class extends Widget {
     keyAccept(e)  { return e.key === "Enter"  }             // return true if the key pressed accepts the edits
     keyReject(e)  { return e.key === "Escape" }             // return true if the key pressed rejects the edits
 
-    value()     { return this.input.current.value }               // retrieve an edited flat value (encoded) from the editor
+    value()     { return this.input.current.value }             // retrieve an edited flat value (encoded) from the editor
 
-    open(e) { this.setState({editing: true})  }                     // activate the editor and editing mode
+    open(e) { this.setState({editing: true})  }                 // activate the editor and editing mode
     close() { this.setState({editing: false}); this.props.error(null) }     // close the editor and editing mode
-    read()  {                                                       // read the edited flat value, return this value and a "changed" flag
+    read()  {                                                   // read the edited flat value, return this value and a "changed" flag
         let current = this.value()
         let changed = (current !== this.initial)
         return [current, changed]
@@ -365,9 +366,16 @@ Schema.Widget = class extends Widget {
     }
 
     render() {
-        this.initial = this.state.editing ? this.encode(this.props.value) : undefined
-        return this.state.editing ? this.editor() : this.viewer()
+        let {schema, value} = this.props
+        if (!this.state.editing) return this.viewer()
+        this.initial = (value !== undefined) ? this.encode(value) : undefined
+        this.default = (this.initial !== undefined) ? this.initial : schema.param('default')
+        return this.editor()
     }
+    // render() {
+    //     this.initial = this.state.editing ? this.encode(this.props.value) : undefined
+    //     return this.state.editing ? this.editor() : this.viewer()
+    // }
 }
 
 /**********************************************************************************************************************
@@ -400,7 +408,7 @@ export class BOOLEAN extends Primitive {
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static initial = 0
+    static default = 0
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -449,7 +457,7 @@ export class TEXT extends Textual
         viewer() { return PRE(DIV(cl('use-scroll'), {onDoubleClick: e => this.open(e)}, this.display(this.props.value))) }
         editor() {
             return PRE(TEXTAREA({
-                defaultValue:   this.initial,
+                defaultValue:   this.default,
                 ref:            this.input,
                 onKeyDown:      e => this.key(e),
                 onBlur:         e => this.reject(e),
@@ -556,7 +564,7 @@ export class CODE extends TEXT
 
             let div = this.input.current
             let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
-            editorAce.session.setValue(this.initial)
+            editorAce.session.setValue(this.default)
             // editorAce.setTheme("ace/theme/textmate")
             // editorAce.session.setMode("ace/mode/javascript")
 
@@ -1037,7 +1045,7 @@ export class CATALOG extends Schema {
             // let options = keynames.map(key => OPTION({value: key}, key))
             let options = [OPTION("select key ...", {value: ""}), ...keynames.map(key => OPTION({value: key}, key))]
             return SELECT({
-                    defaultValue:   this.initial,
+                    defaultValue:   this.default,
                     ref:            this.input,
                     onKeyDown:      e => this.key(e),
                     onChange:       e => e.target.value === "" ?  this.reject(e) : this.accept(e),
@@ -1050,11 +1058,12 @@ export class CATALOG extends Schema {
     static NewKeyWidget = class extends CATALOG.KeyWidget {
         static defaultProps = {
             editing:  true,         // this widget starts in edit mode
-            initkey:  undefined,    // initkey(key) is called when the user has typed in and accepted an initial key
-                                    // of a newly created entry; undefined for existing (not new) entries
+            // initkey:  undefined,    // initkey(key) is called when the user has typed in and accepted an initial key
+            //                         // of a newly created entry
         }
-        async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
-        reject(e)       { this.props.initkey() }
+        // async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
+        // reject(e)       { this.props.initkey() }
+        reject(e)       { this.props.save(undefined) }      // save() must be called to inform that no initial value was provided
     }
 }
 
@@ -1222,10 +1231,11 @@ CATALOG.Table = class extends Component {
         let [flash, flashBox] = this.flash()
         let [error, errorBox] = this.error()
 
-        // the presence of `ops.initkey` indicates this is an "add new entry" row
+        // the presence of `ops.initkey` indicates this is a newly added row: the key is displayed in edit mode
+        // and saved through `initkey()` after edit
         let {initkey, keynames} = ops
         let widget = initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
-        let props  = {value: current, save, flash, error, initkey, keynames, schema: generic_string}
+        let props  = {value: current, flash, error, save: initkey || save, keynames, schema: generic_string}
 
         return FRAGMENT(
                     this.move(ops.move),
@@ -1252,9 +1262,9 @@ CATALOG.Table = class extends Component {
             await item.remote_edit({path, value: schema.encode(newValue)})
             setValue(newValue)
         }
-        let [flash, flashBox] = this.flash()            // components for value editing; for key editing, created in key()
+        let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
         let [error, errorBox] = this.error()
-        let props = {value:   isnew ? schema?.param('initial') : value,
+        let props = {value, //:   isnew ? schema?.param('default') : value,
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
                      save, flash, error}
 
@@ -1267,7 +1277,7 @@ CATALOG.Table = class extends Component {
     EntrySubcat({item, path, entry, schema, color, ops}) {
         let [folded, setFolded] = useState(false)
         let subcat = entry.value
-        let empty  = !subcat.length
+        let empty  = false //!subcat.length   -- this becomes INVALID when entries are inserted/deleted inside `subcat`
         let toggle = () => !empty && setFolded(f => !f)
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
         let key    = this.key(entry.key, schema?.info, ops, expand)
@@ -1279,6 +1289,9 @@ CATALOG.Table = class extends Component {
             ),
             folded ? null : e(this.Catalog, {item, path, value: subcat, schema, color}),
         )
+    }
+    EntryAddNew() {
+        return DIV(cl('entry-head'), DIV(cl('cell cell-key'), "Add new entry..."))
     }
 
     // validKey(pos, key, entries, schema) {
@@ -1307,6 +1320,11 @@ CATALOG.Table = class extends Component {
         // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
+        function token(id, props = {}) {
+            // an artificial entry that marks a place along the list of entries where a UI operation was/will be performed
+            return {id, ...props, _special_: true}
+        }
+
         let move = (pos, delta) => setEntries(prev => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             if (pos+delta < 0 || pos+delta >= prev.length) return prev
@@ -1315,18 +1333,19 @@ CATALOG.Table = class extends Component {
             return entries
         })
         let del = (pos) => setEntries(prev => {
-            // delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete
+            /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             return [...prev.slice(0,pos), ...prev.slice(pos+1)]
         })
-        let ins = (pos, rel) => setEntries(prev => {
+        let ins = (pos, rel = -1) => setEntries(prev => {
+            /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
             // `rel` is -1 (add before), or +1 (add after)
             if (rel === +1) pos++
-            return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
+            return [...prev.slice(0,pos), token('new'), ...prev.slice(pos)]
         })
         let initkey = (pos, key) => {
-            // verify that a `key` name is allowed by the catalog's schema
+            /* store the new key of a newly created entry materializing the entry for the 1st time in this way */
             let subschema = trycatch(() => schema.subschema(key))
-            if (key !== undefined && !subschema) {
+            if (key !== undefined && !subschema) {          // verify that a `key` name is allowed by the catalog's schema
                 alert(`The name "${key}" for a key is not permitted by the schema.`)
                 key = undefined
             }
@@ -1342,22 +1361,28 @@ CATALOG.Table = class extends Component {
         // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
 
-        // if (!entries.length) entries = [{id: 'new'}]            // "new entry" row auto-added inside an empty catalog
+        // if (!entries.length) entries = token('new')            // "new entry" row auto-added inside an empty catalog
+
+        let addnew = token('add', {key: 'add new entry...'})
 
         let rows = entries.map((entry, pos) =>
         {
             let {key}   = entry
-            let isnew   = (entry.id === 'new')
-            let vschema = isnew ? undefined : schema.subschema(key)
+            let special = entry._special_  //(entry.id === 'new')
+            let vschema = special ? undefined : schema.subschema(key)
             let color   = getColor(pos)
             let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames}
-            if (isnew) {
+
+            if (entry.id === 'new') {
                 ops.initkey = key => initkey(pos,key)
             }
             let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
+
+        // let pos = rows.length
+        // rows.push(DIV(cl('entry entry-addnew'), this.EntryAddNew({ops: {ins: () => ins(pos)}, keynames})))
 
         return DIV(cl(`catalog-d${path.length}`), ...rows)        // depth class: catalog-d0, catalog-d1, ...
     }
