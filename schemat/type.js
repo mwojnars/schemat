@@ -309,9 +309,12 @@ Schema.Widget = class extends Widget {
     }
 
     empty(v)    { return v === undefined && I('none') }         // detect an empty value and display it in a custom way
-    display(v)  { return this.empty(v) || this.encode(v) }      // convert a value to a UI element for display in viewer()
+    nonempty(v) { return this.encode(v) }                       // convert a non-empty value to a UI element for display()
+    display(v)  { return this.empty(v) || this.nonempty(v) }    // convert a value to a UI element for display in viewer()
     encode(v)   { return this.props.schema.encodeJson(v) }      // convert a value to its editable representation
     decode(v)   { return this.props.schema.decodeJson(v) }      // ...and back
+    // encode(v)   { return v }                                    // convert a value to its editable representation
+    // decode(v)   { return v }                                    // ...and back
 
     viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
@@ -420,9 +423,9 @@ export class Textual extends Primitive {
     static stype = "string"
 
     static Widget = class extends Primitive.Widget {
-        encode(value)   { return value }
-        decode(value)   { return value }
         empty (value)   { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
+        encode(v)   { return v }
+        decode(v)   { return v }
     }
 }
 
@@ -452,8 +455,6 @@ export class TEXT extends Textual
                 max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
             }
         `
-
-        empty(v) { return !v && " " }  //SPAN(cl('key-missing'), "(missing)") }
         viewer() { return PRE(DIV(cl('use-scroll'), {onDoubleClick: e => this.open(e)}, this.display(this.props.value))) }
         editor() {
             return PRE(TEXTAREA({
@@ -615,10 +616,9 @@ export class GENERIC extends Schema {
 
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
-        decode (value)  { return this.props.schema.decodeJson(value) }
+        empty  (value)  { return Schema.Widget.prototype.empty.call(this, value) }
         encode (value)  { return this.props.schema.encodeJson(value, null, 2) }   // JSON string is pretty-printed for edit
-        display(value)  { return this.props.schema.encodeJson(value) }
-        empty  (value)  { return value === undefined && "undefined" }
+        decode (value)  { return this.props.schema.decodeJson(value) }
     }
 }
 
@@ -639,19 +639,19 @@ export class SCHEMA extends GENERIC {
             .info { font-style: italic; }
         `}
 
-        viewer() {
+        viewer()  { return Schema.Widget.prototype.viewer.call(this) }
+        nonempty() {
             let {value: schema} = this.props
-            let defalt = `${schema.default}`
-            return DIV({onDoubleClick: e => this.open(e)}, SPAN({className: 'Schema SCHEMA'},
-                    `${schema}`,
+            let deflt = `${schema.param('default')}`
+            return SPAN({className: 'Schema SCHEMA'}, `${schema}`,
                     schema.default !== undefined &&
-                        SPAN({className: 'default', title: `default value: ${truncate(defalt,1000)}`},
-                            ` (${truncate(defalt,100)})`),
+                        SPAN({className: 'default', title: `default value: ${truncate(deflt,1000)}`},
+                            ` (${truncate(deflt,100)})`),
                     schema.info &&
                         SPAN({className: 'info'}, ` • ${schema.info}`),
                         // smaller dot: &middot;
                         // larger dot: •
-                    ))
+                    )
         }
     }
 }
@@ -752,7 +752,7 @@ export class ITEM extends Schema {
     }
 
     static Widget = ItemLoadingHOC(class extends Schema.Widget {
-        viewer() {
+        nonempty() {
             let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
                 return SPAN({suppressHydrationWarning: true}, "loading...")
@@ -1268,7 +1268,7 @@ CATALOG.Table = class extends Component {
 
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-            // await item.remote_edit({path, value: schema.encode(newValue)})
+            await item.remote_edit({path, value: schema.encode(newValue)})
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
@@ -1300,11 +1300,11 @@ CATALOG.Table = class extends Component {
                 e(this.Catalog, {item, path, value: subcat, schema, color})),
         )
     }
-    EntryAddNew({hide = true}) {
+    EntryAddNew({hide = true, ins}) {
         return FRAGMENT(
             hide && DIV(cl('onhover')),
             DIV(cl('entry-head addnew'), hide && cl('hide'),
-                DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ..."),
+                DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ...", {onClick: ins}),
                 DIV(cl('cell cell-value'))
             )
         )
@@ -1398,12 +1398,12 @@ CATALOG.Table = class extends Component {
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 
-        let pos = rows.length
-        let empty = !entries.length
+        let pos   = rows.length
         let depth = path.length
+        let empty = !entries.length
 
         rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, st({position: 'relative'}),
-                      e(this.EntryAddNew, {hide: depth > 0})))
+                      e(this.EntryAddNew, {hide: depth > 0, ins: () => ins(pos)})))
 
         return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
