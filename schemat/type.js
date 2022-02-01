@@ -1091,7 +1091,7 @@ CATALOG.Table = class extends Component {
         .spacer           { flex-grow: 1; }
 
         .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
-        .addnew           { padding-left: 20px; opacity: 0.6; }
+        .addnew           { padding-left: 20px; opacity: 0.7; }
         .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear; overflow-y: hidden; }
         .addnew:hover     { opacity: 1; }
         .addnew:hover, .onhover:hover + .addnew   
@@ -1121,9 +1121,9 @@ CATALOG.Table = class extends Component {
         .movedown:hover|::after       { content: "▼"; color: mediumblue; }
         
         .expand                       { padding-left: 10px; }
+        .expand.is-empty|::after      { content: "▿"; }
         .expand.is-folded|::after     { content: "▸"; cursor: pointer; }
         .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
-        /*.is-empty .expand|::after     { content: "▿"; }*/
         
         .insert|::after               { content: "✚"; }
         .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
@@ -1268,7 +1268,7 @@ CATALOG.Table = class extends Component {
 
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-            await item.remote_edit({path, value: schema.encode(newValue)})
+            // await item.remote_edit({path, value: schema.encode(newValue)})
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
@@ -1292,11 +1292,12 @@ CATALOG.Table = class extends Component {
         let key    = this.key(entry.key, schema?.info, ops, expand)
 
         return FRAGMENT(
-            DIV(cl('entry-head'),
+            DIV(cl('entry-head'), {key: 'head'},
                 DIV(cl('cell cell-key'), key, folded ? null : st({borderRight:'none'})),
                 DIV(cl('cell cell-value'))
             ),
-            folded ? null : e(this.Catalog, {item, path, value: subcat, schema, color}),
+            DIV({key: 'cat'}, folded && st({display: 'none'}),
+                e(this.Catalog, {item, path, value: subcat, schema, color})),
         )
     }
     EntryAddNew({hide = true}) {
@@ -1370,7 +1371,7 @@ CATALOG.Table = class extends Component {
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let maxid = Math.max(-1, ...prev.map(e => e.id))
                 let entries = [...prev]
-                entries[pos] = {id: maxid + 1, key}
+                entries[pos] = {id: maxid + 1, key}  //value: subschema.param('default')
                 return entries
             })
         }
