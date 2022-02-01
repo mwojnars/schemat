@@ -1090,10 +1090,13 @@ CATALOG.Table = class extends Component {
         .entry:not(:last-child)          { border-bottom: 1px solid #fff; }
         .spacer           { flex-grow: 1; }
 
-        .onhover          { width: 20%; height: 20px; margin-top: -20px; position: absolute; top:0; }
-        .addnew           { max-height: 0; padding-left: 20px; margin-top:-1px; overflow-y: hidden; visibility: hidden; transition: max-height 0.2s linear; }
+        .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
+        .addnew           { padding-left: 20px; opacity: 0.6; }
+        .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear; overflow-y: hidden; }
+        .addnew:hover     { opacity: 1; }
         .addnew:hover, .onhover:hover + .addnew   
-                          { max-height: 100px; visibility: visible; transition: max-height 0.3s linear; margin-top:0; }
+                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear; }
+        .addnew .cell-key { cursor: pointer; }
 
         .cell             { padding: 14px 20px 11px; position: relative; }
         .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
@@ -1120,7 +1123,7 @@ CATALOG.Table = class extends Component {
         .expand                       { padding-left: 10px; }
         .expand.is-folded|::after     { content: "▸"; cursor: pointer; }
         .expand.is-expanded|::after   { content: "▾"; cursor: pointer; }
-        .expand.is-empty|::after      { content: "▿"; }
+        /*.is-empty .expand|::after     { content: "▿"; }*/
         
         .insert|::after               { content: "✚"; }
         .insert:hover|                { color: green; text-shadow: 1px 1px 1px #777; cursor: pointer; }
@@ -1133,7 +1136,7 @@ CATALOG.Table = class extends Component {
         .catalog-d1                   { padding-left: 25px; margin-top: -10px; }
         .catalog-d1 .entry            { padding-left: 2px; }
         .catalog-d1 .key              { font-weight: normal; font-style: italic; }
-        .catalog-d1.is-empty          { margin-top: 0; }
+        .catalog.is-empty             { margin-top: 0; }
 
         .flash|         { padding:4px 12px; border-radius: 2px; color:white; opacity:1; position: absolute; top:8px; right:8px; z-index:10; }
         .flash-info|    { background-color: mediumseagreen; transition: 0.2s; }
@@ -1296,10 +1299,10 @@ CATALOG.Table = class extends Component {
             folded ? null : e(this.Catalog, {item, path, value: subcat, schema, color}),
         )
     }
-    EntryAddNew() {
+    EntryAddNew({hide = true}) {
         return FRAGMENT(
-            DIV(cl('onhover')),
-            DIV(cl('entry-head addnew'),
+            hide && DIV(cl('onhover')),
+            DIV(cl('entry-head addnew'), hide && cl('hide'),
                 DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ..."),
                 DIV(cl('cell cell-value'))
             )
@@ -1395,10 +1398,13 @@ CATALOG.Table = class extends Component {
         })
 
         let pos = rows.length
-        rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, e(this.EntryAddNew), st({position: 'relative'})))
-
         let empty = !entries.length
-        return DIV(cl(`catalog-d${path.length}`), empty && cl('is-empty'), ...rows)        // depth class: catalog-d0, catalog-d1, ...
+        let depth = path.length
+
+        rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, st({position: 'relative'}),
+                      e(this.EntryAddNew, {hide: depth > 0})))
+
+        return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
 
     render()    { return e(this.Catalog, this.props) }

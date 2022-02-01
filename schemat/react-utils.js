@@ -167,19 +167,24 @@ export function cl(...classes) { return {className: classes.join(' ')} }    // s
 export function st(styles)     { return {style: styles} }                   // shorthand for setting a `style` of a React component
 
 function _sortReactArgs(args) {
-    /* Unpack, sort, and merge the arguments to be passed to React.createElement().
-       All plain objects in `args` (not strings, not React elements) are treated as props and merged.
-       The `style` prop is merged separately to allow merging of individual style entries.
+    /* Unpack, sort, and merge the arguments for React.createElement().
+       All plain objects in `args` (not strings, not arrays, not React elements) are treated as props and merged.
+       The `style` and `className` props are merged separately to allow merging of individual class/style entries.
+       Arrays are concatenated to a list of elements (but no additional preprocessing of elements).
      */
-    let props = {}, styles = {}, elements = [], style
+    let props = {}, styles = {}, classes = '', elements = [], style, className
     for (let arg of args)
         if (arg === undefined || arg === false) {}
         else if (T.isArray(arg)) { elements.push(...arg) }      // arrays get unpacked
         else if (arg && !arg.$$typeof && typeof arg !== 'string') {
-            ({style, ...arg} = arg)                     // pull out the `style` property as it needs special handling
+            ({style, className, ...arg} = arg)                  // pull out the `style` and `className` property as they need special handling
             if (arg)   props  = {...props, ...arg}
             if (style) styles = {...styles, ...style}
+            if (className) classes += ' ' + className
         } else elements.push(arg)
+
+    classes = classes.trim()
+    if (classes) props.className = classes
     if (T.notEmpty(styles)) props.style = styles
     return [props, elements]
 }
