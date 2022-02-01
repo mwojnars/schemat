@@ -308,13 +308,11 @@ Schema.Widget = class extends Widget {
         }
     }
 
-    empty(v)    { return v === undefined && I('none') }         // detect an empty value and display it in a custom way
-    nonempty(v) { return this.encode(v) }                       // convert a non-empty value to a UI element for display()
-    display(v)  { return this.empty(v) || this.nonempty(v) }    // convert a value to a UI element for display in viewer()
+    empty(v)    { return v === undefined && I('none') }         // view of an empty value, for display() and viewer()
+    view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
+    display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
     encode(v)   { return this.props.schema.encodeJson(v) }      // convert a value to its editable representation
     decode(v)   { return this.props.schema.decodeJson(v) }      // ...and back
-    // encode(v)   { return v }                                    // convert a value to its editable representation
-    // decode(v)   { return v }                                    // ...and back
 
     viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
@@ -617,7 +615,8 @@ export class GENERIC extends Schema {
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
         empty  (value)  { return Schema.Widget.prototype.empty.call(this, value) }
-        encode (value)  { return this.props.schema.encodeJson(value, null, 2) }   // JSON string is pretty-printed for edit
+        view   (value)  { return this.props.schema.encodeJson(value) }              // JSON string is pretty-printed for edit
+        encode (value)  { return this.props.schema.encodeJson(value, null, 2) }     // JSON string is pretty-printed for edit
         decode (value)  { return this.props.schema.decodeJson(value) }
     }
 }
@@ -633,24 +632,21 @@ export class SCHEMA extends GENERIC {
     static type = Schema
 
     static Widget = class extends GENERIC.Widget {
-        static style(scope = '.Schema.SCHEMA') {       // TODO: automatically prepend scope of base classes (.Schema)
-            return cssPrepend(scope) `
-            .default { color: #888; }
-            .info { font-style: italic; }
-        `}
-
+        scope = 'Schema-SCHEMA'
+        static style = () => this.safeCSS({stopper: '|'})
+        `
+            .default|   { color: #888; }
+            .info|      { font-style: italic; }
+        `
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
-        nonempty() {
+        view() {
             let {value: schema} = this.props
-            let deflt = `${schema.param('default')}`
-            return SPAN({className: 'Schema SCHEMA'}, `${schema}`,
+            let dflt = `${schema.param('default')}`
+            return SPAN(`${schema}`,
                     schema.default !== undefined &&
-                        SPAN({className: 'default', title: `default value: ${truncate(deflt,1000)}`},
-                            ` (${truncate(deflt,100)})`),
+                        SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
                     schema.info &&
-                        SPAN({className: 'info'}, ` • ${schema.info}`),
-                        // smaller dot: &middot;
-                        // larger dot: •
+                        SPAN(cl('info'), ` • ${schema.info}`),   // smaller dot: &middot;  larger dot: •
                     )
         }
     }
@@ -752,7 +748,7 @@ export class ITEM extends Schema {
     }
 
     static Widget = ItemLoadingHOC(class extends Schema.Widget {
-        nonempty() {
+        view() {
             let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
                 return SPAN({suppressHydrationWarning: true}, "loading...")
@@ -918,17 +914,17 @@ export class CATALOG extends Schema {
     - no duplicate key names (across all non-missing names)
     - no duplicates for a particular key name -- encoded in the key's subschema, subschema.unique=true
     other constraints:
-    - obligatory keys (empty key='' allowed)
+    - mandatory keys (empty key='' allowed)
     - empty key not allowed (by default key_empty_allowed=false)
     - keys not allowed (what about labels then?)
      */
 
     isCatalog = true
 
-    // static keys_obligatory = false
+    // static keys_mandatory = false
     // static keys_forbidden  = false
     // static keys_unique     = false
-    // static keys_empty_allowed = false
+    // static keys_empty_ok   = false
 
     static keys_default   = new STRING({blank: true})
     static values_default = new GENERIC({multi: true})
@@ -1091,12 +1087,11 @@ CATALOG.Table = class extends Component {
         .spacer           { flex-grow: 1; }
 
         .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
-        .addnew           { padding-left: 20px; opacity: 0.7; }
+        .addnew           { padding-left: 20px; opacity: 0.4; }
         .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear; overflow-y: hidden; }
-        .addnew:hover     { opacity: 1; }
         .addnew:hover, .onhover:hover + .addnew   
-                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear; }
-        .addnew .cell-key { cursor: pointer; }
+                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear; opacity: 1; }
+        .addnew .cell-key { cursor: pointer; border-right: none; }
 
         .cell             { padding: 14px 20px 11px; position: relative; }
         .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
@@ -1300,11 +1295,11 @@ CATALOG.Table = class extends Component {
                 e(this.Catalog, {item, path, value: subcat, schema, color})),
         )
     }
-    EntryAddNew({hide = true, ins}) {
+    EntryAddNew({hide = true, insert}) {
         return FRAGMENT(
             hide && DIV(cl('onhover')),
             DIV(cl('entry-head addnew'), hide && cl('hide'),
-                DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ...", {onClick: ins}),
+                DIV(cl('cell cell-key'), "✚ ", NBSP, " Add new entry ...", {onClick: insert}),
                 DIV(cl('cell cell-value'))
             )
         )
@@ -1336,10 +1331,10 @@ CATALOG.Table = class extends Component {
         // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
-        function special(id, props = {}) {
-            // an artificial entry that marks a place along the list of entries where a UI operation was/will be performed
-            return {id, ...props, special: true}
-        }
+        // function special(id, props = {}) {
+        //     // an artificial entry that marks a place along the list of entries where a UI operation was/will be performed
+        //     return {id, ...props, special: true}
+        // }
 
         let move = (pos, delta) => setEntries(prev => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
@@ -1356,7 +1351,7 @@ CATALOG.Table = class extends Component {
             /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
             // `rel` is -1 (add before), or +1 (add after)
             if (rel === +1) pos++
-            return [...prev.slice(0,pos), special('new'), ...prev.slice(pos)]
+            return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
         })
         let initkey = (pos, key) => {
             /* confirm creation of a new entry with a given key (or value?); assign an ID to it; */
@@ -1378,21 +1373,15 @@ CATALOG.Table = class extends Component {
         // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
 
-        // if (!entries.length) entries = token('new')            // "new entry" row auto-added inside an empty catalog
-        // let addnew = special('add', {key: '✚ Add new entry ...'})
-
         let rows = entries.map((entry, pos) =>
         {
             let {key}   = entry
-            let special = entry.special  //(entry.id === 'new')
-            let vschema = special ? undefined : schema.subschema(key)
+            let isnew   = (entry.id === 'new')  //entry.special
+            let vschema = isnew ? undefined : schema.subschema(key)
             let color   = getColor(pos)
-            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames,
-                key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
-            }
-            if (entry.id === 'new') {
-                ops.initkey = key => initkey(pos,key)
-            }
+            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames }
+                // key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
+            if (isnew) { ops.initkey = key => initkey(pos,key) }
             let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
@@ -1402,8 +1391,9 @@ CATALOG.Table = class extends Component {
         let depth = path.length
         let empty = !entries.length
 
+        // if (!entries.map(e => e.id).includes('new'))
         rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, st({position: 'relative'}),
-                      e(this.EntryAddNew, {hide: depth > 0, ins: () => ins(pos)})))
+                  e(this.EntryAddNew, {hide: depth > 0, insert: () => ins(pos)})))
 
         return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
