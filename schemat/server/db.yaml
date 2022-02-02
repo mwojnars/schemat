@@ -23,10 +23,10 @@
           - key: startup_site
             value:
               "@": schemat.type.GENERIC
-          - key: prototype
+          - key: base_category
             value:
-              info: Base category from which this one inherits. Multiple prototypes are
-                allowed, the first ones have priority over subsequent ones.
+              info: Base category from which this one inherits properties. Multiple bases are
+                allowed, the first one has priority over subsequent ones.
               "@": schemat.type.ITEM
           - key: class_name
             value:
@@ -90,7 +90,7 @@
     - 2
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
-  prototype:
+  base_category:
     - 0
     - 1
   class_name: schemat.item.FileLocal
@@ -119,9 +119,10 @@
     - 0
     - 4
   name: FolderLocal
-  info: File folder located on a local disk, identified by its local file path.
+  info: |-
+    File folder located on a local disk, identified by its local file path. 
     Gives access to all files and folders beneath the path.
-  prototype:
+  base_category:
     - 0
     - 3
   class_name: schemat.item.FolderLocal
@@ -144,7 +145,7 @@
   name: AppRoot
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: schemat.item.AppRoot
-  prototype:
+  base_category:
     - 0
     - 5
   fields:

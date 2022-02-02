@@ -23,7 +23,7 @@ let root_fields = C({
     name         : new STRING({info: "human-readable title of the category"}),
     info         : new TEXT(),
     startup_site : new GENERIC(),
-    prototype    : new ITEM(null, {info: "Base category from which this one inherits. Multiple prototypes are allowed, the first ones have priority over subsequent ones."}),
+    base_category: new ITEM(null, {info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
@@ -103,7 +103,7 @@ async function create_categories(Category) {
     cat.FileLocal = Category.new({
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
-        prototype   : cat.File,
+        base_category: cat.File,
         class_name  : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
@@ -121,8 +121,8 @@ async function create_categories(Category) {
     })
     cat.FolderLocal = Category.new({
         name        : "FolderLocal",
-        info        : "File folder located on a local disk, identified by its local file path. Gives access to all files and folders beneath the path.",
-        prototype   : cat.Folder,
+        info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
+        base_category: cat.Folder,
         class_name  : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
@@ -140,7 +140,7 @@ async function create_categories(Category) {
         name        : "AppRoot",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
         class_name  : 'schemat.item.AppRoot',
-        prototype   : cat.Application,
+        base_category: cat.Application,
         fields      : C({name: new STRING(), apps: new CATALOG(new ITEM())}),  // TODO: restrict apps to sub-categories of Application_ (?)
     })
     cat.AppAdmin = Category.new({

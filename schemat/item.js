@@ -518,8 +518,8 @@ export class Category extends Item {
     */
 
     async afterLoad(data) {
-        /* Load all prototypes of this category, so that getDefault() and mergeInherited() can work synchronously later on. */
-        let proto = data.getAll('prototype')
+        /* Load all base categories of this one, so that getDefault() and mergeInherited() can work synchronously later on. */
+        let proto = data.getAll('base_category')
         if (proto.length) return Promise.all(proto.map(p => p.load()))
     }
 
@@ -537,12 +537,12 @@ export class Category extends Item {
     issubcat(category) {
         /*
         Return true if `this` inherits from `category`, or is `category` (by ID comparison).
-        Inheritance means that the ID of `category` is present on an item-prototype chain of `this`.
+        Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let prototypes = this.getAll('prototype')
-        for (const proto of prototypes)
-            if (proto.issubcat(category)) return true
+        let bases = this.getAll('base_category')
+        for (const base of bases)
+            if (base.issubcat(category)) return true
         return false
     }
     getFields()       { return this.temp('fields_all') }            // calls _temp_fields_all()
@@ -582,10 +582,10 @@ export class Category extends Item {
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let catalog    = new Catalog()
-        let prototypes = this.getAll('prototype')
-        for (const proto of [this, ...prototypes]) {
-            let cat = proto.get(field)
+        let catalog = new Catalog()
+        let bases   = this.getAll('base_category')
+        for (const base of [this, ...bases]) {
+            let cat = base.get(field)
             if (!cat) continue
             for (const entry of cat)
                 if (entry.key !== undefined && !catalog.has(entry.key))
