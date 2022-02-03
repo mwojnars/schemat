@@ -59,7 +59,7 @@ class AjaxDB extends Database {
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${cid},${iid}]...`)
-        return $.get(`${this.ajax_url}/${cid}:${iid}`)
+        return $.get(`${this.ajax_url}/${cid}:${iid}@json`)
     }
     async *scanCategory(cid) {
         print(`ajax category scan [0,${cid}]...`)

@@ -24,7 +24,8 @@ export class Site extends Item {
 
     ajaxURL() {
         /* Absolute base URL for AJAX calls originating at a client UI. */
-        return this.get('base_url') + '/ajax'
+        return this.get('base_url') + '/$'
+        // return this.get('base_url') + '/ajax'
     }
 
     buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
@@ -154,8 +155,8 @@ export class AppRoot extends Application {
     }
 }
 
-export class AppAdmin extends Application {
-    /* Admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
+export class AppSystem extends Application {
+    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
     async execute(path, session) {
         let item = await this._find_item(path)
@@ -175,13 +176,13 @@ export class AppAdmin extends Application {
     }
 }
 
-export class AppAjax extends AppAdmin {
-    async execute(path, session) {
-        session.endpointDefault = "json"
-        let item = await this._find_item(path)
-        return item.handle(session, this)
-    }
-}
+// export class AppAjax extends AppSystem {
+//     async execute(path, session) {
+//         session.endpointDefault = "json"
+//         let item = await this._find_item(path)
+//         return item.handle(session, this)
+//     }
+// }
 
 export class AppFiles extends Application {
     /*

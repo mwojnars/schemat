@@ -143,10 +143,10 @@ async function create_categories(Category) {
         base_category: cat.Application,
         fields      : C({name: new STRING(), apps: new CATALOG(new ITEM())}),  // TODO: restrict apps to sub-categories of Application_ (?)
     })
-    cat.AppAdmin = Category.new({
-        name        : "AppAdmin",
+    cat.AppSystem = Category.new({
+        name        : "AppSystem",
         info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
-        class_name  : 'schemat.item.AppAdmin',
+        class_name  : 'schemat.item.AppSystem',
         fields      : C({name: new STRING()}),
     })
     cat.AppAjax = Category.new({
@@ -227,10 +227,10 @@ async function create_items(cat, Category) {
     //     }),
     // })
     
-    item.app_admin = cat.AppAdmin.new({name: "Admin"})
-    item.app_ajax  = cat.AppAjax .new({name: "AJAX"})
-    item.app_files = cat.AppFiles.new({name: "Files"})
-    
+    item.app_system = cat.AppSystem.new({name: "System"})
+    item.app_files  = cat.AppFiles.new({name: "Files"})
+    // item.app_ajax  = cat.AppAjax .new({name: "AJAX"})
+
     item.app_catalog = cat.AppSpaces.new({
         name        : "Catalog",
         spaces      : C({
@@ -244,9 +244,9 @@ async function create_items(cat, Category) {
     item.app_root = cat.AppRoot.new({
         name        : "Applications",
         apps        : C({
-            'admin':    item.app_admin,
-            'ajax':     item.app_ajax,           // this app must be present under the "ajax" route for proper handling of client-server communication
+            '$':        item.app_system,
             'files':    item.app_files,
+            // 'ajax':     item.app_ajax,           // this app must be present under the "ajax" route for proper handling of client-server communication
             '':         item.app_catalog,        // default route
         }),
     })

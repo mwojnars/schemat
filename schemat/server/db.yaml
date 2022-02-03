@@ -120,7 +120,7 @@
     - 4
   name: FolderLocal
   info: |-
-    File folder located on a local disk, identified by its local file path. 
+    File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   base_category:
     - 0
@@ -159,10 +159,10 @@
 - __id:
     - 0
     - 7
-  name: AppAdmin
+  name: AppSystem
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
-  class_name: schemat.item.AppAdmin
+  class_name: schemat.item.AppSystem
   fields:
     name:
       "@": schemat.type.STRING
@@ -283,11 +283,7 @@
 - __id:
     - 7
     - 1
-  name: Admin
-- __id:
-    - 8
-    - 1
-  name: AJAX
+  name: System
 - __id:
     - 9
     - 1
@@ -307,11 +303,8 @@
     - 1
   name: Applications
   apps:
-    admin:
+    $:
       - 7
-      - 1
-    ajax:
-      - 8
       - 1
     files:
       - 9
