@@ -23,7 +23,7 @@ export class Site extends Item {
     }
 
     systemURL() {
-        /* Absolute base URL for system web calls originating at a client UI. */
+        /* Absolute base URL for system calls originating at a web client and targeting specific items. */
         return this.get('base_url') + this.get('system_path')
     }
 

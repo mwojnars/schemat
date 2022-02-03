@@ -144,6 +144,7 @@ export class Registry {
         // await classpath.add_module("schemat.item", this._specializedItemJS)
         await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
+        await classpath.add_module("schemat.item", "./server/db.js")
 
         // // amend base class of all Item subclasses from site.js: replace __proto__=Item with ServerItem or ClientItem ...
         // let mod_item = await import(this._specializedItemJS)

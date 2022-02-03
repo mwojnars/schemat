@@ -62,12 +62,29 @@
         "@": schemat.data.Catalog
     - key: startup_site
       value:
-        - 10
+        - 12
         - 1
   "@": schemat.data.Data
 - __id:
     - 0
     - 1
+  name: Database
+  info: Base category for items that represent an abstract database layer.
+- __id:
+    - 0
+    - 2
+  name: YAML Database
+  info: Single-machine database stored in a YAML file.
+  class_name: schemat.item.DatabaseYaml
+  base_category:
+    - 0
+    - 1
+  fields:
+    filename:
+      "@": schemat.type.STRING
+- __id:
+    - 0
+    - 3
   name: File
   info: File with a text content. Accessible through the web filesystem.
   class_name: schemat.item.File
@@ -87,19 +104,19 @@
       }
 - __id:
     - 0
-    - 2
+    - 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   base_category:
     - 0
-    - 1
+    - 3
   class_name: schemat.item.FileLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 3
+    - 5
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
@@ -117,21 +134,21 @@
       "@": schemat.type.BOOLEAN
 - __id:
     - 0
-    - 4
+    - 6
   name: FolderLocal
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   base_category:
     - 0
-    - 3
+    - 5
   class_name: schemat.item.FolderLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 5
+    - 7
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
@@ -141,13 +158,13 @@
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 6
+    - 8
   name: AppRoot
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: schemat.item.AppRoot
   base_category:
     - 0
-    - 5
+    - 7
   fields:
     name:
       "@": schemat.type.STRING
@@ -158,7 +175,7 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 7
+    - 9
   name: AppSystem
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
@@ -168,7 +185,7 @@
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 8
+    - 10
   name: AppFiles
   class_name: schemat.item.AppFiles
   fields:
@@ -178,12 +195,12 @@
       category_base:
         =:
           - 0
-          - 3
+          - 5
         "@": (item)
       "@": schemat.type.ITEM
 - __id:
     - 0
-    - 9
+    - 11
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -204,7 +221,7 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 10
+    - 12
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -228,12 +245,20 @@
       category_base:
         =:
           - 0
-          - 3
+          - 5
+        "@": (item)
+      "@": schemat.type.ITEM
+    database:
+      info: Global database layer
+      category_base:
+        =:
+          - 0
+          - 1
         "@": (item)
       "@": schemat.type.ITEM
 - __id:
     - 0
-    - 11
+    - 13
   name: Varia
   info: Category of items that do not belong to any specific category
   class_name: schemat.item.Item
@@ -244,89 +269,96 @@
       "@": schemat.type.STRING
   handlers: {}
 - __id:
-    - 3
+    - 5
     - 1
   files:
     Site:
       - 0
-      - 10
+      - 12
     File:
       - 0
-      - 1
+      - 3
     Folder:
       - 0
-      - 3
+      - 5
 - __id:
-    - 1
+    - 3
     - 1
   content: This is a test file.
 - __id:
-    - 3
+    - 5
     - 2
   files:
     test.txt:
-      - 1
+      - 3
       - 1
 - __id:
-    - 3
+    - 5
     - 3
   files:
     tmp1:
-      - 3
+      - 5
       - 2
 - __id:
-    - 4
+    - 2
+    - 1
+  filename: /home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml
+- __id:
+    - 6
     - 1
   path: /home/marcin/Documents/priv/catalog/src/schemat
 - __id:
-    - 7
+    - 9
     - 1
   name: System
 - __id:
-    - 8
+    - 10
     - 1
   name: Files
 - __id:
-    - 9
+    - 11
     - 1
   name: Catalog
   spaces:
     sys.category: 0
-    sys.item: 11
-    sys.site: 10
-    sys.dir: 3
-    sys.file: 2
+    sys.item: 13
+    sys.site: 12
+    sys.dir: 5
+    sys.file: 4
 - __id:
-    - 6
+    - 8
     - 1
   name: Applications
   apps:
     $:
-      - 7
-      - 1
-    files:
-      - 8
-      - 1
-    "":
       - 9
       - 1
+    files:
+      - 10
+      - 1
+    "":
+      - 11
+      - 1
 - __id:
-    - 10
+    - 12
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
   system_path: /$
   application:
-    - 6
+    - 8
     - 1
   filesystem:
-    - 4
+    - 6
+    - 1
+  database:
+    - 2
     - 1
 - __id:
-    - 11
+    - 13
     - 1
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - __id:
-    - 11
+    - 13
     - 2
   title: ąłęÓŁŻŹŚ

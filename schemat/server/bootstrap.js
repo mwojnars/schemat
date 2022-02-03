@@ -83,6 +83,20 @@ async function create_categories(Category) {
         get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
     }
 
+    cat.Database = Category.new({
+        name        : "Database",
+        info        : "Base category for items that represent an abstract database layer.",
+    })
+    cat.DatabaseYaml = Category.new({
+        name        : "YAML Database",
+        info        : "Single-machine database stored in a YAML file.",
+        class_name  : 'schemat.item.DatabaseYaml',
+        base_category: cat.Database,
+        fields      : C({
+            filename: new STRING(),
+        }),
+    })
+
     cat.File = Category.new({
         name        : "File",
         info        : "File with a text content. Accessible through the web filesystem.",
@@ -171,6 +185,7 @@ async function create_categories(Category) {
             system_path : new STRING({info: "URL path (after base_url) of the system application, AppSystem, that's used for internal web access to items"}),
             application : new ITEM({info: "Application hosted on this site, typically an AppRoot with multiple subapplications"}),
             filesystem  : new ITEM({type: cat.Folder, info: "Root of the global file system"}),
+            database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
     cat.Varia = Category.new({
@@ -204,6 +219,7 @@ async function create_items(cat, Category) {
     item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
     item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     
+    item.database = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.filesystem = cat.FolderLocal.new({path: `${path}`})
     // item.filesystem = cat.Folder.new({
     //     files: C({
@@ -252,6 +268,7 @@ async function create_items(cat, Category) {
         system_path : "/$",
         application : item.app_root,
         filesystem  : item.filesystem,
+        database    : item.database,
     })
     
     item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
