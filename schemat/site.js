@@ -176,14 +176,6 @@ export class AppSystem extends Application {
     }
 }
 
-// export class AppAjax extends AppSystem {
-//     async execute(path, session) {
-//         session.endpointDefault = "json"
-//         let item = await this._find_item(path)
-//         return item.handle(session, this)
-//     }
-// }
-
 export class AppFiles extends Application {
     /*
     Filesystem application. Folders and files are accessible through the hierarchical

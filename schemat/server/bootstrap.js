@@ -149,12 +149,6 @@ async function create_categories(Category) {
         class_name  : 'schemat.item.AppSystem',
         fields      : C({name: new STRING()}),
     })
-    cat.AppAjax = Category.new({
-        name        : "AppAjax",
-        info        : "Internal application to serve AJAX requests, mainly for pulling additional items by client UI.",
-        class_name  : 'schemat.item.AppAjax',
-        fields      : C({name: new STRING()}),
-    })
     cat.AppFiles = Category.new({
         name        : "AppFiles",
         class_name  : 'schemat.item.AppFiles',
