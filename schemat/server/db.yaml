@@ -213,15 +213,23 @@
     name:
       "@": schemat.type.STRING
     base_url:
+      info: Base URL at which the website is served, no trailing '/'
       "@": schemat.type.STRING
+    system_path:
+      info: URL path (after base_url) of the system application, AppSystem, that's
+        used for internal web access to items
+      "@": schemat.type.STRING
+    application:
+      info: Application hosted on this site, typically an AppRoot with multiple
+        subapplications
+      "@": schemat.type.ITEM
     filesystem:
+      info: Root of the global file system
       category_base:
         =:
           - 0
           - 3
         "@": (item)
-      "@": schemat.type.ITEM
-    application:
       "@": schemat.type.ITEM
 - __id:
     - 0
@@ -307,11 +315,12 @@
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
-  filesystem:
-    - 4
-    - 1
+  system_path: /$
   application:
     - 6
+    - 1
+  filesystem:
+    - 4
     - 1
 - __id:
     - 11

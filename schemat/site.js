@@ -22,10 +22,9 @@ export class Site extends Item {
         return app.execute(session.ipath, session)
     }
 
-    ajaxURL() {
-        /* Absolute base URL for AJAX calls originating at a client UI. */
-        return this.get('base_url') + '/$'
-        // return this.get('base_url') + '/ajax'
+    systemURL() {
+        /* Absolute base URL for system web calls originating at a client UI. */
+        return this.get('base_url') + this.get('system_path')
     }
 
     buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {

@@ -23,7 +23,7 @@ let root_fields = C({
     name         : new STRING({info: "human-readable title of the category"}),
     info         : new TEXT(),
     startup_site : new GENERIC(),
-    base_category: new ITEM(null, {info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
+    base_category: new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
     class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
@@ -152,13 +152,13 @@ async function create_categories(Category) {
     cat.AppFiles = Category.new({
         name        : "AppFiles",
         class_name  : 'schemat.item.AppFiles',
-        fields      : C({name: new STRING(), root_folder: new ITEM(cat.Folder)}),    // if root_folder is missing, Site's main folder is used
+        fields      : C({name: new STRING(), root_folder: new ITEM({type: cat.Folder})}),    // if root_folder is missing, Site's main folder is used
     })
     cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_name  : 'schemat.item.AppSpaces',
-        fields      : C({name: new STRING(), spaces: new CATALOG(new ITEM(null, {exact: Category}))}),
+        fields      : C({name: new STRING(), spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     })
     
     cat.Site = Category.new({
@@ -167,9 +167,10 @@ async function create_categories(Category) {
         class_name  : 'schemat.item.Site',
         fields      : C({
             name        : new STRING(),
-            base_url    : new STRING(),             // the base URL at which the `application` is served, /-terminated
-            filesystem  : new ITEM(cat.Folder),     // root of the site-global file system
-            application : new ITEM(),               // Application hosted on this site, typically an AppRoot with multiple subapplications
+            base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
+            system_path : new STRING({info: "URL path (after base_url) of the system application, AppSystem, that's used for internal web access to items"}),
+            application : new ITEM({info: "Application hosted on this site, typically an AppRoot with multiple subapplications"}),
+            filesystem  : new ITEM({type: cat.Folder, info: "Root of the global file system"}),
         }),
     })
     cat.Varia = Category.new({
@@ -248,8 +249,9 @@ async function create_items(cat, Category) {
     item.catalog_wiki = cat.Site.new({
         name        : "catalog.wiki",
         base_url    : "http://127.0.0.1:3000",
-        filesystem  : item.filesystem,
+        system_path : "/$",
         application : item.app_root,
+        filesystem  : item.filesystem,
     })
     
     item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})

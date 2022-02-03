@@ -706,12 +706,12 @@ export class ITEM extends Schema {
     category_exact      // (optional) an exact category of the items being encoded; stored as an object
                         // because during bootstrap there's no IID yet (!) when this ITEM is being created
 
-    constructor(base, params = {}) {
+    constructor(params = {}) {
         /* `params.exact` may contain a category object for exact category checks. */
-        let {exact, ...base_params} = params
+        let {type, type_exact, ...base_params} = params
         super(base_params)
-        if (exact) this.category_exact = exact
-        if (base)  this.category_base  = base
+        if (type) this.category_base = type
+        if (type_exact) this.category_exact = type_exact
     }
     encode(item) {
         if (!item.has_id())

@@ -328,10 +328,10 @@ export class Session {
         items = items.map(i => i.encodeSelf())
 
         let {app, item, state} = this
-        let session  = {app, item, state}                       // truncated representation of the current session
-        let ajax_url = this.registry.site.ajaxURL()
+        let session = {app, item, state}                       // truncated representation of the current session
+        let system_url = this.registry.site.systemURL()
 
-        return {'ajax_url': ajax_url, 'session': JSONx.encode(session), 'items': items}
+        return {system_url, 'session': JSONx.encode(session), items}
     }
 
     static load(registry, sessionData) {

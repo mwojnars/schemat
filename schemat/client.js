@@ -31,15 +31,15 @@ class AjaxDB extends Database {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    ajax_url = null                 // base URL for AJAX calls, no trailing slash '/'
-    records  = new ItemsMap()       // cached records received on initial or subsequent web requests;
+    url     = null                  // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
+    records = new ItemsMap()        // cached records received on initial or subsequent web requests;
                                     // each record is {cid,iid,data}, `data` is JSON-encoded for safety
 
-    constructor(ajax_url, records = []) {
+    constructor(url, records = []) {
         super()
-        this.ajax_url = ajax_url
+        this.url = url
         this.keep(...records)
-        assert(!ajax_url.endsWith('/'))
+        assert(!url.endsWith('/'))
     }
 
     keep(...records) {
@@ -59,11 +59,11 @@ class AjaxDB extends Database {
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${cid},${iid}]...`)
-        return $.get(`${this.ajax_url}/${cid}:${iid}@json`)
+        return $.get(`${this.url}/${cid}:${iid}@json`)
     }
     async *scanCategory(cid) {
         print(`ajax category scan [0,${cid}]...`)
-        let items = await $.get(`${this.ajax_url}/0:${cid}@scan`)
+        let items = await $.get(`${this.url}/0:${cid}@scan`)
         for (const item of items) yield item
     }
 }
@@ -75,7 +75,7 @@ class ClientRegistry extends Registry {
 
     constructor(data) {
         super()
-        this.db = new AjaxDB(data.ajax_url, data.items)
+        this.db = new AjaxDB(data.system_url, data.items)
         // this.cache = new ClientCache()
     }
     async boot(data) {
