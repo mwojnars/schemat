@@ -83,6 +83,9 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp when this item instance should be considered expired in Ragistry.cache; managed by registry
 
+    editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
+                    // hence it should NOT be used for reading
+
     temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
@@ -136,8 +139,8 @@ export class Item {
 
         return this.data
     }
-    afterLoad(data) {
-        /* Any extra initialization after the item's data is loaded but NOT yet stored in this.data.
+    async afterLoad(data) {
+        /* Any extra initialization after the item's `data` is loaded but NOT yet stored in this.data.
            This initialization could NOT be implemented by overriding load() or reload(),
            because the class may NOT yet be determined and attached to `this` when load() is called (!)
            Subclasses may override this method, either as sync or async method.
@@ -165,12 +168,6 @@ export class Item {
 
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
-    }
-
-    async edit(path, props = {}) {
-        await this.load()
-        this.data.edit(path, props)                 // TODO: use EditableItem instead
-        return this.registry.update(this)
     }
 
     get(path, default_ = undefined) {
@@ -277,14 +274,6 @@ export class Item {
         return value                            // this may return a promise
     }
 
-    async getEditable() {
-        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
-        return this.registry.getEditable(this.id)
-        // let item = T.clone(this)
-        // if (this.data) item.data = new Data(await this.data)
-        // return item
-    }
-
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         this.assertLoaded()
@@ -318,6 +307,46 @@ export class Item {
         }
     }
 
+    /***  Editing item's data  ***/
+
+    async getEditable() {
+        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
+        return this.registry.getEditable(this.id)
+        // let item = T.clone(this)
+        // if (this.data) item.data = new Data(await this.data)
+        // return item
+    }
+
+    edit(...edits) {
+        this.editable = true    // TODO...
+        if (!this.editable) throw new Error("this item is not editable")
+        for (let [edit, args] of edits)
+            this[`_edit_${edit}`].call(this, ...args)
+    }
+
+    async _edit_update(path, entry = {}) {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        this.data.edit(path, entry)
+        return this.registry.update(this)
+    }
+
+    async _handle_edit({req, res}) {
+        /* Web endpoint for all types of edits of this.data. */
+        assert(req.method === 'POST')
+        await this.load()
+        let edits = req.body
+        assert(edits instanceof Array)
+        this.edit(...edits)
+        let out = await this.registry.update(this)
+        return res.json(out || {})
+    }
+
+    // async remote_edit(edits) { return this.remote('edit', edits) }
+    async remote_edit_update(path, entry)   {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+        return this.remote('edit', [['update', [path, entry]]])
+    }
+
     /***  Client-server communication protocols (operation chains)  ***/
 
     // delete = Protocol({
@@ -334,12 +363,18 @@ export class Item {
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
 
-           function handler({item, session, req, res, endpoint})
+           function handler(context)
+
+        where context = {item, session, req, res, endpoint}
 
         or as methods of a particular Item subclass, named `_handle_{endpoint}`.
         In every case, the function's `this` is bound to `item` (this===item).
+        Query parameters are passed in `req.query`, as:
+        - a string if there's one occurrence of PARAM in a query string,
+        - an array [val1, val2, ...] if PARAM occurs multiple times.
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
+        (?? The function may allow to be called directly as a regular method with no context.)
         */
         session.item = this
         if (app) session.app = app
@@ -367,21 +402,23 @@ export class Item {
             res.send(page)
     }
 
-    async _handle_edit({req, res}) {
-        /* Web endpoint for editing an existing (sub)entry inside this.data. */
-        assert(req.method === 'POST')
-        let {path, value} = req.body
-        let schema = this.getSchema(path)
-        assert(schema)
-        value = schema.decode(value)
-        // print(`_handle_set: path ${path}, value ${value}`)
-        await this.edit(path, {value})
-        return res.json({})
-    }
+    // async _handle_edit({req, res}) {
+    //     /* Web endpoint for editing an existing (sub)entry inside this.data. */
+    //     assert(req.method === 'POST')
+    //     let {path, value} = req.body
+    //     let schema = this.getSchema(path)
+    //     assert(schema)
+    //     value = schema.decode(value)
+    //     // print(`_handle_set: path ${path}, value ${value}`)
+    //     await this._edit_update(path, {value})
+    //     return res.json({})
+    // }
+
     async _handle_delete({res}) {
         await this.registry.delete(this)
         return res.json({})
     }
+
     _handle_json({res}) { res.sendItem(this) }
 
     _handle_view({session, req, res, endpoint}) {
@@ -407,8 +444,7 @@ export class Item {
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
-    async remote_delete()   { return this.remote('delete') }
-    async remote_edit(args) { return this.remote('edit', args) }
+    async remote_delete()       { return this.remote('delete') }
 
     HTML({title, head, body} = {}) {
         return dedent(`

@@ -182,7 +182,7 @@ async function create_categories(Category) {
         fields      : C({
             name        : new STRING(),
             base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
-            system_path : new STRING({info: "URL path (after base_url) of the system application, AppSystem, that's used for internal web access to items"}),
+            system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
             application : new ITEM({info: "Application hosted on this site, typically an AppRoot with multiple subapplications"}),
             filesystem  : new ITEM({type: cat.Folder, info: "Root of the global file system"}),
             database    : new ITEM({type: cat.Database, info: "Global database layer"}),

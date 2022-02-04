@@ -15,37 +15,37 @@ import { Item, RootCategory, ROOT_CID } from './item.js'
  **
  */
 
-export class Database {
-    /*
-    DB operations on an `item`.
-
-    Instant execution:
-    - DELETE -- delete a DB record with a given ID=item.id
-    - UPDATE <data> -- overwrite the entire item.data in DB with `data`
-
-    Delayed exection (on commit):
-    - INSERT -- create a new item record in DB, store item.data in it, assign and return a new IID
-    - EDIT <action> <args>
-             -- inside a write lock, load the item's current data, create an Item instance, call item._edit_<action>(args),
-                save the resulting item.data; multiple EDIT/CHECK operations are executed together in a single transaction
-    - CHECK <action> <args>
-             -- like EDIT, but calls _check_<action>(args), which should NOT modify the data, but only return true/false;
-                if false is returned, or an exception raised, the transaction is stopped, changes not saved
-
-    Transactions work at a record level. NO transactions spanning multiple items.
-    */
-
-    async insert(...items) {
-        /* Insert items to a DB, possibly using a bulk insert. */
-        throw new Error("not implemented")
-    }
-    async update(item) { throw new Error("not implemented") }
-    async delete(id)   { throw new Error("not implemented") }
-    async write(id, edits) {
-        /* Load an item of a given `id`, execute a number of `edits` on it, and write the result back to DB. */
-        throw new Error("not implemented")
-    }
-}
+// export class Database {
+//     /*
+//     DB operations on an `item`.
+//
+//     Instant execution:
+//     - DELETE -- delete a DB record with a given ID=item.id
+//     - UPDATE <data> -- overwrite the entire item.data in DB with `data`
+//
+//     Delayed exection (on commit):
+//     - INSERT -- create a new item record in DB, store item.data in it, assign and return a new IID
+//     - EDIT <action> <args>
+//              -- inside a write lock, load the item's current data, create an Item instance, call item._edit_<action>(args),
+//                 save the resulting item.data; multiple EDIT/CHECK operations are executed together in a single transaction
+//     - CHECK <action> <args>
+//              -- like EDIT, but calls _check_<action>(args), which should NOT modify the data, but only return true/false;
+//                 if false is returned, or an exception raised, the transaction is stopped, changes not saved
+//
+//     Transactions work at a record level. NO transactions spanning multiple items.
+//     */
+//
+//     async insert(...items) {
+//         /* Insert items to a DB, possibly using a bulk insert. */
+//         throw new Error("not implemented")
+//     }
+//     async update(item) { throw new Error("not implemented") }
+//     async delete(id)   { throw new Error("not implemented") }
+//     async write(id, edits) {
+//         /* Load an item of a given `id`, execute a number of `edits` on it, and write the result back to DB. */
+//         throw new Error("not implemented")
+//     }
+// }
 
 /**********************************************************************************************************************
  **
@@ -123,7 +123,7 @@ export class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
-    db                      // Database instance for accessing items and other data from database servers
+    db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment

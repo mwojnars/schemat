@@ -1,7 +1,7 @@
 import { print, assert } from './utils.js'
 import { ItemsMap } from './data.js'
 import { JSONx } from './serialize.js'
-import { Database, Registry, Session } from './registry.js'
+import { Registry, Session } from './registry.js'
 
 
 /**********************************************************************************************************************/
@@ -26,7 +26,7 @@ function read_data(node, type = "json") {
 
 /**********************************************************************************************************************/
 
-class AjaxDB extends Database {
+class AjaxDB {
     /* Remote abstract DB layer that's accessed by this web client over AJAX calls.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
@@ -36,7 +36,6 @@ class AjaxDB extends Database {
                                     // each record is {cid,iid,data}, `data` is JSON-encoded for safety
 
     constructor(url, records = []) {
-        super()
         this.url = url
         this.keep(...records)
         assert(!url.endsWith('/'))

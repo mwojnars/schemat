@@ -5,7 +5,7 @@ import { Mutex } from 'async-mutex'
 import { assert, print, T } from '../utils.js'
 import { ItemsMap } from '../data.js'
 import { Item, RootCategory } from '../item.js'
-import { Database, Registry } from '../registry.js'
+import { Registry } from '../registry.js'
 
 import { YamlDB } from './db.js'
 
@@ -175,6 +175,7 @@ export class ServerRegistry extends Registry {
     async boot() {
         await this.db.load()
         await super.boot()
+        // this.db = this.site.get('database')      // replace the startup database with a full-featured Database item from DB
     }
     async createRoot(root_data = null) {
         /*
