@@ -320,11 +320,13 @@ export class Item {
     edit(...edits) {
         this.editable = true    // TODO...
         if (!this.editable) throw new Error("this item is not editable")
-        for (let [edit, args] of edits)
+        for (let [edit, args] of edits) {
+            print([edit, args])
             this[`_edit_${edit}`].call(this, ...args)
+        }
     }
 
-    async _edit_update(path, entry = {}) {
+    async _edit_update(path, entry) {
         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
         this.data.edit(path, entry)
         return this.registry.update(this)
@@ -401,18 +403,6 @@ export class Item {
         if (typeof page === 'string')
             res.send(page)
     }
-
-    // async _handle_edit({req, res}) {
-    //     /* Web endpoint for editing an existing (sub)entry inside this.data. */
-    //     assert(req.method === 'POST')
-    //     let {path, value} = req.body
-    //     let schema = this.getSchema(path)
-    //     assert(schema)
-    //     value = schema.decode(value)
-    //     // print(`_handle_set: path ${path}, value ${value}`)
-    //     await this._edit_update(path, {value})
-    //     return res.json({})
-    // }
 
     async _handle_delete({res}) {
         await this.registry.delete(this)

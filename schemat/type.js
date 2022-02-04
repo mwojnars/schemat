@@ -1264,7 +1264,7 @@ CATALOG.Table = class extends Component {
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
             // await item.remote_edit({path, value: schema.encode(newValue)})
-            await item.remote_edit_update(path, {value: schema.encode(newValue)})
+            await item.remote_edit_update(path, {value: newValue})
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
