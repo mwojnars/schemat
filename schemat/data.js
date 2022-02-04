@@ -108,7 +108,7 @@ export class Catalog {
        - flags:  "key/key2:label::first" or "key::last" (first/last flag at the end of a path, after ::)
     */
 
-    _entries = []               // list of plain objects with {key, value, label, comment} attributes
+    _entries = []               // plain objects with {key, value, label, comment} attributes
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted
     size     = 0                // the true number of entries in this._entries, `undefined` ignored
 
@@ -138,6 +138,9 @@ export class Catalog {
             for (const [key, value] of Object.entries(data))
                 this.pushEntry({key, value})
     }
+
+    __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
+    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
 
     _findPosition(key, {unique = false} = {}) {
         /* Find a (unique) position of a `key`, the key being a string or a number. Return undefined if not found.
@@ -197,29 +200,6 @@ export class Catalog {
     getEntries(key = undefined) {
         if (key === undefined) return Array.from(this.entries())
         return this._findEntries(key)
-    }
-
-    edit(path, {key, value, label, comment}, context = {}, sep = '/') {
-        /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
-           This method should be used to apply manual data modifications.
-           Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
-         */
-        if (typeof path === 'string') path = path.split('/')
-        assert(path.length >= 1)
-
-        let step = path[0]
-        let pos  = this._findPosition(step, {unique: true})
-        if (pos === undefined) throw new Error(`path not found: ${step}`)
-
-        let props = {key, value, label, comment}
-        let subpath = path.slice(1)
-        if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
-
-        let subcat = this._entries[pos].value
-        if (subcat instanceof Catalog)                              // subcat is a Catalog? make a recursive call
-            return subcat.edit(subpath, props)
-
-        throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
     set(path, value, {label, comment} = {}, create_path = false) {
@@ -303,24 +283,33 @@ export class Catalog {
         if (comment !== undefined) {if (comment) e.comment = comment; else delete e.comment}
 
         if (prevKey !== key && key !== undefined) {             // `key` has changed? update this._keys accordingly
-            if (!T.isMissing(prevKey)) this._keysDelete(prevKey, id)
-            if (!T.isMissing(key))     this._keysInsert(key, id)
+            if (!T.isMissing(prevKey)) this._deleteKey(prevKey, id)
+            if (!T.isMissing(key))     this._insertKey(key, id)
         }
         return e
     }
-    _keysInsert(key, id) {
+    _insertKey(key, id) {
         /* Insert `id` at a proper position in a list of entry indices for a `key`, this._keys[key]. */
-        let ids = this._keys[key]
+        let ids = this._keys.get(key) || []
         ids.push(id)
-        this._keys[key] = ids.filter(Number).sort()
+        this._keys.set(key, ids.filter(Number).sort())
     }
-    _keysDelete(key, id) {
+    _deleteKey(key, id) {
         /* Hard-delete `id` from a list of entry indices for a `key`, this._keys[key], withOUT leaving an "undefined". */
-        let ids = this._keys[key]
+        let ids = this._keys.get(key)
         let pos = ids.indexOf(id)
         assert(pos >= 0)
         ids[pos] = undefined
-        this._keys[key] = ids.filter(Number).sort()
+        ids = ids.filter(Number).sort()
+        ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
+    }
+    _deleteID(id) {
+        /* Delete an entry given its ID (position in _entries). */
+        let entry = this._entries[id]
+        if (entry === undefined) throw new Error("trying to delete a non-existing entry")
+        this._deleteKey(entry.key, id)
+        this._entries[id] = undefined                   // mark the entry as deleted; no physical rewrite of the array
+        this.size--
     }
 
     push(key, value, {label, comment} = {}) {
@@ -352,7 +341,51 @@ export class Catalog {
         }
         return entry
     }
+    
+    /***  Higher-level edit operations  ***/
 
+    step(path) {
+        /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique) and the remaining path. */
+        if (typeof path === 'string') path = path.split('/')
+        assert(path.length >= 1)
+
+        let step = path[0]
+        let pos = this._findPosition(step, {unique: true})
+        if (pos === undefined) throw new Error(`path not found: ${step}`)
+        let subpath = path.slice(1)
+
+        return [pos, subpath]
+    }
+    
+    edit(path, {key, value, label, comment}, context = {}, sep = '/') {
+        /* Modify an existing entry at a given `path`. The entry must be unique. Return the entry after modifications.
+           This method should be used to apply manual data modifications.
+           Automated changes, which are less reliable, should go through update() to allow for deduplication etc. - TODO
+         */
+        let props = {key, value, label, comment}
+        let [pos, subpath] = this.step(path)
+        if (!subpath.length) return this._overwrite(pos, props)     // `path` has only one segment, make the modifications and return
+
+        let subcat = this._entries[pos].value
+        if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
+            return subcat.edit(subpath, props)
+
+        throw new Error(`path not found: ${subpath.join('/')}`)
+    }
+    
+    delete(path) {
+        /* Delete a (sub)entry uniquely identified by `path`. */
+        let [pos, subpath] = this.step(path)
+        if (!subpath.length) return this._deleteID(pos)
+
+        let subcat = this._entries[pos].value
+        if (subcat instanceof Catalog)                              // nested Catalog? make a recursive call
+            return subcat.delete(subpath)
+
+        throw new Error(`path not found: ${subpath.join('/')}`)
+    }
+    
+    
     // delete(key) {
     //     /* Delete a single entry at a given position in _entries, if `key` is a number (entry.id);
     //        or delete all 0+ entries whose entry.key === key. Return the number of entries deleted.
@@ -382,9 +415,6 @@ export class Catalog {
     //     this.size -= count
     //     return count
     // }
-
-    __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
-    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
 }
 
 

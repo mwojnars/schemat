@@ -1346,6 +1346,7 @@ CATALOG.Table = class extends Component {
         })
         let del = (pos) => setEntries(prev => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
+            item.remote_edit_delete([...path, pos])
             return [...prev.slice(0,pos), ...prev.slice(pos+1)]
         })
         let ins = (pos, rel = -1) => setEntries(prev => {
@@ -1417,7 +1418,7 @@ export class DATA extends CATALOG {
     }
     subschema(key) {
         if (!this.fields.hasOwnProperty(key))
-            throw new DataError(`unknown field "${key}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
+            throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(this.fields)}]`)
         return this.fields[key] || this.constructor.values_default
     }
     collect(assets) {

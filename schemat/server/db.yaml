@@ -233,8 +233,8 @@
       info: Base URL at which the website is served, no trailing '/'
       "@": schemat.type.STRING
     system_path:
-      info: URL path (after base_url) of the system application, AppSystem, that's
-        used for internal web access to items
+      info: A URL path that when appended to the `base_url` creates a URL of the
+        system application, AppSystem - used for internal web access to items.
       "@": schemat.type.STRING
     application:
       info: Application hosted on this site, typically an AppRoot with multiple

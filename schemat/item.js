@@ -321,15 +321,21 @@ export class Item {
         this.editable = true    // TODO...
         if (!this.editable) throw new Error("this item is not editable")
         for (let [edit, args] of edits) {
-            print([edit, args])
+            print('edit: ', [edit, args])
             this[`_edit_${edit}`].call(this, ...args)
         }
     }
 
-    async _edit_update(path, entry) {
+    _edit_insert(path, pos, entry) {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        this.data.insert(path, pos, entry)
+    }
+    _edit_delete(path) {
+        this.data.delete(path)
+    }
+    _edit_update(path, entry) {
         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
         this.data.edit(path, entry)
-        return this.registry.update(this)
     }
 
     async _handle_edit({req, res}) {
@@ -343,10 +349,36 @@ export class Item {
         return res.json(out || {})
     }
 
-    // async remote_edit(edits) { return this.remote('edit', edits) }
+    async remote_edit_insert(path, pos, entry)   {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+        return this.remote('edit', [['insert', [path, pos, entry]]])
+    }
+    async remote_edit_delete(path)   {
+        return this.remote('edit', [['delete', [path]]])
+    }
     async remote_edit_update(path, entry)   {
         if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
         return this.remote('edit', [['update', [path, entry]]])
+    }
+
+    async _handle_delete({res}) {
+        await this.registry.delete(this)
+        return res.json({})
+    }
+
+    async remote_delete()       { return this.remote('delete') }
+
+    async remote(endpoint, data, {args, params} = {}) {
+        /* Connect from client to an `endpoint` of an internal API; send `data` if any;
+           return a response body parsed from JSON to an object.
+         */
+        let url = this.url(endpoint)
+        let res = await fetchJson(url, data, params)        // Response object
+        if (!res.ok) throw new ServerError(res)
+        return res.json()
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
     /***  Client-server communication protocols (operation chains)  ***/
@@ -404,11 +436,6 @@ export class Item {
             res.send(page)
     }
 
-    async _handle_delete({res}) {
-        await this.registry.delete(this)
-        return res.json({})
-    }
-
     _handle_json({res}) { res.sendItem(this) }
 
     _handle_view({session, req, res, endpoint}) {
@@ -420,21 +447,6 @@ export class Item {
             body:  this.BODY({session}),
         })
     }
-
-    async remote(endpoint, data, {args, params} = {}) {
-        /* Connect from client to an `endpoint` of an internal API; send `data` if any;
-           return a response body parsed from JSON to an object.
-         */
-        let url = this.url(endpoint)
-        let res = await fetchJson(url, data, params)        // Response object
-        if (!res.ok) throw new ServerError(res)
-        return res.json()
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
-    }
-
-    async remote_delete()       { return this.remote('delete') }
 
     HTML({title, head, body} = {}) {
         return dedent(`
