@@ -335,7 +335,7 @@ export class Item {
     }
     _edit_update(path, entry) {
         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        this.data.edit(path, entry)
+        this.data.update(path, entry)
     }
 
     async _handle_edit({req, res}) {

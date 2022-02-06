@@ -1344,11 +1344,12 @@ CATALOG.Table = class extends Component {
             [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
             return entries
         })
-        let del = (pos) => setEntries(prev => {
+        let del = async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
-            item.remote_edit_delete([...path, pos])
-            return [...prev.slice(0,pos), ...prev.slice(pos+1)]
-        })
+            // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
+            await item.remote_edit_delete([...path, pos])
+            setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
+        }
         let ins = (pos, rel = -1) => setEntries(prev => {
             /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
             // `rel` is -1 (add before), or +1 (add after)
@@ -1367,8 +1368,10 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let maxid = Math.max(-1, ...prev.map(e => e.id))
+                let entry = {id: maxid + 1, key}  //value: subschema.param('default')
                 let entries = [...prev]
-                entries[pos] = {id: maxid + 1, key}  //value: subschema.param('default')
+                entries[pos] = entry
+                // item.remote_edit_insert(path, pos, entry)
                 return entries
             })
         }
