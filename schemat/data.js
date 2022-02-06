@@ -96,10 +96,8 @@ export class Catalog {
        - key,
        - label,
        - comment.
-       Keys, labels, comments, if present, are strings. `id` is an integer and is equal to the position
-       of an entry in a list of all entries; when an entry is deleted, it gets marked as undefined,
-       so that ids and positions of following entries stay unchanged (!). `id` is excluded from serialization in CATALOG.
-       Keys may repeat. Keys may include all printable characters except ":" and whitespace.
+       Keys, labels, comments, if present, are strings. Keys may repeat.
+       Keys may include all printable characters except ":" and whitespace.
        Labels may include all printable characters except ":", newline, tab (spaces allowed).
        Comments may include all printable characters including whitespace.
        Empty strings in label/comment are treated as missing. Empty string is a valid non-missing key.
@@ -110,20 +108,24 @@ export class Catalog {
 
     _entries = []               // plain objects with {key, value, label, comment} attributes
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted
-    size     = 0                // the true number of entries in this._entries, `undefined` ignored
+    // size     = 0                // the true number of entries in this._entries, `undefined` ignored
 
-    get length()        { return this.size }
-    has(key)            { return this._keys.has(key) }
+    get length()        { return this._entries.length }  //{ return this.size }
+    has(key)            { return this._keys.has(key)  }
     hasKeys()           { return this._keys.size > 0  }
-    hasUniqueKeys()     { return this._keys.size === this.size }
+    hasUniqueKeys()     { return this._keys.size === this.length }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
-    asDict()            { return Object.fromEntries(this.map(e => [e.key, e.value])) }
-    map(fun)            { return Array.from(this.entries(), fun) }
-    *keys()             { return this._keys.keys }
-    *values()           { for (const e of this._entries) if(e) yield e.value }
-    *entries()          { for (const e of this._entries) if(e) yield e }
-    *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
+    asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
+    map(fun)            { return Array.from(this._entries, fun) }
+    *keys()             { yield* this._keys.keys() }
+    *values()           { yield* this._entries.map(e => e.value) }
+    *entries()          { yield* this._entries }
+    *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
+    getEntries(key = null) { return key === null ? [...this._entries] : this._findEntries(key) }
+    // *values()           { for (const e of this._entries) if(e) yield e.value }
+    // *entries()          { for (const e of this._entries) if(e) yield e }
+    // *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
 
     constructor(data = null) {
         if (!data) return
@@ -139,8 +141,23 @@ export class Catalog {
                 this.pushEntry({key, value})
     }
 
-    __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
-    __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
+    __setstate__(state)     { this.build(state.entries); return this }
+    __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
+                            // value=undefined can't be serialized as it would get converted to null after deserialization
+    // __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
+    // __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
+
+    build(entries = null) {
+        /* (Re)initialize this._keys given this._entries. */
+        this._keys = new Map()
+        if (entries) this._entries = [...entries]
+        for (const [pos, entry] of this._entries.entries()) {
+            const key = entry.key
+            if (key === null || key === undefined) continue
+            let ids = this._keys.get(key) || []
+            if (ids.push(pos) === 1) this._keys.set(key, ids)
+        }
+    }
 
     _normPath(path)         { return typeof path === 'string' ? path.split('/') : path }
 
@@ -198,10 +215,10 @@ export class Catalog {
         if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
         return default_
     }
-    getEntries(key = undefined) {
-        if (key === undefined) return Array.from(this.entries())
-        return this._findEntries(key)
-    }
+    // getEntries(key = undefined) {
+    //     if (key === undefined) return Array.from(this.entries())
+    //     return this._findEntries(key)
+    // }
 
     set(path, value, {label, comment} = {}, create_path = false) {
         /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
@@ -310,7 +327,7 @@ export class Catalog {
         if (entry === undefined) throw new Error("trying to delete a non-existing entry")
         this._deleteKey(entry.key, id)
         this._entries[id] = undefined                   // mark the entry as deleted; no physical rewrite of the array
-        this.size--
+        // this.size--
     }
 
     push(key, value, {label, comment} = {}) {
@@ -320,7 +337,7 @@ export class Catalog {
 
     pushEntry(entry) {
         /* Append `entry` without deleting existing occurrencies of the key:
-           Drop unneeded props in `entry`, insert into this._entries, assign entry.id, update this._keys.
+           Drop unneeded props in `entry`, insert into this._entries, update this._keys.
          */
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
         assert(entry.value !== undefined)
@@ -330,14 +347,13 @@ export class Catalog {
         if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
         if (entry.comment === undefined) delete entry.comment
 
-        // insert to this._entries
-        entry.id = this._entries.push(entry) - 1                    // insert to this._entries AND assign its position as `id`
-        this.size ++
+        let pos = this._entries.push(entry) - 1                    // insert to this._entries and get its position
+        // this.size ++
 
         // update this._keys
         if (!T.isMissing(entry.key)) {
             let ids = this._keys.get(entry.key) || []
-            if (ids.push(entry.id) === 1)
+            if (ids.push(pos) === 1)
                 this._keys.set(entry.key, ids)
         }
         return entry
