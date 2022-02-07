@@ -158,26 +158,32 @@ export class Catalog {
 
     _normPath(path)         { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
-    _positionOf(key) {
+    _positionOf(key, unique = false) {
         /* Find a unique position of a `key`, the key being a string or a number. Return undefined if not found.
-           Raise an exception if multiple occurrences.
+           Raise an exception if multiple occurrences and unique=true.
          */
-        if (Number.isInteger(key)) return this._entries[key] ? key : undefined
-        if (this._keys.has(key)) {
-            let poslist = this._keys.get(key)
-            if (poslist.length > 1) throw new Error(`unique entry expected for '${key}', found ${poslist.length} entries instead`)
-            return poslist[0]
-        }
-    }
-    getEntry(key, {unique = false} = {}) {
-        /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number. */
-        if (typeof key === 'number') return this._entries[key]
+        if (typeof key === 'number') return key in this._entries ? key : undefined
         if (this._keys.has(key)) {
             let ids = this._keys.get(key)
             if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
-            return this._entries[ids[0]]            // first entry returned if multiple occurrences
+            return ids[0]
         }
     }
+
+    getEntry(key, unique = false) {
+        /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number.
+           If the key is missing, undefined is returned. Exception is raised if duplicates are present and unique=true.
+         */
+        let pos = this._positionOf(key, unique)
+        return this._entries[pos]
+        // if (typeof key === 'number') return this._entries[key]
+        // if (this._keys.has(key)) {
+        //     let ids = this._keys.get(key)
+        //     if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
+        //     return this._entries[ids[0]]            // first entry returned if multiple occurrences
+        // }
+    }
+
     step(path, error = true) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
            the remaining path, and the value object found after the 1st step. */
@@ -266,7 +272,7 @@ export class Catalog {
             else return this.setShallow(step, props)
 
         // make one step forward, then call set() recursively
-        let entry = this.getEntry(step, {unique: true})
+        let entry = this.getEntry(step, true)
         if (!entry)
             if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
                 this.setShallow({key: step, value: new Catalog()})
