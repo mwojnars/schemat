@@ -143,12 +143,10 @@ export class Catalog {
 
     __setstate__(state)     { this.build(state.entries); return this }
     __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
-                            // value=undefined can't be serialized as it would get converted to null after deserialization
-    // __setstate__(state)     { for (let e of state.entries) this.pushEntry(e); return this }
-    // __getstate__()          { return {entries: this.getEntries().map(e => {let {id, ...f} = e; return f})} }    // drop entry.id, it can be recovered
+                            // value=undefined can't be serialized as it would get replaced with null after deserialization
 
     build(entries = null) {
-        /* (Re)initialize this._keys given this._entries. */
+        /* (Re)build this._keys mapping based on this._entries. */
         this._keys = new Map()
         if (entries) this._entries = [...entries]
         for (const [pos, entry] of this._entries.entries()) {
@@ -314,20 +312,13 @@ export class Catalog {
     }
     _deleteKey(key, id) {
         /* Hard-delete `id` from a list of entry indices for a `key`, this._keys[key], withOUT leaving an "undefined". */
+        if (key === undefined) return
         let ids = this._keys.get(key)
         let pos = ids.indexOf(id)
         assert(pos >= 0)
         ids[pos] = undefined
         ids = ids.filter(Number).sort()
         ids.length ? this._keys.set(key, ids) : this._keys.delete(key)
-    }
-    _deleteID(id) {
-        /* Delete an entry given its ID (position in _entries). */
-        let entry = this._entries[id]
-        if (entry === undefined) throw new Error("trying to delete a non-existing entry")
-        this._deleteKey(entry.key, id)
-        this._entries[id] = undefined                   // mark the entry as deleted; no physical rewrite of the array
-        // this.size--
     }
 
     push(key, value, {label, comment} = {}) {
@@ -348,7 +339,6 @@ export class Catalog {
         if (entry.comment === undefined) delete entry.comment
 
         let pos = this._entries.push(entry) - 1                    // insert to this._entries and get its position
-        // this.size ++
 
         // update this._keys
         if (!T.isMissing(entry.key)) {
@@ -374,6 +364,34 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
+    _deleteAt(pos) {
+        /* Delete an entry located at a given position in _entries. Rebuild the _entries array and _keys map.
+           `pos` can be negative, for example, pos=-1 means deleting the last entry.
+         */
+        let N = this._entries.length
+        if (pos < 0) pos = N + pos
+        if (pos < 0 || pos >= N) throw new Error("trying to delete a non-existing entry")
+        if (pos === N - 1) {
+            // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
+            let entry = this._entries.pop()
+            if (entry.key !== undefined) {
+                let ids = this._keys.get(entry.key)
+                let id  = ids.pop()
+                assert(id === pos)
+                if (!ids.length) this._keys.delete(entry.key)
+            }
+        }
+        else {
+            // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
+            this.build(entries)
+        }
+        // let entry = this._entries[pos]
+        // if (entry === undefined) throw new Error("trying to delete a non-existing entry")
+        // this._deleteKey(entry.key, pos)
+        // this._entries[pos] = undefined                   // mark the entry as deleted; no physical rewrite of the array
+    }
+    
     /***  Higher-level edit operations  ***/
 
     insert(path, pos, entry) {
@@ -396,7 +414,7 @@ export class Catalog {
     delete(path) {
         /* Delete a (sub)entry uniquely identified by `path`. */
         let [pos, subpath, subcat] = this.step(path)
-        if (!subpath.length) return this._deleteID(pos)
+        if (!subpath.length) return this._deleteAt(pos)
         if (subcat instanceof Catalog) return subcat.delete(subpath)        // nested Catalog? make a recursive call
         throw new Error(`path not found: ${subpath.join('/')}`)
     }

@@ -1332,11 +1332,6 @@ CATALOG.Table = class extends Component {
         // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
-        // function special(id, props = {}) {
-        //     // an artificial entry that marks a place along the list of entries where a UI operation was/will be performed
-        //     return {id, ...props, special: true}
-        // }
-
         let move = (pos, delta) => setEntries(prev => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             if (pos+delta < 0 || pos+delta >= prev.length) return prev
