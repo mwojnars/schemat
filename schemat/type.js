@@ -1179,10 +1179,12 @@ CATALOG.Table = class extends Component {
         this.Catalog = this.Catalog.bind(this)
     }
 
-    move(handle)    { return DIV(cl('move'),
-                                DIV(cl('moveup'),   {onClick: e => handle(-1), title: "Move up"}),
-                                DIV(cl('movedown'), {onClick: e => handle(+1), title: "Move down"}))
-                    }
+    move(up, down) {
+        let hide = st({visibility: 'hidden'})
+        return DIV(cl('move'),
+                   DIV(cl('moveup'),   {onClick: e => up(),   title: "Move up"},   !up   && hide),
+                   DIV(cl('movedown'), {onClick: e => down(), title: "Move down"}, !down && hide))
+    }
     delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
 
     // info(schema)    { return schema.info ? {title: schema.info} : null }
@@ -1246,7 +1248,7 @@ CATALOG.Table = class extends Component {
         let props  = {value: current, flash, error, save: initkey || save, keynames, schema: generic_string}
 
         return FRAGMENT(
-                    ops?.move && this.move(ops.move),
+                    this.move(ops.moveup, ops.movedown),
                     DIV(cl('key'), e(widget, props), info && {title: info}),
                     expand && this.expand(expand),
                     DIV(cl('spacer')),
@@ -1379,6 +1381,7 @@ CATALOG.Table = class extends Component {
         }
         // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
+        let N = entries.length
 
         let rows = entries.map((entry, pos) =>
         {
@@ -1386,7 +1389,14 @@ CATALOG.Table = class extends Component {
             let isnew   = (entry.id === 'new')
             let vschema = isnew ? undefined : schema.subschema(key)
             let color   = getColor(pos)
-            let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames }
+            let ops     = {
+                ins: rel => ins(pos,rel),
+                del: () => del(pos),
+                // move: d => move(pos,d),
+                moveup:   pos > 0   ? () => move(pos,-1) : null,    // moveup() is only present if there is a position available above
+                movedown: pos < N-1 ? () => move(pos,+1) : null,    // similar for movedown()
+                keynames,
+            }
                 // key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
             if (isnew) { ops.initkey = key => initkey(pos,key) }
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
