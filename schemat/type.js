@@ -1017,19 +1017,17 @@ export class CATALOG extends Schema {
             return `${name}(${values}, ${keys})`
     }
 
-    get(path = null, default_ = undefined, sep = '/') {
+    find(path = null, default_ = undefined, sep = '/') {
         /* Return a (nested) subschema at a given `path`, or `this` if `path` is empty.
            The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
-           This method is a counterpart of Catalog.get(), but only accepts string keys, not indexes.
          */
         if (!path || !path.length) return this
         assert(T.isArray(path))
-        // if (typeof path === 'string') path = path.split(sep)
         let schema  = this.subschema(path[0])             // make one step forward, then call get() recursively
         let subpath = path.slice(1)
         if (!subpath.length)            return schema
-        if (schema instanceof CATALOG)  return schema.get(subpath, default_)
+        if (schema instanceof CATALOG)  return schema.find(subpath, default_)
         return default_
     }
 

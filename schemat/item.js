@@ -262,11 +262,11 @@ export class Item {
         let keys = [], data = this.data
         for (let step of path) {
             assert(data instanceof Catalog)
-            let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
+            let entry = data.findEntry(step)                     // can be undefined for the last step of `path`
             keys.push(typeof step === 'number' ? entry.key : step)
             data = entry?.value
         }
-        return schema.get(keys)
+        return schema.find(keys)
     }
 
     temp(field) {

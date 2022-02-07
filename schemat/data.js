@@ -122,7 +122,6 @@ export class Catalog {
     *values()           { yield* this._entries.map(e => e.value) }
     *entries()          { yield* this._entries }
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
-    getEntries(key = null) { return key === null ? [...this._entries] : this._findEntries(key) }
     // *values()           { for (const e of this._entries) if(e) yield e.value }
     // *entries()          { for (const e of this._entries) if(e) yield e }
     // *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
@@ -159,8 +158,8 @@ export class Catalog {
 
     _normPath(path)         { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
-    _findPosition(key, {unique = false} = {}) {
-        /* Find a (unique) position of a `key`, the key being a string or a number. Return undefined if not found.
+    _positionOf(key) {
+        /* Find a unique position of a `key`, the key being a string or a number. Return undefined if not found.
            Raise an exception if multiple occurrences.
          */
         if (Number.isInteger(key)) return this._entries[key] ? key : undefined
@@ -178,24 +177,35 @@ export class Catalog {
             return this._entries[poslist[0]]            // first entry returned if multiple occurrences
         }
     }
-    _findEntries(key) {
-        let poslist = this._keys.get(key) || []
-        return poslist.map(pos => this._entries[pos])
+
+    getEntries(key = null) {
+        if (key === null) return [...this._entries]
+        let refs = this._keys.get(key) || []
+        return refs.map(pos => this._entries[pos])
+        // return key === null ? [...this._entries] : this._findEntries(key)
     }
+    // _findEntries(key) {
+    //     let poslist = this._keys.get(key) || []
+    //     return poslist.map(pos => this._entries[pos])
+    // }
+    // getEntries(key = undefined) {
+    //     if (key === undefined) return Array.from(this.entries())
+    //     return this._findEntries(key)
+    // }
 
     get(path, default_ = undefined) {
         /* Return a value on a given path, or default_ if path not found. */
-        let entry = this.getEntry(path)
+        let entry = this.findEntry(path)
         return entry === undefined ? default_ : entry.value
     }
     getAll(key) {
         /* Return an array of all values that are present for a given top-level key. */
-        return this._findEntries(key).map(e => e.value)
+        return this.getEntries(key).map(e => e.value)
     }
-    getEntry(path, default_ = undefined) {
+    findEntry(path, default_ = undefined) {
         path = this._normPath(path)
 
-        // make one step forward, then call getEntry() recursively if needed
+        // make one step forward, then call findEntry() recursively if needed
         let step  = path[0]
         let entry = this._findEntry(step)
 
@@ -205,7 +215,7 @@ export class Catalog {
         let subcat  = entry.value
         let subpath = path.slice(1)
 
-        if (subcat instanceof Catalog)  return subcat.getEntry(subpath, default_)
+        if (subcat instanceof Catalog)  return subcat.findEntry(subpath, default_)
         if (subpath.length > 1)         return default_
         let key = subpath[0]
 
@@ -213,10 +223,6 @@ export class Catalog {
         if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
         return default_
     }
-    // getEntries(key = undefined) {
-    //     if (key === undefined) return Array.from(this.entries())
-    //     return this._findEntries(key)
-    // }
 
     set(path, value, {label, comment} = {}, create_path = false) {
         /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
@@ -357,7 +363,7 @@ export class Catalog {
         assert(path.length >= 1)
 
         let step = path[0]
-        let pos = this._findPosition(step, {unique: true})
+        let pos = this._positionOf(step)
         if (pos === undefined) throw new Error(`path not found: ${step}`)
         let subpath = path.slice(1)
         let value = this._entries[pos].value
