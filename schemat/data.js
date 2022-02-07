@@ -169,13 +169,30 @@ export class Catalog {
             return poslist[0]
         }
     }
-    _findEntry(key, {unique = false} = {}) {
+    getEntry(key, {unique = false} = {}) {
+        /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number. */
         if (typeof key === 'number') return this._entries[key]
         if (this._keys.has(key)) {
-            let poslist = this._keys.get(key)
-            if (unique && poslist.length > 1) throw new Error(`unique entry expected for '${key}', found ${poslist.length} entries instead`)
-            return this._entries[poslist[0]]            // first entry returned if multiple occurrences
+            let ids = this._keys.get(key)
+            if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
+            return this._entries[ids[0]]            // first entry returned if multiple occurrences
         }
+    }
+    step(path, error = true) {
+        /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
+           the remaining path, and the value object found after the 1st step. */
+        path = this._normPath(path)
+        assert(path.length >= 1)
+
+        let step = path[0]
+        let pos = this._positionOf(step)
+        if (pos === undefined)
+            if (error) throw new Error(`path not found: ${step}`)
+            else return [-1]
+        let subpath = path.slice(1)
+        let value = this._entries[pos].value
+
+        return [pos, subpath, value]
     }
 
     getEntries(key = null) {
@@ -184,36 +201,38 @@ export class Catalog {
         return refs.map(pos => this._entries[pos])
         // return key === null ? [...this._entries] : this._findEntries(key)
     }
-    // _findEntries(key) {
-    //     let poslist = this._keys.get(key) || []
-    //     return poslist.map(pos => this._entries[pos])
-    // }
-    // getEntries(key = undefined) {
-    //     if (key === undefined) return Array.from(this.entries())
-    //     return this._findEntries(key)
-    // }
-
-    get(path, default_ = undefined) {
-        /* Return a value on a given path, or default_ if path not found. */
-        let entry = this.findEntry(path)
-        return entry === undefined ? default_ : entry.value
-    }
-    getAll(key) {
+    getValues(key) {
         /* Return an array of all values that are present for a given top-level key. */
         return this.getEntries(key).map(e => e.value)
     }
+
+    get(path, default_ = undefined) {
+        /* Return a value on a given path, or default_ if path not found. */
+        // try {
+        //     let entry = this.findEntry(path)
+        //     return entry.value
+        // }
+        // catch(e) { return default_ }
+        let entry = this.findEntry(path)
+        return entry === undefined ? default_ : entry.value
+    }
+
     findEntry(path, default_ = undefined) {
-        path = this._normPath(path)
 
         // make one step forward, then call findEntry() recursively if needed
-        let step  = path[0]
-        let entry = this._findEntry(step)
+        let [pos, subpath, subcat] = this.step(path, false)
+        if (pos < 0) return default_
+        if (!subpath.length) return this._entries[pos]
 
-        if (!entry) return default_
-        if (path.length <= 1) return entry
-
-        let subcat  = entry.value
-        let subpath = path.slice(1)
+        // path = this._normPath(path)
+        // let step  = path[0]
+        // let entry = this.getEntry(step)
+        //
+        // if (!entry) return default_
+        // if (path.length <= 1) return entry
+        //
+        // let subcat  = entry.value
+        // let subpath = path.slice(1)
 
         if (subcat instanceof Catalog)  return subcat.findEntry(subpath, default_)
         if (subpath.length > 1)         return default_
@@ -247,7 +266,7 @@ export class Catalog {
             else return this.setShallow(step, props)
 
         // make one step forward, then call set() recursively
-        let entry = this._findEntry(step, {unique: true})
+        let entry = this.getEntry(step, {unique: true})
         if (!entry)
             if (create_path && typeof step === 'string')                // create a missing intermediate Catalog() if so requested
                 this.setShallow({key: step, value: new Catalog()})
@@ -354,21 +373,6 @@ export class Catalog {
         if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
         if (entry.comment === undefined) delete entry.comment
         return entry
-    }
-
-    step(path) {
-        /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
-           the remaining path, and the value object found after the 1st step. */
-        path = this._normPath(path)
-        assert(path.length >= 1)
-
-        let step = path[0]
-        let pos = this._positionOf(step)
-        if (pos === undefined) throw new Error(`path not found: ${step}`)
-        let subpath = path.slice(1)
-        let value = this._entries[pos].value
-
-        return [pos, subpath, value]
     }
 
     _deleteAt(pos) {

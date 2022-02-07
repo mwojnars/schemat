@@ -187,12 +187,12 @@ export class Item {
 
         return default_
     }
-    getAll(key) {
+    getValues(key) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT used.
          */
         this.assertLoaded()
-        return this.data.getAll(key)
+        return this.data.getValues(key)
     }
     async getLoaded(path, default_ = undefined) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
@@ -262,7 +262,7 @@ export class Item {
         let keys = [], data = this.data
         for (let step of path) {
             assert(data instanceof Catalog)
-            let entry = data.findEntry(step)                     // can be undefined for the last step of `path`
+            let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
             keys.push(typeof step === 'number' ? entry.key : step)
             data = entry?.value
         }
@@ -569,7 +569,7 @@ export class Category extends Item {
 
     async afterLoad(data) {
         /* Load all base categories of this one, so that getDefault() and mergeInherited() can work synchronously later on. */
-        let proto = data.getAll('base_category')
+        let proto = data.getValues('base_category')
         if (proto.length) return Promise.all(proto.map(p => p.load()))
     }
 
@@ -590,7 +590,7 @@ export class Category extends Item {
         Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let bases = this.getAll('base_category')
+        let bases = this.getValues('base_category')
         for (const base of bases)
             if (base.issubcat(category)) return true
         return false
@@ -633,7 +633,7 @@ export class Category extends Item {
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let catalog = new Catalog()
-        let bases   = this.getAll('base_category')
+        let bases   = this.getValues('base_category')
         for (const base of [this, ...bases]) {
             let cat = base.get(field)
             if (!cat) continue
