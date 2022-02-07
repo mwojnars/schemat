@@ -157,7 +157,7 @@ export class Catalog {
         }
     }
 
-    _normPath(path)         { return typeof path === 'string' ? path.split('/') : path }
+    _normPath(path)         { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
     _findPosition(key, {unique = false} = {}) {
         /* Find a (unique) position of a `key`, the key being a string or a number. Return undefined if not found.

@@ -255,8 +255,18 @@ export class Item {
     getSchema(path = null) {
         /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
            as defined in this item's category's `fields` property. */
-        assert(this.category)
-        return this.category.temp('schema').get(path)               // calls _temp_schema() of this.category
+        let schema = this.category.temp('schema')               // calls _temp_schema() of this.category
+        if (!path || !path.length) return schema
+
+        this.assertLoaded()
+        let keys = [], data = this.data
+        for (let step of path) {
+            assert(data instanceof Catalog)
+            let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
+            keys.push(typeof step === 'number' ? entry.key : step)
+            data = entry?.value
+        }
+        return schema.get(keys)
     }
 
     temp(field) {
@@ -327,7 +337,7 @@ export class Item {
     }
 
     _edit_insert(path, pos, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
         this.data.insert(path, pos, entry)
     }
     _edit_delete(path) {
@@ -350,14 +360,16 @@ export class Item {
     }
 
     async remote_edit_insert(path, pos, entry)   {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+        /* `entry.value` must have been schema-encoded already (!) */
+        // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
         return this.remote('edit', [['insert', [path, pos, entry]]])
     }
     async remote_edit_delete(path)   {
         return this.remote('edit', [['delete', [path]]])
     }
     async remote_edit_update(path, entry)   {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+        /* `entry.value` must have been schema-encoded already (!) */
+        // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
         return this.remote('edit', [['update', [path, entry]]])
     }
 

@@ -1017,13 +1017,15 @@ export class CATALOG extends Schema {
             return `${name}(${values}, ${keys})`
     }
 
-    get(path, default_ = undefined, sep = '/') {
-        /* Return a nested schema object at a given `path`, or `this` if `path` is empty.
-           The path is either an array of keys on subsequent levels of nesting, or a '/'-concatenated string.
-           The path may span nested CATALOGs at arbitrary depths. This method is a counterpart of Catalog.get().
+    get(path = null, default_ = undefined, sep = '/') {
+        /* Return a (nested) subschema at a given `path`, or `this` if `path` is empty.
+           The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
+           if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
+           This method is a counterpart of Catalog.get(), but only accepts string keys, not indexes.
          */
         if (!path || !path.length) return this
-        if (typeof path === 'string') path = path.split(sep)
+        assert(T.isArray(path))
+        // if (typeof path === 'string') path = path.split(sep)
         let schema  = this.subschema(path[0])             // make one step forward, then call get() recursively
         let subpath = path.slice(1)
         if (!subpath.length)            return schema
@@ -1268,12 +1270,12 @@ CATALOG.Table = class extends Component {
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
             // await item.remote_edit({path, value: schema.encode(newValue)})
-            await item.remote_edit_update(path, {value: newValue})
+            await item.remote_edit_update(path, {value: schema.encode(newValue)})
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
         let [error, errorBox] = this.error()
-        let props = {value, //:   isnew ? schema?.prop('default') : value,
+        let props = {value,
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
                      save, flash, error}
 
@@ -1366,11 +1368,11 @@ CATALOG.Table = class extends Component {
             setEntries(prev => {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
-                let maxid = Math.max(-1, ...prev.map(e => e.id))
-                let entry = {id: maxid + 1, key}  //value: subschema.prop('default')
+                let maxid = Math.max(-1, ...prev.map(e => e.id))        // IDs are needed internally as keys in React subcomponents
+                let entry = {key, value: subschema.encode(subschema.prop('initial')) }
                 let entries = [...prev]
-                entries[pos] = entry
-                // item.remote_edit_insert(path, pos, entry)
+                entries[pos] = {id: maxid + 1, ...entry}
+                item.remote_edit_insert(path, pos, entry)
                 return entries
             })
         }
@@ -1380,13 +1382,13 @@ CATALOG.Table = class extends Component {
         let rows = entries.map((entry, pos) =>
         {
             let {key}   = entry
-            let isnew   = (entry.id === 'new')  //entry.special
+            let isnew   = (entry.id === 'new')
             let vschema = isnew ? undefined : schema.subschema(key)
             let color   = getColor(pos)
             let ops     = {move: d => move(pos,d), del: () => del(pos), ins: rel => ins(pos,rel), keynames }
                 // key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
             if (isnew) { ops.initkey = key => initkey(pos,key) }
-            let props   = {item, path: [...path, key], entry, schema: vschema, color, ops}
+            let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
