@@ -609,7 +609,7 @@ export class Category extends Item {
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
-        return schema ? schema.param('default') : default_
+        return schema ? schema.prop('default') : default_
     }
 
     mergeInherited(field) {

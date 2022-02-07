@@ -210,8 +210,10 @@ export class Schema {
     unique          // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
     blank           // if true, `null` should be treated as a valid value
     type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
-    //initial       // initial value assigned to a newly created data element of this schema
+    initial         // initial value assigned to a newly created data element of this schema
     // multi        // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+
+    static initial = null
 
     constructor(params = {}) {
         let {default_, info, blank, type} = params || {}         // params=null is valid
@@ -223,8 +225,8 @@ export class Schema {
         // if (multi !== undefined)    this.multi = multi
     }
 
-    param(name) {
-        /* Return the value of a given parameter as defined in `this` or in the constructor (class-level default). */
+    prop(name) {
+        /* Return the value of a given schema property as defined either in `this` or in the constructor (class-level default). */
         let p = this[name]
         if (p === undefined) p = this.constructor[name]
         return p
@@ -308,7 +310,7 @@ Schema.Widget = class extends Widget {
         }
     }
 
-    empty(v)    { return v === undefined && I('none') }         // view of an empty value, for display() and viewer()
+    empty(v)    { return T.isMissing(v) && I('missing') }       // view of an empty value, for display() and viewer()
     view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
     display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
     encode(v)   { return this.props.schema.encodeJson(v) }      // convert a value to its editable representation
@@ -329,7 +331,7 @@ Schema.Widget = class extends Widget {
     keyAccept(e)  { return e.key === "Enter"  }             // return true if the key pressed accepts the edits
     keyReject(e)  { return e.key === "Escape" }             // return true if the key pressed rejects the edits
 
-    value()     { return this.input.current.value }             // retrieve an edited flat value (encoded) from the editor
+    value() { return this.input.current.value }             // retrieve an edited flat value (encoded) from the editor
 
     open(e) { this.setState({editing: true})  }                 // activate the editor and editing mode
     close() { this.setState({editing: false}); this.props.error(null) }     // close the editor and editing mode
@@ -370,7 +372,7 @@ Schema.Widget = class extends Widget {
         let {schema, value} = this.props
         if (!this.state.editing) return this.viewer()
         this.initial = (value !== undefined) ? this.encode(value) : undefined
-        this.default = (this.initial !== undefined) ? this.initial : schema.param('default')
+        this.default = (this.initial !== undefined) ? this.initial : schema.prop('initial')
         return this.editor()
     }
     // render() {
@@ -405,11 +407,12 @@ export class Primitive extends Schema {
 
 export class BOOLEAN extends Primitive {
     static stype = "boolean"
+    static initial = false
 }
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static default = 0
+    static initial = 0
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -419,6 +422,7 @@ export class INTEGER extends NUMBER {
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
+    static initial = ''
 
     static Widget = class extends Primitive.Widget {
         empty (value)   { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
@@ -641,7 +645,7 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
-            let dflt = `${schema.param('default')}`
+            let dflt = `${schema.prop('default')}`
             return SPAN(`${schema}`,
                     schema.default !== undefined &&
                         SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
@@ -1269,7 +1273,7 @@ CATALOG.Table = class extends Component {
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
         let [error, errorBox] = this.error()
-        let props = {value, //:   isnew ? schema?.param('default') : value,
+        let props = {value, //:   isnew ? schema?.prop('default') : value,
                      editing: isnew,                    // a newly created entry (no value) starts in edit mode
                      save, flash, error}
 
@@ -1363,7 +1367,7 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let maxid = Math.max(-1, ...prev.map(e => e.id))
-                let entry = {id: maxid + 1, key}  //value: subschema.param('default')
+                let entry = {id: maxid + 1, key}  //value: subschema.prop('default')
                 let entries = [...prev]
                 entries[pos] = entry
                 // item.remote_edit_insert(path, pos, entry)
@@ -1424,7 +1428,7 @@ export class DATA extends CATALOG {
             schema.collect(assets)
         this.constructor.Table.collect(assets)
     }
-    getValidKeys()          { return Object.getOwnPropertyNames(this.param('fields')).sort() }
+    getValidKeys()          { return Object.getOwnPropertyNames(this.prop('fields')).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 

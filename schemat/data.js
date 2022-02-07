@@ -151,7 +151,7 @@ export class Catalog {
         if (entries) this._entries = [...entries]
         for (const [pos, entry] of this._entries.entries()) {
             const key = entry.key
-            if (key === null || key === undefined) continue
+            if (key === undefined || key === null) continue
             let ids = this._keys.get(key) || []
             if (ids.push(pos) === 1) this._keys.set(key, ids)
         }
@@ -327,28 +327,29 @@ export class Catalog {
     }
 
     pushEntry(entry) {
-        /* Append `entry` without deleting existing occurrencies of the key:
+        /* Append `entry` to this._entries while keeping the existing occurrencies of entry.key.
            Drop unneeded props in `entry`, insert into this._entries, update this._keys.
          */
-        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
-        assert(entry.value !== undefined)
-
-        // clean up the entry's properties
-        if (T.isMissing(entry.key)) delete entry.key
-        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
-        if (entry.comment === undefined) delete entry.comment
-
-        let pos = this._entries.push(entry) - 1                    // insert to this._entries and get its position
-
-        // update this._keys
-        if (!T.isMissing(entry.key)) {
+        entry = this._clean(entry)
+        let pos = this._entries.push(entry) - 1                 // insert to this._entries and get its position
+        if (!T.isMissing(entry.key)) {                          // update this._keys
             let ids = this._keys.get(entry.key) || []
             if (ids.push(pos) === 1)
                 this._keys.set(entry.key, ids)
         }
         return entry
     }
-    
+
+    _clean(entry) {
+        /* Validate and clean up the entry's properties. */
+        assert(entry.value !== undefined)
+        assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
+        if (T.isMissing(entry.key)) delete entry.key
+        if (entry.label === undefined) delete entry.label           // in some cases, an explicit `undefined` can be present, remove it
+        if (entry.comment === undefined) delete entry.comment
+        return entry
+    }
+
     step(path) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
            the remaining path, and the value object found after the 1st step. */
@@ -374,41 +375,47 @@ export class Catalog {
         if (pos === N - 1) {
             // special case: deleting the LAST entry does NOT require rebuilding the entire _keys maps
             let entry = this._entries.pop()
-            if (entry.key !== undefined) {
+            if (!T.isMissing(entry.key)) {
                 let ids = this._keys.get(entry.key)
-                let id  = ids.pop()
+                let id  = ids.pop()                 // indices in `ids` are stored in increasing order, so `pos` must be the last one
                 assert(id === pos)
                 if (!ids.length) this._keys.delete(entry.key)
             }
         }
         else {
             // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            let entry = this._entries[pos]
             let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
             this.build(entries)
         }
-        // let entry = this._entries[pos]
-        // if (entry === undefined) throw new Error("trying to delete a non-existing entry")
-        // this._deleteKey(entry.key, pos)
-        // this._entries[pos] = undefined                   // mark the entry as deleted; no physical rewrite of the array
     }
-    
+    _insertAt(pos, entry) {
+        /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
+        let N = this._entries.length
+        if (pos < 0) pos = N + pos
+        if (pos < 0 || pos > N) throw new Error("invalid position where to insert a new entry")
+        if (pos === N)
+            this.pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
+        else {
+            // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
+            entry = this._clean(entry)
+            let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
+            this.build(entries)
+        }
+    }
+
     /***  Higher-level edit operations  ***/
 
     insert(path, pos, entry) {
-        /* Insert a new `entry` at position `pos` in a subcatalog identified by `path` (empty path denotes this catalog).
-           `pos` is an integer that says how many existing non-missing entries must be skipped
-           before the `entry` is inserted into this._entries.
-         */
+        /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
         if (path.length) {
             let [pos, subpath, subcat] = this.step(path)
             if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
             throw new Error(`path not found: ${subpath.join('/')}`)
         }
-        // no more recursion? insert here...
-
-        // skip `pos` number of existing entries
-
+        // no more recursion, insert here...
+        this._insertAt(pos, entry)
     }
 
     delete(path) {
