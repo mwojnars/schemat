@@ -398,7 +398,7 @@ export class Catalog {
         /* Insert new `entry` at a given position in this._entries. Update this._keys accordingly. `pos` can be negative. */
         let N = this._entries.length
         if (pos < 0) pos = N + pos
-        if (pos < 0 || pos > N) throw new Error("invalid position where to insert a new entry")
+        if (pos < 0 || pos > N) throw new Error(`invalid position (${pos}) where to insert a new entry`)
         if (pos === N)
             this.pushEntry(entry)       // special case: inserting at the END does NOT require rebuilding the entire _keys maps
         else {
@@ -408,18 +408,37 @@ export class Catalog {
             this.build(entries)
         }
     }
+    _move(pos1, pos2) {
+        let N = this._entries.length
+        function check(pos, src = false) {
+            if (pos < 0) pos = N + pos
+            if (pos < 0 || pos >= N) throw new Error(`invalid position (${pos}) in a catalog for moving an entry`)
+            return pos
+        }
+        pos1 = check(pos1)
+        pos2 = check(pos2)
+        if (pos1 === pos2) return
+
+        // pull the entry at [pos1] out of this._entries...
+        let entry = this._entries[pos1]
+        let entries = [...this._entries.slice(0,pos1), ...this._entries.slice(pos1+1)]
+
+        // ...and reinsert at [pos2], treating pos2 as an index in the initial array
+        //if (pos2 > pos1) pos2--
+        entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
+
+        this.build(entries)
+    }
 
     /***  Higher-level edit operations  ***/
 
     insert(path, pos, entry) {
         /* Insert a new `entry` at position `pos` in a subcatalog identified by `path`; empty path denotes this catalog. */
         path = this._normPath(path)
-        if (path.length) {
-            let [pos, subpath, subcat] = this.step(path)
-            if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
-            throw new Error(`path not found: ${subpath.join('/')}`)
-        }
-        this._insertAt(pos, entry)
+        if (!path.length) return this._insertAt(pos, entry)
+        let [_, subpath, subcat] = this.step(path)
+        if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
+        throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
     delete(path) {
@@ -446,6 +465,14 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
+    move(path, pos1, pos2) {
+        /* In a (sub)catalog pointed to by `path`, move the entry at position `pos1` to position `pos2` while shifting after entries. */
+        path = this._normPath(path)
+        if (!path.length) return this._move(pos1, pos2)
+        let [_, subpath, subcat] = this.step(path)
+        if (subcat instanceof Catalog) return subcat.move(subpath, pos1, pos2)        // nested Catalog? make a recursive call
+        throw new Error(`path not found: ${subpath.join('/')}`)
+    }
 
     // delete(key) {
     //     /* Delete a single entry at a given position in _entries, if `key` is a number (entry.id);

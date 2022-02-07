@@ -1336,13 +1336,17 @@ CATALOG.Table = class extends Component {
         // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
-        let move = (pos, delta) => setEntries(prev => {
+        let move = async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
-            if (pos+delta < 0 || pos+delta >= prev.length) return prev
-            entries = [...prev];
-            [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
-            return entries
-        })
+            assert(delta === -1 || delta === +1)
+            await item.remote_edit_move(path, pos, pos+delta)
+            setEntries(prev => {
+                // if (pos+delta < 0 || pos+delta >= prev.length) return prev
+                entries = [...prev];
+                [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+                return entries
+            })
+        }
         let del = async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time

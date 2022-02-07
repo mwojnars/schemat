@@ -347,6 +347,9 @@ export class Item {
         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
         this.data.update(path, entry)
     }
+    _edit_move(path, pos1, pos2) {
+        this.data.move(path, pos1, pos2)
+    }
 
     async _handle_edit({req, res}) {
         /* Web endpoint for all types of edits of this.data. */
@@ -371,6 +374,9 @@ export class Item {
         /* `entry.value` must have been schema-encoded already (!) */
         // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
         return this.remote('edit', [['update', [path, entry]]])
+    }
+    async remote_edit_move(path, pos1, pos2) {
+        return this.remote('edit', [['move', [path, pos1, pos2]]])
     }
 
     async _handle_delete({res}) {
