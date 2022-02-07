@@ -1058,12 +1058,8 @@ export class CATALOG extends Schema {
     static NewKeyWidget = class extends CATALOG.KeyWidget {
         static defaultProps = {
             editing:  true,         // this widget starts in edit mode
-            // initkey:  undefined,    // initkey(key) is called when the user has typed in and accepted an initial key
-            //                         // of a newly created entry
         }
-        // async accept(e) { let key = await super.accept(e); this.props.initkey(key); return key }
-        // reject(e)       { this.props.initkey() }
-        reject(e)       { this.props.save(undefined) }      // save() must be called to inform that no initial value was provided
+        reject(e)   { this.props.save(undefined) }      // save() must be called to inform that no initial value was provided
     }
 }
 
@@ -1372,7 +1368,8 @@ CATALOG.Table = class extends Component {
             setEntries(prev => {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
-                let maxid = Math.max(-1, ...prev.map(e => e.id))        // IDs are needed internally as keys in React subcomponents
+                let ids = [-1, ...prev.map(e => e.id)]
+                let maxid = Math.max(...ids.filter(Number.isInteger))       // IDs are needed internally as keys in React subcomponents
                 let entries = [...prev]
                 entries[pos] = {id: maxid + 1, key}
                 item.remote_edit_insert(path, pos, {key, value: subschema.encode(subschema.prop('initial')) })
@@ -1391,14 +1388,13 @@ CATALOG.Table = class extends Component {
             let color   = getColor(pos)
             let ops     = {
                 ins: rel => ins(pos,rel),
-                del: () => del(pos),
-                // move: d => move(pos,d),
+                del: ()  => del(pos),
                 moveup:   pos > 0   ? () => move(pos,-1) : null,    // moveup() is only present if there is a position available above
                 movedown: pos < N-1 ? () => move(pos,+1) : null,    // similar for movedown()
+                initkey:  isnew ? key => initkey(pos,key) : null,
                 keynames,
             }
-                // key: {save: initkey, names: keynames, isnew: entry.id === 'new'},
-            if (isnew) { ops.initkey = key => initkey(pos,key) }
+            // if (isnew) { ops.initkey = key => initkey(pos,key) }
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
