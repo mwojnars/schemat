@@ -156,7 +156,7 @@ export class Catalog {
         }
     }
 
-    _normPath(path)         { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
+    /***  Read access  ***/
 
     _positionOf(key, unique = false) {
         /* Find a unique position of a `key`, the key being a string or a number. Return undefined if not found.
@@ -170,19 +170,32 @@ export class Catalog {
         }
     }
 
+    get(key, default_ = undefined, unique = false) {
+        /* Return the `value` property of the first entry with a given `key`, or default_ if the key is missing. */
+        let entry = this.getEntry(key, unique)
+        return entry === undefined ? default_ : entry.value
+    }
+
     getEntry(key, unique = false) {
         /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number.
            If the key is missing, undefined is returned. Exception is raised if duplicates are present and unique=true.
          */
         let pos = this._positionOf(key, unique)
         return this._entries[pos]
-        // if (typeof key === 'number') return this._entries[key]
-        // if (this._keys.has(key)) {
-        //     let ids = this._keys.get(key)
-        //     if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
-        //     return this._entries[ids[0]]            // first entry returned if multiple occurrences
-        // }
     }
+
+    getValues(key) {
+        /* Return an array of all values that are present for a given top-level key. */
+        return this.getEntries(key).map(e => e.value)
+    }
+
+    getEntries(key = null) {
+        if (key === null) return [...this._entries]
+        let refs = this._keys.get(key) || []
+        return refs.map(pos => this._entries[pos])
+    }
+
+    _normPath(path) { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
     step(path, error = true) {
         /* Make one step along a `path`. Return the position of the 1st entry on the path (must be unique),
@@ -201,24 +214,8 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    getEntries(key = null) {
-        if (key === null) return [...this._entries]
-        let refs = this._keys.get(key) || []
-        return refs.map(pos => this._entries[pos])
-        // return key === null ? [...this._entries] : this._findEntries(key)
-    }
-    getValues(key) {
-        /* Return an array of all values that are present for a given top-level key. */
-        return this.getEntries(key).map(e => e.value)
-    }
-
-    get(path, default_ = undefined) {
+    findValue(path, default_ = undefined) {
         /* Return a value on a given path, or default_ if path not found. */
-        // try {
-        //     let entry = this.findEntry(path)
-        //     return entry.value
-        // }
-        // catch(e) { return default_ }
         let entry = this.findEntry(path)
         return entry === undefined ? default_ : entry.value
     }
@@ -230,16 +227,6 @@ export class Catalog {
         if (pos < 0) return default_
         if (!subpath.length) return this._entries[pos]
 
-        // path = this._normPath(path)
-        // let step  = path[0]
-        // let entry = this.getEntry(step)
-        //
-        // if (!entry) return default_
-        // if (path.length <= 1) return entry
-        //
-        // let subcat  = entry.value
-        // let subpath = path.slice(1)
-
         if (subcat instanceof Catalog)  return subcat.findEntry(subpath, default_)
         if (subpath.length > 1)         return default_
         let key = subpath[0]
@@ -248,6 +235,8 @@ export class Catalog {
         if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
         return default_
     }
+
+    /***  Write access  ***/
 
     set(path, value, {label, comment} = {}, create_path = false) {
         /* Create an entry at a given `path` (string or Array) if missing; or overwrite value/label/comment
@@ -372,7 +361,7 @@ export class Catalog {
     }
 
     _clean(entry) {
-        /* Validate and clean up the entry's properties. */
+        /* Validate and clean up the new entry's properties. */
         assert(entry.value !== undefined)
         assert(isstring(entry.key) && isstring(entry.label) && isstring(entry.comment))
         if (T.isMissing(entry.key)) delete entry.key
@@ -430,7 +419,6 @@ export class Catalog {
             if (subcat instanceof Catalog) return subcat.insert(subpath, pos, entry)        // nested Catalog? make a recursive call
             throw new Error(`path not found: ${subpath.join('/')}`)
         }
-        // no more recursion, insert here...
         this._insertAt(pos, entry)
     }
 

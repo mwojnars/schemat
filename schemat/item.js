@@ -175,7 +175,7 @@ export class Item {
         this.assertLoaded()
 
         // search in this.data
-        let value = this.data.get(path)
+        let value = this.data.findValue(path)
         if (value !== undefined) return value
 
         // search in category's defaults

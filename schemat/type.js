@@ -1367,10 +1367,9 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let maxid = Math.max(-1, ...prev.map(e => e.id))        // IDs are needed internally as keys in React subcomponents
-                let entry = {key, value: subschema.encode(subschema.prop('initial')) }
                 let entries = [...prev]
-                entries[pos] = {id: maxid + 1, ...entry}
-                item.remote_edit_insert(path, pos, entry)
+                entries[pos] = {id: maxid + 1, key}
+                item.remote_edit_insert(path, pos, {key, value: subschema.encode(subschema.prop('initial')) })
                 return entries
             })
         }
