@@ -41,6 +41,9 @@ class Changes {
     }
 }
 
+// utilities for in-DB source code
+const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+
 
 /**********************************************************************************************************************
  **
@@ -439,7 +442,8 @@ export class Item {
 
         // get handler's source code from category's properties?
         if (source) {
-            handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
+            handler = AsyncFunction('context', `"use strict";` + source)
+            // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
         else                                        // fallback: get handler from the item's class
