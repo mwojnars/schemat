@@ -192,7 +192,10 @@ async function create_categories(Category) {
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
         // class_name  : 'schemat.item.Item',
-        class_body  : `static check() { console.log("Varia/class_body/check() successful") }`,
+        class_body  : `
+                        static check() { console.log("Varia/class_body/check() successful") } 
+                        static error() { throw new Error('Varia/class_body/error()') }
+                        `,
         fields      : C({name: new STRING(), title: new STRING()}),
         handlers    : C({}),
     })

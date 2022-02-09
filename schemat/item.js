@@ -613,26 +613,32 @@ export class Category extends Item {
 
     _temp_class() {
         print(`${this.id_str} _temp_class()`)
-        let base = this.get('base_category')
-        let name = this.get('class_name'), cls
+        let base = this.get('base_category')            // use the FIRST base category's class as the (base) class
+        let name = this.get('class_name')
         let body = this.get('class_body')
-        // let code = this.get('class_code')
-        // if (code)
-        //     return eval(code)
-        //     // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
-        //     // TODO: check this.data for individual methods & templates to be treated as methods
-        // assert(name, `no class_name defined for category ${this}: ${name}`)
+        let cls
 
         if (base) cls = base.getClass()
         if (name) cls = this.registry.getClass(name)
         assert(cls)
 
+        function clean(s) {
+            if (typeof s !== 'string') return ''
+            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
+        }
+
         if (body) {
-            // use the first base category's class as the base class
-            let name = `Category_${this.cid}_${this.iid}`
-            let func = `return class ${name} extends base_class {${body}}`
-            cls = new Function('base_class', func)(cls)
+            // let typ_name = clean(this.category.get('name')) || 'C'
+            let domain   = 'schemat'
+            let cat_name = clean(this.get('name'))
+            let typ_name = `C${this.cid}`
+            let atr_name = 'class_body'
+            let cls_name = [cat_name, typ_name, `${this.iid}`] .filter(String) .join('_')
+            let fil_name = `${cat_name}_${this.id_str}`
+            let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`
+            cls = new Function('base_class', code)(cls)
             cls.check()
+            // cls.error()
         }
         return cls
     }
