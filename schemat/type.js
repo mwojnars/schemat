@@ -509,31 +509,35 @@ export class CODE extends TEXT
         static scope = 'Widget-CODE'
         static style = () => this.safeCSS()
         `
-        .ace-editor {
-            --bk-color: rgba(255,255,255,0.3);
-            background-color: var(--bk-color);
-            height: 12rem;
-            width: 100%;
+        .ace-viewer, .ace-editor {
+            min-height: 3em;
             line-height: 1.4;
             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
-            /*margin-left: -10px;      /* shift the editor to better align inner text with text of surrounding rows in a catalog */
-            /*border-left: 8px solid var(--bk-color);*/
+        }
+        .ace-viewer {
+            background-color: rgba(255,255,255,0);
+            width: calc(100% + 4px);
+            margin-left: -4px;       /* shift the viewer to better align inner text with text of surrounding rows in a catalog */
+            height: 5em;
+        }
+        .ace-editor {
+            background-color: rgba(255,255,255,0.3);
+            height: 12em;
         }
         `
 
-        // static viewer_options = {
-        //     mode:           "ace/mode/haml",
-        //     theme:          "ace/theme/textmate",     // dreamweaver crimson_editor
-        //     readOnly:               true,
-        //     showGutter:             false,
-        //     displayIndentGuides:    false,
-        //     showPrintMargin:        false,
-        //     highlightActiveLine:    false,
-        // }
-
+        static viewer_options = {
+            mode:                   "ace/mode/javascript",
+            readOnly:               true,
+            showGutter:             false,
+            displayIndentGuides:    false,
+            showPrintMargin:        false,
+            highlightActiveLine:    false,
+            // maxLines:               10,    // when set, it makes the editor (!) display with incorrect height
+        }
         static editor_options = {
             // each mode & theme may need a separate mode-*, worker-*, theme-* file (!) - see: https://cdnjs.com/libraries/ace
-            //theme:          "ace/theme/textmate",  //textmate dreamweaver crimson_editor
+            //theme:                "ace/theme/textmate",  //textmate dreamweaver crimson_editor
             mode:                   "ace/mode/javascript",
             showGutter:             true,
             displayIndentGuides:    true,
@@ -542,9 +546,12 @@ export class CODE extends TEXT
             useWorker:              false,      // disable syntax checker and warnings
         }
 
-        editorAce           // an ACE editor object
+        viewerRef = createRef()
+        viewerAce           // ACE viewer object
+        editorAce           // ACE editor object
         observer            // a ResizeObserver to watch for user resizing the editor box
 
+        viewer() { return DIV(cl("ace-viewer"), {onDoubleClick: e => this.open(e), ref: this.viewerRef}) }
         editor() {
             return DIV({
                 ref:            this.input,
@@ -552,18 +559,29 @@ export class CODE extends TEXT
                 onKeyDown:      e => this.key(e),
                 onBlur:         e => this.reject(e),
                 className:      "ace-editor",
-                width:  '100px',
-                height: '100px',
             })
+        }
+
+        componentDidMount()     { this.initViewer() }
+        componentWillUnmount()  { this.dropViewer() }
+
+        initViewer() {
+            assert(this.viewerRef.current)
+            this.viewerAce = ace.edit(this.viewerRef.current, this.constructor.viewer_options)
+            this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
+            this.viewerAce.session.setValue(this.display(this.props.value))
+        }
+        dropViewer() {
+            if (!this.viewerAce) return
+            this.viewerAce.destroy()
+            delete this.viewerAce
         }
 
         componentDidUpdate(prevProps, prevState) {
             /* Create an ACE editor after open(). */
-            if (!this.state.editing || this.state.editing === prevState.editing) return
-
-            // viewerAce = this.create_editor("#view", this.view_options);
-            // viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
-            // viewerAce.session.setValue(currentValue)
+            if (this.state.editing === prevState.editing) return
+            if (!this.state.editing) return this.initViewer()
+            this.dropViewer()
 
             let div = this.input.current
             let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
@@ -1100,7 +1118,7 @@ CATALOG.Table = class extends Component {
 
         .cell             { padding: 14px 20px 11px; position: relative; }
         .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-        .cell-value       { width: 700px; }
+        .cell-value       { width: 750px; }
         
         .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
         .key:not([title]) { text-decoration-line: none; }
@@ -1109,9 +1127,9 @@ CATALOG.Table = class extends Component {
         /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
         .cell-key:hover *|            { visibility: visible; }
                 
-        .cell-value :is(input, pre, textarea, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
+        .cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
         .cell-value| 
-                                      { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+                                      { font-size: 0.9em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
 
         .move|                        { margin-right: 10px; visibility: hidden; }
         :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 

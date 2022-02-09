@@ -259,15 +259,10 @@
     - 13
   name: Varia
   info: Category of items that do not belong to any specific category
-  class_body: "
-
-    \                        static check() {
-    console.log(\"Varia/class_body/check() successful\") }\ 
-
-    \                        static error() { throw new
-    Error('Varia/class_body/error()') }
-
-    \                        "
+  class_body: |
+    
+    static check() { console.log("Varia/class_body/check() successful") } 
+    static error() { throw new Error('Varia/class_body/error()') }
   fields:
     name:
       "@": schemat.type.STRING
