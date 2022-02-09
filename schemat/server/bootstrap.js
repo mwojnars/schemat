@@ -24,8 +24,8 @@ let root_fields = C({
     info         : new TEXT(),
     startup_site : new GENERIC(),
     base_category: new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
-    class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class. Or a class name that should be imported from `class_code` after its execution."}),
-    class_code   : new TEXT(),     // TODO: take class name from `name` not `class_name`; drop class_name; rename class_code to `code`
+    class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class."}),
+    class_body   : new CODE({info: "Body of a subclass that will be created for this category. The subclass will inherit from the class of the first `base_category`, or from the top-level Item class."}),
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names."}),
 
@@ -191,7 +191,8 @@ async function create_categories(Category) {
     cat.Varia = Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
-        class_name  : 'schemat.item.Item',
+        // class_name  : 'schemat.item.Item',
+        class_body  : `static check() { console.log("Varia/class_body/check() successful") }`,
         fields      : C({name: new STRING(), title: new STRING()}),
         handlers    : C({}),
     })

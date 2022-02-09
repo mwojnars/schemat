@@ -30,13 +30,15 @@
               "@": schemat.type.ITEM
           - key: class_name
             value:
-              info: Full (dotted) path of a JS class. Or a class name that should be imported
-                from `class_code` after its execution.
+              info: Full (dotted) path of a JS class.
               default: schemat.item.Item
               "@": schemat.type.STRING
-          - key: class_code
+          - key: class_body
             value:
-              "@": schemat.type.TEXT
+              info: Body of a subclass that will be created for this category. The subclass
+                will inherit from the class of the first `base_category`, or
+                from the top-level Item class.
+              "@": schemat.type.CODE
           - key: handlers
             value:
               info: Methods for server-side handling of web requests.
@@ -257,7 +259,7 @@
     - 13
   name: Varia
   info: Category of items that do not belong to any specific category
-  class_name: schemat.item.Item
+  class_body: static check() { console.log("Varia/class_body/check() successful") }
   fields:
     name:
       "@": schemat.type.STRING

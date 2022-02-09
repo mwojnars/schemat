@@ -612,20 +612,29 @@ export class Category extends Item {
     getClass()      { return this.temp('class') }
 
     _temp_class() {
-        let name = this.get('class_name')
+        print(`${this.id_str} _temp_class()`)
+        let base = this.get('base_category')
+        let name = this.get('class_name'), cls
+        let body = this.get('class_body')
+        // let code = this.get('class_code')
+        // if (code)
+        //     return eval(code)
+        //     // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
+        //     // TODO: check this.data for individual methods & templates to be treated as methods
+        // assert(name, `no class_name defined for category ${this}: ${name}`)
 
-        if (!name) {
-            // inherit from the first base category's class
+        if (base) cls = base.getClass()
+        if (name) cls = this.registry.getClass(name)
+        assert(cls)
+
+        if (body) {
+            // use the first base category's class as the base class
+            let name = `Category_${this.cid}_${this.iid}`
+            let func = `return class ${name} extends base_class {${body}}`
+            cls = new Function('base_class', func)(cls)
+            cls.check()
         }
-
-        let code = this.get('class_code')
-        if (code)
-            return eval(code)
-            // TODO: save the newly created class to registry as a subclass NAME_XXX of Item
-            // TODO: check this.data for individual methods & templates to be treated as methods
-
-        assert(name, `no class_name defined for category ${this}: ${name}`)
-        return this.registry.getClass(name)
+        return cls
     }
     getItem(iid) {
         /*
