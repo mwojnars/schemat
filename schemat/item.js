@@ -192,7 +192,7 @@ export class Item {
 
         return default_
     }
-    getValues(key) {
+    getMany(key) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT used.
          */
@@ -602,7 +602,7 @@ export class Category extends Item {
         Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let bases = this.getValues('base_category')
+        let bases = this.getMany('base_category')
         for (const base of bases)
             if (base.issubcat(category)) return true
         return false
@@ -613,6 +613,11 @@ export class Category extends Item {
 
     _temp_class() {
         let name = this.get('class_name')
+
+        if (!name) {
+            // inherit from the first base category's class
+        }
+
         let code = this.get('class_code')
         if (code)
             return eval(code)
@@ -646,7 +651,7 @@ export class Category extends Item {
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let catalog = new Catalog()
-        let bases   = this.getValues('base_category')
+        let bases   = this.getMany('base_category')
         for (const base of [this, ...bases]) {
             let cat = base.get(field)
             if (!cat) continue
