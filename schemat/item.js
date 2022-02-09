@@ -442,7 +442,7 @@ export class Item {
 
         // get handler's source code from category's properties?
         if (source) {
-            handler = AsyncFunction('context', `"use strict";` + source)
+            handler = new AsyncFunction('context', `"use strict";` + source)
             // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }

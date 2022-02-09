@@ -630,6 +630,11 @@ export let generic_schema = new GENERIC()
 export let generic_string = new STRING()
 
 
+class DERIVED extends GENERIC {
+    derived     // function derived(data) called when the value is requested
+    get readonly() { return true }
+}
+
 /**********************************************************************************************************************/
 
 export class SCHEMA extends GENERIC {
