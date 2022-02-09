@@ -129,6 +129,8 @@ export class Item {
         if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
         if (!this.category) {
+            // load the category and set a proper class for this item - stubs only have Item as their class,
+            // which must be changed when an item gets loaded and linked to its category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
             let itemclass = this.category.getClass()
@@ -605,10 +607,11 @@ export class Category extends Item {
             if (base.issubcat(category)) return true
         return false
     }
-    getFields()       { return this.temp('fields_all') }            // calls _temp_fields_all()
-    getHandlers()     { return this.temp('handlers_all') }          // calls _temp_handlers_all()
+    getFields()     { return this.temp('fields_all') }            // calls _temp_fields_all()
+    getHandlers()   { return this.temp('handlers_all') }          // calls _temp_handlers_all()
+    getClass()      { return this.temp('class') }
 
-    getClass() {
+    _temp_class() {
         let name = this.get('class_name')
         let code = this.get('class_code')
         if (code)
