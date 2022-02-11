@@ -279,13 +279,13 @@
       - 5
       - 2
 - __id:
-    - 2
-    - 1
-  filename: /home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml
-- __id:
     - 6
     - 1
   path: /home/marcin/Documents/priv/catalog/src/schemat
+- __id:
+    - 2
+    - 1
+  filename: /home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml
 - __id:
     - 9
     - 1

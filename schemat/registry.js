@@ -129,9 +129,6 @@ export class Registry {
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
     cache = new ItemsCache()
-
-    // the getters below are async functions that return a Promise (!) and should be used with await
-    // get files() { return this.site.getLoaded('filesystem') }
     // get _specializedItemJS() { assert(false) }
 
     async initClasspath() {

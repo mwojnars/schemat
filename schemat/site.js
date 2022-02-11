@@ -197,25 +197,6 @@ export class AppSystem extends Application {
     }
 }
 
-// export class AppFiles extends Application {
-//     /*
-//     Filesystem application. Folders and files are accessible through the hierarchical
-//     "file path" routing pattern: .../dir1/dir2/file.txt
-//     */
-//     async execute(session) {
-//         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
-//         session.app = this
-//         let root = await this.getLoaded('root_folder') || await this.registry.files
-//         return root.execute(session)     // `root` must be an item of Folder_ or its subcategory
-//     }
-//
-//     url_path(item, opts = {}) {
-//         // TODO: convert folder-item relationship to bottom-up to avoid using current_request.state
-//         let state = this.registry.session.state
-//         return state.folder.get_name(item)
-//     }
-// }
-
 export class AppSpaces extends Application {
     /*
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,

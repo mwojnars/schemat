@@ -146,9 +146,6 @@ async function create_categories(Category) {
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class_name  : 'schemat.item.Application',
         fields      : C({name: new STRING()}),
-        // folder   : FILEPATH(),       // path to a folder in the site's directory where this application was installed;
-                                        // if the app needs to store data items in the directory, it's recommended
-                                        // to do this inside a .../data subfolder
     })
     cat.AppRouter  = Category.new({
         name        : "AppRouter",
@@ -163,11 +160,6 @@ async function create_categories(Category) {
         class_name  : 'schemat.item.AppSystem',
         fields      : C({name: new STRING()}),
     })
-    // cat.AppFiles = Category.new({
-    //     name        : "AppFiles",
-    //     class_name  : 'schemat.item.AppFiles',
-    //     fields      : C({name: new STRING(), root_folder: new ITEM({type: cat.Folder})}),    // if root_folder is missing, Site's main folder is used
-    // })
     cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
@@ -185,7 +177,6 @@ async function create_categories(Category) {
             system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
             application : new ITEM({info: "Application hosted on this site, typically an AppRouter with multiple subapplications"}),
             database    : new ITEM({type: cat.Database, info: "Global database layer"}),
-            // filesystem  : new ITEM({type: cat.Folder, info: "Root of the global file system"}),
         }),
     })
     cat.Varia = Category.new({
@@ -225,13 +216,10 @@ async function create_items(cat, Category) {
     item.test_txt = cat.File.new({content: "This is a test file."})
     item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
     item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
-    
-    item.database  = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
-    item.dir_files = cat.FolderLocal.new({path: `${local_files}`})
+    item.dir_files= cat.FolderLocal.new({path: `${local_files}`})
 
+    item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.app_system = cat.AppSystem.new({name: "System"})
-    // item.app_files  = cat.AppFiles.new({name: "Files"})
-
     item.widgets_js = cat.File.new({content:
 `
 export check() { console.log('called /site/widgets.js/check()') }
@@ -254,8 +242,6 @@ export check() { console.log('called /site/widgets.js/check()') }
             '$':        item.app_system,
             'site':     item.dir_site,
             'files':    item.dir_files,
-            // 'files':    item.app_files,
-            // 'ajax':     item.app_ajax,           // this app must be present under the "ajax" route for proper handling of client-server communication
             '':         item.app_catalog,        // default route
         }),
     })
@@ -265,7 +251,6 @@ export check() { console.log('called /site/widgets.js/check()') }
         base_url    : "http://127.0.0.1:3000",
         system_path : "/$",
         application : item.app_root,
-        // filesystem  : item.filesystem,
         database    : item.database,
     })
     
