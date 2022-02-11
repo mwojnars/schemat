@@ -14,10 +14,10 @@ export class Site extends Item {
 
     static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
-    async execute(session) {
+    async route(session) {
         /* Forward the request to the root item. */
         let app = await this.getLoaded('application')
-        return app.execute(session)
+        return app.route(session)
     }
 
     systemURL() {
@@ -93,14 +93,14 @@ export class Application extends Item {
     */
     static SEP_ROUTE = '/'      // separator of route segments in URL paths
 
-    async execute(session) {
+    async route(session) {
         /*
-        Execute an action desribed by session.path that originated from a web `request` and emit results to a web `response`.
+        Execute an action described by session.path that originated from a web `request` and emit results to a web `response`.
         When spliting an original path on SEP_ROUTE, parent applications should ensure that
         the separatoror (if present) is preserved in a remaining subpath, so that sub-applications
         can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
         */
-        throw new Error('method not implemented in a subclass')
+        throw new Error('not implemented')
     }
     url_path(item, {route, relative}) {
         /*
@@ -126,15 +126,15 @@ export class Application extends Item {
 export class AppRouter extends Application {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
-    async execute(session) {
+    async route(session) {
         /*
-        Find an application in 'apps' that matches the requested URL path and call its execute().
+        Find an application in 'apps' that matches the requested URL path and call its route().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
         let [step, app, subpath] = this._route(session.path)
         session.path = subpath
         await app.load()
-        return app.execute(session)
+        return app.route(session)
     }
 
     _route(path = '') {
@@ -179,7 +179,7 @@ export class AppRouter extends Application {
 export class AppSystem extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
-    async execute(session) {
+    async route(session) {
         let item = await this._find_item(session.path)
         return item.handle(session, this)
     }
@@ -210,7 +210,7 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async execute(session) {
+    async route(session) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = session.path.slice(1).split(':')
         category = await this.getLoaded(`spaces/${space}`)
@@ -260,9 +260,9 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async execute(session) {
+    async route(session) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
-           If the object is a Folder, call its execute() with a truncated path. If the object is an item, call its handle().
+           If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
          */
         let {path} = session
         if (!path.startsWith('/')) return session.redirect(session.pathFull + '/')
@@ -285,7 +285,7 @@ export class Folder extends Item {
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) { session.path = path; return item.execute(session) }
+            if (path) { session.path = path; return item.route(session) }
             else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
@@ -326,7 +326,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async execute(session) {
+    async route(session) {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */

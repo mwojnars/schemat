@@ -57,7 +57,7 @@ class Server {
         let session = new Session(this.registry, req, res)
         await session.start()
 
-        await this.registry.site.execute(session)
+        await this.registry.site.route(session)
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
