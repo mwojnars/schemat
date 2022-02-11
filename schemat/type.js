@@ -510,6 +510,7 @@ export class CODE extends TEXT
         static style = () => this.safeCSS()
         `
         .ace-viewer, .ace-editor {
+            font-size: 1em;
             min-height: 3em;
             line-height: 1.4;
             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
@@ -1127,9 +1128,9 @@ CATALOG.Table = class extends Component {
         /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
         .cell-key:hover *|            { visibility: visible; }
                 
-        .cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor),     /* NO stopper in this selector, as it must apply inside embedded widgets */
-        .cell-value| 
-                                      { font-size: 0.9em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+        .cell-value|                  { font-size: 0.85em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+        /*.cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor)    / NO stopper in this selector, it must apply inside embedded widgets /
+                                      { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; } */
 
         .move|                        { margin-right: 10px; visibility: hidden; }
         :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
