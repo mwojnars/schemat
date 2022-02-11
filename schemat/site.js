@@ -17,9 +17,10 @@ export class Site extends Item {
     async execute(session) {
         /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
         let app  = await this.getLoaded('application')
-        let path = session.request.path, sep = Site.SEP_ENDPOINT;
-        [session.ipath, session.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        return app.execute(session.ipath, session)
+        return app.execute(session.pathFull, session)
+        // let path = session.request.path, sep = Site.SEP_ENDPOINT;
+        // [session.ipath, session.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        // return app.execute(session.ipath, session)
     }
 
     systemURL() {
@@ -77,8 +78,20 @@ export class Site extends Item {
 
 export class Application extends Item {
     /*
-    An application implements a mapping of URL paths to item methods, and the way back.
-    Some application classes may support nested applications.
+    Application implements a bidirectional mapping of URL names to items and back.
+    Typically, an application is placed as the leaf segment of a routing pattern,
+    to provide naming & routing for an open set of dynamically created items ("item space")
+    which do not have their own proper names. Usually, the application also provides methods
+    (endpoints) for creating new items. Applications make sure the URL names are unique.
+
+    Not every route must contain an application, rather it may be composed of statically-named segments alone.
+    Also, there can be multiple applications on a particular route, for example, the route:
+
+       /post/XXX/comment/YYY
+
+    contains two applications: "posts" and "comments".
+    Some applications may generate multi-segment hierarchical names (TODO).
+
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
     static SEP_ROUTE = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
@@ -104,6 +117,15 @@ export class Application extends Item {
         in any case, a leading separator should be appended by caller if needed.
         */
         throw new Error('method not implemented in a subclass')
+    }
+
+    name(item) {
+        /* If `item` belongs to the item space defined by this application, return its flat name
+           (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
+           The name can be used as a trailing component when building a URL for an item.
+           TODO: support generation of multi-segment hierarchical names (with '/').
+         */
+        return undefined
     }
 }
 
@@ -187,11 +209,6 @@ export class AppFiles extends Application {
     */
     async execute(path, session) {
         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
-
-        if (!path.startsWith('/'))
-            return session.redirect(session.ipath + '/')
-        // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
-
         session.app = this
         let root = await this.getLoaded('root_folder') || await this.registry.files
         return root.execute(path, session)     // `root` must be an item of Folder_ or its subcategory
@@ -271,6 +288,9 @@ export class Folder extends Item {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its execute() with a truncated path. If the object is an item, call its handle().
          */
+        if (!path.startsWith('/')) return session.redirect(session.pathFull + '/')
+        // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
+
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         let name = path.split(Folder.SEP_FOLDER)[0]
         let item = this

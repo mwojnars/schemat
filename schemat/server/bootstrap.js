@@ -197,6 +197,7 @@ async function create_categories(Category) {
 static check() { import('./utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
 static error() { throw new Error('Varia/class_body/error()') }
 `,
+//static check() { import('/site/utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
 //static check() { console.log("Varia/class_body/check() successful") }
         fields      : C({name: new STRING(), title: new STRING()}),
         handlers    : C({}),
@@ -229,16 +230,6 @@ async function create_items(cat, Category) {
     item.filesystem = cat.FolderLocal.new({path: `${path}`})
     // item.filesystem = cat.Folder.new({
     //     files: C({
-    //         'system':           item.dir_system,
-    //         'tmp':              item.dir_tmp2,
-    //         'assets':           cat.FolderLocal.new({path: `${path}/assets`}),
-    //
-    //         'client.js':        cat.FileLocal.new({path: `${path}/client.js`}),
-    //         'data.js':          cat.FileLocal.new({path: `${path}/data.js`}),
-    //         'item.js':          cat.FileLocal.new({path: `${path}/item.js`}),
-    //         'registry.js':      cat.FileLocal.new({path: `${path}/registry.js`}),
-    //         'serialize.js':     cat.FileLocal.new({path: `${path}/serialize.js`}),
-    //         'type.js':         cat.FileLocal.new({path: `${path}/type.js`}),
     //         'utils.js':         cat.FileLocal.new({path: `${path}/utils.js`}),
     //         // 'react.production.min.js': cat.FileLocal.new({path: `${path}/react.production.min.js`}),
     //     }),
@@ -246,7 +237,12 @@ async function create_items(cat, Category) {
     
     item.app_system = cat.AppSystem.new({name: "System"})
     item.app_files  = cat.AppFiles.new({name: "Files"})
-    // item.app_ajax  = cat.AppAjax .new({name: "AJAX"})
+
+    item.widgets_js = cat.File.new({content:
+`
+export check() { console.log('called /site/widgets.js/check()') }
+`})
+    item.dir_site   = cat.Folder.new({name: "/site", files: C({'widgets.js': item.widgets_js})})
 
     item.app_catalog = cat.AppSpaces.new({
         name        : "Catalog",
@@ -259,9 +255,10 @@ async function create_items(cat, Category) {
         }),
     })
     item.app_root = cat.AppRoot.new({
-        name        : "Applications",
+        name        : "Root",
         apps        : C({
             '$':        item.app_system,
+            'site':     item.dir_site,
             'files':    item.app_files,
             // 'ajax':     item.app_ajax,           // this app must be present under the "ajax" route for proper handling of client-server communication
             '':         item.app_catalog,        // default route

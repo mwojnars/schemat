@@ -330,7 +330,7 @@
 - __id:
     - 8
     - 1
-  name: Applications
+  name: Root
   apps:
     $:
       - 9

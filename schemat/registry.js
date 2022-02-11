@@ -1,6 +1,6 @@
 "use strict";
 
-import { print, assert } from './utils.js'
+import { print, assert, splitLast } from './utils.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID } from './item.js'
@@ -267,6 +267,8 @@ export class Registry {
 export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
+    static SEP_ACTION = '@'     // separator of an item path and an endpoint (action) name within a URL path
+
     registry            // instance of Registry
     request             // instance of node.js express' Request (only present server-side)
     response            // instance of node.js express' Response (only present server-side)
@@ -277,10 +279,14 @@ export class Session {
 
     // context of request processing; built gradually by the application(s) that process the request...
 
-    ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
+    // ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
+    pathFull            // like the original request.path, but with trailing @action removed, no routing-related truncation
     endpoint            // action to be executed on the target item; empty string '' if not provided in a request
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
+
+    //apps              // dict {...} of applications that occured on the current route, e.g., apps.posts, apps.comments ...
+    //url               // dict {...} of URL-generation functions for the apps encountered along the route: url['posts'](nextPost)
 
     app                 // leaf Application object the request is addressed to
     item                // target item that's responsible for actual handling of the request
@@ -302,6 +308,11 @@ export class Session {
         this.registry = registry
         this.request  = request
         this.response = response
+
+        if (request) {
+            let path = request.path, sep = Session.SEP_ACTION;
+            [this.pathFull, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        }
     }
 
     async start()   { this.releaseMutex = await this.registry.startSession(this) }
