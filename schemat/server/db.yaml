@@ -157,16 +157,16 @@
 - __id:
     - 0
     - 8
-  name: AppRouter
+  name: Router
   info: A set of sub-applications, each bound to a different URL prefix.
-  class_name: schemat.item.AppRouter
+  class_name: schemat.item.Router
   base_category:
     - 0
     - 7
   fields:
     name:
       "@": schemat.type.STRING
-    apps:
+    routes:
       isCatalog: true
       values:
         "@": schemat.type.ITEM
@@ -220,7 +220,7 @@
         system application, AppSystem - used for internal web access to items.
       "@": schemat.type.STRING
     application:
-      info: Application hosted on this site, typically an AppRouter with multiple
+      info: Item to perform top-level URL routing, typically a Router with multiple
         subapplications
       "@": schemat.type.ITEM
     database:
@@ -317,7 +317,7 @@
     - 8
     - 1
   name: Router
-  apps:
+  routes:
     $:
       - 9
       - 1

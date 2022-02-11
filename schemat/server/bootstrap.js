@@ -147,12 +147,12 @@ async function create_categories(Category) {
         class_name  : 'schemat.item.Application',
         fields      : C({name: new STRING()}),
     })
-    cat.AppRouter  = Category.new({
-        name        : "AppRouter",
+    cat.Router  = Category.new({
+        name        : "Router",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
-        class_name  : 'schemat.item.AppRouter',
+        class_name  : 'schemat.item.Router',
         base_category: cat.Application,
-        fields      : C({name: new STRING(), apps: new CATALOG(new ITEM())}),  // TODO: restrict apps to sub-categories of Application_ (?)
+        fields      : C({name: new STRING(), routes: new CATALOG(new ITEM())}),
     })
     cat.AppSystem = Category.new({
         name        : "AppSystem",
@@ -175,7 +175,7 @@ async function create_categories(Category) {
             name        : new STRING(),
             base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
             system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
-            application : new ITEM({info: "Application hosted on this site, typically an AppRouter with multiple subapplications"}),
+            application : new ITEM({info: "Item to perform top-level URL routing, typically a Router with multiple subapplications"}),
             database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
@@ -236,9 +236,9 @@ export check() { console.log('called /site/widgets.js/check()') }
             'sys.file':         cat.FileLocal,
         }),
     })
-    item.app_root = cat.AppRouter.new({
+    item.app_root = cat.Router.new({
         name        : "Router",
-        apps        : C({
+        routes      : C({
             '$':        item.app_system,
             'site':     item.dir_site,
             'files':    item.dir_files,

@@ -123,7 +123,7 @@ export class Application extends Item {
     }
 }
 
-export class AppRouter extends Application {
+export class Router extends Item {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
     async route(session) {
@@ -131,17 +131,14 @@ export class AppRouter extends Application {
         Find an application in 'apps' that matches the requested URL path and call its route().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
-        let [step, app, subpath] = this._route(session.path)
+        let [app, subpath] = this._find(session.path)
         session.path = subpath
         await app.load()
         return app.route(session)
     }
 
-    _route(path = '') {
-        /*
-        Make one step forward along a URL `path`. Return the extracted route segment (step),
-        the associated application object, and the remaining subpath.
-        */
+    _find(path = '') {
+        /* Make one step forward along a URL `path`. Return the object associated with the route and the remaining subpath. */
         let lead = 0, step
 
         // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
@@ -152,14 +149,14 @@ export class AppRouter extends Application {
         } else
             step = path.split(Application.SEP_ROUTE)[0]
         
-        let apps = this.get('apps')
-        let app  = apps.get(step)
+        let routes = this.get('routes')
+        let route  = routes.get(step)
         
-        if (step && app)                        // non-default (named) route can be followed with / in path
-            return [step, app, path.slice(lead + step.length)]
+        if (step && route)                          // non-default (named) route can be followed with / in path
+            return [route, path.slice(lead + step.length)]
         
-        if (apps.has(''))                      // default (unnamed) route has special format, no "/"
-            return ['', apps.get(''), path]
+        if (routes.has(''))                         // default (unnamed) route has special format, no "/"
+            return [routes.get(''), path]
         
         throw new Error(`URL path not found: ${path}`)
     }
