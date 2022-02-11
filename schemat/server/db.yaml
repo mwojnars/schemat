@@ -64,7 +64,7 @@
         "@": schemat.data.Catalog
     - key: startup_site
       value:
-        - 12
+        - 11
         - 1
   "@": schemat.data.Data
 - __id:
@@ -88,7 +88,7 @@
     - 0
     - 3
   name: File
-  info: File with a text content. Accessible through the web filesystem.
+  info: File with a text content.
   class_name: schemat.item.File
   fields:
     format:
@@ -184,21 +184,6 @@
 - __id:
     - 0
     - 10
-  name: AppFiles
-  class_name: schemat.item.AppFiles
-  fields:
-    name:
-      "@": schemat.type.STRING
-    root_folder:
-      category_base:
-        =:
-          - 0
-          - 5
-        "@": (item)
-      "@": schemat.type.ITEM
-- __id:
-    - 0
-    - 11
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -219,7 +204,7 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 12
+    - 11
   name: Site
   info: Category of site records. A site contains information about applications,
     servers, startup
@@ -238,14 +223,6 @@
       info: Application hosted on this site, typically an AppRouter with multiple
         subapplications
       "@": schemat.type.ITEM
-    filesystem:
-      info: Root of the global file system
-      category_base:
-        =:
-          - 0
-          - 5
-        "@": (item)
-      "@": schemat.type.ITEM
     database:
       info: Global database layer
       category_base:
@@ -256,7 +233,7 @@
       "@": schemat.type.ITEM
 - __id:
     - 0
-    - 13
+    - 12
   name: Varia
   info: Category of items that do not belong to any specific category
   class_body: >
@@ -276,7 +253,7 @@
   files:
     Site:
       - 0
-      - 12
+      - 11
     File:
       - 0
       - 3
@@ -314,10 +291,6 @@
     - 1
   name: System
 - __id:
-    - 10
-    - 1
-  name: Files
-- __id:
     - 3
     - 2
   content: |
@@ -331,13 +304,13 @@
       - 3
       - 2
 - __id:
-    - 11
+    - 10
     - 1
   name: Catalog
   spaces:
     sys.category: 0
-    sys.item: 13
-    sys.site: 12
+    sys.item: 12
+    sys.site: 11
     sys.dir: 5
     sys.file: 4
 - __id:
@@ -355,10 +328,10 @@
       - 6
       - 1
     "":
-      - 11
+      - 10
       - 1
 - __id:
-    - 12
+    - 11
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
@@ -366,17 +339,14 @@
   application:
     - 8
     - 1
-  filesystem:
-    - 6
-    - 1
   database:
     - 2
     - 1
 - __id:
-    - 13
+    - 12
     - 1
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - __id:
-    - 13
+    - 12
     - 2
   title: ąłęÓŁŻŹŚ
