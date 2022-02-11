@@ -91,7 +91,7 @@ export class Application extends Item {
 
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
-    static SEP_ROUTE = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
+    static SEP_ROUTE = '/'      // separator of route segments in URL paths
 
     async execute(session) {
         /*
@@ -123,8 +123,8 @@ export class Application extends Item {
     }
 }
 
-export class AppRoot extends Application {
-    /* A set of sub-applications, each bound to a different URL prefix. */
+export class AppRouter extends Application {
+    /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
     async execute(session) {
         /*
@@ -164,16 +164,16 @@ export class AppRoot extends Application {
         throw new Error(`URL path not found: ${path}`)
     }
 
-    url_path(item, opts = {}) {
-
-        let [step, app, path] = this._route(opts.route)
-        app.assertLoaded()
-        // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
-        let subpath = app.url_path(item, {...opts, route: path})
-        if (opts.relative) return subpath                           // path relative to `route`
-        let segments = [step, subpath].filter(Boolean)              // only non-empty segments
-        return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
-    }
+    // url_path(item, opts = {}) {
+    //
+    //     let [step, app, path] = this._route(opts.route)
+    //     app.assertLoaded()
+    //     // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
+    //     let subpath = app.url_path(item, {...opts, route: path})
+    //     if (opts.relative) return subpath                           // path relative to `route`
+    //     let segments = [step, subpath].filter(Boolean)              // only non-empty segments
+    //     return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
+    // }
 }
 
 export class AppSystem extends Application {

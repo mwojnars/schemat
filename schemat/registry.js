@@ -277,9 +277,13 @@ export class Session {
     get res()           { return this.response }
     get channels()      { return [this.request, this.response] }
 
-    // context of request processing; built gradually by the application(s) that process the request...
+    // get method()        { return this.request.method }
+    // get query()         { return this.request.query  }
+    // get body()          { return this.request.body   }
 
-    pathFull            // like the original request.path, but with trailing @action removed, no routing-related truncation
+    // context & state of request processing; built gradually by subsequent nodes on the request route...
+
+    pathFull            // like the original request.path, but with trailing @action removed; no routing-related truncation
     path                // remaining path to be consumed by subsequent nodes along the route; equal pathFull at the beginning,
                         // it gets truncated while the routing proceeds
 

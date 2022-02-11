@@ -157,9 +157,9 @@
 - __id:
     - 0
     - 8
-  name: AppRoot
+  name: AppRouter
   info: A set of sub-applications, each bound to a different URL prefix.
-  class_name: schemat.item.AppRoot
+  class_name: schemat.item.AppRouter
   base_category:
     - 0
     - 7
@@ -235,7 +235,7 @@
         system application, AppSystem - used for internal web access to items.
       "@": schemat.type.STRING
     application:
-      info: Application hosted on this site, typically an AppRoot with multiple
+      info: Application hosted on this site, typically an AppRouter with multiple
         subapplications
       "@": schemat.type.ITEM
     filesystem:
@@ -318,6 +318,19 @@
     - 1
   name: Files
 - __id:
+    - 3
+    - 2
+  content: |
+    
+    export check() { console.log('called /site/widgets.js/check()') }
+- __id:
+    - 5
+    - 4
+  files:
+    widgets.js:
+      - 3
+      - 2
+- __id:
     - 11
     - 1
   name: Catalog
@@ -330,13 +343,16 @@
 - __id:
     - 8
     - 1
-  name: Root
+  name: Router
   apps:
     $:
       - 9
       - 1
+    site:
+      - 5
+      - 4
     files:
-      - 10
+      - 6
       - 1
     "":
       - 11

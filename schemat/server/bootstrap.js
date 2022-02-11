@@ -150,10 +150,10 @@ async function create_categories(Category) {
                                         // if the app needs to store data items in the directory, it's recommended
                                         // to do this inside a .../data subfolder
     })
-    cat.AppRoot  = Category.new({
-        name        : "AppRoot",
+    cat.AppRouter  = Category.new({
+        name        : "AppRouter",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
-        class_name  : 'schemat.item.AppRoot',
+        class_name  : 'schemat.item.AppRouter',
         base_category: cat.Application,
         fields      : C({name: new STRING(), apps: new CATALOG(new ITEM())}),  // TODO: restrict apps to sub-categories of Application_ (?)
     })
@@ -183,7 +183,7 @@ async function create_categories(Category) {
             name        : new STRING(),
             base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
             system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
-            application : new ITEM({info: "Application hosted on this site, typically an AppRoot with multiple subapplications"}),
+            application : new ITEM({info: "Application hosted on this site, typically an AppRouter with multiple subapplications"}),
             filesystem  : new ITEM({type: cat.Folder, info: "Root of the global file system"}),
             database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
@@ -242,7 +242,7 @@ async function create_items(cat, Category) {
 `
 export check() { console.log('called /site/widgets.js/check()') }
 `})
-    item.dir_site   = cat.Folder.new({name: "/site", files: C({'widgets.js': item.widgets_js})})
+    item.dir_site   = cat.Folder.new({files: C({'widgets.js': item.widgets_js})})   // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
 
     item.app_catalog = cat.AppSpaces.new({
         name        : "Catalog",
@@ -254,12 +254,13 @@ export check() { console.log('called /site/widgets.js/check()') }
             'sys.file':         cat.FileLocal,
         }),
     })
-    item.app_root = cat.AppRoot.new({
-        name        : "Root",
+    item.app_root = cat.AppRouter.new({
+        name        : "Router",
         apps        : C({
             '$':        item.app_system,
             'site':     item.dir_site,
-            'files':    item.app_files,
+            'files':    item.filesystem,
+            // 'files':    item.app_files,
             // 'ajax':     item.app_ajax,           // this app must be present under the "ajax" route for proper handling of client-server communication
             '':         item.app_catalog,        // default route
         }),
