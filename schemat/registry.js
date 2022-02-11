@@ -279,8 +279,10 @@ export class Session {
 
     // context of request processing; built gradually by the application(s) that process the request...
 
-    // ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
     pathFull            // like the original request.path, but with trailing @action removed, no routing-related truncation
+    path                // remaining path to be consumed by subsequent nodes along the route; equal pathFull at the beginning,
+                        // it gets truncated while the routing proceeds
+
     endpoint            // action to be executed on the target item; empty string '' if not provided in a request
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
@@ -309,9 +311,10 @@ export class Session {
         this.request  = request
         this.response = response
 
-        if (request) {
+        if (request) {                      // server-side
             let path = request.path, sep = Session.SEP_ACTION;
             [this.pathFull, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+            this.path = this.pathFull
         }
     }
 

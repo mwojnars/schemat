@@ -15,12 +15,9 @@ export class Site extends Item {
     static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
     async execute(session) {
-        /* Set `ipath` and `endpoint` in request. Forward the request to a root application from the `app` property. */
-        let app  = await this.getLoaded('application')
-        return app.execute(session.pathFull, session)
-        // let path = session.request.path, sep = Site.SEP_ENDPOINT;
-        // [session.ipath, session.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        // return app.execute(session.ipath, session)
+        /* Forward the request to the root item. */
+        let app = await this.getLoaded('application')
+        return app.execute(session)
     }
 
     systemURL() {
@@ -96,13 +93,10 @@ export class Application extends Item {
     */
     static SEP_ROUTE = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
 
-    async execute(path, session) {
+    async execute(session) {
         /*
-        Execute an action desribed by a `path` that originated from a web `request` and emit results to a web `response`.
-        Typically, `path` is a URL path or subpath that points to an item and its particular view
-        that should be rendered in response; this is not a strict rule, however.
-
-        When spliting an original request.path on SEP_ROUTE, parent applications should ensure that
+        Execute an action desribed by session.path that originated from a web `request` and emit results to a web `response`.
+        When spliting an original path on SEP_ROUTE, parent applications should ensure that
         the separatoror (if present) is preserved in a remaining subpath, so that sub-applications
         can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
         */
@@ -132,14 +126,15 @@ export class Application extends Item {
 export class AppRoot extends Application {
     /* A set of sub-applications, each bound to a different URL prefix. */
 
-    async execute(path, session) {
+    async execute(session) {
         /*
         Find an application in 'apps' that matches the requested URL path and call its execute().
         `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
         */
-        let [step, app, subpath] = this._route(path)
+        let [step, app, subpath] = this._route(session.path)
+        session.path = subpath
         await app.load()
-        return app.execute(subpath, session)
+        return app.execute(session)
     }
 
     _route(path = '') {
@@ -184,8 +179,8 @@ export class AppRoot extends Application {
 export class AppSystem extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
-    async execute(path, session) {
-        let item = await this._find_item(path)
+    async execute(session) {
+        let item = await this._find_item(session.path)
         return item.handle(session, this)
     }
     async _find_item(path) {
@@ -207,11 +202,11 @@ export class AppFiles extends Application {
     Filesystem application. Folders and files are accessible through the hierarchical
     "file path" routing pattern: .../dir1/dir2/file.txt
     */
-    async execute(path, session) {
+    async execute(session) {
         /* Find an item (file/folder) pointed to by `path` and call its handle(). */
         session.app = this
         let root = await this.getLoaded('root_folder') || await this.registry.files
-        return root.execute(path, session)     // `root` must be an item of Folder_ or its subcategory
+        return root.execute(session)     // `root` must be an item of Folder_ or its subcategory
     }
 
     url_path(item, opts = {}) {
@@ -234,9 +229,9 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async execute(path, session) {
+    async execute(session) {
         // decode space identifier and convert to a category object
-        let category, [space, item_id] = path.slice(1).split(':')
+        let category, [space, item_id] = session.path.slice(1).split(':')
         category = await this.getLoaded(`spaces/${space}`)
         if (!category) return session.sendStatus(404)
         let item = category.getItem(Number(item_id))
@@ -284,10 +279,11 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async execute(path, session) {
+    async execute(session) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its execute() with a truncated path. If the object is an item, call its handle().
          */
+        let {path} = session
         if (!path.startsWith('/')) return session.redirect(session.pathFull + '/')
         // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
 
@@ -308,7 +304,7 @@ export class Folder extends Item {
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) return item.execute(path, session)
+            if (path) { session.path = path; return item.execute(session) }
             else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
@@ -349,10 +345,11 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async execute(path, session) {
+    async execute(session) {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */
+        let {path} = session
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         if (!path) return this.handle(session)          // if no file `path` given, display this folder as a plain item
 
