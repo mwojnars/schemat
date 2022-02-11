@@ -194,9 +194,10 @@ async function create_categories(Category) {
         // class_name  : 'schemat.item.Item',
         class_body  :
 `
-static check() { console.log("Varia/class_body/check() successful") } 
+static check() { import('./utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
 static error() { throw new Error('Varia/class_body/error()') }
 `,
+//static check() { console.log("Varia/class_body/check() successful") }
         fields      : C({name: new STRING(), title: new STRING()}),
         handlers    : C({}),
     })

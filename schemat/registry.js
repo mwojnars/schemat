@@ -278,7 +278,7 @@ export class Session {
     // context of request processing; built gradually by the application(s) that process the request...
 
     ipath               // like request.path, but with trailing @endpoint removed; typically identifies an item ("item path")
-    endpoint            // item's endpoint/view that should be executed; empty string '' if no endpoint
+    endpoint            // action to be executed on the target item; empty string '' if not provided in a request
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
 

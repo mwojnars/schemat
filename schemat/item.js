@@ -9,9 +9,10 @@ import { Catalog, Data } from './data.js'
 
 export const ROOT_CID = 0
 
-// import styles from "./assets/styles.css";
-// print("styles:", styles)
-
+// import * as utils from 'http://127.0.0.1:3000/files/utils.js'
+// import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
+// print("imported utils from localhost:", utils)
+print('import.meta:', import.meta)
 
 /**********************************************************************************************************************
  **
@@ -612,7 +613,7 @@ export class Category extends Item {
     getClass()      { return this.temp('class') }
 
     _temp_class() {
-        print(`${this.id_str} _temp_class()`)
+        // print(`${this.id_str} _temp_class()`)
         let base = this.get('base_category')            // use the FIRST base category's class as the (base) class
         let name = this.get('class_name')
         let body = this.get('class_body')

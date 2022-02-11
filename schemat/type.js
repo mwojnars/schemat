@@ -521,7 +521,7 @@ export class CODE extends TEXT
             height: 5em;
         }
         .ace-editor {
-            background-color: rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.5);
             height: 12em;
         }
         `

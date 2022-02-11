@@ -33,36 +33,41 @@ export class Site extends Item {
         that's processing the current web request; or an absolute or relative URL
         assigned by an application anchored at a given `route`.
         */
-        let url = this.url_path(item, {route, relative, baseURL})
+        // let url = this.url_path(item, {route, relative, baseURL})
+        let app  = this.registry.session.app
+        app.assertLoaded()
+        let path = app.url_path(item, {relative})
+        let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         return this.setEndpoint(url, endpoint, args)              // append `endpoint` and `args` to the URL
     }
 
-    url_path(item, {route, relative, baseURL}) {
+    // url_path(item, {route, relative, baseURL}) {
+    //
+    //     // relative URL anchored at the deep-most application's route
+    //     if (route === undefined) {
+    //         let app  = this.registry.session.app
+    //         app.assertLoaded()
+    //         let path = app.url_path(item, {relative})
+    //         return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+    //     }
+    //
+    //     // NOTE: the code below is never used right now, all calls leave route=undefined (??)
+    //
+    //     // relative URL anchored at `route`
+    //     let root = this.get('application'); root.assertLoaded()
+    //     let path = root.url_path(item, {route, relative})
+    //     if (relative) return path
+    //
+    //     // absolute URL without base?
+    //     path = '/' + path
+    //     if (!baseURL) return path
+    //
+    //     // absolute URL with base (protocol+domain+port)
+    //     let base = (typeof baseURL === 'string') ? baseURL : this.get('base_url')
+    //     if (base.endsWith('/')) base = base.slice(-1)
+    //     return base + path
+    // }
 
-        // relative URL anchored at the deep-most application's route
-        if (route === undefined) {
-            let app  = this.registry.session.app
-            app.assertLoaded()
-            let path = app.url_path(item, {relative})
-            return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        }
-
-        // NOTE: the code below is never used right now, all calls leave route=undefined (??)
-
-        // relative URL anchored at `route`
-        let root = this.get('application'); root.assertLoaded()
-        let path = root.url_path(item, {route, relative})
-        if (relative) return path
-
-        // absolute URL without base?
-        path = '/' + path
-        if (!baseURL) return path
-
-        // absolute URL with base (protocol+domain+port)
-        let base = (typeof baseURL === 'string') ? baseURL : this.get('base_url')
-        if (base.endsWith('/')) base = base.slice(-1)
-        return base + path
-    }
     setEndpoint(url, endpoint, args) {
         if (endpoint) url += `${Site.SEP_ENDPOINT}${endpoint}`
         if (args) url += '?' + new URLSearchParams(args).toString()
@@ -78,10 +83,10 @@ export class Application extends Item {
     */
     static SEP_ROUTE = '/'      // separator of route segments in URL, each segment corresponds to another (sub)application
 
-    async execute(action, session) {
+    async execute(path, session) {
         /*
-        Execute an `action` that originated from a web `request` and emit results to a web `response`.
-        Typically, `action` is a URL path or subpath that points to an item and its particular view
+        Execute an action desribed by a `path` that originated from a web `request` and emit results to a web `response`.
+        Typically, `path` is a URL path or subpath that points to an item and its particular view
         that should be rendered in response; this is not a strict rule, however.
 
         When spliting an original request.path on SEP_ROUTE, parent applications should ensure that
