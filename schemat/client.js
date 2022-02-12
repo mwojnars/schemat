@@ -91,6 +91,8 @@ class ClientRegistry extends Registry {
  **
  */
 
+import {check} from "/site/widgets.js"
+
 export async function boot() {
 
     let data     = read_data('#data-session')   //'json+base64'
@@ -107,4 +109,6 @@ export async function boot() {
     // print('main item:', item)
 
     item.render(root)
+
+    check()
 }

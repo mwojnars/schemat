@@ -414,7 +414,19 @@ export class Item {
     //     onback:    ...                     (db handler)
     // })
 
-    /***  Handlers (server side)  ***/
+    /***  Routing & handling requests (server side)  ***/
+
+    async route(session) {
+        /*
+        Route a web request to an appropriate sub-node, or call its handle() if a terminal node.
+        Truncate the .path as needed for routing in subsequent nodes.
+        When spliting an original path on SEP_ROUTE, parent applications should ensure that
+        the separatoror (if present) is preserved in the remaining subpath, so that subsequent nodes
+        can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
+        */
+        // TODO: route into `data` by default
+        throw new Error('not implemented')
+    }
 
     async handle(session, app = null) {
         /*
@@ -437,7 +449,7 @@ export class Item {
         session.item = this
         if (app) session.app = app
         let endpoint = session.getEndpoint()
-        await this.load()       // needed to have this.category below initialized
+        await this.load()       // for this.category, below, to be initialized
 
         let handler
         let handlers = this.category.getHandlers()

@@ -107,11 +107,7 @@ async function create_categories(Category) {
             _is_file    : new BOOLEAN({default: true}),
         }),
         handlers    : C({
-            download    : `return this.read()   // full content of this File returned as plain text`,
-// `async function() {
-//     /* Return full content of this File as plain text. */
-//     return this.read()
-// }`,
+            // download    : `return this.read()   // full content of this File returned as plain text`,
         })
     })
     cat.FileLocal = Category.new({
@@ -151,7 +147,6 @@ async function create_categories(Category) {
         name        : "Router",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
         class_name  : 'schemat.item.Router',
-        base_category: cat.Application,
         fields      : C({name: new STRING(), routes: new CATALOG(new ITEM())}),
     })
     cat.AppSystem = Category.new({
@@ -220,10 +215,7 @@ async function create_items(cat, Category) {
 
     item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.app_system = cat.AppSystem.new({name: "System"})
-    item.widgets_js = cat.File.new({content:
-`
-export check() { console.log('called /site/widgets.js/check()') }
-`})
+    item.widgets_js = cat.File.new({content: `export function check() { console.log('called /site/widgets.js/check()') }`})
     item.dir_site   = cat.Folder.new({files: C({'widgets.js': item.widgets_js})})   // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
 
     item.app_catalog = cat.AppSpaces.new({

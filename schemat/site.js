@@ -3,6 +3,12 @@ import { ItemsMap } from './data.js'
 import { Item } from './item.js'
 
 
+/**********************************************************************************************************************/
+
+const SEP_ROUTE  = '/'        // separator of route segments in URL paths
+const SEP_ACTION = '@'        // separator of an item path and an endpoint (action) name within a URL
+
+
 /**********************************************************************************************************************
  **
  **  ITEM SUBCLASSES
@@ -11,8 +17,6 @@ import { Item } from './item.js'
 
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
-
-    static SEP_ENDPOINT = '@'       // separator of an item path and an endpoint name within a URL path
 
     async route(session) {
         /* Forward the request to the root item. */
@@ -36,7 +40,10 @@ export class Site extends Item {
         app.assertLoaded()
         let path = app.url_path(item, {relative})
         let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        return this.setEndpoint(url, endpoint, args)              // append `endpoint` and `args` to the URL
+        if (endpoint) url += `${SEP_ACTION}${endpoint}`                 // append `endpoint` and `args` to the URL
+        if (args) url += '?' + new URLSearchParams(args).toString()
+        return url
+        // return this.setEndpoint(url, endpoint, args)
     }
 
     // url_path(item, {route, relative, baseURL}) {
@@ -65,62 +72,12 @@ export class Site extends Item {
     //     if (base.endsWith('/')) base = base.slice(-1)
     //     return base + path
     // }
-
-    setEndpoint(url, endpoint, args) {
-        if (endpoint) url += `${Site.SEP_ENDPOINT}${endpoint}`
-        if (args) url += '?' + new URLSearchParams(args).toString()
-        return url
-    }
-}
-
-export class Application extends Item {
-    /*
-    Application implements a bidirectional mapping of URL names to items and back.
-    Typically, an application is placed as the leaf segment of a routing pattern,
-    to provide naming & routing for an open set of dynamically created items ("item space")
-    which do not have their own proper names. Usually, the application also provides methods
-    (endpoints) for creating new items. Applications make sure the URL names are unique.
-
-    Not every route must contain an application, rather it may be composed of statically-named segments alone.
-    Also, there can be multiple applications on a particular route, for example, the route:
-
-       /post/XXX/comment/YYY
-
-    contains two applications: "posts" and "comments".
-    Some applications may generate multi-segment hierarchical names (TODO).
-
-    INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
-    */
-    static SEP_ROUTE = '/'      // separator of route segments in URL paths
-
-    async route(session) {
-        /*
-        Execute an action described by session.path that originated from a web `request` and emit results to a web `response`.
-        When spliting an original path on SEP_ROUTE, parent applications should ensure that
-        the separatoror (if present) is preserved in a remaining subpath, so that sub-applications
-        can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
-        */
-        throw new Error('not implemented')
-    }
-    url_path(item, {route, relative}) {
-        /*
-        Generate URL path (URL fragment after route) for `item`.
-        If relative=true, the path is relative to a given application `route`; otherwise,
-        it is absolute, i.e., includes segments for all intermediate applications below this one;
-        the path does NOT have a leading separator, or it has a different meaning -
-        in any case, a leading separator should be appended by caller if needed.
-        */
-        throw new Error('method not implemented in a subclass')
-    }
-
-    name(item) {
-        /* If `item` belongs to the item space defined by this application, return its flat name
-           (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
-           The name can be used as a trailing component when building a URL for an item.
-           TODO: support generation of multi-segment hierarchical names (with '/').
-         */
-        return undefined
-    }
+    //
+    // setEndpoint(url, endpoint, args) {
+    //     if (endpoint) url += `${SEP_ACTION}${endpoint}`
+    //     if (args) url += '?' + new URLSearchParams(args).toString()
+    //     return url
+    // }
 }
 
 export class Router extends Item {
@@ -128,8 +85,8 @@ export class Router extends Item {
 
     async route(session) {
         /*
-        Find an application in 'apps' that matches the requested URL path and call its route().
-        `path` can be an empty string; if non-empty, it starts with SEP_ROUTE character.
+        Find an object in `routes` that matches the requested URL path and call its route().
+        The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
         */
         let [app, subpath] = this._find(session.path)
         session.path = subpath
@@ -143,11 +100,11 @@ export class Router extends Item {
 
         // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
         // and preserve in a returned subpath otherwise
-        if (path.startsWith(Application.SEP_ROUTE)) {
+        if (path.startsWith(SEP_ROUTE)) {
             lead = (path.length >= 2)
-            step = path.slice(1).split(Application.SEP_ROUTE)[0]
+            step = path.slice(1).split(SEP_ROUTE)[0]
         } else
-            step = path.split(Application.SEP_ROUTE)[0]
+            step = path.split(SEP_ROUTE)[0]
         
         let routes = this.get('routes')
         let route  = routes.get(step)
@@ -169,8 +126,48 @@ export class Router extends Item {
     //     let subpath = app.url_path(item, {...opts, route: path})
     //     if (opts.relative) return subpath                           // path relative to `route`
     //     let segments = [step, subpath].filter(Boolean)              // only non-empty segments
-    //     return segments.join(Application.SEP_ROUTE)                 // absolute path, empty segments excluded
+    //     return segments.join(SEP_ROUTE)                 // absolute path, empty segments excluded
     // }
+}
+
+export class Application extends Item {
+    /*
+    Application implements a bidirectional mapping of URL names to items and back.
+    Typically, an application is placed as the leaf segment of a routing pattern,
+    to provide naming & routing for an open set of dynamically created items ("item space")
+    which do not have their own proper names. Usually, the application also provides methods
+    (endpoints) for creating new items. Applications make sure the URL names are unique.
+
+    Not every route must contain an application, rather it may be composed of statically-named segments alone.
+    Also, there can be multiple applications on a particular route, for example, the route:
+
+       /post/XXX/comment/YYY
+
+    contains two applications: "posts" and "comments".
+    Some applications may generate multi-segment hierarchical names (TODO).
+
+    INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
+    */
+
+    url_path(item, {route, relative}) {
+        /*
+        Generate URL path (URL fragment after route) for `item`.
+        If relative=true, the path is relative to a given application `route`; otherwise,
+        it is absolute, i.e., includes segments for all intermediate applications below this one;
+        the path does NOT have a leading separator, or it has a different meaning -
+        in any case, a leading separator should be appended by caller if needed.
+        */
+        throw new Error('method not implemented in a subclass')
+    }
+
+    name(item) {
+        /* If `item` belongs to the item space defined by this application, return its flat name
+           (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
+           The name can be used as a trailing component when building a URL for an item.
+           TODO: support generation of multi-segment hierarchical names (with '/').
+         */
+        return undefined
+    }
 }
 
 export class AppSystem extends Application {
@@ -224,13 +221,22 @@ export class AppSpaces extends Application {
  */
 
 export class File extends Item {
-    async read() {
-        return this.get('content')
+    read() { return this.get('content') }
+
+    _handle_download({res, session}) {
+        this.setMimetype(res, session.pathFull)
+        res.send(this.read())
     }
-    // async _handle_download() {
-    //     /* Return full content of this file, either as <str> or a Response object. */
-    //     return this.read()
-    // }
+    setMimetype(res, path) {
+        // use the `mimetype` property if present...
+        let mimetype = this.get('mimetype')
+        if (mimetype) return res.type(mimetype)
+
+        // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
+        let name = path.split('/').pop()
+        let ext  = name.split('.').pop()
+        if (ext !== name) res.type(ext)
+    }
 }
 
 export class FileLocal extends File {
@@ -240,11 +246,11 @@ export class FileLocal extends File {
         if (path) return fs.readFileSync(path, {encoding})
     }
     _handle_download({res}) {
-        let content = this.get('content', null)
+        let content = this.get('content')
         if (typeof content === 'string')
             return res.send(content)
         
-        let path = this.get('path', null)
+        let path = this.get('path')
         if (!path) res.sendStatus(404)
 
         res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
@@ -263,7 +269,7 @@ export class Folder extends Item {
          */
         let {path} = session
         if (!path.startsWith('/')) return session.redirect(session.pathFull + '/')
-        // TODO: make sure that special symbols, e.g. SEP_ENDPOINT, are forbidden in file paths
+        // TODO: make sure that special symbols, e.g. SEP_ACTION, are forbidden in file paths
 
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         let name = path.split(Folder.SEP_FOLDER)[0]
@@ -274,6 +280,7 @@ export class Folder extends Item {
             if (!item) throw new Error(`URL path not found: ${path}`)
             assert(item instanceof Item, `not an item: ${item}`)
             path = path.slice(name.length+1)
+            await item.load()
         }
 
         if (item.get('_is_file')) {

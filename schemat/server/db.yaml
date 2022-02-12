@@ -98,8 +98,7 @@
     _is_file:
       default: true
       "@": schemat.type.BOOLEAN
-  handlers:
-    download: return this.read()   // full content of this File returned as plain text
+  handlers: {}
 - __id:
     - 0
     - 4
@@ -160,9 +159,6 @@
   name: Router
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: schemat.item.Router
-  base_category:
-    - 0
-    - 7
   fields:
     name:
       "@": schemat.type.STRING
@@ -293,9 +289,7 @@
 - __id:
     - 3
     - 2
-  content: |
-    
-    export check() { console.log('called /site/widgets.js/check()') }
+  content: export function check() { console.log('called /site/widgets.js/check()') }
 - __id:
     - 5
     - 4
