@@ -91,10 +91,16 @@
   info: File with a text content.
   class_name: schemat.item.File
   fields:
-    format:
-      "@": schemat.type.STRING
     content:
       "@": schemat.type.CODE
+    mimetype:
+      info: Mimetype string (must include '/') to be sent as Content-Type when serving
+        file download; or an extension ('js', 'jpg', ...) to be converted to an
+        appropriate mimetype. If missing, response mimetype is inferred from a
+        URL path extension, if any.
+      "@": schemat.type.STRING
+    format:
+      "@": schemat.type.STRING
     _is_file:
       default: true
       "@": schemat.type.BOOLEAN

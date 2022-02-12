@@ -102,8 +102,9 @@ async function create_categories(Category) {
         info        : "File with a text content.",
         class_name  : 'schemat.item.File',
         fields      : C({
-            format      : new STRING(),    // ProgrammingLanguage()
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
+            mimetype    : new STRING({info: "Mimetype string (must include '/') to be sent as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate mimetype. If missing, response mimetype is inferred from a URL path extension, if any."}),
+            format      : new STRING(),    // ProgrammingLanguage()
             _is_file    : new BOOLEAN({default: true}),
         }),
         handlers    : C({
