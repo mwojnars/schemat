@@ -94,10 +94,10 @@
     content:
       "@": schemat.type.CODE
     mimetype:
-      info: Mimetype string (must include '/') to be sent as Content-Type when serving
+      info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
-        appropriate mimetype. If missing, response mimetype is inferred from a
-        URL path extension, if any.
+        appropriate type. If missing, response mimetype is inferred from a URL
+        path extension, if any.
       "@": schemat.type.STRING
     format:
       "@": schemat.type.STRING

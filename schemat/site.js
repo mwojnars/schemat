@@ -173,6 +173,11 @@ export class Application extends Item {
 export class AppSystem extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
     
+    url_path(item, opts = {}) {
+        assert(item.has_id())
+        let [cid, iid] = item.id
+        return `${cid}:${iid}`
+    }
     async route(session) {
         let item = await this._find_item(session.path)
         return item.handle(session, this)
@@ -183,11 +188,6 @@ export class AppSystem extends Application {
         try { id = path.slice(1).split(':').map(Number) }
         catch (ex) { throw new Error(`URL path not found: ${path}`) }
         return this.registry.getLoaded(id)
-    }
-    url_path(item, opts = {}) {
-        assert(item.has_id())
-        let [cid, iid] = item.id
-        return `${cid}:${iid}`
     }
 }
 
@@ -224,10 +224,10 @@ export class File extends Item {
     read() { return this.get('content') }
 
     _handle_download({res, session}) {
-        this.setMimetype(res, session.pathFull)
+        this.setMimeType(res, session.pathFull)
         res.send(this.read())
     }
-    setMimetype(res, path) {
+    setMimeType(res, path) {
         // use the `mimetype` property if present...
         let mimetype = this.get('mimetype')
         if (mimetype) return res.type(mimetype)

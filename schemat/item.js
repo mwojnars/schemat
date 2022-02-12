@@ -12,7 +12,7 @@ export const ROOT_CID = 0
 // import * as utils from 'http://127.0.0.1:3000/files/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
-print('import.meta:', import.meta)
+// print('import.meta:', import.meta)
 
 /**********************************************************************************************************************
  **
@@ -416,16 +416,30 @@ export class Item {
 
     /***  Routing & handling requests (server side)  ***/
 
-    async route(session) {
+    async route(path, session) {
         /*
-        Route a web request to an appropriate sub-node, or call its handle() if a terminal node.
+        Find an object pointed to by `path`. The `path` may span multiple connected (sub)items,
+        and path segments may be interpreted differently at different stages of `path` routing.
+        Typically, `path` originates from a web request as a trailing part of a URL after the domain.
+        However, route() can also be called internally by Schemat, in such case, `path` is an arbitrary
+        path into the Schemat's Common Namespace, and `session` is left undefined.
+
+        Route a deep `path` request to an appropriate sub-node, or call handle() if a terminal node.
         Truncate the .path as needed for routing in subsequent nodes.
         When spliting an original path on SEP_ROUTE, parent applications should ensure that
         the separatoror (if present) is preserved in the remaining subpath, so that subsequent nodes
         can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
         */
-        // TODO: route into `data` by default
         throw new Error('not implemented')
+
+        if (!path) return session ? this.handle(session) : this
+
+        // route into `data` by default; other types of Items can perform routing differently
+        await this.load()
+        let [obj, subpath] = this.data.route(path)
+        if (!subpath) return obj
+        if (!(obj instanceof Item)) throw new Error(`path not found: ${subpath}`)
+        return item.route(path, session)
     }
 
     async handle(session, app = null) {

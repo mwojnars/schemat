@@ -91,7 +91,7 @@ class ClientRegistry extends Registry {
  **
  */
 
-import {check} from "/site/widgets.js"
+// import {check} from "/site/widgets.js"
 
 export async function boot() {
 
@@ -109,6 +109,5 @@ export async function boot() {
     // print('main item:', item)
 
     item.render(root)
-
-    check()
+    // check()
 }

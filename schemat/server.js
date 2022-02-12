@@ -10,6 +10,9 @@ import {assert, print, sleep} from './utils.js'
 import {ServerRegistry} from './server/registry-s.js'
 import {Session} from './registry.js'
 
+// import {check} from "/site/widgets.js"
+// check()
+
 
 /**********************************************************************************************************************/
 
@@ -41,13 +44,13 @@ RES.sendItems = function(items) {
  **
  */
 
-class Server {
+export class Server {
     /* For sending & receiving multi-part data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor()   { this.registry = globalThis.registry = new ServerRegistry(DB_YAML) }
+    constructor()   { this.registry = globalThis.registry = new ServerRegistry(DB_YAML); print("Server created") }
     async boot()    { return this.registry.boot() }
 
     async handle(req, res) {
@@ -64,7 +67,41 @@ class Server {
         // session.printCounts()
         session.stop()
     }
+
+    async serve_express() {
+        await this.boot()
+        const app = express()
+
+        // for official middleware see: https://expressjs.com/en/resources/middleware.html
+        // for receiving files:
+        //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
+        //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
+
+        app.use(express.json())                                 // for parsing application/json
+        app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
+
+        app.all('*', (req, res) => this.handle(req, res))
+        // web.get('*', async (req, res) => {
+        //     res.send(`URL path: ${req.path}`)
+        //     res.send('Hello World!')
+        // })
+
+        app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
+    }
+
+    async serve_cluster(workers) {
+        /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
+        if (workers && workers > 1 && cluster.isMaster) {
+            print(`primary ${process.pid} is starting ${workers} workers...`)
+            for (let i = 0; i < workers; i++) cluster.fork()
+            cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
+            return
+        }
+        await this.serve_express()
+    }
 }
+
+export const server = new Server()
 
 
 /**********************************************************************************************************************
@@ -90,40 +127,40 @@ class Server {
 //     });
 // }
 
-async function serve_express() {
-    const app = express()
-    const server = new Server()
-    await server.boot()
-
-    // for official middleware see: https://expressjs.com/en/resources/middleware.html
-    // for receiving files:
-    //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
-    //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
-
-    app.use(express.json())                                 // for parsing application/json
-    app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
-
-    app.all('*', (req, res) => server.handle(req, res))
-    // web.get('*', async (req, res) => {
-    //     res.send(`URL path: ${req.path}`)
-    //     res.send('Hello World!')
-    // })
-
-    app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
-}
-
-async function serve_cluster(workers) {
-    /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-    if (workers && workers > 1 && cluster.isMaster) {
-        print(`primary ${process.pid} is starting ${workers} workers...`)
-        for (let i = 0; i < workers; i++) cluster.fork()
-        cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
-        return
-    }
-    await serve_express()
-}
+// async function serve_express() {
+//     const app = express()
+//     const server = new Server()
+//     await server.boot()
+//
+//     // for official middleware see: https://expressjs.com/en/resources/middleware.html
+//     // for receiving files:
+//     //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
+//     //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
+//
+//     app.use(express.json())                                 // for parsing application/json
+//     app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
+//
+//     app.all('*', (req, res) => server.handle(req, res))
+//     // web.get('*', async (req, res) => {
+//     //     res.send(`URL path: ${req.path}`)
+//     //     res.send('Hello World!')
+//     // })
+//
+//     app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
+// }
+//
+// async function serve_cluster(workers) {
+//     /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
+//     if (workers && workers > 1 && cluster.isMaster) {
+//         print(`primary ${process.pid} is starting ${workers} workers...`)
+//         for (let i = 0; i < workers; i++) cluster.fork()
+//         cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
+//         return
+//     }
+//     await serve_express()
+// }
 
 /**********************************************************************************************************************/
 
 // await serve_express()
-await serve_cluster(WORKERS)
+// await server.serve_cluster(WORKERS)
