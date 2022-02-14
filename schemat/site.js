@@ -6,8 +6,10 @@ import { Item, Request } from './item.js'
 /**********************************************************************************************************************/
 
 const SEP_ROUTE  = '/'        // separator of route segments in URL paths
-const SEP_ACTION = '@'        // separator of an item path and an endpoint (action) name within a URL
+const SEP_METHOD = '@'        // separator of a method name within a URL path
 
+// module.exports = {}
+// function require() {}
 
 /**********************************************************************************************************************
  **
@@ -18,9 +20,31 @@ const SEP_ACTION = '@'        // separator of an item path and an endpoint (acti
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
+    async import(path) {
+        /* Custom import of JS files and code snippets from Schemat's Universal Namespace. */
+        const vm = await import('vm')
+
+        let source = await this.route(new Request({path, method: 'import'}))
+        print('Site.import()/source:', source)
+
+        let context = vm.createContext({registry: this.registry})
+        let identifier = `schemat:${path}`
+
+        let linker = (specifier, referrer) => this.import(specifier)
+
+        let initializeImportMeta    = (meta) => {meta.url = identifier}
+        let importModuleDynamically = (specifier, referrer) => this.import(specifier)
+
+        let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically})
+
+        await module.link(linker)
+        await module.evaluate()
+        return module.namespace
+    }
+
     async routeWeb(session) {
         /* Routing of a web request (in contrast to an internal request). */
-        let request = new Request()
+        let request = new Request({session})
         return this.route(request, session)
     }
     async route(request, session) {
@@ -45,7 +69,7 @@ export class Site extends Item {
         app.assertLoaded()
         let path = app.url_path(item, {relative})
         let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        if (endpoint) url += `${SEP_ACTION}${endpoint}`                 // append `endpoint` and `args` to the URL
+        if (endpoint) url += `${SEP_METHOD}${endpoint}`                 // append `endpoint` and `args` to the URL
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
         // return this.setEndpoint(url, endpoint, args)
@@ -79,7 +103,7 @@ export class Site extends Item {
     // }
     //
     // setEndpoint(url, endpoint, args) {
-    //     if (endpoint) url += `${SEP_ACTION}${endpoint}`
+    //     if (endpoint) url += `${SEP_METHOD}${endpoint}`
     //     if (args) url += '?' + new URLSearchParams(args).toString()
     //     return url
     // }
@@ -93,8 +117,8 @@ export class Router extends Item {
         Find an object in `routes` that matches the requested URL path and call its route().
         The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
         */
-        let [app, subpath] = this._find(session.path)
-        session.path = subpath
+        let [app, subpath] = this._find(request.path)
+        request.path = subpath
         await app.load()
         return app.route(request, session)
     }
@@ -184,8 +208,10 @@ export class AppSystem extends Application {
         return `${cid}:${iid}`
     }
     async route(request, session) {
-        let item = await this._find_item(session.path)
-        return item.handle(session, this)
+        let item = await this._find_item(request.path)
+        request.path = ''
+        request.app = this
+        return item.handle(request, session)
     }
     async _find_item(path) {
         /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
@@ -211,11 +237,13 @@ export class AppSpaces extends Application {
 
     async route(request, session) {
         // decode space identifier and convert to a category object
-        let category, [space, item_id] = session.path.slice(1).split(':')
+        let category, [space, item_id] = request.path.slice(1).split(':')
         category = await this.getLoaded(`spaces/${space}`)
-        if (!category) return session.sendStatus(404)
+        if (!category) return session?.sendStatus(404)
         let item = category.getItem(Number(item_id))
-        return item.handle(session, this)
+        request.path = ''
+        request.app = this
+        return item.handle(request, session)
     }
 }
 
@@ -228,8 +256,12 @@ export class AppSpaces extends Application {
 export class File extends Item {
     read() { return this.get('content') }
 
-    _handle_download({res, session}) {
-        this.setMimeType(res, session.pathFull)
+    _handle_import({}) {
+        return this.read()
+    }
+
+    _handle_download({res, request}) {
+        this.setMimeType(res, request.pathFull)
         res.send(this.read())
     }
     setMimeType(res, path) {
@@ -272,9 +304,9 @@ export class Folder extends Item {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
          */
-        let {path} = session
-        if (!path.startsWith('/')) return session.redirect(session.pathFull + '/')
-        // TODO: make sure that special symbols, e.g. SEP_ACTION, are forbidden in file paths
+        let path = request.path
+        if (!path.startsWith('/')) return session?.redirect(request.pathFull + '/')
+        // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
 
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         let name = path.split(Folder.SEP_FOLDER)[0]
@@ -290,15 +322,16 @@ export class Folder extends Item {
 
         if (item.get('_is_file')) {
             if (path) throw new Error('URL not found')
-            session.endpointDefault = 'download'
+            request.methodDefault = 'download'
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) { session.path = path; return item.route(request, session) }
+            if (path) { request.path = path; return item.route(request, session) }
             else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
-        return item.handle(session)
+        request.path = ''
+        return item.handle(request, session)
     }
 
     // exists(path) {
@@ -339,9 +372,12 @@ export class FolderLocal extends Folder {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */
-        let {path} = session
+        let path = request.path
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        if (!path) return this.handle(session)          // if no file `path` given, display this folder as a plain item
+        if (!path) {
+            request.path = ''
+            return this.handle(request, session)          // if no file `path` given, display this folder as a plain item
+        }
 
         let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')

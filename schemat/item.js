@@ -3,7 +3,7 @@ import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
-import { print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent } from './utils.js'
+import { print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent, splitLast } from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
@@ -46,17 +46,32 @@ class Changes {
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 
 export class Request {
-    pathInitial
-    methodInitial
+    static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    path
-    origin          // 'web', 'internal'
+    pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
+    path            // remaining path to be consumed by subsequent nodes along the route;
+                    // equal pathFull at the beginning, it gets truncated while the routing proceeds
+
     method
+    origin          // 'web', 'internal'
     type            // 'view', 'action'
-
     args            // dict of action's arguments; taken from req.query (if a web request) or passed directly (internal request)
 
-    constructor() {
+    methodDefault   // method that should be used if one is missing in the request; configured by nodes on the route
+
+    constructor({path, method, session}) {
+        let sep = Request.SEP_METHOD, meth
+        if (session) path = path || session.path
+        ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        this.path = this.pathFull
+        this.method = method || meth || session?.endpoint
+    }
+
+    getMethod()     { return this.method || this.methodDefault }
+
+    move(prefix) {
+        /* This may return a new Request object in the future. */
+        return this
     }
 }
 
@@ -431,35 +446,31 @@ export class Item {
 
     /***  Routing & handling requests (server side)  ***/
 
-    async route(request, session) {
-        /*
-        Find an object pointed to by `path`. The `path` may span multiple connected (sub)items,
-        and path segments may be interpreted differently at different stages of `path` routing.
-        Typically, `path` originates from a web request as a trailing part of a URL after the domain.
-        However, route() can also be called internally by Schemat, in such case, `path` is an arbitrary
-        path into the Schemat's Common Namespace, and `session` is left undefined.
+    // async route(request, session) {
+    //     /*
+    //     Find an object pointed to by `path`. The `path` may span multiple connected (sub)items,
+    //     and path segments may be interpreted differently at different stages of `path` routing.
+    //     Typically, `path` originates from a web request as a trailing part of a URL after the domain.
+    //     However, route() can also be called internally by Schemat, in such case, `path` is an arbitrary
+    //     path into the Schemat's Universal Namespace, and `session` is left undefined.
+    //
+    //     Route a deep `path` request to an appropriate sub-node, or call handle() if a terminal node.
+    //     Truncate the .path as needed for routing in subsequent nodes.
+    //     When spliting an original path on SEP_ROUTE, parent applications should ensure that
+    //     the separatoror (if present) is preserved in the remaining subpath, so that subsequent nodes
+    //     can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
+    //     */
+    //     if (!request.path) return this.handle(request, session)
+    //
+    //     // route into `data` by default; subtypes may perform routing differently
+    //     await this.load()
+    //     let [entry, subpath] = this.data.route(request.path)
+    //     if (!subpath) return this.handle(request, session, entry)
+    //     if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
+    //     throw new Error(`path not found: ${subpath}`)
+    // }
 
-        Route a deep `path` request to an appropriate sub-node, or call handle() if a terminal node.
-        Truncate the .path as needed for routing in subsequent nodes.
-        When spliting an original path on SEP_ROUTE, parent applications should ensure that
-        the separatoror (if present) is preserved in the remaining subpath, so that subsequent nodes
-        can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
-        */
-        throw new Error('not implemented')
-
-        if (!request.path) return this.handle(request, session)
-
-        // route into `data` by default; other types of Items can perform routing differently
-        await this.load()
-        let [obj, subpath] = this.data.route(request.path)
-        if (!subpath)
-            if (request.action === 'get') return obj
-            else throw new Error(`incorrect action, '${request.action}'`)
-        if (!(obj instanceof Item)) throw new Error(`path not found: ${subpath}`)
-        return item.route(request.move(subpath), session)
-    }
-
-    async handle(session, app = null) {
+    async handle(request, session, entry) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -477,14 +488,30 @@ export class Item {
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         (?? The function may allow to be called directly as a regular method with no context.)
         */
+
+        if (request.path) {
+            // route into `data` if there's still a path to be consumed
+            await this.load()
+            let [entry, subpath] = this.data.route(request.path)
+            // if (!subpath) return this.handle(request, session, entry)
+            if (subpath)
+                if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
+                else throw new Error(`path not found: ${subpath}`)
+        }
+
+        // if (request.method === 'get') return element !== undefined ? element : this
+        // else throw new Error(`method '${request.method}' not applicable on this path`)
+
         session.item = this
-        if (app) session.app = app
-        let endpoint = session.getEndpoint()
+        if (request.app) session.app = request.app
+        // if (app) session.app = app
+        // let method = session.getEndpoint() || 'default'
+        let method = request.getMethod() || 'default'
         await this.load()       // for this.category, below, to be initialized
 
         let handler
         let handlers = this.category.getHandlers()
-        let source   = handlers.get(endpoint)
+        let source   = handlers.get(method)
 
         // get handler's source code from category's properties?
         if (source) {
@@ -493,27 +520,25 @@ export class Item {
             // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
         else                                        // fallback: get handler from the item's class
-            handler = this[`_handle_${endpoint}`]
+            handler = this[`_handle_${method}`]
 
-        if (!handler) throw new Error(`Endpoint "${endpoint}" not found`)
+        if (!handler) throw new Error(`Endpoint @${method} not found`)
 
         let [req, res] = session.channels
-        let page = handler.call(this, {item: this, req, res, endpoint, session})
-        if (page instanceof Promise) page = await page
-        if (typeof page === 'string')
-            res.send(page)
+        return handler.call(this, {item: this, req, res, request, session, entry})
     }
 
-    _handle_json({res}) { res.sendItem(this) }
+    _handle_default(...args)    { return this._handle_view(...args)}
+    _handle_json({res})         { res.sendItem(this) }
 
-    _handle_view({session, req, res, endpoint}) {
+    _handle_view({session, req, res}) {
         let name = this.getName('')
         let ciid = this.getStamp({html: false})
-        return this.HTML({
+        return res.send(this.HTML({
             title: `${name} ${ciid}`,
             head:  this.category.temp('assets').renderAll(),
             body:  this.BODY({session}),
-        })
+        }))
     }
 
     HTML({title, head, body} = {}) {
@@ -530,7 +555,7 @@ export class Item {
     BODY({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
         <div id="react-root">${this.temp('render')}</div>
-        <script type="module"> import {boot} from "/files/client.js"; boot(); </script>
+        <script async type="module"> import {boot} from "/files/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/
@@ -681,7 +706,7 @@ export class Category extends Item {
             let fil_name = `${cat_name}_${this.id_str}`
             let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`
             cls = new Function('base_class', code)(cls)
-            cls.check()
+            // cls.check()
             // cls.error()
         }
         return cls

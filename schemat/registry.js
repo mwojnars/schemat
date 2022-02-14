@@ -264,7 +264,7 @@ export class Registry {
 export class Session {
     /* Collection of objects that are global to a single request processing. Also holds an evolving state of the latter. */
 
-    static SEP_ACTION = '@'     // separator of an item path and an endpoint (action) name within a URL path
+    static SEP_METHOD = '@'     // separator of a method name within a URL path
 
     registry            // instance of Registry
     request             // instance of node.js express' Request (only present server-side)
@@ -313,7 +313,7 @@ export class Session {
         this.response = response
 
         if (request) {                      // server-side
-            let path = request.path, sep = Session.SEP_ACTION;
+            let path = request.path, sep = Session.SEP_METHOD;
             [this.pathFull, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
             this.path = this.pathFull
         }
@@ -332,7 +332,7 @@ export class Session {
     sendItems(...args)      { this.response.sendItems(...args)  }
 
     // get an ultimate endpoint, fall back to a default when necessary
-    getEndpoint()           { return this.endpoint || this.endpointDefault || 'view' }
+    getEndpoint()           { return this.endpoint || this.endpointDefault } // || 'view' }
 
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }
