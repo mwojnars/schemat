@@ -470,7 +470,7 @@ export class Item {
     //     throw new Error(`path not found: ${subpath}`)
     // }
 
-    async handle(request, session, entry) {
+    async handle(request, session) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -488,11 +488,12 @@ export class Item {
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         (?? The function may allow to be called directly as a regular method with no context.)
         */
+        let req, res, entry, subpath
 
         if (request.path) {
             // route into `data` if there's still a path to be consumed
             await this.load()
-            let [entry, subpath] = this.data.route(request.path)
+            ;[entry, subpath] = this.data.route(request.path)
             // if (!subpath) return this.handle(request, session, entry)
             if (subpath)
                 if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
@@ -502,8 +503,11 @@ export class Item {
         // if (request.method === 'get') return element !== undefined ? element : this
         // else throw new Error(`method '${request.method}' not applicable on this path`)
 
-        session.item = this
-        if (request.app) session.app = request.app
+        if (session) {
+            session.item = this
+            if (request.app) session.app = request.app
+            ;[req, res] = session.channels
+        }
         // if (app) session.app = app
         // let method = session.getEndpoint() || 'default'
         let method = request.getMethod() || 'default'
@@ -524,7 +528,6 @@ export class Item {
 
         if (!handler) throw new Error(`Endpoint @${method} not found`)
 
-        let [req, res] = session.channels
         return handler.call(this, {item: this, req, res, request, session, entry})
     }
 

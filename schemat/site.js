@@ -25,9 +25,9 @@ export class Site extends Item {
         const vm = await import('vm')
 
         let source = await this.route(new Request({path, method: 'import'}))
-        print('Site.import()/source:', source)
+        // print('Site.import()/source:', source)
 
-        let context = vm.createContext({registry: this.registry})
+        let context = vm.createContext(globalThis)
         let identifier = `schemat:${path}`
 
         let linker = (specifier, referrer) => this.import(specifier)
@@ -200,7 +200,7 @@ export class Application extends Item {
 }
 
 export class AppSystem extends Application {
-    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: .../CID:IID */
+    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
     
     url_path(item, opts = {}) {
         assert(item.has_id())
