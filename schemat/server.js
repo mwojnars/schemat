@@ -60,7 +60,7 @@ export class Server {
         let session = new Session(this.registry, req, res)
         await session.start()
 
-        await this.registry.site.route(session)
+        await this.registry.site.routeWeb(session)
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing
@@ -163,4 +163,4 @@ export const server = new Server()
 /**********************************************************************************************************************/
 
 // await serve_express()
-// await server.serve_cluster(WORKERS)
+await server.serve_cluster(WORKERS)

@@ -9,7 +9,7 @@
 
 import {server} from './server.js'
 
-console.log("imported server in loader.js:", server, server.registry)
+// console.log("imported server in loader.js:", server)
 
 
 /**********************************************************************************************************************
@@ -35,17 +35,19 @@ export function resolve(specifier, context, defaultResolve) {
 
     else ret = defaultResolve(specifier, context, defaultResolve)
 
-    console.log(`resolve():  ${specifier}  -->  ${JSON.stringify(ret)}`)
+    // console.log(`resolve():  ${specifier}  -->  ${JSON.stringify(ret)}`)
     return ret
 }
 
-export async function load(url, context, defaultLoad) {
+export async function load(path, context, defaultLoad) {
 
-    if (url.startsWith(PREFIX)) {
-        let source = await site.route(url)
+    if (path.startsWith(PREFIX)) {
+        let source = await site.route(path)
     }
 
-    return defaultLoad(url, context, defaultLoad)
+    let ret = await defaultLoad(path, context, defaultLoad)
+    // console.log(`load(${url}):\n${ret.source}`)
+    return ret
 }
 
 

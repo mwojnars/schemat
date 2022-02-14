@@ -1,6 +1,6 @@
 import { print, assert, splitLast, T } from './utils.js'
 import { ItemsMap } from './data.js'
-import { Item } from './item.js'
+import { Item, Request } from './item.js'
 
 
 /**********************************************************************************************************************/
@@ -18,10 +18,15 @@ const SEP_ACTION = '@'        // separator of an item path and an endpoint (acti
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    async route(session) {
+    async routeWeb(session) {
+        /* Routing of a web request (in contrast to an internal request). */
+        let request = new Request()
+        return this.route(request, session)
+    }
+    async route(request, session) {
         /* Forward the request to the root item. */
         let app = await this.getLoaded('application')
-        return app.route(session)
+        return app.route(request, session)
     }
 
     systemURL() {
@@ -83,7 +88,7 @@ export class Site extends Item {
 export class Router extends Item {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
-    async route(session) {
+    async route(request, session) {
         /*
         Find an object in `routes` that matches the requested URL path and call its route().
         The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
@@ -91,7 +96,7 @@ export class Router extends Item {
         let [app, subpath] = this._find(session.path)
         session.path = subpath
         await app.load()
-        return app.route(session)
+        return app.route(request, session)
     }
 
     _find(path = '') {
@@ -178,7 +183,7 @@ export class AppSystem extends Application {
         let [cid, iid] = item.id
         return `${cid}:${iid}`
     }
-    async route(session) {
+    async route(request, session) {
         let item = await this._find_item(session.path)
         return item.handle(session, this)
     }
@@ -204,7 +209,7 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async route(session) {
+    async route(request, session) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = session.path.slice(1).split(':')
         category = await this.getLoaded(`spaces/${space}`)
@@ -263,7 +268,7 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async route(session) {
+    async route(request, session) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
          */
@@ -289,7 +294,7 @@ export class Folder extends Item {
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) { session.path = path; return item.route(session) }
+            if (path) { session.path = path; return item.route(request, session) }
             else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
         }
 
@@ -330,7 +335,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async route(session) {
+    async route(request, session) {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */

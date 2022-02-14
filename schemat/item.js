@@ -45,6 +45,21 @@ class Changes {
 // utilities for in-DB source code
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 
+export class Request {
+    pathInitial
+    methodInitial
+
+    path
+    origin          // 'web', 'internal'
+    method
+    type            // 'view', 'action'
+
+    args            // dict of action's arguments; taken from req.query (if a web request) or passed directly (internal request)
+
+    constructor() {
+    }
+}
+
 
 /**********************************************************************************************************************
  **
@@ -416,7 +431,7 @@ export class Item {
 
     /***  Routing & handling requests (server side)  ***/
 
-    async route(path, session) {
+    async route(request, session) {
         /*
         Find an object pointed to by `path`. The `path` may span multiple connected (sub)items,
         and path segments may be interpreted differently at different stages of `path` routing.
@@ -432,14 +447,16 @@ export class Item {
         */
         throw new Error('not implemented')
 
-        if (!path) return session ? this.handle(session) : this
+        if (!request.path) return this.handle(request, session)
 
         // route into `data` by default; other types of Items can perform routing differently
         await this.load()
-        let [obj, subpath] = this.data.route(path)
-        if (!subpath) return obj
+        let [obj, subpath] = this.data.route(request.path)
+        if (!subpath)
+            if (request.action === 'get') return obj
+            else throw new Error(`incorrect action, '${request.action}'`)
         if (!(obj instanceof Item)) throw new Error(`path not found: ${subpath}`)
-        return item.route(path, session)
+        return item.route(request.move(subpath), session)
     }
 
     async handle(session, app = null) {
