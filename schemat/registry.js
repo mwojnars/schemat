@@ -267,23 +267,20 @@ export class Session {
     static SEP_METHOD = '@'     // separator of a method name within a URL path
 
     registry            // instance of Registry
-    request             // instance of node.js express' Request (only present server-side)
-    response            // instance of node.js express' Response (only present server-side)
+    req                 // instance of node.js express' Request (only present server-side)
+    res            // instance of node.js express' Response (only present server-side)
 
-    get req()           { return this.request  }
-    get res()           { return this.response }
-    get channels()      { return [this.request, this.response] }
+    // get req()           { return this.request  }
+    // get res()           { return this.response }
+    get channels()      { return [this.req, this.res] }
 
-    // get method()        { return this.request.method }
-    // get query()         { return this.request.query  }
-    // get body()          { return this.request.body   }
+    // get method()        { return this.req.method }
+    // get query()         { return this.req.query  }
+    // get body()          { return this.req.body   }
 
     // context & state of request processing; built gradually by subsequent nodes on the request route...
 
-    path                // like the original req.path, but with trailing @method name removed
-    // path                // remaining path to be consumed by subsequent nodes along the route; equal pathFull at the beginning,
-                        // it gets truncated while the routing proceeds
-
+    path                // like the original req.path, but with trailing @method removed
     endpoint            // action to be executed on the target item; empty string '' if not provided in a request
     endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
                         // configured by an application that handles the request
@@ -307,15 +304,14 @@ export class Session {
     itemsRequested = new ItemsCount()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
     itemsLoaded    = new ItemsCount()       // for each item ID: no. of times the item data was loaded through registry.loadData()
 
-    constructor(registry, request, response) {
+    constructor(registry, req, res) {
         this.registry = registry
-        this.request  = request
-        this.response = response
+        this.req = req
+        this.res = res
 
-        if (request) {                      // server-side
-            let path = request.path, sep = Session.SEP_METHOD;
+        if (req) {                          // server-side code
+            let path = req.path, sep = Session.SEP_METHOD;
             [this.path, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-            // this.path = this.pathFull
         }
     }
 
@@ -324,12 +320,12 @@ export class Session {
     printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
                       print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
 
-    redirect(...args)       { this.response.redirect(...args)   }
-    send(...args)           { this.response.send(...args)       }
-    sendFile(...args)       { this.response.sendFile(...args)   }
-    sendStatus(...args)     { this.response.sendStatus(...args) }
-    sendItem(...args)       { this.response.sendItem(...args)   }
-    sendItems(...args)      { this.response.sendItems(...args)  }
+    redirect(...args)       { this.res.redirect(...args)   }
+    send(...args)           { this.res.send(...args)       }
+    sendFile(...args)       { this.res.sendFile(...args)   }
+    sendStatus(...args)     { this.res.sendStatus(...args) }
+    sendItem(...args)       { this.res.sendItem(...args)   }
+    sendItems(...args)      { this.res.sendItems(...args)  }
 
     // get an ultimate endpoint, fall back to a default when necessary
     getEndpoint()           { return this.endpoint || this.endpointDefault } // || 'view' }
