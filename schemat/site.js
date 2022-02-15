@@ -11,6 +11,12 @@ const SEP_METHOD = '@'        // separator of a method name within a URL path
 // module.exports = {}
 // function require() {}
 
+// Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not objects of vm.Module class.
+// For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
+// as an alias for standard (no-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
+globalThis.importLocal = (p) => import(p)
+
+
 /**********************************************************************************************************************
  **
  **  ITEM SUBCLASSES
@@ -23,6 +29,7 @@ export class Site extends Item {
     async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace.
            This method returns a namespace object extracted from a vm.Module loaded by importModule().
+           Optional `referrer` is a vm.Module object.
          */
         let module = await this.importModule(path, referrer)
         return module.namespace
@@ -39,22 +46,25 @@ export class Site extends Item {
         // convert a relative path to absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
-            if (typeof referrer !== 'string') referrer = referrer.identifier        // vm.Module.identifier
-            path = unprefix(referrer) + '/../' + path
+            // if (typeof referrer !== 'string') referrer = referrer.identifier
+            path = unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
             path = this._normPath(path)
         }
-        else if (!path.startsWith(PREFIX) && path[0] !== '/')       // fall back to Node's import for no-path global imports (no ./ or /...)
-            return import(path)
+        // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // fall back to Node's import for no-path global imports (no ./ or /...)
+        //     return import(path)
         else
             path = unprefix(path)
 
-        const vm = await import('vm')
         let source = await this.route(new Request({path, method: 'import'}))
-        let context = vm.createContext(globalThis)
-        let identifier = PREFIX + path
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
+        let identifier = PREFIX + path
 
-        let linker = (specifier, ref) => this.importModule(specifier, ref)
+        const vm = await import('vm')
+        let context = vm.createContext(globalThis)
+        // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
+        // ^^ submodules must use the same context as referrer (if not globalThis), otherwise an except is raised
+
+        let linker = (specifier, ref, extra) => this.importModule(specifier, ref)
         let initializeImportMeta = (meta) => {meta.url = identifier}
 
         let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically: linker})
@@ -65,14 +75,18 @@ export class Site extends Item {
     }
     _normPath(path) {
         /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
-        let p = path.replaceAll('/./', '/')
+        path = path.replaceAll('/./', '/')
+        let lead = path[0] === '/' ? path[0] : ''
+        if (lead) path = path.slice(1)
+
         let parts = []
-        for (const part of p.split('/'))
+        for (const part of path.split('/'))
             if (part === '..')
-                if (!parts.length) throw new Error(`incorrect import path: '${path}'`)
+                if (!parts.length) throw new Error(`incorrect path: '${path}'`)
                 else parts.pop()
             else parts.push(part)
-        return parts.join('/')
+
+        return lead + parts.join('/')
     }
 
     async routeWeb(session) {
@@ -82,6 +96,7 @@ export class Site extends Item {
     }
     async route(request, session) {
         /* Forward the request to the root item. */
+        if (request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
         let app = await this.getLoaded('application')
         return app.route(request, session)
     }

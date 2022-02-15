@@ -218,7 +218,13 @@ async function create_items(cat, Category) {
     item.app_system = cat.AppSystem.new({name: "System"})
 
     item.utils_js   = cat.File.new({content: `export let print = console.log`})
-    item.widgets_js = cat.File.new({content: `import {print} from './xxx/../utils.js'; export function check() { print('called /site/widgets.js/check()') }`})
+    item.widgets_js = cat.File.new({content:
+`
+import {print} from '../site/utils.js'
+export function check() { print('called /site/widgets.js/check()') } 
+//let fs = await importLocal('fs')
+//print('fs:',fs)
+`})
 
     item.dir_site   = cat.Folder.new({      // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
         files: C({

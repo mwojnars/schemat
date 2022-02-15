@@ -299,8 +299,12 @@
 - __id:
     - 3
     - 3
-  content: import {print} from './xxx/../utils.js'; export function check() {
-    print('called /site/widgets.js/check()') }
+  content: |
+    
+    import {print} from '../site/utils.js'
+    export function check() { print('called /site/widgets.js/check()') } 
+    //let fs = await importLocal('fs')
+    //print('fs:',fs)
 - __id:
     - 5
     - 4
