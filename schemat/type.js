@@ -781,7 +781,7 @@ export class ITEM extends Schema {
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
                 return SPAN({suppressHydrationWarning: true}, "loading...")
 
-            let url  = item.url({raise: false})
+            let url  = item.url()
             let name = item.get('name', '')
             let ciid = HTML(item.getStamp({html: false, brackets: false}))
 
@@ -802,7 +802,7 @@ export class ITEM extends Schema {
     //     if (!loaded(item))                      // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
     //         return SPAN({suppressHydrationWarning: true}, "loading...")
     //
-    //     let url  = item.url({raise: false})
+    //     let url  = item.url()
     //     let name = item.get('name', '')
     //     let ciid = HTML(item.getStamp({html: false, brackets: false}))
     //

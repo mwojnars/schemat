@@ -291,7 +291,7 @@ export class Item {
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.category.url({raise: false})
+            let url = this.category.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = `${cat}:${this.iid}`
@@ -348,11 +348,11 @@ export class Item {
         return state
     }
 
-    url(method = null, params = {}, args) {
-        /* `method` is a string parameter to be added to `params`, or an object to replace `params`. */
-        if (typeof method === "string") params.method = method
-        else if (method) params = method
-        method = params.method
+    url(method, args) {
+        /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
+        // if (typeof method === "string") params.method = method
+        // else if (method) params = method
+        // method = params.method
 
         let site = this.registry.site
         let app  = this.registry.session.app
@@ -361,22 +361,12 @@ export class Item {
         if (app) {
             app.assertLoaded()
             path = app.urlPath(this)
-            if (path) path = './' + path        // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+            if (path) path = './' + path            // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
-        if (!path) path = site.urlRaw(this)     // fallback; urlRaw() is an absolute path, no leading ./
-
-        if (method) path += Request.SEP_METHOD + method                 // append `method` and `args` to the URL
-        if (args) path += '?' + new URLSearchParams(args).toString()
+        if (!path)  path = site.urlRaw(this)        // fallback; urlRaw() is an absolute path, no leading ./
+        if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
+        if (args)   path += '?' + new URLSearchParams(args).toString()
         return path
-
-        // let {raise = true, warn = true, ...params_} = params
-        // let  site  = this.registry.site
-        // try {return site.buildURL(this, params_)}
-        // catch (ex) {
-        //     if (raise) throw ex
-        //     if (warn) console.log(`WARNING: exception raised in .url() of item ${this}`)
-        //     return null
-        // }
     }
 
     /***  Editing item's data  ***/
@@ -832,7 +822,7 @@ export class Category extends Item {
             for await (const item of items) {
                 await item.load()
                 let name = item.getName() || item.getStamp({html:false})
-                let url  = item.url({raise: false})
+                let url  = item.url()
                 rows.push(TR(
                     TD(`${item.iid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
