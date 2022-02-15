@@ -16,34 +16,41 @@ export const ROOT_CID = 0
 
 /**********************************************************************************************************************
  **
- **  UI COMPONENTS
+ **  UTILITIES
  **
  */
 
-class Changes {
-    /* List of changes to item's data that have been made by a user and can be submitted
-       to the server and applied in DB. Multiple edits of the same data entry are merged into one.
-     */
-    constructor(item) {
-        this.item = item
-    }
-    reset() {
-        print('Reset clicked')
-    }
-    submit() {
-        print('Submit clicked')
-    }
+// class Changes {
+//     /* List of changes to item's data that have been made by a user and can be submitted
+//        to the server and applied in DB. Multiple edits of the same data entry are merged into one.
+//      */
+//     constructor(item) {
+//         this.item = item
+//     }
+//     reset() {
+//         print('Reset clicked')
+//     }
+//     submit() {
+//         print('Submit clicked')
+//     }
+//
+//     Buttons() {
+//         return DIV({style: {textAlign:'right', paddingTop:'20px'}},
+//             BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
+//             BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
+//         )
+//     }
+// }
 
-    Buttons() {
-        return DIV({style: {textAlign:'right', paddingTop:'20px'}},
-            BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
-            BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
-        )
-    }
-}
-
-// utilities for in-DB source code
+// AsyncFunction class is needed for parsing from-DB source code
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+
+
+/**********************************************************************************************************************
+ **
+ **  REQUEST (custom Schemat's)
+ **
+ */
 
 export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
@@ -341,19 +348,35 @@ export class Item {
         return state
     }
 
-    url(method = null, params = {}) {
+    url(method = null, params = {}, args) {
         /* `method` is a string parameter to be added to `params`, or an object to replace `params`. */
         if (typeof method === "string") params.method = method
         else if (method) params = method
+        method = params.method
 
-        let {raise = true, warn = true, ...params_} = params
-        let  site  = this.registry.site
-        try {return site.buildURL(this, params_)}
-        catch (ex) {
-            if (raise) throw ex
-            if (warn) console.log(`WARNING: exception raised in .url() of item ${this}`)
-            return null
+        let site = this.registry.site
+        let app  = this.registry.session.app
+        let path
+
+        if (app) {
+            app.assertLoaded()
+            path = app.urlPath(this)
+            if (path) path = './' + path        // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
         }
+        if (!path) path = site.urlRaw(this)     // fallback; urlRaw() is an absolute path, no leading ./
+
+        if (method) path += Request.SEP_METHOD + method                 // append `method` and `args` to the URL
+        if (args) path += '?' + new URLSearchParams(args).toString()
+        return path
+
+        // let {raise = true, warn = true, ...params_} = params
+        // let  site  = this.registry.site
+        // try {return site.buildURL(this, params_)}
+        // catch (ex) {
+        //     if (raise) throw ex
+        //     if (warn) console.log(`WARNING: exception raised in .url() of item ${this}`)
+        //     return null
+        // }
     }
 
     /***  Editing item's data  ***/
@@ -612,7 +635,7 @@ export class Item {
 
     DataTable() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        let changes = new Changes(this)
+        // let changes = new Changes(this)
         return FRAGMENT(
                 this.getSchema().displayTable({item: this}),
                 // e(changes.Buttons.bind(changes)),

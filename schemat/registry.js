@@ -283,8 +283,8 @@ export class Session {
     app                 // leaf Application object the request is addressed to
     item                // target item that's responsible for actual handling of the request
     state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
-                        // response generation when a specific app's method is called, most typically url_path()
-                        // TODO: only keep `route` instead of `app` for URL generation - Site.url_path()
+                        // response generation when a specific app's method is called, most typically urlPath()
+                        // TODO: only keep `route` instead of `app` for URL generation - Site.urlPath()
 
     // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
     // // or an array [val1, val2, ...] if PARAM occurs multiple times

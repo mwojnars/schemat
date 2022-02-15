@@ -5,10 +5,6 @@ import { Item, Request } from './item.js'
 
 /**********************************************************************************************************************/
 
-// const SEP_ROUTE  = '/'        // separator of route segments in URL paths
-// const SEP_METHOD = '@'        // separator of a method name within a URL path
-
-
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
 // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
 // as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
@@ -102,30 +98,37 @@ export class Site extends Item {
         return this.get('base_url') + this.get('system_path')
     }
 
-    buildURL(item, {route, relative = true, baseURL, method, args} = {}) {
-        /*
-        Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
-        that's processing the current web request; or an absolute or relative URL
-        assigned by an application anchored at a given `route`.
-        */
-        // let url = this.url_path(item, {route, relative, baseURL})
-        let app  = this.registry.session.app
-        app.assertLoaded()
-        let path = app.url_path(item, {relative})
-        let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        if (method) url += Request.SEP_METHOD + method                  // append `method` and `args` to the URL
-        if (args) url += '?' + new URLSearchParams(args).toString()
-        return url
-        // return this.setEndpoint(url, endpoint, args)
+    urlRaw(item) {
+        /* Absolute raw URL for an `item`. TODO: reuse the AppSystem instead of the code below. */
+        assert(item.has_id())
+        let [cid, iid] = item.id
+        return this.systemURL() + `/${cid}:${iid}`
     }
 
-    // url_path(item, {route, relative, baseURL}) {
+    // buildURL(item, {route, relative = true, baseURL, method, args} = {}) {
+    //     /*
+    //     Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
+    //     that's processing the current web request; or an absolute or relative URL
+    //     assigned by an application anchored at a given `route`.
+    //     */
+    //     // let url = this.urlPath(item, {route, relative, baseURL})
+    //     let app  = this.registry.session.app
+    //     app.assertLoaded()
+    //     let path = app.urlPath(item)
+    //     let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
+    //     if (method) url += Request.SEP_METHOD + method                  // append `method` and `args` to the URL
+    //     if (args) url += '?' + new URLSearchParams(args).toString()
+    //     return url
+    //     // return this.setEndpoint(url, endpoint, args)
+    // }
+
+    // urlPath(item, {route, relative, baseURL}) {
     //
     //     // relative URL anchored at the deep-most application's route
     //     if (route === undefined) {
     //         let app  = this.registry.session.app
     //         app.assertLoaded()
-    //         let path = app.url_path(item, {relative})
+    //         let path = app.urlPath(item, {relative})
     //         return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
     //     }
     //
@@ -133,7 +136,7 @@ export class Site extends Item {
     //
     //     // relative URL anchored at `route`
     //     let root = this.get('application'); root.assertLoaded()
-    //     let path = root.url_path(item, {route, relative})
+    //     let path = root.urlPath(item, {route, relative})
     //     if (relative) return path
     //
     //     // absolute URL without base?
@@ -191,12 +194,12 @@ export class Router extends Item {
         throw new Error(`URL path not found: ${path}`)
     }
 
-    // url_path(item, opts = {}) {
+    // urlPath(item, opts = {}) {
     //
     //     let [step, app, path] = this._route(opts.route)
     //     app.assertLoaded()
     //     // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
-    //     let subpath = app.url_path(item, {...opts, route: path})
+    //     let subpath = app.urlPath(item, {...opts, route: path})
     //     if (opts.relative) return subpath                           // path relative to `route`
     //     let segments = [step, subpath].filter(Boolean)              // only non-empty segments
     //     return segments.join(SEP_ROUTE)                 // absolute path, empty segments excluded
@@ -222,15 +225,13 @@ export class Application extends Item {
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
 
-    url_path(item, {route, relative}) {
+    urlPath(item) {
         /*
-        Generate URL path (URL fragment after route) for `item`.
-        If relative=true, the path is relative to a given application `route`; otherwise,
-        it is absolute, i.e., includes segments for all intermediate applications below this one;
-        the path does NOT have a leading separator, or it has a different meaning -
-        in any case, a leading separator should be appended by caller if needed.
+        Generate a URL name/path (fragment after the base route string) of `item`.
+        The path does NOT have a leading separator, or it has a different (internal) meaning -
+        in any case, a leading separator should be inserted by caller if needed.
         */
-        throw new Error('method not implemented in a subclass')
+        return undefined
     }
 
     name(item) {
@@ -246,7 +247,7 @@ export class Application extends Item {
 export class AppSystem extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
     
-    url_path(item, opts = {}) {
+    urlPath(item) {
         assert(item.has_id())
         let [cid, iid] = item.id
         return `${cid}:${iid}`
@@ -271,10 +272,11 @@ export class AppSpaces extends Application {
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
-    url_path(item, opts = {}) {
+    urlPath(item) {
         let spaces_rev = this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
-        if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
+        if (!space) return undefined
+        //if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
         return `${space}:${item.iid}`
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
@@ -349,7 +351,8 @@ export class Folder extends Item {
            If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
          */
         let path = request.path
-        if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
+        if (path === '/') return request.session?.redirect(request.pathFull.slice(0,-1))    // truncate the trailing '/' in URL
+        // if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
         // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
 
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
@@ -371,7 +374,7 @@ export class Folder extends Item {
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
             if (path) { request.path = path; return item.route(request) }
-            else request.session.state.folder = item            // leaf folder, for use when generating file URLs (url_path())
+            else request.session.state.folder = item            // leaf folder, for use when generating file URLs (urlPath())
         }
 
         request.path = ''
