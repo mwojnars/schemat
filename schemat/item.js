@@ -492,12 +492,12 @@ export class Item {
 
         if (request.path) {
             // route into `data` if there's still a path to be consumed
+            // TODO: check for "read" privilege of request.client to this item
             await this.load()
             ;[entry, subpath] = this.data.route(request.path)
-            // if (!subpath) return this.handle(request, session, entry)
-            if (subpath)
-                if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
-                else throw new Error(`path not found: ${subpath}`)
+            if (subpath) throw new Error(`path not found: ${subpath}`)
+                // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
+                // else throw new Error(`path not found: ${subpath}`)
         }
 
         // if (request.method === 'get') return element !== undefined ? element : this

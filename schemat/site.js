@@ -21,6 +21,11 @@ export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
     async import(path) {
+        /* Returns a namespace object extracted from the VM Module imported from `path`. */
+        let module = await this.importModule(path)
+        return module.namespace
+    }
+    async importModule(path) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace. */
         const vm = await import('vm')
 
@@ -30,16 +35,14 @@ export class Site extends Item {
         let context = vm.createContext(globalThis)
         let identifier = `schemat:${path}`
 
-        let linker = (specifier, referrer) => this.import(specifier)
+        let linker = (specifier, referrer) => this.importModule(specifier)
+        let initializeImportMeta = (meta) => {meta.url = identifier}
 
-        let initializeImportMeta    = (meta) => {meta.url = identifier}
-        let importModuleDynamically = (specifier, referrer) => this.import(specifier)
-
-        let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically})
+        let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically: linker})
 
         await module.link(linker)
         await module.evaluate()
-        return module.namespace
+        return module
     }
 
     async routeWeb(session) {

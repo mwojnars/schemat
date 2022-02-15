@@ -295,14 +295,22 @@
 - __id:
     - 3
     - 2
-  content: export function check() { console.log('called /site/widgets.js/check()') }
+  content: export let print = console.log
+- __id:
+    - 3
+    - 3
+  content: import {print} from '/site/utils.js'; export function check() {
+    print('called /site/widgets.js/check()') }
 - __id:
     - 5
     - 4
   files:
-    widgets.js:
+    utils.js:
       - 3
       - 2
+    widgets.js:
+      - 3
+      - 3
 - __id:
     - 10
     - 1

@@ -216,8 +216,17 @@ async function create_items(cat, Category) {
 
     item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.app_system = cat.AppSystem.new({name: "System"})
-    item.widgets_js = cat.File.new({content: `export function check() { console.log('called /site/widgets.js/check()') }`})
-    item.dir_site   = cat.Folder.new({files: C({'widgets.js': item.widgets_js})})   // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
+
+    item.utils_js   = cat.File.new({content: `export let print = console.log`})
+    item.widgets_js = cat.File.new({content: `import {print} from '/site/utils.js'; export function check() { print('called /site/widgets.js/check()') }`})
+    // item.widgets_js = cat.File.new({content: `export function check() { console.log('called /site/widgets.js/check()') }`})
+
+    item.dir_site   = cat.Folder.new({      // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
+        files: C({
+            'utils.js':     item.utils_js,
+            'widgets.js':   item.widgets_js,
+        })
+    })
 
     item.app_catalog = cat.AppSpaces.new({
         name        : "Catalog",
