@@ -241,6 +241,6 @@ export class DatabaseYaml extends Database {
         let filename = data.get('filename')
         this.db = new YamlDB(filename)
         await this.db.load()
-        print('created YamlDB in DatabaseYaml:', this.db, filename)
+        // print('created YamlDB in DatabaseYaml:', this.db, filename)
     }
 }

@@ -5,8 +5,8 @@ import { Item, Request } from './item.js'
 
 /**********************************************************************************************************************/
 
-const SEP_ROUTE  = '/'        // separator of route segments in URL paths
-const SEP_METHOD = '@'        // separator of a method name within a URL path
+// const SEP_ROUTE  = '/'        // separator of route segments in URL paths
+// const SEP_METHOD = '@'        // separator of a method name within a URL path
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
@@ -113,7 +113,7 @@ export class Site extends Item {
         app.assertLoaded()
         let path = app.url_path(item, {relative})
         let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        if (method) url += `${SEP_METHOD}${method}`                     // append `method` and `args` to the URL
+        if (method) url += Request.SEP_METHOD + method                  // append `method` and `args` to the URL
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
         // return this.setEndpoint(url, endpoint, args)
@@ -173,11 +173,11 @@ export class Router extends Item {
 
         // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
         // and preserve in a returned subpath otherwise
-        if (path.startsWith(SEP_ROUTE)) {
+        if (path.startsWith(Request.SEP_ROUTE)) {
             lead = (path.length >= 2)
-            step = path.slice(1).split(SEP_ROUTE)[0]
+            step = path.slice(1).split(Request.SEP_ROUTE)[0]
         } else
-            step = path.split(SEP_ROUTE)[0]
+            step = path.split(Request.SEP_ROUTE)[0]
         
         let routes = this.get('routes')
         let route  = routes.get(step)

@@ -46,6 +46,7 @@ class Changes {
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 
 export class Request {
+    static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
     session         // Session object; only for top-level web requests (not for internal requests)
