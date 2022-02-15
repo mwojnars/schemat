@@ -8,12 +8,10 @@ import { Item, Request } from './item.js'
 const SEP_ROUTE  = '/'        // separator of route segments in URL paths
 const SEP_METHOD = '@'        // separator of a method name within a URL path
 
-// module.exports = {}
-// function require() {}
 
-// Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not objects of vm.Module class.
+// Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.
 // For this reason, importLocal() is added to the global context, so that the modules imported from DB can use it
-// as an alias for standard (no-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
+// as an alias for standard (non-VM) import(). Adding this function in a call to vm.createContext() instead of here raises errors.
 globalThis.importLocal = (p) => import(p)
 
 
@@ -46,11 +44,10 @@ export class Site extends Item {
         // convert a relative path to absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
-            // if (typeof referrer !== 'string') referrer = referrer.identifier
             path = unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
             path = this._normPath(path)
         }
-        // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // fall back to Node's import for no-path global imports (no ./ or /...)
+        // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // NOT WORKING: fall back to Node's import for no-path global imports (no ./ or /...)
         //     return import(path)
         else
             path = unprefix(path)
@@ -62,7 +59,7 @@ export class Site extends Item {
         const vm = await import('vm')
         let context = vm.createContext(globalThis)
         // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
-        // ^^ submodules must use the same context as referrer (if not globalThis), otherwise an except is raised
+        // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let linker = (specifier, ref, extra) => this.importModule(specifier, ref)
         let initializeImportMeta = (meta) => {meta.url = identifier}
@@ -91,14 +88,13 @@ export class Site extends Item {
 
     async routeWeb(session) {
         /* Routing of a web request (in contrast to an internal request). */
-        let request = new Request({session})
-        return this.route(request, session)
+        return this.route(new Request({session, path: session.path}))
     }
-    async route(request, session) {
+    async route(request) {
         /* Forward the request to the root item. */
         if (request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
         let app = await this.getLoaded('application')
-        return app.route(request, session)
+        return app.route(request)
     }
 
     systemURL() {
@@ -160,7 +156,7 @@ export class Site extends Item {
 export class Router extends Item {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
-    async route(request, session) {
+    async route(request) {
         /*
         Find an object in `routes` that matches the requested URL path and call its route().
         The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
@@ -168,7 +164,7 @@ export class Router extends Item {
         let [app, subpath] = this._find(request.path)
         request.path = subpath
         await app.load()
-        return app.route(request, session)
+        return app.route(request)
     }
 
     _find(path = '') {
@@ -255,11 +251,11 @@ export class AppSystem extends Application {
         let [cid, iid] = item.id
         return `${cid}:${iid}`
     }
-    async route(request, session) {
+    async route(request) {
         let item = await this._find_item(request.path)
         request.path = ''
         request.app = this
-        return item.handle(request, session)
+        return item.handle(request)
     }
     async _find_item(path) {
         /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
@@ -283,15 +279,15 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async route(request, session) {
+    async route(request) {
         // decode space identifier and convert to a category object
         let category, [space, item_id] = request.path.slice(1).split(':')
         category = await this.getLoaded(`spaces/${space}`)
-        if (!category) return session?.sendStatus(404)
+        if (!category) return request.session?.sendStatus(404)
         let item = category.getItem(Number(item_id))
         request.path = ''
         request.app = this
-        return item.handle(request, session)
+        return item.handle(request)
     }
 }
 
@@ -348,12 +344,12 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async route(request, session) {
+    async route(request) {
         /* Propagate a web request down to the nearest object pointed to by `path`.
            If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
          */
         let path = request.path
-        if (!path.startsWith('/')) return session?.redirect(request.pathFull + '/')
+        if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
         // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
 
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
@@ -374,12 +370,12 @@ export class Folder extends Item {
         }
         else if (item.get('_is_folder')) {
             // request.endpointDefault = 'browse'
-            if (path) { request.path = path; return item.route(request, session) }
-            else session.state.folder = item                 // leaf folder, for use when generating file URLs (url_path())
+            if (path) { request.path = path; return item.route(request) }
+            else request.session.state.folder = item            // leaf folder, for use when generating file URLs (url_path())
         }
 
         request.path = ''
-        return item.handle(request, session)
+        return item.handle(request)
     }
 
     // exists(path) {
@@ -416,7 +412,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async route(request, session) {
+    async route(request) {
         /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
            FolderLocal does NOT provide web browsing of files and nested folders.
          */
@@ -424,7 +420,7 @@ export class FolderLocal extends Folder {
         if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
         if (!path) {
             request.path = ''
-            return this.handle(request, session)          // if no file `path` given, display this folder as a plain item
+            return this.handle(request)             // if no file `path` given, display this folder as a plain item
         }
 
         let root = this.get('path')
@@ -436,7 +432,7 @@ export class FolderLocal extends Folder {
         if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
             throw new Error(`URL path not found: ${path}`)
 
-        session.sendFile(fullpath, {}, (err) => {if(err) session.sendStatus(err.status)})
+        request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
     }
     get_name(item) { return null }
 }

@@ -48,6 +48,7 @@ const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 export class Request {
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
+    session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
@@ -60,8 +61,9 @@ export class Request {
     methodDefault   // method that should be used if one is missing in the request; configured by nodes on the route
 
     constructor({path, method, session}) {
+        this.session = session
         let sep = Request.SEP_METHOD, meth
-        if (session) path = path || session.path
+        // if (session) path = path || session.path
         ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
         this.path = this.pathFull
         this.method = method || meth || session?.endpoint
@@ -470,7 +472,7 @@ export class Item {
     //     throw new Error(`path not found: ${subpath}`)
     // }
 
-    async handle(request, session) {
+    async handle(request) {
         /*
         Serve a web request submitted to a given @endpoint of this item.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -503,6 +505,7 @@ export class Item {
         // if (request.method === 'get') return element !== undefined ? element : this
         // else throw new Error(`method '${request.method}' not applicable on this path`)
 
+        let session = request.session
         if (session) {
             session.item = this
             if (request.app) session.app = request.app

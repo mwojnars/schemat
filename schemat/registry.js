@@ -280,8 +280,8 @@ export class Session {
 
     // context & state of request processing; built gradually by subsequent nodes on the request route...
 
-    pathFull            // like the original request.path, but with trailing @action removed; no routing-related truncation
-    path                // remaining path to be consumed by subsequent nodes along the route; equal pathFull at the beginning,
+    path                // like the original req.path, but with trailing @method name removed
+    // path                // remaining path to be consumed by subsequent nodes along the route; equal pathFull at the beginning,
                         // it gets truncated while the routing proceeds
 
     endpoint            // action to be executed on the target item; empty string '' if not provided in a request
@@ -314,8 +314,8 @@ export class Session {
 
         if (request) {                      // server-side
             let path = request.path, sep = Session.SEP_METHOD;
-            [this.pathFull, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-            this.path = this.pathFull
+            [this.path, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+            // this.path = this.pathFull
         }
     }
 
