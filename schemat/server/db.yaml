@@ -299,7 +299,7 @@
 - __id:
     - 3
     - 3
-  content: import {print} from '/site/utils.js'; export function check() {
+  content: import {print} from './xxx/../utils.js'; export function check() {
     print('called /site/widgets.js/check()') }
 - __id:
     - 5

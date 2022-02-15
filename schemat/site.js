@@ -20,22 +20,41 @@ const SEP_METHOD = '@'        // separator of a method name within a URL path
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    async import(path) {
-        /* Returns a namespace object extracted from the VM Module imported from `path`. */
-        let module = await this.importModule(path)
+    async import(path, referrer) {
+        /* Custom import of JS files and code snippets from Schemat's Universal Namespace.
+           This method returns a namespace object extracted from a vm.Module loaded by importModule().
+         */
+        let module = await this.importModule(path, referrer)
         return module.namespace
     }
-    async importModule(path) {
-        /* Custom import of JS files and code snippets from Schemat's Universal Namespace. */
+
+    async importModule(path, referrer) {
+        /* Custom import of JS files and code snippets from Schemat's Universal Namespace. Returns a vm.Module object. */
+        // TODO: cache module objects, parameter Site:cache_modules_ttl
+        // TODO: for circular dependency return an unfinished module (use cache for this)
+
+        const PREFIX = 'schemat:'
+        const unprefix = (s) => s.startsWith(PREFIX) ? s.slice(PREFIX.length) : s
+
+        // convert a relative path to absolute
+        if (path[0] === '.') {
+            if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
+            if (typeof referrer !== 'string') referrer = referrer.identifier        // vm.Module.identifier
+            path = unprefix(referrer) + '/../' + path
+            path = this._normPath(path)
+        }
+        else if (!path.startsWith(PREFIX) && path[0] !== '/')       // fall back to Node's import for no-path global imports (no ./ or /...)
+            return import(path)
+        else
+            path = unprefix(path)
+
         const vm = await import('vm')
-
         let source = await this.route(new Request({path, method: 'import'}))
-        // print('Site.import()/source:', source)
-
         let context = vm.createContext(globalThis)
-        let identifier = `schemat:${path}`
+        let identifier = PREFIX + path
+        if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
-        let linker = (specifier, referrer) => this.importModule(specifier)
+        let linker = (specifier, ref) => this.importModule(specifier, ref)
         let initializeImportMeta = (meta) => {meta.url = identifier}
 
         let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically: linker})
@@ -43,6 +62,17 @@ export class Site extends Item {
         await module.link(linker)
         await module.evaluate()
         return module
+    }
+    _normPath(path) {
+        /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
+        let p = path.replaceAll('/./', '/')
+        let parts = []
+        for (const part of p.split('/'))
+            if (part === '..')
+                if (!parts.length) throw new Error(`incorrect import path: '${path}'`)
+                else parts.pop()
+            else parts.push(part)
+        return parts.join('/')
     }
 
     async routeWeb(session) {
