@@ -268,11 +268,10 @@ export class Session {
 
     registry            // instance of Registry
     req                 // instance of node.js express' Request (only present server-side)
-    res            // instance of node.js express' Response (only present server-side)
+    res                 // instance of node.js express' Response (only present server-side)
 
-    // get req()           { return this.request  }
-    // get res()           { return this.response }
     get channels()      { return [this.req, this.res] }
+    get path()          { return this.req.path }
 
     // get method()        { return this.req.method }
     // get query()         { return this.req.query  }
@@ -280,10 +279,10 @@ export class Session {
 
     // context & state of request processing; built gradually by subsequent nodes on the request route...
 
-    path                // like the original req.path, but with trailing @method removed
-    endpoint            // action to be executed on the target item; empty string '' if not provided in a request
-    endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
-                        // configured by an application that handles the request
+    // path                // like the original req.path, but with trailing @method removed
+    // endpoint            // action to be executed on the target item; empty string '' if not provided in a request
+    // endpointDefault     // default endpoint that should be used instead of "view" if `endpoint` is missing;
+    //                     // configured by an application that handles the request
 
     //apps              // dict {...} of applications that occured on the current route, e.g., apps.posts, apps.comments ...
     //url               // dict {...} of URL-generation functions for the apps encountered along the route: url['posts'](nextPost)
@@ -309,10 +308,10 @@ export class Session {
         this.req = req
         this.res = res
 
-        if (req) {                          // server-side code
-            let path = req.path, sep = Session.SEP_METHOD;
-            [this.path, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
-        }
+        // if (req) {                          // server-side code
+        //     let path = req.path, sep = Session.SEP_METHOD;
+        //     [path, this.endpoint] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+        // }
     }
 
     async start()   { this.releaseMutex = await this.registry.startSession(this) }
@@ -327,8 +326,8 @@ export class Session {
     sendItem(...args)       { this.res.sendItem(...args)   }
     sendItems(...args)      { this.res.sendItems(...args)  }
 
-    // get an ultimate endpoint, fall back to a default when necessary
-    getEndpoint()           { return this.endpoint || this.endpointDefault } // || 'view' }
+    // // get an ultimate endpoint, fall back to a default when necessary
+    // getEndpoint()           { return this.endpoint || this.endpointDefault } // || 'view' }
 
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }

@@ -62,8 +62,8 @@ export class Server {
 
         await this.registry.site.routeWeb(session)
 
-        // let {check} = await this.registry.site.import("/site/widgets.js")
-        // check()
+        let {check} = await this.registry.site.import("/site/widgets.js")
+        check()
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing

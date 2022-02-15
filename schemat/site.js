@@ -102,7 +102,7 @@ export class Site extends Item {
         return this.get('base_url') + this.get('system_path')
     }
 
-    buildURL(item, {route, relative = true, baseURL, endpoint, args} = {}) {
+    buildURL(item, {route, relative = true, baseURL, method, args} = {}) {
         /*
         Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
         that's processing the current web request; or an absolute or relative URL
@@ -113,7 +113,7 @@ export class Site extends Item {
         app.assertLoaded()
         let path = app.url_path(item, {relative})
         let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-        if (endpoint) url += `${SEP_METHOD}${endpoint}`                 // append `endpoint` and `args` to the URL
+        if (method) url += `${SEP_METHOD}${method}`                     // append `method` and `args` to the URL
         if (args) url += '?' + new URLSearchParams(args).toString()
         return url
         // return this.setEndpoint(url, endpoint, args)

@@ -66,7 +66,7 @@ export class Request {
         // if (session) path = path || session.path
         ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
         this.path = this.pathFull
-        this.method = method || meth || session?.endpoint
+        this.method = method || meth //|| session?.endpoint
     }
 
     getMethod()     { return this.method || this.methodDefault }
@@ -340,10 +340,10 @@ export class Item {
         return state
     }
 
-    url(endpoint = null, params = {}) {
-        /* `endpoint` can be a string that will be appended to `params`, or an object that will be used instead of `params`. */
-        if (typeof endpoint === "string") params.endpoint = endpoint
-        else if (endpoint) params = endpoint
+    url(method = null, params = {}) {
+        /* `method` is a string parameter to be added to `params`, or an object to replace `params`. */
+        if (typeof method === "string") params.method = method
+        else if (method) params = method
 
         let {raise = true, warn = true, ...params_} = params
         let  site  = this.registry.site
@@ -424,11 +424,11 @@ export class Item {
 
     async remote_delete()       { return this.remote('delete') }
 
-    async remote(endpoint, data, {args, params} = {}) {
-        /* Connect from client to an `endpoint` of an internal API; send `data` if any;
+    async remote(method, data, {args, params} = {}) {
+        /* Connect from client to an `method` of an internal API; send `data` if any;
            return a response body parsed from JSON to an object.
          */
-        let url = this.url(endpoint)
+        let url = this.url(method)
         let res = await fetchJson(url, data, params)        // Response object
         if (!res.ok) throw new ServerError(res)
         return res.json()
