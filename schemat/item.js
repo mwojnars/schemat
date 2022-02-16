@@ -94,16 +94,14 @@ export class Request {
         return this.path.slice(1).split(Request.SEP_ROUTE)[0]
     }
 
-    move(step) {
+    move(step = this.step()) {
         /* Truncate `step` or this.step() from this.path. The step can be an empty string. Return this object. */
-        if (step === undefined) step = this.step()
         if (step === undefined) this.throwNotFound()
-        if (step === '') return this
-
-        assert(this.path.startsWith('/' + step))
-        this.path = this.path.slice(1 + step.length)
-        return this
-        // return Object.create(this, {path: path})
+        if (step) {
+            assert(this.path.startsWith('/' + step))
+            this.path = this.path.slice(1 + step.length)
+        }
+        return this             //Object.create(this, {path: path})
     }
 
     throwNotFound() { throw new Request.NotFound({path: this.path}) }
@@ -495,7 +493,7 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        let [node, target, req] = this._findRouteChecked(request)
+        let [node, req, target] = this._findRouteChecked(request)
         // if (node instanceof Promise) node = await node
         if (!node.loaded) await node.load()
         return target ? node.handle(req) : node.route(req)
@@ -510,7 +508,7 @@ export class Item {
          */
         if (!request.path && strategy === 'first') return [this, request]
         try {
-            let [node, target, req] = this._findRouteChecked(request)
+            let [node, req, target] = this._findRouteChecked(request)
             // if (node instanceof Promise) node = await node
             if (!node.loaded) await node.load()
             if (target) return [node, req]
@@ -533,12 +531,12 @@ export class Item {
 
     findRoute(request) {
         /* Find the next node on a route identified by request.path, the route starting in this node.
-           Return [next-node, is-target, new-request], or undefined. The next-node can be a stub (unloaded).
-           If `request` is modified internally, the implementation must ensure that any exceptions
-           are raised *before* the modifications take place.
+           Return [next-node, new-request, is-target], or undefined. The next-node can be a stub (unloaded).
+           The is-target can be omitted (false by default). If `request` is modified internally,
+           the implementation must ensure that any exceptions are raised *before* the modifications take place.
          */
         request.throwNotFound()
-        return [this, false, request]       // just a mockup for an IDE to infer return types
+        return [this, request, false]       // just a mockup for an IDE to infer return types
     }
 
     async handle(request) {

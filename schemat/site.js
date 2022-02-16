@@ -89,8 +89,8 @@ export class Site extends Item {
 
     findRoute(request) {
         return request.path ?
-            [this.get('application'), false, request] :
-            [this.get('empty_path'),  true,  request]
+            [this.get('application'), request, false] :
+            [this.get('empty_path'),  request,  true]
     }
 
     systemURL() {
@@ -174,8 +174,8 @@ export class Router extends Item {
         let step   = request.step()
         let routes = this.get('routes')
         let route  = routes.get(step)
-        if (step && route)  return [route, false, request.move(step)]
-        if (routes.has('')) return [routes.get(''), false, request]          // default (unnamed) route
+        if (step && route)  return [route, request.move(step)]
+        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
     }
 
     _find(path = '') {
