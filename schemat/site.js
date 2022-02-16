@@ -212,7 +212,7 @@ export class File extends Item {
     }
 
     read()              { return this.get('content') }
-    _handle_import()    { return this.read() }      // internal calls from Site.import()
+    _handle_import()    { return this.read() }      // this endpoint used by internal requests from Site.import()
 
     _handle_download({res, request}) {
         this.setMimeType(res, request.pathFull)
@@ -252,7 +252,6 @@ export class FileLocal extends File {
 }
 
 export class Folder extends Item {
-    // static SEP_FOLDER = '/'          // separator of folders in a file path
 
     findRoute(request) {
         let step = request.step()
@@ -260,34 +259,6 @@ export class Folder extends Item {
         let item = this.get(`files/${step}`)
         return [item, request.move(step)]
     }
-
-    // search(path) {
-    //     /*
-    //     Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
-    //     The search is performed recursively in subfolders.
-    //     */
-    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-    //     let item = this
-    //     while (path) {
-    //         let name = path.split(Folder.SEP_FOLDER)[0]
-    //         item = item.get(`files/${name}`)
-    //         path = path.slice(name.length+1)
-    //     }
-    //     return item
-    // }
-    // read(path) {
-    //     /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
-    //     let f = this.search(path)
-    //     if (f instanceof File) return f.read()
-    //     throw new Error(`not a File: ${path}`)
-    // }
-    // get_name(item) {
-    //     /* Return a name assigned to a given item. If the same item is assigned multiple names,
-    //     the last one is returned. */
-    //     let names = this.temp('names')
-    //     return names.get(item.id, null)
-    // }
-    // _temp_names()     { return ItemsMap.reversed(this.get('files')) }
 }
 
 export class FolderLocal extends Folder {
@@ -314,7 +285,5 @@ export class FolderLocal extends Folder {
 
         request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
     }
-
-    // get_name(item) { return null }
 }
 
