@@ -141,21 +141,16 @@ export class Application extends Item {
     */
 
     urlPath(item) {
-        /*
-        Generate a URL name/path (fragment after the base route string) of `item`.
-        The path does NOT have a leading separator, or it has a different (internal) meaning -
-        in any case, a leading separator should be inserted by caller if needed.
-        */
-        return undefined
+        /* Generate a URL name/path (fragment after the base route string) of `item`.
+           The path does NOT have a leading separator, or it has a different (internal) meaning -
+           in any case, a leading separator should be inserted by caller if needed.
+         */
     }
-
     name(item) {
         /* If `item` belongs to the item space defined by this application, return its flat name
            (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
            The name can be used as a trailing component when building a URL for an item.
-           TODO: support generation of multi-segment hierarchical names (with '/').
          */
-        return undefined
     }
 }
 
@@ -274,16 +269,11 @@ export class FolderLocal extends Folder {
     }
 
     handlePartial(request) {
-        let path = request.path.slice(1)                    // truncate the leading '/'
         let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')
-        if (!root.endsWith('/')) root += '/'
-
-        let fullpath = this._module_path.join(root, path)   // this reduces the '..' special symbols, so we have to check
-        if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
-            request.throwNotFound()
-
-        request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
+        let path = this._module_path.join(root, request.path)   // this reduces the '..' special symbols, so we have to check
+        if (!path.startsWith(root)) request.throwNotFound()     // if the final path still falls under the `root`, for security
+        request.session.sendFile(path)
     }
 }
 
