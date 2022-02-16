@@ -84,7 +84,20 @@ export class Site extends Item {
 
     async routeWeb(session) {
         /* Routing of a web request (in contrast to an internal request). */
-        return this.route(new Request({session, path: session.path}))
+
+        let request = new Request({session, path: session.path})
+        return this.route(request)
+        // if (request.path.endsWith('/'))           // redirect if there's a trailing '/' in URL
+        //     return session.redirect(session.path.slice(0,-1))
+
+        // try { return this.route(request) }
+        // catch (ex) {
+        //     if (ex instanceof Request.NotFound) {
+        //         print(ex)
+        //         return session.sendStatus(404)
+        //     }
+        //     else throw ex
+        // }
     }
 
     findRoute(request) {
@@ -322,6 +335,12 @@ export class AppSpaces extends Application {
  */
 
 export class File extends Item {
+
+    findRoute(request) {
+        request.methodDefault = 'download'
+        return [this, request, true]            // "true": mark every File as a target node of a URL route
+    }
+
     read() { return this.get('content') }
 
     _handle_import({}) {
@@ -368,44 +387,48 @@ export class FileLocal extends File {
 export class Folder extends Item {
     static SEP_FOLDER = '/'          // separator of folders in a file path
 
-    async route(request) {
-        /* Propagate a web request down to the nearest object pointed to by `path`.
-           If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
-         */
-        let path = request.path
-        if (path === '/') return request.session?.redirect(request.pathFull.slice(0,-1))    // truncate the trailing '/' in URL
-        // if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
-        // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
+    // async route(request) {
+    //     /* Propagate a web request down to the nearest object pointed to by `path`.
+    //        If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
+    //      */
+    //     let path = request.path
+    //     if (path === '/') return request.session?.redirect(request.pathFull.slice(0,-1))    // truncate the trailing '/' in URL
+    //     // if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
+    //     // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
+    //
+    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+    //     let step = path.split(Folder.SEP_FOLDER)[0]
+    //     let item = this
+    //
+    //     if (step) {
+    //         item = this.get(`files/${step}`)
+    //         if (!item) throw new Error(`URL path not found: ${path}`)
+    //         assert(item instanceof Item, `not an item: ${item}`)
+    //         path = path.slice(step.length+1)
+    //         await item.load()
+    //     }
+    //
+    //     if (item.get('_is_file')) {
+    //         if (path) throw new Error('URL not found')
+    //         request.methodDefault = 'download'
+    //     }
+    //     else if (item.get('_is_folder')) {
+    //         // request.endpointDefault = 'browse'
+    //         if (path) { request.path = path; return item.route(request) }
+    //         // else request.session.state.folder = item            // leaf folder, for use when generating file URLs (urlPath())
+    //     }
+    //
+    //     request.path = ''
+    //     return item.handle(request)
+    // }
 
-        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        let name = path.split(Folder.SEP_FOLDER)[0]
-        let item = this
-
-        if (name) {
-            item = this.get(`files/${name}`)
-            if (!item) throw new Error(`URL path not found: ${path}`)
-            assert(item instanceof Item, `not an item: ${item}`)
-            path = path.slice(name.length+1)
-            await item.load()
-        }
-
-        if (item.get('_is_file')) {
-            if (path) throw new Error('URL not found')
-            request.methodDefault = 'download'
-        }
-        else if (item.get('_is_folder')) {
-            // request.endpointDefault = 'browse'
-            if (path) { request.path = path; return item.route(request) }
-            else request.session.state.folder = item            // leaf folder, for use when generating file URLs (urlPath())
-        }
-
-        request.path = ''
-        return item.handle(request)
+    findRoute(request) {
+        let step = request.step()
+        if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
+        let item = this.get(`files/${step}`)
+        return [item, request.move(step)]
     }
 
-    // exists(path) {
-    //     /* Check whether a given path exists in this folder. */
-    // }
     search(path) {
         /*
         Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
@@ -437,28 +460,50 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async route(request) {
-        /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
-           FolderLocal does NOT provide web browsing of files and nested folders.
-         */
-        let path = request.path
-        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        if (!path) {
-            request.path = ''
-            return this.handle(request)             // if no file `path` given, display this folder as a plain item
-        }
+    async afterLoad(data) {
+        this._module_path = await import('path')        // to avoid awaiting while routing
+    }
 
+    findRoute(request) {
+        // always mark this folder as the target node of the route: either to display the folder (if empty path),
+        // or to pass the execution to .handlePartial() otherwise
+        return [this, request, true]
+    }
+    handlePartial(request) {
+        let path = request.path.slice(1)                // truncate the leading '/'
         let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         if (!root.endsWith('/')) root += '/'
 
-        let fspath   = await import('path')
-        let fullpath = fspath.join(root, path)              // this interpretes and reduces the '..' symbols, so we have to check
+        let fullpath = this._module_path.join(root, path)   // this reduces the '..' special symbols, so we have to check
         if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
-            throw new Error(`URL path not found: ${path}`)
+            request.throwNotFound()
 
         request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
     }
+
+    // async route(request) {
+    //     /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
+    //        FolderLocal does NOT provide web browsing of files and nested folders.
+    //      */
+    //     let path = request.path
+    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+    //     if (!path) {
+    //         request.path = ''
+    //         return this.handle(request)             // if no file `path` given, display this folder as a plain item
+    //     }
+    //
+    //     let root = this.get('path')
+    //     if (!root) throw new Error('missing `path` property in a FolderLocal')
+    //     if (!root.endsWith('/')) root += '/'
+    //
+    //     let fspath   = await import('path')
+    //     let fullpath = fspath.join(root, path)              // this interpretes and reduces the '..' symbols, so we have to check
+    //     if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
+    //         throw new Error(`URL path not found: ${path}`)
+    //
+    //     request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
+    // }
     get_name(item) { return null }
 }
 

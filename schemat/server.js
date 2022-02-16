@@ -9,6 +9,7 @@ import express from 'express'
 import {assert, print, sleep} from './utils.js'
 import {ServerRegistry} from './server/registry-s.js'
 import {Session} from './registry.js'
+import {Request} from "./item.js";
 
 // import {check} from "/site/widgets.js"
 // check()
@@ -60,7 +61,14 @@ export class Server {
         let session = new Session(this.registry, req, res)
         await session.start()
 
-        await this.registry.site.routeWeb(session)
+        try { await this.registry.site.routeWeb(session) }
+        catch (ex) {
+            if (ex instanceof Request.NotFound) {
+                print('failed request:', ex)
+                try { session.sendStatus(404) } catch(e){}
+            }
+            else throw ex
+        }
 
         // let {check} = await this.registry.site.import("/site/widgets.js")
         // check()

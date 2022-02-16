@@ -109,7 +109,7 @@ export class Request {
         return this
     }
 
-    throwNotFound() { throw new Request.NotFound({path: this.path}) }
+    throwNotFound() { throw new Request.NotFound({'remaining path': this.path}) }
 }
 
 
@@ -498,6 +498,7 @@ export class Item {
         */
         let [node, req, target] = this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
+        if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
         if (!node.loaded) await node.load()
         return target ? node.handle(req) : node.route(req)
     }
@@ -542,7 +543,15 @@ export class Item {
         return [this, request, false]           // just a mockup for an IDE to infer return types
     }
 
-    async handle(request) {
+    handlePartial(request) {
+        /* Handle a request whose .path goes into the item. Default: error.
+           Subclasses may override this method to provide support for in-item subpaths.
+           Overriding methods can be "async" if needed.
+         */
+        request.throwNotFound()
+    }
+
+    handle(request) {
         /*
         Serve a web request by executing a web @method (endpoint) on self, as requested by request.method.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
@@ -562,15 +571,16 @@ export class Item {
         */
         let req, res, entry, subpath
 
-        if (request.path) {
-            // route into `data` if there's still a path to be consumed
-            // TODO: check for "read" privilege of request.client to this item
-            await this.load()
-            ;[entry, subpath] = this.data.route(request.path)
-            if (subpath) throw new Error(`path not found: ${subpath}`)
-                // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
-                // else throw new Error(`path not found: ${subpath}`)
-        }
+        if (request.path) return this.handlePartial(request)
+        // if (request.path) {
+        //     // route into `data` if there's still a path to be consumed
+        //     // TODO: check for "read" privilege of request.client to this item
+        //     await this.load()
+        //     ;[entry, subpath] = this.data.route(request.path)
+        //     if (subpath) throw new Error(`path not found: ${subpath}`)
+        //         // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
+        //         // else throw new Error(`path not found: ${subpath}`)
+        // }
 
         // if (request.method === 'get') return element !== undefined ? element : this
         // else throw new Error(`method '${request.method}' not applicable on this path`)
@@ -584,7 +594,7 @@ export class Item {
         // if (app) session.app = app
         // let method = session.getEndpoint() || 'default'
         let method = request.getMethod() || 'default'
-        await this.load()       // for this.category, below, to be initialized
+        // await this.load()       // for this.category, below, to be initialized
 
         let handler
         let handlers = this.category.getHandlers()
