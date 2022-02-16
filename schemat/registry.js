@@ -123,6 +123,10 @@ export class Registry {
 
     static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
+    // global flags onServer/onClient to indicate the environment where the code is executing
+    onServer = true
+    get onClient() { return !this.onServer }
+
     db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests

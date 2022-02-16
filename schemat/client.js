@@ -70,7 +70,7 @@ class AjaxDB {
 class ClientRegistry extends Registry {
     /* Client-side registry: getItem() pulls items from server and caches in browser's web storage. */
 
-    // get _specializedItemJS() { return "./client/item-c.js" }
+    onServer = false
 
     constructor(data) {
         super()

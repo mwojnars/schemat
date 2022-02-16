@@ -461,16 +461,16 @@ export class Folder extends Item {
 export class FolderLocal extends Folder {
 
     async afterLoad(data) {
-        this._module_path = await import('path')        // to avoid awaiting while routing
+        if (this.registry.onServer)
+            this._module_path = await import('path')        // to avoid awaiting in handlePartial()
     }
 
     findRoute(request) {
-        // always mark this folder as the target node of the route: either to display the folder (if empty path),
-        // or to pass the execution to .handlePartial() otherwise
+        // always mark this folder as the target: either to display it (empty path), or to pass the execution to .handlePartial()
         return [this, request, true]
     }
     handlePartial(request) {
-        let path = request.path.slice(1)                // truncate the leading '/'
+        let path = request.path.slice(1)                    // truncate the leading '/'
         let root = this.get('path')
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         if (!root.endsWith('/')) root += '/'

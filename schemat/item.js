@@ -496,6 +496,7 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
+        assert(this.registry.onServer)                  // route() is exclusively server-side code
         let [node, req, target] = this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
@@ -544,9 +545,8 @@ export class Item {
     }
 
     handlePartial(request) {
-        /* Handle a request whose .path goes into the item. Default: error.
-           Subclasses may override this method to provide support for in-item subpaths.
-           Overriding methods can be "async" if needed.
+        /* Handle a request whose "partial path" addresses an inner element of the item. Default: error.
+           Subclasses may override this method. Overriding methods can be "async".
          */
         request.throwNotFound()
     }
