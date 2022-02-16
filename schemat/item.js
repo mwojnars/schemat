@@ -66,9 +66,9 @@ export class Request {
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
 
     method
-    origin          // 'web', 'internal'
-    type            // 'view', 'action'
     args            // dict of action's arguments; taken from req.query (if a web request) or passed directly (internal request)
+    //origin        // 'web', 'internal'
+    //type          // 'view', 'action'
 
     methodDefault   // method that should be used if one is missing in the request; configured by nodes on the route
 
@@ -88,9 +88,22 @@ export class Request {
 
     getMethod()     { return this.method || this.methodDefault }
 
-    move(prefix) {
-        /* This may return a new Request object in the future. */
+    step() {
+        if (!this.path) return undefined
+        if (this.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${this.path}'`)
+        return this.path.slice(1).split(Request.SEP_ROUTE)[0]
+    }
+
+    move(step) {
+        /* Truncate `step` or this.step() from this.path. The step can be an empty string. Return this object. */
+        if (step === undefined) step = this.step()
+        if (step === undefined) this.throwNotFound()
+        if (step === '') return this
+
+        assert(this.path.startsWith('/' + step))
+        this.path = this.path.slice(1 + step.length)
         return this
+        // return Object.create(this, {path: path})
     }
 
     throwNotFound() { throw new Request.NotFound({path: this.path}) }
@@ -482,13 +495,14 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        let [node, target, req] = this.findRoute(request)           // here, a part of request.path gets consumed
-        if (node instanceof Promise) node = await node
+        let [node, target, req] = this._findRouteChecked(request)
+        // if (node instanceof Promise) node = await node
+        if (!node.loaded) await node.load()
         return target ? node.handle(req) : node.route(req)
     }
     async routeNode(request, strategy = 'last') {
         /* Like route(), but request.path can point to an intermediate node on a route,
-           and instead of calling .handle() this method returns the node pointed to by the path:
+           and instead of calling .handle() this method returns a (loaded) node pointed to by the path:
            the first node where request.path becomes empty (if strategy="first");
            or the last node before catching a Request.NotFound error (if strategy="last");
            or the target node with remaining subpath - if the target was reached along the way.
@@ -496,8 +510,9 @@ export class Item {
          */
         if (!request.path && strategy === 'first') return [this, request]
         try {
-            let [node, target, req] = this.findRoute(request)
-            if (node instanceof Promise) node = await node
+            let [node, target, req] = this._findRouteChecked(request)
+            // if (node instanceof Promise) node = await node
+            if (!node.loaded) await node.load()
             if (target) return [node, req]
             return node.routeNode(req, strategy)
         }
@@ -508,11 +523,19 @@ export class Item {
         }
     }
 
+    _findRouteChecked(request) {
+        /* Wrapper around findRoute() that adds validity checks. */
+        let next = this.findRoute(request)              // here, a part of request.path gets consumed
+        if (!next) request.throwNotFound()
+        if (!next[0]) request.throwNotFound()           // missing `node` in the returned tuple
+        return next
+    }
+
     findRoute(request) {
-        /* Find the next node on a route identified by request.path and starting in this node.
-           Return [next-node, is-target, new-request]. If `request` is modified internally,
-           the implementation must ensure that any exceptions are raised *before* the modifications take place.
-           The returned `node` can be a Promise to be awaited by the caller.
+        /* Find the next node on a route identified by request.path, the route starting in this node.
+           Return [next-node, is-target, new-request], or undefined. The next-node can be a stub (unloaded).
+           If `request` is modified internally, the implementation must ensure that any exceptions
+           are raised *before* the modifications take place.
          */
         request.throwNotFound()
         return [this, false, request]       // just a mockup for an IDE to infer return types

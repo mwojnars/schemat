@@ -86,21 +86,11 @@ export class Site extends Item {
         /* Routing of a web request (in contrast to an internal request). */
         return this.route(new Request({session, path: session.path}))
     }
-    // async route(request) {
-    //     /* Forward the request to the root item. */
-    //     if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
-    //     let app = await this.getLoaded('application')
-    //     return app.route(request)
-    // }
+
     findRoute(request) {
-        if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
-        if (!request.path) {
-            let home = this.get('empty_path')
-            if (!home) request.throwNotFound()
-            return [home.load(), true, request]
-        }
-        let app = this.get('application')
-        return [app.load(), false, request]
+        return request.path ?
+            [this.get('application'), false, request] :
+            [this.get('empty_path'),  true,  request]
     }
 
     systemURL() {
@@ -169,15 +159,23 @@ export class Site extends Item {
 export class Router extends Item {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
 
-    async route(request) {
-        /*
-        Find an object in `routes` that matches the requested URL path and call its route().
-        The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
-        */
-        let [target, subpath] = this._find(request.path)
-        request.path = subpath
-        await target.load()
-        return target.route(request)
+    // async route(request) {
+    //     /*
+    //     Find an object in `routes` that matches the requested URL path and call its route().
+    //     The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
+    //     */
+    //     let [target, subpath] = this._find(request.path)
+    //     request.path = subpath
+    //     await target.load()
+    //     return target.route(request)
+    // }
+
+    findRoute(request) {
+        let step   = request.step()
+        let routes = this.get('routes')
+        let route  = routes.get(step)
+        if (step && route)  return [route, false, request.move(step)]
+        if (routes.has('')) return [routes.get(''), false, request]          // default (unnamed) route
     }
 
     _find(path = '') {
