@@ -146,7 +146,7 @@ export class Item {
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
     get newborn()   { return this.iid === null }
-    get loaded()    { return this.has_data() }
+    get loaded()    { return this.has_data() && !(this.data instanceof Promise) }   // false if `data` is still loading (a Promise) !!
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
@@ -172,13 +172,16 @@ export class Item {
         }
     }
 
-    loadThen(fun) { return this.load().then(fun) }
+    // loadThen(fun) { return this.load().then(fun) }
 
     async load(field = null, use_schema = true) {
         /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
 
         // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
-        if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
+        // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
+
+        if (this.loaded) return this
+        if (this.data) return this.data.then(() => this)        // loading has already started, must wait rather than load again (`data` is a Promise)
 
         if (!this.category) {
             // load the category and set a proper class for this item - stubs only have Item as their class,
@@ -194,7 +197,7 @@ export class Item {
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
 
-        return this.data
+        return this.data.then(() => this)
     }
     async afterLoad(data) {
         /* Any extra initialization after the item's `data` is loaded but NOT yet stored in this.data.
@@ -479,7 +482,8 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        let [node, target, req] = await this.findRoute(request)         // here, a part of request.path gets consumed
+        let [node, target, req] = this.findRoute(request)           // here, a part of request.path gets consumed
+        if (node instanceof Promise) node = await node
         return target ? node.handle(req) : node.route(req)
     }
     async routeNode(request, strategy = 'last') {
@@ -492,7 +496,8 @@ export class Item {
          */
         if (!request.path && strategy === 'first') return [this, request]
         try {
-            let [node, target, req] = await this.findRoute(request)
+            let [node, target, req] = this.findRoute(request)
+            if (node instanceof Promise) node = await node
             if (target) return [node, req]
             return node.routeNode(req, strategy)
         }
@@ -503,11 +508,11 @@ export class Item {
         }
     }
 
-    async findRoute(request) {
+    findRoute(request) {
         /* Find the next node on a route identified by request.path and starting in this node.
-           Return [next-node, is-target, new-request].
-           If `request` is modified internally, the implementation must ensure that any exceptions
-           are raised *before* the modifications take place.
+           Return [next-node, is-target, new-request]. If `request` is modified internally,
+           the implementation must ensure that any exceptions are raised *before* the modifications take place.
+           The returned `node` can be a Promise to be awaited by the caller.
          */
         request.throwNotFound()
         return [this, false, request]       // just a mockup for an IDE to infer return types

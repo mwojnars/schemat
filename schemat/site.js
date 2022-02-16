@@ -92,16 +92,15 @@ export class Site extends Item {
     //     let app = await this.getLoaded('application')
     //     return app.route(request)
     // }
-    async findRoute(request) {
+    findRoute(request) {
         if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
         if (!request.path) {
             let home = this.get('empty_path')
             if (!home) request.throwNotFound()
-            await home.load()
-            return [home, true, request]
+            return [home.load(), true, request]
         }
-        let app = await this.getLoaded('application')
-        return [app, false, request]
+        let app = this.get('application')
+        return [app.load(), false, request]
     }
 
     systemURL() {
