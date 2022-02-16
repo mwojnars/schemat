@@ -479,19 +479,12 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        let [node, target, req] = this.findRoute(request)       // here, a part of request.path gets consumed
+        let [node, target, req] = await this.findRoute(request)         // here, a part of request.path gets consumed
         return target ? node.handle(req) : node.route(req)
-
-        // // route into `data` by default; subtypes may perform routing differently
-        // await this.load()
-        // let [entry, subpath] = this.data.route(request.path)
-        // if (!subpath) return this.handle(request, session, entry)
-        // if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
-        // throw new Error(`path not found: ${subpath}`)
     }
     async routeNode(request, strategy = 'last') {
         /* Like route(), but request.path can point to an intermediate node on a route,
-           and instead of calling .handle(), this method returns the node pointed to by the path:
+           and instead of calling .handle() this method returns the node pointed to by the path:
            the first node where request.path becomes empty (if strategy="first");
            or the last node before catching a Request.NotFound error (if strategy="last");
            or the target node with remaining subpath - if the target was reached along the way.
@@ -499,7 +492,7 @@ export class Item {
          */
         if (!request.path && strategy === 'first') return [this, request]
         try {
-            let [node, target, req] = this.findRoute(request)
+            let [node, target, req] = await this.findRoute(request)
             if (target) return [node, req]
             return node.routeNode(req, strategy)
         }
@@ -510,7 +503,15 @@ export class Item {
         }
     }
 
-    async findRoute(request) { request.throwNotFound() }
+    async findRoute(request) {
+        /* Find the next node on a route identified by request.path and starting in this node.
+           Return [next-node, is-target, new-request].
+           If `request` is modified internally, the implementation must ensure that any exceptions
+           are raised *before* the modifications take place.
+         */
+        request.throwNotFound()
+        return [this, false, request]       // just a mockup for an IDE to infer return types
+    }
 
     async handle(request) {
         /*

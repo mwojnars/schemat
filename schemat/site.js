@@ -86,11 +86,22 @@ export class Site extends Item {
         /* Routing of a web request (in contrast to an internal request). */
         return this.route(new Request({session, path: session.path}))
     }
-    async route(request) {
-        /* Forward the request to the root item. */
+    // async route(request) {
+    //     /* Forward the request to the root item. */
+    //     if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
+    //     let app = await this.getLoaded('application')
+    //     return app.route(request)
+    // }
+    async findRoute(request) {
         if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
+        if (!request.path) {
+            let home = this.get('empty_path')
+            if (!home) request.throwNotFound()
+            await home.load()
+            return [home, true, request]
+        }
         let app = await this.getLoaded('application')
-        return app.route(request)
+        return [app, false, request]
     }
 
     systemURL() {
