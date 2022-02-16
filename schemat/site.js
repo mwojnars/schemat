@@ -178,29 +178,29 @@ export class Router extends Item {
         if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
     }
 
-    _find(path = '') {
-        /* Make one step forward along a URL `path`. Return the object associated with the route and the remaining subpath. */
-        let lead = 0, step
-
-        // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
-        // and preserve in a returned subpath otherwise
-        if (path.startsWith(Request.SEP_ROUTE)) {
-            lead = (path.length >= 2)
-            step = path.slice(1).split(Request.SEP_ROUTE)[0]
-        } else
-            step = path.split(Request.SEP_ROUTE)[0]
-        
-        let routes = this.get('routes')
-        let route  = routes.get(step)
-        
-        if (step && route)                          // non-default (named) route can be followed with / in path
-            return [route, path.slice(lead + step.length)]
-        
-        if (routes.has(''))                         // default (unnamed) route has special format, no "/"
-            return [routes.get(''), path]
-        
-        throw new Error(`URL path not found: ${path}`)
-    }
+    // _find(path = '') {
+    //     /* Make one step forward along a URL `path`. Return the object associated with the route and the remaining subpath. */
+    //     let lead = 0, step
+    //
+    //     // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
+    //     // and preserve in a returned subpath otherwise
+    //     if (path.startsWith(Request.SEP_ROUTE)) {
+    //         lead = (path.length >= 2)
+    //         step = path.slice(1).split(Request.SEP_ROUTE)[0]
+    //     } else
+    //         step = path.split(Request.SEP_ROUTE)[0]
+    //
+    //     let routes = this.get('routes')
+    //     let route  = routes.get(step)
+    //
+    //     if (step && route)                          // non-default (named) route can be followed with / in path
+    //         return [route, path.slice(lead + step.length)]
+    //
+    //     if (routes.has(''))                         // default (unnamed) route has special format, no "/"
+    //         return [routes.get(''), path]
+    //
+    //     throw new Error(`URL path not found: ${path}`)
+    // }
 
     // urlPath(item, opts = {}) {
     //
@@ -260,18 +260,24 @@ export class AppSystem extends Application {
         let [cid, iid] = item.id
         return `${cid}:${iid}`
     }
-    async route(request) {
-        let item = await this._find_item(request.path)
-        request.path = ''
-        request.app = this
-        return item.handle(request)
-    }
-    async _find_item(path) {
-        /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
-        let id
-        try { id = path.slice(1).split(':').map(Number) }
-        catch (ex) { throw new Error(`URL path not found: ${path}`) }
-        return this.registry.getLoaded(id)
+    // async route(request) {
+    //     let item = await this._find_item(request.path)
+    //     request.path = ''
+    //     request.app = this
+    //     return item.handle(request)
+    // }
+    // async _find_item(path) {
+    //     /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
+    //     let id
+    //     try { id = path.slice(1).split(':').map(Number) }
+    //     catch (ex) { throw new Error(`URL path not found: ${path}`) }
+    //     return this.registry.getLoaded(id)
+    // }
+    findRoute(request) {
+        let step = request.step(), id
+        try { id = step.split(':').map(Number) }
+        catch (ex) { request.throwNotFound() }
+        return [this.registry.getItem(id), request.move(step), true]
     }
 }
 

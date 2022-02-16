@@ -184,8 +184,8 @@ export class Registry {
     }
 
     getItem(id, {version = null} = {}) {
-        /* Get a read-only instance of an item with a given ID. If possible, an existing cached copy
-           is taken from this.cache, otherwise it is created anew and saved in this.cache for future calls.
+        /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
+           if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
         let [cid, iid] = id
         if (cid === null) throw new Error('missing CID')

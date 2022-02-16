@@ -536,7 +536,7 @@ export class Item {
            the implementation must ensure that any exceptions are raised *before* the modifications take place.
          */
         request.throwNotFound()
-        return [this, request, false]       // just a mockup for an IDE to infer return types
+        return [this, request, false]           // just a mockup for an IDE to infer return types
     }
 
     async handle(request) {
