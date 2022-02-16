@@ -3,7 +3,7 @@ import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
-import { print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent, splitLast } from './utils.js'
+import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent, splitLast, BaseError} from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
@@ -56,6 +56,10 @@ export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
+    static NotFound = class extends BaseError {
+        static message = "URL path not found"
+    }
+
     session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
@@ -73,6 +77,11 @@ export class Request {
         let sep = Request.SEP_METHOD, meth
         // if (session) path = path || session.path
         ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
+
+        // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
+        // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
+        if (this.pathFull === '/') this.pathFull = ''
+
         this.path = this.pathFull
         this.method = method || meth //|| session?.endpoint
     }
@@ -83,6 +92,8 @@ export class Request {
         /* This may return a new Request object in the future. */
         return this
     }
+
+    throwNotFound() { throw new Request.NotFound({path: this.path}) }
 }
 
 
@@ -350,10 +361,6 @@ export class Item {
 
     url(method, args) {
         /* `method` is an optional name of a web @method, `args` will be appended to URL as a query string. */
-        // if (typeof method === "string") params.method = method
-        // else if (method) params = method
-        // method = params.method
-
         let site = this.registry.site
         let app  = this.registry.session.app
         let path
@@ -462,33 +469,52 @@ export class Item {
 
     /***  Routing & handling requests (server side)  ***/
 
-    // async route(request, session) {
-    //     /*
-    //     Find an object pointed to by `path`. The `path` may span multiple connected (sub)items,
-    //     and path segments may be interpreted differently at different stages of `path` routing.
-    //     Typically, `path` originates from a web request as a trailing part of a URL after the domain.
-    //     However, route() can also be called internally by Schemat, in such case, `path` is an arbitrary
-    //     path into the Schemat's Universal Namespace, and `session` is left undefined.
-    //
-    //     Route a deep `path` request to an appropriate sub-node, or call handle() if a terminal node.
-    //     Truncate the .path as needed for routing in subsequent nodes.
-    //     When spliting an original path on SEP_ROUTE, parent applications should ensure that
-    //     the separatoror (if present) is preserved in the remaining subpath, so that subsequent nodes
-    //     can differentiate between URLs of the form ".../PARENT/" and ".../PARENT".
-    //     */
-    //     if (!request.path) return this.handle(request, session)
-    //
-    //     // route into `data` by default; subtypes may perform routing differently
-    //     await this.load()
-    //     let [entry, subpath] = this.data.route(request.path)
-    //     if (!subpath) return this.handle(request, session, entry)
-    //     if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
-    //     throw new Error(`path not found: ${subpath}`)
-    // }
+    async route(request) {
+        /*
+        Override this method, or findRoute(), in subclasses of items that serve as intermediate nodes on URL paths.
+        The route() method should forward the `request` to the next node on the path
+        by calling either its node.route(), if more routing is needed, or node.handle(),
+        if the node was identified as a TARGET item that should actually serve the request.
+        The routing node can also forward the request to itself by calling this.handle().
+        Typically, `request` originates from a web request. The routing can also be started internally,
+        and in such case request.session is left undefined.
+        */
+        let [node, target, req] = this.findRoute(request)       // here, a part of request.path gets consumed
+        return target ? node.handle(req) : node.route(req)
+
+        // // route into `data` by default; subtypes may perform routing differently
+        // await this.load()
+        // let [entry, subpath] = this.data.route(request.path)
+        // if (!subpath) return this.handle(request, session, entry)
+        // if (entry.value instanceof Item) return entry.value.route(request.move(subpath), session)
+        // throw new Error(`path not found: ${subpath}`)
+    }
+    async routeNode(request, strategy = 'last') {
+        /* Like route(), but request.path can point to an intermediate node on a route,
+           and instead of calling .handle(), this method returns the node pointed to by the path:
+           the first node where request.path becomes empty (if strategy="first");
+           or the last node before catching a Request.NotFound error (if strategy="last");
+           or the target node with remaining subpath - if the target was reached along the way.
+           A pair is returned: [node, current-request] from the point where the routing was terminated.
+         */
+        if (!request.path && strategy === 'first') return [this, request]
+        try {
+            let [node, target, req] = this.findRoute(request)
+            if (target) return [node, req]
+            return node.routeNode(req, strategy)
+        }
+        catch (ex) {
+            if (ex instanceof Request.NotFound && strategy === 'last')
+                return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
+            throw ex
+        }
+    }
+
+    async findRoute(request) { request.throwNotFound() }
 
     async handle(request) {
         /*
-        Serve a web request submitted to a given @endpoint of this item.
+        Serve a web request by executing a web @method (endpoint) on self, as requested by request.method.
         Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
 
            function handler(context)

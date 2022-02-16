@@ -200,15 +200,30 @@ export class T extends Types {}     // T is an alias for Types
  **
  */
 
-export class DataError extends Error {}
+export class BaseError extends Error {
+    static message = null           // default message; configured in subclasses
+    constructor(msg, args) {
+        super()
+        if (msg && typeof msg !== 'string') { args = msg; msg = null; }
+        this.message = msg || this.constructor.message
+        if (args) {
+            let argss = Object.entries(args).map(([k, v]) => k + `=${JSON.stringify(v)}`).join(', ')
+            if (this.message) this.message += ', ' + argss
+            else this.message = argss
+        }
+        this.name = this.constructor.name
+    }
+}
+
+export class DataError extends BaseError {}
 export class ValueError extends DataError {}
 
-export class ItemNotLoaded extends Error {
+export class ItemNotLoaded extends BaseError {
     constructor(item) {
         super(`item is not loaded yet, call 'await item.load()' first: ${item}`)
     }
 }
-export class ServerError extends Error {
+export class ServerError extends BaseError {
     /* Raised on client side when an internal call to the server completed with a not-OK status code. */
     constructor(response) {
         super()

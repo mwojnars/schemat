@@ -148,7 +148,10 @@ async function create_categories(Category) {
         name        : "Router",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
         class_name  : 'schemat.item.Router',
-        fields      : C({name: new STRING(), routes: new CATALOG(new ITEM())}),
+        fields      : C({name: new STRING(),
+            empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
+            routes      : new CATALOG(new ITEM()),
+        }),
     })
     cat.AppSystem = Category.new({
         name        : "AppSystem",

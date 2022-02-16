@@ -88,7 +88,7 @@ export class Site extends Item {
     }
     async route(request) {
         /* Forward the request to the root item. */
-        if (request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
+        if (request.path && request.path[0] !== '/') throw new Error(`missing leading slash '/' in a routing path: '${request.path}'`)
         let app = await this.getLoaded('application')
         return app.route(request)
     }
@@ -164,10 +164,10 @@ export class Router extends Item {
         Find an object in `routes` that matches the requested URL path and call its route().
         The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
         */
-        let [app, subpath] = this._find(request.path)
+        let [target, subpath] = this._find(request.path)
         request.path = subpath
-        await app.load()
-        return app.route(request)
+        await target.load()
+        return target.route(request)
     }
 
     _find(path = '') {
@@ -275,9 +275,8 @@ export class AppSpaces extends Application {
     urlPath(item) {
         let spaces_rev = this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
-        if (!space) return undefined
+        if (space) return `${space}:${item.iid}`
         //if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
-        return `${space}:${item.iid}`
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
