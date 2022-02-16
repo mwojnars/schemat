@@ -66,6 +66,7 @@ export class Site extends Item {
         await module.evaluate()
         return module
     }
+
     _normPath(path) {
         /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
         path = path.replaceAll('/./', '/')
@@ -82,22 +83,12 @@ export class Site extends Item {
         return lead + parts.join('/')
     }
 
-    async routeWeb(session) {
-        /* Routing of a web request (in contrast to an internal request). */
+    /*** Processing requests & URL generation ***/
 
+    async routeWeb(session) {
+        /* Convert a web request to an internal Request and process it through route(). */
         let request = new Request({session, path: session.path})
         return this.route(request)
-        // if (request.path.endsWith('/'))           // redirect if there's a trailing '/' in URL
-        //     return session.redirect(session.path.slice(0,-1))
-
-        // try { return this.route(request) }
-        // catch (ex) {
-        //     if (ex instanceof Request.NotFound) {
-        //         print(ex)
-        //         return session.sendStatus(404)
-        //     }
-        //     else throw ex
-        // }
     }
 
     findRoute(request) {
@@ -117,71 +108,10 @@ export class Site extends Item {
         let [cid, iid] = item.id
         return this.systemURL() + `/${cid}:${iid}`
     }
-
-    // buildURL(item, {route, relative = true, baseURL, method, args} = {}) {
-    //     /*
-    //     Return a relative URL of `item` as assigned by the deep-most Application (if no `route`)
-    //     that's processing the current web request; or an absolute or relative URL
-    //     assigned by an application anchored at a given `route`.
-    //     */
-    //     // let url = this.urlPath(item, {route, relative, baseURL})
-    //     let app  = this.registry.session.app
-    //     app.assertLoaded()
-    //     let path = app.urlPath(item)
-    //     let url  = './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-    //     if (method) url += Request.SEP_METHOD + method                  // append `method` and `args` to the URL
-    //     if (args) url += '?' + new URLSearchParams(args).toString()
-    //     return url
-    //     // return this.setEndpoint(url, endpoint, args)
-    // }
-
-    // urlPath(item, {route, relative, baseURL}) {
-    //
-    //     // relative URL anchored at the deep-most application's route
-    //     if (route === undefined) {
-    //         let app  = this.registry.session.app
-    //         app.assertLoaded()
-    //         let path = app.urlPath(item, {relative})
-    //         return './' + path      // ./ informs the browser this is a relative path, even if dots and ":" are present similar to a domain name with http port
-    //     }
-    //
-    //     // NOTE: the code below is never used right now, all calls leave route=undefined (??)
-    //
-    //     // relative URL anchored at `route`
-    //     let root = this.get('application'); root.assertLoaded()
-    //     let path = root.urlPath(item, {route, relative})
-    //     if (relative) return path
-    //
-    //     // absolute URL without base?
-    //     path = '/' + path
-    //     if (!baseURL) return path
-    //
-    //     // absolute URL with base (protocol+domain+port)
-    //     let base = (typeof baseURL === 'string') ? baseURL : this.get('base_url')
-    //     if (base.endsWith('/')) base = base.slice(-1)
-    //     return base + path
-    // }
-    //
-    // setEndpoint(url, endpoint, args) {
-    //     if (endpoint) url += `${SEP_METHOD}${endpoint}`
-    //     if (args) url += '?' + new URLSearchParams(args).toString()
-    //     return url
-    // }
 }
 
 export class Router extends Item {
     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
-
-    // async route(request) {
-    //     /*
-    //     Find an object in `routes` that matches the requested URL path and call its route().
-    //     The path can be an empty string; if non-empty, it should start with SEP_ROUTE character.
-    //     */
-    //     let [target, subpath] = this._find(request.path)
-    //     request.path = subpath
-    //     await target.load()
-    //     return target.route(request)
-    // }
 
     findRoute(request) {
         let step   = request.step()
@@ -190,41 +120,6 @@ export class Router extends Item {
         if (step && route)  return [route, request.move(step)]
         if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
     }
-
-    // _find(path = '') {
-    //     /* Make one step forward along a URL `path`. Return the object associated with the route and the remaining subpath. */
-    //     let lead = 0, step
-    //
-    //     // consume leading '/' (lead=1) when it's followed by text, but treat it as terminal
-    //     // and preserve in a returned subpath otherwise
-    //     if (path.startsWith(Request.SEP_ROUTE)) {
-    //         lead = (path.length >= 2)
-    //         step = path.slice(1).split(Request.SEP_ROUTE)[0]
-    //     } else
-    //         step = path.split(Request.SEP_ROUTE)[0]
-    //
-    //     let routes = this.get('routes')
-    //     let route  = routes.get(step)
-    //
-    //     if (step && route)                          // non-default (named) route can be followed with / in path
-    //         return [route, path.slice(lead + step.length)]
-    //
-    //     if (routes.has(''))                         // default (unnamed) route has special format, no "/"
-    //         return [routes.get(''), path]
-    //
-    //     throw new Error(`URL path not found: ${path}`)
-    // }
-
-    // urlPath(item, opts = {}) {
-    //
-    //     let [step, app, path] = this._route(opts.route)
-    //     app.assertLoaded()
-    //     // app.requestLoaded() -- if (!app.loaded) { session.itemsRequested.push(app); throw ... or return undefined }
-    //     let subpath = app.urlPath(item, {...opts, route: path})
-    //     if (opts.relative) return subpath                           // path relative to `route`
-    //     let segments = [step, subpath].filter(Boolean)              // only non-empty segments
-    //     return segments.join(SEP_ROUTE)                 // absolute path, empty segments excluded
-    // }
 }
 
 export class Application extends Item {
@@ -240,8 +135,7 @@ export class Application extends Item {
 
        /post/XXX/comment/YYY
 
-    contains two applications: "posts" and "comments".
-    Some applications may generate multi-segment hierarchical names (TODO).
+    contains two applications: "posts" and "comments". Some applications may generate multi-segment names.
 
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
@@ -273,19 +167,6 @@ export class AppSystem extends Application {
         let [cid, iid] = item.id
         return `${cid}:${iid}`
     }
-    // async route(request) {
-    //     let item = await this._find_item(request.path)
-    //     request.path = ''
-    //     request.app = this
-    //     return item.handle(request)
-    // }
-    // async _find_item(path) {
-    //     /* Extract (CID, IID) from a raw URL of the form CID:IID, return as an item. */
-    //     let id
-    //     try { id = path.slice(1).split(':').map(Number) }
-    //     catch (ex) { throw new Error(`URL path not found: ${path}`) }
-    //     return this.registry.getLoaded(id)
-    // }
     findRoute(request) {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), id
@@ -304,20 +185,9 @@ export class AppSpaces extends Application {
         let spaces_rev = this.temp('spaces_rev')
         let space = spaces_rev.get(item.category.id)
         if (space) return `${space}:${item.iid}`
-        //if (!space) throw new Error(`URL path not found for items of category ${item.category}`)
     }
-    _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
+    _temp_spaces_rev() { return ItemsMap.reversed(this.get('spaces')) }
 
-    // async route(request) {
-    //     // decode space identifier and convert to a category object
-    //     let [space, item_id] = request.path.slice(1).split(':')
-    //     let category = await this.getLoaded(`spaces/${space}`)
-    //     if (!category) return request.session?.sendStatus(404)
-    //     let item = category.getItem(Number(item_id))
-    //     request.path = ''
-    //     request.app = this
-    //     return item.handle(request)
-    // }
     findRoute(request) {
         let step = request.step()
         let [space, item_id] = step.split(':')
@@ -338,14 +208,11 @@ export class File extends Item {
 
     findRoute(request) {
         request.methodDefault = 'download'
-        return [this, request, true]            // "true": mark every File as a target node of a URL route
+        return [this, request, true]                // "true": mark every File as a target node of a URL route
     }
 
-    read() { return this.get('content') }
-
-    _handle_import({}) {
-        return this.read()
-    }
+    read()              { return this.get('content') }
+    _handle_import()    { return this.read() }      // internal calls from Site.import()
 
     _handle_download({res, request}) {
         this.setMimeType(res, request.pathFull)
@@ -385,42 +252,7 @@ export class FileLocal extends File {
 }
 
 export class Folder extends Item {
-    static SEP_FOLDER = '/'          // separator of folders in a file path
-
-    // async route(request) {
-    //     /* Propagate a web request down to the nearest object pointed to by `path`.
-    //        If the object is a Folder, call its route() with a truncated path. If the object is an item, call its handle().
-    //      */
-    //     let path = request.path
-    //     if (path === '/') return request.session?.redirect(request.pathFull.slice(0,-1))    // truncate the trailing '/' in URL
-    //     // if (!path.startsWith('/')) return request.session?.redirect(request.pathFull + '/')
-    //     // TODO: make sure that special symbols, e.g. SEP_METHOD, are forbidden in file paths
-    //
-    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-    //     let step = path.split(Folder.SEP_FOLDER)[0]
-    //     let item = this
-    //
-    //     if (step) {
-    //         item = this.get(`files/${step}`)
-    //         if (!item) throw new Error(`URL path not found: ${path}`)
-    //         assert(item instanceof Item, `not an item: ${item}`)
-    //         path = path.slice(step.length+1)
-    //         await item.load()
-    //     }
-    //
-    //     if (item.get('_is_file')) {
-    //         if (path) throw new Error('URL not found')
-    //         request.methodDefault = 'download'
-    //     }
-    //     else if (item.get('_is_folder')) {
-    //         // request.endpointDefault = 'browse'
-    //         if (path) { request.path = path; return item.route(request) }
-    //         // else request.session.state.folder = item            // leaf folder, for use when generating file URLs (urlPath())
-    //     }
-    //
-    //     request.path = ''
-    //     return item.handle(request)
-    // }
+    // static SEP_FOLDER = '/'          // separator of folders in a file path
 
     findRoute(request) {
         let step = request.step()
@@ -429,33 +261,33 @@ export class Folder extends Item {
         return [item, request.move(step)]
     }
 
-    search(path) {
-        /*
-        Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
-        The search is performed recursively in subfolders.
-        */
-        if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-        let item = this
-        while (path) {
-            let name = path.split(Folder.SEP_FOLDER)[0]
-            item = item.get(`files/${name}`)
-            path = path.slice(name.length+1)
-        }
-        return item
-    }
-    read(path) {
-        /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
-        let f = this.search(path)
-        if (f instanceof File) return f.read()
-        throw new Error(`not a File: ${path}`)
-    }
-    get_name(item) {
-        /* Return a name assigned to a given item. If the same item is assigned multiple names,
-        the last one is returned. */
-        let names = this.temp('names')
-        return names.get(item.id, null)
-    }
-    _temp_names()     { return ItemsMap.reversed(this.get('files')) }
+    // search(path) {
+    //     /*
+    //     Find an object pointed to by `path`. The path may start with '/', but this is not obligatory.
+    //     The search is performed recursively in subfolders.
+    //     */
+    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
+    //     let item = this
+    //     while (path) {
+    //         let name = path.split(Folder.SEP_FOLDER)[0]
+    //         item = item.get(`files/${name}`)
+    //         path = path.slice(name.length+1)
+    //     }
+    //     return item
+    // }
+    // read(path) {
+    //     /* Search for a File/FileLocal pointed to by a given `path` and return its content as a utf8 string. */
+    //     let f = this.search(path)
+    //     if (f instanceof File) return f.read()
+    //     throw new Error(`not a File: ${path}`)
+    // }
+    // get_name(item) {
+    //     /* Return a name assigned to a given item. If the same item is assigned multiple names,
+    //     the last one is returned. */
+    //     let names = this.temp('names')
+    //     return names.get(item.id, null)
+    // }
+    // _temp_names()     { return ItemsMap.reversed(this.get('files')) }
 }
 
 export class FolderLocal extends Folder {
@@ -466,9 +298,10 @@ export class FolderLocal extends Folder {
     }
 
     findRoute(request) {
-        // always mark this folder as the target: either to display it (empty path), or to pass the execution to .handlePartial()
+        // always mark this folder as a target: either to display it (empty path), or to pass the execution to .handlePartial()
         return [this, request, true]
     }
+
     handlePartial(request) {
         let path = request.path.slice(1)                    // truncate the leading '/'
         let root = this.get('path')
@@ -482,28 +315,6 @@ export class FolderLocal extends Folder {
         request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
     }
 
-    // async route(request) {
-    //     /* Find `path` on the local filesystem and send the file pointed to by `path` back to the client (download).
-    //        FolderLocal does NOT provide web browsing of files and nested folders.
-    //      */
-    //     let path = request.path
-    //     if (path.startsWith(Folder.SEP_FOLDER)) path = path.slice(1)
-    //     if (!path) {
-    //         request.path = ''
-    //         return this.handle(request)             // if no file `path` given, display this folder as a plain item
-    //     }
-    //
-    //     let root = this.get('path')
-    //     if (!root) throw new Error('missing `path` property in a FolderLocal')
-    //     if (!root.endsWith('/')) root += '/'
-    //
-    //     let fspath   = await import('path')
-    //     let fullpath = fspath.join(root, path)              // this interpretes and reduces the '..' symbols, so we have to check
-    //     if (!fullpath.startsWith(root))                     // if the final path still falls under the `root`, for security
-    //         throw new Error(`URL path not found: ${path}`)
-    //
-    //     request.session.sendFile(fullpath, {}, (err) => {if(err) request.session.sendStatus(err.status)})
-    // }
-    get_name(item) { return null }
+    // get_name(item) { return null }
 }
 
