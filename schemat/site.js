@@ -274,6 +274,7 @@ export class AppSystem extends Application {
     //     return this.registry.getLoaded(id)
     // }
     findRoute(request) {
+        /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), id
         try { id = step.split(':').map(Number) }
         catch (ex) { request.throwNotFound() }
@@ -294,15 +295,23 @@ export class AppSpaces extends Application {
     }
     _temp_spaces_rev()    { return ItemsMap.reversed(this.get('spaces')) }
 
-    async route(request) {
-        // decode space identifier and convert to a category object
-        let category, [space, item_id] = request.path.slice(1).split(':')
-        category = await this.getLoaded(`spaces/${space}`)
-        if (!category) return request.session?.sendStatus(404)
-        let item = category.getItem(Number(item_id))
-        request.path = ''
-        request.app = this
-        return item.handle(request)
+    // async route(request) {
+    //     // decode space identifier and convert to a category object
+    //     let [space, item_id] = request.path.slice(1).split(':')
+    //     let category = await this.getLoaded(`spaces/${space}`)
+    //     if (!category) return request.session?.sendStatus(404)
+    //     let item = category.getItem(Number(item_id))
+    //     request.path = ''
+    //     request.app = this
+    //     return item.handle(request)
+    // }
+    findRoute(request) {
+        let step = request.step()
+        let [space, item_id] = step.split(':')
+        let category = this.get(`spaces/${space}`)          // decode space identifier and convert to a category object
+        if (!category) request.throwNotFound()
+        let item = category.load().then(c => c.getItem(Number(item_id)))
+        return [item, request.pushApp(this).move(step), true]
     }
 }
 

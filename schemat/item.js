@@ -104,6 +104,11 @@ export class Request {
         return this             //Object.create(this, {path: path})
     }
 
+    pushApp(app) {
+        this.app = app
+        return this
+    }
+
     throwNotFound() { throw new Request.NotFound({path: this.path}) }
 }
 
@@ -182,8 +187,6 @@ export class Item {
             this.cid      = category.iid
         }
     }
-
-    // loadThen(fun) { return this.load().then(fun) }
 
     async load(field = null, use_schema = true) {
         /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
@@ -494,7 +497,7 @@ export class Item {
         and in such case request.session is left undefined.
         */
         let [node, req, target] = this._findRouteChecked(request)
-        // if (node instanceof Promise) node = await node
+        if (node instanceof Promise) node = await node
         if (!node.loaded) await node.load()
         return target ? node.handle(req) : node.route(req)
     }
@@ -509,7 +512,7 @@ export class Item {
         if (!request.path && strategy === 'first') return [this, request]
         try {
             let [node, req, target] = this._findRouteChecked(request)
-            // if (node instanceof Promise) node = await node
+            if (node instanceof Promise) node = await node
             if (!node.loaded) await node.load()
             if (target) return [node, req]
             return node.routeNode(req, strategy)
