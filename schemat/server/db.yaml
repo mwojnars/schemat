@@ -39,20 +39,6 @@
                 will inherit from the class of the first `base_category`, or
                 from the top-level Item class.
               "@": schemat.type.CODE
-          - key: handlers
-            value:
-              info: Methods for server-side handling of web requests.
-              isCatalog: true
-              values:
-                "@": schemat.type.CODE
-              "@": schemat.type.CATALOG
-          - key: fields
-            value:
-              info: Fields must have unique names.
-              isCatalog: true
-              values:
-                "@": schemat.type.SCHEMA
-              "@": schemat.type.CATALOG
           - key: cache_ttl
             value:
               info: Time To Live (TTL). Determines for how long (in seconds) an item of this
@@ -61,6 +47,24 @@
                 the items are evicted immediately after each request.
               default: 5
               "@": schemat.type.NUMBER
+          - key: handlers
+            value:
+              info: Methods for server-side handling of web requests.
+              values:
+                "@": schemat.type.CODE
+              "@": schemat.type.CATALOG
+          - key: fields
+            value:
+              info: Fields must have unique names.
+              default:
+                entries:
+                  - key: name
+                    value:
+                      "@": schemat.type.STRING
+                "@": schemat.data.Catalog
+              values:
+                "@": schemat.type.SCHEMA
+              "@": schemat.type.CATALOG
         "@": schemat.data.Catalog
     - key: startup_site
       value:
@@ -126,7 +130,6 @@
   class_name: schemat.item.Folder
   fields:
     files:
-      isCatalog: true
       keys:
         "@": schemat.type.FILENAME
       values:
@@ -168,8 +171,10 @@
   fields:
     name:
       "@": schemat.type.STRING
+    empty_path:
+      info: An item to handle the request if the URL path is empty.
+      "@": schemat.type.ITEM
     routes:
-      isCatalog: true
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
@@ -195,7 +200,6 @@
     name:
       "@": schemat.type.STRING
     spaces:
-      isCatalog: true
       values:
         category_exact:
           =:

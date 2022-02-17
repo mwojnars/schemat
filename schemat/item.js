@@ -820,16 +820,20 @@ export class Category extends Item {
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let catalog = new Catalog()
-        let bases   = this.getMany('base_category')
-        for (const base of [this, ...bases]) {
-            let cat = base.get(field)
-            if (!cat) continue
-            for (const entry of cat)
-                if (entry.key !== undefined && !catalog.has(entry.key))
-                    catalog.pushEntry({...entry})
-        }
-        return catalog
+        let bases = this.getMany('base_category')
+        let catalogs = [this, ...bases].map(base => base.get(field)).filter(Boolean)
+        return catalogs.length === 1 ? catalogs[0] : Catalog.merge(...catalogs)
+
+        // let catalog = new Catalog()
+        // let bases   = this.getMany('base_category')
+        // for (const base of [this, ...bases]) {
+        //     let cat = base.get(field)
+        //     if (!cat) continue
+        //     for (const entry of cat)
+        //         if (entry.key !== undefined && !catalog.has(entry.key))
+        //             catalog.pushEntry({...entry})
+        // }
+        // return catalog
     }
 
     _temp_schema() {
@@ -837,7 +841,7 @@ export class Category extends Item {
         return new DATA(fields.asDict())
     }
     _temp_assets() {
-        /* Web assets: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
+        /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
         return this.temp('schema').getAssets()
     }
     _temp_fields_all() {

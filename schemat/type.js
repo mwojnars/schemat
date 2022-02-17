@@ -221,15 +221,14 @@ export class Schema {
         if (blank !== undefined)    this.blank = blank
         if (type  !== undefined)    this.type  = type
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
-        if ('default' in params)    this.default = params['default']    // to pass it to Schema: as "default" or "default_"
+        if ('default' in params)    this.default = params.default       // to pass it to Schema: as "default" or "default_"
         // if (multi !== undefined)    this.multi = multi
     }
 
     prop(name) {
         /* Return the value of a given schema property as defined either in `this` or in the constructor (class-level default). */
         let p = this[name]
-        if (p === undefined) p = this.constructor[name]
-        return p
+        return (p === undefined) ? this.constructor[name] : p
     }
 
     valid(value) {
@@ -947,7 +946,7 @@ export class CATALOG extends Schema {
     - keys not allowed (what about labels then?)
      */
 
-    isCatalog = true
+    get isCatalog() { return true }
 
     // static keys_mandatory = false
     // static keys_forbidden  = false

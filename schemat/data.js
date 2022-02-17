@@ -108,7 +108,6 @@ export class Catalog {
 
     _entries = []               // plain objects with {key, value, label, comment} attributes
     _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted
-    // size     = 0                // the true number of entries in this._entries, `undefined` ignored
 
     get length()        { return this._entries.length }  //{ return this.size }
     has(key)            { return this._keys.has(key)  }
@@ -122,9 +121,6 @@ export class Catalog {
     *values()           { yield* this._entries.map(e => e.value) }
     *entries()          { yield* this._entries }
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
-    // *values()           { for (const e of this._entries) if(e) yield e.value }
-    // *entries()          { for (const e of this._entries) if(e) yield e }
-    // *[Symbol.iterator](){ for (const e of this._entries) if(e) yield e }      // iterator over entries, same as this.entries()
 
     constructor(data = null) {
         if (!data) return
@@ -234,6 +230,19 @@ export class Catalog {
         if (subcat instanceof Map)  return {key, value: subcat.get(key)}        // last step inside a Map
         if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
         return default_
+    }
+
+    static merge(...catalogs) {
+        /* Merge `catalogs` into a new Catalog instance.
+           Only the entries with keys are included in the result, one entry per key.
+           If a key occurs multiple times in `catalogs`, the first occurrence is used.
+         */
+        let catalog = new Catalog()
+        for (const cat of catalogs)
+            for (const entry of cat)
+                if (entry.key !== undefined && !catalog.has(entry.key))
+                    catalog.pushEntry({...entry})
+        return catalog
     }
 
     /***  Write access  ***/

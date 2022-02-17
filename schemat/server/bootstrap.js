@@ -18,6 +18,11 @@ import {Catalog} from '../data.js'
 // conversion of a dict to a Catalog
 let C = (data) => new Catalog(data)
 
+// global default fields shared by all item types
+let default_fields = C({
+    name        : new STRING(),
+})
+
 // fields of categories, including the root category
 let root_fields = C({
     name         : new STRING({info: "human-readable title of the category"}),
@@ -26,10 +31,9 @@ let root_fields = C({
     base_category: new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class."}),
     class_body   : new CODE({info: "Body of a subclass that will be created for this category. The subclass will inherit from the class of the first `base_category`, or from the top-level Item class."}),
+    cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
-    fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names."}),
-
-    cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."})
+    fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
