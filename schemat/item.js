@@ -157,6 +157,7 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
+    cache = new Map()           // cache of values of methods wrapped up with Item.setCaching(); values can be promises
     temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
@@ -640,13 +641,14 @@ export class Item {
 
     BODY({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
-        <div id="react-root">${this.temp('render')}</div>
+        <div id="react-root">${this.renderSSR()}</div>
         <script async type="module"> import {boot} from "/files/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/
 
     _temp_render()      { return this.render() }            // cached server-side render() (SSR) of this item
+    renderSSR()         { print("renderSSR"); return this.render() }
 
     render(targetElement = null) {
         /* Render this item into an HTMLElement (client-side) if `targetElement` is given,  or to a string
@@ -697,7 +699,33 @@ export class Item {
                 // e(changes.Buttons.bind(changes)),
             )
     }
+
+    static setCaching(...methods) {
+        /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
+           The wrapper utilizes the `cache` property of an Item instance to store cached values.
+         */
+        const cached = (name, fun) => {
+            function cachedMethod() {
+                this.assertLoaded()                     // here, `this` is an Item instance
+                if (this.cache.has(name)) { print(`${name}() from cache`); return this.cache.get(name) }
+                let value = fun.bind(this)()
+                this.cache.set(name, value)             // this may store a promise
+                return value                            // this may return a promise
+            }
+            Object.defineProperty(cachedMethod, 'name', {value: `${name}_cached`})
+            cachedMethod.isCached = true                // for detection of an existing wrapper, to avoid repeated wrapping
+            return cachedMethod
+        }
+        for (const name of methods) {
+            let fun = this.prototype[name]              // here, `this` is the Item class or its subclass
+            if (fun && !fun.isCached)
+                this.prototype[name] = cached(name, fun)
+        }
+    }
 }
+
+Item.setCaching('renderSSR')
+
 
 /**********************************************************************************************************************/
 
@@ -823,17 +851,6 @@ export class Category extends Item {
         let bases = this.getMany('base_category')
         let catalogs = [this, ...bases].map(base => base.get(field)).filter(Boolean)
         return catalogs.length === 1 ? catalogs[0] : Catalog.merge(...catalogs)
-
-        // let catalog = new Catalog()
-        // let bases   = this.getMany('base_category')
-        // for (const base of [this, ...bases]) {
-        //     let cat = base.get(field)
-        //     if (!cat) continue
-        //     for (const entry of cat)
-        //         if (entry.key !== undefined && !catalog.has(entry.key))
-        //             catalog.pushEntry({...entry})
-        // }
-        // return catalog
     }
 
     _temp_schema() {
