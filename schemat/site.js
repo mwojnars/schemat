@@ -22,7 +22,7 @@ export class Site extends Item {
 
     async getItem(path) {
         /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
-        return this.route(new Request({path, method: 'item'}))
+        return this.route(new Request({path, method: '@item'}))
     }
 
     async getRouteNode(route, strategy = 'last') {
@@ -187,6 +187,7 @@ export class AppSystem extends Application {
         let step = request.step(), id
         try { id = step.split(':').map(Number) }
         catch (ex) { request.throwNotFound() }
+        request.setDefaultMethod('@full')
         return [this.registry.getItem(id), request.move(step), true]
     }
 }
@@ -224,10 +225,10 @@ AppSpaces.setCaching('spacesRev')
 
 export class File extends Item {
 
-    findRoute(request) {
-        request.methodDefault = 'file'
-        return [this, request, true]                // "true": mark every File as a target node of a URL route
-    }
+    // findRoute(request) {
+    //     request.setDefaultMethod('@file')
+    //     return [this, request, true]                // "true": mark every File as a target node of a URL route
+    // }
 
     read()          { return this.get('content') }
     CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
@@ -275,6 +276,7 @@ export class Folder extends Item {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.get(`files/${step}`)
+        request.setDefaultMethod('@file')               // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Folder)]
     }
 }

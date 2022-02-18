@@ -60,33 +60,51 @@ export class Request {
         static message = "URL path not found"
     }
 
+    type            // CALL, GET, POST, (SOCK in the future); request type; there are different handler functions for different request types
     session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
 
-    method
-    args            // dict of action's arguments; taken from req.query (if a web request) or passed directly (internal request)
-    //origin        // 'web', 'internal'
-    //type          // 'view', 'action'
+    method          // optional name of a handler method to execute on the target item; configured by the caller
+    args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
 
-    methodDefault   // method that should be used if one is missing in the request; configured by nodes on the route
+    defaultMethods = []     // names of suggested handler methods to use if `method` is missing in the request,
+                            // in the order of INCREASING priority (most important suggestions at the end);
+                            // this array is only collected and used for requests of type=GET (!)
 
     constructor({path, method, session}) {
         this.session = session
-        let sep = Request.SEP_METHOD, meth
-        // if (session) path = path || session.path
+        this.type =
+            !session                    ? "CALL" :          // CALL = internal call through Site.route()
+            session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
+                                          "POST"            // POST = write access through HTTP POST
+
+        let meth, sep = Request.SEP_METHOD
         ;[this.pathFull, meth] = path.includes(sep) ? splitLast(path, sep) : [path, '']
 
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.pathFull === '/') this.pathFull = ''
-
-        this.path = this.pathFull
-        this.method = method || meth //|| session?.endpoint
+        this.path   = this.pathFull
+        this.method = this._prepare(method) || meth
     }
 
-    getMethod()     { return this.method || this.methodDefault }
+    _prepare(method) {
+        if (!method) return method
+        assert(method[0] === Request.SEP_METHOD, `method name must start with '${Request.SEP_METHOD}' (${method})`)
+        return method.slice(1)
+    }
+
+    setDefaultMethod(...methods) {
+        /* Append one or more method names to `defaultMethods`. The methods at the beginning have higher priority.
+           Each name must start with '@' for easier detection of method names in a source code -
+           this prefix is truncated when assigning to this.defaultMethods.
+         */
+        if (this.type !== 'GET') return
+        for (const method of methods.reverse())
+            this.defaultMethods.push(this._prepare(method))
+    }
 
     step() {
         if (!this.path) return undefined
@@ -564,15 +582,15 @@ export class Item {
 
         if (request.path) return this.handlePartial(request)
         
-        let session  = request.session
-        let protocol =
-            !session                    ? "CALL" :          // CALL = internal call, the lowest permission level required
-            session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
-                                          "POST"            // POST = write access through HTTP POST
+        // let protocol =
+        //     !session                    ? "CALL" :          // CALL = internal call, the lowest permission level required
+        //     session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
+        //                                   "POST"            // POST = write access through HTTP POST
         
         let req, res
-        let method   = request.getMethod() || 'default'
-        let endpoint = `${protocol}_${method}`
+        let session  = request.session
+        let method   = request.method || this.defaultMethod(request) || 'default'
+        let endpoint = `${request.type}_${method}`
 
         if (session) {
             session.item = this
@@ -580,29 +598,40 @@ export class Item {
             ;[req, res] = session.channels
         }
 
-        let handler
-        let handlers = this.category.getHandlers()
-        let source   = handlers.get(endpoint)
+        // let handler
+        // let handlers = this.category.getHandlers()
+        // let source   = handlers.get(endpoint)
+        //
+        // // get handler's source code from category's properties?
+        // if (source) {
+        //     handler = new AsyncFunction('context', `"use strict";` + source)
+        //     // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
+        // }
 
-        // get handler's source code from category's properties?
-        if (source) {
-            handler = new AsyncFunction('context', `"use strict";` + source)
-            // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
-        }
-        else handler = this[endpoint]                   // fallback: get handler from the item's class
-
+        let handler = this[endpoint]
         if (!handler) request.throwNotFound(`handler ${endpoint}() not found`)
 
         return handler.call(this, {item: this, req, res, request, session})
     }
 
+    defaultMethod(request) {
+        /* Subclasses may override this method to decide what default @method should be used by handle()
+           for a particular `request` when no method name was supplied by the client.
+           By default, suggestions from request.defaultMethods are used, but only if request.type='GET'.
+         */
+        if (request.type !== 'GET') return
+        for (const method of request.defaultMethods.reverse())
+            if (`GET_${method}` in this) return method
+    }
+
     CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
     CALL_item()             { return this }
 
-    GET_default(...args)    { return this.GET_view(...args)}
+    GET_default(...args)    { return this.GET_full(...args)}
     GET_json({res})         { res.sendItem(this) }
 
-    GET_view({session, res}) {
+    GET_full({session, res}) {
+        /* Detailed (admin) view of an item. */
         let name = this.getName('')
         let ciid = this.getStamp({html: false})
         return res.send(this.HTML({
