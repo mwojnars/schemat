@@ -129,17 +129,18 @@ export class Site extends Item {
     }
 }
 
-export class Router extends Item {
-    /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
-
-    findRoute(request) {
-        let step   = request.step()
-        let routes = this.get('routes')
-        let route  = routes.get(step)
-        if (step && route)  return [route, request.move(step)]
-        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-    }
-}
+// MOVED to DB:
+// export class Router extends Item {
+//     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
+//
+//     findRoute(request) {
+//         let step   = request.step()
+//         let routes = this.get('routes')
+//         let route  = routes.get(step)
+//         if (step && route)  return [route, request.move(step)]
+//         if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+//     }
+// }
 
 export class Application extends Item {
     /*

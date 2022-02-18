@@ -15,10 +15,8 @@
         entries:
           - key: info
             value:
+              info: Description of the category.
               "@": schemat.type.TEXT
-          - key: startup_site
-            value:
-              "@": schemat.type.GENERIC
           - key: extends
             value:
               info: Base category from which this one inherits properties. Multiple bases are
@@ -29,11 +27,22 @@
               info: Full (dotted) path of a JS class.
               default: schemat.item.Item
               "@": schemat.type.STRING
-          - key: class_body
+          - key: code
             value:
-              info: Body of a subclass that will be created for this category. The subclass
-                will inherit from the class of the first base category, or from
-                the top-level Item class.
+              info: Source code of a subclass (a body without heading) that will be created
+                for this category. The subclass inherits from the `class_name`
+                class, or the class of the first base category, or the top-level
+                Item class.
+              "@": schemat.type.CODE
+          - key: code_client
+            value:
+              info: Exclusively client-side source code to be appended to this category's
+                class on a client.
+              "@": schemat.type.CODE
+          - key: code_server
+            value:
+              info: Exclusively server-side source code to be appended to this category's
+                class on a server.
               "@": schemat.type.CODE
           - key: cache_ttl
             value:
@@ -56,13 +65,16 @@
                 entries:
                   - key: name
                     value:
-                      info: Human-readable display name of the item. May contain spaces, punctuation
-                        and non-latin characters.
+                      info: Display name of the item. May contain spaces, punctuation, non-latin
+                        characters.
                       "@": schemat.type.STRING
                 "@": schemat.data.Catalog
               values:
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
+          - key: startup_site
+            value:
+              "@": schemat.type.GENERIC
         "@": schemat.data.Catalog
     - key: startup_site
       value:
@@ -162,7 +174,6 @@
     - 8
   name: Router
   info: A set of sub-applications, each bound to a different URL prefix.
-  class_name: schemat.item.Router
   fields:
     empty_path:
       info: An item to handle the request if the URL path is empty.
@@ -171,6 +182,14 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
+  code: >
+    findRoute(request) {
+        let step   = request.step()
+        let routes = this.get('routes')
+        let route  = routes.get(step)
+        if (step && route)  return [route, request.move(step)]
+        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+    }
 - __id:
     - 0
     - 9
@@ -228,11 +247,11 @@
     - 12
   name: Varia
   info: Category of items that do not belong to any specific category
-  class_body: >
+  code: >
     
-    static check() { import('./utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
+    static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
 
-    static error() { throw new Error('Varia/class_body/error()') }
+    static error() { throw new Error('Varia/code/error()') }
   fields:
     title:
       "@": schemat.type.STRING

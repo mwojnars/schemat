@@ -773,8 +773,13 @@ export class Category extends Item {
     getClass() {
         let base = this.get('extends')                  // use the FIRST base category's class as the (base) class
         let name = this.get('class_name')
-        let body = this.get('class_body')
-        let cls
+        let body = this.get('code', '')
+        let cls  = Item
+
+        // extend the `body` with code_client/code_server
+        let env = this.registry.onServer ? 'server' : 'client'
+        let ext = this.get(`code_${env}`)
+        if (ext) body += '\n' + ext
 
         if (base) cls = base.getClass()
         if (name) cls = this.registry.getClass(name)
@@ -790,7 +795,7 @@ export class Category extends Item {
             let domain   = 'schemat'
             let cat_name = clean(this.get('name'))
             let typ_name = `C${this.cid}`
-            let atr_name = 'class_body'
+            let atr_name = 'code'
             let cls_name = [cat_name, typ_name, `${this.iid}`] .filter(String) .join('_')
             let fil_name = `${cat_name}_${this.id_str}`
             let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`

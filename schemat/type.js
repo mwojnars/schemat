@@ -518,7 +518,6 @@ export class CODE extends TEXT
             background-color: rgba(255,255,255,0);
             width: calc(100% + 4px);
             margin-left: -4px;       /* shift the viewer to better align inner text with text of surrounding rows in a catalog */
-            height: 5em;
         }
         .ace-editor {
             background-color: rgba(255,255,255,0.5);
@@ -551,7 +550,11 @@ export class CODE extends TEXT
         editorAce           // ACE editor object
         observer            // a ResizeObserver to watch for user resizing the editor box
 
-        viewer() { return DIV(cl("ace-viewer"), {onDoubleClick: e => this.open(e), ref: this.viewerRef}) }
+        viewer() {
+            let lines  = this.props.value.trimRight().split('\n')
+            let height = lines.length <= 3 ? '4em' : '6em'
+            return DIV(cl("ace-viewer"), st({height}), {onDoubleClick: e => this.open(e), ref: this.viewerRef})
+        }
         editor() {
             return DIV({
                 ref:            this.input,

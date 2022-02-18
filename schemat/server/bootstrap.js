@@ -20,19 +20,22 @@ let C = (data) => new Catalog(data)
 
 // global-default fields shared by all item types
 let default_fields = C({
-    name : new STRING({info: "Human-readable display name of the item. May contain spaces, punctuation and non-latin characters."}),
+    name : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
 })
 
 // fields of categories, including the root category
 let root_fields = C({
-    info         : new TEXT(),
-    startup_site : new GENERIC(),
+    info         : new TEXT({info: "Description of the category."}),
     extends      : new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class."}),
-    class_body   : new CODE({info: "Body of a subclass that will be created for this category. The subclass will inherit from the class of the first base category, or from the top-level Item class."}),
+    code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class_name` class, or the class of the first base category, or the top-level Item class."}),
+    code_client  : new CODE({info: "Exclusively client-side source code to be appended to this category's class on a client."}),
+    code_server  : new CODE({info: "Exclusively server-side source code to be appended to this category's class on a server."}),
+
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
+    startup_site : new GENERIC(),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -149,11 +152,20 @@ async function create_categories(Category) {
     cat.Router  = Category.new({
         name        : "Router",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
-        class_name  : 'schemat.item.Router',
         fields      : C({
             empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
+        // class_name  : 'schemat.item.Router',
+        code        :
+`findRoute(request) {
+    let step   = request.step()
+    let routes = this.get('routes')
+    let route  = routes.get(step)
+    if (step && route)  return [route, request.move(step)]
+    if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+}
+`,
     })
     cat.AppSystem = Category.new({
         name        : "AppSystem",
@@ -181,13 +193,13 @@ async function create_categories(Category) {
     cat.Varia = Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
-        class_body  :
+        code  :
 `
-static check() { import('./utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
-static error() { throw new Error('Varia/class_body/error()') }
+static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+static error() { throw new Error('Varia/code/error()') }
 `,
-//static check() { import('/site/utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
-//static check() { console.log("Varia/class_body/check() successful") }
+//static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+//static check() { console.log("Varia/code/check() successful") }
         fields      : C({title: new STRING()}),
         handlers    : C({}),
     })
