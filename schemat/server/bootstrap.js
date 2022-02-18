@@ -18,14 +18,13 @@ import {Catalog} from '../data.js'
 // conversion of a dict to a Catalog
 let C = (data) => new Catalog(data)
 
-// global default fields shared by all item types
+// global-default fields shared by all item types
 let default_fields = C({
-    name        : new STRING({info: "Human-readable display name of the item. May contain spaces, punctuation and non-latin characters."}),
+    name : new STRING({info: "Human-readable display name of the item. May contain spaces, punctuation and non-latin characters."}),
 })
 
 // fields of categories, including the root category
 let root_fields = C({
-    // name         : new STRING({info: "human-readable title of the category"}),
     info         : new TEXT(),
     startup_site : new GENERIC(),
     base_category: new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
@@ -146,13 +145,12 @@ async function create_categories(Category) {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class_name  : 'schemat.item.Application',
-        // fields      : C({name: new STRING()}),
     })
     cat.Router  = Category.new({
         name        : "Router",
         info        : "A set of sub-applications, each bound to a different URL prefix.",
         class_name  : 'schemat.item.Router',
-        fields      : C({ //name: new STRING(),
+        fields      : C({
             empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
@@ -161,13 +159,12 @@ async function create_categories(Category) {
         name        : "AppSystem",
         info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
         class_name  : 'schemat.item.AppSystem',
-        // fields      : C({name: new STRING()}),
     })
     cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_name  : 'schemat.item.AppSpaces',
-        fields      : C({/*name: new STRING(),*/ spaces: new CATALOG(new ITEM({type_exact: Category}))}),
+        fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     })
     
     cat.Site = Category.new({
@@ -175,7 +172,6 @@ async function create_categories(Category) {
         info        : "Category of site records. A site contains information about applications, servers, startup",
         class_name  : 'schemat.item.Site',
         fields      : C({
-            // name        : new STRING(),
             base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
             system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
             application : new ITEM({info: "Item to perform top-level URL routing, typically a Router with multiple subapplications"}),
@@ -185,7 +181,6 @@ async function create_categories(Category) {
     cat.Varia = Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
-        // class_name  : 'schemat.item.Item',
         class_body  :
 `
 static check() { import('./utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
@@ -193,7 +188,7 @@ static error() { throw new Error('Varia/class_body/error()') }
 `,
 //static check() { import('/site/utils.js').then(mod => console.log("Varia.class_body: imported ", mod)) }
 //static check() { console.log("Varia/class_body/check() successful") }
-        fields      : C({/*name: new STRING(),*/ title: new STRING()}),
+        fields      : C({title: new STRING()}),
         handlers    : C({}),
     })
     
@@ -233,16 +228,14 @@ export function check() { print('called /site/widgets.js/check()') }
 //print('fs:',fs)
 `})
 
-    item.dir_site   = cat.Folder.new({      // TODO CASE: {name: "/site"} -> global default fields, inheritance of catalog defaults
-        name: "/site",
+    item.dir_site   = cat.Folder.new({name: "/site",
         files: C({
             'utils.js':     item.utils_js,
             'widgets.js':   item.widgets_js,
         })
     })
 
-    item.app_catalog = cat.AppSpaces.new({
-        name        : "Catalog",
+    item.app_catalog = cat.AppSpaces.new({name: "Catalog",
         spaces      : C({
             'sys.category':     Category,
             'sys.item':         cat.Varia,
@@ -251,8 +244,7 @@ export function check() { print('called /site/widgets.js/check()') }
             'sys.file':         cat.FileLocal,
         }),
     })
-    item.app_root = cat.Router.new({
-        name        : "Router",
+    item.app_root = cat.Router.new({name: "Router",
         routes      : C({
             '$':        item.app_system,
             'site':     item.dir_site,
