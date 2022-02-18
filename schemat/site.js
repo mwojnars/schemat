@@ -275,7 +275,7 @@ export class Folder extends Item {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.get(`files/${step}`)
-        return [item, request.move(step)]
+        return [item, request.move(step), item => !(item instanceof Folder)]
     }
 }
 

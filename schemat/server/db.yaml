@@ -257,36 +257,23 @@
       "@": schemat.type.STRING
   handlers: {}
 - __id:
-    - 5
-    - 1
-  files:
-    Site:
-      - 0
-      - 11
-    File:
-      - 0
-      - 3
-    Folder:
-      - 0
-      - 5
-- __id:
     - 3
     - 1
   content: This is a test file.
 - __id:
     - 5
-    - 2
+    - 1
   files:
     test.txt:
       - 3
       - 1
 - __id:
     - 5
-    - 3
+    - 2
   files:
     tmp1:
       - 5
-      - 2
+      - 1
 - __id:
     - 6
     - 1
@@ -314,7 +301,7 @@
     //print('fs:',fs)
 - __id:
     - 5
-    - 4
+    - 3
   name: /site
   files:
     utils.js:
@@ -323,6 +310,23 @@
     widgets.js:
       - 3
       - 3
+- __id:
+    - 5
+    - 4
+  name: /system
+  files:
+    Application:
+      - 0
+      - 7
+    File:
+      - 0
+      - 3
+    Folder:
+      - 0
+      - 5
+    Site:
+      - 0
+      - 11
 - __id:
     - 10
     - 1
@@ -342,6 +346,9 @@
       - 9
       - 1
     site:
+      - 5
+      - 3
+    system:
       - 5
       - 4
     files:

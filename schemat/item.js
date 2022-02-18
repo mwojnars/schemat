@@ -483,6 +483,7 @@ export class Item {
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
         if (!node.loaded) await node.load()
+        if (typeof target === 'function') target = target(node)         // delayed target test after the node is loaded
         return target ? node.handle(req) : node.route(req)
     }
     async routeNode(request, strategy = 'last') {
@@ -498,6 +499,7 @@ export class Item {
             let [node, req, target] = this._findRouteChecked(request)
             if (node instanceof Promise) node = await node
             if (!node.loaded) await node.load()
+            if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
             if (target) return [node, req]
             return node.routeNode(req, strategy)
         }
@@ -519,7 +521,8 @@ export class Item {
     findRoute(request) {
         /* Find the next node on a route identified by request.path, the route starting in this node.
            Return [next-node, new-request, is-target], or undefined. The next-node can be a stub (unloaded).
-           The is-target can be omitted (false by default). If `request` is modified internally,
+           The is-target can be omitted (false by default), or can be a function, target(node),
+           to be called later, after the `node` is fully loaded. If `request` is modified internally,
            the implementation must ensure that any exceptions are raised *before* the modifications take place.
          */
         request.throwNotFound()
