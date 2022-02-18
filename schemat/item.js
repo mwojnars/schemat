@@ -749,8 +749,8 @@ export class Category extends Item {
 
     async afterLoad(data) {
         /* Load all base categories of this one, so that getDefault() and inherited() can work synchronously later on. */
-        let proto = data.getValues('base_category')
-        if (proto.length) return Promise.all(proto.map(p => p.load()))
+        let bases = data.getValues('extends')
+        if (bases.length) return Promise.all(bases.map(b => b.load()))
     }
 
     new(data = null, iid = null) {
@@ -761,7 +761,7 @@ export class Category extends Item {
         let itemclass = this.getClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
-        else this.registry.stage(item)              // mark `item` for insertion on the next commit()
+        else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
     issubcat(category) {
@@ -770,14 +770,14 @@ export class Category extends Item {
         Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
         */
         if (this.has_id(category.id)) return true
-        let bases = this.getMany('base_category')
+        let bases = this.getMany('extends')
         for (const base of bases)
             if (base.issubcat(category)) return true
         return false
     }
 
     getClass() {
-        let base = this.get('base_category')            // use the FIRST base category's class as the (base) class
+        let base = this.get('extends')                  // use the FIRST base category's class as the (base) class
         let name = this.get('class_name')
         let body = this.get('class_body')
         let cls
@@ -848,7 +848,7 @@ export class Category extends Item {
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let bases = this.getMany('base_category')
+        let bases = this.getMany('extends')
         let catalogs = [this, ...bases].map(base => base.get(field))            // `field` taken from category.data
         let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()
         let default_ = schemas.get(field).prop('default')

@@ -19,7 +19,7 @@
           - key: startup_site
             value:
               "@": schemat.type.GENERIC
-          - key: base_category
+          - key: extends
             value:
               info: Base category from which this one inherits properties. Multiple bases are
                 allowed, the first one has priority over subsequent ones.
@@ -32,8 +32,8 @@
           - key: class_body
             value:
               info: Body of a subclass that will be created for this category. The subclass
-                will inherit from the class of the first `base_category`, or
-                from the top-level Item class.
+                will inherit from the class of the first base category, or from
+                the top-level Item class.
               "@": schemat.type.CODE
           - key: cache_ttl
             value:
@@ -80,7 +80,7 @@
   name: YAML Database
   info: Single-machine database stored in a YAML file.
   class_name: schemat.item.DatabaseYaml
-  base_category:
+  extends:
     - 0
     - 1
   fields:
@@ -112,7 +112,7 @@
     - 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
-  base_category:
+  extends:
     - 0
     - 3
   class_name: schemat.item.FileLocal
@@ -143,7 +143,7 @@
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
-  base_category:
+  extends:
     - 0
     - 5
   class_name: schemat.item.FolderLocal

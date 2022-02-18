@@ -27,9 +27,9 @@ let default_fields = C({
 let root_fields = C({
     info         : new TEXT(),
     startup_site : new GENERIC(),
-    base_category: new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
+    extends      : new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class_name   : new STRING({default: 'schemat.item.Item', info: "Full (dotted) path of a JS class."}),
-    class_body   : new CODE({info: "Body of a subclass that will be created for this category. The subclass will inherit from the class of the first `base_category`, or from the top-level Item class."}),
+    class_body   : new CODE({info: "Body of a subclass that will be created for this category. The subclass will inherit from the class of the first base category, or from the top-level Item class."}),
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
@@ -94,7 +94,7 @@ async function create_categories(Category) {
         name        : "YAML Database",
         info        : "Single-machine database stored in a YAML file.",
         class_name  : 'schemat.item.DatabaseYaml',
-        base_category: cat.Database,
+        extends     : cat.Database,
         fields      : C({
             filename: new STRING(),
         }),
@@ -117,7 +117,7 @@ async function create_categories(Category) {
     cat.FileLocal = Category.new({
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
-        base_category: cat.File,
+        extends     : cat.File,
         class_name  : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
@@ -136,7 +136,7 @@ async function create_categories(Category) {
     cat.FolderLocal = Category.new({
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
-        base_category: cat.Folder,
+        extends     : cat.Folder,
         class_name  : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
