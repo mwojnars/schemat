@@ -48,7 +48,7 @@ export class Site extends Item {
         else
             path = unprefix(path)
 
-        let source = await this.route(new Request({path, method: 'import'}))
+        let source = await this.route(new Request({path, method: 'text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
         let identifier = PREFIX + path
 
@@ -205,14 +205,14 @@ AppSpaces.setCaching('spacesRev')
 export class File extends Item {
 
     findRoute(request) {
-        request.methodDefault = 'download'
+        request.methodDefault = 'file'
         return [this, request, true]                // "true": mark every File as a target node of a URL route
     }
 
     read()          { return this.get('content') }
-    GET_import()    { return this.read() }          // this endpoint used by internal requests from Site.import()
+    CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
 
-    GET_download({res, request}) {
+    GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)
         res.send(this.read())
     }
@@ -234,7 +234,7 @@ export class FileLocal extends File {
         let path = this.get('path')
         if (path) return fs.readFileSync(path, {encoding})
     }
-    GET_download({res}) {
+    GET_file({res}) {
         let content = this.get('content')
         if (typeof content === 'string')
             return res.send(content)

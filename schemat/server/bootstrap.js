@@ -111,7 +111,7 @@ async function create_categories(Category) {
             _is_file    : new BOOLEAN({default: true}),
         }),
         handlers    : C({
-            // GET_download : `return this.read()   // full content of this File returned as plain text`,
+            // GET_file : `return this.read()   // full content of this File returned as plain text`,
         })
     })
     cat.FileLocal = Category.new({

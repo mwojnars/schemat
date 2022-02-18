@@ -594,10 +594,11 @@ export class Item {
         return handler.call(this, {item: this, req, res, request, session})
     }
 
+    CALL_default()          { return this }
     GET_default(...args)    { return this.GET_view(...args)}
     GET_json({res})         { res.sendItem(this) }
 
-    GET_view({session, req, res}) {
+    GET_view({session, res}) {
         let name = this.getName('')
         let ciid = this.getStamp({html: false})
         return res.send(this.HTML({
