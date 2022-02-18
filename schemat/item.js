@@ -772,7 +772,7 @@ export class Category extends Item {
 
     getClass() {
         let base = this.get('extends')                  // use the FIRST base category's class as the (base) class
-        let name = this.get('class_name')
+        let name = this.get('class')
         let body = this.get('code', '')
         let cls  = Item
 

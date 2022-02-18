@@ -511,7 +511,7 @@ export class CODE extends TEXT
         .ace-viewer, .ace-editor {
             font-size: 1em;
             min-height: 3em;
-            line-height: 1.4;
+            line-height: 1.3;
             resize: vertical;        /* editor box resizing requires editor.resize() to be invoked by ResizeObserver */
         }
         .ace-viewer {
@@ -552,7 +552,7 @@ export class CODE extends TEXT
 
         viewer() {
             let lines  = this.props.value.trimRight().split('\n')
-            let height = lines.length <= 3 ? '4em' : '6em'
+            let height = Math.min(8, 4 + Math.max(0, lines.length - 3)) + 'em'
             return DIV(cl("ace-viewer"), st({height}), {onDoubleClick: e => this.open(e), ref: this.viewerRef})
         }
         editor() {
@@ -1114,9 +1114,9 @@ CATALOG.Table = class extends Component {
 
         .onhover          { width: 25%; height: 20px; margin-top: -20px; position: absolute; top:0; }
         .addnew           { padding-left: 20px; opacity: 0.4; }
-        .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear; overflow-y: hidden; }
+        .addnew.hide      { max-height: 0; margin-top:-1px; visibility: hidden; transition: 0.2s linear 0.1s; overflow-y: hidden; }
         .addnew:hover, .onhover:hover + .addnew   
-                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear; opacity: 1; }
+                          { max-height: 100px; margin-top:0; visibility: visible; transition: max-height 0.3s linear 0.5s; opacity: 1; }
         .addnew .cell-key { cursor: pointer; border-right: none; }
 
         .cell             { padding: 14px 20px 11px; position: relative; }
