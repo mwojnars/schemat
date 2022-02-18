@@ -157,8 +157,8 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
-    cache = new Map()           // cache of values of methods wrapped up with Item.setCaching(); values can be promises
-    temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
+    cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
+    // temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -330,7 +330,7 @@ export class Item {
     getSchema(path = null) {
         /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
            as defined in this item's category's `fields` property. */
-        let schema = this.category.temp('schema')               // calls _temp_schema() of this.category
+        let schema = this.category.getItemSchema()
         if (!path || !path.length) return schema
 
         this.assertLoaded()
@@ -344,20 +344,20 @@ export class Item {
         return schema.find(keys)
     }
 
-    temp(field) {
-        /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
-           (can be async). The value (or a promise) is computed once and cached in this.temporary for subsequent
-           temp() calls. Whether the result should be awaited depends on a particular _temp_FIELD() method -
-           the caller should be aware that a given field returns a promise and handle it appropriately.
-         */
-        this.assertLoaded()
-        if (this.temporary.has(field)) return this.temporary.get(field)
-        let fun = this[`_temp_${field}`]
-        if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
-        let value = fun.bind(this)()
-        this.temporary.set(field, value)        // this may store a promise
-        return value                            // this may return a promise
-    }
+    // temp(field) {
+    //     /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
+    //        (can be async). The value (or a promise) is computed once and cached in this.temporary for subsequent
+    //        temp() calls. Whether the result should be awaited depends on a particular _temp_FIELD() method -
+    //        the caller should be aware that a given field returns a promise and handle it appropriately.
+    //      */
+    //     this.assertLoaded()
+    //     if (this.temporary.has(field)) return this.temporary.get(field)
+    //     let fun = this[`_temp_${field}`]
+    //     if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
+    //     let value = fun.bind(this)()
+    //     this.temporary.set(field, value)        // this may store a promise
+    //     return value                            // this may return a promise
+    // }
 
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
@@ -623,7 +623,7 @@ export class Item {
         let ciid = this.getStamp({html: false})
         return res.send(this.HTML({
             title: `${name} ${ciid}`,
-            head:  this.category.temp('assets').renderAll(),
+            head:  this.category.getAssets().renderAll(),
             body:  this.BODY({session}),
         }))
     }
@@ -641,14 +641,11 @@ export class Item {
 
     BODY({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
-        <div id="react-root">${this.renderSSR()}</div>
+        <div id="react-root">${this.render()}</div>
         <script async type="module"> import {boot} from "/files/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/
-
-    _temp_render()      { return this.render() }            // cached server-side render() (SSR) of this item
-    renderSSR()         { print("renderSSR"); return this.render() }
 
     render(targetElement = null) {
         /* Render this item into an HTMLElement (client-side) if `targetElement` is given,  or to a string
@@ -703,14 +700,16 @@ export class Item {
     static setCaching(...methods) {
         /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
            The wrapper utilizes the `cache` property of an Item instance to store cached values.
+           NOTE: the value is cached and re-used only when the method was called without arguments;
+                 otherwise, the original method is executed on each and every call.
          */
         const cached = (name, fun) => {
-            function cachedMethod() {
-                this.assertLoaded()                     // here, `this` is an Item instance
+            function cachedMethod(...args) {
+                if (args.length) return fun.call(this, ...args)     // here and below, `this` is an Item instance
                 if (this.cache.has(name)) { print(`${name}() from cache`); return this.cache.get(name) }
-                let value = fun.bind(this)()
-                this.cache.set(name, value)             // this may store a promise
-                return value                            // this may return a promise
+                let value = fun.call(this)
+                this.cache.set(name, value)             // may store a promise
+                return value                            // may return a promise
             }
             Object.defineProperty(cachedMethod, 'name', {value: `${name}_cached`})
             cachedMethod.isCached = true                // for detection of an existing wrapper, to avoid repeated wrapping
@@ -724,7 +723,7 @@ export class Item {
     }
 }
 
-Item.setCaching('renderSSR')
+Item.setCaching('render')
 
 
 /**********************************************************************************************************************/
@@ -790,11 +789,8 @@ export class Category extends Item {
             if (base.issubcat(category)) return true
         return false
     }
-    getFields()     { return this.temp('fields_all') }            // calls _temp_fields_all()
-    getHandlers()   { return this.temp('handlers_all') }          // calls _temp_handlers_all()
-    getClass()      { return this.temp('class') }
 
-    _temp_class() {
+    getClass() {
         // print(`${this.id_str} _temp_class()`)
         let base = this.get('base_category')            // use the FIRST base category's class as the (base) class
         let name = this.get('class_name')
@@ -832,12 +828,31 @@ export class Category extends Item {
         */
         return this.registry.getItem([this.iid, iid])
     }
+
+    getFields() {
+        /* Catalog of all fields of this category including the inherited ones. */
+        return this.mergeInherited('fields')
+    }
+    getHandlers() {
+        /* Catalog of all handlers of this category including the inherited ones. */
+        return this.mergeInherited('handlers')
+    }
     getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
         return schema ? schema.prop('default') : default_
+    }
+
+    getItemSchema() {
+        /* Get schema of items in this category (not the category itself). */
+        let fields = this.getFields()
+        return new DATA(fields.asDict())
+    }
+    getAssets() {
+        /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
+        return this.getItemSchema().getAssets()
     }
 
     mergeInherited(field) {
@@ -851,23 +866,6 @@ export class Category extends Item {
         let bases = this.getMany('base_category')
         let catalogs = [this, ...bases].map(base => base.get(field)).filter(Boolean)
         return catalogs.length === 1 ? catalogs[0] : Catalog.merge(...catalogs)
-    }
-
-    _temp_schema() {
-        let fields = this.getFields()
-        return new DATA(fields.asDict())
-    }
-    _temp_assets() {
-        /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
-        return this.temp('schema').getAssets()
-    }
-    _temp_fields_all() {
-        /* The 'fields_all' temporary variable: a catalog of all fields of this category including the inherited ones. */
-        return this.mergeInherited('fields')
-    }
-    _temp_handlers_all() {
-        /* The 'handlers_all' temporary variable: a catalog of all handlers of this category including the inherited ones. */
-        return this.mergeInherited('handlers')
     }
 
     async _handle_scan({res}) {
@@ -974,6 +972,8 @@ export class Category extends Item {
         )})
     }
 }
+
+Category.setCaching('getClass', 'getFields', 'getHandlers', 'getItemSchema', 'getAssets')
 
 
 /**********************************************************************************************************************/

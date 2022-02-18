@@ -1,6 +1,6 @@
 import { print, assert, splitLast, T } from './utils.js'
 import { ItemsMap } from './data.js'
-import { Item, Request } from './item.js'
+import {Category, Item, Request} from './item.js'
 
 
 /**********************************************************************************************************************/
@@ -177,11 +177,11 @@ export class AppSpaces extends Application {
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
     urlPath(item) {
-        let spaces_rev = this.temp('spaces_rev')
+        let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item.category.id)
         if (space) return `${space}:${item.iid}`
     }
-    _temp_spaces_rev() { return ItemsMap.reversed(this.get('spaces')) }
+    spacesRev() { return ItemsMap.reversed(this.get('spaces')) }
 
     findRoute(request) {
         let step = request.step()
@@ -192,6 +192,9 @@ export class AppSpaces extends Application {
         return [item, request.pushApp(this).move(step), true]
     }
 }
+
+AppSpaces.setCaching('spacesRev')
+
 
 /**********************************************************************************************************************
  **
