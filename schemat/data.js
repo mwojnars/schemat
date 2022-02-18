@@ -238,10 +238,12 @@ export class Catalog {
            If a key occurs multiple times in `catalogs`, the first occurrence is used.
          */
         let catalog = new Catalog()
-        for (const cat of catalogs)
+        for (const cat of catalogs) {
+            if (!cat) continue
             for (const entry of cat)
                 if (entry.key !== undefined && !catalog.has(entry.key))
                     catalog.pushEntry({...entry})
+        }
         return catalog
     }
 

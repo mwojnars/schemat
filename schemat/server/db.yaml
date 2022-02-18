@@ -13,10 +13,6 @@
     - key: fields
       value:
         entries:
-          - key: name
-            value:
-              info: human-readable title of the category
-              "@": schemat.type.STRING
           - key: info
             value:
               "@": schemat.type.TEXT
@@ -60,6 +56,8 @@
                 entries:
                   - key: name
                     value:
+                      info: Human-readable display name of the item. May contain spaces, punctuation
+                        and non-latin characters.
                       "@": schemat.type.STRING
                 "@": schemat.data.Catalog
               values:
@@ -159,9 +157,6 @@
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_name: schemat.item.Application
-  fields:
-    name:
-      "@": schemat.type.STRING
 - __id:
     - 0
     - 8
@@ -169,8 +164,6 @@
   info: A set of sub-applications, each bound to a different URL prefix.
   class_name: schemat.item.Router
   fields:
-    name:
-      "@": schemat.type.STRING
     empty_path:
       info: An item to handle the request if the URL path is empty.
       "@": schemat.type.ITEM
@@ -185,9 +178,6 @@
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
   class_name: schemat.item.AppSystem
-  fields:
-    name:
-      "@": schemat.type.STRING
 - __id:
     - 0
     - 10
@@ -197,8 +187,6 @@
     `spaces` property."
   class_name: schemat.item.AppSpaces
   fields:
-    name:
-      "@": schemat.type.STRING
     spaces:
       values:
         category_exact:
@@ -216,8 +204,6 @@
     servers, startup
   class_name: schemat.item.Site
   fields:
-    name:
-      "@": schemat.type.STRING
     base_url:
       info: Base URL at which the website is served, no trailing '/'
       "@": schemat.type.STRING
@@ -248,8 +234,6 @@
 
     static error() { throw new Error('Varia/class_body/error()') }
   fields:
-    name:
-      "@": schemat.type.STRING
     title:
       "@": schemat.type.STRING
   handlers: {}
@@ -312,6 +296,7 @@
 - __id:
     - 5
     - 4
+  name: /site
   files:
     utils.js:
       - 3

@@ -157,8 +157,7 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
-    cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
-    // temporary = new Map()       // cache of temporary fields and their values; access through temp(); values can be promises
+    cache = new Map()       // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -343,21 +342,6 @@ export class Item {
         }
         return schema.find(keys)
     }
-
-    // temp(field) {
-    //     /* Calculate and return a value of a temporary `field`. For the calculation, method _temp_FIELD() is called
-    //        (can be async). The value (or a promise) is computed once and cached in this.temporary for subsequent
-    //        temp() calls. Whether the result should be awaited depends on a particular _temp_FIELD() method -
-    //        the caller should be aware that a given field returns a promise and handle it appropriately.
-    //      */
-    //     this.assertLoaded()
-    //     if (this.temporary.has(field)) return this.temporary.get(field)
-    //     let fun = this[`_temp_${field}`]
-    //     if (!fun) throw new Error(`method '_temp_${field}' not found for a temporary field`)
-    //     let value = fun.bind(this)()
-    //     this.temporary.set(field, value)        // this may store a promise
-    //     return value                            // this may return a promise
-    // }
 
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
@@ -550,6 +534,13 @@ export class Item {
            Subclasses may override this method. Overriding methods can be "async".
          */
         request.throwNotFound()
+        // // route into `data` if there's still a path to be consumed
+        // // TODO: check for "GET" privilege of request.client to this item
+        // await this.load()
+        // ;[entry, subpath] = this.data.route(request.path)
+        // if (subpath) throw new Error(`path not found: ${subpath}`)
+        //     // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
+        //     // else throw new Error(`path not found: ${subpath}`)
     }
 
     handle(request) {
@@ -573,16 +564,12 @@ export class Item {
         let req, res, entry, subpath
 
         if (request.path) return this.handlePartial(request)
-        // if (request.path) {
-        //     // route into `data` if there's still a path to be consumed
-        //     // TODO: check for "read" privilege of request.client to this item
-        //     await this.load()
-        //     ;[entry, subpath] = this.data.route(request.path)
-        //     if (subpath) throw new Error(`path not found: ${subpath}`)
-        //         // if (entry.value instanceof Item) return entry.value.handle(request.move(subpath), session)
-        //         // else throw new Error(`path not found: ${subpath}`)
-        // }
-
+        
+        let protocol = 
+            !request.session            ? "CALL" :          // CALL = internal call, the lowest permission level required
+            request.method === 'get'    ? "GET"  :          // GET  = read access through HTTP GET
+                                          "POST"            // POST = write access through HTTP POST
+        
         // if (request.method === 'get') return element !== undefined ? element : this
         // else throw new Error(`method '${request.method}' not applicable on this path`)
 
@@ -666,18 +653,17 @@ export class Item {
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
-            // e(this._mui_test),
             e(this.Title.bind(this)),
             H2('Properties'),
             e(this.DataTable.bind(this)),
             extra,
         )
     }
-    _mui_test() {
-        return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
-        // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
-        //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
-    }
+    // _mui_test() {
+    //     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
+    //     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
+    //     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
+    // }
 
     Title() {
         let name = this.getName()
@@ -705,8 +691,8 @@ export class Item {
          */
         const cached = (name, fun) => {
             function cachedMethod(...args) {
-                if (args.length) return fun.call(this, ...args)     // here and below, `this` is an Item instance
-                if (this.cache.has(name)) { print(`${name}() from cache`); return this.cache.get(name) }
+                if (args.length) return fun.call(this, ...args)         // here and below, `this` is an Item instance
+                if (this.cache.has(name)) return this.cache.get(name)   // print(`${name}() from cache`)
                 let value = fun.call(this)
                 this.cache.set(name, value)             // may store a promise
                 return value                            // may return a promise
@@ -762,7 +748,7 @@ export class Category extends Item {
     */
 
     async afterLoad(data) {
-        /* Load all base categories of this one, so that getDefault() and mergeInherited() can work synchronously later on. */
+        /* Load all base categories of this one, so that getDefault() and inherited() can work synchronously later on. */
         let proto = data.getValues('base_category')
         if (proto.length) return Promise.all(proto.map(p => p.load()))
     }
@@ -791,7 +777,6 @@ export class Category extends Item {
     }
 
     getClass() {
-        // print(`${this.id_str} _temp_class()`)
         let base = this.get('base_category')            // use the FIRST base category's class as the (base) class
         let name = this.get('class_name')
         let body = this.get('class_body')
@@ -830,12 +815,12 @@ export class Category extends Item {
     }
 
     getFields() {
-        /* Catalog of all fields of this category including the inherited ones. */
-        return this.mergeInherited('fields')
+        /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
+        return this.inherited('fields')
     }
     getHandlers() {
-        /* Catalog of all handlers of this category including the inherited ones. */
-        return this.mergeInherited('handlers')
+        /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
+        return this.inherited('handlers')
     }
     getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
@@ -846,7 +831,7 @@ export class Category extends Item {
     }
 
     getItemSchema() {
-        /* Get schema of items in this category (not the category itself). */
+        /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         let fields = this.getFields()
         return new DATA(fields.asDict())
     }
@@ -855,8 +840,8 @@ export class Category extends Item {
         return this.getItemSchema().getAssets()
     }
 
-    mergeInherited(field) {
-        /* Merge all catalogs found at a given `field` in all base categories of this, `this` included.
+    inherited(field) {
+        /* Merge all catalogs found at a given `field` in all base categories + meta-category's default + `this`.
            It's assumed that the catalogs have unique non-missing keys.
            If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
            A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
@@ -864,8 +849,11 @@ export class Category extends Item {
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let bases = this.getMany('base_category')
-        let catalogs = [this, ...bases].map(base => base.get(field)).filter(Boolean)
-        return catalogs.length === 1 ? catalogs[0] : Catalog.merge(...catalogs)
+        let catalogs = [this, ...bases].map(base => base.get(field))            // `field` taken from category.data
+        let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()
+        let default_ = schemas.get(field).prop('default')
+        catalogs.push(default_)
+        return Catalog.merge(...catalogs)
     }
 
     async _handle_scan({res}) {
