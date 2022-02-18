@@ -109,7 +109,7 @@ export class Request {
         return this
     }
 
-    throwNotFound() { throw new Request.NotFound({'remaining path': this.path}) }
+    throwNotFound(msg, args) { throw new Request.NotFound(msg, args || {'remaining path': this.path}) }
 }
 
 
@@ -412,10 +412,8 @@ export class Item {
         this.data.move(path, pos1, pos2)
     }
 
-    async _handle_edit({req, res}) {
+    async POST_edit({req, res}) {
         /* Web endpoint for all types of edits of this.data. */
-        assert(req.method === 'POST')
-        await this.load()
         let edits = req.body
         assert(edits instanceof Array)
         this.edit(...edits)
@@ -440,7 +438,7 @@ export class Item {
         return this.remote('edit', [['move', [path, pos1, pos2]]])
     }
 
-    async _handle_delete({res}) {
+    async POST_delete({res}) {
         await this.registry.delete(this)
         return res.json({})
     }
@@ -448,8 +446,8 @@ export class Item {
     async remote_delete()       { return this.remote('delete') }
 
     async remote(method, data, {args, params} = {}) {
-        /* Connect from client to an `method` of an internal API; send `data` if any;
-           return a response body parsed from JSON to an object.
+        /* Connect from client to a @method endpoint of an internal API using HTTP POST by default;
+           send `data` if any; return a response body parsed from JSON to an object.
          */
         let url = this.url(method)
         let res = await fetchJson(url, data, params)        // Response object
@@ -552,7 +550,7 @@ export class Item {
 
         where context = {item, session, req, res, endpoint}
 
-        or as methods of a particular Item subclass, named `_handle_{endpoint}`.
+        or as methods of a particular Item subclass, named `{PROTOCOL}_{endpoint}`.
         In every case, the function's `this` is bound to `item` (this===item).
         Query parameters are passed in `req.query`, as:
         - a string if there's one occurrence of PARAM in a query string,
@@ -561,51 +559,45 @@ export class Item {
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         (?? The function may allow to be called directly as a regular method with no context.)
         */
-        let req, res, entry, subpath
 
         if (request.path) return this.handlePartial(request)
         
-        let protocol = 
-            !request.session            ? "CALL" :          // CALL = internal call, the lowest permission level required
-            request.method === 'get'    ? "GET"  :          // GET  = read access through HTTP GET
+        let session  = request.session
+        let protocol =
+            !session                    ? "CALL" :          // CALL = internal call, the lowest permission level required
+            session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
         
-        // if (request.method === 'get') return element !== undefined ? element : this
-        // else throw new Error(`method '${request.method}' not applicable on this path`)
+        let req, res
+        let method   = request.getMethod() || 'default'
+        let endpoint = `${protocol}_${method}`
 
-        let session = request.session
         if (session) {
             session.item = this
             if (request.app) session.app = request.app
             ;[req, res] = session.channels
         }
-        // if (app) session.app = app
-        // let method = session.getEndpoint() || 'default'
-        let method = request.getMethod() || 'default'
-        // await this.load()       // for this.category, below, to be initialized
 
         let handler
         let handlers = this.category.getHandlers()
-        let source   = handlers.get(method)
+        let source   = handlers.get(endpoint)
 
         // get handler's source code from category's properties?
         if (source) {
             handler = new AsyncFunction('context', `"use strict";` + source)
             // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
-            // TODO: parse as a module with imports, see https://2ality.com/2019/10/eval-via-import.html
         }
-        else                                        // fallback: get handler from the item's class
-            handler = this[`_handle_${method}`]
+        else handler = this[endpoint]                   // fallback: get handler from the item's class
 
-        if (!handler) throw new Error(`Endpoint @${method} not found`)
+        if (!handler) request.throwNotFound(`handler ${endpoint}() not found`)
 
-        return handler.call(this, {item: this, req, res, request, session, entry})
+        return handler.call(this, {item: this, req, res, request, session})
     }
 
-    _handle_default(...args)    { return this._handle_view(...args)}
-    _handle_json({res})         { res.sendItem(this) }
+    GET_default(...args)    { return this.GET_view(...args)}
+    GET_json({res})         { res.sendItem(this) }
 
-    _handle_view({session, req, res}) {
+    GET_view({session, req, res}) {
         let name = this.getName('')
         let ciid = this.getStamp({html: false})
         return res.send(this.HTML({
@@ -843,7 +835,7 @@ export class Category extends Item {
     inherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories + meta-category's default + `this`.
            It's assumed that the catalogs have unique non-missing keys.
-           If a key is present in multiple catalogs, its first occurrence is used (closest to `this`).
+           If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
            A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
@@ -856,7 +848,7 @@ export class Category extends Item {
         return Catalog.merge(...catalogs)
     }
 
-    async _handle_scan({res}) {
+    async GET_scan({res}) {
         /* Retrieve all children of this category and send to client as a JSON.
            TODO: set a size limit & offset (pagination).
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
@@ -868,12 +860,9 @@ export class Category extends Item {
         }
         res.sendItems(items)
     }
-    async _handle_new({req, res}) {
+    async POST_new({req, res}) {
         /* Web handler to create a new item in this category based on request data. */
-        // print('in _handle_new()...')
         // print('request body:  ', req.body)
-        assert(req.method === 'POST')
-
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
         let item = this.new(data)

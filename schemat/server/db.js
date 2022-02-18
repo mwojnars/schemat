@@ -202,14 +202,10 @@ export class Database extends Item {
 
     db          // database engine that's used to access physical database on local hardware
 
-    async _handle_select(ctx, id) {}
-    async _handle_scan(ctx, index, range) {}
+    async GET_select(ctx, id) {}
+    async GET_scan(ctx, index, range) {}
 
-    // async _handle_insert(ctx, data) {}
-    // async _handle_delete(ctx, id) {}
-    // async _handle_edit(ctx, id, edits) {}
-
-    async _handle_edit({req, res}) {
+    async POST_edit({req, res}) {
         // let {id, path, pos, entry} = req.body
         let [id, edits] = req.body
         assert(edits instanceof Array)

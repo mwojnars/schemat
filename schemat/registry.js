@@ -274,8 +274,8 @@ export class Session {
 
     get channels()      { return [this.req, this.res] }
     get path()          { return this.req.path }        // URL path, same as req.path, with @method name included (!)
+    get method()        { return this.req.method }      // "GET" or "POST"
 
-    // get method()        { return this.req.method }
     // get query()         { return this.req.query  }
     // get body()          { return this.req.body   }
 

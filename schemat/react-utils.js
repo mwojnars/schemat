@@ -337,10 +337,10 @@ export async function fetchJson(url, data, params) {
        Return the received JSON response parsed into an object.
      */
     params = params ? {...params} : {}
+    if (!params.method) params.method = 'POST'
+    if (!params.headers) params.headers = {}
     if (data !== undefined) {
         params.body = JSON.stringify(data)
-        if (!params.method) params.method = 'POST'
-        if (!params.headers) params.headers = {}
         if (!params.headers['Content-Type']) params.headers['Content-Type'] = 'application/json; charset=utf-8'
     }
     return fetch(url, params)

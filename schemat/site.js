@@ -209,10 +209,10 @@ export class File extends Item {
         return [this, request, true]                // "true": mark every File as a target node of a URL route
     }
 
-    read()              { return this.get('content') }
-    _handle_import()    { return this.read() }      // this endpoint used by internal requests from Site.import()
+    read()          { return this.get('content') }
+    GET_import()    { return this.read() }          // this endpoint used by internal requests from Site.import()
 
-    _handle_download({res, request}) {
+    GET_download({res, request}) {
         this.setMimeType(res, request.pathFull)
         res.send(this.read())
     }
@@ -234,7 +234,7 @@ export class FileLocal extends File {
         let path = this.get('path')
         if (path) return fs.readFileSync(path, {encoding})
     }
-    _handle_download({res}) {
+    GET_download({res}) {
         let content = this.get('content')
         if (typeof content === 'string')
             return res.send(content)
