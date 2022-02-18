@@ -171,10 +171,9 @@ export class Item {
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
 
-    isinstance(category) {
-        /*
-        Check whether this item belongs to a category that inherits from `category` via a prototype chain.
-        All comparisons along the way use IDs of category items, not object identity. This item's category must be loaded.
+    instanceof(category) {
+        /* Check whether this item belongs to a `category`, or its subcategory.
+           All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
         return this.category.issubcat(category)
     }
@@ -479,7 +478,7 @@ export class Item {
         Typically, `request` originates from a web request. The routing can also be started internally,
         and in such case request.session is left undefined.
         */
-        assert(this.registry.onServer)                  // route() is exclusively server-side code
+        assert(this.registry.onServer)                  // route() is exclusively server-side functionality, including internal URL-calls
         let [node, req, target] = this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
@@ -594,7 +593,9 @@ export class Item {
         return handler.call(this, {item: this, req, res, request, session})
     }
 
-    CALL_default()          { return this }
+    CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
+    CALL_item()             { return this }
+
     GET_default(...args)    { return this.GET_view(...args)}
     GET_json({res})         { res.sendItem(this) }
 

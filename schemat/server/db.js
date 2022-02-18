@@ -202,33 +202,32 @@ export class Database extends Item {
 
     db          // database engine that's used to access physical database on local hardware
 
-    async GET_select(ctx, id) {}
-    async GET_scan(ctx, index, range) {}
+    // async GET_select(ctx, id) {}
+    // async GET_scan(ctx, index, range) {}
 
-    async POST_edit({req, res}) {
-        // let {id, path, pos, entry} = req.body
-        let [id, edits] = req.body
-        assert(edits instanceof Array)
+    // async POST_edit({req, res}) {
+    //     // let {id, path, pos, entry} = req.body
+    //     let [id, edits] = req.body
+    //     assert(edits instanceof Array)
+    //
+    //     let record = await this.db.select(id)
+    //     let data   = JSON.parse(record.data)        // the data is schema-encoded
+    //
+    //     let item = this.registry.getLoaded(id)
+    //
+    //     for (let [edit, args] of edits)
+    //         this[`edit_${edit}`].call(this, data, ...args)
+    //
+    //     let out = await this.db.update(id, data)
+    //     return res.json(out)
+    // }
 
-        let record = await this.db.select(id)
-        let data   = JSON.parse(record.data)        // the data is schema-encoded
-
-        let item = this.registry.getLoaded(id)
-
-        for (let [edit, args] of edits)
-            this[`edit_${edit}`].call(this, data, ...args)
-
-        let out = await this.db.update(id, data)
-        return res.json(out)
-    }
-
-    edit_insert({data, path, pos, entry}) {
-        /* Insert a data `entry` at position `pos` inside a subcatalog located at the end of a `path` of an item`s data. */
-    }
-
-    edit_delete(id, path) {}
-    edit_update(id, path, entry) {}
-    edit_move(id, path_src, path_dst) {}
+    // edit_insert({data, path, pos, entry}) {
+    //     /* Insert a data `entry` at position `pos` inside a subcatalog located at the end of a `path` of an item`s data. */
+    // }
+    // edit_delete(id, path) {}
+    // edit_update(id, path, entry) {}
+    // edit_move(id, path_src, path_dst) {}
 }
 
 export class DatabaseYaml extends Database {

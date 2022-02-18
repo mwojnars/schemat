@@ -746,7 +746,7 @@ export class ITEM extends Schema {
 
         // verify inheritance from a base category - only for LOADED items !!
         if (this.category_base)
-            if (item.has_data() && !item.isinstance(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
+            if (item.has_data() && !item.instanceof(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
 
         // return IID alone if an exact category is known
         if (this.category_exact) {

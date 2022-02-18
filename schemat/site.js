@@ -20,6 +20,25 @@ globalThis.importLocal = (p) => import(p)
 export class Site extends Item {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
+    async getItem(path) {
+        /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
+        return this.route(new Request({path, method: 'item'}))
+    }
+
+    async getRouteNode(route, strategy = 'last') {
+        /* URL-call that returns an intermediate routing node installed at the `route` point of URL paths. */
+        return this.routeNode(new Request({path: route}), strategy)
+    }
+
+    async getApplication(route, strategy = 'last') {
+        /* URL-call to an application installed as a routing node at the end of `route` path. */
+        let Application = await this.getItem('/system/Application')
+        print('Application:', Application)
+        let app = await this.getRouteNode(route, strategy)
+        if (app.instanceof(Application)) return app
+        throw new Request.NotFound("not an application")
+    }
+
     async import(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace.
            This method returns a namespace object extracted from a vm.Module loaded by importModule().
