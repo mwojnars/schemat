@@ -33,8 +33,8 @@ let root_fields = C({
     code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
-    handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
+    // handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
     startup_site : new GENERIC(),
 
     //indexes    : new CATALOG(new ITEM(Index)),
@@ -113,9 +113,6 @@ async function create_categories(Category) {
             format      : new STRING(),    // ProgrammingLanguage()
             _is_file    : new BOOLEAN({default: true}),
         }),
-        handlers    : C({
-            // GET_file : `return this.read()   // full content of this File returned as plain text`,
-        })
     })
     cat.FileLocal = Category.new({
         name        : "FileLocal",
@@ -201,7 +198,6 @@ static error() { throw new Error('Varia/code/error()') }
 //static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
 //static check() { console.log("Varia/code/check() successful") }
         fields      : C({title: new STRING()}),
-        handlers    : C({}),
     })
     
     return cat

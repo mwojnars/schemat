@@ -563,29 +563,20 @@ export class Item {
 
     handle(request) {
         /*
-        Serve a web request by executing a web @method (endpoint) on self, as requested by request.method.
-        Endpoints map to Javascript "handler" functions stored in a category's "handlers" property:
+        Serve a web or internal `request` by executing a handler method of `this` that implements
+        a given web method (request.method). A default web method is selected if request.method is missing.
 
-           function handler(context)
+        The handler's name must have a form of:   `{request.type}_{request.method}`
+        and is called with the arguments:         function handler({item, session, req, res, endpoint})
 
-        where context = {item, session, req, res, endpoint}
-
-        or as methods of a particular Item subclass, named `{PROTOCOL}_{endpoint}`.
-        In every case, the function's `this` is bound to `item` (this===item).
         Query parameters are passed in `req.query`, as:
         - a string if there's one occurrence of PARAM in a query string,
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
-        (?? The function may allow to be called directly as a regular method with no context.)
         */
 
         if (request.path) return this.handlePartial(request)
-        
-        // let protocol =
-        //     !session                    ? "CALL" :          // CALL = internal call, the lowest permission level required
-        //     session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
-        //                                   "POST"            // POST = write access through HTTP POST
         
         let req, res
         let session  = request.session
@@ -849,10 +840,10 @@ export class Category extends Item {
         /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
         return this.inherited('fields')
     }
-    getHandlers() {
-        /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
-        return this.inherited('handlers')
-    }
+    // getHandlers() {
+    //     /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
+    //     return this.inherited('handlers')
+    // }
     getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
         this.assertLoaded()
@@ -989,7 +980,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getClass', 'getFields', 'getHandlers', 'getItemSchema', 'getAssets')
+Category.setCaching('getClass', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 
 /**********************************************************************************************************************/
