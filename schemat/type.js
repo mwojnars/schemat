@@ -231,6 +231,11 @@ export class Schema {
         return (p === undefined) ? this.constructor[name] : p
     }
 
+    getInitial() {
+        let initial = this.prop('initial')
+        return (typeof initial === 'function') ? initial() : initial
+    }
+
     valid(value) {
         /* Validate and normalize an app-layer `value` before encoding.
            Return a normalized value, or throw ValueError.
@@ -371,13 +376,9 @@ Schema.Widget = class extends Widget {
         let {schema, value} = this.props
         if (!this.state.editing) return this.viewer()
         this.initial = (value !== undefined) ? this.encode(value) : undefined
-        this.default = (this.initial !== undefined) ? this.initial : schema.prop('initial')
+        this.default = (this.initial !== undefined) ? this.initial : schema.getInitial()
         return this.editor()
     }
-    // render() {
-    //     this.initial = this.state.editing ? this.encode(this.props.value) : undefined
-    //     return this.state.editing ? this.editor() : this.viewer()
-    // }
 }
 
 /**********************************************************************************************************************
@@ -602,13 +603,11 @@ export class CODE extends TEXT
 
         value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
         close() {
-            try { return super.close() }
-            finally {
-                this.editorAce.destroy()                        // destroy the ACE editor to free up resources
-                this.observer.disconnect()
-                delete this.editorAce
-                delete this.observer
-            }
+            this.editorAce.destroy()                        // destroy the ACE editor to free up resources
+            this.observer.disconnect()
+            delete this.editorAce
+            delete this.observer
+            super.close()
         }
     }
 }
@@ -948,6 +947,8 @@ export class CATALOG extends Schema {
     - empty key not allowed (by default key_empty_allowed=false)
     - keys not allowed (what about labels then?)
      */
+
+    static initial = () => new Catalog()
 
     get isCatalog() { return true }
 
@@ -1391,17 +1392,20 @@ CATALOG.Table = class extends Component {
                 alert(`The name "${key}" for a key is not permitted by the schema.`)
                 key = undefined
             }
+            let value = subschema.getInitial()
+
             setEntries(prev => {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let ids = [-1, ...prev.map(e => e.id)]
                 let maxid = Math.max(...ids.filter(Number.isInteger))       // IDs are needed internally as keys in React subcomponents
                 let entries = [...prev]
-                entries[pos] = {id: maxid + 1, key}
-                item.remote_edit_insert(path, pos, {key, value: subschema.encode(subschema.prop('initial')) })
+                entries[pos] = {id: maxid + 1, key, value}
+                item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
                 return entries
             })
         }
+
         // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
         let N = entries.length
