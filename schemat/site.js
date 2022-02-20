@@ -233,6 +233,20 @@ export class File extends Item {
     read()          { return this.get('content') }
     CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
 
+    async CALL_import({request}) {
+        /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
+           A function for parsing module's source code, parse(source), must be passed in `args` by the caller,
+           as well as a function for reloading the module from cache without parsing, loadCached(route).
+         */
+        let {loadCached, parse} = request.args
+        let module = loadCached(request.route) || parse(this.read())
+        if (!request.path) return module
+
+        let symbol = request.step()
+        if (request.move().path) request.throwNotFound()
+        return module[symbol]
+    }
+
     GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)
         res.send(this.read())
@@ -250,24 +264,25 @@ export class File extends Item {
 }
 
 export class FileLocal extends File {
-    async read(encoding = 'utf8') {
-        let fs = await import('fs')
-        let path = this.get('path')
-        if (path) return fs.readFileSync(path, {encoding})
-    }
-    GET_file({res}) {
-        let content = this.get('content')
-        if (typeof content === 'string')
-            return res.send(content)
-        
-        let path = this.get('path')
-        if (!path) res.sendStatus(404)
+    async afterLoad()   { if (this.registry.onServer) this._fs = await import('fs') }
 
-        res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
-
-        // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
-        // https://github.com/django/django/blob/main/django/views/static.py
+    read(encoding = 'utf8') {
+        let path = this.get('path')
+        if (path) return this._fs.readFileSync(path, {encoding})
     }
+    // GET_file({res}) {
+    //     let content = this.get('content')
+    //     if (typeof content === 'string')
+    //         return res.send(content)
+    //
+    //     let path = this.get('path')
+    //     if (!path) res.sendStatus(404)
+    //
+    //     res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
+    //
+    //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
+    //     // https://github.com/django/django/blob/main/django/views/static.py
+    // }
 }
 
 export class Folder extends Item {
@@ -283,7 +298,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async afterLoad(data) {
+    async afterLoad() {
         if (this.registry.onServer)
             this._module_path = await import('path')        // to avoid awaiting in handlePartial()
     }
