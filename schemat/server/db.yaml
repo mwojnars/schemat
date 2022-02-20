@@ -337,6 +337,9 @@
     $:
       - 9
       - 1
+    apps:
+      - 5
+      - 5
     site:
       - 5
       - 3
@@ -369,3 +372,25 @@
     - 12
     - 2
   title: ąłęÓŁŻŹŚ
+- __id:
+    - 0
+    - 13
+  name: TwitterPost
+  fields:
+    text:
+      "@": schemat.type.STRING
+  code: |
+    
+    GET_view() { return 'ala ma kota'; }
+- __id:
+    - 5
+    - 5
+  name: /apps
+  files:
+    demo:
+      - 5
+      - 6
+- __id:
+    - 5
+    - 6
+  name: demo
