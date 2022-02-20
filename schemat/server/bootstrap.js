@@ -73,7 +73,7 @@ let root_fields = C({
 let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
-    class       : 'schemat.item.Category',
+    class       : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,
 }
@@ -250,10 +250,9 @@ export function check() { print('called /site/widgets.js/check()') }
             'sys.item':         cat.Varia,
             'sys.site':         cat.Site,
             'sys.dir':          cat.Folder,
-            'sys.file':         cat.FileLocal,
         }),
     })
-    item.app_root = cat.Router.new({name: "Router",
+    item.router = cat.Router.new({name: "Router",
         routes      : C({
             '$':        item.app_system,
             'site':     item.dir_site,
@@ -267,7 +266,7 @@ export function check() { print('called /site/widgets.js/check()') }
         name        : "catalog.wiki",
         base_url    : "http://127.0.0.1:3000",
         system_path : "/$",
-        application : item.app_root,
+        application : item.router,
         database    : item.database,
     })
     
@@ -312,5 +311,6 @@ async function bootstrap(db) {
 
 /**********************************************************************************************************************/
 
-await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml')
+// 'db-boot.yaml' file must be manually renamed to 'db.yaml' after creation (!)
+await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
 
