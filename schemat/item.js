@@ -53,6 +53,11 @@ const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
  */
 
 export class Request {
+    /* Custom representation of a web request (.session defined) or internal request (no .session).
+       The "web method" (.method) is mapped to a "class method" (a "handler") of a target item
+       by prepending the {request.type}_ to its name.
+     */
+
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
@@ -72,6 +77,17 @@ export class Request {
     defaultMethods = []     // names of suggested handler methods to use if `method` is missing in the request,
                             // in the order of INCREASING priority (most important suggestions at the end);
                             // this array is only collected and used for requests of type=GET (!)
+
+    get position() {
+        /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
+        assert(this.pathFull.endsWith(this.path))
+        return this.pathFull.length - this.path.length
+    }
+
+    get route() {
+        /* Part of the pathFull consumed so far: pathFull = route + path */
+        return this.pathFull.slice(0, this.position)
+    }
 
     constructor({path, method, session}) {
         this.session = session
@@ -566,8 +582,9 @@ export class Item {
         Serve a web or internal `request` by executing a handler method of `this` that implements
         a given web method (request.method). A default web method is selected if request.method is missing.
 
-        The handler's name must have a form of:   `{request.type}_{request.method}`
-        and is called with the arguments:         function handler({item, session, req, res, endpoint})
+        The handler's name has a form of:    `{request.type}_{request.method}`
+        and is called with the arguments:    function handler({request, req, res, args}),
+        `this` is bound to the target item.
 
         Query parameters are passed in `req.query`, as:
         - a string if there's one occurrence of PARAM in a query string,
@@ -602,7 +619,7 @@ export class Item {
         let handler = this[endpoint]
         if (!handler) request.throwNotFound(`handler ${endpoint}() not found`)
 
-        return handler.call(this, {item: this, req, res, request, session})
+        return handler.call(this, {request, req, res})
     }
 
     defaultMethod(request) {
@@ -621,14 +638,14 @@ export class Item {
     GET_default(...args)    { return this.GET_full(...args)}
     GET_json({res})         { res.sendItem(this) }
 
-    GET_full({session, res}) {
+    GET_full({request, res}) {
         /* Detailed (admin) view of an item. */
         let name = this.getName('')
         let ciid = this.getStamp({html: false})
         return res.send(this.HTML({
             title: `${name} ${ciid}`,
             head:  this.category.getAssets().renderAll(),
-            body:  this.BODY({session}),
+            body:  this.BODY({session: request.session}),
         }))
     }
 
@@ -806,6 +823,7 @@ export class Category extends Item {
 
         if (base) cls = base.getClass()
         if (name) cls = this.registry.getClass(name)
+        // if (name) cls = this.registry.site.getObject(name)
         assert(cls)
 
         function clean(s) {
