@@ -213,7 +213,7 @@ export class Schema {
     initial         // initial value assigned to a newly created data element of this schema
     // multi        // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
-    static initial = null
+    static initial = undefined
 
     constructor(params = {}) {
         let {default_, info, blank, type} = params || {}         // params=null is valid
@@ -1288,12 +1288,13 @@ CATALOG.Table = class extends Component {
            If value is undefined, but schema is present, the value is displayed as "missing".
          */
         let [value, setValue] = useState(entry.value)
-        let isnew = (value === undefined)
+        let isnew = (value === undefined) || entry.saveNew
 
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
             // await item.remote_edit({path, value: schema.encode(newValue)})
-            await item.remote_edit_update(path, {value: schema.encode(newValue)})
+            if (entry.saveNew) await entry.saveNew(newValue)    // an entire entry is saved for the first time?
+            else await item.remote_edit_update(path, {value: schema.encode(newValue)})
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
@@ -1384,6 +1385,13 @@ CATALOG.Table = class extends Component {
             if (rel === +1) pos++
             return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
         })
+
+        let unnew = (pos) => setEntries(prev => {
+            /* mark an entry at a given position as not new anymore, by deleting its `saveNew` prop */
+            delete prev[pos].saveNew
+            return [...prev]
+        })
+
         let initkey = (pos, key) => {
             /* confirm creation of a new entry with a given key (or value?); assign an ID to it; */
             /* store an initial value of a key after new entry creation */
@@ -1398,11 +1406,14 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
                 let ids = [-1, ...prev.map(e => e.id)]
-                let maxid = Math.max(...ids.filter(Number.isInteger))       // IDs are needed internally as keys in React subcomponents
-                let entries = [...prev]
-                entries[pos] = {id: maxid + 1, key, value}
-                item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
-                return entries
+                let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
+                prev[pos] = {id, key, value}
+
+                if (subschema.isCatalog) item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
+                else prev[pos].saveNew = (value) =>
+                    item.remote_edit_insert(path, pos, {key, value: subschema.encode(value)}).then(() => unnew(pos))
+
+                return [...prev]
             })
         }
 
