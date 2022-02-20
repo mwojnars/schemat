@@ -172,7 +172,17 @@ export class Application extends Item {
            The name can be used as a trailing component when building a URL for an item.
          */
     }
+
+    findRoute(request)  {
+        // findRoute() is parsed dynamically from source on the 1st call and stored in `this`;
+        // after that, the newly created function is called directly
+        let func = this.findRoute = this.parseMethod('findRoute', 'request')
+        return func.call(this, request)
+    }
 }
+
+Application.setCaching('_findRoute')
+
 
 export class AppSystem extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */

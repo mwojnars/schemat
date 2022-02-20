@@ -177,6 +177,9 @@ export class Item {
     ? info     -- a string like `name`, but longer ~300-500 ??
     */
 
+    static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
+
+
     cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
     iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
 
@@ -409,6 +412,33 @@ export class Item {
         if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
         if (args)   path += '?' + new URLSearchParams(args).toString()
         return path
+    }
+
+    /***  Dynamic loading of source code  ***/
+
+    sourceURL(path) {
+        /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
+        function clean(s) {
+            if (typeof s !== 'string') return ''
+            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
+        }
+        let domain   = Item.CODE_DOMAIN
+        let cat_name = clean(this.get('name'))
+        let fil_name = `${cat_name}_${this.id_str}`
+        let url = `${domain}:///items/${fil_name}/${path}`
+        return `\n//# sourceURL=${url}`
+    }
+
+    parseClass(path, base_class, body) {
+        let source = `return class extends base_class {${body}} ${this.sourceURL(path)}`
+        return new Function('base_class', source)(base_class)
+        // cls.check()
+        // cls.error?.()
+    }
+
+    parseMethod(path, ...args) {
+        let source = this.get(path)
+        return source ? new Function(...args, source + this.sourceURL(path)) : undefined
     }
 
     /***  Editing item's data  ***/
@@ -826,24 +856,20 @@ export class Category extends Item {
         // if (name) cls = this.registry.site.getObject(name)
         assert(cls)
 
-        function clean(s) {
-            if (typeof s !== 'string') return ''
-            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
-        }
-
-        if (body) {
-            // let typ_name = clean(this.category.get('name')) || 'C'
-            let domain   = 'schemat'
-            let cat_name = clean(this.get('name'))
-            let typ_name = `C${this.cid}`
-            let atr_name = 'code'
-            let cls_name = [cat_name, typ_name, `${this.iid}`] .filter(String) .join('_')
-            let fil_name = `${cat_name}_${this.id_str}`
-            let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`
-            cls = new Function('base_class', code)(cls)
-            // cls.check()
-            // cls.error()
-        }
+        if (body) cls = this.parseClass('code', cls, body)
+        // if (body) {
+        //     // let typ_name = clean(this.category.get('name')) || 'C'
+        //     let domain   = 'schemat'
+        //     let cat_name = clean(this.get('name'))
+        //     let typ_name = `C${this.cid}`
+        //     let atr_name = 'code'
+        //     let cls_name = [cat_name, typ_name, `${this.iid}`] .filter(String) .join('_')
+        //     let fil_name = `${cat_name}_${this.id_str}`
+        //     let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`
+        //     cls = new Function('base_class', code)(cls)
+        //     // cls.check()
+        //     // cls.error()
+        // }
         return cls
     }
     getItem(iid) {
