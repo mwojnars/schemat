@@ -72,9 +72,50 @@ export function escape_html(string) {
     return string.replace(reUnescapedHtml, (chr) => htmlEscapes[chr]);
 }
 
-export function dedent(text) {
+// def del_indent(text, indent = None):
+//     """
+//     Remove `indent` string from the beginning of each line of `text`, wherever it is present as a line prefix.
+//     If indent=None, maximum common indentation (get_indent()) is truncated.
+//     """
+//     if indent is None: indent = get_indent(text)
+//     if text.startswith(indent): text = text[len(indent):]
+//     return text.replace('\n' + indent, '\n')
+//
+// def get_indent(text):
+//     """
+//     Retrieve the longest indentation string fully composed of whitespace
+//     that is shared by ALL non-empty lines in `text`, including the 1st line (if it contains a non-whitespace).
+//     """
+//     lines = text.split('\n')
+//     lines = list(filter(None, [l.rstrip() for l in lines]))             # filter out empty or whitespace-only lines
+//     # lines = list(filter(None, [l if l.strip() else '' for l in lines]))          # filter out empty lines
+//     if not lines: return ''
+//
+//     # iterate over columns (!) of `text`, from left to right
+//     for i, column in enumerate(zip(*lines)):        # zip() only eats up as many characters as the shortest line
+//         if not column[0].isspace() or min(column) != max(column):
+//             return lines[0][:i]
+//     else:
+//         size = min(map(len, lines))
+//         return lines[0][:size]                      # when all lines are prefixes of each other take the shortest one
+
+export function dedentFull(text) {
     /* Remove all leading whitespace in each line of `text` and drop empty lines. */
     return text.trimLeft().replace(/\n\s+/g, '\n')
+}
+
+export function dedentCommon(text) {
+    /* Remove the longest common whitespace prefix of non-empty lines. Drop leading empty lines & trailing whitespace. */
+    if (!text.trim()) return text
+    text = text.trimRight()
+    text = text.replace(/^\s*\n/g, '')                          // drop leading empty lines
+    text = text.replace(/\t/g, '    ')                          // replace each tab character with 4x spaces
+    let prefixes = text.match(/(?<=^|\n) *(?=\S)/g)
+    let common = Math.min(...prefixes.map(p => p.length))       // length of the shortest prefix
+    if (!common) return text
+    let pattern = new RegExp(`(?<=^|\\n) {${common}}`, 'g')
+    text = text.replace(pattern, '')
+    return text
 }
 
 export function truncate(s, length = 255, {end = '...', killwords = false, maxdrop = null, leeway = 0} = {}) {

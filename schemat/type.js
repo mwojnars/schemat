@@ -533,6 +533,7 @@ export class CODE extends TEXT
             displayIndentGuides:    false,
             showPrintMargin:        false,
             highlightActiveLine:    false,
+            useWorker:              false,      // disable syntax checker and warnings
             // maxLines:               10,    // when set, it makes the editor (!) display with incorrect height
         }
         static editor_options = {

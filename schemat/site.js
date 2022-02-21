@@ -160,10 +160,9 @@ export class Application extends Item {
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
 
-    name(item) {
-        /* If `item` belongs to the item space defined by this application, return its flat name
-           (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
-           The name can be used as a trailing component when building a URL for an item.
+    address(item) {
+        /* If `item` belongs to the item space defined by this application, return its URL subpath
+           (no leading '/') to be appended to a route when building a URL. Otherwise, return undefined.
          */
     }
     urlPath(item) {
@@ -184,23 +183,23 @@ export class Application extends Item {
 }
 
 
-export class AppSystem extends Application {
-    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
-    
-    urlPath(item) {
-        assert(item.has_id())
-        let [cid, iid] = item.id
-        return `${cid}:${iid}`
-    }
-    findRoute(request) {
-        /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
-        let step = request.step(), id
-        try { id = step.split(':').map(Number) }
-        catch (ex) { request.throwNotFound() }
-        request.setDefaultMethod('@full')
-        return [this.registry.getItem(id), request.move(step), true]
-    }
-}
+// export class AppSystem extends Application {
+//     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
+//
+//     urlPath(item) {
+//         assert(item.has_id())
+//         let [cid, iid] = item.id
+//         return `${cid}:${iid}`
+//     }
+//     findRoute(request) {
+//         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
+//         let step = request.step(), id
+//         try { id = step.split(':').map(Number) }
+//         catch (ex) { request.throwNotFound() }
+//         request.setDefaultMethod('@full')
+//         return [this.registry.getItem(id), request.move(step), true]
+//     }
+// }
 
 export class AppSpaces extends Application {
     /*

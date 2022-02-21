@@ -2,7 +2,7 @@
 Creating core items from scratch and storing them as initial items in DB.
  */
 
-import {print} from '../utils.js'
+import {print, dedentCommon as dedent} from '../utils.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
@@ -156,15 +156,15 @@ async function create_categories(Category) {
             routes      : new CATALOG(new ITEM()),
         }),
         // class  : 'schemat.item.Router',
-        code        :
-`findRoute(request) {
-    let step   = request.step()
-    let routes = this.get('routes')
-    let route  = routes.get(step)
-    if (step && route)  return [route, request.move(step)]
-    if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-}
-`,
+        code        : dedent(`
+                        findRoute(request) {
+                            let step   = request.step()
+                            let routes = this.get('routes')
+                            let route  = routes.get(step)
+                            if (step && route)  return [route, request.move(step)]
+                            if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+                        }
+                    `),
     })
     cat.AppSystem = Category.new({
         name        : "AppSystem",
@@ -192,13 +192,12 @@ async function create_categories(Category) {
     cat.Varia = Category.new({
         name        : "Varia",
         info        : "Category of items that do not belong to any specific category",
-        code  :
-`
-static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-static error() { throw new Error('Varia/code/error()') }
-`,
-//static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-//static check() { console.log("Varia/code/check() successful") }
+        code        : dedent(`
+                        static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+                        static error() { throw new Error('Varia/code/error()') }
+                    `),
+                        //static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+                        //static check() { console.log("Varia/code/check() successful") }
         fields      : C({title: new STRING()}),
     })
     
@@ -220,29 +219,29 @@ async function create_items(cat, Category) {
 
     item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.app_system = cat.Application.new({name: "AppSystem",
-        findRoute: `
-console.log('AppSystem.findRoute()')
-let step = request.step(), id
-try { id = step.split(':').map(Number) }
-catch (ex) { request.throwNotFound() }
-request.setDefaultMethod('@full')
-return [this.registry.getItem(id), request.move(step), true]
-`,
-        urlPath: `
-console.log('AppSystem.urlPath()')
-let [cid, iid] = item.id
-return cid + ':' + iid
-`,})
+        findRoute: dedent(`
+            let step = request.step(), id
+            try { id = step.split(':').map(Number) }
+            catch (ex) { request.throwNotFound() }
+            request.setDefaultMethod('@full')
+            return [this.registry.getItem(id), request.move(step), true]
+        `),
+        urlPath: dedent(`
+            console.log('AppSystem.urlPath()')
+            let [cid, iid] = item.id
+            return cid + ':' + iid
+        `),
+    })
     // item.app_system = cat.AppSystem.new({name: "System"})
 
     item.utils_js   = cat.File.new({content: `export let print = console.log`})
-    item.widgets_js = cat.File.new({content:
-`
-import {print} from '../site/utils.js'
-export function check() { print('called /site/widgets.js/check()') } 
-//let fs = await importLocal('fs')
-//print('fs:',fs)
-`})
+    item.widgets_js = cat.File.new({content: dedent(`
+            import {print} from '../site/utils.js'
+            export function check() { print('called /site/widgets.js/check()') } 
+            //let fs = await importLocal('fs')
+            //print('fs:',fs)
+        `)
+    })
 
     item.dir_demo   = cat.Folder.new({name: "/demo", })
     item.dir_apps   = cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
@@ -332,5 +331,5 @@ async function bootstrap(db) {
 /**********************************************************************************************************************/
 
 // 'db-boot.yaml' file must be manually renamed to 'db.yaml' after creation (!)
-await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
+await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml')
 

@@ -186,7 +186,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-  code: >
+  code: >-
     findRoute(request) {
         let step   = request.step()
         let routes = this.get('routes')
@@ -251,9 +251,9 @@
     - 12
   name: Varia
   info: Category of items that do not belong to any specific category
-  code: >
-    
-    static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+  code: >-
+    static check() { import('./utils.js').then(mod => console.log("Varia.code:
+    imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
   fields:
@@ -289,16 +289,13 @@
     - 7
     - 1
   name: AppSystem
-  findRoute: |
-    
-    console.log('AppSystem.findRoute()')
+  findRoute: |-
     let step = request.step(), id
     try { id = step.split(':').map(Number) }
     catch (ex) { request.throwNotFound() }
     request.setDefaultMethod('@full')
     return [this.registry.getItem(id), request.move(step), true]
-  urlPath: |
-    
+  urlPath: |-
     console.log('AppSystem.urlPath()')
     let [cid, iid] = item.id
     return cid + ':' + iid
@@ -309,8 +306,7 @@
 - __id:
     - 3
     - 3
-  content: |
-    
+  content: |-
     import {print} from '../site/utils.js'
     export function check() { print('called /site/widgets.js/check()') } 
     //let fs = await importLocal('fs')

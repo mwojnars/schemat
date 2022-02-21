@@ -3,7 +3,7 @@ import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
-import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedent, splitLast, BaseError} from './utils.js'
+import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
@@ -693,7 +693,7 @@ export class Item {
     }
 
     HTML({title, head, body} = {}) {
-        return dedent(`
+        return dedentFull(`
             <!DOCTYPE html><html>
             <head>
                 <title>${title}</title>
