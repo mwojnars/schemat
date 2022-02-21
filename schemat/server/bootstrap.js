@@ -6,7 +6,6 @@ import {print, dedentCommon as dedent} from '../utils.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
-//import {Index} from '../item.js'
 
 
 /**********************************************************************************************************************
@@ -331,5 +330,5 @@ async function bootstrap(db) {
 /**********************************************************************************************************************/
 
 // 'db-boot.yaml' file must be manually renamed to 'db.yaml' after creation (!)
-await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml')
+await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
 

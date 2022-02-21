@@ -10,6 +10,7 @@ import {assert, print, sleep} from './utils.js'
 import {ServerRegistry} from './server/registry-s.js'
 import {Session} from './registry.js'
 import {Request} from "./item.js";
+import {YamlDB, RingsDB} from "./server/db.js";
 
 // import {check} from "/site/widgets.js"
 // check()
@@ -17,7 +18,8 @@ import {Request} from "./item.js";
 
 /**********************************************************************************************************************/
 
-const DB_YAML   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'
+const DB_BOOT   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml'
+const DB_WORK   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db-demo.yaml'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
@@ -51,8 +53,20 @@ export class Server {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor()   { this.registry = globalThis.registry = new ServerRegistry(DB_YAML); print("Server created") }
-    async boot()    { return this.registry.boot() }
+    constructor() {
+        // this.db = new YamlDB(DB_BOOT)
+        this.db = new RingsDB(
+            new YamlDB(DB_BOOT, {writable: false}),
+            new YamlDB(DB_WORK, {start_IID: 100}),
+        )
+        this.registry = globalThis.registry = new ServerRegistry(this.db)
+        print("Server created")
+    }
+
+    async boot() {
+        await this.db.load()
+        await this.registry.boot()
+    }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
@@ -63,11 +77,11 @@ export class Server {
 
         try { await this.registry.site.routeWeb(session) }
         catch (ex) {
-            if (ex instanceof Request.NotFound) {
-                print('failed request:', ex)
-                try { session.sendStatus(404) } catch(e){}
-            }
-            else throw ex
+            print(ex)
+            if (ex instanceof Request.NotFound)
+                try { res.sendStatus(404) } catch(e){}
+            else
+                try { res.sendStatus(500) } catch(e){}
         }
 
         // let {check} = await this.registry.site.import("/site/widgets.js")
@@ -80,7 +94,6 @@ export class Server {
     }
 
     async serve_express() {
-        await this.boot()
         const app = express()
 
         // for official middleware see: https://expressjs.com/en/resources/middleware.html
@@ -113,6 +126,7 @@ export class Server {
 }
 
 export const server = new Server()
+await server.boot()
 
 
 /**********************************************************************************************************************

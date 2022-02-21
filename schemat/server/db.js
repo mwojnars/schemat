@@ -1,4 +1,4 @@
-import { assert, print, T } from '../utils.js'
+import {assert, BaseError, print, T} from '../utils.js'
 import { ItemsMap } from '../data.js'
 import { Item } from "../item.js";
 
@@ -79,7 +79,35 @@ import { Item } from "../item.js";
  **
  */
 
-class ServerDB {
+class DB {
+    writable  = true    // only if true, the database accepts modifications: inserts/updates/deletes
+    start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
+                        // between different underlying databases used together inside a RingDB
+
+    constructor(params = {}) {
+        let {writable = true, start_IID = 0} = params
+        this.writable  = writable
+        this.start_IID = start_IID
+    }
+
+    static Error = class extends BaseError {}
+    static NotFound = class extends DB.Error {
+        static message = "item ID not found in DB"
+    }
+    static NotWritable = class extends DB.Error {
+        static message = "no write access to the database"
+    }
+    static TooLowIID = class extends DB.Error {
+        static message = "found an item in DB with IID lower than expected"
+    }
+
+    throwNotFound(msg, args)        { throw new DB.NotFound(msg, args) }
+    throwNotWritable(msg, args)     { throw new DB.NotWritable(msg, args) }
+
+    checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
+}
+
+class ServerDB extends DB {
     async flush() { throw new Error("not implemented") }
     async insert(item, flush = true) { throw new Error("not implemented") }
     async update(item, flush = true) { throw new Error("not implemented") }
@@ -99,14 +127,14 @@ class FileDB extends ServerDB {
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
 
-    constructor(filename) {
-        super()
+    constructor(filename, params = {}) {
+        super(params)
         this.filename = filename
     }
 
     async select(id) {
         let record = this.records.get(id)
-        if (!record) throw new Error(`undefined record for ${id}`)
+        if (!record) this.throwNotFound({id})
         assert(record.cid === id[0] && record.iid === id[1])
         return record
     }
@@ -133,6 +161,7 @@ export class YamlDB extends FileDB {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
             assert(!this.records.has(id), `duplicate item ID: ${id}`)
+            if (iid < this.start_IID) throw new DB.TooLowIID({id, start_IID: this.start_IID})
 
             let data = '__data' in record ? record.__data : record
             let curr_max = this.max_iid.get(cid) || 0
@@ -144,6 +173,7 @@ export class YamlDB extends FileDB {
         //     print(id, data)
     }
     async insert(...items) {
+        this.checkWritable()
         await Promise.all(items.map(item => this._insert_one(item, false)))
         await this.flush()
     }
@@ -159,11 +189,11 @@ export class YamlDB extends FileDB {
         else
             max_iid = this.max_iid.get(cid) || 0
 
-        let iid = item.iid = max_iid + 1
+        let iid = item.iid = Math.max(max_iid + 1, this.start_IID)
         this.max_iid.set(cid, iid)
 
         assert(item.has_data())
-        assert(!this.records.has(item.id), "an item with the same ID already exists")
+        assert(!this.records.has(item.id), "an item with this ID already exists")
 
         this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
@@ -172,11 +202,15 @@ export class YamlDB extends FileDB {
     async update(item, flush = true) {
         assert(item.has_data())
         assert(item.has_id())
+        if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
+        this.checkWritable(item.id)
         let [cid, iid] = item.id
         this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
     }
     async delete(id) {
+        if (!this.records.has(id)) this.throwNotFound({id})
+        this.checkWritable(id)
         this.records.delete(id)
         return this.flush()
     }
@@ -193,6 +227,56 @@ export class YamlDB extends FileDB {
             })
         let out = YAML.stringify(recs)
         return fs.promises.writeFile(this.filename, out, 'utf8')
+    }
+}
+
+/**********************************************************************************************************************/
+
+export class RingsDB extends ServerDB {
+    /* Several databases used together like rings. Each read/write operation is executed
+       on the outermost ring possible. If NotFound/NotWritable is caught, a deeper (lower) ring is tried.
+       In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
+       that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
+       NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
+       -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
+       is expected; while the reversed relationship is a sign of undesired convolution between the databases.
+     */
+
+    static RingNotFound = class extends DB.Error {
+        static message = "no suitable ring database found for the operation"
+    }
+
+    constructor(...databases) {
+        /* `databases` are ordered by increasing level: from innermost to outermost. */
+        super()
+        this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
+
+        this.select = this.outermost('select')
+        this.insert = this.outermost('insert')
+        this.update = this.outermost('update')
+        this.delete = this.outermost('delete')
+    }
+    load()  { return Promise.all(this.databases.map(d => d.load())) }
+
+    outermost = (method) => async function (...args) {
+        let exLast
+        for (const db of this.databases)
+            try {
+                let result = db[method](...args)
+                return result instanceof Promise ? await result : result
+            }
+            catch (ex) {
+                if (ex instanceof DB.NotFound) { exLast = ex; continue }
+                // if (ex instanceof DB.NotFound || ex instanceof DB.NotWritable) continue
+                throw ex
+            }
+        throw exLast || new DB.NotFound()
+        // throw new RingsDB.RingNotFound()
+    }
+
+    async *scanCategory(cid) {
+        for (const db of this.databases)
+            yield* db.scanCategory(cid)
     }
 }
 
@@ -239,3 +323,4 @@ export class DatabaseYaml extends Database {
         // print('created YamlDB in DatabaseYaml:', this.db, filename)
     }
 }
+

@@ -168,15 +168,15 @@ export class ServerRegistry extends Registry {
 
     // get _specializedItemJS() { return "./server/item-s.js" }
 
-    constructor(filename) {
+    constructor(db) {
         super()
-        this.db = new YamlDB(filename)
+        this.db = db
     }
-    async boot() {
-        await this.db.load()
-        await super.boot()
-        // this.db = this.site.get('database')      // replace the startup database with a full-featured Database item from DB
-    }
+    // async boot() {
+    //     await this.db.load()
+    //     await super.boot()
+    //     // this.db = this.site.get('database')      // replace the startup database with a full-featured Database item from DB
+    // }
     async createRoot(root_data = null) {
         /*
         Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
