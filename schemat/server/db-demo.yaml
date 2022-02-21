@@ -1,0 +1,10 @@
+- __id:
+    - 0
+    - 13
+  name: TwitterPost
+  fields:
+    text:
+      "@": schemat.type.STRING
+  code: |
+    
+    GET_view() { return 'ala ma kota'; }

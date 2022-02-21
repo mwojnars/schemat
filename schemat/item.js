@@ -249,12 +249,18 @@ export class Item {
 
         return this.data.then(() => this)
     }
-    async afterLoad(data) {
-        /* Any extra initialization after the item's `data` is loaded but NOT yet stored in this.data.
+    afterLoad(data) {
+        /* Any extra initialization & verification after the item's `data` is loaded but NOT yet stored in this.data.
            This initialization could NOT be implemented by overriding load() or reload(),
            because the class may NOT yet be determined and attached to `this` when load() is called (!)
            Subclasses may override this method, either as sync or async method.
          */
+        // load all prototypes and check that they belong to the same category (exactly) as this item,
+        // otherwise the schema of some fields may be incompatible or missing
+        let prototypes = data.getValues('prototype')
+        for (const proto of prototypes)
+            if (proto.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${proto})`)
+        if (prototypes.length) return Promise.all(prototypes.map(p => p.load()))
     }
 
     async reload(use_schema = true, record = null) {
@@ -287,6 +293,13 @@ export class Item {
         // search in this.data
         let value = this.data.findValue(path)
         if (value !== undefined) return value
+
+        // search in prototypes
+        let prototypes = this.data.getValues('prototype')
+        for (const proto of prototypes) {
+            value = proto.get(path)
+            if (value !== undefined) return value
+        }
 
         // search in category's defaults
         if (this.category !== this) {
@@ -813,6 +826,7 @@ export class Category extends Item {
 
     async afterLoad(data) {
         /* Load all base categories of this one, so that getDefault() and inherited() can work synchronously later on. */
+        await super.afterLoad(data)
         let bases = data.getValues('extends')
         if (bases.length) return Promise.all(bases.map(b => b.load()))
     }
@@ -857,19 +871,6 @@ export class Category extends Item {
         assert(cls)
 
         if (body) cls = this.parseClass('code', cls, body)
-        // if (body) {
-        //     // let typ_name = clean(this.category.get('name')) || 'C'
-        //     let domain   = 'schemat'
-        //     let cat_name = clean(this.get('name'))
-        //     let typ_name = `C${this.cid}`
-        //     let atr_name = 'code'
-        //     let cls_name = [cat_name, typ_name, `${this.iid}`] .filter(String) .join('_')
-        //     let fil_name = `${cat_name}_${this.id_str}`
-        //     let code = `return class ${cls_name} extends base_class {${body}} //# sourceURL=${domain}:///items/${fil_name}/${atr_name}`
-        //     cls = new Function('base_class', code)(cls)
-        //     // cls.check()
-        //     // cls.error()
-        // }
         return cls
     }
     getItem(iid) {

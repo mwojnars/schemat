@@ -171,8 +171,6 @@
   fields:
     findRoute:
       "@": schemat.type.CODE
-    urlPath:
-      "@": schemat.type.CODE
 - __id:
     - 0
     - 8
@@ -286,22 +284,9 @@
     - 1
   filename: /home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml
 - __id:
-    - 7
+    - 9
     - 1
-  name: AppSystem
-  findRoute: |
-    
-    console.log('AppSystem.findRoute()')
-    let step = request.step(), id
-    try { id = step.split(':').map(Number) }
-    catch (ex) { request.throwNotFound() }
-    request.setDefaultMethod('@full')
-    return [this.registry.getItem(id), request.move(step), true]
-  urlPath: |
-    
-    console.log('AppSystem.urlPath()')
-    let [cid, iid] = item.id
-    return cid + ':' + iid
+  name: System
 - __id:
     - 3
     - 2
@@ -318,18 +303,6 @@
 - __id:
     - 5
     - 3
-  name: /demo
-- __id:
-    - 5
-    - 4
-  name: /apps
-  files:
-    demo:
-      - 5
-      - 3
-- __id:
-    - 5
-    - 5
   name: /site
   files:
     utils.js:
@@ -340,7 +313,7 @@
       - 3
 - __id:
     - 5
-    - 6
+    - 4
   name: /system
   files:
     Application:
@@ -364,24 +337,24 @@
     sys.item: 12
     sys.site: 11
     sys.dir: 5
-    sys.file: 3
+    sys.file: 4
 - __id:
     - 8
     - 1
   name: Router
   routes:
     $:
-      - 7
+      - 9
       - 1
     apps:
       - 5
-      - 4
+      - 5
     site:
       - 5
-      - 5
+      - 3
     system:
       - 5
-      - 6
+      - 4
     files:
       - 6
       - 1
@@ -408,3 +381,25 @@
     - 12
     - 2
   title: ąłęÓŁŻŹŚ
+- __id:
+    - 5
+    - 5
+  name: /apps
+  files:
+    demo:
+      - 5
+      - 6
+- __id:
+    - 5
+    - 6
+  name: demo
+- __id:
+    - 7
+    - 1
+  name: AppSystem
+  findRoute: |
+    let step = request.step(), id
+    try { id = step.split(':').map(Number) }
+    catch (ex) { request.throwNotFound() }
+    request.setDefaultMethod('@full')
+    return [this.registry.getItem(id), request.move(step), true]

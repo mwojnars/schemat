@@ -160,28 +160,28 @@ export class Application extends Item {
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
 
-    urlPath(item) {
-        /* Generate a URL name/path (fragment after the base route string) of `item`.
-           The path does NOT have a leading separator, or it has a different (internal) meaning -
-           in any case, a leading separator should be inserted by caller if needed.
-         */
-    }
     name(item) {
         /* If `item` belongs to the item space defined by this application, return its flat name
            (no '/' or '@' characters) as assigned by the application. Otherwise, return undefined.
            The name can be used as a trailing component when building a URL for an item.
          */
     }
+    urlPath(item) {
+        /* Generate a URL name/path (fragment after the base route string) of `item`.
+           The path does NOT have a leading separator, or it has a different (internal) meaning -
+           in any case, a leading separator should be inserted by caller if needed.
+         */
+        let func = this.urlPath = this.parseMethod('urlPath', 'item')
+        return func.call(this, item)
+    }
 
     findRoute(request)  {
-        // findRoute() is parsed dynamically from source on the 1st call and stored in `this`;
-        // after that, the newly created function is called directly
+        // findRoute() is parsed dynamically from source on the 1st call and stored in `this` -
+        // not in a class prototype like `code` (!); after that, all calls go directly to the new function
         let func = this.findRoute = this.parseMethod('findRoute', 'request')
         return func.call(this, request)
     }
 }
-
-Application.setCaching('_findRoute')
 
 
 export class AppSystem extends Application {

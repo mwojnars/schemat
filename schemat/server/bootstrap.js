@@ -20,7 +20,8 @@ let C = (data) => new Catalog(data)
 
 // global-default fields shared by all item types
 let default_fields = C({
-    name : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
+    name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
+    prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item."}),
 })
 
 // fields of categories, including the root category
@@ -145,6 +146,7 @@ async function create_categories(Category) {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class       : 'schemat.item.Application',
+        fields      : C({findRoute: new CODE(), urlPath: new CODE()}),
     })
     cat.Router  = Category.new({
         name        : "Router",
@@ -217,7 +219,21 @@ async function create_items(cat, Category) {
     item.dir_files= cat.FolderLocal.new({path: `${local_files}`})
 
     item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
-    item.app_system = cat.AppSystem.new({name: "System"})
+    item.app_system = cat.Application.new({name: "AppSystem",
+        findRoute: `
+console.log('AppSystem.findRoute()')
+let step = request.step(), id
+try { id = step.split(':').map(Number) }
+catch (ex) { request.throwNotFound() }
+request.setDefaultMethod('@full')
+return [this.registry.getItem(id), request.move(step), true]
+`,
+        urlPath: `
+console.log('AppSystem.urlPath()')
+let [cid, iid] = item.id
+return cid + ':' + iid
+`,})
+    // item.app_system = cat.AppSystem.new({name: "System"})
 
     item.utils_js   = cat.File.new({content: `export let print = console.log`})
     item.widgets_js = cat.File.new({content:
@@ -228,6 +244,8 @@ export function check() { print('called /site/widgets.js/check()') }
 //print('fs:',fs)
 `})
 
+    item.dir_demo   = cat.Folder.new({name: "/demo", })
+    item.dir_apps   = cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
     item.dir_site   = cat.Folder.new({name: "/site",
         files: C({
             'utils.js':     item.utils_js,
@@ -250,11 +268,13 @@ export function check() { print('called /site/widgets.js/check()') }
             'sys.item':         cat.Varia,
             'sys.site':         cat.Site,
             'sys.dir':          cat.Folder,
+            'sys.file':         cat.File,
         }),
     })
     item.router = cat.Router.new({name: "Router",
         routes      : C({
             '$':        item.app_system,
+            'apps':     item.dir_apps,
             'site':     item.dir_site,
             'system':   item.dir_system,
             'files':    item.dir_files,
