@@ -3,7 +3,7 @@
 import { print, assert, splitLast } from './utils.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID } from './item.js'
+import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -133,7 +133,6 @@ export class Registry {
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
     cache = new ItemsCache()
-    // get _specializedItemJS() { assert(false) }
 
     async initClasspath() {
         // print('initClasspath() started...')
@@ -142,20 +141,9 @@ export class Registry {
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
         await classpath.add_module("schemat.data", "./data.js")
         await classpath.add_module("schemat.item", "./item.js")
-        // await classpath.add_module("schemat.item", this._specializedItemJS)
         await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
         await classpath.add_module("schemat.item", "./server/db.js")
-
-        // // amend base class of all Item subclasses from site.js: replace __proto__=Item with ServerItem or ClientItem ...
-        // let mod_item = await import(this._specializedItemJS)
-        // let mod_site = await import("./site.js")
-        // let ItemSpec = mod_item.Item
-        // let ItemBase = Object.getPrototypeOf(ItemSpec)
-        //
-        // for (let cls of Object.values(mod_site))
-        //     if (Object.getPrototypeOf(cls) === ItemBase)
-        //         cls.prototype.__proto__ = ItemSpec.prototype
 
         this.classpath = classpath
         // print('initClasspath() done')
@@ -165,9 +153,19 @@ export class Registry {
         /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
         await this.initClasspath()
         await this.createRoot()
-        // let site_id = this.root.get(Registry.STARTUP_SITE)
+        if (!site_id) site_id = await this._findSite()
         this.site = await this.getLoaded(site_id)
     }
+    async _findSite() {
+        /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
+        assert(this.onServer)
+        let Site = await this.getCategory(SITE_CID)
+        let scan = this.scanCategory(Site, {limit: 1})
+        let ret  = await scan.next()
+        if (!ret) throw new Error(`no Site item found in the DB`)
+        return ret.value.id
+    }
+
     async createRoot() {
         /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
         let root = this.root = new RootCategory(this)
@@ -224,12 +222,16 @@ export class Registry {
         this.session?.countLoaded(id)
         return this.db.select(id)
     }
-    async *scanCategory(category) {
+    async *scanCategory(category, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. A generator. */
+        category.assertLoaded()
         let records = this.db.scanCategory(category.iid)
+        let count = 0
+
         for await (const record of records) {
+            if (limit !== undefined && count >= limit) break
             let {cid, iid} = record
-            assert(!category || cid === category.iid)
+            assert(cid === category.iid)
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
@@ -237,14 +239,14 @@ export class Registry {
                 await item.reload(undefined, record)
                 yield item
             }
+            count++
         }
     }
 
     getPath(cls) {
-        /*
-        Return a dotted module path of a given class or function as stored in a global Classpath.
-        `cls` should be either a constructor function, or a prototype with .constructor property.
-        */
+        /* Return a dotted module path of a given class or function as stored in a global Classpath.
+           `cls` should be either a constructor function, or a prototype with .constructor property.
+         */
         if (typeof cls === "object")            // if `cls` is a class prototype, take its constructor instead
             cls = cls.constructor
         if (!cls) throw `Argument is empty or not a class: ${cls}`

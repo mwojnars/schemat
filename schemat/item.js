@@ -8,6 +8,7 @@ import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
 
 export const ROOT_CID = 0
+export const SITE_CID = 1
 
 // import * as utils from 'http://127.0.0.1:3000/files/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
