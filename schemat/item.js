@@ -205,16 +205,16 @@ export class Item {
         /* Check whether this item belongs to a `category`, or its subcategory.
            All comparisons along the way use item IDs, not object identity. The item must be loaded.
         */
-        return this.category.issubcat(category)
+        return this.category.inherits(category)
     }
-    inherited(parent) {
+    inherits(parent) {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
         if (this.has_id(parent.id)) return true
         let prototypes = this.getMany('prototype')
         for (const proto of prototypes)
-            if (proto.inherited(parent)) return true
+            if (proto.inherits(parent)) return true
         return false
     }
 
@@ -327,7 +327,7 @@ export class Item {
         return item
     }
 
-    getInherited__(field) {
+    getInherited(field) {
         /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
            from prototypes + the schema's default catalog for this field.
            It's assumed that the catalogs have unique non-missing keys.
@@ -818,12 +818,12 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    async afterLoad(data) {
-        /* Load all base categories of this one, so that getDefault() and getInherited() can work synchronously later on. */
-        await super.afterLoad(data)
-        let bases = data.getValues('extends')
-        if (bases.length) return Promise.all(bases.map(b => b.load()))
-    }
+    // async afterLoad(data) {
+    //     /* Load all base categories of this one, so that getDefault() and getInherited() can work synchronously later on. */
+    //     await super.afterLoad(data)
+    //     let bases = data.getValues('extends')
+    //     if (bases.length) return Promise.all(bases.map(b => b.load()))
+    // }
 
     new(data = null, iid = null) {
         /*
@@ -836,19 +836,19 @@ export class Category extends Item {
         else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
-    issubcat(category) {
-        /* Return true if `this` inherits from `category`, or is `category` (by ID comparison).
-           Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
-        */
-        if (this.has_id(category.id)) return true
-        let bases = this.getMany('extends')
-        for (const base of bases)
-            if (base.issubcat(category)) return true
-        return false
-    }
+    // issubcat(category) {
+    //     /* Return true if `this` inherits from `category`, or is `category` (by ID comparison).
+    //        Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
+    //     */
+    //     if (this.has_id(category.id)) return true
+    //     let bases = this.getMany('extends')
+    //     for (const base of bases)
+    //         if (base.issubcat(category)) return true
+    //     return false
+    // }
 
     getClass() {
-        let base = this.get('extends')                  // use the FIRST base category's class as the (base) class
+        let base = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
         let name = this.get('class')
         let body = this.get('code', '')
         let cls  = Item
@@ -900,21 +900,21 @@ export class Category extends Item {
         return this.getItemSchema().getAssets()
     }
 
-    getInherited(field) {
-        /* Merge all catalogs found at a given `field` in all base categories + meta-category's default + `this`.
-           It's assumed that the catalogs have unique non-missing keys.
-           If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
-           A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
-           https://en.wikipedia.org/wiki/C3_linearization
-           http://python-history.blogspot.com/2010/06/method-resolution-order.html
-         */
-        let bases = this.getMany('extends')
-        let catalogs = [this, ...bases].map(base => base.get(field))            // `field` taken from category.data
-        let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()
-        let default_ = schemas.get(field).prop('default')
-        catalogs.push(default_)
-        return Catalog.merge(...catalogs)
-    }
+    // getInherited(field) {
+    //     /* Merge all catalogs found at a given `field` in all base categories + meta-category's default + `this`.
+    //        It's assumed that the catalogs have unique non-missing keys.
+    //        If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
+    //        A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
+    //        https://en.wikipedia.org/wiki/C3_linearization
+    //        http://python-history.blogspot.com/2010/06/method-resolution-order.html
+    //      */
+    //     let bases = this.getMany('extends')
+    //     let catalogs = [this, ...bases].map(base => base.get(field))            // `field` taken from category.data
+    //     let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()
+    //     let default_ = schemas.get(field).prop('default')
+    //     catalogs.push(default_)
+    //     return Catalog.merge(...catalogs)
+    // }
 
     async GET_scan({res}) {
         /* Retrieve all children of this category and send to client as a JSON.

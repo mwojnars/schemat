@@ -109,9 +109,6 @@
   prototype:
     - 0
     - 1
-  extends:
-    - 0
-    - 1
   class: schemat.item.FileLocal
   fields:
     path:
@@ -141,9 +138,6 @@
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   prototype:
-    - 0
-    - 3
-  extends:
     - 0
     - 3
   class: schemat.item.FolderLocal

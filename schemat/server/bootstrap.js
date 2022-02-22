@@ -98,7 +98,7 @@ async function create_categories(Category) {
     //     name        : "YAML Database",
     //     info        : "Single-machine database stored in a YAML file.",
     //     class       : 'schemat.item.DatabaseYaml',
-    //     extends     : cat.Database,
+    //     prototype   : cat.Database,
     //     fields      : C({
     //         filename: new STRING(),
     //     }),
@@ -119,7 +119,6 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        extends     : cat.File,
         class       : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
@@ -139,7 +138,6 @@ async function create_categories(Category) {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
-        extends     : cat.Folder,
         class       : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
