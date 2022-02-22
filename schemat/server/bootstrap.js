@@ -21,13 +21,14 @@ let C = (data) => new Catalog(data)
 // global-default fields shared by all item types
 let default_fields = C({
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
-    prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item."}),
+    prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
+                                  "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, as well as for categories - the latter case represents category inheritance. " +
+                                  "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
 })
 
 // fields of categories, including the root category
 let root_fields = C({
     info         : new TEXT({info: "Description of the category."}),
-    extends      : new ITEM({info: "Base category from which this one inherits properties. Multiple bases are allowed, the first one has priority over subsequent ones."}),
     class        : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
     code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class`, or the class of the first base category, or the top-level Item."}),
     code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
@@ -183,25 +184,14 @@ async function create_categories(Category) {
         info        : "Category of site records. A site contains information about applications, servers, startup.",
         class       : 'schemat.item.Site',
         fields      : C({
-            base_url    : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            URL     : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             // path_default / app_default
-            system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
+            system_path : new STRING({info: "A URL path of the system application, AppSystem - used for internal web access to items."}),
             router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
-    // cat.Varia = Category.new({
-    //     name        : "Varia",
-    //     info        : "Category of items that do not belong to any specific category",
-    //     code        : dedent(`
-    //                     static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-    //                     static error() { throw new Error('Varia/code/error()') }
-    //                 `),
-    //                     //static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-    //                     //static check() { console.log("Varia/code/check() successful") }
-    //     fields      : C({title: new STRING()}),
-    // })
-    
+
     return cat
 }
 
@@ -284,7 +274,7 @@ async function create_items(cat, Category) {
     
     item.catalog_wiki = cat.Site.new({
         name        : "catalog.wiki",
-        base_url    : "http://127.0.0.1:3000",
+        URL         : "http://127.0.0.1:3000",
         system_path : "/$",
         router      : item.router,
         // database    : item.database,

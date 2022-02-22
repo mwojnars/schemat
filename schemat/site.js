@@ -118,7 +118,7 @@ export class Site extends Item {
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.get('base_url') + this.get('system_path')
+        return this.get('URL') + this.get('system_path')
     }
 
     urlRaw(item) {

@@ -17,11 +17,6 @@
             value:
               info: Description of the category.
               "@": schemat.type.TEXT
-          - key: extends
-            value:
-              info: Base category from which this one inherits properties. Multiple bases are
-                allowed, the first one has priority over subsequent ones.
-              "@": schemat.type.ITEM
           - key: class
             value:
               info: Full (dotted) name of a Javascript class to be used for items of this
@@ -66,7 +61,14 @@
                     value:
                       info: An item of the same category that serves as a prototype for this one, that
                         is, provides default values for missing properties of
-                        this item.
+                        this item. Multiple prototypes are allowed, the first
+                        one has priority over subsequent ones. Prototypes can be
+                        defined for regular items, as well as for categories -
+                        the latter case represents category inheritance.
+                        Items/categories may inherit individual entries from
+                        catalog-valued fields, see Item.getInherited(). In this
+                        way, subcategories inherit individual field schemas as
+                        defined in base categories.
                       "@": schemat.type.ITEM
                 "@": schemat.data.Catalog
               values:
@@ -210,13 +212,13 @@
     servers, startup.
   class: schemat.item.Site
   fields:
-    base_url:
+    URL:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": schemat.type.STRING
     system_path:
-      info: A URL path that when appended to the `base_url` creates a URL of the
-        system application, AppSystem - used for internal web access to items.
+      info: A URL path of the system application, AppSystem - used for internal web
+        access to items.
       "@": schemat.type.STRING
     router:
       info: A Router that performs top-level URL routing to downstream applications
@@ -346,7 +348,7 @@
     - 9
     - 1
   name: catalog.wiki
-  base_url: http://127.0.0.1:3000
+  URL: http://127.0.0.1:3000
   system_path: /$
   router:
     - 6
