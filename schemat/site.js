@@ -112,7 +112,7 @@ export class Site extends Item {
 
     findRoute(request) {
         return request.path ?
-            [this.get('application'), request, false] :
+            [this.get('router'), request, false] :
             [this.get('empty_path'),  request,  true]
     }
 

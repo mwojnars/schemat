@@ -323,7 +323,7 @@ export class Session {
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
-        let items = [this.item, this.item.category, this.registry.root, this.app]
+        let items = [this.item, this.item.category, this.registry.root, this.registry.site, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         items = items.map(i => i.encodeSelf())
 

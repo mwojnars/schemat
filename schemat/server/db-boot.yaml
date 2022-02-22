@@ -78,29 +78,12 @@
         "@": schemat.data.Catalog
     - key: startup_site
       value:
-        - 11
+        - 9
         - 1
   "@": schemat.data.Data
 - __id:
     - 0
     - 1
-  name: Database
-  info: Base category for items that represent an abstract database layer.
-- __id:
-    - 0
-    - 2
-  name: YAML Database
-  info: Single-machine database stored in a YAML file.
-  class: schemat.item.DatabaseYaml
-  extends:
-    - 0
-    - 1
-  fields:
-    filename:
-      "@": schemat.type.STRING
-- __id:
-    - 0
-    - 3
   name: File
   info: File with a text content.
   class: schemat.item.File
@@ -120,19 +103,22 @@
       "@": schemat.type.BOOLEAN
 - __id:
     - 0
-    - 4
+    - 2
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
+  prototype:
+    - 0
+    - 1
   extends:
     - 0
-    - 3
+    - 1
   class: schemat.item.FileLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 5
+    - 3
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
@@ -149,21 +135,24 @@
       "@": schemat.type.BOOLEAN
 - __id:
     - 0
-    - 6
+    - 4
   name: FolderLocal
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
+  prototype:
+    - 0
+    - 3
   extends:
     - 0
-    - 5
+    - 3
   class: schemat.item.FolderLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 7
+    - 5
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
@@ -175,7 +164,7 @@
       "@": schemat.type.CODE
 - __id:
     - 0
-    - 8
+    - 6
   name: Router
   info: A set of sub-applications, each bound to a different URL prefix.
   fields:
@@ -196,14 +185,14 @@
     }
 - __id:
     - 0
-    - 9
+    - 7
   name: AppSystem
   info: Application that serves items on simple URLs of the form /CID:IID, for
     admin purposes.
   class: schemat.item.AppSystem
 - __id:
     - 0
-    - 10
+    - 8
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -221,72 +210,48 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
-    - 11
+    - 9
   name: Site
   info: Category of site records. A site contains information about applications,
-    servers, startup
+    servers, startup.
   class: schemat.item.Site
   fields:
     base_url:
-      info: Base URL at which the website is served, no trailing '/'
+      info: "Base URL at which the website is served: protocol + domain + root path
+        (if any); no trailing '/'."
       "@": schemat.type.STRING
     system_path:
       info: A URL path that when appended to the `base_url` creates a URL of the
         system application, AppSystem - used for internal web access to items.
       "@": schemat.type.STRING
-    application:
-      info: Item to perform top-level URL routing, typically a Router with multiple
-        subapplications
-      "@": schemat.type.ITEM
-    database:
-      info: Global database layer
-      category_base:
-        =:
-          - 0
-          - 1
-        "@": (item)
+    router:
+      info: A Router that performs top-level URL routing to downstream applications
+        and file folders.
       "@": schemat.type.ITEM
 - __id:
-    - 0
-    - 12
-  name: Varia
-  info: Category of items that do not belong to any specific category
-  code: >-
-    static check() { import('./utils.js').then(mod => console.log("Varia.code:
-    imported ", mod)) }
-
-    static error() { throw new Error('Varia/code/error()') }
-  fields:
-    title:
-      "@": schemat.type.STRING
-- __id:
-    - 3
+    - 1
     - 1
   content: This is a test file.
 - __id:
-    - 5
+    - 3
     - 1
   files:
     test.txt:
-      - 3
+      - 1
       - 1
 - __id:
-    - 5
+    - 3
     - 2
   files:
     tmp1:
-      - 5
+      - 3
       - 1
 - __id:
-    - 6
+    - 4
     - 1
   path: /home/marcin/Documents/priv/catalog/src/schemat
 - __id:
-    - 2
-    - 1
-  filename: /home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml
-- __id:
-    - 7
+    - 5
     - 1
   name: AppSystem
   findRoute: |-
@@ -300,11 +265,11 @@
     let [cid, iid] = item.id
     return cid + ':' + iid
 - __id:
-    - 3
+    - 1
     - 2
   content: export let print = console.log
 - __id:
-    - 3
+    - 1
     - 3
   content: |-
     import {print} from '../site/utils.js'
@@ -312,95 +277,83 @@
     //let fs = await importLocal('fs')
     //print('fs:',fs)
 - __id:
-    - 5
+    - 3
     - 3
   name: /demo
 - __id:
-    - 5
+    - 3
     - 4
   name: /apps
   files:
     demo:
-      - 5
+      - 3
       - 3
 - __id:
-    - 5
+    - 3
     - 5
   name: /site
   files:
     utils.js:
-      - 3
+      - 1
       - 2
     widgets.js:
-      - 3
+      - 1
       - 3
 - __id:
-    - 5
+    - 3
     - 6
   name: /system
   files:
     Application:
       - 0
-      - 7
+      - 5
     File:
       - 0
-      - 3
+      - 1
     Folder:
       - 0
-      - 5
+      - 3
     Site:
       - 0
-      - 11
+      - 9
 - __id:
-    - 10
+    - 8
     - 1
   name: Catalog
   spaces:
     sys.category: 0
-    sys.item: 12
-    sys.site: 11
-    sys.dir: 5
-    sys.file: 3
+    sys.site: 9
+    sys.dir: 3
+    sys.file: 1
 - __id:
-    - 8
+    - 6
     - 1
   name: Router
   routes:
     $:
-      - 7
+      - 5
       - 1
     apps:
-      - 5
+      - 3
       - 4
     site:
-      - 5
+      - 3
       - 5
     system:
-      - 5
+      - 3
       - 6
     files:
-      - 6
+      - 4
       - 1
     "":
-      - 10
+      - 8
       - 1
 - __id:
-    - 11
+    - 9
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
   system_path: /$
-  application:
-    - 8
+  router:
+    - 6
     - 1
-  database:
-    - 2
-    - 1
-- __id:
-    - 12
-    - 1
-  title: Ala ma kota Sierściucha i psa Kłapoucha.
-- __id:
-    - 12
-    - 2
-  title: ąłęÓŁŻŹŚ

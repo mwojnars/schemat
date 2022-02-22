@@ -194,8 +194,6 @@ export class ServerRegistry extends Registry {
         this.site = site
         this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
         return this.update(this.root)
-        // this.stage(this.root)
-        // return this.commit()
     }
 
     async startSession(session) {

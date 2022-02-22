@@ -6,6 +6,7 @@ import {print, dedentCommon as dedent} from '../utils.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
+import {YamlDB} from "./db.js";
 
 
 /**********************************************************************************************************************
@@ -89,19 +90,19 @@ async function create_categories(Category) {
         get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
     }
 
-    cat.Database = Category.new({
-        name        : "Database",
-        info        : "Base category for items that represent an abstract database layer.",
-    })
-    cat.DatabaseYaml = Category.new({
-        name        : "YAML Database",
-        info        : "Single-machine database stored in a YAML file.",
-        class       : 'schemat.item.DatabaseYaml',
-        extends     : cat.Database,
-        fields      : C({
-            filename: new STRING(),
-        }),
-    })
+    // cat.Database = Category.new({
+    //     name        : "Database",
+    //     info        : "Base category for items that represent an abstract database layer.",
+    // })
+    // cat.DatabaseYaml = Category.new({
+    //     name        : "YAML Database",
+    //     info        : "Single-machine database stored in a YAML file.",
+    //     class       : 'schemat.item.DatabaseYaml',
+    //     extends     : cat.Database,
+    //     fields      : C({
+    //         filename: new STRING(),
+    //     }),
+    // })
 
     cat.File = Category.new({
         name        : "File",
@@ -117,6 +118,7 @@ async function create_categories(Category) {
     cat.FileLocal = Category.new({
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
+        prototype   : cat.File,
         extends     : cat.File,
         class       : 'schemat.item.FileLocal',
         fields      : C({
@@ -136,6 +138,7 @@ async function create_categories(Category) {
     cat.FolderLocal = Category.new({
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
+        prototype   : cat.Folder,
         extends     : cat.Folder,
         class       : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
@@ -179,26 +182,27 @@ async function create_categories(Category) {
     
     cat.Site = Category.new({
         name        : "Site",
-        info        : "Category of site records. A site contains information about applications, servers, startup",
+        info        : "Category of site records. A site contains information about applications, servers, startup.",
         class       : 'schemat.item.Site',
         fields      : C({
-            base_url    : new STRING({info: "Base URL at which the website is served, no trailing '/'"}),
+            base_url    : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            // path_default / app_default
             system_path : new STRING({info: "A URL path that when appended to the `base_url` creates a URL of the system application, AppSystem - used for internal web access to items."}),
-            application : new ITEM({info: "Item to perform top-level URL routing, typically a Router with multiple subapplications"}),
-            database    : new ITEM({type: cat.Database, info: "Global database layer"}),
+            router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
+            //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
-    cat.Varia = Category.new({
-        name        : "Varia",
-        info        : "Category of items that do not belong to any specific category",
-        code        : dedent(`
-                        static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-                        static error() { throw new Error('Varia/code/error()') }
-                    `),
-                        //static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
-                        //static check() { console.log("Varia/code/check() successful") }
-        fields      : C({title: new STRING()}),
-    })
+    // cat.Varia = Category.new({
+    //     name        : "Varia",
+    //     info        : "Category of items that do not belong to any specific category",
+    //     code        : dedent(`
+    //                     static check() { import('./utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+    //                     static error() { throw new Error('Varia/code/error()') }
+    //                 `),
+    //                     //static check() { import('/site/utils.js').then(mod => console.log("Varia.code: imported ", mod)) }
+    //                     //static check() { console.log("Varia/code/check() successful") }
+    //     fields      : C({title: new STRING()}),
+    // })
     
     return cat
 }
@@ -216,7 +220,7 @@ async function create_items(cat, Category) {
     item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     item.dir_files= cat.FolderLocal.new({path: `${local_files}`})
 
-    item.database   = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
+    // item.database = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
     item.app_system = cat.Application.new({name: "AppSystem",
         findRoute: dedent(`
             let step = request.step(), id
@@ -261,16 +265,16 @@ async function create_items(cat, Category) {
     })
 
     item.app_catalog = cat.AppSpaces.new({name: "Catalog",
-        spaces      : C({
+        spaces: C({
             'sys.category':     Category,
-            'sys.item':         cat.Varia,
             'sys.site':         cat.Site,
             'sys.dir':          cat.Folder,
             'sys.file':         cat.File,
+            // 'sys.item':         cat.Varia,
         }),
     })
     item.router = cat.Router.new({name: "Router",
-        routes      : C({
+        routes: C({
             '$':        item.app_system,
             'apps':     item.dir_apps,
             'site':     item.dir_site,
@@ -284,12 +288,12 @@ async function create_items(cat, Category) {
         name        : "catalog.wiki",
         base_url    : "http://127.0.0.1:3000",
         system_path : "/$",
-        application : item.router,
-        database    : item.database,
+        router      : item.router,
+        // database    : item.database,
     })
     
-    item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
-    item.item_002 = cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
+    // item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
+    // item.item_002 = cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
 
     // item.item_002.push('name', "test_item")
     // item.item_002.push('name', "duplicate")
@@ -303,11 +307,12 @@ async function create_items(cat, Category) {
  **
  */
 
-async function bootstrap(db) {
+async function bootstrap(dbPath) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    print(`Starting full RESET of DB, core items will be created anew in: ${db}`)
-    
+    print(`Starting full RESET of DB, core items will be created anew in: ${dbPath}`)
+
+    let db = new YamlDB(dbPath)
     let registry = globalThis.registry = new ServerRegistry(db)
     await registry.initClasspath()
 

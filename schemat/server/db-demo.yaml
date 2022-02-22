@@ -1,6 +1,27 @@
 - __id:
     - 0
     - 100
+  name: Varia
+  info: Category of items that do not belong to any specific category
+  code: >-
+    static check() { import('./utils.js').then(mod => console.log("Varia.code:
+    imported ", mod)) }
+
+    static error() { throw new Error('Varia/code/error()') }
+  fields:
+    title:
+      "@": schemat.type.STRING
+- __id:
+    - 100
+    - 1
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+- __id:
+    - 100
+    - 2
+  title: ąłęÓŁŻŹŚ
+- __id:
+    - 0
+    - 200
   name: TwitterPost
   fields:
     text:

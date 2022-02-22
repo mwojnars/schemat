@@ -57,7 +57,7 @@ export class Server {
         // this.db = new YamlDB(DB_BOOT)
         this.db = new RingsDB(
             new YamlDB(DB_BOOT, {writable: false}),
-            new YamlDB(DB_WORK, {start_IID: 100}),
+            new YamlDB(DB_WORK, {start_IID: 1}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
         print("Server created")

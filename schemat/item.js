@@ -24,16 +24,9 @@ export const ROOT_CID = 0
 //     /* List of changes to item's data that have been made by a user and can be submitted
 //        to the server and applied in DB. Multiple edits of the same data entry are merged into one.
 //      */
-//     constructor(item) {
-//         this.item = item
-//     }
-//     reset() {
-//         print('Reset clicked')
-//     }
-//     submit() {
-//         print('Submit clicked')
-//     }
-//
+//     constructor(item) { this.item = item }
+//     reset() { print('Reset clicked') }
+//     submit() { print('Submit clicked') }
 //     Buttons() {
 //         return DIV({style: {textAlign:'right', paddingTop:'20px'}},
 //             BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
@@ -214,6 +207,16 @@ export class Item {
         */
         return this.category.issubcat(category)
     }
+    inherited(parent) {
+        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
+           True if parent==this. All comparisons by item ID.
+         */
+        if (this.has_id(parent.id)) return true
+        let prototypes = this.getMany('prototype')
+        for (const proto of prototypes)
+            if (proto.inherited(parent)) return true
+        return false
+    }
 
     constructor(category = null, data = null) {
         if (data) this.data = data instanceof Data ? data : new Data(data)
@@ -324,34 +327,22 @@ export class Item {
         return item
     }
 
-    // getEntries(order = 'schema') {
-    //     /*
-    //     Retrieve a list of this item's fields and their values.
-    //     Multiple values for a single field are returned as separate entries.
-    //     */
-    //     this.assertLoaded()
-    //     return this.data.getEntries()
-    //
-    //     // let fields  = this.category.getFields()
-    //     // let entries = []
-    //     //
-    //     // function push(f, v) {
-    //     //     if (v instanceof multiple)
-    //     //         for (w of v.values()) entries.push([f, w])
-    //     //     else
-    //     //         entries.push([f, v])
-    //     // }
-    //     // // retrieve entries by their order in category's schema
-    //     // for (const f in fields) {
-    //     //     let v = T.getOwnProperty(data, f)
-    //     //     if (v !== undefined) push(f, v)
-    //     // }
-    //     // // add out-of-schema entries, in their natural order (of insertion)
-    //     // for (const f in data)
-    //     //     if (!fields.hasOwnProperty(f)) push(f, data[f])
-    //     //
-    //     // return entries
-    // }
+    getInherited__(field) {
+        /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
+           from prototypes + the schema's default catalog for this field.
+           It's assumed that the catalogs have unique non-missing keys.
+           If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
+           A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
+           https://en.wikipedia.org/wiki/C3_linearization
+           http://python-history.blogspot.com/2010/06/method-resolution-order.html
+         */
+        let prototypes = this.getMany('prototype')
+        let catalogs = [this, ...prototypes].map(proto => proto.get(field))
+        let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        let default_ = schemas.get(field).prop('default')
+        catalogs.push(default_)
+        return Catalog.merge(...catalogs)
+    }
 
     getName(default_)   { return this.get('name', default_) }
 
@@ -415,6 +406,9 @@ export class Item {
         let site = this.registry.site
         let app  = this.registry.session.app
         let path
+        // let defaultApp = this.registry.site.getApplication()
+        // let defaultApp = this.registry.session.apps['$']
+        // app = app || defaultApp
 
         if (app) {
             app.assertLoaded()
@@ -825,7 +819,7 @@ export class Category extends Item {
     */
 
     async afterLoad(data) {
-        /* Load all base categories of this one, so that getDefault() and inherited() can work synchronously later on. */
+        /* Load all base categories of this one, so that getDefault() and getInherited() can work synchronously later on. */
         await super.afterLoad(data)
         let bases = data.getValues('extends')
         if (bases.length) return Promise.all(bases.map(b => b.load()))
@@ -843,9 +837,8 @@ export class Category extends Item {
         return item
     }
     issubcat(category) {
-        /*
-        Return true if `this` inherits from `category`, or is `category` (by ID comparison).
-        Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
+        /* Return true if `this` inherits from `category`, or is `category` (by ID comparison).
+           Inheritance means that the ID of `category` is present on a category inheritance chain of `this`.
         */
         if (this.has_id(category.id)) return true
         let bases = this.getMany('extends')
@@ -883,11 +876,11 @@ export class Category extends Item {
 
     getFields() {
         /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
-        return this.inherited('fields')
+        return this.getInherited('fields')
     }
     // getHandlers() {
     //     /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
-    //     return this.inherited('handlers')
+    //     return this.getInherited('handlers')
     // }
     getDefault(field, default_ = undefined) {
         /* Get default value of a field from category schema. Return `default` if no category default is configured. */
@@ -907,7 +900,7 @@ export class Category extends Item {
         return this.getItemSchema().getAssets()
     }
 
-    inherited(field) {
+    getInherited(field) {
         /* Merge all catalogs found at a given `field` in all base categories + meta-category's default + `this`.
            It's assumed that the catalogs have unique non-missing keys.
            If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
