@@ -187,14 +187,14 @@ export class ServerRegistry extends Registry {
         return root
     }
 
-    async setSite(site) {
-        let Site = (await import('../site.js')).Site
-        assert(site instanceof Site)
-        assert(site.has_id() && site.has_data())
-        this.site = site
-        this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
-        return this.update(this.root)
-    }
+    // async setSite(site) {
+    //     let Site = (await import('../site.js')).Site
+    //     assert(site instanceof Site)
+    //     assert(site.has_id() && site.has_data())
+    //     this.site = site
+    //     this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
+    //     return this.update(this.root)
+    // }
 
     async startSession(session) {
         let release = await this.sessionMutex.acquire()

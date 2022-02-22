@@ -2,7 +2,7 @@
 Creating core items from scratch and storing them as initial items in DB.
  */
 
-import {print, dedentCommon as dedent} from '../utils.js'
+import {print, assert, dedentCommon as dedent} from '../utils.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
@@ -37,7 +37,7 @@ let root_fields = C({
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
     // handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
-    startup_site : new GENERIC(),
+    // startup_site : new GENERIC(),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -90,6 +90,19 @@ async function create_categories(Category) {
     let cat = {
         get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
     }
+
+    cat.Site = Category.new({
+        name        : "Site",
+        info        : "Category of site records. A site contains information about applications, servers, startup.",
+        class       : 'schemat.item.Site',
+        fields      : C({
+            URL     : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            // path_default / app_default
+            system_path : new STRING({info: "A URL path of the system application, AppSystem - used for internal web access to items."}),
+            router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
+            //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
+        }),
+    })
 
     // cat.Database = Category.new({
     //     name        : "Database",
@@ -179,19 +192,6 @@ async function create_categories(Category) {
         fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     })
     
-    cat.Site = Category.new({
-        name        : "Site",
-        info        : "Category of site records. A site contains information about applications, servers, startup.",
-        class       : 'schemat.item.Site',
-        fields      : C({
-            URL     : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
-            // path_default / app_default
-            system_path : new STRING({info: "A URL path of the system application, AppSystem - used for internal web access to items."}),
-            router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
-            //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
-        }),
-    })
-
     return cat
 }
 
@@ -317,7 +317,11 @@ async function bootstrap(dbPath) {
     // insert all items to DB; the insertion order is important: if item A is referenced by item B,
     // the A must be inserted first so that its ID is available before B gets inserted
     await registry.commit()                             // insert items to DB and assign an ID to each of them
-    await registry.setSite(items.catalog_wiki)
+
+    let [cid, iid] = items.catalog_wiki.id
+    assert(cid === 1 && iid === 1)              // ID of the startup site is always [1,1], to be used as a default when launching a Schemat server
+
+    // await registry.setSite(items.catalog_wiki)
 }
 
 /**********************************************************************************************************************/

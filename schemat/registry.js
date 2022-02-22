@@ -121,7 +121,7 @@ class Classpath {
 
 export class Registry {
 
-    static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
+    // static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
 
     // global flags onServer/onClient to indicate the environment where the code is executing
     onServer = true
@@ -161,12 +161,12 @@ export class Registry {
         // print('initClasspath() done')
     }
 
-    async boot() {
+    async boot(site_id) {
         /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
         await this.initClasspath()
         await this.createRoot()
-        let site_id = this.root.get(Registry.STARTUP_SITE)
-        this.site   = await this.getLoaded(site_id)
+        // let site_id = this.root.get(Registry.STARTUP_SITE)
+        this.site = await this.getLoaded(site_id)
     }
     async createRoot() {
         /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
@@ -323,15 +323,16 @@ export class Session {
 
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
-        let items = [this.item, this.item.category, this.registry.root, this.registry.site, this.app]
+        let site  = this.registry.site
+        let items = [this.item, this.item.category, this.registry.root, site, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         items = items.map(i => i.encodeSelf())
 
         let {app, item, state} = this
         let session = {app, item, state}                       // truncated representation of the current session
-        let system_url = this.registry.site.systemURL()
+        let system_url = site.systemURL()
 
-        return {system_url, 'session': JSONx.encode(session), items}
+        return {site_id: site.id, system_url, 'session': JSONx.encode(session), items}
     }
 
     static load(registry, sessionData) {

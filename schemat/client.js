@@ -78,7 +78,7 @@ class ClientRegistry extends Registry {
         // this.cache = new ClientCache()
     }
     async boot(data) {
-        await super.boot()
+        await super.boot(data.site_id)
         this.session = Session.load(this, data.session)
         for (let rec of data.items)
             await this.getLoaded([rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()

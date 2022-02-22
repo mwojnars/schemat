@@ -65,7 +65,7 @@ export class Server {
 
     async boot() {
         await this.db.load()
-        await this.registry.boot()
+        await this.registry.boot([1,1])
     }
 
     async handle(req, res) {
