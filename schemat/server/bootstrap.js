@@ -22,6 +22,7 @@ let C = (data) => new Catalog(data)
 // global-default fields shared by all item types
 let default_fields = C({
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
+    info        : new TEXT({info: "Internal description of the item."}),
     prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, as well as for categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
@@ -29,7 +30,7 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    info         : new TEXT({info: "Description of the category."}),
+    // info         : new TEXT({info: "Description of the category."}),
     class        : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
     code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class`, or the class of the first base category, or the top-level Item."}),
     code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
@@ -97,7 +98,8 @@ async function create_categories(Category) {
         class       : 'schemat.item.Site',
         fields      : C({
             URL     : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
-            // path_default / app_default
+            // app_default / path_default
+            // dir_system / path_system
             system_path : new STRING({info: "A URL path of the system application, AppSystem - used for internal web access to items."}),
             router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
@@ -180,11 +182,11 @@ async function create_categories(Category) {
                         }
                     `),
     })
-    cat.AppSystem = Category.new({
-        name        : "AppSystem",
-        info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
-        class       : 'schemat.item.AppSystem',
-    })
+    // cat.AppSystem = Category.new({
+    //     name        : "AppSystem",
+    //     info        : "Application that serves items on simple URLs of the form /CID:IID, for admin purposes.",
+    //     class       : 'schemat.item.AppSystem',
+    // })
     cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
@@ -200,16 +202,15 @@ async function create_categories(Category) {
 async function create_items(cat, Category) {
     let item = {}
     
-    // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    let local_files = "/home/marcin/Documents/priv/catalog/src/schemat"
-    
-    item.test_txt = cat.File.new({content: "This is a test file."})
-    item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
-    item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
-    item.dir_files= cat.FolderLocal.new({path: `${local_files}`})
-
+    // item.test_txt = cat.File.new({content: "This is a test file."})
+    // item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
+    // item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
     // item.database = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
-    item.app_system = cat.Application.new({name: "AppSystem",
+
+    item.app_system = cat.Application.new({
+        name: "AppSystem",
+        info: "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
+
         findRoute: dedent(`
             let step = request.step(), id
             try { id = step.split(':').map(Number) }
@@ -223,7 +224,12 @@ async function create_items(cat, Category) {
             return cid + ':' + iid
         `),
     })
-    // item.app_system = cat.AppSystem.new({name: "System"})
+    // item.app_spaces = cat.Application.new({
+    //     name        : "AppSpaces",
+    //     info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
+    //     class       : 'schemat.item.AppSpaces',
+    //     fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
+    // })
 
     item.utils_js   = cat.File.new({content: `export let print = console.log`})
     item.widgets_js = cat.File.new({content: dedent(`
@@ -251,6 +257,11 @@ async function create_items(cat, Category) {
             'Site'          : cat.Site,
         }),
     })
+
+    // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    let local_files = "/home/marcin/Documents/priv/catalog/src/schemat"
+    item.dir_files  = cat.FolderLocal.new({path: `${local_files}`})
+
 
     item.app_catalog = cat.AppSpaces.new({name: "Catalog",
         spaces: C({

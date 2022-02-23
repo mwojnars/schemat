@@ -188,6 +188,8 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
+    pendingClass    // true if the initial <Item> class of this stub still needs to be substituted with a target subclass as for a full item
+
     cache = new Map()       // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
@@ -235,36 +237,28 @@ export class Item {
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
         if (this.loaded) return this
-        if (this.data) return this.data.then(() => this)        // loading has already started, must wait rather than load again (`data` is a Promise)
+        if (this.data) return this.data.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
 
         if (!this.category) {
             // load the category and set a proper class for this item - stubs only have Item as their class,
             // which must be changed when an item gets loaded and linked to its category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
-            let itemclass = this.category.getClass()
-            T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
+            this.pendingClass = true
         }
-        if (this.category !== this) await this.category.load()
+        else if (!this.category.loaded && this.category !== this) await this.category.load()
+
+        // if (this.pendingClass) {
+        //     delete this.pendingClass
+        //     let itemclass = this.category.getClass()
+        //     T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
+        // }
 
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
 
         return this.data.then(() => this)
-    }
-    afterLoad(data) {
-        /* Any extra initialization & verification after the item's `data` is loaded but NOT yet stored in this.data.
-           This initialization could NOT be implemented by overriding load() or reload(),
-           because the class may NOT yet be determined and attached to `this` when load() is called (!)
-           Subclasses may override this method, either as sync or async method.
-         */
-        // load all prototypes and check that they belong to the same category (exactly) as this item,
-        // otherwise the schema of some fields may be incompatible or missing
-        let prototypes = data.getValues('prototype')
-        for (const proto of prototypes)
-            if (proto.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${proto})`)
-        if (prototypes.length) return Promise.all(prototypes.map(p => p.load()))
     }
 
     async reload(use_schema = true, record = null) {
@@ -275,13 +269,19 @@ export class Item {
             record = await this.registry.loadData(this.id)
         }
         let flat   = record.data
-        let schema = use_schema ? this.getSchema() : generic_schema
+        let schema = use_schema ? this.category.getItemSchema() : generic_schema
         let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = schema.decode(state)
-        let after  = this.afterLoad(data)                   // optional extra initialization after the data is loaded
-        if (after instanceof Promise) await after
-        this.data  = data
 
+        let proto  = this.initPrototypes(data)
+        if (proto instanceof Promise) await proto
+
+        this.initClass(data)
+
+        let init = this.init(data)                      // optional custom initialization after the data is loaded
+        if (init instanceof Promise) await init
+
+        this.data   = data
         let ttl_ms  = this.category.get('cache_ttl') * 1000
         this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
@@ -289,6 +289,31 @@ export class Item {
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
     }
+
+    initPrototypes(data) {
+        /* Load all prototypes and check that they belong to the same category (exactly) as this item,
+           otherwise the schema of some fields may be incompatible or missing.
+         */
+        let prototypes = data.getValues('prototype')
+        for (const p of prototypes)
+            if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
+        prototypes = prototypes.filter(p => !p.loaded)
+        if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
+        if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
+    }
+
+    initClass(data) {
+        /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
+        if (this.category === this) return
+        let itemclass = this.category.getClass()
+        T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
+    }
+
+    init(data) {}
+        /* Optional category-specific initialization after the item's `data` is loaded but NOT yet stored in this.data.
+           This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
+           and attached to `this` at these stages. Subclasses may override this method as either sync or async.
+         */
 
     get(path, default_ = undefined) {
 

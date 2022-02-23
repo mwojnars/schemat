@@ -273,7 +273,7 @@ export class File extends Item {
 }
 
 export class FileLocal extends File {
-    async afterLoad()   { if (this.registry.onServer) this._fs = await import('fs') }
+    async init()   { if (this.registry.onServer) this._fs = await import('fs') }
 
     read(encoding = 'utf8') {
         let path = this.get('path')
@@ -307,7 +307,7 @@ export class Folder extends Item {
 
 export class FolderLocal extends Folder {
 
-    async afterLoad() {
+    async init() {
         if (this.registry.onServer)
             this._module_path = await import('path')        // to avoid awaiting in handlePartial()
     }

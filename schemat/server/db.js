@@ -316,7 +316,7 @@ export class Database extends Item {
 
 export class DatabaseYaml extends Database {
 
-    async afterLoad(data) {
+    async init(data) {
         let filename = data.get('filename')
         this.db = new YamlDB(filename)
         await this.db.load()
