@@ -3,6 +3,7 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print, assert, dedentCommon as dedent} from '../utils.js'
+import {ROOT_CID, SITE_CID} from '../item.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
 import {Catalog} from '../data.js'
@@ -37,7 +38,6 @@ let root_fields = C({
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
     // handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
-    // startup_site : new GENERIC(),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -280,9 +280,6 @@ async function create_items(cat, Category) {
         // database    : item.database,
     })
     
-    // item.item_001 = cat.Varia.new({title: "Ala ma kota Sierściucha i psa Kłapoucha."})
-    // item.item_002 = cat.Varia.new({title: "ąłęÓŁŻŹŚ"})
-
     // item.item_002.push('name', "test_item")
     // item.item_002.push('name', "duplicate")
 
@@ -318,10 +315,9 @@ async function bootstrap(dbPath) {
     // the A must be inserted first so that its ID is available before B gets inserted
     await registry.commit()                             // insert items to DB and assign an ID to each of them
 
-    let [cid, iid] = items.catalog_wiki.id
-    assert(cid === 1 && iid === 1)              // ID of the startup site is always [1,1], to be used as a default when launching a Schemat server
-
-    // await registry.setSite(items.catalog_wiki)
+    // make sure the CID/IID numbers of the Site category and the root Category are compatible with global constants
+    assert(Category.cid === ROOT_CID && Category.iid === ROOT_CID)
+    assert(cats.Site.iid === SITE_CID)
 }
 
 /**********************************************************************************************************************/

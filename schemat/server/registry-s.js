@@ -166,17 +166,11 @@ export class ServerRegistry extends Registry {
     // staging_ids = new Map()     // dict of items with a non-empty ID that have already been added to `staging`,
     //                             // to avoid repeated insertion of the same item twice and to verify its identity (newborn items excluded)
 
-    // get _specializedItemJS() { return "./server/item-s.js" }
-
     constructor(db) {
         super()
         this.db = db
     }
-    // async boot() {
-    //     await this.db.load()
-    //     await super.boot()
-    //     // this.db = this.site.get('database')      // replace the startup database with a full-featured Database item from DB
-    // }
+
     async createRoot(root_data = null) {
         /*
         Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
@@ -186,15 +180,6 @@ export class ServerRegistry extends Registry {
         if (!root_data) await root.load()
         return root
     }
-
-    // async setSite(site) {
-    //     let Site = (await import('../site.js')).Site
-    //     assert(site instanceof Site)
-    //     assert(site.has_id() && site.has_data())
-    //     this.site = site
-    //     this.root.data.set(this.constructor.STARTUP_SITE, site.id)      // plain ID (not object) is stored to avoid circular dependency when loading RootCategory
-    //     return this.update(this.root)
-    // }
 
     async startSession(session) {
         let release = await this.sessionMutex.acquire()

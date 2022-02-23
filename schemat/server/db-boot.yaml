@@ -74,9 +74,6 @@
               values:
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
-          - key: startup_site
-            value:
-              "@": schemat.type.GENERIC
         "@": schemat.data.Catalog
   "@": schemat.data.Data
 - __id:

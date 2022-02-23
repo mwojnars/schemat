@@ -121,8 +121,6 @@ class Classpath {
 
 export class Registry {
 
-    // static STARTUP_SITE = 'startup_site'        // this property of the root category stores the current site, for startup boot()
-
     // global flags onServer/onClient to indicate the environment where the code is executing
     onServer = true
     get onClient() { return !this.onServer }
