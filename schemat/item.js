@@ -213,8 +213,7 @@ export class Item {
            True if parent==this. All comparisons by item ID.
          */
         if (this.has_id(parent.id)) return true
-        let prototypes = this.getMany('prototype')
-        for (const proto of prototypes)
+        for (const proto of this.getPrototypes())
             if (proto.inherits(parent)) return true
         return false
     }
@@ -360,6 +359,8 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
+    getPrototypes()     { return this.data.getValues('prototype') }
+
     get(path, default_ = undefined) {
 
         this.assertLoaded()
@@ -369,8 +370,7 @@ export class Item {
         if (value !== undefined) return value
 
         // search in prototypes
-        let prototypes = this.data.getValues('prototype')
-        for (const proto of prototypes) {
+        for (const proto of this.getPrototypes()) {
             value = proto.get(path)
             if (value !== undefined) return value
         }
@@ -384,13 +384,25 @@ export class Item {
 
         return default_
     }
-    getMany(key) {
+
+    getMany(key, inherit = true) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined), as well as prototypes values, are NOT used (!).
+           Default value (if defined) is NOT included. Prototype values are only included if inherit=true.
          */
         this.assertLoaded()
-        return this.data.getValues(key)
+        let own = this.data.getValues(key)
+        if (!inherit) return own
+
+        let inherited = this.getPrototypes().map(p => p.getMany(key))
+        if (!inherited.length) return own
+
+        // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
+        let values = []
+        for (const vals of inherited) values.push(...vals)
+        values.push(...own)
+        return values
     }
+
     async getLoaded(path, default_ = undefined) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
         let item = this.get(path, default_)
@@ -407,8 +419,7 @@ export class Item {
            https://en.wikipedia.org/wiki/C3_linearization
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
-        let prototypes = this.getMany('prototype')
-        let catalogs = [this, ...prototypes].map(proto => proto.get(field))
+        let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
         let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
         let default_ = schemas.get(field).prop('default')
         catalogs.push(default_)
@@ -824,7 +835,7 @@ export class Item {
     }
 }
 
-Item.setCaching('getClass', 'render')
+Item.setCaching('getPrototypes', 'getClass', 'render')
 
 
 /**********************************************************************************************************************/
@@ -875,8 +886,8 @@ export class Category extends Item {
     }
 
     getItemClass(base = Item) {
-        let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
-        if (proto) base = proto.getItemClass()
+        // let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
+        // if (proto) base = proto.getItemClass()
         let name = this.get('class')
         if (name) base = this.registry.getClass(name)
         return this.parseClassCode(base)
