@@ -272,13 +272,13 @@ async function create_items(cat, Category) {
         }),
     })
     
-    item.catalog_wiki = cat.Site.new({
-        name        : "catalog.wiki",
-        URL         : "http://127.0.0.1:3000",
-        system_path : "/$",
-        router      : item.router,
-        // database    : item.database,
-    })
+    // item.catalog_wiki = cat.Site.new({
+    //     name        : "catalog.wiki",
+    //     URL         : "http://127.0.0.1:3000",
+    //     system_path : "/$",
+    //     router      : item.router,
+    //     // database    : item.database,
+    // })
     
     // item.item_002.push('name', "test_item")
     // item.item_002.push('name', "duplicate")

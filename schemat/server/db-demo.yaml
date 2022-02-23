@@ -1,4 +1,13 @@
 - __id:
+    - 1
+    - 100
+  name: catalog.wiki
+  URL: http://127.0.0.1:3000
+  system_path: /$
+  router:
+    - 7
+    - 1
+- __id:
     - 0
     - 100
   name: Varia
