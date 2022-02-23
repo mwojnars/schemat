@@ -183,23 +183,23 @@ export class Application extends Item {
 }
 
 
-// export class AppSystem extends Application {
-//     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
-//
-//     urlPath(item) {
-//         assert(item.has_id())
-//         let [cid, iid] = item.id
-//         return `${cid}:${iid}`
-//     }
-//     findRoute(request) {
-//         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
-//         let step = request.step(), id
-//         try { id = step.split(':').map(Number) }
-//         catch (ex) { request.throwNotFound() }
-//         request.setDefaultMethod('@full')
-//         return [this.registry.getItem(id), request.move(step), true]
-//     }
-// }
+export class AppSystem extends Application {
+    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
+
+    urlPath(item) {
+        assert(item.has_id())
+        let [cid, iid] = item.id
+        return `${cid}:${iid}`
+    }
+    findRoute(request) {
+        /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
+        let step = request.step(), id
+        try { id = step.split(':').map(Number) }
+        catch (ex) { request.throwNotFound() }
+        request.setDefaultMethod('@full')
+        return [this.registry.getItem(id), request.move(step), true]
+    }
+}
 
 export class AppSpaces extends Application {
     /*

@@ -19,6 +19,12 @@
                 category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code.
               "@": schemat.type.STRING
+          - key: custom_class
+            value:
+              info: If true in a category, items of this category are allowed to provide their
+                own `class` and `code*` implementations.
+              default: false
+              "@": schemat.type.BOOLEAN
           - key: code
             value:
               info: Source code of a subclass (a body without heading) that will be created
@@ -89,8 +95,8 @@
         (if any); no trailing '/'."
       "@": schemat.type.STRING
     system_path:
-      info: A URL path of the system application, AppSystem - used for internal web
-        access to items.
+      info: A URL path of the application used for internal/default web access to
+        items.
       "@": schemat.type.STRING
     router:
       info: A Router that performs top-level URL routing to downstream applications
@@ -171,6 +177,9 @@
       "@": schemat.type.CODE
     urlPath:
       "@": schemat.type.CODE
+    class:
+      "@": schemat.type.STRING
+  custom_class: true
 - __id:
     - 0
     - 7
@@ -195,6 +204,14 @@
 - __id:
     - 0
     - 8
+  name: AppSystem
+  info: Application that serves items on simple URLs of the form /CID:IID. Mainly
+    used for system & admin purposes, or as a last-resort default for URL
+    generation.
+  class: schemat.item.AppSystem
+- __id:
+    - 0
+    - 9
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -210,23 +227,6 @@
           "@": (item)
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-- __id:
-    - 6
-    - 1
-  name: AppSystem
-  info: Application that serves items on simple URLs of the form /CID:IID. Mainly
-    used for system & admin purposes, or as a last-resort default for URL
-    generation.
-  findRoute: |-
-    let step = request.step(), id
-    try { id = step.split(':').map(Number) }
-    catch (ex) { request.throwNotFound() }
-    request.setDefaultMethod('@full')
-    return [this.registry.getItem(id), request.move(step), true]
-  urlPath: |-
-    console.log('AppSystem.urlPath()')
-    let [cid, iid] = item.id
-    return cid + ':' + iid
 - __id:
     - 2
     - 1
@@ -286,6 +286,10 @@
 - __id:
     - 8
     - 1
+  name: AppSystem
+- __id:
+    - 9
+    - 1
   name: Catalog
   spaces:
     sys.category: 0
@@ -297,9 +301,6 @@
     - 1
   name: Router
   routes:
-    $:
-      - 6
-      - 1
     apps:
       - 4
       - 2
@@ -312,6 +313,9 @@
     files:
       - 5
       - 1
-    "":
+    $:
       - 8
+      - 1
+    "":
+      - 9
       - 1

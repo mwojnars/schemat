@@ -309,8 +309,8 @@ export class Item {
     /***  Dynamic loading of source code  ***/
 
     getClass() {
-        /* Create/parse/load a class to be used for this item. If `custom_class` property is true, the item may receive
-           a custom subclass (different from the category's default class) built from this item's own and inherited `code*` snippets.
+        /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
+           a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
          */
         let base = this.category.parseClass()
         let custom = this.category.get('custom_class')
