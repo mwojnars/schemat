@@ -188,8 +188,6 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
-    pendingClass    // true if the initial <Item> class of this stub still needs to be substituted with a target subclass as for a full item
-
     cache = new Map()       // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
     get id()        { return [this.cid, this.iid] }
@@ -244,15 +242,9 @@ export class Item {
             // which must be changed when an item gets loaded and linked to its category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
-            this.pendingClass = true
         }
-        else if (!this.category.loaded && this.category !== this) await this.category.load()
-
-        // if (this.pendingClass) {
-        //     delete this.pendingClass
-        //     let itemclass = this.category.getClass()
-        //     T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
-        // }
+        else if (!this.category.loaded && this.category !== this) 
+            await this.category.load()
 
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
@@ -305,7 +297,7 @@ export class Item {
     initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return
-        let itemclass = this.category.getClass()
+        let itemclass = this.getClass()
         T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
     }
 
@@ -314,6 +306,59 @@ export class Item {
            This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
            and attached to `this` at these stages. Subclasses may override this method as either sync or async.
          */
+
+    /***  Dynamic loading of source code  ***/
+
+    getClass() {
+        /* Create/parse/load a class object to be used for this item as a substitute for the default Item class. */
+        let base = this.category.getItemClass()
+        if (!this.category.get('custom_class')) return base
+        let name = this.get('class')                            // if `custom_class` is ON, the item receives a custom
+        if (name) base = this.registry.getClass(name)           // subclass built from this item's `code` snippets
+        return this.parseClassCode(base)
+    }
+
+    parseClassCode(base) {
+        /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
+           and dynamically parse them into a new class object - a subclass of `base` or the class identified
+           by the `class` property (if present). Return `base` if no code snippets found.
+         */
+        assert(base, 'missing base class for dynamic class construction')
+        let env  = this.registry.onServer ? 'server' : 'client'
+        let spec = this.getMany(`code_${env}`)          // environment-specific code extensions
+        let code = this.getMany('code')
+        let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
+        return this.parseClass('code', base, body)
+    }
+
+    parseClass(path, base_class, body) {
+        if (!body) return base_class
+        let source = `return class extends base_class {${body}} ${this.sourceURL(path)}`
+        return new Function('base_class', source)(base_class)
+        // cls.check()
+        // cls.error?.()
+    }
+
+    parseMethod(path, ...args) {
+        let source = this.get(path)
+        return source ? new Function(...args, source + this.sourceURL(path)) : undefined
+    }
+
+    sourceURL(path) {
+        /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
+        function clean(s) {
+            if (typeof s !== 'string') return ''
+            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
+        }
+        let domain   = Item.CODE_DOMAIN
+        let cat_name = clean(this.get('name'))
+        let fil_name = `${cat_name}_${this.id_str}`
+        let url = `${domain}:///items/${fil_name}/${path}`
+        return `\n//# sourceURL=${url}`
+    }
+
+
+    /***  READ access to item's data  ***/
 
     get(path, default_ = undefined) {
 
@@ -341,7 +386,7 @@ export class Item {
     }
     getMany(key) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined) is NOT used.
+           Default value (if defined), as well as prototypes values, are NOT used (!).
          */
         this.assertLoaded()
         return this.data.getValues(key)
@@ -445,33 +490,6 @@ export class Item {
         if (method) path += Request.SEP_METHOD + method                 // append @method and ?args if present...
         if (args)   path += '?' + new URLSearchParams(args).toString()
         return path
-    }
-
-    /***  Dynamic loading of source code  ***/
-
-    sourceURL(path) {
-        /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
-        function clean(s) {
-            if (typeof s !== 'string') return ''
-            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
-        }
-        let domain   = Item.CODE_DOMAIN
-        let cat_name = clean(this.get('name'))
-        let fil_name = `${cat_name}_${this.id_str}`
-        let url = `${domain}:///items/${fil_name}/${path}`
-        return `\n//# sourceURL=${url}`
-    }
-
-    parseClass(path, base_class, body) {
-        let source = `return class extends base_class {${body}} ${this.sourceURL(path)}`
-        return new Function('base_class', source)(base_class)
-        // cls.check()
-        // cls.error?.()
-    }
-
-    parseMethod(path, ...args) {
-        let source = this.get(path)
-        return source ? new Function(...args, source + this.sourceURL(path)) : undefined
     }
 
     /***  Editing item's data  ***/
@@ -806,7 +824,7 @@ export class Item {
     }
 }
 
-Item.setCaching('render')
+Item.setCaching('getClass', 'render')
 
 
 /**********************************************************************************************************************/
@@ -849,32 +867,21 @@ export class Category extends Item {
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         set its IID, or mark as pending for insertion to DB if no `iid` provided.
         */
-        let itemclass = this.getClass()
+        let itemclass = this.getItemClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
         else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
-    getClass() {
-        let base = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
+    getItemClass(base = Item) {
+        let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
+        if (proto) base = proto.getItemClass()
         let name = this.get('class')
-        let body = this.get('code', '')
-        let cls  = Item
-
-        // extend the `body` with code_client/code_server
-        let env = this.registry.onServer ? 'server' : 'client'
-        let ext = this.get(`code_${env}`)
-        if (ext) body += '\n' + ext
-
-        if (base) cls = base.getClass()
-        if (name) cls = this.registry.getClass(name)
-        // if (name) cls = this.registry.site.getObject(name)
-        assert(cls)
-
-        if (body) cls = this.parseClass('code', cls, body)
-        return cls
+        if (name) base = this.registry.getClass(name)
+        return this.parseClassCode(base)
     }
+
     getItem(iid) {
         /*
         Instantiate a stub of an Item and seed it with IID (the IID being present in DB, presumably, not checked),
@@ -1011,7 +1018,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getClass', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getItemClass', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 
 /**********************************************************************************************************************/
