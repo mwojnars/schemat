@@ -309,31 +309,29 @@ export class Item {
     /***  Dynamic loading of source code  ***/
 
     getClass() {
-        /* Create/parse/load a class object to be used for this item as a substitute for the default Item class. */
-        let base = this.category.getItemClass()
-        if (!this.category.get('custom_class')) return base
-        let name = this.get('class')                            // if `custom_class` is ON, the item receives a custom
-        if (name) base = this.registry.getClass(name)           // subclass built from this item's `code` snippets
-        return this.parseClassCode(base)
+        /* Create/parse/load a class to be used for this item. If `custom_class` property is true, the item may receive
+           a custom subclass (different from the category's default class) built from this item's own and inherited `code*` snippets.
+         */
+        let base = this.category.parseClass()
+        let custom = this.category.get('custom_class')
+        return custom ? this.parseClass(base) : base
     }
 
-    parseClassCode(base) {
+    parseClass(base = Item) {
         /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
-           and dynamically parse them into a new class object - a subclass of `base` or the class identified
-           by the `class` property (if present). Return `base` if no code snippets found.
+           and dynamically parse them into a new class object - a subclass of `base` or the base class identified
+           by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
          */
-        assert(base, 'missing base class for dynamic class construction')
+        let name = this.get('class')
+        if (name) base = this.registry.getClass(name)
         let env  = this.registry.onServer ? 'server' : 'client'
         let spec = this.getMany(`code_${env}`)          // environment-specific code extensions
         let code = this.getMany('code')
         let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
-        return this.parseClass('code', base, body)
-    }
+        if (!body) return base
 
-    parseClass(path, base_class, body) {
-        if (!body) return base_class
-        let source = `return class extends base_class {${body}} ${this.sourceURL(path)}`
-        return new Function('base_class', source)(base_class)
+        let source = `return class extends base_class {${body}} ${this.sourceURL('code')}`
+        return new Function('base_class', source)(base)
         // cls.check()
         // cls.error?.()
     }
@@ -835,7 +833,7 @@ export class Item {
     }
 }
 
-Item.setCaching('getPrototypes', 'getClass', 'render')
+Item.setCaching('getPrototypes', 'getClass', 'parseClass', 'render')
 
 
 /**********************************************************************************************************************/
@@ -878,20 +876,18 @@ export class Category extends Item {
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         set its IID, or mark as pending for insertion to DB if no `iid` provided.
         */
-        let itemclass = this.getItemClass()
+        let itemclass = this.parseClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
         else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
-    getItemClass(base = Item) {
-        // let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
-        // if (proto) base = proto.getItemClass()
-        let name = this.get('class')
-        if (name) base = this.registry.getClass(name)
-        return this.parseClassCode(base)
-    }
+    // getItemClass() {
+    //     // let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
+    //     // if (proto) base = proto.getItemClass()
+    //     return this.parseClass()
+    // }
 
     getItem(iid) {
         /*
