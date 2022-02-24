@@ -94,13 +94,16 @@
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": schemat.type.STRING
-    system_path:
-      info: A URL path of the application used for internal/default web access to
-        items.
+    path_files:
+      info: URL path of the root folder of the file system.
+      "@": schemat.type.STRING
+    path_internal:
+      info: URL path of an internal application for default/admin web access to items.
+        The application should handle all items.
       "@": schemat.type.STRING
     router:
-      info: A Router that performs top-level URL routing to downstream applications
-        and file folders.
+      info: Router that performs top-level URL routing to downstream applications and
+        file folders.
       "@": schemat.type.ITEM
 - __id:
     - 0
@@ -184,11 +187,9 @@
     - 0
     - 7
   name: Router
-  info: A set of sub-applications, each bound to a different URL prefix.
+  info: A set of sub-applications or sub-folders, each bound to a different URL
+    prefix.
   fields:
-    empty_path:
-      info: An item to handle the request if the URL path is empty.
-      "@": schemat.type.ITEM
     routes:
       values:
         "@": schemat.type.ITEM
@@ -204,11 +205,26 @@
 - __id:
     - 0
     - 8
-  name: AppSystem
+  name: AppBasic
   info: Application that serves items on simple URLs of the form /CID:IID. Mainly
     used for system & admin purposes, or as a last-resort default for URL
     generation.
-  class: schemat.item.AppSystem
+  class: schemat.item.AppBasic
+  fields:
+    category:
+      info: Optional category(ies) of items handled by this application.
+      category_base:
+        =:
+          - 0
+          - 0
+        "@": (item)
+      "@": schemat.type.ITEM
+    drop_cid:
+      info: If true, CID is excluded from URL paths. Requires that a single `category`
+        is declared for the application; and implies that only the exact
+        instances (no inheritance) of this category are handled (otherwise,
+        instances of subclasses are handled, too).
+      "@": schemat.type.BOOLEAN
 - __id:
     - 0
     - 9
@@ -220,7 +236,7 @@
   fields:
     spaces:
       values:
-        category_exact:
+        category_base:
           =:
             - 0
             - 0
@@ -282,37 +298,54 @@
 - __id:
     - 5
     - 1
+  name: /local
   path: /home/marcin/Documents/priv/catalog/src/schemat
 - __id:
-    - 8
-    - 1
-  name: AppSystem
-- __id:
-    - 9
-    - 1
-  name: Catalog
-  spaces:
-    sys.category: 0
-    sys.site: 1
-    sys.dir: 4
-    sys.file: 2
-- __id:
-    - 7
-    - 1
-  name: Router
-  routes:
+    - 4
+    - 5
+  name: /files
+  files:
     apps:
       - 4
       - 2
+    local:
+      - 5
+      - 1
     site:
       - 4
       - 3
     system:
       - 4
       - 4
-    files:
-      - 5
+- __id:
+    - 8
+    - 1
+  name: /$
+- __id:
+    - 9
+    - 1
+  name: Catalog
+  spaces:
+    sys.category:
+      - 0
+      - 0
+    sys.site:
+      - 0
       - 1
+    sys.dir:
+      - 0
+      - 4
+    sys.file:
+      - 0
+      - 2
+- __id:
+    - 7
+    - 1
+  name: Router
+  routes:
+    files:
+      - 4
+      - 5
     $:
       - 8
       - 1

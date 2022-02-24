@@ -98,11 +98,10 @@ async function create_categories(Category) {
         info        : "Category of site records. A site contains information about applications, servers, startup.",
         class       : 'schemat.item.Site',
         fields      : C({
-            URL     : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
-            // app_default / path_default / system_path
-            // dir_system / path_system
-            system_path : new STRING({info: "A URL path of the application used for internal/default web access to items."}),
-            router      : new ITEM({info: "A Router that performs top-level URL routing to downstream applications and file folders."}),
+            URL          : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            path_files   : new STRING({info: "URL path of the root folder of the file system."}),
+            path_internal: new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
+            router       : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
@@ -168,9 +167,9 @@ async function create_categories(Category) {
     })
     cat.Router  = Category.new({
         name        : "Router",
-        info        : "A set of sub-applications, each bound to a different URL prefix.",
+        info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
         fields      : C({
-            empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
+            // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
         // class  : 'schemat.item.Router',
@@ -184,16 +183,20 @@ async function create_categories(Category) {
                         }
                     `),
     })
-    cat.AppSystem = Category.new({
-        name        : "AppSystem",
+    cat.AppBasic = Category.new({
+        name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class       : 'schemat.item.AppSystem',
+        class       : 'schemat.item.AppBasic',
+        fields      : C({
+            category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
+            drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
+        }),
     })
     cat.AppSpaces = Category.new({
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class       : 'schemat.item.AppSpaces',
-        fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
+        fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
     
     return cat
@@ -210,7 +213,7 @@ async function create_items(cat, Category) {
     // item.database = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
 
     // item.app_system = cat.Application.new({
-    //     name: "AppSystem",
+    //     name: "AppBasic",
     //     info: "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
     //
     //     findRoute: dedent(`
@@ -221,7 +224,7 @@ async function create_items(cat, Category) {
     //         return [this.registry.getItem(id), request.move(step), true]
     //     `),
     //     urlPath: dedent(`
-    //         console.log('AppSystem.urlPath()')
+    //         console.log('AppBasic.urlPath()')
     //         let [cid, iid] = item.id
     //         return cid + ':' + iid
     //     `),
@@ -261,11 +264,19 @@ async function create_items(cat, Category) {
     })
 
     // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    let local_files = "/home/marcin/Documents/priv/catalog/src/schemat"
-    item.dir_files  = cat.FolderLocal.new({path: `${local_files}`})
+    let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
+    item.dir_local = cat.FolderLocal.new({name: '/local', path: `${path_local}`})
+    // item.dir_files = cat.FolderLocal.new({path: `${path_local}`})
+    item.dir_files = cat.Folder.new({name: "/files",
+        files: C({
+            'apps':     item.dir_apps,
+            'local':    item.dir_local,
+            'site':     item.dir_site,
+            'system':   item.dir_system,
+        })
+    })
 
-
-    item.app_system  = cat.AppSystem.new({name: "AppSystem",})
+    item.app_system  = cat.AppBasic.new({name: "/$",})
     item.app_catalog = cat.AppSpaces.new({name: "Catalog",
         spaces: C({
             'sys.category':     Category,
@@ -277,9 +288,9 @@ async function create_items(cat, Category) {
     })
     item.router = cat.Router.new({name: "Router",
         routes: C({
-            'apps':     item.dir_apps,
-            'site':     item.dir_site,
-            'system':   item.dir_system,
+            // 'apps':     item.dir_apps,
+            // 'site':     item.dir_site,
+            // 'system':   item.dir_system,
             'files':    item.dir_files,
             '$':        item.app_system,
             '':         item.app_catalog,        // default route
@@ -289,7 +300,7 @@ async function create_items(cat, Category) {
     // item.catalog_wiki = cat.Site.new({
     //     name        : "catalog.wiki",
     //     URL         : "http://127.0.0.1:3000",
-    //     system_path : "/$",
+    //     path_internal : "/$",
     //     router      : item.router,
     //     // database    : item.database,
     // })

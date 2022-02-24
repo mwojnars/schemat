@@ -228,7 +228,7 @@
     base_url:
       info: Base URL at which the website is served, no trailing '/'
       "@": schemat.type.STRING
-    system_path:
+    path_internal:
       info: A URL path that when appended to the `base_url` creates a URL of the
         system application, AppSystem - used for internal web access to items.
       "@": schemat.type.STRING
@@ -366,7 +366,7 @@
     - 1
   name: catalog.wiki
   base_url: http://127.0.0.1:3000
-  system_path: /$
+  path_internal: /$
   application:
     - 8
     - 1

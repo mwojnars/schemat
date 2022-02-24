@@ -10,7 +10,7 @@ import { Catalog, Data } from './data.js'
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
-// import * as utils from 'http://127.0.0.1:3000/files/utils.js'
+// import * as utils from 'http://127.0.0.1:3000/files/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
@@ -383,9 +383,11 @@ export class Item {
         return default_
     }
 
-    getMany(key, inherit = true) {
+    getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined) is NOT included. Prototype values are only included if inherit=true.
+           Default value (if defined) is NOT included. Values from prototypes are only included if inherit=true,
+           and in such case, the order of prototypes is preserved, with `this` included at the end (reverse=false);
+           or the order is reversed, with `this` included at the beginning of the result array (reverse=true, default).
          */
         this.assertLoaded()
         let own = this.data.getValues(key)
@@ -396,8 +398,9 @@ export class Item {
 
         // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
         let values = []
+        inherited.push(own)
+        if (reverse) inherited.reverse()
         for (const vals of inherited) values.push(...vals)
-        values.push(...own)
         return values
     }
 
@@ -753,7 +756,7 @@ export class Item {
     BODY({session}) { return `
         <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
         <div id="react-root">${this.render()}</div>
-        <script async type="module"> import {boot} from "/files/client.js"; boot(); </script>
+        <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/

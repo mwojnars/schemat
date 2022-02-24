@@ -118,11 +118,11 @@ export class Site extends Item {
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.get('URL') + this.get('system_path')
+        return this.get('URL') + this.get('path_internal')
     }
 
     urlRaw(item) {
-        /* Absolute raw URL for an `item`. TODO: reuse the AppSystem instead of the code below. */
+        /* Absolute raw URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
         assert(item.has_id())
         let [cid, iid] = item.id
         return this.systemURL() + `/${cid}:${iid}`
@@ -183,7 +183,7 @@ export class Application extends Item {
 }
 
 
-export class AppSystem extends Application {
+export class AppBasic extends Application {
     /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
 
     urlPath(item) {
