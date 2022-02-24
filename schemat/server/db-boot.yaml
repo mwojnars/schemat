@@ -102,6 +102,18 @@
 - __id:
     - 0
     - 2
+  name: Router
+  info: A set of sub-applications or sub-folders, each bound to a different URL
+    prefix.
+  fields:
+    routes:
+      values:
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
+  class: schemat.item.Router
+- __id:
+    - 0
+    - 3
   name: File
   info: File with a text content.
   class: schemat.item.File
@@ -121,19 +133,19 @@
       "@": schemat.type.BOOLEAN
 - __id:
     - 0
-    - 3
+    - 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   prototype:
     - 0
-    - 2
+    - 3
   class: schemat.item.FileLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 4
+    - 5
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
@@ -150,21 +162,21 @@
       "@": schemat.type.BOOLEAN
 - __id:
     - 0
-    - 5
+    - 6
   name: FolderLocal
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   prototype:
     - 0
-    - 4
+    - 5
   class: schemat.item.FolderLocal
   fields:
     path:
       "@": schemat.type.STRING
 - __id:
     - 0
-    - 6
+    - 7
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
@@ -176,18 +188,6 @@
       "@": schemat.type.CODE
     class:
       "@": schemat.type.STRING
-- __id:
-    - 0
-    - 7
-  name: Router
-  info: A set of sub-applications or sub-folders, each bound to a different URL
-    prefix.
-  fields:
-    routes:
-      values:
-        "@": schemat.type.ITEM
-      "@": schemat.type.CATALOG
-  class: schemat.item.Router
 - __id:
     - 0
     - 8
@@ -230,97 +230,19 @@
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
 - __id:
-    - 2
+    - 5
     - 1
-  content: export let print = console.log
-- __id:
-    - 2
-    - 2
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called /site/widgets.js/check()') } 
-    //let fs = await importLocal('fs')
-    //print('fs:',fs)
-- __id:
-    - 4
-    - 1
-  name: /demo
-- __id:
-    - 4
-    - 2
-  name: /apps
-  files:
-    demo:
-      - 4
-      - 1
-- __id:
-    - 4
-    - 3
-  name: /site
-  files:
-    utils.js:
-      - 2
-      - 1
-    widgets.js:
-      - 2
-      - 2
-- __id:
-    - 4
-    - 4
   name: /system
   files:
     Application:
       - 0
-      - 6
+      - 7
     File:
       - 0
-      - 2
+      - 3
     Folder:
       - 0
-      - 4
+      - 5
     Site:
       - 0
       - 1
-- __id:
-    - 5
-    - 1
-  name: /local
-  path: /home/marcin/Documents/priv/catalog/src/schemat
-- __id:
-    - 4
-    - 5
-  name: /files
-  files:
-    apps:
-      - 4
-      - 2
-    local:
-      - 5
-      - 1
-    site:
-      - 4
-      - 3
-    system:
-      - 4
-      - 4
-- __id:
-    - 8
-    - 1
-  name: /$
-- __id:
-    - 9
-    - 1
-  name: Catalog
-  spaces:
-    sys.category:
-      - 0
-      - 0
-    sys.site:
-      - 0
-      - 1
-    sys.dir:
-      - 0
-      - 4
-    sys.file:
-      - 0
-      - 2

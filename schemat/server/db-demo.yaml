@@ -7,14 +7,95 @@
   path_internal: /$
   routes:
     files:
-      - 4
       - 5
+      - 105
     $:
       - 8
-      - 1
+      - 101
     "":
       - 9
+      - 101
+
+- __id:
+    - 3
+    - 101
+  content: export let print = console.log
+- __id:
+    - 3
+    - 102
+  content: |-
+    import {print} from '../site/utils.js'
+    export function check() { print('called /site/widgets.js/check()') } 
+    //let fs = await importLocal('fs')
+    //print('fs:',fs)
+- __id:
+    - 5
+    - 102
+  name: /demo
+- __id:
+    - 5
+    - 103
+  name: /apps
+  files:
+    demo:
+      - 5
+      - 102
+- __id:
+    - 5
+    - 104
+  name: /site
+  files:
+    utils.js:
+      - 3
+      - 101
+    widgets.js:
+      - 3
+      - 102
+- __id:
+    - 6
+    - 101
+  name: /local
+  path: /home/marcin/Documents/priv/catalog/src/schemat
+- __id:
+    - 5
+    - 105
+  name: /files
+  files:
+    apps:
+      - 5
+      - 103
+    local:
+      - 6
+      - 101
+    site:
+      - 5
+      - 104
+    system:
+      - 5
       - 1
+- __id:
+    - 8
+    - 101
+  name: /$
+- __id:
+    - 9
+    - 101
+  name: Catalog
+  spaces:
+    sys.category:
+      - 0
+      - 0
+    sys.site:
+      - 0
+      - 1
+    sys.dir:
+      - 0
+      - 5
+    sys.file:
+      - 0
+      - 3
+
+
 - __id:
     - 0
     - 100
@@ -30,11 +111,11 @@
       "@": schemat.type.STRING
 - __id:
     - 100
-    - 1
+    - 101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
 - __id:
     - 100
-    - 2
+    - 102
   title: ąłęÓŁŻŹŚ
 - __id:
     - 0

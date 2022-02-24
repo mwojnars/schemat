@@ -195,7 +195,7 @@ export class YamlDB extends FileDB {
         else
             max_iid = this.max_iid.get(cid) || 0
 
-        // set IID of the item
+        // set IID of the item, if missing
         let iid = item.iid
         if (iid === null || iid === undefined) {
             item.iid = iid = Math.max(max_iid + 1, this.start_IID)

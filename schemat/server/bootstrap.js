@@ -89,13 +89,15 @@ let root_data = {
  */
 
 async function create_categories(Category) {
-    let cat = {}
-        // get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
 
-    cat.Site = Category.new({
+    let cat = {}
+    assert(SITE_CID === 1)
+
+    cat.Site = Category.new(1, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class       : 'schemat.item.Site',
+        // prototype   : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_filesystem : new STRING({info: "URL path of the root folder of this site's file system."}),
@@ -104,8 +106,26 @@ async function create_categories(Category) {
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
-    }, SITE_CID)
+    })
 
+    cat.Router  = Category.new(2, {
+        name        : "Router",
+        info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
+        fields      : C({
+            // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
+            routes      : new CATALOG(new ITEM()),
+        }),
+        class  : 'schemat.item.Router',
+        // code        : dedent(`
+        //                 findRoute(request) {
+        //                     let step   = request.step()
+        //                     let routes = this.get('routes')
+        //                     let route  = routes.get(step)
+        //                     if (step && route)  return [route, request.move(step)]
+        //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+        //                 }
+        //             `),
+    })
     // cat.Database = Category.new({
     //     name        : "Database",
     //     info        : "Base category for items that represent an abstract database layer.",
@@ -165,24 +185,6 @@ async function create_categories(Category) {
         fields      : C({findRoute: new CODE(), urlPath: new CODE(), class: new STRING()}),
         // custom_class: true,
     })
-    cat.Router  = Category.new({
-        name        : "Router",
-        info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
-        fields      : C({
-            // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-            routes      : new CATALOG(new ITEM()),
-        }),
-        class  : 'schemat.item.Router',
-        // code        : dedent(`
-        //                 findRoute(request) {
-        //                     let step   = request.step()
-        //                     let routes = this.get('routes')
-        //                     let route  = routes.get(step)
-        //                     if (step && route)  return [route, request.move(step)]
-        //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-        //                 }
-        //             `),
-    })
     cat.AppBasic = Category.new({
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
@@ -236,24 +238,6 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     // })
 
-    item.utils_js   = cat.File.new({content: `export let print = console.log`})
-    item.widgets_js = cat.File.new({content: dedent(`
-            import {print} from '../site/utils.js'
-            export function check() { print('called /site/widgets.js/check()') } 
-            //let fs = await importLocal('fs')
-            //print('fs:',fs)
-        `)
-    })
-
-    item.dir_demo   = cat.Folder.new({name: "/demo", })
-    item.dir_apps   = cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
-    item.dir_site   = cat.Folder.new({name: "/site",
-        files: C({
-            'utils.js':     item.utils_js,
-            'widgets.js':   item.widgets_js,
-        })
-    })
-
     item.dir_system = cat.Folder.new({name: "/system",
         files: C({
             'Application'   : cat.Application,
@@ -263,33 +247,48 @@ async function create_items(cat, Category) {
         }),
     })
 
-    // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
-    item.dir_local = cat.FolderLocal.new({name: '/local', path: `${path_local}`})
-    item.dir_files = cat.Folder.new({name: "/files",
-        files: C({
-            'apps':     item.dir_apps,
-            'local':    item.dir_local,
-            'site':     item.dir_site,
-            'system':   item.dir_system,
-        })
-    })
+    // item.utils_js   = cat.File.new({content: `export let print = console.log`})
+    // item.widgets_js = cat.File.new({content: dedent(`
+    //         import {print} from '../site/utils.js'
+    //         export function check() { print('called /site/widgets.js/check()') }
+    //         //let fs = await importLocal('fs')
+    //         //print('fs:',fs)
+    //     `)
+    // })
+    //
+    // item.dir_demo   = cat.Folder.new({name: "/demo", })
+    // item.dir_apps   = cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
+    // item.dir_site   = cat.Folder.new({name: "/site",
+    //     files: C({
+    //         'utils.js':     item.utils_js,
+    //         'widgets.js':   item.widgets_js,
+    //     })
+    // })
+    //
+    // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
+    // item.dir_local = cat.FolderLocal.new({name: '/local', path: `${path_local}`})
+    // item.dir_files = cat.Folder.new({name: "/files",
+    //     files: C({
+    //         'apps':     item.dir_apps,
+    //         'local':    item.dir_local,
+    //         'site':     item.dir_site,
+    //         'system':   item.dir_system,
+    //     })
+    // })
+    //
+    // item.app_system  = cat.AppBasic.new({name: "/$",})
+    // item.app_catalog = cat.AppSpaces.new({name: "Catalog",
+    //     spaces: C({
+    //         'sys.category':     Category,
+    //         'sys.site':         cat.Site,
+    //         'sys.dir':          cat.Folder,
+    //         'sys.file':         cat.File,
+    //     }),
+    // })
 
-    item.app_system  = cat.AppBasic.new({name: "/$",})
-    item.app_catalog = cat.AppSpaces.new({name: "Catalog",
-        spaces: C({
-            'sys.category':     Category,
-            'sys.site':         cat.Site,
-            'sys.dir':          cat.Folder,
-            'sys.file':         cat.File,
-            // 'sys.item':         cat.Varia,
-        }),
-    })
     // item.router = cat.Router.new({name: "Router",
     //     routes: C({
-    //         // 'apps':     item.dir_apps,
-    //         // 'site':     item.dir_site,
-    //         // 'system':   item.dir_system,
     //         'files':    item.dir_files,
     //         '$':        item.app_system,
     //         '':         item.app_catalog,        // default route
@@ -325,26 +324,20 @@ async function bootstrap(dbPath) {
     let registry = globalThis.registry = new ServerRegistry(db)
     await registry.initClasspath()
 
-    // create root category; insert it manually to DB (no staging) because it already has an ID and
-    // would get "updated" rather than inserted
-    let Category = await registry.createRoot(root_data)
-    // await registry.db.insert(Category)
-
-    // create non-root categories & leaf items; while being create with Category.new(),
-    // each item is staged for insertion to DB
-    let cats  = await create_categories(Category)
+    let Category = await registry.createRoot(root_data)             // create root category
+    let cats  = await create_categories(Category)                   // create non-root categories & leaf items
     let items = await create_items(cats, Category)
 
-    // insert all items to DB and assign IIDs if missing
+    // insert to DB and assign IIDs if missing
     await registry.db.insert(Category, ...Object.values(cats), ...Object.values(items))
 
     // // insert all items to DB; the insertion order is important: if item A is referenced by item B,
     // // the A must be inserted first so that its ID is available before B gets inserted
     // await registry.commit()                             // insert items to DB and assign an ID to each of them
 
-    // make sure the CID/IID numbers of the Site category and the root Category are compatible with global constants
-    assert(Category.cid === ROOT_CID && Category.iid === ROOT_CID)
-    assert(cats.Site.iid === SITE_CID)
+    // // make sure the CID/IID numbers of the Site category and the root Category are compatible with global constants
+    // assert(Category.cid === ROOT_CID && Category.iid === ROOT_CID)
+    // assert(cats.Site.iid === SITE_CID)
 }
 
 /**********************************************************************************************************************/

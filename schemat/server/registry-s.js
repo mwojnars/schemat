@@ -226,36 +226,4 @@ export class ServerRegistry extends Registry {
     //
     //     return Promise.all([insert, ...edits])          // all the operations are executed concurrently
     // }
-
-    // stage(item) {
-    //     /* Add an updated or newly created `item` to the staging area.
-    //        For updates, stage() can be called before a first edit is created.
-    //     */
-    //     assert(item instanceof Item)
-    //     let id = item.has_id()
-    //     if (id && this.staging_ids.has(item.id)) {      // do NOT insert the same item twice (NOT checked for newborn items)
-    //         assert(item === this.staging_ids.get(item.id))  // make sure the identity of `item` hasn't changed - this should be ...
-    //         return                                          // guaranteed by the way how Cache and Registry work (single-threaded; cache eviction only after request)
-    //     }
-    //     this.staging.push(item)
-    //     if (id) this.staging_ids.set(item.id, item)
-    // }
-    // async commit() { //...items
-    //     /* Write all staged edits/inserts to the DB and purge the staging area. */
-    //
-    //     // for (const item of items) this.stage(item)
-    //     if (!this.staging.length) return
-    //
-    //     // assert cache validity: the items to be updated must not have been substituted in cache in the meantime
-    //     for (const item of this.staging) {
-    //         if (!item.has_id()) continue
-    //         let incache = this.items.get(item.id)
-    //         if (!incache) continue
-    //         assert(item === incache, `item instance substituted in cache while being modified: ${item}, instances ${id(item)} vs ${id(incache)}`)
-    //     }
-    //     await this.db.upsert_many(this.staging)
-    //
-    //     this.staging_ids.clear()
-    //     this.staging.length = 0
-    // }
 }

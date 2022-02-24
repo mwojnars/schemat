@@ -878,7 +878,9 @@ export class Category extends Item {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         set its IID, or mark as pending for insertion to DB if no `iid` provided.
+        The order of `data` and `iid` arguments can be swapped.
         */
+        if (typeof data === 'number') [data, iid] = [iid, data]
         let itemclass = this.parseClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
