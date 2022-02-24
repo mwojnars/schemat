@@ -1066,7 +1066,7 @@ export class CATALOG extends Schema {
         static defaultProps = {
             keynames: undefined,    // array of predefined key names to choose from
         }
-        empty(value)   { return !value && I(cl('key-missing'), "(undefined)") }
+        empty(value)   { return !value && I(cl('key-missing'), "(empty)") }
         editor() {
             let {keynames} = this.props
             if (!keynames) return super.editor()

@@ -17,7 +17,19 @@ globalThis.importLocal = (p) => import(p)
  **
  */
 
-export class Site extends Item {
+export class Router extends Item {
+    /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
+
+    findRoute(request) {
+        let step   = request.step()
+        let routes = this.get('routes')
+        let route  = routes.get(step)
+        if (step && route)  return [route, request.move(step)]
+        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+    }
+}
+
+export class Site extends Router {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
     async getItem(path) {
@@ -110,11 +122,11 @@ export class Site extends Item {
         return this.route(request)
     }
 
-    findRoute(request) {
-        return request.path ?
-            [this.get('router'), request, false] :
-            [this.get('empty_path'),  request,  true]
-    }
+    // findRoute(request) {
+    //     return request.path ?
+    //         [this.get('router'), request, false] :
+    //         [this.get('empty_path'),  request,  true]
+    // }
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
@@ -128,19 +140,6 @@ export class Site extends Item {
         return this.systemURL() + `/${cid}:${iid}`
     }
 }
-
-// MOVED to DB:
-// export class Router extends Item {
-//     /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
-//
-//     findRoute(request) {
-//         let step   = request.step()
-//         let routes = this.get('routes')
-//         let route  = routes.get(step)
-//         if (step && route)  return [route, request.move(step)]
-//         if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-//     }
-// }
 
 export class Application extends Item {
     /*

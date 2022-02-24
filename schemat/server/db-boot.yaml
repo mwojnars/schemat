@@ -19,12 +19,6 @@
                 category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code.
               "@": schemat.type.STRING
-          - key: custom_class
-            value:
-              info: If true in a category, items of this category are allowed to provide their
-                own `class` and `code*` implementations.
-              default: false
-              "@": schemat.type.BOOLEAN
           - key: code
             value:
               info: Source code of a subclass (a body without heading) that will be created
@@ -101,10 +95,10 @@
       info: URL path of an internal application for default/admin web access to items.
         The application should handle all items.
       "@": schemat.type.STRING
-    router:
-      info: Router that performs top-level URL routing to downstream applications and
-        file folders.
-      "@": schemat.type.ITEM
+    routes:
+      values:
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
 - __id:
     - 0
     - 2
@@ -182,7 +176,6 @@
       "@": schemat.type.CODE
     class:
       "@": schemat.type.STRING
-  custom_class: true
 - __id:
     - 0
     - 7
@@ -194,14 +187,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-  code: >-
-    findRoute(request) {
-        let step   = request.step()
-        let routes = this.get('routes')
-        let route  = routes.get(step)
-        if (step && route)  return [route, request.move(step)]
-        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-    }
+  class: schemat.item.Router
 - __id:
     - 0
     - 8
@@ -338,17 +324,3 @@
     sys.file:
       - 0
       - 2
-- __id:
-    - 7
-    - 1
-  name: Router
-  routes:
-    files:
-      - 4
-      - 5
-    $:
-      - 8
-      - 1
-    "":
-      - 9
-      - 1

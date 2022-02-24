@@ -30,16 +30,16 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    // info         : new TEXT({info: "Description of the category."}),
     class        : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
-    custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class` and `code*` implementations.", default: false}),
     code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class`, or the class of the first base category, or the top-level Item."}),
     code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
-    // handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
+
+    //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class` and `code*` implementations.", default: false}),
+    //handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -101,7 +101,8 @@ async function create_categories(Category) {
             URL          : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_files   : new STRING({info: "URL path of the root folder of the file system."}),
             path_internal: new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
-            router       : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
+            routes       : new CATALOG(new ITEM()),
+            //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
     })
@@ -163,7 +164,7 @@ async function create_categories(Category) {
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class       : 'schemat.item.Application',
         fields      : C({findRoute: new CODE(), urlPath: new CODE(), class: new STRING()}),
-        custom_class: true,
+        // custom_class: true,
     })
     cat.Router  = Category.new({
         name        : "Router",
@@ -172,16 +173,16 @@ async function create_categories(Category) {
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
-        // class  : 'schemat.item.Router',
-        code        : dedent(`
-                        findRoute(request) {
-                            let step   = request.step()
-                            let routes = this.get('routes')
-                            let route  = routes.get(step)
-                            if (step && route)  return [route, request.move(step)]
-                            if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
-                        }
-                    `),
+        class  : 'schemat.item.Router',
+        // code        : dedent(`
+        //                 findRoute(request) {
+        //                     let step   = request.step()
+        //                     let routes = this.get('routes')
+        //                     let route  = routes.get(step)
+        //                     if (step && route)  return [route, request.move(step)]
+        //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+        //                 }
+        //             `),
     })
     cat.AppBasic = Category.new({
         name        : "AppBasic",
@@ -198,7 +199,7 @@ async function create_categories(Category) {
         class       : 'schemat.item.AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
-    
+
     return cat
 }
 
@@ -286,16 +287,16 @@ async function create_items(cat, Category) {
             // 'sys.item':         cat.Varia,
         }),
     })
-    item.router = cat.Router.new({name: "Router",
-        routes: C({
-            // 'apps':     item.dir_apps,
-            // 'site':     item.dir_site,
-            // 'system':   item.dir_system,
-            'files':    item.dir_files,
-            '$':        item.app_system,
-            '':         item.app_catalog,        // default route
-        }),
-    })
+    // item.router = cat.Router.new({name: "Router",
+    //     routes: C({
+    //         // 'apps':     item.dir_apps,
+    //         // 'site':     item.dir_site,
+    //         // 'system':   item.dir_system,
+    //         'files':    item.dir_files,
+    //         '$':        item.app_system,
+    //         '':         item.app_catalog,        // default route
+    //     }),
+    // })
     
     // item.catalog_wiki = cat.Site.new({
     //     name        : "catalog.wiki",
