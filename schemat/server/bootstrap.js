@@ -89,23 +89,22 @@ let root_data = {
  */
 
 async function create_categories(Category) {
-    let cat = {
-        get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
-    }
+    let cat = {}
+        // get Category()  { throw new Error('Category is NOT in `cat` object, use Category variable instead') }   // for debugging
 
     cat.Site = Category.new({
         name        : "Site",
-        info        : "Category of site records. A site contains information about applications, servers, startup.",
+        info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class       : 'schemat.item.Site',
         fields      : C({
-            URL          : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
-            path_files   : new STRING({info: "URL path of the root folder of the file system."}),
-            path_internal: new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes       : new CATALOG(new ITEM()),
+            URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
+            path_filesystem : new STRING({info: "URL path of the root folder of this site's file system."}),
+            path_internal   : new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
+            routes          : new CATALOG(new ITEM()),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
-    })
+    }, SITE_CID)
 
     // cat.Database = Category.new({
     //     name        : "Database",
@@ -267,7 +266,6 @@ async function create_items(cat, Category) {
     // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
     item.dir_local = cat.FolderLocal.new({name: '/local', path: `${path_local}`})
-    // item.dir_files = cat.FolderLocal.new({path: `${path_local}`})
     item.dir_files = cat.Folder.new({name: "/files",
         files: C({
             'apps':     item.dir_apps,
@@ -330,16 +328,19 @@ async function bootstrap(dbPath) {
     // create root category; insert it manually to DB (no staging) because it already has an ID and
     // would get "updated" rather than inserted
     let Category = await registry.createRoot(root_data)
-    await registry.db.insert(Category)
+    // await registry.db.insert(Category)
 
     // create non-root categories & leaf items; while being create with Category.new(),
     // each item is staged for insertion to DB
     let cats  = await create_categories(Category)
     let items = await create_items(cats, Category)
 
-    // insert all items to DB; the insertion order is important: if item A is referenced by item B,
-    // the A must be inserted first so that its ID is available before B gets inserted
-    await registry.commit()                             // insert items to DB and assign an ID to each of them
+    // insert all items to DB and assign IIDs if missing
+    await registry.db.insert(Category, ...Object.values(cats), ...Object.values(items))
+
+    // // insert all items to DB; the insertion order is important: if item A is referenced by item B,
+    // // the A must be inserted first so that its ID is available before B gets inserted
+    // await registry.commit()                             // insert items to DB and assign an ID to each of them
 
     // make sure the CID/IID numbers of the Site category and the root Category are compatible with global constants
     assert(Category.cid === ROOT_CID && Category.iid === ROOT_CID)

@@ -80,16 +80,16 @@
     - 0
     - 1
   name: Site
-  info: Category of site records. A site contains information about applications,
-    servers, startup.
+  info: Top-level URL routing + global configuration of applications, servers,
+    startup.
   class: schemat.item.Site
   fields:
     URL:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": schemat.type.STRING
-    path_files:
-      info: URL path of the root folder of the file system.
+    path_filesystem:
+      info: URL path of the root folder of this site's file system.
       "@": schemat.type.STRING
     path_internal:
       info: URL path of an internal application for default/admin web access to items.

@@ -197,41 +197,35 @@ export class ServerRegistry extends Registry {
 
     /***  DB modifications  ***/
 
-    async update(item) {
-        /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
-        return this.db.update(item)
-    }
-    async delete(item) {
-        /* Delete `item` from DB. Executed instantly without commit. */
-        assert(item.has_id())
-        return this.db.delete(item.id)
-    }
+    insert(...items) { return this.db.insert(...items) }
+    update(item) { return this.db.update(item) }   /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
+    delete(item) { assert(item.has_id()); return this.db.delete(item.id) }  /* Delete `item` from DB. Executed instantly without commit. */
 
-    stage(item, edit) {
-        /* Add an updated or newly created `item` to the staging area.
-           For updates, stage() can be called before the first edit is created.
-        */
-        assert(item instanceof Item)
-        if (item.newborn)                           // newborn items get scheduled for insertion; do NOT stage the same item twice!
-            this.inserts.push(item)
-        else {                                      // item already in DB? push an edit to a list of edits
-            assert(edit)
-            let edits = this.edits.get(item.id) || []
-            edits.push(edit)
-            if (edits.length === 1) this.edits.set(item.id, edits)
-        }
-    }
-    async commit() {
-        // insert new items; during this operation, each item's IID (item.iid) gets assigned
-        let insert = this.db.insert(...this.inserts)                // a promise
-        this.inserts = []
-
-        // edit/update/delete existing items
-        let edits = Array.from(this.edits, ([id, edits]) => this.db.write(id, edits))       // array of promises
-        this.edits.clear()
-
-        return Promise.all([insert, ...edits])          // all the operations are executed concurrently
-    }
+    // stage(item, edit) {
+    //     /* Add an updated or newly created `item` to the staging area.
+    //        For updates, stage() can be called before the first edit is created.
+    //     */
+    //     assert(item instanceof Item)
+    //     if (item.newborn)                           // newborn items get scheduled for insertion; do NOT stage the same item twice!
+    //         this.inserts.push(item)
+    //     else {                                      // item already in DB? push an edit to a list of edits
+    //         assert(edit)
+    //         let edits = this.edits.get(item.id) || []
+    //         edits.push(edit)
+    //         if (edits.length === 1) this.edits.set(item.id, edits)
+    //     }
+    // }
+    // async commit() {
+    //     // insert new items; during this operation, each item's IID (item.iid) gets assigned
+    //     let insert = this.db.insert(...this.inserts)                // a promise
+    //     this.inserts = []
+    //
+    //     // edit/update/delete existing items
+    //     let edits = Array.from(this.edits, ([id, edits]) => this.db.write(id, edits))       // array of promises
+    //     this.edits.clear()
+    //
+    //     return Promise.all([insert, ...edits])          // all the operations are executed concurrently
+    // }
 
     // stage(item) {
     //     /* Add an updated or newly created `item` to the staging area.

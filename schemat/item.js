@@ -385,9 +385,9 @@ export class Item {
 
     getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined) is NOT included. Values from prototypes are only included if inherit=true,
-           and in such case, the order of prototypes is preserved, with `this` included at the end (reverse=false);
-           or the order is reversed, with `this` included at the beginning of the result array (reverse=true, default).
+           Default value (if defined) is NOT included. Values from prototypes are only included if inherit=true.
+           In such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
+           or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
          */
         this.assertLoaded()
         let own = this.data.getValues(key)
@@ -398,7 +398,7 @@ export class Item {
 
         // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
         let values = []
-        inherited.push(own)
+        inherited = [own, ...inherited]
         if (reverse) inherited.reverse()
         for (const vals of inherited) values.push(...vals)
         return values
@@ -882,7 +882,7 @@ export class Category extends Item {
         let itemclass = this.parseClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
-        else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
+        // else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
@@ -944,9 +944,8 @@ export class Category extends Item {
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
         let item = this.new(data)
-        await this.registry.commit()
-        // print('new item.id:', item.id)
-        // print('new item.data:', item.data)
+        await this.registry.insert(item)
+        // await this.registry.commit()
         res.sendItem(item)
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }

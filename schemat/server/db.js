@@ -103,20 +103,22 @@ class DB {
 
     throwNotFound(msg, args)        { throw new DB.NotFound(msg, args) }
     throwNotWritable(msg, args)     { throw new DB.NotWritable(msg, args) }
+    throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
 
     checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
+    checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
 }
 
 class ServerDB extends DB {
     async flush() { throw new Error("not implemented") }
-    async insert(item, flush = true) { throw new Error("not implemented") }
-    async update(item, flush = true) { throw new Error("not implemented") }
-    async upsert_many(items, flush = true) {
-        for (const item of items)
-            if (item.newborn) await this.insert(item)
-            else              await this.update(item)
-        if (flush) await this.flush()
-    }
+    // async update(item, flush = true) { throw new Error("not implemented") }
+    // async insert(item, flush = true) { throw new Error("not implemented") }
+    // async upsert_many(items, flush = true) {
+    //     for (const item of items)
+    //         if (item.newborn) await this.insert(item)
+    //         else              await this.update(item)
+    //     if (flush) await this.flush()
+    // }
 }
 
 class FileDB extends ServerDB {
@@ -126,6 +128,8 @@ class FileDB extends ServerDB {
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
+
+    checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
 
     constructor(filename, params = {}) {
         super(params)
@@ -160,8 +164,8 @@ export class YamlDB extends FileDB {
         for (let record of db) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
-            assert(!this.records.has(id), `duplicate item ID: ${id}`)
-            if (iid < this.start_IID) throw new DB.TooLowIID({id, start_IID: this.start_IID})
+            this.checkIID(id)
+            this.checkNew(id)
 
             let data = '__data' in record ? record.__data : record
             let curr_max = this.max_iid.get(cid) || 0
@@ -179,8 +183,10 @@ export class YamlDB extends FileDB {
     }
     async _insert_one(item, flush = true) {
 
-        if (item.cid === null)
-            item.cid = item.category.iid
+        assert(item.has_data())
+
+        // set CID of the item
+        if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
         let cid = item.cid
         let max_iid
 
@@ -189,11 +195,16 @@ export class YamlDB extends FileDB {
         else
             max_iid = this.max_iid.get(cid) || 0
 
-        let iid = item.iid = Math.max(max_iid + 1, this.start_IID)
-        this.max_iid.set(cid, iid)
+        // set IID of the item
+        let iid = item.iid
+        if (iid === null || iid === undefined) {
+            item.iid = iid = Math.max(max_iid + 1, this.start_IID)
+            this.max_iid.set(cid, iid)
+        }
 
-        assert(item.has_data())
-        assert(!this.records.has(item.id), "an item with this ID already exists")
+        this.checkIID(item.id)
+        this.checkNew(item.id)
+        this.max_iid.set(cid, Math.max(iid, max_iid))
 
         this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
