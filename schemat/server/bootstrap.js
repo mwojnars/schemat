@@ -93,7 +93,7 @@ async function create_categories(Category) {
     let cat = {}
     assert(SITE_CID === 1)
 
-    cat.Site = Category.new(1, {
+    cat.Site = Category.new(SITE_CID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class       : 'schemat.item.Site',
@@ -330,14 +330,6 @@ async function bootstrap(dbPath) {
 
     // insert to DB and assign IIDs if missing
     await registry.db.insert(Category, ...Object.values(cats), ...Object.values(items))
-
-    // // insert all items to DB; the insertion order is important: if item A is referenced by item B,
-    // // the A must be inserted first so that its ID is available before B gets inserted
-    // await registry.commit()                             // insert items to DB and assign an ID to each of them
-
-    // // make sure the CID/IID numbers of the Site category and the root Category are compatible with global constants
-    // assert(Category.cid === ROOT_CID && Category.iid === ROOT_CID)
-    // assert(cats.Site.iid === SITE_CID)
 }
 
 /**********************************************************************************************************************/

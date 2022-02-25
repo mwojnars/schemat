@@ -57,7 +57,7 @@ export class Server {
         // this.db = new YamlDB(DB_BOOT)
         this.db = new RingsDB(
             new YamlDB(DB_BOOT, {writable: false}),
-            new YamlDB(DB_WORK, {start_IID: 1}),
+            new YamlDB(DB_WORK, {start_IID: 100}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
         print("Server created")
@@ -65,7 +65,7 @@ export class Server {
 
     async boot() {
         await this.db.load()
-        await this.registry.boot()//[1,1])
+        await this.registry.boot() //[1,1]
     }
 
     async handle(req, res) {
