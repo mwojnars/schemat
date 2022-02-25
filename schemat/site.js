@@ -116,7 +116,7 @@ export class Site extends Router {
 
     /*** Processing requests & URL generation ***/
 
-    async routeWeb(session) {
+    routeWeb(session) {
         /* Convert a web request to an internal Request and process it through route(). */
         let request = new Request({session, path: session.path})
         return this.route(request)

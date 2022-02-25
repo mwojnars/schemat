@@ -15,7 +15,6 @@
     "":
       - 9
       - 101
-
 - __id:
     - 3
     - 101
@@ -94,8 +93,6 @@
     sys.file:
       - 0
       - 3
-
-
 - __id:
     - 0
     - 100
@@ -127,3 +124,8 @@
   code: |
     
     GET_view() { return 'ala ma kota'; }
+- __id:
+    - 200
+    - 100
+  name: Post A
+  text: Ala ma kota

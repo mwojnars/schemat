@@ -140,7 +140,7 @@ async function create_categories(Category) {
     //     }),
     // })
 
-    cat.File = Category.new({
+    cat.File = Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
         class       : 'schemat.item.File',
@@ -151,7 +151,7 @@ async function create_categories(Category) {
             _is_file    : new BOOLEAN({default: true}),
         }),
     })
-    cat.FileLocal = Category.new({
+    cat.FileLocal = Category.new(4, {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
@@ -161,7 +161,7 @@ async function create_categories(Category) {
             //format: new STRING(),             // file format: pdf, xlsx, ...
         }),
     })
-    cat.Folder = Category.new({
+    cat.Folder = Category.new(5, {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         class       : 'schemat.item.Folder',
@@ -170,7 +170,7 @@ async function create_categories(Category) {
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
-    cat.FolderLocal = Category.new({
+    cat.FolderLocal = Category.new(6, {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
@@ -178,14 +178,14 @@ async function create_categories(Category) {
         fields      : C({path: new STRING()}),
     })
 
-    cat.Application = Category.new({
+    cat.Application = Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
         class       : 'schemat.item.Application',
         fields      : C({findRoute: new CODE(), urlPath: new CODE(), class: new STRING()}),
         // custom_class: true,
     })
-    cat.AppBasic = Category.new({
+    cat.AppBasic = Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
         class       : 'schemat.item.AppBasic',
@@ -194,7 +194,7 @@ async function create_categories(Category) {
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
         }),
     })
-    cat.AppSpaces = Category.new({
+    cat.AppSpaces = Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class       : 'schemat.item.AppSpaces',

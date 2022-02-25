@@ -74,8 +74,12 @@ export class Server {
 
         let session = new Session(this.registry, req, res)
         await session.start()
-
-        try { await this.registry.site.routeWeb(session) }
+        
+        try {
+            let result = this.registry.site.routeWeb(session)
+            if (result instanceof Promise) result = await result
+            if (result !== undefined) res.send(result)
+        }
         catch (ex) {
             print(ex)
             if (ex instanceof Request.NotFound)
