@@ -100,6 +100,12 @@ export class Request {
         this.method = this._prepare(method) || meth
     }
 
+    copy() {
+        let req = T.clone(this)
+        req.defaultMethods = [...this.defaultMethods]
+        return req
+    }
+
     _prepare(method) {
         if (!method) return method
         assert(method[0] === Request.SEP_METHOD, `method name must start with '${Request.SEP_METHOD}' (${method})`)
@@ -385,8 +391,8 @@ export class Item {
 
     getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined) is NOT included. Values from prototypes are only included if inherit=true.
-           In such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
+           Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
+           in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
            or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
          */
         this.assertLoaded()

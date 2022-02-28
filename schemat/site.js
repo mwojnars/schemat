@@ -18,15 +18,33 @@ globalThis.importLocal = (p) => import(p)
  */
 
 export class Router extends Item {
-    /* A set of named routes, possibly with an unnamed default route that's selected without path truncation. */
+    /* A set of named routes, possibly with unnamed default routes that are selected without path truncation. */
 
-    findRoute(request) {
+    async route(request) {
         let step   = request.step()
         let routes = this.get('routes')
-        let route  = routes.get(step)
-        if (step && route)  return [route, request.move(step)]
-        if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+        let node   = routes.get(step)
+        if (step && node) return node.load().then(n => n.route(request.move(step)))
+
+        // check for empty '' route segments in the routing table, there can be multiple ones;
+        // try subsequent ones for as long as NotFound is raised
+        let defaults = this.getMany('route_default')
+        for (let node of defaults)
+            try { return await node.load().then(n => n.route(request.copy())) }
+            catch(ex) {
+                if (!(ex instanceof Request.NotFound)) throw ex
+            }
+
+        request.throwNotFound()
     }
+
+    // findRoute(request) {
+    //     let step   = request.step()
+    //     let routes = this.get('routes')
+    //     let route  = routes.get(step)
+    //     if (step && route)  return [route, request.move(step)]
+    //     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
+    // }
 }
 
 export class Site extends Router {
@@ -274,18 +292,12 @@ export class File extends Item {
 export class FileLocal extends File {
     async init()   { if (this.registry.onServer) this._fs = await import('fs') }
 
-    read(encoding = 'utf8') {
+    read(encoding) {
         let path = this.get('path')
         if (path) return this._fs.readFileSync(path, {encoding})
     }
     // GET_file({res}) {
-    //     let content = this.get('content')
-    //     if (typeof content === 'string')
-    //         return res.send(content)
-    //
     //     let path = this.get('path')
-    //     if (!path) res.sendStatus(404)
-    //
     //     res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
     //
     //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:

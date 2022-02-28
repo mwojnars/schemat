@@ -1,20 +1,34 @@
 - __id:
     - 1
     - 100
-  name: catalog.wiki
-  URL: http://127.0.0.1:3000
-  path_filesystem: /files
-  path_internal: /$
-  routes:
-    files:
-      - 5
-      - 105
-    $:
-      - 8
-      - 101
-    "":
-      - 9
-      - 101
+  __data:
+    - - catalog.wiki
+      - name
+    - - http://127.0.0.1:3000
+      - URL
+    - - /files
+      - path_filesystem
+    - - /$
+      - path_internal
+    - - files:
+          - 5
+          - 105
+        $:
+          - 8
+          - 101
+        xxx:
+          - 5
+          - 106
+        "":
+          - 9
+          - 101
+      - routes
+    - - - 5
+        - 106
+      - route_default
+    - - - 9
+        - 101
+      - route_default
 - __id:
     - 3
     - 101
@@ -129,3 +143,16 @@
     - 100
   name: Post A
   text: Ala ma kota
+- __id:
+    - 4
+    - 100
+  name: favicon.ico
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+- __id:
+    - 5
+    - 106
+  name: static-top
+  files:
+    favicon.ico:
+      - 4
+      - 100

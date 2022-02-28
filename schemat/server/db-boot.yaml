@@ -97,8 +97,17 @@
       "@": schemat.type.STRING
     routes:
       values:
+        info: URL prefixes (as keys) mapped to items that shall perform routing of
+          requests whose URLs start with a given prefix. No leading/trailing
+          slashes.
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
+    route_default:
+      info: URL route anchored at the site root, i.e., having empty URL prefix. If
+        there are multiple `route_default` entries, they are being tried in the
+        order of listing in the site's configuration, until a route is found
+        that does NOT raise the Request.NotFound.
+      "@": schemat.type.ITEM
 - __id:
     - 0
     - 2
@@ -123,8 +132,8 @@
     mimetype:
       info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
-        appropriate type. If missing, response mimetype is inferred from a URL
-        path extension, if any.
+        appropriate type. If missing, response mimetype is inferred from the URL
+        path extension, if present.
       "@": schemat.type.STRING
     format:
       "@": schemat.type.STRING

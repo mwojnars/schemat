@@ -102,7 +102,8 @@ async function create_categories(Category) {
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_filesystem : new STRING({info: "URL path of the root folder of this site's file system."}),
             path_internal   : new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes          : new CATALOG(new ITEM()),
+            routes          : new CATALOG(new ITEM({info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. No leading/trailing slashes."})),
+            route_default   : new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),
@@ -146,7 +147,7 @@ async function create_categories(Category) {
         class       : 'schemat.item.File',
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
-            mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from a URL path extension, if any."}),
+            mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
             format      : new STRING(),    // ProgrammingLanguage()
             _is_file    : new BOOLEAN({default: true}),
         }),
