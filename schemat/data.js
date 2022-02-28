@@ -191,6 +191,11 @@ export class Catalog {
         return refs.map(pos => this._entries[pos])
     }
 
+    getEmpty() {
+        /* Return all entries with an empty key (missing, null, ''). */
+        return this._entries.filter(e => !e.key)
+    }
+
     _normPath(path) { return typeof path === 'string' ? path.split('/') : T.isArray(path) ? path : [path] }
 
     step(path, error = true) {

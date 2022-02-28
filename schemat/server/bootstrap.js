@@ -103,7 +103,7 @@ async function create_categories(Category) {
             path_filesystem : new STRING({info: "URL path of the root folder of this site's file system."}),
             path_internal   : new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
             routes          : new CATALOG(new ITEM({info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. No leading/trailing slashes."})),
-            route_default   : new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
+            //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
         }),

@@ -102,12 +102,6 @@
           slashes.
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-    route_default:
-      info: URL route anchored at the site root, i.e., having empty URL prefix. If
-        there are multiple `route_default` entries, they are being tried in the
-        order of listing in the site's configuration, until a route is found
-        that does NOT raise the Request.NotFound.
-      "@": schemat.type.ITEM
 - __id:
     - 0
     - 2

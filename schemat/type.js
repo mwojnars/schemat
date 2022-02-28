@@ -472,9 +472,9 @@ export class TEXT extends Textual
                 defaultValue:   this.default,
                 ref:            this.input,
                 onKeyDown:      e => this.key(e),
-                // onBlur:         e => this.reject(e),
                 autoFocus:      true,
                 rows:           1,
+                // onBlur:         e => this.reject(e),
                 // wrap:           'off',
             })
         }
@@ -1067,7 +1067,7 @@ export class CATALOG extends Schema {
         return default_
     }
 
-    displayTable(props) { return e(this.constructor.Table, {...props, schema: this}) }
+    displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
 
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
@@ -1100,15 +1100,7 @@ export class CATALOG extends Schema {
 }
 
 CATALOG.Table = class extends Component {
-    /* Display catalog's data in a tabular form. */
-    static defaultProps = {
-        item:        undefined,             // the parent item of the data displayed
-        value:       undefined,
-        schema:      undefined,             // parent schema (a CATALOG)
-        path:        [],
-        color:       undefined,
-        start_color: undefined,
-    }
+    /* A set of function components for displaying a Catalog in a tabular form. */
 
     static scope = 'Schema-CATALOG'
     static style = () => this.safeCSS({stopper: '|'})
@@ -1185,21 +1177,7 @@ CATALOG.Table = class extends Component {
         .value     -- deep-most element containing just a rendered value component
        Other:
         .icon-*    -- fixed-sized icons for control elements
-     */
-    /* DRAFTS:
-        & ?entry:not(.CATALOG?d1 *)  { background: red; }    -- rule with a "stop-at" criterion
-
-        & ?icon-info        { color: #aaa; margin: 0 5px; }
-        & ?icon-info:hover  { color: unset; }
-
-        & ?icon-info        { color:white; background-color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px;
-                              font-weight:bold; font-style:normal; flex-shrink:0; border-radius:3px; text-align:center; box-shadow: 1px 1px 1px #555; }
-        & ?icon-info:hover  { background-color: #777; font-style: italic; }
-
-        & ?icon-info        { color:#bbb; width:18px; height:18px; line-height:17px; font-size:16px; border-radius:10px;
-                              font-weight:bold; font-style:normal; flex-shrink:0; text-align:center; box-shadow: 1px 1px 1px; }
-        & ?icon-info:hover  { color:white; background-color: #888; }
-
+       DRAFTS:
         drag-handle (double ellipsis):  "\u22ee\u22ee ⋮⋮"
         undelete: ↺ U+21BA
     */
@@ -1265,7 +1243,7 @@ CATALOG.Table = class extends Component {
         /* Display key of an entry, be it an atomatic entry or a subcatalog. */
         let [current, setCurrent] = useState(key_)
         const save = async (newKey) => {
-            // await item.remote_edit_update({path, value: schema.encode(newValue)})
+            await ops.keyUpdate(newKey)
             setCurrent(newKey)
         }
         let [flash, flashBox] = this.flash()
@@ -1368,7 +1346,7 @@ CATALOG.Table = class extends Component {
         let catalog  = value
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
 
-        // below, we assign an `id` to each entry to avoid reliance on Catalog's own internal `id` assignment
+        // `id` of an entry is used to identify subcomponents through React's "key" property
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
 
         let move = async (pos, delta) => {
@@ -1425,8 +1403,10 @@ CATALOG.Table = class extends Component {
                 return [...prev]
             })
         }
+        let keyUpdate = (pos, newKey) => {
+            return item.remote_edit_update([...path, pos], {key: newKey})
+        }
 
-        // let changeKey = (pos, key) => {}
         let keynames = schema.getValidKeys()
         let N = entries.length
 
@@ -1443,6 +1423,7 @@ CATALOG.Table = class extends Component {
                 movedown: pos < N-1 ? () => move(pos,+1) : null,    // similar for movedown()
                 initkey:  isnew ? key => initkey(pos,key) : null,
                 keynames,
+                keyUpdate: newKey => keyUpdate(pos, newKey),
             }
             // if (isnew) { ops.initkey = key => initkey(pos,key) }
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}

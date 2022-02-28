@@ -1,34 +1,21 @@
 - __id:
     - 1
     - 100
-  __data:
-    - - catalog.wiki
-      - name
-    - - http://127.0.0.1:3000
-      - URL
-    - - /files
-      - path_filesystem
-    - - /$
-      - path_internal
-    - - files:
-          - 5
-          - 105
-        $:
-          - 8
-          - 101
-        xxx:
-          - 5
-          - 106
-        "":
-          - 9
-          - 101
-      - routes
+  name: catalog.wiki
+  URL: http://127.0.0.1:3000
+  path_filesystem: /files
+  path_internal: /$
+  routes:
+    - - - 5
+        - 105
+      - files
+    - - - 8
+        - 101
+      - $
     - - - 5
         - 106
-      - route_default
     - - - 9
         - 101
-      - route_default
 - __id:
     - 3
     - 101
@@ -111,7 +98,7 @@
     - 0
     - 100
   name: Varia
-  info: Category of items that do not belong to any specific category
+  info: Category of items that do not belong to any specific category.
   code: >-
     static check() { import('./utils.js').then(mod => console.log("Varia.code:
     imported ", mod)) }
@@ -151,7 +138,9 @@
 - __id:
     - 5
     - 106
-  name: static-top
+  name: domain-root
+  info: Folder with public static files that must be accessible at the domain
+    root, like .../favicon.ico, /robots.txt etc.
   files:
     favicon.ico:
       - 4
