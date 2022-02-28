@@ -29,7 +29,7 @@ export class Router extends Item {
         // check for empty '' route segments in the routing table, there can be multiple ones;
         // try subsequent ones for as long as NotFound is raised
         let defaults = this.getMany('route_default')
-        for (let node of defaults)
+        for (let node of defaults)  
             try { return await node.load().then(n => n.route(request.copy())) }
             catch(ex) {
                 if (!(ex instanceof Request.NotFound)) throw ex
