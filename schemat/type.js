@@ -446,29 +446,37 @@ export class TEXT extends Textual
         static scope = 'Widget-TEXT'
         static style = () => this.safeCSS()
         `
-            .use-scroll {
-                overflow: auto;   /*scroll*/
-                max-height: 12rem;
-                border-bottom: 1px solid rgba(0,0,0,0.1);
-                border-right:  1px solid rgba(0,0,0,0.1);
+            .editor {
+                min-height: 2em;
+                height: 10em;
+                width: 100%;
+                outline: none;
                 resize: vertical;
             }
-            .use-scroll[style*="height"] {
-                max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
-            }
         `
-        viewer() { return PRE(DIV(cl('use-scroll'), {onDoubleClick: e => this.open(e)}, this.display(this.props.value))) }
+        //     .use-scroll {
+        //         overflow: auto;   /*scroll*/
+        //         max-height: 12rem;
+        //         border-bottom: 1px solid rgba(0,0,0,0.1);
+        //         border-right:  1px solid rgba(0,0,0,0.1);
+        //         resize: vertical;
+        //     }
+        //     .use-scroll[style*="height"] {
+        //         max-height: unset;              /* this allows manual resizing (resize:vertical) to exceed predefined max-height */
+        //     }
+
+        viewer() { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
         editor() {
-            return PRE(TEXTAREA({
+            return TEXTAREA({
+                className:      'editor',
                 defaultValue:   this.default,
                 ref:            this.input,
                 onKeyDown:      e => this.key(e),
-                onBlur:         e => this.reject(e),
+                // onBlur:         e => this.reject(e),
                 autoFocus:      true,
                 rows:           1,
-                wrap:           'off',
-                style:          {width:'100%', height:'10em'}
-            }))
+                // wrap:           'off',
+            })
         }
         keyAccept(e) { return e.key === "Enter" && e.ctrlKey }       //e.shiftKey
     }
@@ -554,7 +562,7 @@ export class CODE extends TEXT
 
         viewer() {
             let lines  = this.props.value.trimRight().split('\n')
-            let height = Math.min(8, 4 + Math.max(0, lines.length - 3)) + 'em'
+            let height = Math.min(8, 4 + Math.max(0, lines.length - 2)) + 'em'
             return DIV(cl("ace-viewer"), st({height}), {onDoubleClick: e => this.open(e), ref: this.viewerRef})
         }
         editor() {
@@ -1123,7 +1131,7 @@ CATALOG.Table = class extends Component {
 
         .cell             { padding: 14px 20px 11px; position: relative; }
         .cell-key         { padding-left: 0; border-right: 1px solid #fff; display: flex; flex-grow: 1; align-items: center; }
-        .cell-value       { width: 750px; }
+        .cell-value       { width: 800px; }
         
         .key              { font-weight: bold; overflow-wrap: anywhere; text-decoration-line: underline; text-decoration-style: dotted; }
         .key:not([title]) { text-decoration-line: none; }
@@ -1132,9 +1140,9 @@ CATALOG.Table = class extends Component {
         /* show all control icons/info when hovering over the entry: .move, .delete, .insert, .key-missing */
         .cell-key:hover *|            { visibility: visible; }
                 
-        .cell-value|                  { font-size: 0.85em; font-family: 'Noto Sans Mono', monospace; /* courier */ }
-        /*.cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor)    / NO stopper in this selector, it must apply inside embedded widgets /
-                                      { font-size: 0.95em; font-family: 'Noto Sans Mono', monospace; } */
+        .cell-value|                  { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; /* courier */ }
+        .cell-value :is(input, pre, textarea, .ace-viewer, .ace-editor)      /* NO stopper in this selector, it must apply inside embedded widgets */         
+                                      { font-size: 0.8rem; font-family: 'Noto Sans Mono', monospace; }
 
         .move|                        { margin-right: 10px; visibility: hidden; }
         :is(.moveup,.movedown)|       { font-size: 0.8em; line-height: 1em; cursor: pointer; } 
@@ -1257,7 +1265,7 @@ CATALOG.Table = class extends Component {
         /* Display key of an entry, be it an atomatic entry or a subcatalog. */
         let [current, setCurrent] = useState(key_)
         const save = async (newKey) => {
-            // await item.remote_edit({path, value: schema.encode(newValue)})
+            // await item.remote_edit_update({path, value: schema.encode(newValue)})
             setCurrent(newKey)
         }
         let [flash, flashBox] = this.flash()
