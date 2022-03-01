@@ -1072,14 +1072,14 @@ export class CATALOG extends Schema {
     static KeyWidget = class extends STRING.Widget {
         /* A special type of STRING widget for displaying keys in a catalog. */
         static defaultProps = {
-            keynames: undefined,    // array of predefined key names to choose from
+            keyNames: undefined,    // array of predefined key names to choose from
         }
         empty(value)   { return !value && I(cl('key-missing'), "(empty)") }
         editor() {
-            let {keynames} = this.props
-            if (!keynames) return super.editor()
-            // let options = keynames.map(key => OPTION({value: key}, key))
-            let options = [OPTION("select key ...", {value: ""}), ...keynames.map(key => OPTION({value: key}, key))]
+            let {keyNames} = this.props
+            if (!keyNames) return super.editor()
+            // let options = keyNames.map(key => OPTION({value: key}, key))
+            let options = [OPTION("select key ...", {value: ""}), ...keyNames.map(key => OPTION({value: key}, key))]
             return SELECT({
                     defaultValue:   this.default,
                     ref:            this.input,
@@ -1195,7 +1195,7 @@ CATALOG.Table = class extends Component {
                    DIV(cl('moveup'),   {onClick: e => up(),   title: "Move up"},   !up   && hide),
                    DIV(cl('movedown'), {onClick: e => down(), title: "Move down"}, !down && hide))
     }
-    delete(handle)  { return DIV(cl('delete'), {onClick: handle, title: "Delete this entry"}) }
+    delete(action)  { return DIV(cl('delete'), {onClick: action, title: "Delete this entry"}) }
 
     // info(schema)    { return schema.info ? {title: schema.info} : null }
     //     if (!schema.info) return null
@@ -1210,19 +1210,18 @@ CATALOG.Table = class extends Component {
     // }
 
     expand({state, toggle}) { return DIV(cl(`expand is-${state}`), {onClick: toggle}) }
-    insert(handle, subcat)  {
+    insert(action)  {
         let menu = [
-            ['Add before', () => handle(-1)],
-            ['Add after',  () => handle(+1)],
+            ['Add before', () => action(-1)],
+            ['Add after',  () => action(+1)],
         ]
-        // if (!subcat) menu = menu.slice(0,-1)
         return e(MaterialUI.Tooltip,
                     {// PopperProps: {style: {marginTop: '-30px'}, sx: {mt: '-30px'}},
                      componentsProps: {tooltip: {sx: {background: 'white', color: 'black', m:'0 !important'}}},
                      title: FRAGMENT(...menu.map(cmd => e(MaterialUI.MenuItem, cmd[0], {onClick: cmd[1]}))),
                      placement: "bottom-end", enterDelay: 1500, enterTouchDelay: 500, leaveTouchDelay: 500,
                     },
-                    DIV(cl('insert'), {onClick: () => handle(+1)}),
+                    DIV(cl('insert'), {onClick: () => action(+1)}),
                 )
     }
 
@@ -1239,9 +1238,9 @@ CATALOG.Table = class extends Component {
         return [setMsg, box]
     }
 
-    key(key_, info, ops, expand) {
+    key(entry, info, ops, expand) {
         /* Display key of an entry, be it an atomatic entry or a subcatalog. */
-        let [current, setCurrent] = useState(key_)
+        let [current, setCurrent] = useState(entry.key)
         const save = async (newKey) => {
             await ops.keyUpdate(newKey)
             setCurrent(newKey)
@@ -1249,21 +1248,17 @@ CATALOG.Table = class extends Component {
         let [flash, flashBox] = this.flash()
         let [error, errorBox] = this.error()
 
-        // the presence of `ops.initkey` indicates this is a newly added row: the key is displayed in edit mode
-        // and saved through `initkey()` after edit
-
-        // let {isnew, save, names} = ops.key   // ops.key.isnew, ops.key.save, ops.key.names
-        let {initkey, keynames} = ops
-        let widget = initkey ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
-        let props  = {value: current, flash, error, save: initkey || save, keynames, schema: generic_string}
+        let {keyInit, keyNames} = ops
+        let widget = (entry.id === 'new') ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
+        let props  = {value: current, flash, error, save: keyInit || save, keyNames, schema: generic_string}
 
         return FRAGMENT(
                     this.move(ops.moveup, ops.movedown),
                     DIV(cl('key'), e(widget, props), info && {title: info}),
                     expand && this.expand(expand),
                     DIV(cl('spacer')),
-                    ops?.ins && this.insert(ops.ins),
-                    ops?.del && this.delete(ops.del),
+                    ops?.insert && this.insert(ops.insert),
+                    ops?.delete && this.delete(ops.delete),
                     flashBox, errorBox,
         )
     }
@@ -1291,7 +1286,7 @@ CATALOG.Table = class extends Component {
                      save, flash, error}
 
         return DIV(cl('entry-head'),
-                  DIV(cl('cell cell-key'),   this.key(entry.key, schema?.info, ops)),
+                  DIV(cl('cell cell-key'),   this.key(entry, schema?.info, ops)),
                   DIV(cl('cell cell-value'), schema && this.embed(schema.display(props)), flashBox, errorBox),
                )
     }
@@ -1302,7 +1297,7 @@ CATALOG.Table = class extends Component {
         let empty  = false //!subcat.length   -- this becomes INVALID when entries are inserted/deleted inside `subcat`
         let toggle = () => !empty && setFolded(f => !f)
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
-        let key    = this.key(entry.key, schema?.info, ops, expand)
+        let key    = this.key(entry, schema?.info, ops, expand)
 
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},
@@ -1338,6 +1333,73 @@ CATALOG.Table = class extends Component {
     //     return true
     // }
 
+    actions({item, path, setEntries}) { return {
+        /* A set of UI actions to manipulate top-level entries, for use by subcomponents of a Catalog() widget below. */
+
+        insert: (pos, rel = -1) => setEntries(prev => {
+            /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
+            // `rel` is -1 (add before), or +1 (add after)
+            if (rel > 0) pos++
+            return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
+        }),
+
+        delete: async (pos) => {
+            /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
+            // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
+            await item.remote_edit_delete([...path, pos])
+            setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
+        },
+
+        move: async (pos, delta) => {
+            // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
+            assert(delta === -1 || delta === +1)
+            await item.remote_edit_move(path, pos, pos+delta)
+            setEntries(prev => {
+                // if (pos+delta < 0 || pos+delta >= prev.length) return prev
+                let entries = [...prev];
+                [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+                return entries
+            })
+        },
+
+        keyInit: (pos, key, catalogSchema) => {
+            /* Confirm creation of a new entry with a given key; assign an ID to it.
+               Store an initial value of a key after new entry creation.
+               `catalogSchema` is a DATA schema of a parent catalog, for checking if `key` is valid or not.
+             */
+
+            let subschema = trycatch(() => catalogSchema.subschema(key))
+            if (key !== undefined && !subschema) {                  // verify if `key` name is allowed by the parent catalog
+                alert(`The name "${key}" for a key is not permitted by the schema.`)
+                key = undefined
+            }
+            let unnew = () => setEntries(prev => {
+                /* mark an entry at a given position as not new anymore, by deleting its `saveNew` prop */
+                delete prev[pos].saveNew
+                return [...prev]
+            })
+
+            setEntries(prev => {
+                assert(prev[pos].id === 'new')
+                if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
+
+                let value = subschema.getInitial()
+                let ids = [-1, ...prev.map(e => e.id)]
+                let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
+                prev[pos] = {id, key, value}
+
+                if (subschema.isCatalog) item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
+                else prev[pos].saveNew = (value) =>
+                    item.remote_edit_insert(path, pos, {key, value: subschema.encode(value)}).then(() => unnew())
+
+                return [...prev]
+            })
+        },
+        keyUpdate: (pos, newKey) => {
+            return item.remote_edit_update([...path, pos], {key: newKey})
+        },
+    }}
+
     Catalog({item, value, schema, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
         assert(value  instanceof Catalog)
@@ -1348,66 +1410,66 @@ CATALOG.Table = class extends Component {
 
         // `id` of an entry is used to identify subcomponents through React's "key" property
         let [entries, setEntries] = useState(catalog.getEntries().map((ent, pos) => ({...ent, id: pos})))
+        let run = this.actions({item, path, setEntries})
 
-        let move = async (pos, delta) => {
-            // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
-            assert(delta === -1 || delta === +1)
-            await item.remote_edit_move(path, pos, pos+delta)
-            setEntries(prev => {
-                // if (pos+delta < 0 || pos+delta >= prev.length) return prev
-                entries = [...prev];
-                [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
-                return entries
-            })
-        }
-        let del = async (pos) => {
-            /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
-            // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
-            await item.remote_edit_delete([...path, pos])
-            setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
-        }
-        let ins = (pos, rel = -1) => setEntries(prev => {
-            /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
-            // `rel` is -1 (add before), or +1 (add after)
-            if (rel === +1) pos++
-            return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
-        })
+        // let move = async (pos, delta) => {
+        //     // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
+        //     assert(delta === -1 || delta === +1)
+        //     await item.remote_edit_move(path, pos, pos+delta)
+        //     setEntries(prev => {
+        //         // if (pos+delta < 0 || pos+delta >= prev.length) return prev
+        //         entries = [...prev];
+        //         [entries[pos], entries[pos+delta]] = [entries[pos+delta], entries[pos]]     // swap [pos] and [pos+delta]
+        //         return entries
+        //     })
+        // }
+        // let delete_ = async (pos) => {
+        //     /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
+        //     // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
+        //     await item.remote_edit_delete([...path, pos])
+        //     setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
+        // }
+        // let insert = (pos, rel = -1) => setEntries(prev => {
+        //     /* insert a special entry {id:"new"} at a given position to mark a place where an "add new entry" row should be displayed */
+        //     // `rel` is -1 (add before), or +1 (add after)
+        //     if (rel === +1) pos++
+        //     return [...prev.slice(0,pos), {id: 'new'}, ...prev.slice(pos)]
+        // })
 
-        let unnew = (pos) => setEntries(prev => {
-            /* mark an entry at a given position as not new anymore, by deleting its `saveNew` prop */
-            delete prev[pos].saveNew
-            return [...prev]
-        })
+        // let keyInit = (pos, key) => {
+        //     /* confirm creation of a new entry with a given key (or value?); assign an ID to it; */
+        //     /* store an initial value of a key after new entry creation */
+        //     let subschema = trycatch(() => schema.subschema(key))
+        //     if (key !== undefined && !subschema) {          // verify that a `key` name is allowed by the catalog's schema
+        //         alert(`The name "${key}" for a key is not permitted by the schema.`)
+        //         key = undefined
+        //     }
+        //     let value = subschema.getInitial()
+        //     let unnew = () => setEntries(prev => {
+        //         /* mark an entry at a given position as not new anymore, by deleting its `saveNew` prop */
+        //         delete prev[pos].saveNew
+        //         return [...prev]
+        //     })
+        //
+        //     setEntries(prev => {
+        //         assert(prev[pos].id === 'new')
+        //         if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
+        //         let ids = [-1, ...prev.map(e => e.id)]
+        //         let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
+        //         prev[pos] = {id, key, value}
+        //
+        //         if (subschema.isCatalog) item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
+        //         else prev[pos].saveNew = (value) =>
+        //             item.remote_edit_insert(path, pos, {key, value: subschema.encode(value)}).then(() => unnew())
+        //
+        //         return [...prev]
+        //     })
+        // }
+        // let keyUpdate = (pos, newKey) => {
+        //     return item.remote_edit_update([...path, pos], {key: newKey})
+        // }
 
-        let initkey = (pos, key) => {
-            /* confirm creation of a new entry with a given key (or value?); assign an ID to it; */
-            /* store an initial value of a key after new entry creation */
-            let subschema = trycatch(() => schema.subschema(key))
-            if (key !== undefined && !subschema) {          // verify that a `key` name is allowed by the catalog's schema
-                alert(`The name "${key}" for a key is not permitted by the schema.`)
-                key = undefined
-            }
-            let value = subschema.getInitial()
-
-            setEntries(prev => {
-                assert(prev[pos].id === 'new')
-                if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
-                let ids = [-1, ...prev.map(e => e.id)]
-                let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
-                prev[pos] = {id, key, value}
-
-                if (subschema.isCatalog) item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
-                else prev[pos].saveNew = (value) =>
-                    item.remote_edit_insert(path, pos, {key, value: subschema.encode(value)}).then(() => unnew(pos))
-
-                return [...prev]
-            })
-        }
-        let keyUpdate = (pos, newKey) => {
-            return item.remote_edit_update([...path, pos], {key: newKey})
-        }
-
-        let keynames = schema.getValidKeys()
+        let keyNames = schema.getValidKeys()
         let N = entries.length
 
         let rows = entries.map((entry, pos) =>
@@ -1417,15 +1479,15 @@ CATALOG.Table = class extends Component {
             let vschema = isnew ? undefined : schema.subschema(key)
             let color   = getColor(pos)
             let ops     = {
-                ins: rel => ins(pos,rel),
-                del: ()  => del(pos),
-                moveup:   pos > 0   ? () => move(pos,-1) : null,    // moveup() is only present if there is a position available above
-                movedown: pos < N-1 ? () => move(pos,+1) : null,    // similar for movedown()
-                initkey:  isnew ? key => initkey(pos,key) : null,
-                keynames,
-                keyUpdate: newKey => keyUpdate(pos, newKey),
+                insert: rel => run.insert(pos,rel),
+                delete: ()  => run.delete(pos),
+                // move: delta => run.move(pos, delta),
+                moveup:   pos > 0   ? () => run.move(pos,-1) : null,    // moveup() is only present if there is a position available above
+                movedown: pos < N-1 ? () => run.move(pos,+1) : null,    // similar for movedown()
+                keyInit:  key => run.keyInit(pos, key, schema),
+                keyUpdate: newKey => run.keyUpdate(pos, newKey),
+                keyNames,
             }
-            // if (isnew) { ops.initkey = key => initkey(pos,key) }
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
@@ -1437,7 +1499,7 @@ CATALOG.Table = class extends Component {
 
         // if (!entries.map(e => e.id).includes('new'))
         rows.push(DIV(cl(`entry entry${getColor(pos)}`), {key: 'add'}, st({position: 'relative'}),
-                  e(this.EntryAddNew, {hide: depth > 0, insert: () => ins(pos)})))
+                  e(this.EntryAddNew, {hide: depth > 0, insert: () => run.insert(pos)})))
 
         return DIV(cl(`catalog catalog-d${depth}`), empty && cl('is-empty'), ...rows)
     }
