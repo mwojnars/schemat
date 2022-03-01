@@ -1242,15 +1242,15 @@ CATALOG.Table = class extends Component {
         /* Display key of an entry, be it an atomatic entry or a subcatalog. */
         let [current, setCurrent] = useState(entry.key)
         const save = async (newKey) => {
-            await ops.keyUpdate(newKey)
+            await ops.updateKey(newKey)
             setCurrent(newKey)
         }
         let [flash, flashBox] = this.flash()
         let [error, errorBox] = this.error()
 
-        let {keyInit, keyNames} = ops
+        let {initKey, keyNames} = ops
         let widget = (entry.id === 'new') ? CATALOG.NewKeyWidget : CATALOG.KeyWidget
-        let props  = {value: current, flash, error, save: keyInit || save, keyNames, schema: generic_string}
+        let props  = {value: current, flash, error, save: initKey || save, keyNames, schema: generic_string}
 
         return FRAGMENT(
                     this.move(ops.moveup, ops.movedown),
@@ -1274,9 +1274,8 @@ CATALOG.Table = class extends Component {
 
         const save = async (newValue) => {
             // print(`save: path [${path}], value ${newValue}, schema ${schema}`)
-            // await item.remote_edit({path, value: schema.encode(newValue)})
-            if (entry.saveNew) await entry.saveNew(newValue)    // an entire entry is saved for the first time?
-            else await item.remote_edit_update(path, {value: schema.encode(newValue)})
+            let action = entry.saveNew || ops.updateValue       // saveNew: an entire entry is saved for the first time
+            await action(newValue)
             setValue(newValue)
         }
         let [flash, flashBox] = this.flash()            // components for value editing; for key editing created in key() instead
@@ -1362,14 +1361,14 @@ CATALOG.Table = class extends Component {
             })
         },
 
-        keyInit: (pos, key, catalogSchema) => {
+        initKey: (pos, key, catalogSchema) => {
             /* Confirm creation of a new entry with a given key; assign an ID to it.
                Store an initial value of a key after new entry creation.
                `catalogSchema` is a DATA schema of a parent catalog, for checking if `key` is valid or not.
              */
 
-            let subschema = trycatch(() => catalogSchema.subschema(key))
-            if (key !== undefined && !subschema) {                  // verify if `key` name is allowed by the parent catalog
+            let schema = trycatch(() => catalogSchema.subschema(key))
+            if (key !== undefined && !schema) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted by the schema.`)
                 key = undefined
             }
@@ -1383,21 +1382,24 @@ CATALOG.Table = class extends Component {
                 assert(prev[pos].id === 'new')
                 if (key === undefined) return [...prev.slice(0,pos), ...prev.slice(pos+1)]          // drop the new entry if its key initialization was terminated by user
 
-                let value = subschema.getInitial()
+                let value = schema.getInitial()
                 let ids = [-1, ...prev.map(e => e.id)]
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (subschema.isCatalog) item.remote_edit_insert(path, pos, {key, value: subschema.encode(value) })
+                if (schema.isCatalog) item.remote_edit_insert(path, pos, {key, value: schema.encode(value) })
                 else prev[pos].saveNew = (value) =>
-                    item.remote_edit_insert(path, pos, {key, value: subschema.encode(value)}).then(() => unnew())
+                    item.remote_edit_insert(path, pos, {key, value: schema.encode(value)}).then(() => unnew())
 
                 return [...prev]
             })
         },
-        keyUpdate: (pos, newKey) => {
+        updateKey: (pos, newKey) => {
             return item.remote_edit_update([...path, pos], {key: newKey})
         },
+        updateValue: (pos, newValue, schema) => {
+            return item.remote_edit_update([...path, pos], {value: schema.encode(newValue)})
+        }
     }}
 
     Catalog({item, value, schema, path, color, start_color}) {
@@ -1428,19 +1430,10 @@ CATALOG.Table = class extends Component {
             // some actions in `ops` must be defined separately
             ops.moveup   = pos > 0   ? () => run.move(pos,-1) : null        // moveup() is only present if there is a position available above
             ops.movedown = pos < N-1 ? () => run.move(pos,+1) : null        // similar for movedown()
-            ops.keyInit  = key => run.keyInit(pos, key, schema)
+            ops.initKey  = key => run.initKey(pos, key, schema)
             ops.keyNames = keyNames
+            ops.updateValue = val => run.updateValue(pos, val, vschema)
 
-            // let ops     = {
-            //     insert: rel => run.insert(pos,rel),
-            //     delete: ()  => run.delete(pos),
-            //     // move: delta => run.move(pos, delta),
-            //     moveup:   pos > 0   ? () => run.move(pos,-1) : null,    // moveup() is only present if there is a position available above
-            //     movedown: pos < N-1 ? () => run.move(pos,+1) : null,    // similar for movedown()
-            //     keyInit:  key => run.keyInit(pos, key, schema),
-            //     keyUpdate: newKey => run.keyUpdate(pos, newKey),
-            //     keyNames,
-            // }
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
             let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
