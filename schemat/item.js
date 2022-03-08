@@ -716,7 +716,7 @@ export class Item {
 
         if (`VIEW_${method}` in this) {
             session.view = method
-            return this.HTML({request, view: method})
+            return this.page({request, view: method})
         }
 
         request.throwNotFound(`no handler found for @${method} endpoint`)
@@ -732,19 +732,22 @@ export class Item {
             if (`GET_${method}` in this) return method
     }
 
-    CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
-    CALL_item()             { return this }
-    GET_json({res})         { res.sendItem(this) }
-
-    HTML({title, head, body, request, view} = {}) {
+    page({title, head, body, request, view} = {}) {
+        /* Generate an HTML page to be sent as a response for a GET request;
+           fill the page with HTML contents rendered from a view function (React functional component).
+           The `view` name should point to a method VIEW_{view} of the current Item's subclass.
+         */
         if (title === undefined) {
             let name = this.getName('')
             let ciid = this.getStamp({html: false})
             title = `${name} ${ciid}`
         }
         if (head === undefined) head = this.category.getAssets().renderAll()
-        if (body === undefined) body = this.BODY({request, view})
-
+        if (body === undefined) body = `
+            <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
+            <div id="react-root">${this.render(view)}</div>
+            <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
+        `
         return dedentFull(`
             <!DOCTYPE html><html>
             <head>
@@ -755,11 +758,11 @@ export class Item {
             `<body>${body}</body></html>`
     }
 
-    BODY({request, view}) { return `
-        <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
-        <div id="react-root">${this.render(view)}</div>
-        <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
-    `}
+    // BODY({request, view}) { return `
+    //     <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
+    //     <div id="react-root">${this.render(view)}</div>
+    //     <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
+    // `}
 
     /***  Components (server side & client side)  ***/
 
@@ -778,6 +781,10 @@ export class Item {
         return targetElement ? ReactDOM.render(e(view), targetElement) : ReactDOM.renderToString(e(view))
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
+
+    CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
+    CALL_item()             { return this }
+    GET_json({res})         { res.sendItem(this) }
 
     VIEW_default(props) { return this.VIEW_full(props) }
 
