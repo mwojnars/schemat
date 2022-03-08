@@ -734,21 +734,7 @@ export class Item {
 
     CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
     CALL_item()             { return this }
-
-    // GET_default(...args)    { return this.GET_full(...args)}
-    GET_default(props)      { return this.HTML({...props, view: 'full'})}
     GET_json({res})         { res.sendItem(this) }
-
-    // GET_full({request}) {
-    //     return this.HTML({request, view: 'full'})
-    //     // let name = this.getName('')
-    //     // let ciid = this.getStamp({html: false})
-    //     // return this.HTML({
-    //     //     title: `${name} ${ciid}`,
-    //     //     head:  this.category.getAssets().renderAll(),
-    //     //     body:  this.BODY({session: request.session}),
-    //     // })
-    // }
 
     HTML({title, head, body, request, view} = {}) {
         if (title === undefined) {
@@ -792,6 +778,8 @@ export class Item {
         return targetElement ? ReactDOM.render(e(view), targetElement) : ReactDOM.renderToString(e(view))
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
+
+    VIEW_default(props) { return this.VIEW_full(props) }
 
     VIEW_full({extra = null}) {                                  // React functional component
         /* Detailed (admin) view of an item. */
