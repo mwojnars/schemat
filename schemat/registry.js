@@ -286,9 +286,9 @@ export class Session {
 
     app                 // leaf Application object the request is addressed to
     item                // target item that's responsible for actual handling of the request
-    state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
-                        // response generation when a specific app's method is called, most typically urlPath()
-                        // TODO: only keep `route` instead of `app` for URL generation - Site.urlPath()
+    // state = {}          // app-specific temporary data that's written during routing (handle()) and can be used for
+    //                     // response generation when a specific app's method is called, most typically urlPath()
+    //                     // TODO: only keep `route` instead of `app` for URL generation - Site.urlPath()
 
     // // req.query.PARAM is a string if there's one occurrence of PARAM in a query string,
     // // or an array [val1, val2, ...] if PARAM occurs multiple times
@@ -321,7 +321,7 @@ export class Session {
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }
 
-    dump() {
+    dump(view) {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = this.registry.site
         let items = [this.item, this.item.category, this.registry.root, site, this.app]
@@ -331,8 +331,9 @@ export class Session {
         let {app, item, state} = this
         let session = {app, item, state}                       // truncated representation of the current session
         let system_url = site.systemURL()
+        assert(!view || typeof view === 'string')
 
-        return {site_id: site.id, system_url, 'session': JSONx.encode(session), items}
+        return {site_id: site.id, system_url, 'session': JSONx.encode(session), items, view}
     }
 
     static load(registry, sessionData) {

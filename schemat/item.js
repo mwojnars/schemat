@@ -697,7 +697,6 @@ export class Item {
         let req, res
         let session  = request.session
         let method   = request.method || this.defaultMethod(request) || 'default'
-        let endpoint = `${request.type}_${method}`
 
         if (session) {
             session.item = this
@@ -705,20 +704,22 @@ export class Item {
             ;[req, res] = session.channels
         }
 
-        // let handler
-        // let handlers = this.category.getHandlers()
-        // let source   = handlers.get(endpoint)
-        //
         // // get handler's source code from category's properties?
         // if (source) {
         //     handler = new AsyncFunction('context', `"use strict";` + source)
         //     // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
         // }
 
-        let handler = this[endpoint]
-        if (!handler) request.throwNotFound(`handler ${endpoint}() not found`)
+        let hdl_name = `${request.type}_${method}`
+        let handler  = this[hdl_name]
+        if (handler) return handler.call(this, {request, req, res})
 
-        return handler.call(this, {request, req, res})
+        if (`VIEW_${method}` in this) {
+            session.view = method
+            return this.HTML({request, view: method})
+        }
+
+        request.throwNotFound(`no handler found for @${method} endpoint`)
     }
 
     defaultMethod(request) {
@@ -734,21 +735,30 @@ export class Item {
     CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
     CALL_item()             { return this }
 
-    GET_default(...args)    { return this.GET_full(...args)}
+    // GET_default(...args)    { return this.GET_full(...args)}
+    GET_default(props)      { return this.HTML({...props, view: 'full'})}
     GET_json({res})         { res.sendItem(this) }
 
-    GET_full({request, res}) {
-        /* Detailed (admin) view of an item. */
-        let name = this.getName('')
-        let ciid = this.getStamp({html: false})
-        return res.send(this.HTML({
-            title: `${name} ${ciid}`,
-            head:  this.category.getAssets().renderAll(),
-            body:  this.BODY({session: request.session}),
-        }))
-    }
+    // GET_full({request}) {
+    //     return this.HTML({request, view: 'full'})
+    //     // let name = this.getName('')
+    //     // let ciid = this.getStamp({html: false})
+    //     // return this.HTML({
+    //     //     title: `${name} ${ciid}`,
+    //     //     head:  this.category.getAssets().renderAll(),
+    //     //     body:  this.BODY({session: request.session}),
+    //     // })
+    // }
 
-    HTML({title, head, body} = {}) {
+    HTML({title, head, body, request, view} = {}) {
+        if (title === undefined) {
+            let name = this.getName('')
+            let ciid = this.getStamp({html: false})
+            title = `${name} ${ciid}`
+        }
+        if (head === undefined) head = this.category.getAssets().renderAll()
+        if (body === undefined) body = this.BODY({request, view})
+
         return dedentFull(`
             <!DOCTYPE html><html>
             <head>
@@ -759,17 +769,17 @@ export class Item {
             `<body>${body}</body></html>`
     }
 
-    BODY({session}) { return `
-        <p id="data-session" style="display:none">${JSON.stringify(session.dump())}</p>
-        <div id="react-root">${this.render()}</div>
+    BODY({request, view}) { return `
+        <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
+        <div id="react-root">${this.render(view)}</div>
         <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
     `}
 
     /***  Components (server side & client side)  ***/
 
-    render(targetElement = null) {
-        /* Render this item into an HTMLElement (client-side) if `targetElement` is given,  or to a string
-           (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
+    render(view, targetElement = null) {
+        /* Render this item's `view` (name) into an HTMLElement (client-side) if `targetElement` is given,
+           or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
            so only a part of the HTML output is actually rendered. For workaround, see:
             - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
             - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
@@ -777,12 +787,14 @@ export class Item {
          */
         this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
-        let page = e(this.Page.bind(this))
-        return targetElement ? ReactDOM.render(page, targetElement) : ReactDOM.renderToString(page)
+        view = this[`VIEW_${view || 'full'}`]
+        view = view.bind(this)
+        return targetElement ? ReactDOM.render(e(view), targetElement) : ReactDOM.renderToString(e(view))
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
 
-    Page({extra = null}) {                                  // React functional component
+    VIEW_full({extra = null}) {                                  // React functional component
+        /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
@@ -1016,7 +1028,7 @@ export class Category extends Item {
         ))
     }
 
-    Page({extra = null}) {
+    VIEW_full({extra = null}) {
         const scan = () => this.registry.scanCategory(this)         // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
@@ -1024,7 +1036,7 @@ export class Category extends Item {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return super.Page({item: this, extra: FRAGMENT(
+        return super.VIEW_full({item: this, extra: FRAGMENT(
             H2('Items'),
             e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),

@@ -178,10 +178,16 @@ class Component extends React.Component {
 
 class Widget extends Component {}
 
-function widget(attrs = {}, fun) {
-    /* Create a functional React widget with `attrs` assigned: these are typically `style` and `assets`. */
-    return Object.assign(fun, attrs)
-}
+// export class Page extends Component {
+//     /*  */
+//
+//     page(props) {
+//         /* Functional React (sub)component. Either this function, or render(), should be overriden in subclasses. */
+//         return null
+//     }
+//
+//     render() { return e(this.page, this.props) }
+// }
 
 class Layout extends Component {
     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
@@ -1257,8 +1263,8 @@ CATALOG.Table = class extends Component {
                     DIV(cl('key'), e(widget, props), info && {title: info}),
                     expand && this.expand(expand),
                     DIV(cl('spacer')),
-                    ops?.insert && this.insert(ops.insert),
-                    ops?.delete && this.delete(ops.delete),
+                    ops.insert && this.insert(ops.insert),
+                    ops.delete && this.delete(ops.delete),
                     flashBox, errorBox,
         )
     }
