@@ -321,7 +321,7 @@ export class Session {
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }
 
-    dump(view) {
+    dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = this.registry.site
         let items = [this.item, this.item.category, this.registry.root, site, this.app]
@@ -331,9 +331,8 @@ export class Session {
         let {app, item, state} = this
         let session = {app, item, state}                       // truncated representation of the current session
         let system_url = site.systemURL()
-        assert(!view || typeof view === 'string')
 
-        return {site_id: site.id, system_url, 'session': JSONx.encode(session), items, view}
+        return {site_id: site.id, system_url, 'session': JSONx.encode(session), items}
     }
 
     static load(registry, sessionData) {

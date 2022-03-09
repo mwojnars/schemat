@@ -93,7 +93,7 @@ class ClientRegistry extends Registry {
 
 // import {check} from "/site/widgets.js"
 
-export async function boot() {
+export async function boot(view) {
 
     let data     = read_data('#data-session')   //'json+base64'
     let registry = globalThis.registry = new ClientRegistry(data)
@@ -105,7 +105,6 @@ export async function boot() {
 
     let root = document.querySelector("#react-root")
     let item = registry.session.item
-    let view = data.view
     assert(item.loaded)
     // print('main item:', item)
 

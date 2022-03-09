@@ -744,9 +744,9 @@ export class Item {
         }
         if (head === undefined) head = this.category.getAssets().renderAll()
         if (body === undefined) body = `
-            <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
+            <p id="data-session" style="display:none">${JSON.stringify(request.session.dump())}</p>
             <div id="react-root">${this.render(view)}</div>
-            <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
+            <script async type="module"> import {boot} from "/files/local/client.js"; boot('${view}'); </script>
         `
         return dedentFull(`
             <!DOCTYPE html><html>
@@ -758,14 +758,6 @@ export class Item {
             `<body>${body}</body></html>`
     }
 
-    // BODY({request, view}) { return `
-    //     <p id="data-session" style="display:none">${JSON.stringify(request.session.dump(view))}</p>
-    //     <div id="react-root">${this.render(view)}</div>
-    //     <script async type="module"> import {boot} from "/files/local/client.js"; boot(); </script>
-    // `}
-
-    /***  Components (server side & client side)  ***/
-
     render(view, targetElement = null) {
         /* Render this item's `view` (name) into an HTMLElement (client-side) if `targetElement` is given,
            or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
@@ -776,20 +768,22 @@ export class Item {
          */
         this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
-        view = this[`VIEW_${view || 'full'}`]
+        view = this[`VIEW_${view}`]
         view = view.bind(this)
         return targetElement ? ReactDOM.render(e(view), targetElement) : ReactDOM.renderToString(e(view))
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
 
-    CALL_default()          { return this }         // internal url-calls return the target item (an object) by default
-    CALL_item()             { return this }
-    GET_json({res})         { res.sendItem(this) }
+    /***  Handlers & Components  ***/
+
+    CALL_default()      { return this }         // internal url-calls return the target item (an object) by default
+    CALL_item()         { return this }
+    GET_json({res})     { res.sendItem(this) }
 
     VIEW_default(props) { return this.VIEW_full(props) }
 
-    VIEW_full({extra = null}) {                                  // React functional component
-        /* Detailed (admin) view of an item. */
+    VIEW_full({extra = null}) {
+        /* Detailed (admin) view of an item, as a React functional component. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
