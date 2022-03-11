@@ -562,9 +562,18 @@ export class CODE extends TEXT
         }
 
         viewerRef = createRef()
-        viewerAce           // ACE viewer object
-        editorAce           // ACE editor object
-        observer            // a ResizeObserver to watch for user resizing the editor box
+        viewerAce                       // ACE viewer object
+        editorAce                       // ACE editor object
+
+        createAce(value, div, options) {
+            let widget = ace.edit(div, options)
+            widget.session.setValue(value)
+            let observer = new ResizeObserver(() => widget.resize())    // watch for user resizing the Ace box;
+            observer.observe(div)                                       // on resize must update the Ace widget;
+            let destroy = widget.destroy.bind(widget)                   // amend the standard destroy() to disconnect the observer
+            widget.destroy = () => {observer.disconnect(); destroy()}
+            return widget
+        }
 
         viewer() {
             let lines  = this.props.value.trimRight().split('\n')
@@ -580,34 +589,21 @@ export class CODE extends TEXT
                 className:      "ace-editor",
             })
         }
-
-        componentDidMount()     { this.initViewer() }
-        componentWillUnmount()  { this.dropViewer() }
-
         initViewer() {
             assert(this.viewerRef.current)
             let value = this.display(this.props.value)
             this.viewerAce = this.createAce(value, this.viewerRef.current, this.constructor.viewer_options)
-            // this.viewerAce = ace.edit(this.viewerRef.current, this.constructor.viewer_options)
-            this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview
-            // this.viewerAce.session.setValue(value)
+            this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no Ace cursor in preview
         }
         dropViewer() {
             if (!this.viewerAce) return
             this.viewerAce.destroy()
             delete this.viewerAce
         }
+        value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
 
-        createAce(value, div, options) {
-            let widget = ace.edit(div, options)
-            widget.session.setValue(value)
-            widget._observer = new ResizeObserver(() => widget.resize())
-            widget._observer.observe(div)           // allow resizing of the editor box by a user, must update the Ace widget then
-
-            let destroy = widget.destroy.bind(widget)
-            widget.destroy = () => { widget._observer.disconnect(); delete widget._observer; destroy() }
-            return widget
-        }
+        componentDidMount()     { this.initViewer() }
+        componentWillUnmount()  { this.dropViewer() }
 
         componentDidUpdate(prevProps, prevState) {
             /* Create an ACE editor after open(). */
@@ -616,28 +612,10 @@ export class CODE extends TEXT
             this.dropViewer()
             this.editorAce = this.createAce(this.default, this.input.current, this.constructor.editor_options)
             this.editorAce.focus()
-
-            // let div = this.input.current
-            // let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
-            // editorAce.session.setValue(this.default)
-            // // editorAce.setTheme("ace/theme/textmate")
-            // // editorAce.session.setMode("ace/mode/javascript")
-            //
-            // this.observer = new ResizeObserver(() => editorAce.resize())
-            // this.observer.observe(div)                   // allow resizing of the editor box by a user, must update the Ace widget then
-            //
-            // editorAce.focus()
-
-            // editorAce.gotoLine(1)
-            // editorAce.session.setScrollTop(1)
         }
-
-        value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
         close() {
             this.editorAce.destroy()                            // destroy the ACE editor to free up resources
-            // this.observer.disconnect()
             delete this.editorAce
-            // delete this.observer
             super.close()
         }
     }
