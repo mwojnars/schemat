@@ -96,7 +96,7 @@ export class Site extends Router {
         else
             path = unprefix(path)
 
-        let source = await this.route(new Request({path, method: 'text'}))
+        let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
         let identifier = PREFIX + path
 

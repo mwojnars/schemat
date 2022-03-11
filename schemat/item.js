@@ -1,7 +1,7 @@
-import { Resources, React, ReactDOM, MaterialUI } from './resources.js'
+import { Resources, ReactDOM } from './resources.js'
 import {
-    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, LABEL, FIELDSET,
-    TABLE, TH, TR, TD, TBODY, BUTTON, STYLE, FRAGMENT, HTML, fetchJson
+    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
+    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
 import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
 import { generic_schema, CATALOG, DATA } from './type.js'
@@ -10,7 +10,7 @@ import { Catalog, Data } from './data.js'
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
-// import * as utils from 'http://127.0.0.1:3000/files/local/utils.js'
+// import * as utils from 'http://127.0.0.1:3000/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
@@ -746,7 +746,7 @@ export class Item {
         if (body === undefined) body = `
             <p id="data-session" style="display:none">${JSON.stringify(request.session.dump())}</p>
             <div id="react-root">${this.render(view)}</div>
-            <script async type="module"> import {boot} from "/files/local/client.js"; boot('${view}'); </script>
+            <script async type="module"> import {boot} from "/local/client.js"; boot('${view}'); </script>
         `
         return dedentFull(`
             <!DOCTYPE html><html>

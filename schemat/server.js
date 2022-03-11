@@ -12,9 +12,6 @@ import {Session} from './registry.js'
 import {Request} from "./item.js";
 import {YamlDB, RingsDB} from "./server/db.js";
 
-// import {check} from "/site/widgets.js"
-// check()
-
 
 /**********************************************************************************************************************/
 
@@ -88,8 +85,8 @@ export class Server {
                 try { res.sendStatus(500) } catch(e){}
         }
 
-        // let {check} = await this.registry.site.import("/site/widgets.js")
-        // check()
+        let {check} = await this.registry.site.import("/site/widgets.js")
+        check()
 
         // this.registry.commit()           // auto-commit is here, not in after_request(), to catch and display any possible DB failures
         // await sleep(200)                 // for testing

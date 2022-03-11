@@ -3,15 +3,23 @@
     - 100
   name: catalog.wiki
   URL: http://127.0.0.1:3000
-  path_filesystem: /files
   path_internal: /$
   routes:
-    - - - 5
-        - 105
-      - files
     - - - 8
         - 101
       - $
+    - - - 5
+        - 103
+      - apps
+    - - - 6
+        - 101
+      - local
+    - - - 5
+        - 104
+      - site
+    - - - 5
+        - 1
+      - system
     - - - 5
         - 106
     - - - 9
@@ -25,7 +33,7 @@
     - 102
   content: |-
     import {print} from '../site/utils.js'
-    export function check() { print('called /site/widgets.js/check()') } 
+    export function check() { print('called widgets.js:check()') } 
     //let fs = await importLocal('fs')
     //print('fs:',fs)
 - __id:
@@ -123,8 +131,11 @@
     text:
       "@": schemat.type.STRING
   code: |
-    
-    GET_view() { return 'ala ma kota'; }
+    VIEW_main() { 
+        let text = this.get('text')
+        console.log('in VIEW_main()')
+        return 'Post: <br/> ' + text
+    }
 - __id:
     - 200
     - 100
@@ -138,7 +149,7 @@
 - __id:
     - 5
     - 106
-  name: domain-root
+  name: domain
   info: Folder with public static files that must be accessible at the domain
     root, like .../favicon.ico, /robots.txt etc.
   files:

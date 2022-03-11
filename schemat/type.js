@@ -576,7 +576,7 @@ export class CODE extends TEXT
                 ref:            this.input,
                 autoFocus:      true,
                 onKeyDown:      e => this.key(e),
-                onBlur:         e => this.reject(e),
+                //onBlur:         e => this.reject(e),
                 className:      "ace-editor",
             })
         }
