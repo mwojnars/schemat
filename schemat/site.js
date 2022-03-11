@@ -69,10 +69,15 @@ export class Site extends Router {
     }
 
     async import(path, referrer) {
-        /* Custom import of JS files and code snippets from Schemat's Universal Namespace.
-           This method returns a namespace object extracted from a vm.Module loaded by importModule().
-           Optional `referrer` is a vm.Module object.
+        /* Import JS files and code snippets from Schemat's Universal Namespace.
+           On a server, return a namespace object extracted from a vm.Module loaded by importModule();
+           optional `referrer` is a vm.Module object. On a client, call the standard import(path),
+           the `referrer` must be empty.
          */
+        if (this.registry.onClient) {
+            if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
+            return import(path)
+        }
         let module = await this.importModule(path, referrer)
         return module.namespace
     }

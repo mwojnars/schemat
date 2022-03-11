@@ -339,16 +339,21 @@ export class Item {
         // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
         // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
 
-        let import_ = (path) =>
-            env === 'server' ? this.registry.site.import(path) : import(path)               // returns a promise
+        let url = this.sourceURL('code')
+        let import_ = (path) => {
+            if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
+            return this.registry.site.import(path)
+            // env === 'server' ? this.registry.site.import(path) : import(path)
+        }
 
-        let source = `return class extends base {${body}} ${this.sourceURL('code')}`
+        let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
         return new Function('base', 'import_', source) (base, import_)
     }
 
     parseMethod(path, ...args) {
         let source = this.get(path)
-        return source ? new Function(...args, source + this.sourceURL(path)) : undefined
+        let url = this.sourceURL(path)
+        return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
     }
 
     sourceURL(path) {
@@ -360,8 +365,8 @@ export class Item {
         let domain   = Item.CODE_DOMAIN
         let cat_name = clean(this.get('name'))
         let fil_name = `${cat_name}_${this.id_str}`
-        let url = `${domain}:///items/${fil_name}/${path}`
-        return `\n//# sourceURL=${url}`
+        return `${domain}:///items/${fil_name}/${path}`
+        // return `\n//# sourceURL=${url}`
     }
 
 
