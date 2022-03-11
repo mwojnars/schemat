@@ -91,11 +91,11 @@ class ClientRegistry extends Registry {
  **
  */
 
-import {check} from "/site/widgets.js"
+// import {check} from "/site/widgets.js"
 
 export async function boot(view) {
 
-    let data     = read_data('#data-session')   //'json+base64'
+    let data     = read_data('#data-session', 'json+base64')
     let registry = globalThis.registry = new ClientRegistry(data)
     await registry.boot(data)
 
@@ -109,5 +109,5 @@ export async function boot(view) {
     // print('main item:', item)
 
     item.render(view, root)
-    check()
+    // check()
 }

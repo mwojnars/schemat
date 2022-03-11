@@ -114,15 +114,13 @@
     text:
       "@": schemat.type.STRING
   code: |
-    async init(data) {
-        this.utils  = await import_('/site/utils.js')
+    async init() {
+        this.utils = await import_('/site/utils.js')
     }
     VIEW_main() { 
-        console.log('print:', this.utils.print)
-        // this.utils.print('TwitterPost: imported print()')
+        this.utils.print('TwitterPost: imported print()')
         let text = this.get('text')
-        console.log('in VIEW_main()')
-        return 'Post:  ' + text
+        return 'Post: <br /> ' + text
     }
 - __id:
     - 200

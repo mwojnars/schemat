@@ -577,7 +577,7 @@ export class CODE extends TEXT
 
         viewer() {
             let lines  = this.props.value.trimRight().split('\n')
-            let height = Math.min(8, 4 + Math.max(0, lines.length - 2)) + 'em'
+            let height = Math.min(10, 4 + Math.max(0, lines.length - 2)) + 'em'
             return DIV(cl("ace-viewer"), st({height}), {onDoubleClick: e => this.open(e), ref: this.viewerRef})
         }
         editor() {

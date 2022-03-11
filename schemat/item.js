@@ -343,9 +343,7 @@ export class Item {
         let import_ = (path) => {
             if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
             return this.registry.site.import(path)
-            // env === 'server' ? this.registry.site.import(path) : import(path)
         }
-
         let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
         return new Function('base', 'import_', source) (base, import_)
     }
@@ -753,7 +751,7 @@ export class Item {
         }
         if (head === undefined) head = this.category.getAssets().renderAll()
         if (body === undefined) body = `
-            <p id="data-session" style="display:none">${JSON.stringify(request.session.dump())}</p>
+            <p id="data-session" style="display:none">${btoa(JSON.stringify(request.session.dump()))}</p>
             <div id="react-root">${this.render(view)}</div>
             <script async type="module"> import {boot} from "/local/client.js"; boot('${view}'); </script>
         `
