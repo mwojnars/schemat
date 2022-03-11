@@ -65,23 +65,6 @@
   name: /local
   path: /home/marcin/Documents/priv/catalog/src/schemat
 - __id:
-    - 5
-    - 105
-  name: /files
-  files:
-    apps:
-      - 5
-      - 103
-    local:
-      - 6
-      - 101
-    site:
-      - 5
-      - 104
-    system:
-      - 5
-      - 1
-- __id:
     - 8
     - 101
   name: /$
@@ -131,10 +114,15 @@
     text:
       "@": schemat.type.STRING
   code: |
+    async init(data) {
+        this.utils  = await import_('/site/utils.js')
+    }
     VIEW_main() { 
+        console.log('print:', this.utils.print)
+        // this.utils.print('TwitterPost: imported print()')
         let text = this.get('text')
         console.log('in VIEW_main()')
-        return 'Post: <br/> ' + text
+        return 'Post:  ' + text
     }
 - __id:
     - 200

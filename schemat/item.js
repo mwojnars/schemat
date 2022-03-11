@@ -336,10 +336,14 @@ export class Item {
         let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
         if (!body) return base
 
-        let source = `return class extends base_class {${body}} ${this.sourceURL('code')}`
-        return new Function('base_class', source)(base)
-        // cls.check()
-        // cls.error?.()
+        // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
+        // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
+
+        let import_ = (path) =>
+            env === 'server' ? this.registry.site.import(path) : import(path)               // returns a promise
+
+        let source = `return class extends base {${body}} ${this.sourceURL('code')}`
+        return new Function('base', 'import_', source) (base, import_)
     }
 
     parseMethod(path, ...args) {
