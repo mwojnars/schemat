@@ -586,9 +586,11 @@ export class CODE extends TEXT
 
         initViewer() {
             assert(this.viewerRef.current)
-            this.viewerAce = ace.edit(this.viewerRef.current, this.constructor.viewer_options)
-            this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview editor
-            this.viewerAce.session.setValue(this.display(this.props.value))
+            let value = this.display(this.props.value)
+            this.viewerAce = this.createAce(value, this.viewerRef.current, this.constructor.viewer_options)
+            // this.viewerAce = ace.edit(this.viewerRef.current, this.constructor.viewer_options)
+            this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no cursor in preview
+            // this.viewerAce.session.setValue(value)
         }
         dropViewer() {
             if (!this.viewerAce) return
@@ -596,32 +598,46 @@ export class CODE extends TEXT
             delete this.viewerAce
         }
 
+        createAce(value, div, options) {
+            let widget = ace.edit(div, options)
+            widget.session.setValue(value)
+            widget._observer = new ResizeObserver(() => widget.resize())
+            widget._observer.observe(div)           // allow resizing of the editor box by a user, must update the Ace widget then
+
+            let destroy = widget.destroy.bind(widget)
+            widget.destroy = () => { widget._observer.disconnect(); delete widget._observer; destroy() }
+            return widget
+        }
+
         componentDidUpdate(prevProps, prevState) {
             /* Create an ACE editor after open(). */
             if (this.state.editing === prevState.editing) return
             if (!this.state.editing) return this.initViewer()
             this.dropViewer()
+            this.editorAce = this.createAce(this.default, this.input.current, this.constructor.editor_options)
+            this.editorAce.focus()
 
-            let div = this.input.current
-            let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
-            editorAce.session.setValue(this.default)
-            // editorAce.setTheme("ace/theme/textmate")
-            // editorAce.session.setMode("ace/mode/javascript")
+            // let div = this.input.current
+            // let editorAce = this.editorAce = ace.edit(div, this.constructor.editor_options)
+            // editorAce.session.setValue(this.default)
+            // // editorAce.setTheme("ace/theme/textmate")
+            // // editorAce.session.setMode("ace/mode/javascript")
+            //
+            // this.observer = new ResizeObserver(() => editorAce.resize())
+            // this.observer.observe(div)                   // allow resizing of the editor box by a user, must update the Ace widget then
+            //
+            // editorAce.focus()
 
-            this.observer = new ResizeObserver(() => editorAce.resize())
-            this.observer.observe(div)                   // allow resizing of the editor box by a user, must update the Ace widget then
-
-            editorAce.focus()
             // editorAce.gotoLine(1)
             // editorAce.session.setScrollTop(1)
         }
 
         value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
         close() {
-            this.editorAce.destroy()                        // destroy the ACE editor to free up resources
-            this.observer.disconnect()
+            this.editorAce.destroy()                            // destroy the ACE editor to free up resources
+            // this.observer.disconnect()
             delete this.editorAce
-            delete this.observer
+            // delete this.observer
             super.close()
         }
     }
