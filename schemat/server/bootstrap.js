@@ -31,6 +31,7 @@ let default_fields = C({
 // fields of categories, including the root category
 let root_fields = C({
     class        : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
+    init         : new CODE({info: "Source code to be executed before this category's class is created. Typically contains import_() statements. All top-level names declared here are accessible for the `code` of the category's class."}),
     code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class`, or the class of the first base category, or the top-level Item."}),
     code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),

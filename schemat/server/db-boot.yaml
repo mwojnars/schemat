@@ -19,6 +19,12 @@
                 category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code.
               "@": schemat.type.STRING
+          - key: code_init
+            value:
+              info: Source code to be executed before this category's class is created.
+                Typically contains import_() statements. All top-level names
+                declared here are accessible for the `code` of the category.
+              "@": schemat.type.CODE
           - key: code
             value:
               info: Source code of a subclass (a body without heading) that will be created

@@ -328,6 +328,11 @@ export class Item {
            and dynamically parse them into a new class object - a subclass of `base` or the base class identified
            by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
          */
+        let init = this.get('init')
+        if (init) {
+
+        }
+
         let name = this.get('class')
         if (name) base = this.registry.getClass(name)
         let env  = this.registry.onServer ? 'server' : 'client'
@@ -751,7 +756,7 @@ export class Item {
         }
         if (head === undefined) head = this.category.getAssets().renderAll()
         if (body === undefined) body = `
-            <p id="data-session" style="display:none">${btoa(JSON.stringify(request.session.dump()))}</p>
+            <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
             <div id="react-root">${this.render(view)}</div>
             <script async type="module"> import {boot} from "/local/client.js"; boot('${view}'); </script>
         `

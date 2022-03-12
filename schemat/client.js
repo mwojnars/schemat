@@ -19,7 +19,7 @@ function read_data(node, type = "json") {
 
     // decode `value` depending on the `type`
     if (type === "json") return JSON.parse(value)
-    if (type === "json+base64") return JSON.parse(atob(value))
+    if (type === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
 
     return value
 }

@@ -49,6 +49,8 @@ export class Router extends Item {
 export class Site extends Router {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
+    static MODULE_PREFIX = 'schemat:'
+
     async getItem(path) {
         /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
         return this.route(new Request({path, method: '@item'}))
@@ -87,23 +89,24 @@ export class Site extends Router {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        const PREFIX = 'schemat:'
-        const unprefix = (s) => s.startsWith(PREFIX) ? s.slice(PREFIX.length) : s
+        // const PREFIX = 'schemat:'
+        // const unprefix = (s) => s.startsWith(PREFIX) ? s.slice(PREFIX.length) : s
 
         // convert a relative path to absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
-            path = unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
+            path = this._unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
             path = this._normPath(path)
         }
         // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // NOT WORKING: fall back to Node's import for no-path global imports (no ./ or /...)
         //     return import(path)
         else
-            path = unprefix(path)
+            path = this._unprefix(path)
 
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
-        let identifier = PREFIX + path
+
+        let identifier = Site.MODULE_PREFIX + path
 
         const vm = await import('vm')
         let context = vm.createContext(globalThis)
@@ -119,6 +122,12 @@ export class Site extends Router {
         await module.evaluate()
         return module
     }
+
+    async parseModule(source) {
+
+    }
+
+    _unprefix(path) { return path.startsWith(Site.MODULE_PREFIX) ? path.slice(Site.MODULE_PREFIX.length) : path }
 
     _normPath(path) {
         /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
@@ -186,21 +195,20 @@ export class Application extends Item {
            (no leading '/') to be appended to a route when building a URL. Otherwise, return undefined.
          */
     }
-    urlPath(item) {
-        /* Generate a URL name/path (fragment after the base route string) of `item`.
-           The path does NOT have a leading separator, or it has a different (internal) meaning -
-           in any case, a leading separator should be inserted by caller if needed.
-         */
-        let func = this.urlPath = this.parseMethod('urlPath', 'item')
-        return func.call(this, item)
-    }
-
-    findRoute(request)  {
-        // findRoute() is parsed dynamically from source on the 1st call and stored in `this` -
-        // not in a class prototype like `code` (!); after that, all calls go directly to the new function
-        let func = this.findRoute = this.parseMethod('findRoute', 'request')
-        return func.call(this, request)
-    }
+    // urlPath(item) {
+    //     /* Generate a URL name/path (fragment after the base route string) of `item`.
+    //        The path does NOT have a leading separator, or it has a different (internal) meaning -
+    //        in any case, a leading separator should be inserted by caller if needed.
+    //      */
+    //     let func = this.urlPath = this.parseMethod('urlPath', 'item')
+    //     return func.call(this, item)
+    // }
+    // findRoute(request)  {
+    //     // findRoute() is parsed dynamically from source on the 1st call and stored in `this` -
+    //     // not in a class prototype like `code` (!); after that, all calls go directly to the new function
+    //     let func = this.findRoute = this.parseMethod('findRoute', 'request')
+    //     return func.call(this, request)
+    // }
 }
 
 
