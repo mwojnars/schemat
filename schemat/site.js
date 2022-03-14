@@ -72,8 +72,8 @@ export class Site extends Router {
 
     async import(path, referrer) {
         /* Import JS files and code snippets from Schemat's Universal Namespace.
-           On a server, return a namespace object extracted from a vm.Module loaded by importModule();
-           optional `referrer` is a vm.Module object. On a client, call the standard import(path),
+           On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
+           optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
            the `referrer` must be empty.
          */
         if (this.registry.onClient) {
@@ -89,9 +89,6 @@ export class Site extends Router {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        // const PREFIX = 'schemat:'
-        // const unprefix = (s) => s.startsWith(PREFIX) ? s.slice(PREFIX.length) : s
-
         // convert a relative path to absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
@@ -106,13 +103,17 @@ export class Site extends Router {
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
 
-        let identifier = Site.MODULE_PREFIX + path
+        return this.parseModule(source, path)
+    }
+
+    async parseModule(source, path) {
 
         const vm = await import('vm')
         let context = vm.createContext(globalThis)
         // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
+        let identifier = Site.MODULE_PREFIX + path
         let linker = (specifier, ref, extra) => this.importModule(specifier, ref)
         let initializeImportMeta = (meta) => {meta.url = identifier}
 
@@ -121,10 +122,6 @@ export class Site extends Router {
         await module.link(linker)
         await module.evaluate()
         return module
-    }
-
-    async parseModule(source) {
-
     }
 
     _unprefix(path) { return path.startsWith(Site.MODULE_PREFIX) ? path.slice(Site.MODULE_PREFIX.length) : path }

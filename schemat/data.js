@@ -180,15 +180,22 @@ export class Catalog {
         return this._entries[pos]
     }
 
-    getValues(key) {
-        /* Return an array of all values that are present for a given top-level key. */
-        return this.getEntries(key).map(e => e.value)
+    getValues(...keys) {
+        /* Return an array of all values that are present for given top-level key(s). */
+        return this.getEntries(...keys).map(e => e.value)
     }
 
-    getEntries(key = null) {
-        if (key === null) return [...this._entries]
-        let refs = this._keys.get(key) || []
-        return refs.map(pos => this._entries[pos])
+    getEntries(...keys) {
+        /* Return the entries having the given keys. The order of entries is preserved (as in this._entries).
+           If no key was given, all entries are returned.
+         */
+        if (!keys.length) return [...this._entries]
+        let refs = []
+        for (let key of keys) {
+            let r = this._keys.get(key)
+            if (r) refs.push(...r)
+        }
+        return refs.sort().map(pos => this._entries[pos])
     }
 
     getEmpty() {

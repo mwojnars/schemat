@@ -318,9 +318,25 @@ export class Item {
         /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
            a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
          */
-        let base = this.category.parseClass()
-        let custom = this.category.get('custom_class')
-        return custom ? this.parseClass(base) : base
+        return this.category.getItemClass()
+        // let base = this.category.getItemClass()
+        // let custom = this.category.get('custom_class')
+        // return custom ? this.parseClass(base) : base
+    }
+
+    getCode() {
+        /* Collect all code_* snippets of this item (category) and combine into a module source code. */
+        let module = this.mergeSnippets('code_module')
+
+        let className = `Class_${this.cid}_${this.iid}`
+        let classCode = `class ${className} extends Base {${body}}`
+        
+        let classExport = `export ${className} as Class`
+        let snippets = [module, classCode, classExport].filter(String)
+        let source = snippets.join('\n')
+    }
+    getModule(path) {
+        /*  */
     }
 
     parseClass(base = Item) {
@@ -328,21 +344,14 @@ export class Item {
            and dynamically parse them into a new class object - a subclass of `base` or the base class identified
            by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
          */
-        let init = this.get('init')
-        if (init) {
-
-        }
-
         let name = this.get('class')
         if (name) base = this.registry.getClass(name)
-        let env  = this.registry.onServer ? 'server' : 'client'
-        let spec = this.getMany(`code_${env}`)          // environment-specific code extensions
-        let code = this.getMany('code')
-        let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
+        // let env  = this.registry.onServer ? 'server' : 'client'
+        // let spec = this.getMany(`code_${env}`)          // environment-specific code extensions
+        // let code = this.getMany('code')
+        // let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
+        let body = this.mergeSnippets('code')
         if (!body) return base
-
-        // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
-        // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
 
         let url = this.sourceURL('code')
         let import_ = (path) => {
@@ -352,12 +361,14 @@ export class Item {
         let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
         return new Function('base', 'import_', source) (base, import_)
     }
+        // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
+        // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
 
-    parseMethod(path, ...args) {
-        let source = this.get(path)
-        let url = this.sourceURL(path)
-        return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
-    }
+    // parseMethod(path, ...args) {
+    //     let source = this.get(path)
+    //     let url = this.sourceURL(path)
+    //     return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
+    // }
 
     sourceURL(path) {
         /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
@@ -401,17 +412,27 @@ export class Item {
         return default_
     }
 
+    async getLoaded(path, default_ = undefined) {
+        /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
+        let item = this.get(path, default_)
+        if (item !== default_) await item.load()
+        return item
+    }
+
     getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
            in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
            or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
+           The `key` can be an array of keys.
          */
         this.assertLoaded()
-        let own = this.data.getValues(key)
+
+        if (typeof key === 'string') key = [key]
+        let own = this.data.getValues(...key)
         if (!inherit) return own
 
-        let inherited = this.getPrototypes().map(p => p.getMany(key))
+        let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
         if (!inherited.length) return own
 
         // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
@@ -422,11 +443,13 @@ export class Item {
         return values
     }
 
-    async getLoaded(path, default_ = undefined) {
-        /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
-        let item = this.get(path, default_)
-        if (item !== default_) await item.load()
-        return item
+    mergeSnippets(key, params) {
+        /* Calls getMany() to find all entries with a given `key` including the environment-specific
+           {key}_client OR {key}_server keys; assumes the values are strings.
+           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
+        let env = this.registry.onServer ? 'server' : 'client'
+        let snippets = this.getMany([key, `${key}_${env}`], params)
+        return snippets.join('\n')
     }
 
     getInherited(field) {
@@ -900,18 +923,14 @@ export class Category extends Item {
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let itemclass = this.parseClass()
+        let itemclass = this.getItemClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
         // else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
-    // getItemClass() {
-    //     // let proto = this.get('prototype')                // will use the FIRST prototype's class as the (base) class
-    //     // if (proto) base = proto.getItemClass()
-    //     return this.parseClass()
-    // }
+    getItemClass() { return this.parseClass() }
 
     getItem(iid) {
         /*
