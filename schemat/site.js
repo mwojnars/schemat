@@ -160,12 +160,16 @@ export class Site extends Router {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
         return this.get('URL') + this.get('path_internal')
     }
+    systemPath(item) {
+        /* Default absolute URL path ("system path") of the item. No domain. */
+        assert(item.has_id())
+        let [cid, iid] = item.id
+        return this.get('path_internal') + `/${cid}:${iid}`
+    }
 
     urlRaw(item) {
         /* Absolute raw URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-        assert(item.has_id())
-        let [cid, iid] = item.id
-        return this.systemURL() + `/${cid}:${iid}`
+        return this.get('URL') + this.systemPath(item)
     }
 }
 

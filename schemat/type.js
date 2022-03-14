@@ -621,6 +621,7 @@ export class CODE extends TEXT
     }
 }
 
+export class PATH extends STRING {}
 export class FILENAME extends STRING {}
 
 

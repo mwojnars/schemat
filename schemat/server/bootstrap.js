@@ -5,7 +5,7 @@ Creating core items from scratch and storing them as initial items in DB.
 import {print, assert, dedentCommon as dedent} from '../utils.js'
 import {ROOT_CID, SITE_CID} from '../item.js'
 import {ServerRegistry} from './registry-s.js'
-import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, FILENAME} from '../type.js'
+import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from '../data.js'
 import {YamlDB} from "./db.js";
 
@@ -22,7 +22,8 @@ let C = (data) => new Catalog(data)
 // global-default fields shared by all item types
 let default_fields = C({
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
-    info        : new TEXT({info: "Internal description of the item."}),
+    path        : new PATH({unique: true, info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
+    info        : new TEXT({info: "Description of the item."}),
     prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, as well as for categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
@@ -168,7 +169,7 @@ async function create_categories(Category) {
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         class       : 'schemat.item.Folder',
         fields      : C({
-            files       : new CATALOG(new ITEM(), new FILENAME()),     // file & directory names mapped to item IDs
+            files       : new CATALOG(new ITEM(), new PATH()),      // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })

@@ -326,17 +326,33 @@ export class Item {
 
     getCode() {
         /* Collect all code_* snippets of this item (category) and combine into a module source code. */
-        let module = this.mergeSnippets('code_module')
-
-        let className = `Class_${this.cid}_${this.iid}`
-        let classCode = `class ${className} extends Base {${body}}`
+        let module = this.mergeSnippets('module_code')
+        let body   = this.mergeSnippets('class_body')
         
-        let classExport = `export ${className} as Class`
-        let snippets = [module, classCode, classExport].filter(String)
-        let source = snippets.join('\n')
+        let className = `Class_${this.cid}_${this.iid}`
+        let classCode = body && `class ${className} extends Base {${body}}`
+        let classExpo = body && `export ${className} as Class`
+
+        let snippets = [module, classCode, classExpo].filter(Boolean)
+        return snippets.join('\n')
     }
     getModule(path) {
-        /*  */
+        return this.category.getItemModule(path)
+    }
+    getItemModule(path) {
+        /* Parse the source code from getCode() and return as a module object. Set `path` as the module's path.
+           If `path` is missing, the item's `path` property is used instead (if present),
+           or the default path built from the item's ID on the site's system path.
+         */
+        let site   = this.registry.site
+        let source = this.getCode()
+        let dpath  = this.get('path')               // default path of this item
+        if (path && dpath && path !== dpath)
+            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
+
+        path = path || dpath || site.systemPath(this)
+
+        return site.parseModule(source, path)
     }
 
     parseClass(base = Item) {
@@ -346,11 +362,8 @@ export class Item {
          */
         let name = this.get('class')
         if (name) base = this.registry.getClass(name)
-        // let env  = this.registry.onServer ? 'server' : 'client'
-        // let spec = this.getMany(`code_${env}`)          // environment-specific code extensions
-        // let code = this.getMany('code')
-        // let body = [...code, ...spec].join('\n')        // full class body from concatenated `code` and `code_*` snippets
-        let body = this.mergeSnippets('code')
+
+        let body = this.mergeSnippets('code')           // full class body from concatenated `code` and `code_*` snippets
         if (!body) return base
 
         let url = this.sourceURL('code')
@@ -860,6 +873,8 @@ export class Item {
          */
         const cached = (name, fun) => {
             function cachedMethod(...args) {
+                while (args.length && args[args.length-1] === undefined)
+                    args.pop()                                          // drop trailing `undefined` arguments
                 if (args.length) return fun.call(this, ...args)         // here and below, `this` is an Item instance
                 if (this.cache.has(name)) return this.cache.get(name)   // print(`${name}() from cache`)
                 let value = fun.call(this)

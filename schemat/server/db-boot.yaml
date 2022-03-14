@@ -19,11 +19,12 @@
                 category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code.
               "@": schemat.type.STRING
-          - key: code_init
+          - key: init
             value:
               info: Source code to be executed before this category's class is created.
                 Typically contains import_() statements. All top-level names
-                declared here are accessible for the `code` of the category.
+                declared here are accessible for the `code` of the category's
+                class.
               "@": schemat.type.CODE
           - key: code
             value:
@@ -59,9 +60,18 @@
                       info: Display name of the item. May contain spaces, punctuation, non-latin
                         characters.
                       "@": schemat.type.STRING
+                  - key: path
+                    value:
+                      info: "Canonical path of this item within the SUN, for: display, resolving
+                        relative code imports, resolving relative item
+                        references (REF type), etc. If `path` is configured,
+                        callers can only import this item's code through the
+                        `path`, so that the code is always interpreted the same
+                        and can be cached after parsing."
+                      "@": schemat.type.PATH
                   - key: info
                     value:
-                      info: Internal description of the item.
+                      info: Description of the item.
                       "@": schemat.type.TEXT
                   - key: prototype
                     value:
@@ -159,7 +169,7 @@
   fields:
     files:
       keys:
-        "@": schemat.type.FILENAME
+        "@": schemat.type.PATH
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
