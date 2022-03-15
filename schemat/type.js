@@ -565,16 +565,6 @@ export class CODE extends TEXT
         viewerAce                       // ACE viewer object
         editorAce                       // ACE editor object
 
-        createAce(value, div, options) {
-            let widget = ace.edit(div, options)
-            widget.session.setValue(value)
-            let observer = new ResizeObserver(() => widget.resize())    // watch for user resizing the Ace box;
-            observer.observe(div)                                       // on resize must update the Ace widget;
-            let destroy = widget.destroy.bind(widget)                   // amend the standard destroy() to disconnect the observer
-            widget.destroy = () => {observer.disconnect(); destroy()}
-            return widget
-        }
-
         viewer() {
             let lines  = this.props.value.trimRight().split('\n')
             let height = Math.min(10, 4 + Math.max(0, lines.length - 2)) + 'em'
@@ -589,40 +579,47 @@ export class CODE extends TEXT
                 className:      "ace-editor",
             })
         }
+
+        createAce(value, div, options) {
+            let widget = ace.edit(div, options)
+            widget.session.setValue(value)
+            let observer = new ResizeObserver(() => widget.resize())    // watch for user resizing the Ace box;
+            observer.observe(div)                                       // on resize must update the Ace widget;
+            let destroy = widget.destroy.bind(widget)                   // amend the standard destroy() to disconnect the observer
+            widget.destroy = () => {observer.disconnect(); destroy()}
+            return widget
+        }
+        deleteAce() {
+            this.viewerAce?.destroy()                       // destroy the ACE widget to free up resources
+            this.editorAce?.destroy()
+            delete this.viewerAce
+            delete this.editorAce
+        }
+
         initViewer() {
             assert(this.viewerRef.current)
             let value = this.display(this.props.value)
             this.viewerAce = this.createAce(value, this.viewerRef.current, this.constructor.viewer_options)
             this.viewerAce.renderer.$cursorLayer.element.style.display = "none"      // no Ace cursor in preview
         }
-        dropViewer() {
-            if (!this.viewerAce) return
-            this.viewerAce.destroy()
-            delete this.viewerAce
-        }
-        value() { return this.editorAce.session.getValue() }    // retrieve an edited flat value from the editor
-
-        componentDidMount()     { this.initViewer() }
-        componentWillUnmount()  { this.dropViewer() }
-
-        componentDidUpdate(prevProps, prevState) {
-            /* Create an ACE editor after open(). */
-            if (this.state.editing === prevState.editing) return
-            if (!this.state.editing) return this.initViewer()
-            this.dropViewer()
+        initEditor() {
+            this.deleteAce()
             this.editorAce = this.createAce(this.default, this.input.current, this.constructor.editor_options)
             this.editorAce.focus()
         }
-        close() {
-            this.editorAce.destroy()                            // destroy the ACE editor to free up resources
-            delete this.editorAce
-            super.close()
-        }
+        initAce()   { if (this.state.editing) this.initEditor(); else this.initViewer() }
+        value()     { return this.editorAce.session.getValue() }        // retrieve an edited flat value from the editor
+        close()     { this.deleteAce(); super.close() }
+
+        componentDidMount()                         { this.initAce() }
+        componentWillUnmount()                      { this.deleteAce() }
+        componentDidUpdate(prevProps, prevState)    { if (this.state.editing !== prevState.editing) this.initAce() }
     }
 }
 
-export class PATH extends STRING {}
-export class FILENAME extends STRING {}
+export class PATH extends STRING {
+    relative        // if True, relative paths are allowed in addition to absolute ones
+}
 
 
 /**********************************************************************************************************************
