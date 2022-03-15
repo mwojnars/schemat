@@ -119,6 +119,8 @@
     check()
     import {Item} from '/local/item.js'
     console.log('Item:', Item)
+    import * as csso from 'csso'
+    console.log('csso:', csso)
     console.log('TwitterPost/code executed')
   class_body: |
     async init() {

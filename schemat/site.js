@@ -48,8 +48,10 @@ export class Router extends Item {
 export class Site extends Router {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
+    static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
     static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
+
+    async init()   { if (this.registry.onServer) this._vm = await import('vm') }
 
     async getItem(path) {
         /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
@@ -85,37 +87,27 @@ export class Site extends Router {
     }
 
     async importModule(path, referrer) {
-        /* Custom import of JS files and code snippets from Schemat's Universal Namespace. Returns a vm.Module object. */
+        /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
-        // convert a relative path to absolute
+        // make `path` absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
-            path = this._unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
+            path = referrer.identifier + '/../' + path          // referrer is a vm.Module
         }
-        // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // NOT WORKING: fall back to Node's import for no-path global imports (no ./ or /...)
-        //     return import(path)
-        else path = this._unprefix(path)
 
-        // normalize '.' and '..' segments
+        // path normalize: drop "schemat:", convert '.' and '..' segments
+        path = this._unprefix(path)
         path = this._normPath(path)
 
-        // if `path` starts with `path_local` use the remaining path to import from Schemat's local installation files
+        // perform standard local import for non-SUN paths
+        if (path[0] !== '/') return this.localImport(path)
+
+        // local import if `path` starts with `path_local`
         let local = this.get('path_local')
-        if (local && path.startsWith(local + '/')) {
-            let pathLocal = path.slice((local + '/').length)
-            print('pathLocal:', pathLocal)
-            const vm = await import('vm')
-            let mod  = await import('./' + pathLocal)
-            let context = vm.createContext(globalThis)
-            let module = new vm.SyntheticModule(Object.keys(mod), function() {
-                Object.entries(mod).forEach(([k, v]) => this.setExport(k, v))
-            }, {context})
-            await module.link(() => {})
-            await module.evaluate()
-            return module
-        }
+        if (local && path.startsWith(local + '/'))
+            return this.localImport('./' + path.slice((local + '/').length))
 
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
@@ -123,9 +115,25 @@ export class Site extends Router {
         return this.parseModule(source, path)
     }
 
+    async localImport(path) {
+        /* Import a module from the local installation using standard import(); return as a vm.SyntheticModule. */
+        print('localImport() path:', path)
+        const vm    = this._vm
+        let local   = await import(path)
+        let context = vm.createContext(globalThis)
+        let module  = new vm.SyntheticModule(
+            Object.keys(local),
+            function() { Object.entries(local).forEach(([k, v]) => this.setExport(k, v)) },
+            {context, identifier: Site.DOMAIN_LOCAL + path}
+        )
+        await module.link(() => {})
+        await module.evaluate()
+        return module
+    }
+
     async parseModule(source, path) {
 
-        const vm = await import('vm')
+        const vm = this._vm
         let context = vm.createContext(globalThis)
         // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
