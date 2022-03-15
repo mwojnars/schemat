@@ -115,13 +115,14 @@
     text:
       "@": schemat.type.STRING
   code: |
-    import {check} from '/site/widgets.js'
-    check()
-    import {Item} from '/local/item.js'
-    console.log('Item:', Item)
-    import * as csso from 'csso'
-    console.log('csso:', csso)
     console.log('TwitterPost/code executed')
+
+    // import {check} from '/site/widgets.js'
+    // import {Item} from '/local/item.js'
+    // import vm from 'vm'
+    // check()
+    // console.log('Item:', Item)
+    // console.log('vm:', vm)
   class_body: |
     async init() {
         this.utils = await import_('/site/utils.js')

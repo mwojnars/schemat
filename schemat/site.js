@@ -76,7 +76,7 @@ export class Site extends Router {
         /* Import JS files and code snippets from Schemat's Universal Namespace.
            On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
            optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
-           the `referrer` must be empty.
+           with "@code@text" method designators appended to path; the `referrer` must be empty.
          */
         if (this.registry.onClient) {
             if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
@@ -101,7 +101,7 @@ export class Site extends Router {
         path = this._unprefix(path)
         path = this._normPath(path)
 
-        // perform standard local import for non-SUN paths
+        // standard local import for non-SUN paths
         if (path[0] !== '/') return this.localImport(path)
 
         // local import if `path` starts with `path_local`

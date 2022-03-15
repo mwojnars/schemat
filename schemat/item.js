@@ -58,12 +58,17 @@ export class Request {
     static NotFound = class extends BaseError {
         static message = "URL path not found"
     }
+    // static NoHandler = class extends BaseError {
+    //     static message = "handler not found"
+    // }
 
     type            // CALL, GET, POST, (SOCK in the future); request type; there are different handler functions for different request types
     session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
+
+    methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used
 
     method          // optional name of a handler method to execute on the target item; configured by the caller
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
@@ -98,10 +103,13 @@ export class Request {
         if (this.pathFull === '/') this.pathFull = ''
         this.path   = this.pathFull
         this.method = this._prepare(method) || meth
+
+        if (this.method) this.methods.push(this.method)
     }
 
     copy() {
         let req = T.clone(this)
+        req.methods = [...this.methods]
         req.defaultMethods = [...this.defaultMethods]
         return req
     }
@@ -112,11 +120,19 @@ export class Request {
         return method.slice(1)
     }
 
+    pushMethod(...methods) {
+        for (const method of methods) {
+            let m = this._prepare(method)
+            if (m && !this.methods.includes(m)) this.methods.push(m)
+        }
+    }
+
     setDefaultMethod(...methods) {
         /* Append one or more method names to `defaultMethods`. The methods at the beginning have higher priority.
            Each name must start with '@' for easier detection of method names in a source code -
            this prefix is truncated when assigning to this.defaultMethods.
          */
+        this.pushMethod(...methods)
         if (this.type !== 'GET') return
         for (const method of methods.reverse())
             this.defaultMethods.push(this._prepare(method))
@@ -143,7 +159,7 @@ export class Request {
         return this
     }
 
-    throwNotFound(msg, args) { throw new Request.NotFound(msg, args || {'remaining path': this.path}) }
+    throwNotFound(msg, args)  { throw new Request.NotFound(msg, args || {'remaining path': this.path}) }
 }
 
 
@@ -326,8 +342,14 @@ export class Item {
         // return custom ? this.parseClass(base) : base
     }
 
+    getCode() {
+        /* Collect all code snippets of this item, including inherited ones, and combine into a module source code.
+           Subclasses may override this method to collect a different (broader) set of source code properties.
+         */
+        return this.mergeSnippets('code')
+    }
     getModule(path) {
-        /* Parse the source code from getCode() and return as a module object. Set `path` as the module's path.
+        /* Parse the source code of this item (getCode()) and return as a module object. Set `path` as the module's path.
            If `path` is missing, the item's `path` property is used instead (if present),
            or the default path built from the item's ID on the site's system path.
          */
@@ -340,12 +362,6 @@ export class Item {
         path = path || dpath || site.systemPath(this)
 
         return site.parseModule(source, path)
-    }
-    getCode() {
-        /* Collect all `code` snippets of this item (including inherited ones) and combine into a module source code.
-           Subclasses may override this method to collect a different (broader) set of source-code properties.
-         */
-        return this.mergeSnippets('code')
     }
     getCode_() {
         /* Combine all code snippets of this category; automatically import the Base class,
@@ -757,10 +773,14 @@ export class Item {
         */
 
         if (request.path) return this.handlePartial(request)
-        
+        // print('request.methods:', request.methods)
+        // print('request.defaultMethods:', [request.method, ...request.defaultMethods])
+
         let req, res
-        let session  = request.session
-        let method   = request.method || this.defaultMethod(request) || 'default'
+        let session = request.session
+        // let method  = request.method || this.defaultMethod(request) || 'default'
+        let methods = request.methods //[method]
+        if (!methods.length) methods = ['default']
 
         if (session) {
             session.item = this
@@ -774,27 +794,30 @@ export class Item {
         //     // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
         // }
 
-        let hdl_name = `${request.type}_${method}`
-        let handler  = this[hdl_name]
-        if (handler) return handler.call(this, {request, req, res})
+        for (let method of methods) {
+            let hdl_name = `${request.type}_${method}`
+            let handler  = this[hdl_name]
+            if (handler) return handler.call(this, {request, req, res})
 
-        if (`VIEW_${method}` in this) {
-            session.view = method
-            return this.page({request, view: method})
+            if (`VIEW_${method}` in this) {
+                session.view = method
+                return this.page({request, view: method})
+            }
         }
 
-        request.throwNotFound(`no handler found for @${method} endpoint`)
+        // throw new Request.NoHandler(msg, {method})
+        request.throwNotFound(`no handler found for the access (@) method(s): ${methods}`)
     }
 
-    defaultMethod(request) {
-        /* Subclasses may override this method to decide what default @method should be used by handle()
-           for a particular `request` when no method name was supplied by the client.
-           By default, suggestions from request.defaultMethods are used, but only if request.type='GET'.
-         */
-        if (request.type !== 'GET') return
-        for (const method of request.defaultMethods.reverse())
-            if (`GET_${method}` in this) return method
-    }
+    // defaultMethod(request) {
+    //     /* Subclasses may override this method to decide what default @method should be used by handle()
+    //        for a particular `request` when no method name was supplied by the client.
+    //        By default, suggestions from request.defaultMethods are used, but only if request.type='GET'.
+    //      */
+    //     if (request.type !== 'GET') return
+    //     for (const method of request.defaultMethods.reverse())
+    //         if (`GET_${method}` in this) return method
+    // }
 
     page({title, head, body, request, view} = {}) {
         /* Generate an HTML page to be sent as a response for a GET request;
