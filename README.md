@@ -20,6 +20,7 @@
   - items
 - **active routing**: itermediate items play active role in URL path interpretation; examples:
   - ABTest
+- special routes: /$, /local, /system (?)
 
 ### Code in DB
 

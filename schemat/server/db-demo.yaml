@@ -4,6 +4,7 @@
   name: catalog.wiki
   URL: http://127.0.0.1:3000
   path_internal: /$
+  path_local: /local
   routes:
     - - - 8
         - 101
@@ -63,7 +64,7 @@
     - 6
     - 101
   name: /local
-  path: /home/marcin/Documents/priv/catalog/src/schemat
+  path: .
 - __id:
     - 8
     - 101
@@ -113,7 +114,12 @@
   fields:
     text:
       "@": schemat.type.STRING
-  code: //
+  code: |
+    import {check} from '/site/widgets.js'
+    check()
+    import {Item} from '/local/item.js'
+    console.log('Item:', Item)
+    console.log('TwitterPost/code executed')
   class_body: |
     async init() {
         this.utils = await import_('/site/utils.js')

@@ -976,8 +976,9 @@ export class CATALOG extends Schema {
     getValidKeys()  { return undefined }
 
 
-    constructor(values = null, keys = null, params = {}) {
+    constructor(values, params = {}) {
         super(params)
+        let {keys} = params
         if (keys)   this.keys = keys
         if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
@@ -1460,8 +1461,8 @@ export class DATA extends CATALOG {
 
     fields         // plain object with field names and their schemas; null means a default schema should be used for a given field
 
-    constructor(fields, keys = null, params = {}) {
-        super(null, keys, params)
+    constructor(fields, params = {}) {
+        super(null, params)
         this.fields = fields
     }
     subschema(key) {

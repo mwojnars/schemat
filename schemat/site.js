@@ -48,7 +48,8 @@ export class Router extends Item {
 export class Site extends Router {
     /* Global configuration of all applications that comprise this website, with URL routing etc. */
 
-    static MODULE_PREFIX = 'schemat:'
+    // static DOMAIN_LOCAL   = 'local:'        // for import paths that address physical files of the local Schemat installation
+    static DOMAIN_SCHEMAT = 'schemat:'      // internal server-side domain name prepended to DB import paths for debugging
 
     async getItem(path) {
         /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
@@ -92,12 +93,29 @@ export class Site extends Router {
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
             path = this._unprefix(referrer.identifier) + '/../' + path    // referrer is a vm.Module
-            path = this._normPath(path)
         }
         // else if (!path.startsWith(PREFIX) && path[0] !== '/')       // NOT WORKING: fall back to Node's import for no-path global imports (no ./ or /...)
         //     return import(path)
-        else
-            path = this._unprefix(path)
+        else path = this._unprefix(path)
+
+        // normalize '.' and '..' segments
+        path = this._normPath(path)
+
+        // if `path` starts with `path_local` use the remaining path to import from Schemat's local installation files
+        let local = this.get('path_local')
+        if (local && path.startsWith(local + '/')) {
+            let pathLocal = path.slice((local + '/').length)
+            print('pathLocal:', pathLocal)
+            const vm = await import('vm')
+            let mod  = await import('./' + pathLocal)
+            let context = vm.createContext(globalThis)
+            let module = new vm.SyntheticModule(Object.keys(mod), function() {
+                Object.entries(mod).forEach(([k, v]) => this.setExport(k, v))
+            }, {context})
+            await module.link(() => {})
+            await module.evaluate()
+            return module
+        }
 
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
@@ -112,7 +130,7 @@ export class Site extends Router {
         // let context = referrer?.context || vm.createContext({...globalThis, importLocal: p => import(p)})
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
-        let identifier = Site.MODULE_PREFIX + path
+        let identifier = Site.DOMAIN_SCHEMAT + path
         let linker = (specifier, ref, extra) => this.importModule(specifier, ref)
         let initializeImportMeta = (meta) => {meta.url = identifier}
 
@@ -123,7 +141,7 @@ export class Site extends Router {
         return module
     }
 
-    _unprefix(path) { return path.startsWith(Site.MODULE_PREFIX) ? path.slice(Site.MODULE_PREFIX.length) : path }
+    _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }
 
     _normPath(path) {
         /* Drop single dots '.' occuring as `path` segments; truncate parent segments wherever '..' occur. */
@@ -271,19 +289,19 @@ export class File extends Item {
     read()          { return this.get('content') }
     CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
 
-    async CALL_import({request}) {
-        /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
-           A function for parsing module's source code, parse(source), must be passed in `args` by the caller,
-           as well as a function for reloading the module from cache without parsing, loadCached(route).
-         */
-        let {loadCached, parse} = request.args
-        let module = loadCached(request.route) || parse(this.read())
-        if (!request.path) return module
-
-        let symbol = request.step()
-        if (request.move().path) request.throwNotFound()
-        return module[symbol]
-    }
+    // async CALL_import({request}) {
+    //     /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
+    //        A function for parsing module's source code, parse(source), must be passed in `args` by the caller,
+    //        as well as a function for reloading the module from cache without parsing, loadCached(route).
+    //      */
+    //     let {loadCached, parse} = request.args
+    //     let module = loadCached(request.route) || parse(this.read())
+    //     if (!request.path) return module
+    //
+    //     let symbol = request.step()
+    //     if (request.move().path) request.throwNotFound()
+    //     return module[symbol]
+    // }
 
     GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)
@@ -331,8 +349,10 @@ export class Folder extends Item {
 export class FolderLocal extends Folder {
 
     async init() {
-        if (this.registry.onServer)
-            this._module_path = await import('path')        // to avoid awaiting in handlePartial()
+        if (this.registry.onServer) {
+            this._mod_fs = await import('fs')
+            this._mod_path = await import('path')        // to avoid awaiting in handlePartial()
+        }
     }
 
     findRoute(request) {
@@ -342,10 +362,12 @@ export class FolderLocal extends Folder {
 
     handlePartial(request) {
         let root = this.get('path')
+        root = this._mod_path.resolve(root)                     // make `root` an absolute path
         if (!root) throw new Error('missing `path` property in a FolderLocal')
-        let path = this._module_path.join(root, request.path)   // this reduces the '..' special symbols, so we have to check
+        let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check
         if (!path.startsWith(root)) request.throwNotFound()     // if the final path still falls under the `root`, for security
-        request.session.sendFile(path)
+        if (request.session) request.session.sendFile(path)
+        else return this._mod_fs.readFileSync(path, {encoding: 'utf8'})
     }
 }
 

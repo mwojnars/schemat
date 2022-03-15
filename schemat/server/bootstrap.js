@@ -38,10 +38,10 @@ let root_fields = C({
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
-    fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
+    fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
 
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class` and `code*` implementations.", default: false}),
-    //handlers     : new CATALOG(new CODE(), null, {info: "Methods for server-side handling of web requests."}),
+    //handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),
 
     //indexes    : new CATALOG(new ITEM(Index)),
 
@@ -102,9 +102,9 @@ async function create_categories(Category) {
         // prototype   : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
-            //path_filesystem : new STRING({info: "URL path of the root folder of this site's file system."}),
-            path_internal   : new STRING({info: "URL path of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes          : new CATALOG(new ITEM({info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. No leading/trailing slashes."})),
+            path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
+            path_local      : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
+            routes          : new CATALOG(new ITEM(), {info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
@@ -169,7 +169,7 @@ async function create_categories(Category) {
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
         class_name  : 'schemat.item.Folder',
         fields      : C({
-            files       : new CATALOG(new ITEM(), new PATH()),      // file & directory names mapped to item IDs
+            files       : new CATALOG(new ITEM()),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
