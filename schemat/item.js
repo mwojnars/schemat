@@ -68,14 +68,13 @@ export class Request {
     path            // remaining path to be consumed by subsequent nodes along the route;
                     // equal pathFull at the beginning, it gets truncated while the routing proceeds
 
-    methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used
-
-    method          // optional name of a handler method to execute on the target item; configured by the caller
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
+    methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
-    defaultMethods = []     // names of suggested handler methods to use if `method` is missing in the request,
-                            // in the order of INCREASING priority (most important suggestions at the end);
-                            // this array is only collected and used for requests of type=GET (!)
+    // method          // optional name of a handler method to execute on the target item; configured by the caller
+    // defaultMethods = []     // names of suggested handler methods to use if `method` is missing in the request,
+    //                         // in the order of INCREASING priority (most important suggestions at the end);
+    //                         // this array is only collected and used for requests of type=GET (!)
 
     get position() {
         /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
@@ -110,7 +109,7 @@ export class Request {
     copy() {
         let req = T.clone(this)
         req.methods = [...this.methods]
-        req.defaultMethods = [...this.defaultMethods]
+        // req.defaultMethods = [...this.defaultMethods]
         return req
     }
 
@@ -121,22 +120,25 @@ export class Request {
     }
 
     pushMethod(...methods) {
+        /* Append names to this.methods. Each name must start with '@' for easier detection of method names
+           in a source code - this prefix is truncated when appended to this.methods.
+         */
         for (const method of methods) {
             let m = this._prepare(method)
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
     }
 
-    setDefaultMethod(...methods) {
-        /* Append one or more method names to `defaultMethods`. The methods at the beginning have higher priority.
-           Each name must start with '@' for easier detection of method names in a source code -
-           this prefix is truncated when assigning to this.defaultMethods.
-         */
-        this.pushMethod(...methods)
-        if (this.type !== 'GET') return
-        for (const method of methods.reverse())
-            this.defaultMethods.push(this._prepare(method))
-    }
+    // setDefaultMethod(...methods) {
+    //     /* Append one or more method names to `defaultMethods`. The methods at the beginning have higher priority.
+    //        Each name must start with '@' for easier detection of method names in a source code -
+    //        this prefix is truncated when assigning to this.defaultMethods.
+    //      */
+    //     this.pushMethod(...methods)
+    //     if (this.type !== 'GET') return
+    //     for (const method of methods.reverse())
+    //         this.defaultMethods.push(this._prepare(method))
+    // }
 
     step() {
         if (!this.path) return undefined
@@ -771,16 +773,14 @@ export class Item {
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
-
         if (request.path) return this.handlePartial(request)
-        // print('request.methods:', request.methods)
-        // print('request.defaultMethods:', [request.method, ...request.defaultMethods])
 
         let req, res
         let session = request.session
         // let method  = request.method || this.defaultMethod(request) || 'default'
         let methods = request.methods //[method]
         if (!methods.length) methods = ['default']
+        // print('methods:', methods)
 
         if (session) {
             session.item = this

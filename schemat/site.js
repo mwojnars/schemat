@@ -251,7 +251,7 @@ export class AppBasic extends Application {
         let step = request.step(), id
         try { id = step.split(':').map(Number) }
         catch (ex) { request.throwNotFound() }
-        request.setDefaultMethod('@full')
+        // request.pushMethod('@full')
         return [this.registry.getItem(id), request.move(step), true]
     }
 }
@@ -349,7 +349,7 @@ export class Folder extends Item {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.get(`files/${step}`)
-        request.setDefaultMethod('@file')               // if `item` doesn't provide @file method, its default one will be used
+        request.pushMethod('@file')               // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Folder)]
     }
 }
