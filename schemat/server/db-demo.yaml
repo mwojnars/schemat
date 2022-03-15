@@ -90,7 +90,7 @@
     - 100
   name: Varia
   info: Category of items that do not belong to any specific category.
-  code: >-
+  class_body: >-
     static check() { import('./utils.js').then(mod => console.log("Varia.code:
     imported ", mod)) }
 
@@ -113,7 +113,8 @@
   fields:
     text:
       "@": schemat.type.STRING
-  code: |
+  code: //
+  class_body: |
     async init() {
         this.utils = await import_('/site/utils.js')
     }

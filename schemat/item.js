@@ -301,7 +301,7 @@ export class Item {
 
     initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
-        if (this.category === this) return
+        if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
         let itemclass = this.getClass()
         T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
     }
@@ -319,27 +319,14 @@ export class Item {
            a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
          */
         return this.category.getItemClass()
+        // return this.category.getModule().Class
+
         // let base = this.category.getItemClass()
         // let custom = this.category.get('custom_class')
         // return custom ? this.parseClass(base) : base
     }
 
-    getCode() {
-        /* Collect all code_* snippets of this item (category) and combine into a module source code. */
-        let module = this.mergeSnippets('module_code')
-        let body   = this.mergeSnippets('class_body')
-        
-        let className = `Class_${this.cid}_${this.iid}`
-        let classCode = body && `class ${className} extends Base {${body}}`
-        let classExpo = body && `export ${className} as Class`
-
-        let snippets = [module, classCode, classExpo].filter(Boolean)
-        return snippets.join('\n')
-    }
     getModule(path) {
-        return this.category.getItemModule(path)
-    }
-    getItemModule(path) {
         /* Parse the source code from getCode() and return as a module object. Set `path` as the module's path.
            If `path` is missing, the item's `path` property is used instead (if present),
            or the default path built from the item's ID on the site's system path.
@@ -354,19 +341,44 @@ export class Item {
 
         return site.parseModule(source, path)
     }
+    getCode() {
+        /* Collect all `code` snippets of this item (including inherited ones) and combine into a module source code.
+           Subclasses may override this method to collect a different (broader) set of source-code properties.
+         */
+        return this.mergeSnippets('code')
+    }
+    getCode_() {
+        /* Combine all code snippets of this category; automatically import the Base class,
+           create a Class definition from `class_body`, append view methods. */
+
+        // let base = `import Item as Base from 'item.js'`
+        // let base = `import Class as Base from 'schemat:${this.category.getPath()}'`
+        //
+        // let name = this.get('class_name')
+        // if (name) base = `let Base = registry.getClass('${name}')`
+
+        let module    = this.mergeSnippets('code')
+        let classBody = this.mergeSnippets('class_body')
+        let className = `Class_${this.cid}_${this.iid}`
+        let classCode = classBody && `class ${className} extends Base {${classBody}}`
+        let classExpo = classBody && `export ${className} as Class`
+
+        let snippets = [module, classCode, classExpo].filter(Boolean)
+        return snippets.join('\n')
+    }
 
     parseClass(base = Item) {
         /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
            and dynamically parse them into a new class object - a subclass of `base` or the base class identified
            by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
          */
-        let name = this.get('class')
+        let name = this.get('class_name')
         if (name) base = this.registry.getClass(name)
 
-        let body = this.mergeSnippets('code')           // full class body from concatenated `code` and `code_*` snippets
+        let body = this.mergeSnippets('class_body')           // full class body from concatenated `code` and `code_*` snippets
         if (!body) return base
 
-        let url = this.sourceURL('code')
+        let url = this.sourceURL('class_body')
         let import_ = (path) => {
             if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
             return this.registry.site.import(path)
@@ -482,6 +494,10 @@ export class Item {
     }
 
     getName(default_)   { return this.get('name', default_) }
+    getPath() {
+        /* Default absolute import path of this item. Starts with '/'. */
+        return this.get('path') || this.registry.site.systemPath(this)
+    }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
         /*

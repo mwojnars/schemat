@@ -6,41 +6,31 @@
       value: Category
     - key: info
       value: Category of items that represent categories
-    - key: class
+    - key: class_name
       value: schemat.item.Category
     - key: cache_ttl
       value: 60
     - key: fields
       value:
         entries:
-          - key: class
+          - key: class_name
             value:
               info: Full (dotted) name of a Javascript class to be used for items of this
                 category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code.
               "@": schemat.type.STRING
-          - key: init
-            value:
-              info: Source code to be executed before this category's class is created.
-                Typically contains import_() statements. All top-level names
-                declared here are accessible for the `code` of the category's
-                class.
-              "@": schemat.type.CODE
           - key: code
             value:
-              info: Source code of a subclass (a body without heading) that will be created
-                for this category. The subclass inherits from the `class`, or
-                the class of the first base category, or the top-level Item.
+              info: Source code of a Javascript module to be created for this category.
+                Typically contains import_() statements. Before parsing, the
+                code is extended with Class implementation from other
+                properties.
               "@": schemat.type.CODE
-          - key: code_client
+          - key: class_body
             value:
-              info: Source code appended to the body of this category's class when the
-                category is loaded on a client (exclusively).
-              "@": schemat.type.CODE
-          - key: code_server
-            value:
-              info: Source code appended to the body of this category's class when the
-                category is loaded on a server (exclusively).
+              info: Source code of the class (a body without heading) that will be created for
+                this category. The class inherits from the `class_name`, or the
+                class of the first base category, or the top-level Item.
               "@": schemat.type.CODE
           - key: cache_ttl
             value:
@@ -98,7 +88,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  class: schemat.item.Site
+  class_name: schemat.item.Site
   fields:
     URL:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -126,13 +116,13 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-  class: schemat.item.Router
+  class_name: schemat.item.Router
 - __id:
     - 0
     - 3
   name: File
   info: File with a text content.
-  class: schemat.item.File
+  class_name: schemat.item.File
   fields:
     content:
       "@": schemat.type.CODE
@@ -155,7 +145,7 @@
   prototype:
     - 0
     - 3
-  class: schemat.item.FileLocal
+  class_name: schemat.item.FileLocal
   fields:
     path:
       "@": schemat.type.STRING
@@ -165,7 +155,7 @@
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class: schemat.item.Folder
+  class_name: schemat.item.Folder
   fields:
     files:
       keys:
@@ -186,7 +176,7 @@
   prototype:
     - 0
     - 5
-  class: schemat.item.FolderLocal
+  class_name: schemat.item.FolderLocal
   fields:
     path:
       "@": schemat.type.STRING
@@ -196,13 +186,13 @@
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class: schemat.item.Application
+  class_name: schemat.item.Application
   fields:
     findRoute:
       "@": schemat.type.CODE
     urlPath:
       "@": schemat.type.CODE
-    class:
+    class_name:
       "@": schemat.type.STRING
 - __id:
     - 0
@@ -211,7 +201,7 @@
   info: Application that serves items on simple URLs of the form /CID:IID. Mainly
     used for system & admin purposes, or as a last-resort default for URL
     generation.
-  class: schemat.item.AppBasic
+  class_name: schemat.item.AppBasic
   fields:
     category:
       info: Optional category(ies) of items handled by this application.
@@ -234,7 +224,7 @@
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class: schemat.item.AppSpaces
+  class_name: schemat.item.AppSpaces
   fields:
     spaces:
       values:

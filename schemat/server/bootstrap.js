@@ -31,11 +31,11 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    class        : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
-    init         : new CODE({info: "Source code to be executed before this category's class is created. Typically contains import_() statements. All top-level names declared here are accessible for the `code` of the category's class."}),
-    code         : new CODE({info: "Source code of a subclass (a body without heading) that will be created for this category. The subclass inherits from the `class`, or the class of the first base category, or the top-level Item."}),
-    code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
-    code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
+    class_name   : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
+    code         : new CODE({info: "Source code of a Javascript module to be created for this category. Typically contains import_() statements. Before parsing, the code is extended with Class implementation from other properties."}),
+    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_name`, or the class of the first base category, or the top-level Item."}),
+    // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
+    // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG(new SCHEMA(), null, {info: "Fields must have unique names.", default: default_fields}),
@@ -79,7 +79,7 @@ let root_fields = C({
 let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
-    class       : 'schemat.item.Category',      //  '/system/item.js/Category'
+    class_name  : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,
 }
@@ -98,7 +98,7 @@ async function create_categories(Category) {
     cat.Site = Category.new(SITE_CID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
-        class       : 'schemat.item.Site',
+        class_name  : 'schemat.item.Site',
         // prototype   : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
@@ -118,7 +118,7 @@ async function create_categories(Category) {
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
-        class  : 'schemat.item.Router',
+        class_name  : 'schemat.item.Router',
         // code        : dedent(`
         //                 findRoute(request) {
         //                     let step   = request.step()
@@ -146,7 +146,7 @@ async function create_categories(Category) {
     cat.File = Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
-        class       : 'schemat.item.File',
+        class_name  : 'schemat.item.File',
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
@@ -158,7 +158,7 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        class       : 'schemat.item.FileLocal',
+        class_name  : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
@@ -167,7 +167,7 @@ async function create_categories(Category) {
     cat.Folder = Category.new(5, {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class       : 'schemat.item.Folder',
+        class_name  : 'schemat.item.Folder',
         fields      : C({
             files       : new CATALOG(new ITEM(), new PATH()),      // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
@@ -177,21 +177,21 @@ async function create_categories(Category) {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
-        class       : 'schemat.item.FolderLocal',
+        class_name  : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
 
     cat.Application = Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class       : 'schemat.item.Application',
-        fields      : C({findRoute: new CODE(), urlPath: new CODE(), class: new STRING()}),
+        class_name  : 'schemat.item.Application',
+        fields      : C({findRoute: new CODE(), urlPath: new CODE(), class_name: new STRING()}),
         // custom_class: true,
     })
     cat.AppBasic = Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class       : 'schemat.item.AppBasic',
+        class_name  : 'schemat.item.AppBasic',
         fields      : C({
             category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
@@ -200,7 +200,7 @@ async function create_categories(Category) {
     cat.AppSpaces = Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class       : 'schemat.item.AppSpaces',
+        class_name  : 'schemat.item.AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
 
