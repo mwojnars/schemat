@@ -92,8 +92,8 @@
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
-    static check() { import('./utils.js').then(mod => console.log("Varia.code:
-    imported ", mod)) }
+    static check() { import('/local/utils.js').then(mod =>
+    console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
   fields:
@@ -115,6 +115,7 @@
     text:
       "@": schemat.type.STRING
   code: |
+    console.log('registry:', registry)
     console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
