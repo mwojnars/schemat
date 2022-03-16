@@ -58,9 +58,6 @@ export class Request {
     static NotFound = class extends BaseError {
         static message = "URL path not found"
     }
-    // static NoHandler = class extends BaseError {
-    //     static message = "handler not found"
-    // }
 
     type            // CALL, GET, POST, (SOCK in the future); request type; there are different handler functions for different request types
     session         // Session object; only for top-level web requests (not for internal requests)
@@ -70,11 +67,6 @@ export class Request {
 
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
-
-    // method          // optional name of a handler method to execute on the target item; configured by the caller
-    // defaultMethods = []     // names of suggested handler methods to use if `method` is missing in the request,
-    //                         // in the order of INCREASING priority (most important suggestions at the end);
-    //                         // this array is only collected and used for requests of type=GET (!)
 
     get position() {
         /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
@@ -100,16 +92,13 @@ export class Request {
         // in Express, the web path always starts with at least on character, '/', even if the URL contains a domain alone;
         // this leading-trailing slash has to be truncated for correct segmentation and detection of an empty path
         if (this.pathFull === '/') this.pathFull = ''
-        this.path   = this.pathFull
-        this.method = this._prepare(method) || meth
-
-        if (this.method) this.methods.push(this.method)
+        this.path = this.pathFull
+        this.pushMethod(method, '@' + meth)
     }
 
     copy() {
         let req = T.clone(this)
         req.methods = [...this.methods]
-        // req.defaultMethods = [...this.defaultMethods]
         return req
     }
 
@@ -128,17 +117,6 @@ export class Request {
             if (m && !this.methods.includes(m)) this.methods.push(m)
         }
     }
-
-    // setDefaultMethod(...methods) {
-    //     /* Append one or more method names to `defaultMethods`. The methods at the beginning have higher priority.
-    //        Each name must start with '@' for easier detection of method names in a source code -
-    //        this prefix is truncated when assigning to this.defaultMethods.
-    //      */
-    //     this.pushMethod(...methods)
-    //     if (this.type !== 'GET') return
-    //     for (const method of methods.reverse())
-    //         this.defaultMethods.push(this._prepare(method))
-    // }
 
     step() {
         if (!this.path) return undefined
@@ -776,10 +754,8 @@ export class Item {
         if (request.path) return this.handlePartial(request)
 
         let req, res
-        let session = request.session
-        // let method  = request.method || this.defaultMethod(request) || 'default'
-        let methods = request.methods //[method]
-        if (!methods.length) methods = ['default']
+        let {session, methods} = request
+        if (!methods.length) methods = ['default']   // methods = this.category.getMany('default_view', {reverse:false})
         // print('methods:', methods)
 
         if (session) {
@@ -787,12 +763,6 @@ export class Item {
             if (request.app) session.app = request.app
             ;[req, res] = session.channels
         }
-
-        // // get handler's source code from category's properties?
-        // if (source) {
-        //     handler = new AsyncFunction('context', `"use strict";` + source)
-        //     // handler = eval('(' + source + ')')      // surrounding (...) are required when parsing a function definition
-        // }
 
         for (let method of methods) {
             let hdl_name = `${request.type}_${method}`
@@ -805,19 +775,8 @@ export class Item {
             }
         }
 
-        // throw new Request.NoHandler(msg, {method})
-        request.throwNotFound(`no handler found for the access (@) method(s): ${methods}`)
+        request.throwNotFound(`no handler found for the @-access method(s): ${methods}`)
     }
-
-    // defaultMethod(request) {
-    //     /* Subclasses may override this method to decide what default @method should be used by handle()
-    //        for a particular `request` when no method name was supplied by the client.
-    //        By default, suggestions from request.defaultMethods are used, but only if request.type='GET'.
-    //      */
-    //     if (request.type !== 'GET') return
-    //     for (const method of request.defaultMethods.reverse())
-    //         if (`GET_${method}` in this) return method
-    // }
 
     page({title, head, body, request, view} = {}) {
         /* Generate an HTML page to be sent as a response for a GET request;
@@ -867,10 +826,10 @@ export class Item {
     CALL_item()         { return this }
     GET_json({res})     { res.sendItem(this) }
 
-    VIEW_default(props) { return this.VIEW_full(props) }
+    VIEW_default(props) { return this.VIEW_admin(props) }
 
-    VIEW_full({extra = null}) {
-        /* Detailed (admin) view of an item, as a React functional component. */
+    VIEW_admin({extra = null}) {
+        /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
@@ -1102,7 +1061,7 @@ export class Category extends Item {
         ))
     }
 
-    VIEW_full({extra = null}) {
+    VIEW_admin({extra = null}) {
         const scan = () => this.registry.scanCategory(this)         // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
@@ -1110,7 +1069,7 @@ export class Category extends Item {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return super.VIEW_full({item: this, extra: FRAGMENT(
+        return super.VIEW_admin({item: this, extra: FRAGMENT(
             H2('Items'),
             e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),

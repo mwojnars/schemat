@@ -289,11 +289,6 @@ AppSpaces.setCaching('spacesRev')
 
 export class File extends Item {
 
-    // findRoute(request) {
-    //     request.setDefaultMethod('@file')
-    //     return [this, request, true]                // "true": mark every File as a target node of a URL route
-    // }
-
     read()          { return this.get('content') }
     CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
 
@@ -310,6 +305,8 @@ export class File extends Item {
     //     if (request.move().path) request.throwNotFound()
     //     return module[symbol]
     // }
+
+    GET_default(args) { return this.GET_file(args) }
 
     GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)
@@ -349,7 +346,7 @@ export class Folder extends Item {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
         let item = this.get(`files/${step}`)
-        request.pushMethod('@file')               // if `item` doesn't provide @file method, its default one will be used
+        // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Folder)]
     }
 }

@@ -127,7 +127,7 @@
     async init() {
         this.utils = await import_('/site/utils.js')
     }
-    VIEW_main() { 
+    VIEW_view() { 
         this.utils.print('TwitterPost: imported print()')
         let text = this.get('text')
         return 'Post: <br /> ' + text
