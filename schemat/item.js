@@ -269,7 +269,7 @@ export class Item {
         let proto  = this.initPrototypes(data)
         if (proto instanceof Promise) await proto
 
-        await this.initClass(data)
+        this.initClass(data)
 
         // let init = this.init(data)                      // optional custom initialization after the data is loaded
         // if (init instanceof Promise) await init
@@ -298,11 +298,9 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    async initClass(data) {
+    initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        // let module = await this.category.getModule()
-        // let itemclass = module.Class
         let itemclass = this.category.module.Class
         T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
     }
@@ -332,25 +330,25 @@ export class Item {
     //     return this.mergeSnippets('code')
     // }
 
-    parseClass(base = Item) {
-        /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
-           and dynamically parse them into a new class object - a subclass of `base` or the base class identified
-           by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
-         */
-        let name = this.get('class_name')
-        if (name) base = this.registry.getClass(name)
-
-        let body = this.mergeSnippets('class_body')           // full class body from concatenated `code` and `code_*` snippets
-        if (!body) return base
-
-        let url = this.sourceURL('class_body')
-        let import_ = (path) => {
-            if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
-            return this.registry.site.import(path)
-        }
-        let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
-        return new Function('base', 'import_', source) (base, import_)
-    }
+    // parseClass(base = Item) {
+    //     /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
+    //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
+    //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
+    //      */
+    //     let name = this.get('class_name')
+    //     if (name) base = this.registry.getClass(name)
+    //
+    //     let body = this.mergeSnippets('class_body')           // full class body from concatenated `code` and `code_*` snippets
+    //     if (!body) return base
+    //
+    //     let url = this.sourceURL('class_body')
+    //     let import_ = (path) => {
+    //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
+    //         return this.registry.site.import(path)
+    //     }
+    //     let source = `return class extends base {${body}}` + `\n//# sourceURL=${url}`
+    //     return new Function('base', 'import_', source) (base, import_)
+    // }
         // let asyn = body.match(/\bawait\b/)              // if `body` contains "await" word, even if it's in a comment (!),
         // let func = asyn ? AsyncFunction : Function      // an async function is created instead of a synchronous one
 
@@ -360,18 +358,18 @@ export class Item {
     //     return source ? new Function(...args, source + `\n//# sourceURL=${url}`) : undefined
     // }
 
-    sourceURL(path) {
-        /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
-        function clean(s) {
-            if (typeof s !== 'string') return ''
-            return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
-        }
-        let domain   = Item.CODE_DOMAIN
-        let cat_name = clean(this.get('name'))
-        let fil_name = `${cat_name}_${this.id_str}`
-        return `${domain}:///items/${fil_name}/${path}`
-        // return `\n//# sourceURL=${url}`
-    }
+    // sourceURL(path) {
+    //     /* Build a sourceURL string for the code parsed dynamically from a data element, `path`, of this item. */
+    //     function clean(s) {
+    //         if (typeof s !== 'string') return ''
+    //         return s.replace(/\W/, '')                  // keep ascii-alphanum characters only, drop all others
+    //     }
+    //     let domain   = Item.CODE_DOMAIN
+    //     let cat_name = clean(this.get('name'))
+    //     let fil_name = `${cat_name}_${this.id_str}`
+    //     return `${domain}:///items/${fil_name}/${path}`
+    //     // return `\n//# sourceURL=${url}`
+    // }
 
 
     /***  READ access to item's data  ***/
@@ -860,7 +858,7 @@ export class Item {
     }
 }
 
-Item.setCaching('getPrototypes', 'getClass', 'parseClass', 'render')
+Item.setCaching('getPrototypes', 'getCode', 'render')
 
 
 /**********************************************************************************************************************/
@@ -900,7 +898,7 @@ export class Category extends Item {
     module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
 
     async init() {
-        this.module = await this.getModule()
+        this.module = await this.parseModule()
     }
 
     new(data = null, iid = null) {
@@ -910,35 +908,31 @@ export class Category extends Item {
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        // let itemclass = this.module.Class
-        let itemclass = this.getItemClass()
-        let item = new itemclass(this, data)
+        let item = new this.module.Class(this, data)
         if (iid !== null) item.iid = iid
         // else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
-    getItemClass() { return this.parseClass() }
-
     getCode() {
-        /* Combine all code snippets of this category; automatically import the Base class,
-           create a Class definition from `class_body`, append view methods, export the new Class.
+        /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
+           import the Base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
         // base = `import { Class as Base } from '${this.category.getPath()}'`
         let base = `import { Item as Base } from '/local/item.js'`
         let name = this.get('class_name')
         if (name) base = `let Base = registry.getClass('${name}')`
-
-        let module    = this.mergeSnippets('code')
+        
+        let code      = this.mergeSnippets('code')
         let classBody = this.mergeSnippets('class_body')
         let className = `Class_${this.cid}_${this.iid}`
         let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
         let classExpo = `export {${className} as Class}`
-
-        let snippets = [base, module, classCode, classExpo].filter(Boolean)
+        
+        let snippets  = [base, code, classCode, classExpo].filter(Boolean)
         return snippets.join('\n')
     }
-    async getModule(path) {
+    async parseModule(path) {
         /* Parse the source code of this item (getCode()) and return the module's namespace object.
            Set `path` as the module's path for the linking of nested imports in parseModule().
            If `path` is missing, the item's `path` property is used instead (if present),
@@ -1106,7 +1100,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getItemClass', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 
 /**********************************************************************************************************************/
@@ -1128,6 +1122,6 @@ export class RootCategory extends Category {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload(false, record)
     }
-    getModule() { return {Class: Category} }
+    parseModule() { return {Class: Category} }
 }
 
