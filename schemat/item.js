@@ -271,13 +271,16 @@ export class Item {
 
         await this.initClass(data)
 
-        let init = this.init(data)                      // optional custom initialization after the data is loaded
-        if (init instanceof Promise) await init
+        // let init = this.init(data)                      // optional custom initialization after the data is loaded
+        // if (init instanceof Promise) await init
 
         this.data   = data
         let ttl_ms  = this.category.get('cache_ttl') * 1000
         this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
+
+        let init = this.init()                              // optional custom initialization after this.data is loaded
+        if (init instanceof Promise) await init
 
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
@@ -298,66 +301,36 @@ export class Item {
     async initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        // let itemclass = this.getClass()
-        let module = await this.category.getModule()
-        let itemclass = module.Class
+        // let module = await this.category.getModule()
+        // let itemclass = module.Class
+        let itemclass = this.category.module.Class
         T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
     }
 
-    init(data) {}
-        /* Optional category-specific initialization after the item's `data` is loaded but NOT yet stored in this.data.
+    init() {}
+        /* Optional category-specific initialization after this.data is loaded.
            This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
            and attached to `this` at these stages. Subclasses may override this method as either sync or async.
          */
 
     /***  Dynamic loading of source code  ***/
 
-    getClass() {
-        /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
-           a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
-         */
-        // let module = await this.category.getModule()
-        // return module.Class
-        return this.category.getItemClass()
+    // getClass() {
+    //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
+    //        a custom subclass (different from the category's default) built from this item's own & inherited `code*` snippets.
+    //      */
+    //     return this.category.getItemClass()
+    //     // let base = this.category.getItemClass()
+    //     // let custom = this.category.get('custom_class')
+    //     // return custom ? this.parseClass(base) : base
+    // }
 
-        // let base = this.category.getItemClass()
-        // let custom = this.category.get('custom_class')
-        // return custom ? this.parseClass(base) : base
-    }
-
-    getCode() {
-        /* Collect all code snippets of this item, including inherited ones, and combine into a module source code.
-           Subclasses may override this method to collect a different (broader) set of source code properties.
-         */
-        return this.mergeSnippets('code')
-    }
-    async getModule(path) {
-        /* Parse the source code of this item (getCode()) and return the module's namespace object.
-           Set `path` as the module's path for the linking of nested imports in parseModule().
-           If `path` is missing, the item's `path` property is used instead (if present),
-           or the default path built from the item's ID on the site's system path.
-         */
-        let site = this.registry.site
-        if (!site) {
-            // when booting up, a couple of core items must be created before registry.site becomes available
-            let name = this.get('class_name')
-            assert(name, `missing 'class_name' property for a boot item: ${this.id_str}`)
-            let Class = this.registry.getClass(name)
-            return {Class}
-        }
-
-        let dpath = this.get('path')                // default path of this item
-        if (path && dpath && path !== dpath)
-            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
-
-        path = path || dpath || site.systemPath(this)
-
-        if (this.registry.onClient) return import(path + '@import')
-
-        let source = this.getCode()
-        let module = await site.parseModule(source, path)
-        return module.namespace
-    }
+    // getCode() {
+    //     /* Collect all code snippets of this item, including inherited ones, and combine into a module source code.
+    //        Subclasses may override this method to collect a different (broader) set of source code properties.
+    //      */
+    //     return this.mergeSnippets('code')
+    // }
 
     parseClass(base = Item) {
         /* Concatenate all the relevant `code_*` and `code` snippets of this item into a class body string,
@@ -924,6 +897,11 @@ export class Category extends Item {
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     */
+    module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
+
+    async init() {
+        this.module = await this.getModule()
+    }
 
     new(data = null, iid = null) {
         /*
@@ -932,6 +910,7 @@ export class Category extends Item {
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
+        // let itemclass = this.module.Class
         let itemclass = this.getItemClass()
         let item = new itemclass(this, data)
         if (iid !== null) item.iid = iid
@@ -958,6 +937,33 @@ export class Category extends Item {
 
         let snippets = [base, module, classCode, classExpo].filter(Boolean)
         return snippets.join('\n')
+    }
+    async getModule(path) {
+        /* Parse the source code of this item (getCode()) and return the module's namespace object.
+           Set `path` as the module's path for the linking of nested imports in parseModule().
+           If `path` is missing, the item's `path` property is used instead (if present),
+           or the default path built from the item's ID on the site's system path.
+         */
+        let site = this.registry.site
+        if (!site) {
+            // when booting up, a couple of core items must be created before registry.site becomes available
+            let name = this.get('class_name')
+            assert(name, `missing 'class_name' property for a boot item: ${this.id_str}`)
+            let Class = this.registry.getClass(name)
+            return {Class}
+        }
+
+        let dpath = this.get('path')                // default path of this item
+        if (path && dpath && path !== dpath)
+            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
+
+        path = path || dpath || site.systemPath(this)
+
+        if (this.registry.onClient) return import(path + '@import')
+
+        let source = this.getCode()
+        let module = await site.parseModule(source, path)
+        return module.namespace
     }
 
     getItem(iid) {

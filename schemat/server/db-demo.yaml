@@ -126,7 +126,7 @@
     // console.log('vm:', vm)
   class_body: |
     async init() {
-        this.utils = await import_('/site/utils.js')
+        this.utils = await import('/site/utils.js')
     }
     VIEW_view() { 
         this.utils.print('TwitterPost: imported print()')

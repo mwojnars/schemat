@@ -171,11 +171,9 @@ export class Registry {
         return root
     }
 
-    createStub(id, category = null) {
-        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class),
-           unless `category` object was provided. */
+    createStub(id) {
+        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class). */
         let [cid, iid] = id
-        if (category) return category.new(null, iid)
         let item = new Item()
         item.cid = cid
         item.iid = iid
@@ -233,7 +231,7 @@ export class Registry {
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                let item = this.createStub([cid, iid], category)
+                let item = category.new(null, iid)
                 await item.reload(undefined, record)
                 yield item
             }
