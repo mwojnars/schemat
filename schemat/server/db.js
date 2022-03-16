@@ -327,8 +327,8 @@ export class Database extends Item {
 
 export class DatabaseYaml extends Database {
 
-    async init() {
-        let filename = this.data.get('filename')
+    async init(data) {
+        let filename = data.get('filename')
         this.db = new YamlDB(filename)
         await this.db.load()
         // print('created YamlDB in DatabaseYaml:', this.db, filename)

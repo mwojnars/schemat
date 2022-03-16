@@ -271,16 +271,19 @@ export class Item {
 
         this.initClass(data)
 
-        // let init = this.init(data)                      // optional custom initialization after the data is loaded
-        // if (init instanceof Promise) await init
+        // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
+        // the item is initialized (this.data is present) while init() has not yet completed !!
+
+        let init = this.init(data)                      // optional custom initialization after the data is loaded
+        if (init instanceof Promise) await init
 
         this.data   = data
         let ttl_ms  = this.category.get('cache_ttl') * 1000
         this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
 
-        let init = this.init()                              // optional custom initialization after this.data is loaded
-        if (init instanceof Promise) await init
+        // let init = this.init()                              // optional custom initialization after this.data is loaded
+        // if (init instanceof Promise) await init
 
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
@@ -305,8 +308,8 @@ export class Item {
         T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
     }
 
-    init() {}
-        /* Optional category-specific initialization after this.data is loaded.
+    init(data) {}
+        /* Optional category-specific initialization after the data is loaded, but not yet assigned to this.data.
            This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
            and attached to `this` at these stages. Subclasses may override this method as either sync or async.
          */
@@ -321,13 +324,6 @@ export class Item {
     //     // let base = this.category.getItemClass()
     //     // let custom = this.category.get('custom_class')
     //     // return custom ? this.parseClass(base) : base
-    // }
-
-    // getCode() {
-    //     /* Collect all code snippets of this item, including inherited ones, and combine into a module source code.
-    //        Subclasses may override this method to collect a different (broader) set of source code properties.
-    //      */
-    //     return this.mergeSnippets('code')
     // }
 
     // parseClass(base = Item) {
@@ -374,18 +370,18 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    getPrototypes()     { return this.data.getValues('prototype') }
+    getPrototypes(data)     { return (data || this.data).getValues('prototype') }
 
-    get(path, default_ = undefined) {
+    get(path, default_, data) {
 
-        this.assertLoaded()
+        data || this.assertLoaded()
 
         // search in this.data
-        let value = this.data.findValue(path)
+        let value = (data || this.data).findValue(path)
         if (value !== undefined) return value
 
         // search in prototypes
-        for (const proto of this.getPrototypes()) {
+        for (const proto of this.getPrototypes(data)) {
             value = proto.get(path)
             if (value !== undefined) return value
         }
@@ -407,20 +403,20 @@ export class Item {
         return item
     }
 
-    getMany(key, {inherit = true, reverse = true} = {}) {
+    getMany(key, {inherit = true, reverse = true} = {}, data) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
            in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
            or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
            The `key` can be an array of keys.
          */
-        this.assertLoaded()
+        data || this.assertLoaded()
 
         if (typeof key === 'string') key = [key]
-        let own = this.data.getValues(...key)
+        let own = (data || this.data).getValues(...key)
         if (!inherit) return own
 
-        let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
+        let inherited = this.getPrototypes(data).map(p => p.getMany(key, {inherit, reverse}))
         if (!inherited.length) return own
 
         // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
@@ -431,12 +427,12 @@ export class Item {
         return values
     }
 
-    mergeSnippets(key, params) {
+    mergeSnippets(key, params, data) {
         /* Calls getMany() to find all entries with a given `key` including the environment-specific
            {key}_client OR {key}_server keys; assumes the values are strings.
            Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
         let env = this.registry.onServer ? 'server' : 'client'
-        let snippets = this.getMany([key, `${key}_${env}`], params)
+        let snippets = this.getMany([key, `${key}_${env}`], params, data)
         return snippets.join('\n')
     }
 
@@ -457,9 +453,9 @@ export class Item {
     }
 
     getName(default_)   { return this.get('name', default_) }
-    getPath() {
+    getPath(data) {
         /* Default import path of this item. Starts with '/' (absolute path). */
-        return this.get('path') || this.registry.site.systemPath(this)
+        return this.get('path', '', data) || this.registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -897,8 +893,8 @@ export class Category extends Item {
     */
     module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
 
-    async init() {
-        this.module = await this.parseModule()
+    async init(data) {
+        this.module = await this.parseModule(data)
     }
 
     new(data = null, iid = null) {
@@ -914,26 +910,8 @@ export class Category extends Item {
         return item
     }
 
-    getCode() {
-        /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
-           import the Base class, create a Class definition from `class_body`, append view methods, export the new Class.
-         */
-        // base = `import { Class as Base } from '${this.category.getPath()}'`
-        let base = `import { Item as Base } from '/local/item.js'`
-        let name = this.get('class_name')
-        if (name) base = `let Base = registry.getClass('${name}')`
-        
-        let code      = this.mergeSnippets('code')
-        let classBody = this.mergeSnippets('class_body')
-        let className = `Class_${this.cid}_${this.iid}`
-        let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
-        let classExpo = `export {${className} as Class}`
-        
-        let snippets  = [base, code, classCode, classExpo].filter(Boolean)
-        return snippets.join('\n')
-    }
-    async parseModule(path) {
-        /* Parse the source code of this item (getCode()) and return the module's namespace object.
+    async parseModule(data) {
+        /* Parse the source code of this item (from getCode()) and return the module's namespace object.
            Set `path` as the module's path for the linking of nested imports in parseModule().
            If `path` is missing, the item's `path` property is used instead (if present),
            or the default path built from the item's ID on the site's system path.
@@ -941,23 +919,43 @@ export class Category extends Item {
         let site = this.registry.site
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            let name = this.get('class_name')
+            let name = this.get('class_name', '', data)
             assert(name, `missing 'class_name' property for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
         }
 
-        let dpath = this.get('path')                // default path of this item
-        if (path && dpath && path !== dpath)
-            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
+        // let dpath = this.get('path')                // default path of this item
+        // if (path && dpath && path !== dpath)
+        //     throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
+        //
+        // path = path || dpath || site.systemPath(this)
 
-        path = path || dpath || site.systemPath(this)
+        let path = this.getPath(data)
 
         if (this.registry.onClient) return import(path + '@import')
 
-        let source = this.getCode()
+        let source = this.getCode(data)
         let module = await site.parseModule(source, path)
         return module.namespace
+    }
+
+    getCode(data) {
+        /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
+           import the Base class, create a Class definition from `class_body`, append view methods, export the new Class.
+         */
+        let base = `import { Item as Base } from '/local/item.js'`
+        let name = this.get('class_name', '', data)
+        if (name) base = `let Base = registry.getClass('${name}')`
+
+        let code      = this.mergeSnippets('code', {}, data)
+        let classBody = this.mergeSnippets('class_body', {}, data)
+        let className = `Class_${this.cid}_${this.iid}`
+        let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
+        let classExpo = `export {${className} as Class}`
+
+        let snippets  = [base, code, classCode, classExpo].filter(Boolean)
+        return snippets.join('\n')
     }
 
     getItem(iid) {
@@ -994,8 +992,13 @@ export class Category extends Item {
         return this.getItemSchema().getAssets()
     }
 
-    GET_import({res}) {
+    GET_import({request, res}) {
         /* Send JS source code of this category with a proper MIME type configured. */
+        let path  = request.pathFull
+        let dpath = this.get('path')                // default path of this item
+        if (dpath && path !== dpath)
+            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
+
         res.type('js')
         res.send(this.getCode())
     }

@@ -115,21 +115,28 @@
     text:
       "@": schemat.type.STRING
   code: |
-    console.log('registry:', registry)
+    // import {print} from '/site/utils.js'
+    // console.log('print:', print)
     console.log('TwitterPost/code executed')
 
     // import {check} from '/site/widgets.js'
     // import {Item} from '/local/item.js'
     // import vm from 'vm'
     // check()
+    // console.log('registry:', registry)
     // console.log('Item:', Item)
     // console.log('vm:', vm)
   class_body: |
     async init() {
-        this.utils = await import('/site/utils.js')
+        console.log('this.utils #1: started...')
+        let utils = await import('/site/utils.js')
+        this.utils = utils
+        console.log('this.utils #1:', this.utils)
     }
-    VIEW_view() { 
-        this.utils.print('TwitterPost: imported print()')
+    VIEW_view() {
+        this.assertLoaded()
+        console.log('this.utils #2:', this.utils)
+        console.log('TwitterPost: imported print()')
         let text = this.get('text')
         return 'Post: <br /> ' + text
     }
