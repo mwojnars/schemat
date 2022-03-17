@@ -911,10 +911,9 @@ export class Category extends Item {
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let item = new this.module.Class(this) //, data)
+        let item = new this.module.Class(this)
         if (data) await item.setData(data)
         if (iid !== null) item.iid = iid
-        // else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
     }
 
@@ -1119,8 +1118,8 @@ export class RootCategory extends Category {
     cid = ROOT_CID
     iid = ROOT_CID
 
-    constructor(registry) { //data = null
-        super(null)   //data
+    constructor(registry) {
+        super(null)
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
