@@ -276,7 +276,7 @@ export class Item {
         let proto  = this.initPrototypes(data)
         if (proto instanceof Promise) await proto
 
-        this.initClass(data)
+        await this.initClass(data)
 
         // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
         // the item is initialized (this.data is present) while init() has not yet completed !!
@@ -308,11 +308,12 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    initClass(data) {
+    async initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        let itemclass = this.category.module.Class
-        T.setClass(this, itemclass)                 // change the actual class of this item from Item to `itemclass`
+        // let itemclass = this.category.module.Class
+        let module = await this.category.getModule()
+        T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
 
     init(data) {}
@@ -341,10 +342,10 @@ export class Item {
     //     let name = this.get('_boot_class')
     //     if (name) base = this.registry.getClass(name)
     //
-    //     let body = this.mergeSnippets('class_body')           // full class body from concatenated `code` and `code_*` snippets
+    //     let body = this.mergeSnippets('class')           // full class body from concatenated `code` and `code_*` snippets
     //     if (!body) return base
     //
-    //     let url = this.sourceURL('class_body')
+    //     let url = this.sourceURL('class')
     //     let import_ = (path) => {
     //         if (path[0] === '.') throw Error(`relative import not allowed in dynamic code of a category (${url}), path='${path}'`)
     //         return this.registry.site.import(path)
@@ -846,8 +847,8 @@ export class Item {
                 if (args.length) return fun.call(this, ...args)         // here and below, `this` is an Item instance
                 if (this.cache.has(name)) return this.cache.get(name)   // print(`${name}() from cache`)
                 let value = fun.call(this)
-                this.cache.set(name, value)             // may store a promise
-                return value                            // may return a promise
+                this.cache.set(name, value)             // may store a promise (!)
+                return value                            // may return a promise (!), the caller should be aware
             }
             Object.defineProperty(cachedMethod, 'name', {value: `${name}_cached`})
             cachedMethod.isCached = true                // for detection of an existing wrapper, to avoid repeated wrapping
@@ -898,11 +899,12 @@ export class Category extends Item {
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     */
-    module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
 
-    async init(data) {
-        this.module = await this.parseModule(data)
-    }
+    // module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
+    //
+    // async init(data) {
+    //     this.module = await this.parseModule(data)
+    // }
 
     async new(data = null, iid = null) {
         /*
@@ -911,13 +913,15 @@ export class Category extends Item {
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let item = new this.module.Class(this)
+        // let item = new this.module.Class(this)
+        let module = await this.getModule()
+        let item = new module.Class(this)
         if (data) await item.setData(data)
         if (iid !== null) item.iid = iid
         return item
     }
 
-    async parseModule(data) {
+    async getModule(data) {
         /* Parse the source code of this item (from getCode()) and return the module's namespace object.
            Set `path` as the module's path for the linking of nested imports in parseModule().
            If `path` is missing, the item's `path` property is used instead (if present),
@@ -949,16 +953,18 @@ export class Category extends Item {
 
     getCode(data) {
         /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
-           import the Base class, create a Class definition from `class_body`, append view methods, export the new Class.
+           import the Base class, create a Class definition from `class`, append view methods, export the new Class.
          */
         let name = this.get('_boot_class', '', data)
         let base = `let Base = ` + (name ? `registry.getClass('${name}')` : 'Item')     // Item class is available globally without import
 
         let code      = this.mergeSnippets('code', {}, data)
-        let classBody = this.mergeSnippets('class_body', {}, data)
+        let classBody = this.mergeSnippets('class', {}, data)
         let className = `Class_${this.cid}_${this.iid}`
         let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
         let classExpo = `export {${className} as Class}`
+
+        // let views     = this.getInherited('views')
 
         let snippets  = [base, code, classCode, classExpo].filter(Boolean)
         return snippets.join('\n')
@@ -1109,7 +1115,7 @@ export class Category extends Item {
     }
 }
 
-Category.setCaching('getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 
 /**********************************************************************************************************************/
@@ -1131,7 +1137,7 @@ export class RootCategory extends Category {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload(false, record)
     }
-    async parseModule() { return {Class: Category} }
+    async getModule() { return {Class: Category} }
 }
 
 /**********************************************************************************************************************/

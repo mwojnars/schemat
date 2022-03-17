@@ -31,14 +31,16 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
-    code         : new CODE({info: "Source code of a Javascript module to be created for this category. Typically contains import_() statements. Before parsing, the code is extended with Class implementation from other properties."}),
-    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
+    code         : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class can be defined through a `class` and/or `views` properties."}),
+    class        : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
+    views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added to the category's Class (`class` property) as VIEW_* methods for rendering item views."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
+
+    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
 
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class` and `code*` implementations.", default: false}),
     //handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),

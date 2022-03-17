@@ -91,7 +91,7 @@
     - 100
   name: Varia
   info: Category of items that do not belong to any specific category.
-  class_body: >-
+  class: >-
     static check() { import('/local/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
@@ -117,9 +117,11 @@
           "@": schemat.type.STRING
       - fields
     - - |
+        import { P, BR } from '/local/react-utils.js'
+
         // import {print} from '/site/utils.js'
         // console.log('print:', print)
-        console.log('TwitterPost/code executed')
+        // console.log('TwitterPost/code executed')
 
         // import {check} from '/site/widgets.js'
         // import {Item} from '/local/item.js'
@@ -135,9 +137,10 @@
             console.log('this.utils #2:', this.utils)
             console.log('TwitterPost: imported print()')
             let text = this.get('text')
-            return 'Post: <br /> ' + text
+            return P('Post', BR(), text)
+            // return 'Post: <br /> ' + text
         }
-      - class_body
+      - class
     - - |-
         // FOR RECORD ONLY...
         // this method works OK (no await import)
@@ -156,7 +159,7 @@
             this.utils = utils
             console.log('this.utils #1:', this.utils)
         }
-      - class_body
+      - class
 - __id:
     - 200
     - 100
