@@ -32,6 +32,16 @@
 - `vm` used to dynamically create modules (server-side)
 - `*_server`, `*_client` to restrict parts of code to server/client env only
 
+### Known issues
+
+- **import()** in dynamic code, when used inside a method and awaited,
+may cause the method be completed too late, after surrounding async code;
+this is probably caused by a bug in `vm` module execution (?).
+Workarounds:
+  - use top-level `import` in the category's initialization section (`code`);
+  - inside a method, use `return import().then(...)` instead of `await import()`.
+
+
 ---
 ## DEVELOPMENT
 
