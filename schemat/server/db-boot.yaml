@@ -28,9 +28,10 @@
               "@": schemat.type.CODE
           - key: views
             value:
-              info: Source code of React functional components to be added to the category's
-                Class (`class` property) as VIEW_* methods for rendering item
-                views.
+              info: "Source code of React functional components to be added dynamically to the
+                category's Class (`class` property) as VIEW_*(props) methods for
+                rendering item views. View methods are called bound: this=item
+                to be rendered."
               values:
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG

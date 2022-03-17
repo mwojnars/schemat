@@ -116,9 +116,14 @@
     - - text:
           "@": schemat.type.STRING
       - fields
+    - - import { P, BR } from '/local/react-utils.js'
+      - code
+    - - view: |
+          let text = this.get('text')
+          return P('Post', BR(), text)
+      - views
     - - |
-        import { P, BR } from '/local/react-utils.js'
-
+        // DRAFT...
         // import {print} from '/site/utils.js'
         // console.log('print:', print)
         // console.log('TwitterPost/code executed')
@@ -132,13 +137,12 @@
         // console.log('vm:', vm)
       - code
     - - |
-        VIEW_view() {
+        VIEW_view_old() {
             this.assertLoaded()
             console.log('this.utils #2:', this.utils)
             console.log('TwitterPost: imported print()')
             let text = this.get('text')
             return P('Post', BR(), text)
-            // return 'Post: <br /> ' + text
         }
       - class
     - - |-

@@ -33,7 +33,7 @@ let default_fields = C({
 let root_fields = C({
     code         : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class can be defined through a `class` and/or `views` properties."}),
     class        : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
-    views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added to the category's Class (`class` property) as VIEW_* methods for rendering item views."}),
+    views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added dynamically to the category's Class (`class` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 

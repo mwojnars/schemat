@@ -900,12 +900,6 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    // module          // module object (its namespace) of this category; contains all dynamic code, parsed; created in init()
-    //
-    // async init(data) {
-    //     this.module = await this.parseModule(data)
-    // }
-
     async new(data = null, iid = null) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
@@ -921,7 +915,7 @@ export class Category extends Item {
         return item
     }
 
-    async getModule(data) {
+    async getModule() {
         /* Parse the source code of this item (from getCode()) and return the module's namespace object.
            Set `path` as the module's path for the linking of nested imports in parseModule().
            If `path` is missing, the item's `path` property is used instead (if present),
@@ -930,7 +924,7 @@ export class Category extends Item {
         let site = this.registry.site
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            let name = this.get('_boot_class', '', data)
+            let name = this.get('_boot_class')
             assert(name, `missing '_boot_class' property for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
@@ -942,29 +936,37 @@ export class Category extends Item {
         //
         // path = path || dpath || site.systemPath(this)
 
-        let path = this.getPath(data)
+        let path = this.getPath()
 
         if (this.registry.onClient) return import(path + '@import')
 
-        let source = this.getCode(data)
+        let source = this.getCode()
         let module = await site.parseModule(source, path)
         return module.namespace
     }
 
-    getCode(data) {
+    getCode() {
         /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
            import the Base class, create a Class definition from `class`, append view methods, export the new Class.
          */
-        let name = this.get('_boot_class', '', data)
+        let name = this.get('_boot_class')
         let base = `let Base = ` + (name ? `registry.getClass('${name}')` : 'Item')     // Item class is available globally without import
 
-        let code      = this.mergeSnippets('code', {}, data)
-        let classBody = this.mergeSnippets('class', {}, data)
+        // module's top-level `code` and Class body (`class`)
+        let code      = this.mergeSnippets('code')
+        let classBody = this.mergeSnippets('class')
+
+        // extends Class body with VIEW_* methods (`views`)
+        let methods = []
+        let views = this.getInherited('views')
+        for (let {key: vname, value: vbody} of views)
+            methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
+        classBody += methods.join('\n')
+
+        // Class definition and export stmt
         let className = `Class_${this.cid}_${this.iid}`
         let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
         let classExpo = `export {${className} as Class}`
-
-        // let views     = this.getInherited('views')
 
         let snippets  = [base, code, classCode, classExpo].filter(Boolean)
         return snippets.join('\n')

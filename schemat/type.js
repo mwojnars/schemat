@@ -1429,7 +1429,7 @@ CATALOG.Table = class extends Component {
             // some actions in `ops` must be defined separately
             ops.moveup   = pos > 0   ? () => run.move(pos,-1) : null        // moveup() is only present if there is a position available above
             ops.movedown = pos < N-1 ? () => run.move(pos,+1) : null        // similar for movedown()
-            ops.initKey  = key => run.initKey(pos, key, schema)
+            ops.initKey  = isnew ? key => run.initKey(pos, key, schema) : null
             ops.keyNames = keyNames
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
