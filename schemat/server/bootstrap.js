@@ -31,9 +31,9 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    class_name   : new STRING({info: "Full (dotted) name of a Javascript class to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
+    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code."}),
     code         : new CODE({info: "Source code of a Javascript module to be created for this category. Typically contains import_() statements. Before parsing, the code is extended with Class implementation from other properties."}),
-    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_name`, or the class of the first base category, or the top-level Item."}),
+    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
@@ -79,7 +79,7 @@ let root_fields = C({
 let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
-    class_name  : 'schemat.item.Category',      //  '/system/item.js/Category'
+    _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,
 }
@@ -95,10 +95,10 @@ async function create_categories(Category) {
     let cat = {}
     assert(SITE_CID === 1)
 
-    cat.Site = Category.new(SITE_CID, {
+    cat.Site = await Category.new(SITE_CID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
-        class_name  : 'schemat.item.Site',
+        _boot_class : 'schemat.item.Site',
         // prototype   : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
@@ -111,14 +111,14 @@ async function create_categories(Category) {
         }),
     })
 
-    cat.Router  = Category.new(2, {
+    cat.Router  = await Category.new(2, {
         name        : "Router",
         info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
         fields      : C({
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
-        class_name  : 'schemat.item.Router',
+        _boot_class : 'schemat.item.Router',
         // code        : dedent(`
         //                 findRoute(request) {
         //                     let step   = request.step()
@@ -129,11 +129,11 @@ async function create_categories(Category) {
         //                 }
         //             `),
     })
-    // cat.Database = Category.new({
+    // cat.Database = await Category.new({
     //     name        : "Database",
     //     info        : "Base category for items that represent an abstract database layer.",
     // })
-    // cat.DatabaseYaml = Category.new({
+    // cat.DatabaseYaml = await Category.new({
     //     name        : "YAML Database",
     //     info        : "Single-machine database stored in a YAML file.",
     //     class       : 'schemat.item.DatabaseYaml',
@@ -143,10 +143,10 @@ async function create_categories(Category) {
     //     }),
     // })
 
-    cat.File = Category.new(3, {
+    cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
-        class_name  : 'schemat.item.File',
+        _boot_class : 'schemat.item.File',
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),
@@ -154,53 +154,53 @@ async function create_categories(Category) {
             _is_file    : new BOOLEAN({default: true}),
         }),
     })
-    cat.FileLocal = Category.new(4, {
+    cat.FileLocal = await Category.new(4, {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        class_name  : 'schemat.item.FileLocal',
+        _boot_class : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
         }),
     })
-    cat.Folder = Category.new(5, {
+    cat.Folder = await Category.new(5, {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_name  : 'schemat.item.Folder',
+        _boot_class : 'schemat.item.Folder',
         fields      : C({
             files       : new CATALOG(new ITEM()),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
-    cat.FolderLocal = Category.new(6, {
+    cat.FolderLocal = await Category.new(6, {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
-        class_name  : 'schemat.item.FolderLocal',
+        _boot_class : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
 
-    cat.Application = Category.new(7, {
+    cat.Application = await Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class_name  : 'schemat.item.Application',
-        fields      : C({findRoute: new CODE(), urlPath: new CODE(), class_name: new STRING()}),
+        _boot_class : 'schemat.item.Application',
+        fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
-    cat.AppBasic = Category.new(8, {
+    cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class_name  : 'schemat.item.AppBasic',
+        _boot_class : 'schemat.item.AppBasic',
         fields      : C({
             category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
         }),
     })
-    cat.AppSpaces = Category.new(9, {
+    cat.AppSpaces = await Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_name  : 'schemat.item.AppSpaces',
+        _boot_class : 'schemat.item.AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
 
@@ -212,12 +212,12 @@ async function create_categories(Category) {
 async function create_items(cat, Category) {
     let item = {}
     
-    // item.test_txt = cat.File.new({content: "This is a test file."})
-    // item.dir_tmp1 = cat.Folder.new({files: C({'test.txt': item.test_txt})})
-    // item.dir_tmp2 = cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
-    // item.database = cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
+    // item.test_txt = await cat.File.new({content: "This is a test file."})
+    // item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
+    // item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
+    // item.database = await cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
 
-    // item.app_system = cat.Application.new({
+    // item.app_system = await cat.Application.new({
     //     name: "AppBasic",
     //     info: "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
     //
@@ -234,14 +234,14 @@ async function create_items(cat, Category) {
     //         return cid + ':' + iid
     //     `),
     // })
-    // item.app_spaces = cat.Application.new({
+    // item.app_spaces = await cat.Application.new({
     //     name        : "AppSpaces",
     //     info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
     //     class       : 'schemat.item.AppSpaces',
     //     // fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     // })
 
-    item.dir_system = cat.Folder.new({name: "/system",
+    item.dir_system = await cat.Folder.new({name: "/system",
         files: C({
             'Application'   : cat.Application,
             'File'          : cat.File,
@@ -250,8 +250,8 @@ async function create_items(cat, Category) {
         }),
     })
 
-    // item.utils_js   = cat.File.new({content: `export let print = console.log`})
-    // item.widgets_js = cat.File.new({content: dedent(`
+    // item.utils_js   = await cat.File.new({content: `export let print = console.log`})
+    // item.widgets_js = await cat.File.new({content: dedent(`
     //         import {print} from '../site/utils.js'
     //         export function check() { print('called /site/widgets.js/check()') }
     //         //let fs = await importLocal('fs')
@@ -259,9 +259,9 @@ async function create_items(cat, Category) {
     //     `)
     // })
     //
-    // item.dir_demo   = cat.Folder.new({name: "/demo", })
-    // item.dir_apps   = cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
-    // item.dir_site   = cat.Folder.new({name: "/site",
+    // item.dir_demo   = await cat.Folder.new({name: "/demo", })
+    // item.dir_apps   = await cat.Folder.new({name: "/apps", files: C({'demo': item.dir_demo})})
+    // item.dir_site   = await cat.Folder.new({name: "/site",
     //     files: C({
     //         'utils.js':     item.utils_js,
     //         'widgets.js':   item.widgets_js,
@@ -270,8 +270,8 @@ async function create_items(cat, Category) {
     //
     // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
-    // item.dir_local = cat.FolderLocal.new({name: '/local', path: `${path_local}`})
-    // item.dir_files = cat.Folder.new({name: "/files",
+    // item.dir_local = await cat.FolderLocal.new({name: '/local', path: `${path_local}`})
+    // item.dir_files = await cat.Folder.new({name: "/files",
     //     files: C({
     //         'apps':     item.dir_apps,
     //         'local':    item.dir_local,
@@ -280,8 +280,8 @@ async function create_items(cat, Category) {
     //     })
     // })
     //
-    // item.app_system  = cat.AppBasic.new({name: "/$",})
-    // item.app_catalog = cat.AppSpaces.new({name: "Catalog",
+    // item.app_system  = await cat.AppBasic.new({name: "/$",})
+    // item.app_catalog = await cat.AppSpaces.new({name: "Catalog",
     //     spaces: C({
     //         'sys.category':     Category,
     //         'sys.site':         cat.Site,
@@ -290,7 +290,7 @@ async function create_items(cat, Category) {
     //     }),
     // })
 
-    // item.router = cat.Router.new({name: "Router",
+    // item.router = await cat.Router.new({name: "Router",
     //     routes: C({
     //         'files':    item.dir_files,
     //         '$':        item.app_system,
@@ -298,7 +298,7 @@ async function create_items(cat, Category) {
     //     }),
     // })
     
-    // item.catalog_wiki = cat.Site.new({
+    // item.catalog_wiki = await cat.Site.new({
     //     name        : "catalog.wiki",
     //     URL         : "http://127.0.0.1:3000",
     //     path_internal : "/$",

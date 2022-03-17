@@ -220,13 +220,20 @@ export class Item {
         return false
     }
 
-    constructor(category = null, data = null) {
-        if (data) this.data = data instanceof Data ? data : new Data(data)
+    constructor(category) {   // data = null
+        /* To set this.data, setData() must be called and awaited (!) separately after this constructor. */
+        // if (data) this.data = data instanceof Data ? data : new Data(data)
         if (category) {
             this.category = category
             this.registry = category.registry
             this.cid      = category.iid
         }
+    }
+
+    async setData(data) {
+        if (!(data instanceof Data)) data = new Data(data)
+        await this.init(data)       // must be called before this.data is set to avoid concurrent async code treat this item as initialized
+        this.data = data
     }
 
     async load(field = null, use_schema = true) {
@@ -331,7 +338,7 @@ export class Item {
     //        and dynamically parse them into a new class object - a subclass of `base` or the base class identified
     //        by the `class` property. Return the base if no code snippets found. Inherited snippets are included in parsing.
     //      */
-    //     let name = this.get('class_name')
+    //     let name = this.get('_boot_class')
     //     if (name) base = this.registry.getClass(name)
     //
     //     let body = this.mergeSnippets('class_body')           // full class body from concatenated `code` and `code_*` snippets
@@ -897,14 +904,15 @@ export class Category extends Item {
         this.module = await this.parseModule(data)
     }
 
-    new(data = null, iid = null) {
+    async new(data = null, iid = null) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
         set its IID, or mark as pending for insertion to DB if no `iid` provided.
         The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let item = new this.module.Class(this, data)
+        let item = new this.module.Class(this) //, data)
+        if (data) await item.setData(data)
         if (iid !== null) item.iid = iid
         // else this.registry.stage(item)                  // mark `item` for insertion on the next commit()
         return item
@@ -919,8 +927,8 @@ export class Category extends Item {
         let site = this.registry.site
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            let name = this.get('class_name', '', data)
-            assert(name, `missing 'class_name' property for a boot item: ${this.id_str}`)
+            let name = this.get('_boot_class', '', data)
+            assert(name, `missing '_boot_class' property for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
         }
@@ -944,9 +952,8 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
            import the Base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let base = `import { Item as Base } from '/local/item.js'`
-        let name = this.get('class_name', '', data)
-        if (name) base = `let Base = registry.getClass('${name}')`
+        let name = this.get('_boot_class', '', data)
+        let base = `let Base = ` + (name ? `registry.getClass('${name}')` : 'Item')     // Item class is available globally without import
 
         let code      = this.mergeSnippets('code', {}, data)
         let classBody = this.mergeSnippets('class_body', {}, data)
@@ -1019,7 +1026,7 @@ export class Category extends Item {
         // print('request body:  ', req.body)
         // req.body is an object representing state of a Data instance, decoded from JSON by middleware
         let data = await (new Data).__setstate__(req.body)
-        let item = this.new(data)
+        let item = await this.new(data)
         await this.registry.insert(item)
         // await this.registry.commit()
         res.sendItem(item)
@@ -1112,8 +1119,8 @@ export class RootCategory extends Category {
     cid = ROOT_CID
     iid = ROOT_CID
 
-    constructor(registry, data = null) {
-        super(null, data)
+    constructor(registry) { //data = null
+        super(null)   //data
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
@@ -1125,6 +1132,9 @@ export class RootCategory extends Category {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload(false, record)
     }
-    parseModule() { return {Class: Category} }
+    async parseModule() { return {Class: Category} }
 }
 
+/**********************************************************************************************************************/
+
+globalThis.Item = Item              // Item class is available globally without import, for dynamic code

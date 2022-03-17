@@ -177,7 +177,8 @@ export class ServerRegistry extends Registry {
         are initialized from there rather than being loaded from DB.
         */
         let root = this.root = new RootCategory(this, root_data)
-        if (!root_data) await root.load()
+        await (root_data ? root.setData(root_data) : root.load())
+        // if (!root_data) await root.load()
         return root
     }
 
