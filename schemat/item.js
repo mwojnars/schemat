@@ -461,9 +461,9 @@ export class Item {
     }
 
     getName(default_)   { return this.get('name', default_) }
-    getPath(data) {
+    getPath() {
         /* Default import path of this item. Starts with '/' (absolute path). */
-        return this.get('path', '', data) || this.registry.site.systemPath(this)
+        return this.get('path') || this.registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -862,7 +862,7 @@ export class Item {
     }
 }
 
-Item.setCaching('getPrototypes', 'getCode', 'render')
+Item.setCaching('getPrototypes', 'getCode', 'getPath', 'render')
 
 
 /**********************************************************************************************************************/
@@ -925,7 +925,9 @@ export class Category extends Item {
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
             let name = this.get('_boot_class')
-            assert(name, `missing '_boot_class' property for a boot item: ${this.id_str}`)
+            if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
+            if (this.get('code') || this.get('class') || this.get('views'))
+                throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
         }
@@ -1006,16 +1008,25 @@ export class Category extends Item {
         return this.getItemSchema().getAssets()
     }
 
+    _checkPath(request) {
+        /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
+        let path  = request.pathFull
+        let dpath = this.getPath()              // `path` must be equal the default path of this item
+        if (path !== dpath)
+            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
+    }
+    // CALL_import({request}) {
+    //     /* Return this category's module object in response to an internal call. */
+    //     this._checkPath(request)
+    //     return this.getModule()
+    // }
     GET_import({request, res}) {
         /* Send JS source code of this category with a proper MIME type configured. */
-        let path  = request.pathFull
-        let dpath = this.get('path')                // default path of this item
-        if (dpath && path !== dpath)
-            throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
-
+        this._checkPath(request)
         res.type('js')
         res.send(this.getCode())
     }
+
     async GET_scan({res}) {
         /* Retrieve all children of this category and send to client as a JSON.
            TODO: set a size limit & offset (pagination).

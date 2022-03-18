@@ -120,7 +120,7 @@
       - code
     - - view: |
           let text = this.get('text')
-          return P('Post', BR(), text)
+          return P('Post:', BR(), text)
       - views
     - - |
         // DRAFT...
