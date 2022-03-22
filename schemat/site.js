@@ -294,8 +294,27 @@ AppSpaces.setCaching('spacesRev')
 
 export class File extends Item {
 
-    read()          { return this.get('content') }
-    CALL_text()     { return this.read() }          // plain text of this File for Site.import() etc.
+    process(content) {
+        /* Optional processing (e.g., transpiling, compaction) of this file before it gets sent to a client/caller.
+           Can be overriden by subclasses.
+         */
+        return content
+    }
+    content() {
+        /* Initial raw content of this file before any processing. */
+        return this.get('content')
+    }
+    read() {
+        /* Final post-processed (e.g., transpiled, compacted) content of this file. */
+        return this.process(this.content())
+    }
+
+    CALL_text({request}) {
+        /* Plain text of this File for Site.import() etc. */
+        let txt = this.read()
+        if (txt === undefined) request.throwNotFound()
+        return txt
+    }
 
     // async CALL_import({request}) {
     //     /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
@@ -315,7 +334,9 @@ export class File extends Item {
 
     GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)
-        res.send(this.read())
+        let txt = this.read()
+        if (txt === undefined) request.throwNotFound()
+        res.send(txt)
     }
     setMimeType(res, path) {
         // use the `mimetype` property if present...
@@ -329,13 +350,17 @@ export class File extends Item {
     }
 }
 
+File.setCaching('read')
+
+
 export class FileLocal extends File {
     async init()   { if (this.registry.onServer) this._fs = await import('fs') }
 
-    read(encoding) {
+    content(encoding) {
         let path = this.get('path')
         if (path) return this._fs.readFileSync(path, {encoding})
     }
+
     // GET_file({res}) {
     //     let path = this.get('path')
     //     res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})

@@ -123,7 +123,7 @@ class ServerDB extends DB {
 
 class FileDB extends ServerDB {
     /* Items stored in a file. For use during development only. */
-
+    
     filename = null
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,

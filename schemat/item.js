@@ -862,7 +862,7 @@ export class Item {
     }
 }
 
-Item.setCaching('getPrototypes', 'getCode', 'getPath', 'render')
+Item.setCaching('getPrototypes', 'getPath', 'render')
 
 
 /**********************************************************************************************************************/
@@ -926,17 +926,11 @@ export class Category extends Item {
             // when booting up, a couple of core items must be created before registry.site becomes available
             let name = this.get('_boot_class')
             if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
-            if (this.get('code') || this.get('class') || this.get('views'))
+            if (this.get('code') || this.get('class') || this.get('views') || this.get('cached_methods'))
                 throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
         }
-
-        // let dpath = this.get('path')                // default path of this item
-        // if (path && dpath && path !== dpath)
-        //     throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or change the "path" property`)
-        //
-        // path = path || dpath || site.systemPath(this)
 
         let path = this.getPath()
 
@@ -965,12 +959,18 @@ export class Category extends Item {
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
         classBody += methods.join('\n')
 
-        // Class definition and export stmt
+        // Class definition and export statement
         let className = `Class_${this.cid}_${this.iid}`
         let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
         let classExpo = `export {${className} as Class}`
 
-        let snippets  = [base, code, classCode, classExpo].filter(Boolean)
+        // append setCaching() statement for selected methods
+        let cached = this.getMany('cached_methods')
+        cached = cached.join(' ').replaceAll(',', ' ').trim()
+        if (cached) cached = cached.split(/\s+/).map(m => `'${m}'`)
+        let setCaching = cached ? `${className}.setCaching(${cached.join(',')})` : ''
+
+        let snippets  = [base, code, classCode, classExpo, setCaching].filter(Boolean)
         return snippets.join('\n')
     }
 

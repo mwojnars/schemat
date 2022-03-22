@@ -38,6 +38,7 @@ let root_fields = C({
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
+    cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's class whose calls are to be cached via Item.setCaching()."}),
     fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
 
     _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
@@ -149,6 +150,7 @@ async function create_categories(Category) {
         name        : "File",
         info        : "File with a text content.",
         _boot_class : 'schemat.item.File',
+        cached_methods: "read",
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
             mimetype    : new STRING({info: "MIME type string (must include '/') to be set as Content-Type when serving file download; or an extension ('js', 'jpg', ...) to be converted to an appropriate type. If missing, response mimetype is inferred from the URL path extension, if present."}),

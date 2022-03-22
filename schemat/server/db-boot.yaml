@@ -43,6 +43,11 @@
                 the items are evicted immediately after each request.
               default: 5
               "@": schemat.type.NUMBER
+          - key: cached_methods
+            value:
+              info: Space- and/or comma-separated list of method names of this category's
+                class whose calls are to be cached via Item.setCaching().
+              "@": schemat.type.STRING
           - key: fields
             value:
               info: Fields must have unique names.
@@ -137,6 +142,7 @@
   name: File
   info: File with a text content.
   _boot_class: schemat.item.File
+  cached_methods: read
   fields:
     content:
       "@": schemat.type.CODE
