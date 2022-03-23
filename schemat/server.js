@@ -15,8 +15,7 @@ import {YamlDB, RingsDB} from "./server/db.js";
 
 /**********************************************************************************************************************/
 
-const DB_BOOT   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml'
-const DB_WORK   = '/home/marcin/Documents/priv/catalog/src/schemat/server/db-demo.yaml'
+const DB_ROOT   = '/home/marcin/Documents/priv/catalog/src/schemat/server'
 const HOSTNAME  = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
@@ -53,8 +52,9 @@ export class Server {
     constructor() {
         // this.db = new YamlDB(DB_BOOT)
         this.db = new RingsDB(
-            new YamlDB(DB_BOOT, {writable: false}),
-            new YamlDB(DB_WORK, {start_IID: 100}),
+            new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
+            new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
+            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
         print("Server created")

@@ -123,7 +123,7 @@ class ServerDB extends DB {
 
 class FileDB extends ServerDB {
     /* Items stored in a file. For use during development only. */
-    
+
     filename = null
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
@@ -157,7 +157,7 @@ export class YamlDB extends FileDB {
         let fs = await import('fs')
         let YAML = (await import('yaml')).default
         let file = await fs.promises.readFile(this.filename, 'utf8')
-        let db = YAML.parse(file)
+        let db = YAML.parse(file) || []
         this.records.clear()
         this.max_iid.clear()
 

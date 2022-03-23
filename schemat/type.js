@@ -429,6 +429,7 @@ export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
     static initial = ''
+    static charcase = false         // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
 
     static Widget = class extends Primitive.Widget {
         empty (value)   { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
@@ -513,7 +514,8 @@ export class CODE extends TEXT
         static assets =                                             // import ACE Editor
         `
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-javascript.min.js" integrity="sha512-37ta5K4KVYs+MEmIg2xnZxJrdiQmBSKt+JInvyPrq9uz7aF67lMJT/t91EYoYj520jEcGlih41kCce7BRTmE3Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-jsx.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-javascript.min.js" integrity="sha512-37ta5K4KVYs+MEmIg2xnZxJrdiQmBSKt+JInvyPrq9uz7aF67lMJT/t91EYoYj520jEcGlih41kCce7BRTmE3Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-base.min.js" integrity="sha512-+nNPckbKGLDhLhi4Gz1Y1Wj5Y+x6l7Qw0EEa7izCznLGTl6CrYBbMUVoIm3OfKW8u82JP0Ow7phPPHdk26Fo5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/worker-javascript.min.js" integrity="sha512-hwPBZJdHUlQzk8FedQ6S0eqJw/26H3hQ1vjpdAVJLaZU/AJSkhU29Js3/J+INYpxEUbgD3gubC7jBBr+WDqS2w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-textmate.min.js" integrity="sha512-VE1d8sDypa2IvfFGVnil5k/xdGWtLTlHk/uM0ojHH8b2RRF75UeUBL9btDB8Hhe7ei0TT8NVuHFxWxh5NhdepQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
@@ -541,7 +543,7 @@ export class CODE extends TEXT
         `
 
         static viewer_options = {
-            mode:                   "ace/mode/javascript",
+            mode:                   "ace/mode/jsx",   // .../javascript
             readOnly:               true,
             showGutter:             false,
             displayIndentGuides:    false,
@@ -553,7 +555,7 @@ export class CODE extends TEXT
         static editor_options = {
             // each mode & theme may need a separate mode-*, worker-*, theme-* file (!) - see: https://cdnjs.com/libraries/ace
             //theme:                "ace/theme/textmate",  //textmate dreamweaver crimson_editor
-            mode:                   "ace/mode/javascript",
+            mode:                   "ace/mode/jsx",
             showGutter:             true,
             displayIndentGuides:    true,
             showPrintMargin:        true,
