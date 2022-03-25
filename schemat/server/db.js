@@ -120,7 +120,11 @@ class DB extends Item {
         return Promise.all(items.map(item => this.insert(item, {flush: false})))
                       .then(() => this.flush())
     }
+
+    async *scan()               { throw new Error("not implemented") }      // iterator over ALL items in this DB
+    async *scanCategory(cid)    { throw new Error("not implemented") }      // iterator over all items in a given category
 }
+
 
 class FileDB extends DB {
     /* Items stored in a file. For use during development only. */

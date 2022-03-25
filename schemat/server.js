@@ -7,18 +7,17 @@ import cluster from 'cluster'
 import express from 'express'
 
 import {assert, print, sleep} from './utils.js'
-import {ServerRegistry} from './server/registry-s.js'
 import {Session} from './registry.js'
 import {Request} from "./item.js";
-import {YamlDB, RingsDB} from "./server/db.js";
+// import {ServerRegistry} from './server/registry-s.js'
+// import {YamlDB, RingsDB} from "./server/db.js";
 
 
 /**********************************************************************************************************************/
 
-const DB_ROOT   = '/home/marcin/Documents/priv/catalog/src/schemat/server'
-const HOSTNAME  = '127.0.0.1'
-const PORT      =  3000
-const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
+// const HOSTNAME  = '127.0.0.1'
+// const PORT      =  3000
+// const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 
 
 let RES = express.response          // standard Express' prototype of all response objects;
@@ -49,21 +48,28 @@ export class Server {
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor() {
-        this.db = new RingsDB(
-            new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
-            new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
-            new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
-            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
-        )
-        this.registry = globalThis.registry = new ServerRegistry(this.db)
-        print("Server created")
+    constructor(schemat, {host, port}) {
+        this.schemat  = schemat
+        this.registry = schemat.registry
+        this.host = host
+        this.port = port
     }
 
-    async boot() {
-        await this.db.load()
-        await this.registry.boot()
-    }
+    // constructor() {
+    //     this.db = new RingsDB(
+    //         new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
+    //         new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
+    //         new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
+    //         new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
+    //     )
+    //     this.registry = globalThis.registry = new ServerRegistry(this.db)
+    //     print("Server created")
+    // }
+    //
+    // async boot() {
+    //     await this.db.load()
+    //     await this.registry.boot()
+    // }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
@@ -111,7 +117,7 @@ export class Server {
         //     res.send('Hello World!')
         // })
 
-        app.listen(PORT, HOSTNAME, () => print(`worker ${process.pid} listening at http://${HOSTNAME}:${PORT}`))
+        app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
     }
 
     async serve_cluster(workers) {
@@ -126,8 +132,8 @@ export class Server {
     }
 }
 
-export const server = new Server()
-await server.boot()
+// export const server = new Server()
+// await server.boot()
 
 
 /**********************************************************************************************************************
@@ -189,4 +195,4 @@ await server.boot()
 /**********************************************************************************************************************/
 
 // await serve_express()
-await server.serve_cluster(WORKERS)
+// await server.serve_cluster(WORKERS)

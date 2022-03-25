@@ -1,0 +1,13 @@
+- __id:
+    - 0
+    - 201
+  name: MysqlDB
+  fields:
+    connection:
+      info: Javascript object containing connection parameters.
+      "@": schemat.type.GENERIC
+    tables:
+      info: Mapping of categories (their paths) to names of sql tables.
+      values:
+        "@": schemat.type.STRING
+      "@": schemat.type.CATALOG

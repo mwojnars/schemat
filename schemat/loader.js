@@ -4,7 +4,7 @@
     Accepts URL paths that are mapped to objects (.js files, code snippets) in Schemat's global namespace.
     To use this loader, add --experimental-loader option to node, like in:
 
-        $ node --experimental-loader ./loader.js ./server.js
+        $ node --experimental-vm-modules --experimental-loader ./loader.js ./server.js
 */
 
 import {server} from './server.js'
