@@ -48,8 +48,6 @@ class AjaxDB {
         }
     }
 
-    // selectSync(id) { return this.records.get(id) }
-
     async select(id) {
         /* Look up this.records for a given `id` and return if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
@@ -68,7 +66,7 @@ class AjaxDB {
 }
 
 class ClientRegistry extends Registry {
-    /* Client-side registry: getItem() pulls items from server and caches in browser's web storage. */
+    /* Client-side registry: getItem() pulls items from server. */
 
     onServer = false
 

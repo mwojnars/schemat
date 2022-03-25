@@ -147,7 +147,7 @@ export class Registry {
         // print('initClasspath() done')
     }
 
-    async boot(site_id) {
+    async boot(site_id = null) {
         /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
         await this.initClasspath()
         await this.createRoot()

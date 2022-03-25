@@ -50,10 +50,10 @@ export class Server {
      */
 
     constructor() {
-        // this.db = new YamlDB(DB_BOOT)
         this.db = new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
+            new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
             new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
@@ -62,7 +62,7 @@ export class Server {
 
     async boot() {
         await this.db.load()
-        await this.registry.boot() //[1,1]
+        await this.registry.boot()
     }
 
     async handle(req, res) {

@@ -336,7 +336,7 @@ async function bootstrap(dbPath) {
     let items = await create_items(cats, Category)
 
     // insert to DB and assign IIDs if missing
-    await registry.db.insert(Category, ...Object.values(cats), ...Object.values(items))
+    await registry.db.insertMany(Category, ...Object.values(cats), ...Object.values(items))
 }
 
 /**********************************************************************************************************************/

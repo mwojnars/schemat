@@ -198,7 +198,7 @@ export class ServerRegistry extends Registry {
 
     /***  DB modifications  ***/
 
-    insert(...items) { return this.db.insert(...items) }
+    insert(item) { return this.db.insert(item) }
     update(item) { return this.db.update(item) }   /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
     delete(item) { assert(item.has_id()); return this.db.delete(item.id) }  /* Delete `item` from DB. Executed instantly without commit. */
 

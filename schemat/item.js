@@ -220,9 +220,8 @@ export class Item {
         return false
     }
 
-    constructor(category) {   // data = null
+    constructor(category = null) {
         /* To set this.data, setData() must be called and awaited (!) separately after this constructor. */
-        // if (data) this.data = data instanceof Data ? data : new Data(data)
         if (category) {
             this.category = category
             this.registry = category.registry
@@ -576,7 +575,7 @@ export class Item {
     }
 
     async POST_edit({req, res}) {
-        /* Web endpoint for all types of edits of this.data. */
+        /* Web handler for all types of edits of this.data. */
         let edits = req.body
         assert(edits instanceof Array)
         this.edit(...edits)
@@ -608,11 +607,11 @@ export class Item {
 
     async remote_delete()       { return this.remote('delete') }
 
-    async remote(method, data, {args, params} = {}) {
-        /* Connect from client to a @method endpoint of an internal API using HTTP POST by default;
+    async remote(endpoint, data, {args, params} = {}) {
+        /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
          */
-        let url = this.url(method)
+        let url = this.url(endpoint)
         let res = await fetchJson(url, data, params)        // Response object
         if (!res.ok) throw new ServerError(res)
         return res.json()

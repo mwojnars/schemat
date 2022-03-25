@@ -432,9 +432,9 @@ export class Textual extends Primitive {
     static charcase = false         // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
 
     static Widget = class extends Primitive.Widget {
-        empty (value)   { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
-        encode(v)   { return v }
-        decode(v)   { return v }
+        empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
+        encode(v)       { return v }
+        decode(v)       { return v }
     }
 }
 
@@ -568,7 +568,8 @@ export class CODE extends TEXT
         editorAce                       // ACE editor object
 
         viewer() {
-            let lines  = this.props.value.trimRight().split('\n')
+            let value  = this.display(this.props.value)
+            let lines  = value.trimRight().split('\n')
             let height = Math.min(10, 4 + Math.max(0, lines.length - 2)) + 'em'
             return DIV(cl("ace-viewer"), st({height}), {onDoubleClick: e => this.open(e), ref: this.viewerRef})
         }
@@ -647,10 +648,10 @@ export class GENERIC extends Schema {
 
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
-        empty  (value)  { return Schema.Widget.prototype.empty.call(this, value) }
-        view   (value)  { return this.props.schema.encodeJson(value) }              // JSON string is pretty-printed for edit
-        encode (value)  { return this.props.schema.encodeJson(value, null, 2) }     // JSON string is pretty-printed for edit
-        decode (value)  { return this.props.schema.decodeJson(value) }
+        empty(value)    { return Schema.Widget.prototype.empty.call(this, value) }
+        view(value)     { return this.props.schema.encodeJson(value) }              // JSON string is pretty-printed for edit
+        encode(value)   { return this.props.schema.encodeJson(value, null, 2) }     // JSON string is pretty-printed for edit
+        decode(value)   { return this.props.schema.decodeJson(value) }
     }
 }
 

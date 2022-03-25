@@ -79,12 +79,13 @@ import { Item } from "../item.js";
  **
  */
 
-class DB {
+class DB extends Item {
     writable  = true    // only if true, the database accepts modifications: inserts/updates/deletes
     start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
                         // between different underlying databases used together inside a RingDB
 
     constructor(params = {}) {
+        super()
         let {writable = true, start_IID = 0} = params
         this.writable  = writable
         this.start_IID = start_IID
@@ -107,21 +108,21 @@ class DB {
 
     checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
     checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
+
+    flush() {}
+
+    select(id)              { throw new Error("not implemented") }
+    update(item, opts)      { throw new Error("not implemented") }
+    insert(item, opts)      { throw new Error("not implemented") }
+
+    insertMany(...items) {
+        this.checkWritable()
+        return Promise.all(items.map(item => this.insert(item, {flush: false})))
+                      .then(() => this.flush())
+    }
 }
 
-class ServerDB extends DB {
-    async flush() { throw new Error("not implemented") }
-    // async update(item, flush = true) { throw new Error("not implemented") }
-    // async insert(item, flush = true) { throw new Error("not implemented") }
-    // async upsert_many(items, flush = true) {
-    //     for (const item of items)
-    //         if (item.newborn) await this.insert(item)
-    //         else              await this.update(item)
-    //     if (flush) await this.flush()
-    // }
-}
-
-class FileDB extends ServerDB {
+class FileDB extends DB {
     /* Items stored in a file. For use during development only. */
 
     filename = null
@@ -137,6 +138,7 @@ class FileDB extends ServerDB {
     }
 
     async select(id) {
+        /* Return an item as a record of the form {cid, iid, data}, where `data` is a JSON string. */
         let record = this.records.get(id)
         if (!record) this.throwNotFound({id})
         assert(record.cid === id[0] && record.iid === id[1])
@@ -176,12 +178,12 @@ export class YamlDB extends FileDB {
         // for (const [id, data] of this.records)
         //     print(id, data)
     }
-    async insert(...items) {
-        this.checkWritable()
-        await Promise.all(items.map(item => this._insert_one(item, false)))
-        await this.flush()
-    }
-    async _insert_one(item, flush = true) {
+    // async insertMany(...items) {
+    //     this.checkWritable()
+    //     await Promise.all(items.map(item => this.insert(item, false)))
+    //     await this.flush()
+    // }
+    async insert(item, {flush = true} = {}) {
 
         assert(item.has_data())
 
@@ -210,7 +212,7 @@ export class YamlDB extends FileDB {
         if (flush) await this.flush()
     }
 
-    async update(item, flush = true) {
+    async update(item, {flush = true} = {}) {
         assert(item.has_data())
         assert(item.has_id())
         if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
@@ -243,7 +245,7 @@ export class YamlDB extends FileDB {
 
 /**********************************************************************************************************************/
 
-export class RingsDB extends ServerDB {
+export class RingsDB extends DB {
     /* Several databases used together like rings. Each read/write operation is executed
        on the outermost ring possible. If NotFound/NotWritable is caught, a deeper (lower) ring is tried.
        In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
@@ -293,45 +295,7 @@ export class RingsDB extends ServerDB {
 
 /**********************************************************************************************************************/
 
-export class Database extends Item {
+export class MysqlDB extends DB {
 
-    db          // database engine that's used to access physical database on local hardware
 
-    // async GET_select(ctx, id) {}
-    // async GET_scan(ctx, index, range) {}
-
-    // async POST_edit({req, res}) {
-    //     // let {id, path, pos, entry} = req.body
-    //     let [id, edits] = req.body
-    //     assert(edits instanceof Array)
-    //
-    //     let record = await this.db.select(id)
-    //     let data   = JSON.parse(record.data)        // the data is schema-encoded
-    //
-    //     let item = this.registry.getLoaded(id)
-    //
-    //     for (let [edit, args] of edits)
-    //         this[`edit_${edit}`].call(this, data, ...args)
-    //
-    //     let out = await this.db.update(id, data)
-    //     return res.json(out)
-    // }
-
-    // edit_insert({data, path, pos, entry}) {
-    //     /* Insert a data `entry` at position `pos` inside a subcatalog located at the end of a `path` of an item`s data. */
-    // }
-    // edit_delete(id, path) {}
-    // edit_update(id, path, entry) {}
-    // edit_move(id, path_src, path_dst) {}
 }
-
-export class DatabaseYaml extends Database {
-
-    async init(data) {
-        let filename = data.get('filename')
-        this.db = new YamlDB(filename)
-        await this.db.load()
-        // print('created YamlDB in DatabaseYaml:', this.db, filename)
-    }
-}
-
