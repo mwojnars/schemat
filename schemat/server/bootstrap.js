@@ -322,7 +322,7 @@ async function create_items(cat, Category) {
  **
  */
 
-async function bootstrap(dbPath) {
+export async function bootstrap(dbPath) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
     print(`Starting full RESET of DB, core items will be created anew in: ${dbPath}`)
@@ -341,6 +341,5 @@ async function bootstrap(dbPath) {
 
 /**********************************************************************************************************************/
 
-// 'db-boot.yaml' file must be manually renamed to 'db.yaml' after creation (!)
-await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
+// await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
 

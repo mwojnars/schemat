@@ -2,6 +2,9 @@
     Administration and execution of the Schemat installation.
 */
 
+import path from 'path'
+import {fileURLToPath} from 'url'
+
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
@@ -11,7 +14,12 @@ import {ServerRegistry} from "./server/registry-s.js";
 import {Server} from "./server.js";
 
 
-const DB_ROOT   = '/home/marcin/Documents/priv/catalog/src/schemat/server'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname  = path.dirname(__filename)
+print('current directory:', __dirname)
+
+// const DB_ROOT   = '/home/marcin/Documents/priv/catalog/src/schemat/database'
+const DB_ROOT   = __dirname + '/database'
 const HOST      = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
@@ -44,6 +52,12 @@ class Schemat {
 
 
     /*****  Admin interface  *****/
+
+    async _build_({path_db_boot}) {
+        /* Generate the core "db-boot" database anew. */
+        let {bootstrap} = await import('./server/bootstrap.js')
+        return bootstrap(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+    }
 
     async imove({cid, iid, new_iid}) {
         print(`imove: changing item's ID=[${cid},${iid}] to ID=[${cid},${new_iid}] ...`)
@@ -81,13 +95,18 @@ async function main() {
             //     .positional('iid')
             //     .positional('new_iid')
         )
-        .demandCommand(1, 'Please provide a command.')
+        .command(
+            '_build_ [path_db_boot]', 'generate the core "db-boot" database anew',
+        )
+
+        .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')
         .argv
 
     let commands = [
         'run',
         'imove',
+        '_build_',
     ]
 
     let cmd = argv._[0]

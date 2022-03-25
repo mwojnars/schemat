@@ -9,16 +9,9 @@ import express from 'express'
 import {assert, print, sleep} from './utils.js'
 import {Session} from './registry.js'
 import {Request} from "./item.js";
-// import {ServerRegistry} from './server/registry-s.js'
-// import {YamlDB, RingsDB} from "./server/db.js";
 
 
 /**********************************************************************************************************************/
-
-// const HOSTNAME  = '127.0.0.1'
-// const PORT      =  3000
-// const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
-
 
 let RES = express.response          // standard Express' prototype of all response objects;
                                     // we're extending it with higher-level methods for handling items
@@ -54,22 +47,6 @@ export class Server {
         this.host = host
         this.port = port
     }
-
-    // constructor() {
-    //     this.db = new RingsDB(
-    //         new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
-    //         new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
-    //         new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
-    //         new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
-    //     )
-    //     this.registry = globalThis.registry = new ServerRegistry(this.db)
-    //     print("Server created")
-    // }
-    //
-    // async boot() {
-    //     await this.db.load()
-    //     await this.registry.boot()
-    // }
 
     async handle(req, res) {
         if (!['GET','POST'].includes(req.method)) { res.sendStatus(405); return }
@@ -132,9 +109,6 @@ export class Server {
     }
 }
 
-// export const server = new Server()
-// await server.boot()
-
 
 /**********************************************************************************************************************
  **
@@ -192,7 +166,3 @@ export class Server {
 //     await serve_express()
 // }
 
-/**********************************************************************************************************************/
-
-// await serve_express()
-// await server.serve_cluster(WORKERS)
