@@ -44,7 +44,8 @@ class AjaxDB {
     keep(...records) {
         for (let rec of records) {
             if (!rec.data) continue                         // don't keep stubs
-            if (typeof rec.data !== 'string') rec = {...rec, data: JSON.stringify(rec.data)}
+            if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
+                rec = {...rec, data: JSON.stringify(rec.data)}
             this.records.set([rec.cid, rec.iid], rec)
         }
     }
@@ -56,8 +57,6 @@ class AjaxDB {
         let [cid, iid] = id
         if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
         return this.records.get(id).data
-        // let rec = this.records.get(id) || await this._from_ajax(cid, iid)
-        // return rec.data
     }
 
     async _from_ajax(cid, iid) {

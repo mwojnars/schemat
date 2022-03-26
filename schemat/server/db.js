@@ -114,9 +114,10 @@ class DB extends Item {
 
     /***  low-level API (on encoded data)  ***/
 
-    get(id)                 { throw new NotImplemented() }
-    del(id)                 { throw new NotImplemented() }
-    put(id, data)           { throw new NotImplemented() }
+    get(id, opts)           { throw new NotImplemented() }
+    del(id, opts)           { throw new NotImplemented() }
+    put(id, data, opts)     { throw new NotImplemented() }
+    ins(cid, data, opts)    { throw new NotImplemented() }
 
     async has(id) {
         try {
@@ -162,8 +163,7 @@ class FileDB extends DB {
         this.filename = filename
     }
 
-    flush()         { throw new NotImplemented() }
-
+    async flush()   { throw new NotImplemented() }
     async has(id)   { return this.records.has(id) }
 
     get(id) {
@@ -188,52 +188,83 @@ class FileDB extends DB {
         if (flush) return this.flush()
     }
 
-    async *scanCategory(cid) {
-        for (const record of this.records.values())
-            if (cid === record.cid) yield record
-    }
+    ins(cid, data, {min_iid = -1, flush = true} = {}) {
+        /* Low-level insert, returns an IID created. */
+        this.checkWritable()
 
-    // async select(id) {
-    //     /* Return an item as a record of the form {cid, iid, data}, where `data` is a JSON string. */
-    //     let record = this.records.get(id)
-    //     if (!record) this.throwNotFound({id})
-    //     assert(record.cid === id[0] && record.iid === id[1])
-    //     return record
-    // }
+        // current maximum IID for this category in the DB;
+        // special case for cid=0 to correctly assign IID=0 for the root category (TODO: check if this is still needed)
+        let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
+        let iid = Math.max(max + 1, this.start_IID, min_iid)
+        this.max_iid.set(cid, iid)
+        this.records.set([cid, iid], {cid, iid, data})
+        return flush ? this.flush().then(() => iid) : iid
+    }
 
     async insert(item, {flush = true} = {}) {
-
+        /* If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
+           after the function completes.
+         */
         assert(item.has_data())
-
-        // set CID of the item
-        if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
-        let cid = item.cid
-        let max_iid
-
-        if (cid === 0 && !this.max_iid.has(cid))
-            max_iid = -1   // use =0 if the root category is not getting an IID here
-        else
-            max_iid = this.max_iid.get(cid) || 0
+        assert(item.cid || item.cid === 0)
+        let data = item.dumpData()
+        let cid  = item.cid
 
         // set IID of the item, if missing
-        let iid = item.iid
-        if (iid === null || iid === undefined) {
-            item.iid = iid = Math.max(max_iid + 1, this.start_IID)
-            this.max_iid.set(cid, iid)
+        if (item.iid === null || item.iid === undefined) {
+            let iid = this.ins(cid, data, {flush})
+            if (iid instanceof Promise) return iid.then(iid => {item.iid = iid})
+            item.iid = iid
         }
-        else await this.checkNew(item.id, "the item already exists")
-
-        this.checkMinIID(item.id)
-        this.max_iid.set(cid, Math.max(iid, max_iid))
-
-        return this.put(item.id, item.dumpData(), {flush})
+        else {
+            this.checkMinIID(item.id)
+            await this.checkNew(item.id, "the item already exists")
+            this.max_iid.set(cid, Math.max(item.iid, this.max_iid.get(cid) || 0))
+            return this.put(item.id, data, {flush})
+        }
     }
+
+    // async insert(item, {flush = true} = {}) {
+    //     /* If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
+    //        after the function completes.
+    //      */
+    //     assert(item.has_data())
+    //
+    //     // set CID of the item
+    //     if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
+    //     let cid = item.cid
+    //     let max_iid
+    //
+    //     if (cid === 0 && !this.max_iid.has(cid))
+    //         max_iid = -1   // use =0 if the root category is not getting an IID here
+    //     else
+    //         max_iid = this.max_iid.get(cid) || 0
+    //
+    //     // set IID of the item, if missing
+    //     let iid = item.iid
+    //     if (iid === null || iid === undefined) {
+    //         item.iid = iid = Math.max(max_iid + 1, this.start_IID)
+    //         this.max_iid.set(cid, iid)
+    //     }
+    //     else {
+    //         this.checkMinIID(item.id)
+    //         await this.checkNew(item.id, "the item already exists")
+    //         this.max_iid.set(cid, Math.max(iid, max_iid))
+    //     }
+    //
+    //     return this.put(item.id, item.dumpData(), {flush})
+    // }
 
     update(item, {flush = true} = {}) {
         assert(item.has_data())
         assert(item.has_id())
         if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
         return this.put(item.id, item.dumpData(), {flush})
+    }
+
+    async *scanCategory(cid) {
+        for (const record of this.records.values())
+            if (cid === record.cid) yield record
     }
 }
 

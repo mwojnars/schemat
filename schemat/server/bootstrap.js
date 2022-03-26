@@ -333,7 +333,13 @@ export async function bootstrap(db) {
     let cats  = await create_categories(Category)                   // create non-root categories & leaf items
     let items = await create_items(cats, Category)
 
-    // insert to DB and assign IIDs if missing
-    await db.insertMany(Category, ...Object.values(cats), ...Object.values(items))
+    // insert to DB and assign IIDs if missing;
+    // plain db.insert() is used instead of insertMany() for better control over the order of items
+    // in the output file - insertMany() outputs no-IID items first
+    for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
+        await db.insert(item, {flush: false})
+    await db.flush()
+
+    // await db.insertMany(Category, ...Object.values(cats), ...Object.values(items))
 }
 

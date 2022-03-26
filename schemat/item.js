@@ -264,22 +264,13 @@ export class Item {
     }
 
     async reload(use_schema = true, jsonData = null) {
-        /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
-        //print(`${this.id_str}.reload() started...`)
-        // if (!record) {
-        //     if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-        //     record = {data: await this.registry.loadData(this.id)}
-        // }
-        // let flat   = record.data
-
+        /* Return this item's Data object newly loaded from a DB or parsed from a JSON-encoded string, `jsonData`. */
         if (jsonData === null) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
         }
-        // assert(typeof jsonData === 'string', `non-string jsonData: ${jsonData}`)
-        // let flat   = jsonData
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
-        let state  = JSON.parse(jsonData)   //(typeof flat === 'string') ? JSON.parse(flat) : flat
+        let state  = JSON.parse(jsonData)
         let data   = schema.decode(state)
 
         let proto  = this.initPrototypes(data)

@@ -67,10 +67,9 @@ class Schemat {
 
         if (await this.db.has(newid)) throw new Error(`target ID already exists: [${cid},${new_iid}]`)
 
-        // load the item from its current ID
-        // save the item as a new one under the new ID
         // update children (of a category item)
 
+        // load the item from its current ID; save a copy under the new ID
         let data = this.db.get(id)
         this.db.put(newid, data)
         // db.add(cid, data, {min_iid}) -- low-level insert, returns an IID created

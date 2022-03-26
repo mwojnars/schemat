@@ -232,8 +232,6 @@ export class Registry {
                 yield this.root
             else {
                 let item = await category.new(null, iid)
-                // let item = new category.module.Class(category)
-                // item.iid = iid
                 await item.reload(undefined, record.data)
                 yield item
             }
