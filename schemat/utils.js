@@ -243,7 +243,7 @@ export class T extends Types {}     // T is an alias for Types
 
 export class BaseError extends Error {
     static message = null           // default message; configured in subclasses
-    constructor(msg, args) {
+    constructor(msg = null, args = null) {
         super()
         if (msg && typeof msg !== 'string') { args = msg; msg = null; }
         this.message = msg || this.constructor.message
@@ -254,6 +254,10 @@ export class BaseError extends Error {
         }
         this.name = this.constructor.name
     }
+}
+
+export class NotImplemented extends BaseError {
+    static message = "not implemented"
 }
 
 export class DataError extends BaseError {}

@@ -65,7 +65,7 @@ class Schemat {
         let id    = [cid, iid]
         let newid = [cid, new_iid]
 
-        if (await this.db.exists(newid)) throw new Error(`target ID already exists: [${cid},${new_iid}]`)
+        if (await this.db.has(newid)) throw new Error(`target ID already exists: [${cid},${new_iid}]`)
 
         // load the item from its current ID
         // save the item as a new one under the new ID

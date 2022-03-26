@@ -1,12 +1,6 @@
-import {assert, BaseError, print, T} from '../utils.js'
+import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
 import { ItemsMap } from '../data.js'
 import { Item } from "../item.js";
-
-
-NotImplemented = class extends BaseError {
-    static message = "method not implemented"
-}
-
 
 /**********************************************************************************************************************
  **
@@ -114,15 +108,13 @@ class DB extends Item {
     checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
     checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
 
+    /***  low-level API (on encoded data)  ***/
+
     get(id)                 { throw new NotImplemented() }
     del(id)                 { throw new NotImplemented() }
     put(id, data)           { throw new NotImplemented() }
 
-    update(item, opts)      { throw new NotImplemented() }
-    insert(item, opts)      { throw new NotImplemented() }
-    // select(id)           { throw new NotImplemented() }
-    
-    async exists(id) {
+    async has(id) {
         try {
             await this.get(id)
             return true
@@ -132,6 +124,11 @@ class DB extends Item {
             throw ex
         }
     }
+
+    /***  high-level API (on items)  ***/
+
+    update(item, opts)      { throw new NotImplemented() }
+    insert(item, opts)      { throw new NotImplemented() }
 
     insertMany(...items) {
         this.checkWritable()
@@ -153,12 +150,15 @@ class FileDB extends DB {
                                 // so that clients create a new deep copy of item data on every access
     // TODO: keep `data` alone (no cid/iid) instead of `records`
 
-    checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
-
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
     }
+
+    flush()         { throw new NotImplemented() }
+    checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
+
+    async has(id)   { return this.records.has(id) }
 
     async get(id) {
         /* Return the JSON-encoded string of item's data as stored in DB. */
@@ -175,12 +175,16 @@ class FileDB extends DB {
         return this.flush()
     }
 
-    async put(id, data, item, {flush = true} = {}) {
-        if (!this.records.has(id)) this.throwNotFound({id})
+    async put(id, data, {flush = true} = {}) {
         this.checkWritable(id)
         let [cid, iid] = id
         this.records.set(id, {cid, iid, data})
         if (flush) await this.flush()
+    }
+
+    async *scanCategory(cid) {
+        for (const record of this.records.values())
+            if (cid === record.cid) yield record
     }
 
     // async select(id) {
@@ -190,12 +194,13 @@ class FileDB extends DB {
     //     assert(record.cid === id[0] && record.iid === id[1])
     //     return record
     // }
-    async *scanCategory(cid) {
-        for (const record of this.records.values())
-            if (cid === record.cid) yield record
+
+    async update(item, {flush = true} = {}) {
+        assert(item.has_data())
+        assert(item.has_id())
+        if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
+        this.put(item.id, item.dumpData(), {flush})
     }
-    
-    flush()     { throw new NotImplemented() }
 }
 
 export class YamlDB extends FileDB {
@@ -256,15 +261,15 @@ export class YamlDB extends FileDB {
         if (flush) await this.flush()
     }
 
-    async update(item, {flush = true} = {}) {
-        assert(item.has_data())
-        assert(item.has_id())
-        if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
-        this.checkWritable(item.id)
-        let [cid, iid] = item.id
-        this.records.set(item.id, {cid, iid, data: item.dumpData()})
-        if (flush) await this.flush()
-    }
+    // async update(item, {flush = true} = {}) {
+    //     assert(item.has_data())
+    //     assert(item.has_id())
+    //     if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
+    //     this.checkWritable(item.id)
+    //     let [cid, iid] = item.id
+    //     this.records.set(item.id, {cid, iid, data: item.dumpData()})
+    //     if (flush) await this.flush()
+    // }
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
