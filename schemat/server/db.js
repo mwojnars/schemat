@@ -3,6 +3,11 @@ import { ItemsMap } from '../data.js'
 import { Item } from "../item.js";
 
 
+NotImplemented = class extends BaseError {
+    static message = "method not implemented"
+}
+
+
 /**********************************************************************************************************************
  **
  **  Physical DB implementation. (Draft)
@@ -109,14 +114,24 @@ class DB extends Item {
     checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
     checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
 
-    flush() {}
+    get(id)                 { throw new NotImplemented() }
+    del(id)                 { throw new NotImplemented() }
+    put(id, data)           { throw new NotImplemented() }
 
-    get(id)                 { throw new Error("not implemented") }
-    del(id)                 { throw new Error("not implemented") }
-
-    update(item, opts)      { throw new Error("not implemented") }
-    insert(item, opts)      { throw new Error("not implemented") }
-    // select(id)           { throw new Error("not implemented") }
+    update(item, opts)      { throw new NotImplemented() }
+    insert(item, opts)      { throw new NotImplemented() }
+    // select(id)           { throw new NotImplemented() }
+    
+    async exists(id) {
+        try {
+            await this.get(id)
+            return true
+        }
+        catch(ex) {
+            if (ex instanceof DB.NotFound) return false
+            throw ex
+        }
+    }
 
     insertMany(...items) {
         this.checkWritable()
@@ -124,8 +139,8 @@ class DB extends Item {
                       .then(() => this.flush())
     }
 
-    async *scan()               { throw new Error("not implemented") }      // iterator over ALL items in this DB
-    async *scanCategory(cid)    { throw new Error("not implemented") }      // iterator over all items in a given category
+    async *scan()               { throw new NotImplemented() }      // iterator over ALL items in this DB
+    async *scanCategory(cid)    { throw new NotImplemented() }      // iterator over all items in a given category
 }
 
 
@@ -136,7 +151,7 @@ class FileDB extends DB {
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
-    // TODO: store a map of `data` alone (no cid/iid) instead of `records`
+    // TODO: keep `data` alone (no cid/iid) instead of `records`
 
     checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
 
@@ -153,6 +168,21 @@ class FileDB extends DB {
         return record.data
     }
 
+    async del(id) {
+        if (!this.records.has(id)) this.throwNotFound({id})
+        this.checkWritable(id)
+        this.records.delete(id)
+        return this.flush()
+    }
+
+    async put(id, data, item, {flush = true} = {}) {
+        if (!this.records.has(id)) this.throwNotFound({id})
+        this.checkWritable(id)
+        let [cid, iid] = id
+        this.records.set(id, {cid, iid, data})
+        if (flush) await this.flush()
+    }
+
     // async select(id) {
     //     /* Return an item as a record of the form {cid, iid, data}, where `data` is a JSON string. */
     //     let record = this.records.get(id)
@@ -164,6 +194,8 @@ class FileDB extends DB {
         for (const record of this.records.values())
             if (cid === record.cid) yield record
     }
+    
+    flush()     { throw new NotImplemented() }
 }
 
 export class YamlDB extends FileDB {
@@ -194,11 +226,7 @@ export class YamlDB extends FileDB {
         // for (const [id, data] of this.records)
         //     print(id, data)
     }
-    // async insertMany(...items) {
-    //     this.checkWritable()
-    //     await Promise.all(items.map(item => this.insert(item, false)))
-    //     await this.flush()
-    // }
+
     async insert(item, {flush = true} = {}) {
 
         assert(item.has_data())
@@ -236,12 +264,6 @@ export class YamlDB extends FileDB {
         let [cid, iid] = item.id
         this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
-    }
-    async del(id) {
-        if (!this.records.has(id)) this.throwNotFound({id})
-        this.checkWritable(id)
-        this.records.delete(id)
-        return this.flush()
     }
 
     async flush() {

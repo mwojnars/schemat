@@ -55,7 +55,8 @@ class Schemat {
     async _build_({path_db_boot}) {
         /* Generate the core "db-boot" database file anew. */
         let {bootstrap} = await import('./server/bootstrap.js')
-        return bootstrap(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+        let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+        return bootstrap(db)
     }
 
     async imove({cid, iid, new_iid}) {

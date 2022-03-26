@@ -7,7 +7,6 @@ import {ROOT_CID, SITE_CID} from '../item.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from '../data.js'
-import {YamlDB} from "./db.js";
 
 
 /**********************************************************************************************************************
@@ -322,12 +321,11 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(dbPath) {
+export async function bootstrap(db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    print(`Starting full RESET of DB, core items will be created anew in: ${dbPath}`)
+    print(`Starting full RESET of DB, core items will be created anew in: ${db.filename}`)
 
-    let db = new YamlDB(dbPath)
     let registry = globalThis.registry = new ServerRegistry(db)
     await registry.initClasspath()
 
