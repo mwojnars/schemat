@@ -17,9 +17,9 @@ export class JSONx {
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
     static PATH_ITEM  = "schemat.item.Item"
 
-    constructor(registry) {
+    constructor() {
         // for now, this constructor is only used internally in static encode() & static decode()
-        this.registry = registry || globalThis.registry
+        this.registry = globalThis.registry
     }
 
     // stringify(obj, type = null) {

@@ -152,7 +152,6 @@ export class Request {
 export class Item {
 
     /*
-    TODO: Item.metadata
     >> meta fields are accessible through this.get('#FIELD') or '.FIELD' ?
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
     - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
@@ -181,7 +180,10 @@ export class Item {
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
-    metadata        // system properties: current version, category's version, status etc.
+
+    jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
+
+    //metadata      // system properties: current version, category's version, status etc.
 
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
@@ -196,6 +198,7 @@ export class Item {
     get id_str()    { return `[${this.cid},${this.iid}]` }
     get newborn()   { return this.iid === null }
     get loaded()    { return this.has_data() && !(this.data instanceof Promise) }   // false if `data` is still loading (a Promise) !!
+    get schema()    { return this.getSchema() }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
@@ -265,7 +268,7 @@ export class Item {
         //print(`${this.id_str}.reload() started...`)
         if (!record) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            record = await this.registry.loadData(this.id)
+            record = {data: await this.registry.loadData(this.id)}
         }
         let flat   = record.data
         let schema = use_schema ? this.category.getItemSchema() : generic_schema

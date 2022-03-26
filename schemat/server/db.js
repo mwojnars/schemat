@@ -111,6 +111,7 @@ class DB extends Item {
 
     flush() {}
 
+    get(id)                 { throw new Error("not implemented") }
     select(id)              { throw new Error("not implemented") }
     update(item, opts)      { throw new Error("not implemented") }
     insert(item, opts)      { throw new Error("not implemented") }
@@ -133,12 +134,21 @@ class FileDB extends DB {
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
+    // TODO: store a map of `data` alone (no cid/iid) instead of `records`
 
     checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
 
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
+    }
+
+    async get(id) {
+        /* Return the JSON-encoded string of item's data as stored in DB. */
+        let record = this.records.get(id)
+        if (!record) this.throwNotFound({id})
+        assert(record.cid === id[0] && record.iid === id[1])
+        return record.data
     }
 
     async select(id) {
@@ -268,6 +278,7 @@ export class RingsDB extends DB {
         super()
         this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
 
+        this.get    = this.outermost('get')
         this.select = this.outermost('select')
         this.insert = this.outermost('insert')
         this.update = this.outermost('update')

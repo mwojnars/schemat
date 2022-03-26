@@ -497,35 +497,37 @@ export class Catalog {
         throw new Error(`path not found: ${subpath.join('/')}`)
     }
 
-    // delete(key) {
-    //     /* Delete a single entry at a given position in _entries, if `key` is a number (entry.id);
-    //        or delete all 0+ entries whose entry.key === key. Return the number of entries deleted.
-    //      */
-    //     let count
-    //     if (typeof key === 'number') {
-    //         let id = key, e = this._entries[key]
-    //         if (id < 0 || id >= this._entries.length) return 0
-    //         this._entries[id] = undefined                       // mark entry at position `id` as deleted
-    //
-    //         let ids = this._keys.get(e.key)
-    //         assert(ids.length >= 1 && ids.includes(id))
-    //         T.deleteFirst(ids, id)                              // update this._keys & this.size
-    //         if (ids.length === 0) this._keys.delete(e.key)
-    //         count = 1
-    //
-    //     } else {
-    //         let ids = this._keys.get(key)
-    //         if (!ids) return 0
-    //         assert(ids.length >= 1)
-    //         for (const id of ids)
-    //             this._entries[id] = undefined
-    //         this._keys.delete(key)
-    //         count = ids.length
-    //     }
-    //
-    //     this.size -= count
-    //     return count
-    // }
+    /***  Transformations  ***/
+
+    transform(ops, {deep = true} = {}) {
+        /* Transform this Catalog and its nested subcatalogs (if deep=true) while applying the
+           {key, value, label, comment, entry} transformations as passed in `ops`. Return a new Catalog of the same class.
+           Each operator in `ops` is a function that takes an original JS value and returns its replacement
+           (can be the same value). When a particular operator is missing, the corresponding value is left unchanged
+           - a copy is NOT performed (!).
+         */
+        // let entries = this._entries.map(e => ({...e}))          // copy each individual entry for subsequent modifications
+        let entries = this._entries
+
+        if (deep)                                               // call transform() recursively on subcatalogs
+            for (let e of entries)
+                if (e.value instanceof Catalog)
+                    e.value = e.value.transform(ops, {deep})
+
+        if (ops.entry) {
+            entries = entries.map(ops.entry)                    // modify each entry as a whole
+            delete ops.entry
+        }
+
+        for (const [prop, op] of Object.entries(ops))           // modify individual properties of each entry
+            entries = entries.map(e => {
+                if(prop in e && (e[prop] = op(e[prop])) === undefined)
+                    delete e[prop]
+            })
+
+        return new this.constructor(entries)
+    }
+
 }
 
 
@@ -535,6 +537,12 @@ export class Data extends Catalog {
     */
 }
 
+export class List extends Catalog {
+    /* A Catalog with values only; no keys, labels, comments. */
+}
+export class Record extends Catalog {
+    /* A Catalog with unique keys for all entries; no labels; comments allowed. */
+}
 
 // class CATALOG extends Schema {
 //     use_keys Y/N

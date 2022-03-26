@@ -339,7 +339,3 @@ export async function bootstrap(dbPath) {
     await registry.db.insertMany(Category, ...Object.values(cats), ...Object.values(items))
 }
 
-/**********************************************************************************************************************/
-
-// await bootstrap('/home/marcin/Documents/priv/catalog/src/schemat/server/db-boot.yaml')
-

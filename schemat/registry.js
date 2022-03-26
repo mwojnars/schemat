@@ -216,7 +216,7 @@ export class Registry {
            - the caller must be prepared for both cases!
          */
         this.session?.countLoaded(id)
-        return this.db.select(id)
+        return this.db.get(id)
     }
     async *scanCategory(category, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. A generator. */

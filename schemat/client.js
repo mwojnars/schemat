@@ -48,6 +48,13 @@ class AjaxDB {
         }
     }
 
+    async get(id) {
+        /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
+        let [cid, iid] = id
+        let rec = this.records.get(id) || await this._from_ajax(cid, iid)
+        return rec.data
+    }
+
     async select(id) {
         /* Look up this.records for a given `id` and return if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
