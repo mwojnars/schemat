@@ -200,7 +200,7 @@ export class ServerRegistry extends Registry {
 
     insert(item) { return this.db.insert(item) }
     update(item) { return this.db.update(item) }   /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
-    delete(item) { assert(item.has_id()); return this.db.delete(item.id) }  /* Delete `item` from DB. Executed instantly without commit. */
+    delete(item) { return this.db.del(item.id) }
 
     // stage(item, edit) {
     //     /* Add an updated or newly created `item` to the staging area.

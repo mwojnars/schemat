@@ -112,9 +112,11 @@ class DB extends Item {
     flush() {}
 
     get(id)                 { throw new Error("not implemented") }
-    select(id)              { throw new Error("not implemented") }
+    del(id)                 { throw new Error("not implemented") }
+
     update(item, opts)      { throw new Error("not implemented") }
     insert(item, opts)      { throw new Error("not implemented") }
+    // select(id)           { throw new Error("not implemented") }
 
     insertMany(...items) {
         this.checkWritable()
@@ -151,13 +153,13 @@ class FileDB extends DB {
         return record.data
     }
 
-    async select(id) {
-        /* Return an item as a record of the form {cid, iid, data}, where `data` is a JSON string. */
-        let record = this.records.get(id)
-        if (!record) this.throwNotFound({id})
-        assert(record.cid === id[0] && record.iid === id[1])
-        return record
-    }
+    // async select(id) {
+    //     /* Return an item as a record of the form {cid, iid, data}, where `data` is a JSON string. */
+    //     let record = this.records.get(id)
+    //     if (!record) this.throwNotFound({id})
+    //     assert(record.cid === id[0] && record.iid === id[1])
+    //     return record
+    // }
     async *scanCategory(cid) {
         for (const record of this.records.values())
             if (cid === record.cid) yield record
@@ -235,7 +237,7 @@ export class YamlDB extends FileDB {
         this.records.set(item.id, {cid, iid, data: item.dumpData()})
         if (flush) await this.flush()
     }
-    async delete(id) {
+    async del(id) {
         if (!this.records.has(id)) this.throwNotFound({id})
         this.checkWritable(id)
         this.records.delete(id)
@@ -279,10 +281,10 @@ export class RingsDB extends DB {
         this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
 
         this.get    = this.outermost('get')
-        this.select = this.outermost('select')
+        this.del    = this.outermost('del')
         this.insert = this.outermost('insert')
         this.update = this.outermost('update')
-        this.delete = this.outermost('delete')
+        // this.select = this.outermost('select')
     }
     load()  { return Promise.all(this.databases.map(d => d.load())) }
 

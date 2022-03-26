@@ -69,8 +69,6 @@ class Schemat {
         // load the item from its current ID
         // save the item as a new one under the new ID
         // update children (of a category item)
-        // update references
-        // remove the old ID
 
         let data = this.db.get(id)
         this.db.put(newid, data)
@@ -82,8 +80,8 @@ class Schemat {
 
         let newItem = this.registry.getItem(newid)
 
-        for await (let ref of this.registry.scan()) {
-            // search for references to `id` in the `ref` referrer item
+        // update references
+        for await (let ref of this.registry.scan()) {           // search for references to `id` in the `ref` referrer item
             await ref.load()
             ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
             let jsonData = ref.dumpData()
@@ -91,6 +89,8 @@ class Schemat {
                 this.db.put(ref.id, jsonData)
         }
 
+        // remove the old item from DB
+        this.db.del(id)
 
         print('imove: done')
     }

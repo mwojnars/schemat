@@ -500,11 +500,10 @@ export class Catalog {
     /***  Transformations  ***/
 
     transform(ops, {deep = true} = {}) {
-        /* Transform this Catalog and its nested subcatalogs (if deep=true) while applying the
-           {key, value, label, comment, entry} transformations as passed in `ops`. Return a new Catalog of the same class.
+        /* Transform this Catalog and its nested subcatalogs (if deep=true) in place by applying the
+           {key, value, label, comment, entry} transformations as passed in `ops`.
            Each operator in `ops` is a function that takes an original JS value and returns its replacement
-           (can be the same value). When a particular operator is missing, the corresponding value is left unchanged
-           - a copy is NOT performed (!).
+           (can be the same value). When an operator is missing, the corresponding value is left unchanged.
          */
         // let entries = this._entries.map(e => ({...e}))          // copy each individual entry for subsequent modifications
         let entries = this._entries
@@ -512,10 +511,11 @@ export class Catalog {
         if (deep)                                               // call transform() recursively on subcatalogs
             for (let e of entries)
                 if (e.value instanceof Catalog)
-                    e.value = e.value.transform(ops, {deep})
+                    e.value.transform(ops, {deep})
 
         if (ops.entry) {
             entries = entries.map(ops.entry)                    // modify each entry as a whole
+            ops = {...ops}
             delete ops.entry
         }
 
@@ -525,7 +525,8 @@ export class Catalog {
                     delete e[prop]
             })
 
-        return new this.constructor(entries)
+        this.build(entries)
+        // return new this.constructor(entries)
     }
 
 }
