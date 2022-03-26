@@ -263,16 +263,23 @@ export class Item {
         return this.data.then(() => this)
     }
 
-    async reload(use_schema = true, record = null) {
+    async reload(use_schema = true, jsonData = null) {
         /* Return this item's data object newly loaded from a DB or from a preloaded DB `record`. */
         //print(`${this.id_str}.reload() started...`)
-        if (!record) {
+        // if (!record) {
+        //     if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
+        //     record = {data: await this.registry.loadData(this.id)}
+        // }
+        // let flat   = record.data
+
+        if (jsonData === null) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            record = {data: await this.registry.loadData(this.id)}
+            jsonData = await this.registry.loadData(this.id)
         }
-        let flat   = record.data
+        // assert(typeof jsonData === 'string', `non-string jsonData: ${jsonData}`)
+        // let flat   = jsonData
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
-        let state  = (typeof flat === 'string') ? JSON.parse(flat) : flat
+        let state  = JSON.parse(jsonData)   //(typeof flat === 'string') ? JSON.parse(flat) : flat
         let data   = schema.decode(state)
 
         let proto  = this.initPrototypes(data)
@@ -1148,9 +1155,9 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    async reload(use_schema = false, record = null) {
+    async reload(use_schema = false, jsonData = null) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.reload(false, record)
+        return super.reload(false, jsonData)
     }
     async getModule() { return {Class: Category} }
 }

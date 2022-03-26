@@ -234,7 +234,7 @@ export class Registry {
                 let item = await category.new(null, iid)
                 // let item = new category.module.Class(category)
                 // item.iid = iid
-                await item.reload(undefined, record)
+                await item.reload(undefined, record.data)
                 yield item
             }
             count++

@@ -154,6 +154,9 @@ class FileDB extends DB {
                                 // so that clients create a new deep copy of item data on every access
     // TODO: keep `data` alone (no cid/iid) instead of `records`
 
+    max_iid = new Map()         // current maximum IIDs per category, as {cid: maximum_iid}
+
+
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
@@ -198,6 +201,34 @@ class FileDB extends DB {
     //     return record
     // }
 
+    async insert(item, {flush = true} = {}) {
+
+        assert(item.has_data())
+
+        // set CID of the item
+        if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
+        let cid = item.cid
+        let max_iid
+
+        if (cid === 0 && !this.max_iid.has(cid))
+            max_iid = -1   // use =0 if the root category is not getting an IID here
+        else
+            max_iid = this.max_iid.get(cid) || 0
+
+        // set IID of the item, if missing
+        let iid = item.iid
+        if (iid === null || iid === undefined) {
+            item.iid = iid = Math.max(max_iid + 1, this.start_IID)
+            this.max_iid.set(cid, iid)
+        }
+        else await this.checkNew(item.id, "the item already exists")
+
+        this.checkMinIID(item.id)
+        this.max_iid.set(cid, Math.max(iid, max_iid))
+
+        return this.put(item.id, item.dumpData(), {flush})
+    }
+
     update(item, {flush = true} = {}) {
         assert(item.has_data())
         assert(item.has_id())
@@ -208,8 +239,6 @@ class FileDB extends DB {
 
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
-
-    max_iid = new Map()         // current maximum IIDs per category, as {cid: maximum_iid}
 
     async load() {
         let fs = await import('fs')
@@ -234,44 +263,6 @@ export class YamlDB extends FileDB {
         // for (const [id, data] of this.records)
         //     print(id, data)
     }
-
-    async insert(item, {flush = true} = {}) {
-
-        assert(item.has_data())
-
-        // set CID of the item
-        if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
-        let cid = item.cid
-        let max_iid
-
-        if (cid === 0 && !this.max_iid.has(cid))
-            max_iid = -1   // use =0 if the root category is not getting an IID here
-        else
-            max_iid = this.max_iid.get(cid) || 0
-
-        // set IID of the item, if missing
-        let iid = item.iid
-        if (iid === null || iid === undefined) {
-            item.iid = iid = Math.max(max_iid + 1, this.start_IID)
-            this.max_iid.set(cid, iid)
-        }
-
-        this.checkMinIID(item.id)
-        await this.checkNew(item.id, "the item already exists")
-        this.max_iid.set(cid, Math.max(iid, max_iid))
-
-        return this.put(item.id, item.dumpData(), {flush})
-    }
-
-    // async update(item, {flush = true} = {}) {
-    //     assert(item.has_data())
-    //     assert(item.has_id())
-    //     if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
-    //     this.checkWritable(item.id)
-    //     let [cid, iid] = item.id
-    //     this.records.set(item.id, {cid, iid, data: item.dumpData()})
-    //     if (flush) await this.flush()
-    // }
 
     async flush() {
         /* Save the entire database (this.records) to a file. */

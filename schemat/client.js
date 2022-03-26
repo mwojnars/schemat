@@ -42,24 +42,24 @@ class AjaxDB {
     }
 
     keep(...records) {
-        for (const rec of records) {
-            if (typeof rec.data !== 'string') rec.data = JSON.stringify(rec.data)
+        for (let rec of records) {
+            if (!rec.data) continue                         // don't keep stubs
+            if (typeof rec.data !== 'string') rec = {...rec, data: JSON.stringify(rec.data)}
             this.records.set([rec.cid, rec.iid], rec)
         }
     }
 
+    has(id)     { return this.records.has(id) }
+
     async get(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
-        let rec = this.records.get(id) || await this._from_ajax(cid, iid)
-        return rec.data
+        if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
+        return this.records.get(id).data
+        // let rec = this.records.get(id) || await this._from_ajax(cid, iid)
+        // return rec.data
     }
 
-    // async select(id) {
-    //     /* Look up this.records for a given `id` and return if found; otherwise pull it from the server-side DB. */
-    //     let [cid, iid] = id
-    //     return this.records.get(id) || this._from_ajax(cid, iid)
-    // }
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${cid},${iid}]...`)
@@ -67,8 +67,14 @@ class AjaxDB {
     }
     async *scanCategory(cid) {
         print(`ajax category scan [0,${cid}]...`)
-        let items = await $.get(`${this.url}/0:${cid}@scan`)
-        for (const item of items) yield item
+        let records = await $.get(`${this.url}/0:${cid}@scan`)
+        for (const rec of records) {
+            if (rec.data) {
+                rec.data = JSON.stringify(rec.data)
+                this.keep(rec)
+            }
+            yield rec
+        }
     }
 }
 
