@@ -1,4 +1,7 @@
 import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
+import fs from 'fs'
+import YAML from 'yaml'
+
 import { ItemsMap } from '../data.js'
 import { Item } from "../item.js";
 
@@ -106,7 +109,8 @@ class DB extends Item {
     throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
 
     checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
-    checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
+    checkMinIID(id)                 { if (id[1] < this.start_IID) this.throwTooLow(id) }
+    async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
 
     /***  low-level API (on encoded data)  ***/
 
@@ -156,11 +160,10 @@ class FileDB extends DB {
     }
 
     flush()         { throw new NotImplemented() }
-    checkNew(id)    { if (this.records.has(id)) throw new Error(`duplicate item ID: [${id}]`) }
 
     async has(id)   { return this.records.has(id) }
 
-    async get(id) {
+    get(id) {
         /* Return the JSON-encoded string of item's data as stored in DB. */
         let record = this.records.get(id)
         if (!record) this.throwNotFound({id})
@@ -168,18 +171,18 @@ class FileDB extends DB {
         return record.data
     }
 
-    async del(id) {
+    del(id) {
         if (!this.records.has(id)) this.throwNotFound({id})
         this.checkWritable(id)
         this.records.delete(id)
         return this.flush()
     }
 
-    async put(id, data, {flush = true} = {}) {
+    put(id, data, {flush = true} = {}) {
         this.checkWritable(id)
         let [cid, iid] = id
         this.records.set(id, {cid, iid, data})
-        if (flush) await this.flush()
+        if (flush) return this.flush()
     }
 
     async *scanCategory(cid) {
@@ -195,11 +198,11 @@ class FileDB extends DB {
     //     return record
     // }
 
-    async update(item, {flush = true} = {}) {
+    update(item, {flush = true} = {}) {
         assert(item.has_data())
         assert(item.has_id())
         if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
-        this.put(item.id, item.dumpData(), {flush})
+        return this.put(item.id, item.dumpData(), {flush})
     }
 }
 
@@ -219,8 +222,8 @@ export class YamlDB extends FileDB {
         for (let record of db) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
-            this.checkIID(id)
-            this.checkNew(id)
+            this.checkMinIID(id)
+            await this.checkNew(id, "duplicate item ID")
 
             let data = '__data' in record ? record.__data : record
             let curr_max = this.max_iid.get(cid) || 0
@@ -253,12 +256,11 @@ export class YamlDB extends FileDB {
             this.max_iid.set(cid, iid)
         }
 
-        this.checkIID(item.id)
-        this.checkNew(item.id)
+        this.checkMinIID(item.id)
+        await this.checkNew(item.id, "the item already exists")
         this.max_iid.set(cid, Math.max(iid, max_iid))
 
-        this.records.set(item.id, {cid, iid, data: item.dumpData()})
-        if (flush) await this.flush()
+        return this.put(item.id, item.dumpData(), {flush})
     }
 
     // async update(item, {flush = true} = {}) {
@@ -274,8 +276,6 @@ export class YamlDB extends FileDB {
     async flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
-        let fs   = await import('fs')
-        let YAML = (await import('yaml')).default
         let flat = [...this.records.values()]
         let recs = flat.map(({cid, iid, data:d}) => {
                 let id = {__id: [cid, iid]}, data = JSON.parse(d)

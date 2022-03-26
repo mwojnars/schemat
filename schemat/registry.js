@@ -141,7 +141,7 @@ export class Registry {
         await classpath.add_module("schemat.item", "./item.js")
         await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
-        await classpath.add_module("schemat.item", "./server/db.js")
+        // await classpath.add_module("schemat.item", "./server/db.js")
 
         this.classpath = classpath
         // print('initClasspath() done')
