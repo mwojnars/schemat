@@ -82,14 +82,17 @@ import { Item } from "../item.js";
  */
 
 class DB extends Item {
-    writable  = true    // only if true, the database accepts modifications: inserts/updates/deletes
+    readOnly  = false   // if true, the database does NOT accept modifications: inserts/updates/deletes
     start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
                         // between different underlying databases used together inside a RingDB
 
+    nextDB              // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
+    prevDB              // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
+
     constructor(params = {}) {
         super()
-        let {writable = true, start_IID = 0} = params
-        this.writable  = writable
+        let {readOnly = false, start_IID = 0} = params
+        this.readOnly = readOnly
         this.start_IID = start_IID
     }
 
@@ -108,7 +111,7 @@ class DB extends Item {
     throwNotWritable(msg, args)     { throw new DB.NotWritable(msg, args) }
     throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
 
-    checkWritable(id)               { if (!this.writable) this.throwNotWritable(id ? {id} : undefined) }
+    checkWritable(id)               { if (this.readOnly) this.throwNotWritable(id ? {id} : undefined) }
     checkMinIID(id)                 { if (id[1] < this.start_IID) this.throwTooLow(id) }
     async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
 
@@ -118,6 +121,34 @@ class DB extends Item {
     del(id, opts)           { throw new NotImplemented() }
     put(id, data, opts)     { throw new NotImplemented() }
     ins(cid, data, opts)    { throw new NotImplemented() }
+
+    async get__(id, opts) {
+        let ret = this._get(id, opts)
+        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+        if (ret !== undefined) return ret
+        if (this.prevDB) return this.prevDB.get(id, opts)
+        this.throwNotFound({id})
+    }
+    async del__(id, opts) {
+        /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
+           or raises an exception if an error occurred.
+         */
+        let {flush = true} = opts
+        let ret = this._del(id, opts)
+        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+        if (!ret && this.prevDB) return this.prevDB.del(id, opts)
+        if (ret && flush) await this.flush()
+        return ret
+    }
+    async put__(id, data, opts) {
+        /* */
+        let {flush = true} = opts
+        let ret = this._put(id, data, opts)
+        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+        if (!ret && this.prevDB) return this.prevDB.put(id, data, opts)
+        if (ret && flush) await this.flush()
+        return ret
+    }
 
     async has(id) {
         try {
@@ -141,8 +172,13 @@ class DB extends Item {
                       .then(() => this.flush())
     }
 
-    async *scan()               { throw new NotImplemented() }      // iterator over ALL items in this DB
-    async *scanCategory(cid)    { throw new NotImplemented() }      // iterator over all items in a given category
+    async *scan(cid) {
+        /* Iterate over all items in this DB (if no `cid`), or over the items of a given category. */
+        if (cid !== undefined) return this.scanCategory(cid)
+        return this.scanAll()
+    }
+    async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
+    async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
 }
 
 
@@ -182,6 +218,7 @@ class FileDB extends DB {
     }
 
     put(id, data, {flush = true} = {}) {
+        /* Assign `data` to a given `id`, no matter if the `id` is already present or not (the previous value is overwritten). */
         this.checkWritable(id)
         let [cid, iid] = id
         this.records.set(id, {cid, iid, data})
@@ -189,7 +226,7 @@ class FileDB extends DB {
     }
 
     ins(cid, data, {min_iid = -1, flush = true} = {}) {
-        /* Low-level insert, returns an IID created. */
+        /* Low-level insert to a specific category. Creates a new IID and returns it. */
         this.checkWritable()
 
         // current maximum IID for this category in the DB;
@@ -202,7 +239,9 @@ class FileDB extends DB {
     }
 
     async insert(item, {flush = true} = {}) {
-        /* If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
+        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
+           this IID is not yet present in the DB), or not.
+           If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
            after the function completes.
          */
         assert(item.has_data())
@@ -309,6 +348,22 @@ export class YamlDB extends FileDB {
 }
 
 /**********************************************************************************************************************/
+
+export function stackDB(...db) {
+    /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
+       and the highest-priority database (db[-1]) placed at the top of the stack.
+       The databases are connected into a double-linked list through their .prevDB & .nextDB attributes.
+       Return the top database.
+     */
+    if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
+    let prev = db[0], next
+    for (next of db.slice(1)) {
+        prev.nextDB = next
+        next.prevDB = prev
+        prev = next
+    }
+    return prev
+}
 
 export class RingsDB extends DB {
     /* Several databases used together like rings. Each read/write operation is executed

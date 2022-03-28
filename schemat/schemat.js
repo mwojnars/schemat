@@ -9,8 +9,9 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from './utils.js'
-import {RingsDB, YamlDB} from "./server/db.js";
+import {RingsDB, YamlDB, stackDB} from "./server/db.js";
 import {ServerRegistry} from "./server/registry-s.js";
+import {ROOT_CID} from "./item.js";
 import {Server} from "./server.js";
 
 
@@ -34,8 +35,8 @@ class Schemat {
 
     async boot() {
         this.db = new RingsDB(
-            new YamlDB(DB_ROOT + '/db-boot.yaml', {writable: false}),
-            new YamlDB(DB_ROOT + '/db-base.yaml', {writable: false}),
+            new YamlDB(DB_ROOT + '/db-boot.yaml', {readOnly: true}),
+            new YamlDB(DB_ROOT + '/db-base.yaml', {readOnly: true}),
             new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
             new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
         )
@@ -59,40 +60,41 @@ class Schemat {
         return bootstrap(db)
     }
 
-    async imove({cid, iid, new_iid}) {
-        print(`imove: changing item's ID=[${cid},${iid}] to ID=[${cid},${new_iid}] ...`)
+    async move({cid, iid, new_iid}) {
 
         let id    = [cid, iid]
         let newid = [cid, new_iid]
 
-        if (await this.db.has(newid)) throw new Error(`target ID already exists: [${cid},${new_iid}]`)
+        if (id[0] === ROOT_CID && newid[0] === ROOT_CID && id[0] !== newid[0])
+            throw new Error(`move: `)
 
-        // update children (of a category item)
+        if (await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
+
+        print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID
-        let data = this.db.get(id)
-        this.db.put(newid, data)
-        // db.add(cid, data, {min_iid}) -- low-level insert, returns an IID created
-
-        if (cid === ROOT_CID)               // category item: must change CID of children to `new_iid`
-            for await (let child of this.db.scan(iid))
-                this.db.move(child.id, [new_iid, child.iid])
-
+        let data = await this.db.get(id)
+        await this.db.put(newid, data)      //flush: false
         let newItem = this.registry.getItem(newid)
 
+        // update children of a category item: change their CID to `new_iid`
+        if (id[0] === ROOT_CID)
+            for await (let child of this.db.scan(iid))
+                await this.move({cid: child.cid, iid: child.iid, new_cid: new_iid})
+
         // update references
-        for await (let ref of this.registry.scan()) {           // search for references to `id` in the `ref` referrer item
+        for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
             await ref.load()
             ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
             let jsonData = ref.dumpData()
             if (jsonData !== ref.jsonData)
-                this.db.put(ref.id, jsonData)
+                await ref.db.put(ref.id, jsonData)      //flush: false
         }
 
         // remove the old item from DB
-        this.db.del(id)
+        await this.db.del(id)       //flush: true
 
-        print('imove: done')
+        print('move: done')
     }
 
 }
@@ -110,7 +112,7 @@ async function main() {
             }
         )
         .command(
-            'imove <cid> <iid> <new_iid>',
+            'move <cid> <iid> <new_iid>',
             'change IID of a given item; update references nested within standard data types; if the item is a category than CID of child items is updated, too',
             // (yargs) => yargs
             //     .positional('cid')
@@ -127,7 +129,7 @@ async function main() {
 
     let commands = [
         'run',
-        'imove',
+        'move',
         '_build_',
     ]
 

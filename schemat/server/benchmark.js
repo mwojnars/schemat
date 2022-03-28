@@ -58,7 +58,9 @@ function bench001() {
 }
 
 async function bench002(M = 1000000, N = 100) {
-    /* Based on: https://madelinemiller.dev/blog/javascript-promise-overhead/ */
+    /* Based on:  https://madelinemiller.dev/blog/javascript-promise-overhead/
+       Results posted at:  https://stackoverflow.com/a/70310025/1202674
+     */
     function fibonacci_sync(num) {
         let a = 1, b = 0, temp
         while (num >= 0) { temp = a; a = a + b; b = temp; num-- }

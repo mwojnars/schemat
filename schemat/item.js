@@ -183,6 +183,9 @@ export class Item {
 
     jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
+    db              // database, element of a DB stack, where this item was read from; undefined in newborn items;
+                    // updates are first sent to this DB, and only propagated to a higher-level DB if necessary
+
     //metadata      // system properties: current version, category's version, status etc.
 
     category        // parent category of this item, as an instance of Category
