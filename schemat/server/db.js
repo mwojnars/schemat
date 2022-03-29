@@ -100,7 +100,7 @@ class DB extends Item {
     static NotFound = class extends DB.Error {
         static message = "item ID not found in DB"
     }
-    static NotWritable = class extends DB.Error {
+    static ReadOnly = class extends DB.Error {
         static message = "no write access to the database"
     }
     static TooLowIID = class extends DB.Error {
@@ -108,10 +108,10 @@ class DB extends Item {
     }
 
     throwNotFound(msg, args)        { throw new DB.NotFound(msg, args) }
-    throwNotWritable(msg, args)     { throw new DB.NotWritable(msg, args) }
+    throwReadOnly(msg, args)        { throw new DB.ReadOnly(msg, args) }
     throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
 
-    checkWritable(id)               { if (this.readOnly) this.throwNotWritable(id ? {id} : undefined) }
+    checkWritable(id)               { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
     checkMinIID(id)                 { if (id[1] < this.start_IID) this.throwTooLow(id) }
     async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
 
@@ -133,6 +133,9 @@ class DB extends Item {
         /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
            or raises an exception if an error occurred.
          */
+        if (this.readOnly)
+            if (await this.has(id)) this.throwReadOnly({id})
+            else return this.prevDB ? this.prevDB.del(id, opts) : false
         let {flush = true} = opts
         let ret = this._del(id, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
@@ -140,14 +143,35 @@ class DB extends Item {
         if (ret && flush) await this.flush()
         return ret
     }
-    async put__(id, data, opts) {
-        /* */
+    put__(id, data, opts) {
+        /* Save `data` under an `id`, no matter if `id` was already present or not. May return a Promise. No return value.
+           If this db is readOnly, the operation is forwarded to a higher-level DB (nextDB), or an exception is raised.
+           If this db is readOnly but already contains the `id`, this method will duplicate the same `id`
+           into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
+           may remove this new instance of `id`, while keeping the old one in this db, which will become
+           accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
+           in this id being still accessible, only in its older version.
+         */
+        if (this.readOnly)
+            if (this.nextDB) return this.nextDB.put(id, data, opts)
+            else this.throwReadOnly({id})
         let {flush = true} = opts
         let ret = this._put(id, data, opts)
-        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-        if (!ret && this.prevDB) return this.prevDB.put(id, data, opts)
-        if (ret && flush) await this.flush()
-        return ret
+        if (ret instanceof Promise && flush) return ret.then(() => this.flush())
+        return flush ? this.flush() : ret
+    }
+    ins__(cid, data, opts) {
+        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
+           If this db is readOnly, forward the operation to a higher-level DB (nextDB), or raise an exception.
+           Return value: the `iid`, possibly wrapped in a Promise.
+         */
+        if (this.readOnly)
+            if (this.nextDB) return this.nextDB.ins(cid, data, opts)
+            else this.throwReadOnly({cid})
+        let {flush = true} = opts
+        let ret = this._ins(cid, data, opts)
+        if (ret instanceof Promise && flush) return ret.then(() => this.flush())
+        return flush ? this.flush() : ret
     }
 
     async has(id) {
@@ -367,7 +391,7 @@ export function stackDB(...db) {
 
 export class RingsDB extends DB {
     /* Several databases used together like rings. Each read/write operation is executed
-       on the outermost ring possible. If NotFound/NotWritable is caught, a deeper (lower) ring is tried.
+       on the outermost ring possible. If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
        In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
        that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
@@ -401,7 +425,7 @@ export class RingsDB extends DB {
             }
             catch (ex) {
                 if (ex instanceof DB.NotFound) { exLast = ex; continue }
-                // if (ex instanceof DB.NotFound || ex instanceof DB.NotWritable) continue
+                // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
                 throw ex
             }
         throw exLast || new DB.NotFound()
