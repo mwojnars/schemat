@@ -117,34 +117,41 @@ class DB extends Item {
 
     /***  low-level API (on encoded data)  ***/
 
-    get(id, opts)           { throw new NotImplemented() }
-    del(id, opts)           { throw new NotImplemented() }
-    put(id, data, opts)     { throw new NotImplemented() }
-    ins(cid, data, opts)    { throw new NotImplemented() }
+    _open(opts)             {}
+    _get(key, opts)         { throw new NotImplemented() }      // return undefined if `key` not found
+    _del(key, opts)         { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
+    _put(key, data, opts)   { throw new NotImplemented() }      // no return value
+    _ins(cid, data, opts)   { throw new NotImplemented() }
 
-    async get__(id, opts) {
-        let ret = this._get(id, opts)
+    open() {
+        /* Open this DB and all lower-level DBs in the stack. */
+        if (!this.prevDB) return this._open()
+        return Promise.all([this._open(), this.prevDB.open()])
+    }
+
+    async get(key, opts) {
+        let ret = this._get(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
         if (ret !== undefined) return ret
-        if (this.prevDB) return this.prevDB.get(id, opts)
-        this.throwNotFound({id})
+        if (this.prevDB) return this.prevDB.get(key, opts)
+        this.throwNotFound({id: key})
     }
-    async del__(id, opts) {
+    async del(key, opts) {
         /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
            or raises an exception if an error occurred.
          */
         if (this.readOnly)
-            if (await this.has(id)) this.throwReadOnly({id})
-            else return this.prevDB ? this.prevDB.del(id, opts) : false
+            if (await this.has(key)) this.throwReadOnly({id: key})
+            else return this.prevDB ? this.prevDB.del(key, opts) : false
         let {flush = true} = opts
-        let ret = this._del(id, opts)
+        let ret = this._del(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-        if (!ret && this.prevDB) return this.prevDB.del(id, opts)
+        if (!ret && this.prevDB) return this.prevDB.del(key, opts)
         if (ret && flush) await this.flush()
         return ret
     }
-    put__(id, data, opts) {
-        /* Save `data` under an `id`, no matter if `id` was already present or not. May return a Promise. No return value.
+    put(key, data, opts) {
+        /* Save `data` under a `key`, regardless if `key` was present or not. May return a Promise. No return value.
            If this db is readOnly, the operation is forwarded to a higher-level DB (nextDB), or an exception is raised.
            If this db is readOnly but already contains the `id`, this method will duplicate the same `id`
            into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
@@ -153,14 +160,14 @@ class DB extends Item {
            in this id being still accessible, only in its older version.
          */
         if (this.readOnly)
-            if (this.nextDB) return this.nextDB.put(id, data, opts)
-            else this.throwReadOnly({id})
+            if (this.nextDB) return this.nextDB.put(key, data, opts)
+            else this.throwReadOnly({id: key})
         let {flush = true} = opts
-        let ret = this._put(id, data, opts)
+        let ret = this._put(key, data, opts)
         if (ret instanceof Promise && flush) return ret.then(() => this.flush())
         return flush ? this.flush() : ret
     }
-    ins__(cid, data, opts) {
+    ins(cid, data, opts) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
            If this db is readOnly, forward the operation to a higher-level DB (nextDB), or raise an exception.
            Return value: the `iid`, possibly wrapped in a Promise.
@@ -226,40 +233,42 @@ class FileDB extends DB {
     async flush()   { throw new NotImplemented() }
     async has(id)   { return this.records.has(id) }
 
-    get(id) {
+    _get(id, opts) {
         /* Return the JSON-encoded string of item's data as stored in DB. */
         let record = this.records.get(id)
-        if (!record) this.throwNotFound({id})
-        assert(record.cid === id[0] && record.iid === id[1])
-        return record.data
+        if (record) return record.data
+        // if (!record) this.throwNotFound({id})
+        // assert(record.cid === id[0] && record.iid === id[1])
+        // return record.data
     }
 
-    del(id) {
-        if (!this.records.has(id)) this.throwNotFound({id})
-        this.checkWritable(id)
-        this.records.delete(id)
-        return this.flush()
+    _del(id, opts) {
+        // if (!this.records.has(id)) this.throwNotFound({id})
+        // this.checkWritable(id)
+        return this.records.delete(id)
+        // return this.flush()
     }
 
-    put(id, data, {flush = true} = {}) {
+    _put(id, data, {flush = true} = {}) {
         /* Assign `data` to a given `id`, no matter if the `id` is already present or not (the previous value is overwritten). */
-        this.checkWritable(id)
+        // this.checkWritable(id)
         let [cid, iid] = id
         this.records.set(id, {cid, iid, data})
-        if (flush) return this.flush()
+        // if (flush) return this.flush()
     }
 
-    ins(cid, data, {min_iid = -1, flush = true} = {}) {
+    _ins(cid, data, {min_iid = -1, flush = true} = {}) {
         /* Low-level insert to a specific category. Creates a new IID and returns it. */
-        this.checkWritable()
+        // this.checkWritable()
 
         // current maximum IID for this category in the DB;
         // special case for cid=0 to correctly assign IID=0 for the root category (TODO: check if this is still needed)
         let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
         let iid = Math.max(max + 1, this.start_IID, min_iid)
         this.max_iid.set(cid, iid)
-        this.records.set([cid, iid], {cid, iid, data})
-        return flush ? this.flush().then(() => iid) : iid
+        return this._put([cid, iid], data)
+        // this.records.set([cid, iid], {cid, iid, data})
+        // return flush ? this.flush().then(() => iid) : iid
     }
 
     async insert(item, {flush = true} = {}) {
@@ -334,9 +343,9 @@ class FileDB extends DB {
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
-    async load() {
-        let fs = await import('fs')
-        let YAML = (await import('yaml')).default
+    async _open() {
+        // let fs = await import('fs')
+        // let YAML = (await import('yaml')).default
         let file = await fs.promises.readFile(this.filename, 'utf8')
         let db = YAML.parse(file) || []
         this.records.clear()

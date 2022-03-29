@@ -34,7 +34,7 @@ class Schemat {
     }
 
     async boot() {
-        this.db = new RingsDB(
+        this.db = stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {readOnly: true}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {readOnly: true}),
             new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
@@ -42,7 +42,7 @@ class Schemat {
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
 
-        await this.db.load()
+        await this.db.open()
         await this.registry.boot()
     }
 
