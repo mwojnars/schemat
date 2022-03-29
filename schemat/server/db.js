@@ -123,20 +123,20 @@ class DB extends Item {
     _put(key, data, opts)   { throw new NotImplemented() }      // no return value
     _ins(cid, data, opts)   { throw new NotImplemented() }
 
-    open() {
+    open(opts = {}) {
         /* Open this DB and all lower-level DBs in the stack. */
         if (!this.prevDB) return this._open()
         return Promise.all([this._open(), this.prevDB.open()])
     }
 
-    async get(key, opts) {
+    async get(key, opts = {}) {
         let ret = this._get(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
         if (ret !== undefined) return ret
         if (this.prevDB) return this.prevDB.get(key, opts)
         this.throwNotFound({id: key})
     }
-    async del(key, opts) {
+    async del(key, opts = {}) {
         /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
            or raises an exception if an error occurred.
          */
@@ -150,7 +150,7 @@ class DB extends Item {
         if (ret && flush) await this.flush()
         return ret
     }
-    put(key, data, opts) {
+    put(key, data, opts = {}) {
         /* Save `data` under a `key`, regardless if `key` was present or not. May return a Promise. No return value.
            If this db is readOnly, the operation is forwarded to a higher-level DB (nextDB), or an exception is raised.
            If this db is readOnly but already contains the `id`, this method will duplicate the same `id`
@@ -167,18 +167,21 @@ class DB extends Item {
         if (ret instanceof Promise && flush) return ret.then(() => this.flush())
         return flush ? this.flush() : ret
     }
-    ins(cid, data, opts) {
+    async ins(cid, data, opts = {}) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
            If this db is readOnly, forward the operation to a higher-level DB (nextDB), or raise an exception.
-           Return value: the `iid`, possibly wrapped in a Promise.
+           Return the `iid`, possibly wrapped in a Promise.
          */
         if (this.readOnly)
             if (this.nextDB) return this.nextDB.ins(cid, data, opts)
             else this.throwReadOnly({cid})
         let {flush = true} = opts
-        let ret = this._ins(cid, data, opts)
-        if (ret instanceof Promise && flush) return ret.then(() => this.flush())
-        return flush ? this.flush() : ret
+        let iid = this._ins(cid, data, opts)
+        if (iid instanceof Promise) iid = await iid
+        if (flush) await this.flush()
+        return iid
+        // if (iid instanceof Promise && flush) return iid.then(() => this.flush())
+        // return flush ? this.flush() : iid
     }
 
     async has(id) {
@@ -266,8 +269,9 @@ class FileDB extends DB {
         let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
         let iid = Math.max(max + 1, this.start_IID, min_iid)
         this.max_iid.set(cid, iid)
-        return this._put([cid, iid], data)
-        // this.records.set([cid, iid], {cid, iid, data})
+        // return this._put([cid, iid], data)
+        this.records.set([cid, iid], {cid, iid, data})
+        return iid
         // return flush ? this.flush().then(() => iid) : iid
     }
 
@@ -285,7 +289,8 @@ class FileDB extends DB {
         // set IID of the item, if missing
         if (item.iid === null || item.iid === undefined) {
             let iid = this.ins(cid, data, {flush})
-            if (iid instanceof Promise) return iid.then(iid => {item.iid = iid})
+            // if (iid instanceof Promise) return iid.then(iid => {item.iid = iid})
+            if (iid instanceof Promise) iid = await iid
             item.iid = iid
         }
         else {

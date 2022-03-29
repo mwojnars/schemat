@@ -205,7 +205,7 @@ export class Item {
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
-        return this.cid !== null && this.iid !== null
+        return this.cid !== null && this.cid !== undefined && this.iid !== null && this.iid !== undefined
     }
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
@@ -519,6 +519,7 @@ export class Item {
     }
     encodeSelf(use_schema = true) {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
+        assert(this.has_id())
         let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
         state.data = this.encodeData(use_schema)
         return state
