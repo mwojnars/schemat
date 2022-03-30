@@ -58,6 +58,7 @@ class AjaxDB {
         if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
         return this.records.get(id).data
     }
+    async select(id) { return this.get(id) }
 
     async _from_ajax(cid, iid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */

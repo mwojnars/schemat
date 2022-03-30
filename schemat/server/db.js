@@ -85,6 +85,8 @@ class DB extends Item {
     readOnly  = false   // if true, the database does NOT accept modifications: inserts/updates/deletes
     start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
                         // between different underlying databases used together inside a RingDB
+    max_iid = new Map() // current maximum IIDs per category, as {cid: maximum_iid}
+
 
     nextDB              // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
     prevDB              // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
@@ -129,19 +131,36 @@ class DB extends Item {
         return Promise.all([this.prevDB.open(), this._open()])
     }
 
+    has(key) {
+        /* Returns true/false. May return a Promise. */
+        let rec = this.get(key)
+        if (rec instanceof Promise) return rec.then(r => (r !== undefined))
+        return rec !== undefined
+
+        // try {
+        //     await this.get(key)
+        //     return true
+        // }
+        // catch(ex) {
+        //     if (ex instanceof DB.NotFound) return false
+        //     throw ex
+        // }
+    }
+
     async get(key, opts = {}) {
+        /* Returns the data stored under a `key`, or undefined if the `key` cannot be found. */
         let ret = this._get(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
         if (ret !== undefined) return ret
         if (this.prevDB) return this.prevDB.get(key, opts)
-        this.throwNotFound({id: key})
+        // this.throwNotFound({key})
     }
     async del(key, opts = {}) {
         /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
            or raises an exception if an error occurred.
          */
         if (this.readOnly)
-            if (await this.has(key)) this.throwReadOnly({id: key})
+            if (await this.has(key)) this.throwReadOnly({key})
             else return this.prevDB ? this.prevDB.del(key, opts) : false
         let {flush = true} = opts
         let ret = this._del(key, opts)
@@ -161,7 +180,7 @@ class DB extends Item {
          */
         if (this.readOnly)
             if (this.nextDB) return this.nextDB.put(key, data, opts)
-            else this.throwReadOnly({id: key})
+            else this.throwReadOnly({key})
         let {flush = true} = opts
         let ret = this._put(key, data, opts)
         if (ret instanceof Promise && flush) return ret.then(() => this.flush())
@@ -182,21 +201,47 @@ class DB extends Item {
         return iid
     }
 
-    async has(id) {
-        try {
-            await this.get(id)
-            return true
-        }
-        catch(ex) {
-            if (ex instanceof DB.NotFound) return false
-            throw ex
-        }
-    }
-
     /***  high-level API (on items)  ***/
 
-    update(item, opts)      { throw new NotImplemented() }
-    insert(item, opts)      { throw new NotImplemented() }
+    async select(id) {
+        /* Similar to get(), but throws an exception when `id` not found. */
+        let rec = this.get(id)
+        if (rec instanceof Promise) rec = await rec
+        if (rec === undefined) this.throwNotFound({id})
+        return rec
+    }
+
+    async update(item, {flush = true} = {}) {
+        assert(item.has_data())
+        assert(item.has_id())
+        if (!await this.has(item.id)) this.throwNotFound({id: item.id})
+        return this.put(item.id, item.dumpData(), {flush})
+    }
+
+    async insert(item, {flush = true} = {}) {
+        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
+           this IID is not yet present in the DB), or not.
+           If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
+           after the function completes.
+         */
+        assert(item.has_data())
+        assert(item.cid || item.cid === 0)
+        let data = item.dumpData()
+        let cid  = item.cid
+
+        // set IID of the item, if missing
+        if (item.iid === null || item.iid === undefined) {
+            let iid = this.ins(cid, data, {flush})
+            if (iid instanceof Promise) iid = await iid
+            item.iid = iid
+        }
+        else {
+            this.checkMinIID(item.id)
+            await this.checkNew(item.id, "the item already exists")
+            this.max_iid.set(cid, Math.max(item.iid, this.max_iid.get(cid) || 0))
+            return this.put(item.id, data, {flush})
+        }
+    }
 
     insertMany(...items) {
         this.checkWritable()
@@ -222,8 +267,6 @@ class FileDB extends DB {
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
     // TODO: keep `data` alone (no cid/iid) instead of `records`
-
-    max_iid = new Map()         // current maximum IIDs per category, as {cid: maximum_iid}
 
 
     constructor(filename, params = {}) {
@@ -260,38 +303,6 @@ class FileDB extends DB {
         this.max_iid.set(cid, iid)
         this.records.set([cid, iid], {cid, iid, data})
         return iid
-    }
-
-    async insert(item, {flush = true} = {}) {
-        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
-           this IID is not yet present in the DB), or not.
-           If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
-           after the function completes.
-         */
-        assert(item.has_data())
-        assert(item.cid || item.cid === 0)
-        let data = item.dumpData()
-        let cid  = item.cid
-
-        // set IID of the item, if missing
-        if (item.iid === null || item.iid === undefined) {
-            let iid = this.ins(cid, data, {flush})
-            if (iid instanceof Promise) iid = await iid
-            item.iid = iid
-        }
-        else {
-            this.checkMinIID(item.id)
-            await this.checkNew(item.id, "the item already exists")
-            this.max_iid.set(cid, Math.max(item.iid, this.max_iid.get(cid) || 0))
-            return this.put(item.id, data, {flush})
-        }
-    }
-
-    update(item, {flush = true} = {}) {
-        assert(item.has_data())
-        assert(item.has_id())
-        if (!this.records.has(item.id)) this.throwNotFound({id: item.id})
-        return this.put(item.id, item.dumpData(), {flush})
     }
 
     async *scanCategory(cid) {
