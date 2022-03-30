@@ -72,8 +72,11 @@ class Schemat {
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
-        // load the item from its current ID; save a copy under the new ID
+        // load the item from its current ID
         let data = await this.db.get(id)
+        if (data === undefined) throw new Error(`item not found: [${id}]`)
+
+        // save a copy under the new ID
         await this.db.put(newid, data)      //flush: false
         let newItem = this.registry.getItem(newid)
 

@@ -85,8 +85,10 @@ class DB extends Item {
     readOnly  = false   // if true, the database does NOT accept modifications: inserts/updates/deletes
     start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
                         // between different underlying databases used together inside a RingDB
-    max_iid = new Map() // current maximum IIDs per category, as {cid: maximum_iid}
-
+    max_iid = new Map   // current maximum IIDs per category, as {cid: maximum_iid}
+    
+    next_iid = new Map  // auto-incremented next IID to be assigned to a newly inserted item in a category,
+                        // as {cid: next_iid}; larger than all IIDs currently present in the category
 
     nextDB              // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
     prevDB              // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
@@ -114,7 +116,7 @@ class DB extends Item {
     throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
 
     checkWritable(id)               { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
-    checkMinIID(id)                 { if (id[1] < this.start_IID) this.throwTooLow(id) }
+    checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
     async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
 
     /***  low-level API (on encoded data)  ***/
@@ -136,15 +138,6 @@ class DB extends Item {
         let rec = this.get(key)
         if (rec instanceof Promise) return rec.then(r => (r !== undefined))
         return rec !== undefined
-
-        // try {
-        //     await this.get(key)
-        //     return true
-        // }
-        // catch(ex) {
-        //     if (ex instanceof DB.NotFound) return false
-        //     throw ex
-        // }
     }
 
     async get(key, opts = {}) {
@@ -236,11 +229,39 @@ class DB extends Item {
             item.iid = iid
         }
         else {
-            this.checkMinIID(item.id)
-            await this.checkNew(item.id, "the item already exists")
-            this.max_iid.set(cid, Math.max(item.iid, this.max_iid.get(cid) || 0))
+            // this.checkIID(item.id)
+            // await this.checkNew(item.id, "the item already exists")
+            // this.max_iid.set(cid, Math.max(item.iid, this.max_iid.get(cid) || 0))
+            await this.assignIID(item.id)
             return this.put(item.id, data, {flush})
         }
+    }
+
+    initIID(cid) {
+        /* Initialize an IID auto-increment (next_IID) for the specified category. */
+        this.next_iid.set(cid, Math.max(1, this.start_IID))
+    }
+    createIID(cid) {
+        /* Choose and return the next available IID in a given category (`cid`) as taken from this.next_iid.
+           Update this.next_iid accordingly.
+         */
+        this.next_iid.has(cid) || this.initIID(cid)
+        let iid = this.next_iid.get(cid)
+        this.checkIID([cid, iid])                   // check against upper bound if present
+        this.next_iid.set(cid, iid + 1)             // auto-increment
+        this.max_iid.set(cid, iid)
+        return iid
+    }
+    async assignIID(id) {
+        /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
+           Update this.next_iid so that it's still larger than the `iid` being taken.
+         */
+        let [cid, iid] = id
+        await this.checkNew(id, "the item already exists")
+        this.checkIID(id)
+        this.next_iid.has(cid) || this.initIID(cid)
+        this.next_iid.set(cid, Math.max(iid, this.next_iid.get(cid)))
+        this.max_iid.set(cid, Math.max(iid, this.max_iid.get(cid) || 0))
     }
 
     insertMany(...items) {
@@ -293,15 +314,13 @@ class FileDB extends DB {
         this.records.set(id, {cid, iid, data})
     }
 
-    _ins(cid, data, {min_iid = -1, flush = true} = {}) {
+    _ins(cid, data, {flush = true} = {}) {
         /* Low-level insert to a specific category. Creates a new IID and returns it. */
 
-        // current maximum IID for this category in the DB;
-        // special case for cid=0 to correctly assign IID=0 for the root category (TODO: check if this is still needed)
-        let max = this.max_iid.get(cid) || 0
-        // let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
-        let iid = Math.max(max + 1, this.start_IID, min_iid)
-        this.max_iid.set(cid, iid)
+        // let max = this.max_iid.get(cid) || 0                    // current maximum IID for this category in the DB
+        // let iid = Math.max(max + 1, this.start_IID)
+        // this.max_iid.set(cid, iid)
+        let iid = this.createIID(cid)
         this.records.set([cid, iid], {cid, iid, data})
         return iid
     }
@@ -320,18 +339,24 @@ export class YamlDB extends FileDB {
         let db = YAML.parse(file) || []
         this.records.clear()
         this.max_iid.clear()
+        this.next_iid.clear()
 
         for (let record of db) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
-            this.checkMinIID(id)
+            this.checkIID(id)
             await this.checkNew(id, "duplicate item ID")
 
-            let data = '__data' in record ? record.__data : record
+            let curr_next = this.next_iid.get(cid) || 1
+            this.next_iid.set(cid, Math.max(curr_next, iid + 1))
+
             let curr_max = this.max_iid.get(cid) || 0
             this.max_iid.set(cid, Math.max(curr_max, iid))
+
+            let data = '__data' in record ? record.__data : record
             this.records.set(id, {cid, iid, data: JSON.stringify(data)})
         }
+
         // print('YamlDB items loaded:')
         // for (const [id, data] of this.records)
         //     print(id, data)
