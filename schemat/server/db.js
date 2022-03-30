@@ -298,7 +298,8 @@ class FileDB extends DB {
 
         // current maximum IID for this category in the DB;
         // special case for cid=0 to correctly assign IID=0 for the root category (TODO: check if this is still needed)
-        let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
+        let max = this.max_iid.get(cid) || 0
+        // let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
         let iid = Math.max(max + 1, this.start_IID, min_iid)
         this.max_iid.set(cid, iid)
         this.records.set([cid, iid], {cid, iid, data})
