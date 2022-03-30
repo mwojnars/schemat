@@ -37,8 +37,8 @@ class Schemat {
         this.db = stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {readOnly: true}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-conf.yaml', {start_IID: 0}),
-            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_IID: 100}),
+            new YamlDB(DB_ROOT + '/db-conf.yaml', {start_iid: 0}),
+            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: 100}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
 

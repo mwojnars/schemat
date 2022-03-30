@@ -83,18 +83,19 @@ import { Item } from "../item.js";
 
 class DB extends Item {
     readOnly  = false   // if true, the database does NOT accept modifications: inserts/updates/deletes
-    start_IID = 0       // minimum IID of newly created items; if >0, it helps maintain separation of IDs
-                        // between different underlying databases used together inside a RingDB
-    max_iid = new Map   // current maximum IID per category, as {cid: maximum_iid}
+
+    start_iid = 0       // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    stop_iid            // (optional) maximum IID of all items
+    curr_iid = new Map  // current maximum IID per category, as {cid: maximum_iid}
     
     nextDB              // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
     prevDB              // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
 
     constructor(params = {}) {
         super()
-        let {readOnly = false, start_IID = 0} = params
+        let {readOnly = false, start_iid = 0} = params
         this.readOnly = readOnly
-        this.start_IID = start_IID
+        this.start_iid = start_iid
     }
 
     static Error = class extends BaseError {}
@@ -108,13 +109,35 @@ class DB extends Item {
         static message = "found an item in DB with IID lower than expected"
     }
 
+    /***  internal API  ***/
+
     throwNotFound(msg, args)        { throw new DB.NotFound(msg, args) }
     throwReadOnly(msg, args)        { throw new DB.ReadOnly(msg, args) }
-    throwTooLow(id)                 { throw new DB.TooLowIID({id, start_IID: this.start_IID}) }
+    throwTooLow(id)                 { throw new DB.TooLowIID({id, start_iid: this.start_iid}) }
 
     checkWritable(id)               { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
-    checkIID(id)                    { if (id[1] < this.start_IID) this.throwTooLow(id) }
+    checkIID(id)                    { if (id[1] < this.start_iid) this.throwTooLow(id) }
     async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
+
+    createIID(cid) {
+        /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
+           Update this.curr_iid accordingly.
+         */
+        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the DB
+        let iid = Math.max(max + 1, this.start_iid)
+        this.checkIID([cid, iid])                           // check against upper bound if present
+        this.curr_iid.set(cid, iid)
+        return iid
+    }
+    async assignIID(id) {
+        /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
+           Update this.curr_iid accordingly.
+         */
+        let [cid, iid] = id
+        await this.checkNew(id, "the item already exists")
+        this.checkIID(id)
+        this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
+    }
 
     /***  low-level API (on encoded data)  ***/
 
@@ -231,26 +254,6 @@ class DB extends Item {
         }
     }
 
-    createIID(cid) {
-        /* Choose and return the next available IID in a given category (`cid`) as taken from this.max_iid.
-           Update this.max_iid accordingly.
-         */
-        let max = this.max_iid.get(cid) || 0                // current maximum IID for this category in the DB
-        let iid = Math.max(max + 1, this.start_IID)
-        this.checkIID([cid, iid])                           // check against upper bound if present
-        this.max_iid.set(cid, iid)
-        return iid
-    }
-    async assignIID(id) {
-        /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
-           Update this.max_iid so that it's still larger than the `iid` being taken.
-         */
-        let [cid, iid] = id
-        await this.checkNew(id, "the item already exists")
-        this.checkIID(id)
-        this.max_iid.set(cid, Math.max(iid, this.max_iid.get(cid) || 0))
-    }
-
     insertMany(...items) {
         this.checkWritable()
         return Promise.all(items.map(item => this.insert(item, {flush: false})))
@@ -303,10 +306,6 @@ class FileDB extends DB {
 
     _ins(cid, data, {flush = true} = {}) {
         /* Low-level insert to a specific category. Creates a new IID and returns it. */
-
-        // let max = this.max_iid.get(cid) || 0                    // current maximum IID for this category in the DB
-        // let iid = Math.max(max + 1, this.start_IID)
-        // this.max_iid.set(cid, iid)
         let iid = this.createIID(cid)
         this.records.set([cid, iid], {cid, iid, data})
         return iid
@@ -325,7 +324,7 @@ export class YamlDB extends FileDB {
         let file = await fs.promises.readFile(this.filename, 'utf8')
         let db = YAML.parse(file) || []
         this.records.clear()
-        this.max_iid.clear()
+        this.curr_iid.clear()
 
         for (let record of db) {
             let id = T.pop(record, '__id')
@@ -333,8 +332,8 @@ export class YamlDB extends FileDB {
             this.checkIID(id)
             await this.checkNew(id, "duplicate item ID")
 
-            let curr_max = this.max_iid.get(cid) || 0
-            this.max_iid.set(cid, Math.max(curr_max, iid))
+            let curr_max = this.curr_iid.get(cid) || 0
+            this.curr_iid.set(cid, Math.max(curr_max, iid))
 
             let data = '__data' in record ? record.__data : record
             this.records.set(id, {cid, iid, data: JSON.stringify(data)})
