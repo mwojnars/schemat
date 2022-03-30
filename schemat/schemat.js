@@ -9,7 +9,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from './utils.js'
-import {RingsDB, YamlDB, stackDB} from "./server/db.js";
+import {YamlDB, stackDB} from "./server/db.js";
 import {ServerRegistry} from "./server/registry-s.js";
 import {ROOT_CID} from "./item.js";
 import {Server} from "./server.js";

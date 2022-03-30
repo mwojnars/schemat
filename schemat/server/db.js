@@ -126,7 +126,7 @@ class DB extends Item {
     open(opts = {}) {
         /* Open this DB and all lower-level DBs in the stack. */
         if (!this.prevDB) return this._open()
-        return Promise.all([this._open(), this.prevDB.open()])
+        return Promise.all([this.prevDB.open(), this._open()])
     }
 
     async get(key, opts = {}) {
@@ -180,8 +180,6 @@ class DB extends Item {
         if (iid instanceof Promise) iid = await iid
         if (flush) await this.flush()
         return iid
-        // if (iid instanceof Promise && flush) return iid.then(() => this.flush())
-        // return flush ? this.flush() : iid
     }
 
     async has(id) {
@@ -240,39 +238,28 @@ class FileDB extends DB {
         /* Return the JSON-encoded string of item's data as stored in DB. */
         let record = this.records.get(id)
         if (record) return record.data
-        // if (!record) this.throwNotFound({id})
-        // assert(record.cid === id[0] && record.iid === id[1])
-        // return record.data
     }
 
     _del(id, opts) {
-        // if (!this.records.has(id)) this.throwNotFound({id})
-        // this.checkWritable(id)
         return this.records.delete(id)
-        // return this.flush()
     }
 
     _put(id, data, {flush = true} = {}) {
         /* Assign `data` to a given `id`, no matter if the `id` is already present or not (the previous value is overwritten). */
-        // this.checkWritable(id)
         let [cid, iid] = id
         this.records.set(id, {cid, iid, data})
-        // if (flush) return this.flush()
     }
 
     _ins(cid, data, {min_iid = -1, flush = true} = {}) {
         /* Low-level insert to a specific category. Creates a new IID and returns it. */
-        // this.checkWritable()
 
         // current maximum IID for this category in the DB;
         // special case for cid=0 to correctly assign IID=0 for the root category (TODO: check if this is still needed)
         let max = (cid === 0 && !this.max_iid.has(cid)) ? -1 : this.max_iid.get(cid) || 0
         let iid = Math.max(max + 1, this.start_IID, min_iid)
         this.max_iid.set(cid, iid)
-        // return this._put([cid, iid], data)
         this.records.set([cid, iid], {cid, iid, data})
         return iid
-        // return flush ? this.flush().then(() => iid) : iid
     }
 
     async insert(item, {flush = true} = {}) {
@@ -289,7 +276,6 @@ class FileDB extends DB {
         // set IID of the item, if missing
         if (item.iid === null || item.iid === undefined) {
             let iid = this.ins(cid, data, {flush})
-            // if (iid instanceof Promise) return iid.then(iid => {item.iid = iid})
             if (iid instanceof Promise) iid = await iid
             item.iid = iid
         }
@@ -300,37 +286,6 @@ class FileDB extends DB {
             return this.put(item.id, data, {flush})
         }
     }
-
-    // async insert(item, {flush = true} = {}) {
-    //     /* If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
-    //        after the function completes.
-    //      */
-    //     assert(item.has_data())
-    //
-    //     // set CID of the item
-    //     if (item.cid === null || item.cid === undefined) item.cid = item.category.iid
-    //     let cid = item.cid
-    //     let max_iid
-    //
-    //     if (cid === 0 && !this.max_iid.has(cid))
-    //         max_iid = -1   // use =0 if the root category is not getting an IID here
-    //     else
-    //         max_iid = this.max_iid.get(cid) || 0
-    //
-    //     // set IID of the item, if missing
-    //     let iid = item.iid
-    //     if (iid === null || iid === undefined) {
-    //         item.iid = iid = Math.max(max_iid + 1, this.start_IID)
-    //         this.max_iid.set(cid, iid)
-    //     }
-    //     else {
-    //         this.checkMinIID(item.id)
-    //         await this.checkNew(item.id, "the item already exists")
-    //         this.max_iid.set(cid, Math.max(iid, max_iid))
-    //     }
-    //
-    //     return this.put(item.id, item.dumpData(), {flush})
-    // }
 
     update(item, {flush = true} = {}) {
         assert(item.has_data())
@@ -349,8 +304,6 @@ export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
     async _open() {
-        // let fs = await import('fs')
-        // let YAML = (await import('yaml')).default
         let file = await fs.promises.readFile(this.filename, 'utf8')
         let db = YAML.parse(file) || []
         this.records.clear()
@@ -403,54 +356,54 @@ export function stackDB(...db) {
     return prev
 }
 
-export class RingsDB extends DB {
-    /* Several databases used together like rings. Each read/write operation is executed
-       on the outermost ring possible. If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
-       In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
-       that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
-       NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
-       -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
-       is expected; while the reversed relationship is a sign of undesired convolution between the databases.
-     */
-
-    static RingNotFound = class extends DB.Error {
-        static message = "no suitable ring database found for the operation"
-    }
-
-    constructor(...databases) {
-        /* `databases` are ordered by increasing level: from innermost to outermost. */
-        super()
-        this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
-
-        this.get    = this.outermost('get')
-        this.del    = this.outermost('del')
-        this.insert = this.outermost('insert')
-        this.update = this.outermost('update')
-        // this.select = this.outermost('select')
-    }
-    load()  { return Promise.all(this.databases.map(d => d.load())) }
-
-    outermost = (method) => async function (...args) {
-        let exLast
-        for (const db of this.databases)
-            try {
-                let result = db[method](...args)
-                return result instanceof Promise ? await result : result
-            }
-            catch (ex) {
-                if (ex instanceof DB.NotFound) { exLast = ex; continue }
-                // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
-                throw ex
-            }
-        throw exLast || new DB.NotFound()
-        // throw new RingsDB.RingNotFound()
-    }
-
-    async *scanCategory(cid) {
-        for (const db of this.databases)
-            yield* db.scanCategory(cid)
-    }
-}
+// export class RingsDB extends DB {
+//     /* Several databases used together like rings. Each read/write operation is executed
+//        on the outermost ring possible. If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
+//        In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
+//        that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
+//        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
+//        -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
+//        is expected; while the reversed relationship is a sign of undesired convolution between the databases.
+//      */
+//
+//     static RingNotFound = class extends DB.Error {
+//         static message = "no suitable ring database found for the operation"
+//     }
+//
+//     constructor(...databases) {
+//         /* `databases` are ordered by increasing level: from innermost to outermost. */
+//         super()
+//         this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
+//
+//         this.get    = this.outermost('get')
+//         this.del    = this.outermost('del')
+//         this.insert = this.outermost('insert')
+//         this.update = this.outermost('update')
+//         // this.select = this.outermost('select')
+//     }
+//     load()  { return Promise.all(this.databases.map(d => d.load())) }
+//
+//     outermost = (method) => async function (...args) {
+//         let exLast
+//         for (const db of this.databases)
+//             try {
+//                 let result = db[method](...args)
+//                 return result instanceof Promise ? await result : result
+//             }
+//             catch (ex) {
+//                 if (ex instanceof DB.NotFound) { exLast = ex; continue }
+//                 // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
+//                 throw ex
+//             }
+//         throw exLast || new DB.NotFound()
+//         // throw new RingsDB.RingNotFound()
+//     }
+//
+//     async *scanCategory(cid) {
+//         for (const db of this.databases)
+//             yield* db.scanCategory(cid)
+//     }
+// }
 
 /**********************************************************************************************************************/
 
