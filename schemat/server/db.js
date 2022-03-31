@@ -161,7 +161,7 @@ class DB extends Item {
     }
 
     async get(key, opts = {}) {
-        /* Returns the data stored under a `key`, or undefined if the `key` cannot be found. */
+        /* Return the JSON-encoded string of item's data as stored in DB under `key`, or undefined if the `key` cannot be found. */
         let ret = this._get(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
         if (ret !== undefined) return ret
@@ -183,7 +183,7 @@ class DB extends Item {
         return ret
     }
     put(key, data, opts = {}) {
-        /* Save `data` under a `key`, regardless if `key` was present or not. May return a Promise. No return value.
+        /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
            If this db is readOnly, the operation is forwarded to a higher-level DB (nextDB), or an exception is raised.
            If this db is readOnly but already contains the `id`, this method will duplicate the same `id`
            into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
@@ -200,7 +200,8 @@ class DB extends Item {
         return flush ? this.flush() : ret
     }
     async ins(cid, data, opts = {}) {
-        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
+        /* Low-level insert to a specific category.
+           Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
            If this db is readOnly, forward the operation to a higher-level DB (nextDB), or raise an exception.
            Return the `iid`, possibly wrapped in a Promise.
          */
@@ -288,35 +289,23 @@ class FileDB extends DB {
     async flush()   { throw new NotImplemented() }
     async has(id)   { return this.records.has(id) }
 
-    _get(id, opts) {
-        /* Return the JSON-encoded string of item's data as stored in DB. */
+    _get(id, opts)  {
         let record = this.records.get(id)
-        if (record) return record //.data
+        if (record) return record
     }
+    _del(id, opts)  { return this.records.delete(id) }
+    _put(id, data)  { this.records.set(id, data) }
 
-    _del(id, opts) {
-        return this.records.delete(id)
-    }
-
-    _put(id, data, {flush = true} = {}) {
-        /* Assign `data` to a given `id`, no matter if the `id` is already present or not (the previous value is overwritten). */
-        this.records.set(id, data)
-        // let [cid, iid] = id
-        // this.records.set(id, {cid, iid, data})
-    }
-
-    _ins(cid, data, {flush = true} = {}) {
-        /* Low-level insert to a specific category. Creates a new IID and returns it. */
+    _ins(cid, data) {
         let iid = this.createIID(cid)
-        this.records.set([cid, iid], data)  //{cid, iid, data})
+        this.records.set([cid, iid], data)
         return iid
     }
 
-    async *scanCategory(cid) {
+    async *scan(cid = null) {
+        let all = (cid === null)
         for (const [id, data] of this.records.entries())
-            if (id[0] === cid) yield {cid: id[0], iid: id[1], data}
-        // for (const record of this.records.values())
-        //     if (cid === record.cid) yield record
+            if (all || id[0] === cid) yield [id, data]
     }
 }
 
@@ -340,7 +329,6 @@ export class YamlDB extends FileDB {
 
             let data = '__data' in record ? record.__data : record
             this.records.set(id, JSON.stringify(data))
-            // this.records.set(id, {cid, iid, data: JSON.stringify(data)})
         }
     }
 
@@ -352,12 +340,6 @@ export class YamlDB extends FileDB {
                 let id = {__id: id_}, data = JSON.parse(data_)
                 return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
             })
-
-        // let flat = [...this.records.values()]
-        // let recs = flat.map(({cid, iid, data:d}) => {
-        //         let id = {__id: [cid, iid]}, data = JSON.parse(d)
-        //         return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
-        //     })
         let out = YAML.stringify(recs)
         return fs.promises.writeFile(this.filename, out, 'utf8')
     }

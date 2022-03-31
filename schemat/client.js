@@ -32,8 +32,8 @@ class AjaxDB {
      */
 
     url     = null                  // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
-    records = new ItemsMap()        // cached records received on initial or subsequent web requests;
-                                    // each record is {cid,iid,data}, `data` is JSON-encoded for safety
+    records = new ItemsMap()        // cached `data` of the items received on initial or subsequent web requests;
+                                    // each `data` is JSON-encoded for safety
 
     constructor(url, records = []) {
         this.url = url
@@ -46,7 +46,8 @@ class AjaxDB {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            this.records.set([rec.cid, rec.iid], rec)
+            let id = rec.id || [rec.cid, rec.iid]
+            this.records.set(id, rec.data)
         }
     }
 
@@ -56,7 +57,7 @@ class AjaxDB {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
         let [cid, iid] = id
         if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
-        return this.records.get(id).data
+        return this.records.get(id)
     }
     async select(id) { return this.get(id) }
 
@@ -65,15 +66,17 @@ class AjaxDB {
         print(`ajax download [${cid},${iid}]...`)
         return $.get(`${this.url}/${cid}:${iid}@json`)
     }
-    async *scanCategory(cid) {
+    async *scan(cid = null) {
+        assert(cid !== null)
         print(`ajax category scan [0,${cid}]...`)
         let records = await $.get(`${this.url}/0:${cid}@scan`)
-        for (const rec of records) {
+        for (const rec of records) {            // rec's shape: {cid, iid, data}   (TODO: change to {id, data})
             if (rec.data) {
                 rec.data = JSON.stringify(rec.data)
                 this.keep(rec)
             }
-            yield rec
+            let id = rec.id || [rec.cid, rec.iid]
+            yield [id, rec.data]
         }
     }
 }

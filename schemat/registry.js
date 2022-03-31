@@ -221,18 +221,18 @@ export class Registry {
     async *scanCategory(category, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. A generator. */
         category.assertLoaded()
-        let records = this.db.scanCategory(category.iid)
+        let records = this.db.scan(category.iid)
         let count = 0
 
-        for await (const record of records) {
+        for await (const [id, data] of records) {
             if (limit !== undefined && count >= limit) break
-            let {cid, iid} = record
+            let [cid, iid] = id
             assert(cid === category.iid)
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
                 let item = await category.new(null, iid)
-                await item.reload(undefined, record.data)
+                await item.reload(undefined, data)
                 yield item
             }
             count++
