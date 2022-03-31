@@ -521,9 +521,6 @@ export class Item {
         /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
         assert(this.has_id())
         return {id: this.id, data: this.encodeData(use_schema)}
-        // let state = (({cid, iid}) => ({cid, iid}))(this)    // pull selected properties from `this`, others are not serializable
-        // state.data = this.encodeData(use_schema)
-        // return state
     }
 
     url(method, args) {
@@ -1101,7 +1098,7 @@ export class Category extends Item {
             if (record) {
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
-                let item = await this.registry.getItem(record.id || [record.cid, record.iid])
+                let item = await this.registry.getItem(record.id)
                 itemAdded(item)
             }
             setFormDisabled(false)

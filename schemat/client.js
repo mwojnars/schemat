@@ -46,8 +46,7 @@ class AjaxDB {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            let id = rec.id || [rec.cid, rec.iid]
-            this.records.set(id, rec.data)
+            this.records.set(rec.id, rec.data)
         }
     }
 
@@ -70,13 +69,12 @@ class AjaxDB {
         assert(cid !== null)
         print(`ajax category scan [0,${cid}]...`)
         let records = await $.get(`${this.url}/0:${cid}@scan`)
-        for (const rec of records) {            // rec's shape: {cid, iid, data}   (TODO: change to {id, data})
+        for (const rec of records) {            // rec's shape: {id, data}
             if (rec.data) {
                 rec.data = JSON.stringify(rec.data)
                 this.keep(rec)
             }
-            let id = rec.id || [rec.cid, rec.iid]
-            yield [id, rec.data]
+            yield [rec.id, rec.data]
         }
     }
 }
@@ -95,7 +93,7 @@ class ClientRegistry extends Registry {
         await super.boot(data.site_id)
         this.session = Session.load(this, data.session)
         for (let rec of data.items)
-            await this.getLoaded(rec.id || [rec.cid, rec.iid])          // preload all boot items from copies passed in constructor()
+            await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
     }
 }
 

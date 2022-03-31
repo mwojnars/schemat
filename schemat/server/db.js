@@ -82,14 +82,15 @@ import { Item } from "../item.js";
  */
 
 class DB extends Item {
-    readOnly  = false   // if true, the database does NOT accept modifications: inserts/updates/deletes
+    readOnly  = false       // if true, the database does NOT accept modifications: inserts/updates/deletes
 
-    start_iid = 0       // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
-    stop_iid            // (optional) maximum IID of all items
-    curr_iid = new Map  // current maximum IID per category, as {cid: maximum_iid}
+    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    stop_iid                // (optional) maximum IID of all items
+
+    curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
     
-    nextDB              // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
-    prevDB              // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
+    nextDB                  // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
+    prevDB                  // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
 
     constructor(params = {}) {
         super()
@@ -154,23 +155,24 @@ class DB extends Item {
     }
 
     has(key) {
-        /* Returns true/false. May return a Promise. */
+        /* Return true if the get(key) would return a record; false otherwise. May return a Promise. */
         let rec = this.get(key)
         if (rec instanceof Promise) return rec.then(r => (r !== undefined))
         return rec !== undefined
     }
 
     async get(key, opts = {}) {
-        /* Return the JSON-encoded string of item's data as stored in DB under `key`, or undefined if the `key` cannot be found. */
+        /* Find the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
+           If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
+         */
         let ret = this._get(key, opts)
         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
         if (ret !== undefined) return ret
         if (this.prevDB) return this.prevDB.get(key, opts)
-        // this.throwNotFound({key})
     }
     async del(key, opts = {}) {
-        /* Returns true if `id` was present and was deleted; false if not found (no modifications done);
-           or raises an exception if an error occurred.
+        /* Find and delete the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
+           Return true on success, or false if the `key` was not found (no modifications done then).
          */
         if (this.readOnly)
             if (await this.has(key)) this.throwReadOnly({key})
