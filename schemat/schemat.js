@@ -140,7 +140,7 @@ async function main() {
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
     let schemat = new Schemat(argv)
-    await schemat.boot()
+    if (cmd !== '_build_') await schemat.boot()         // _build_ command performs boot (creates registry) on its own
 
     return schemat[cmd](argv)
 }

@@ -47,6 +47,11 @@ export class ItemsMap extends Map {
     get(id)        { return super.get(this._key(id)) }
     has(id)        { return super.has(this._key(id)) }
     delete(id)     { return super.delete(this._key(id)) }
+
+    *entries() {
+        for (const [key, obj] of super.entries())
+            yield [key.split(':').map(Number), obj]
+    }
 }
 
 export class ItemsCount extends ItemsMap {

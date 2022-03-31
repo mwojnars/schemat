@@ -291,7 +291,7 @@ class FileDB extends DB {
     _get(id, opts) {
         /* Return the JSON-encoded string of item's data as stored in DB. */
         let record = this.records.get(id)
-        if (record) return record.data
+        if (record) return record //.data
     }
 
     _del(id, opts) {
@@ -300,20 +300,23 @@ class FileDB extends DB {
 
     _put(id, data, {flush = true} = {}) {
         /* Assign `data` to a given `id`, no matter if the `id` is already present or not (the previous value is overwritten). */
-        let [cid, iid] = id
-        this.records.set(id, {cid, iid, data})
+        this.records.set(id, data)
+        // let [cid, iid] = id
+        // this.records.set(id, {cid, iid, data})
     }
 
     _ins(cid, data, {flush = true} = {}) {
         /* Low-level insert to a specific category. Creates a new IID and returns it. */
         let iid = this.createIID(cid)
-        this.records.set([cid, iid], {cid, iid, data})
+        this.records.set([cid, iid], data)  //{cid, iid, data})
         return iid
     }
 
     async *scanCategory(cid) {
-        for (const record of this.records.values())
-            if (cid === record.cid) yield record
+        for (const [id, data] of this.records.entries())
+            if (id[0] === cid) yield {cid: id[0], iid: id[1], data}
+        // for (const record of this.records.values())
+        //     if (cid === record.cid) yield record
     }
 }
 
@@ -336,22 +339,25 @@ export class YamlDB extends FileDB {
             this.curr_iid.set(cid, Math.max(curr_max, iid))
 
             let data = '__data' in record ? record.__data : record
-            this.records.set(id, {cid, iid, data: JSON.stringify(data)})
+            this.records.set(id, JSON.stringify(data))
+            // this.records.set(id, {cid, iid, data: JSON.stringify(data)})
         }
-
-        // print('YamlDB items loaded:')
-        // for (const [id, data] of this.records)
-        //     print(id, data)
     }
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
-        let flat = [...this.records.values()]
-        let recs = flat.map(({cid, iid, data:d}) => {
-                let id = {__id: [cid, iid]}, data = JSON.parse(d)
+        let flat = [...this.records.entries()]
+        let recs = flat.map(([id_, data_]) => {
+                let id = {__id: id_}, data = JSON.parse(data_)
                 return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
             })
+
+        // let flat = [...this.records.values()]
+        // let recs = flat.map(({cid, iid, data:d}) => {
+        //         let id = {__id: [cid, iid]}, data = JSON.parse(d)
+        //         return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
+        //     })
         let out = YAML.stringify(recs)
         return fs.promises.writeFile(this.filename, out, 'utf8')
     }
