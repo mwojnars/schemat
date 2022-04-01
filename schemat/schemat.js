@@ -9,7 +9,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from './utils.js'
-import {YamlDB, stackDB} from "./server/db.js";
+import {DB, YamlDB, stackDB} from "./server/db.js";
 import {ServerRegistry} from "./server/registry-s.js";
 import {ROOT_CID} from "./item.js";
 import {Server} from "./server.js";
@@ -100,7 +100,10 @@ class Schemat {
         }
 
         // remove the old item from DB
-        await this.db.del(id)       //flush: true
+        try { await this.db.del(id) }
+        catch (ex) {
+            if (ex instanceof DB.ReadOnly) print('WARNING: could not delete the old item as the database is read-only')
+        }
 
         print('move: done')
     }

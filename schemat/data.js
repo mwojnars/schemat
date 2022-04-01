@@ -528,6 +528,7 @@ export class Catalog {
             entries = entries.map(e => {
                 if(prop in e && (e[prop] = op(e[prop])) === undefined)
                     delete e[prop]
+                return e
             })
 
         this.build(entries)

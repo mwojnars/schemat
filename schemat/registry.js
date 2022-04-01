@@ -232,8 +232,8 @@ export class Registry {
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                if (!category) category = await this.getCategory(cid)
-                let item = await category.new(null, iid)
+                let cat  = category || await this.getCategory(cid)
+                let item = await cat.new(null, iid)
                 await item.reload(undefined, data)
                 yield item
             }

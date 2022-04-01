@@ -81,7 +81,7 @@ import { Item } from "../item.js";
  **
  */
 
-class DB extends Item {
+export class DB extends Item {
     readOnly  = false       // if true, the database does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
@@ -175,13 +175,8 @@ class DB extends Item {
         return rec !== undefined
     }
 
-    // async findDBWrite(key) {
-    //     /* Find the bottom-most DB where the `key` can be written to and not be masked by any higher-level
-    //        occurrence of the same key. Throw an exception (ReadOnly or RangeIID) if the
-    //      */
-    // }
     async find(key) {
-        /* Return the top-most DB object that contains the `key`. or undefined if `key` not found at any database level. */
+        /* Return the top-most DB that contains the `key`, or undefined if `key` not found at any database level. */
         let data = await this._get(key)
         if (data !== undefined) return this  //{data, db: this}
         if (this.prevDB) return this.prevDB.find(key)
@@ -341,8 +336,6 @@ class FileDB extends DB {
     records  = new ItemsMap()   // preloaded item records, as {key: record} pairs; keys are strings "cid:iid";
                                 // values are objects {cid,iid,data}, `data` is JSON-encoded for mem usage & safety,
                                 // so that clients create a new deep copy of item data on every access
-    // TODO: keep `data` alone (no cid/iid) instead of `records`
-
 
     constructor(filename, params = {}) {
         super(params)
@@ -350,19 +343,10 @@ class FileDB extends DB {
     }
 
     async flush()   { throw new NotImplemented() }
-    async has(id)   { return this.records.has(id) }
 
-    _get(id, opts)  {
-        let record = this.records.get(id)
-        if (record) return record
-    }
+    _get(id, opts)  { return this.records.get(id) }
     _del(id, opts)  { return this.records.delete(id) }
     _put(id, data)  { this.records.set(id, data) }
-    // _ins(id, data)  {
-    //     let iid = this.createIID(cid)
-    //     this.records.set([cid, iid], data)
-    //     return iid
-    // }
 
     async *scan(cid = null) {
         let all = (cid === null)
