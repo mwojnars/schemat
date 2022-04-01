@@ -106,19 +106,28 @@ class DB extends Item {
     static ReadOnly = class extends DB.Error {
         static message = "no write access to the database"
     }
-    static TooLowIID = class extends DB.Error {
-        static message = "found an item in DB with IID lower than expected"
+    static RangeIID = class extends DB.Error {
+        static message = "IID is out of range"
+    }
+    static NotWritable = class extends DB.Error {
+        static message = "record cannot be written, the DB is either read-only or the key (iid) is outside the range"
     }
 
     /***  internal API  ***/
 
-    throwNotFound(msg, args)        { throw new DB.NotFound(msg, args) }
-    throwReadOnly(msg, args)        { throw new DB.ReadOnly(msg, args) }
-    throwTooLow(id)                 { throw new DB.TooLowIID({id, start_iid: this.start_iid}) }
+    throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
+    throwReadOnly(msg, args)    { throw new DB.ReadOnly(msg, args) }
+    throwRangeIID(id)           { throw new DB.RangeIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    throwNotWritable(key)       { throw new DB.NotWritable({key, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
-    checkWritable(id)               { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
-    checkIID(id)                    { if (id[1] < this.start_iid) this.throwTooLow(id) }
-    async checkNew(id, msg)         { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
+    // checkWritable(id)           { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
+    async checkNew(id, msg)     { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
+    checkIID(id, raise=true) {
+        if (id[1] < this.start_iid || (this.stop_iid && id[1] >= this.stop_iid))
+            if (raise) this.throwRangeIID(id)
+            else return false
+        return true
+    }
 
     createIID(cid) {
         /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
@@ -154,6 +163,11 @@ class DB extends Item {
         return Promise.all([this.prevDB.open(), this._open()])
     }
 
+    writable(key) {
+        /* Return true if `key` is allowed to be written here. */
+        return !this.readOnly && this.checkIID(key, false)
+    }
+
     has(key) {
         /* Return true if the get(key) would return a record; false otherwise. May return a Promise. */
         let rec = this.get(key)
@@ -161,13 +175,25 @@ class DB extends Item {
         return rec !== undefined
     }
 
+    // async findDBWrite(key) {
+    //     /* Find the bottom-most DB where the `key` can be written to and not be masked by any higher-level
+    //        occurrence of the same key. Throw an exception (ReadOnly or RangeIID) if the
+    //      */
+    // }
+    async find(key) {
+        /* Return the top-most DB object that contains the `key`. or undefined if `key` not found at any database level. */
+        let data = await this._get(key)
+        if (data !== undefined) return this  //{data, db: this}
+        if (this.prevDB) return this.prevDB.find(key)
+    }
+
     async get(key, opts = {}) {
         /* Find the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
          */
-        let ret = this._get(key, opts)
-        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-        if (ret !== undefined) return ret
+        let data = this._get(key, opts)
+        if (data instanceof Promise) data = await data              // must await here to check for "not found" result
+        if (data !== undefined) return data
         if (this.prevDB) return this.prevDB.get(key, opts)
     }
     async del(key, opts = {}) {
@@ -186,16 +212,18 @@ class DB extends Item {
     }
     put(key, data, opts = {}) {
         /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
-           If this db is readOnly, the operation is forwarded to a higher-level DB (nextDB), or an exception is raised.
-           If this db is readOnly but already contains the `id`, this method will duplicate the same `id`
+           If this db is readOnly or the `key` is out of allowed range, the operation is forwarded
+           to a higher-level DB (nextDB), or an exception is raised.
+           If the db already contains the `id` but is readOnly, this method will duplicate the same `id`
            into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
            may remove this new instance of `id`, while keeping the old one in this db, which will become
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
-           in this id being still accessible, only in its older version.
+           in this id being still accessible in its older version.
          */
-        if (this.readOnly)
+        if (!this.writable(key))
             if (this.nextDB) return this.nextDB.put(key, data, opts)
-            else this.throwReadOnly({key})
+            else this.throwNotWritable(key)
+
         let {flush = true} = opts
         let ret = this._put(key, data, opts)
         if (ret instanceof Promise && flush) return ret.then(() => this.flush())
@@ -211,13 +239,42 @@ class DB extends Item {
             if (this.nextDB) return this.nextDB.ins(cid, data, opts)
             else this.throwReadOnly({cid})
         let {flush = true} = opts
-        let iid = this._ins(cid, data, opts)
-        if (iid instanceof Promise) iid = await iid
+        let iid = this.createIID(cid)
+        await this._put([cid, iid], data, opts)
         if (flush) await this.flush()
         return iid
     }
 
     /***  high-level API (on items)  ***/
+
+    async mutate(id, edits, opts = {}) {
+        /* Apply `edits` to an item's data and store under the `id` in this database or any higher db
+           that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
+           in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
+           on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
+           FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
+         */
+        let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
+
+        // find the record and its current database (this one or below) if `data` is missing
+        if (search) {
+            let db = await this.find(id)
+            if (db === undefined) this.throwNotFound(id)
+            return db.mutate(id, edits, {...opts, search: false})
+        }
+
+        let data = await this.get(id)                   // update `data` with the most recent version from db
+
+        // propagate to a higher-level db if the mutated record can't be saved here
+        if (!this.writable(id))
+            if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
+            else this.throwNotWritable(id)
+
+        for (const edit of edits)                       // mutate `data` and save
+            data = this.apply(data, edit)
+
+        return this.put(id, data)
+    }
 
     async select(id) {
         /* Similar to get(), but throws an exception when `id` not found. */
@@ -227,14 +284,18 @@ class DB extends Item {
         return rec
     }
 
-    async update(item, {flush = true} = {}) {
+    async update(item, opts = {}) {
         assert(item.has_data())
         assert(item.has_id())
+
+        // let db = await this.find(item.id)
+        // if (!db) this.throwNotFound({id: item.id})
+        // return db.put(item.id, item.dumpData(), opts)       // update is attempted on the DB where the item is actually located, but if that DB is read-only the update is forwarded to a higher-level DB and the item gets duplicated
         if (!await this.has(item.id)) this.throwNotFound({id: item.id})
-        return this.put(item.id, item.dumpData(), {flush})
+        return this.put(item.id, item.dumpData(), opts)
     }
 
-    async insert(item, {flush = true} = {}) {
+    async insert(item, opts = {}) {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
            If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
@@ -247,25 +308,25 @@ class DB extends Item {
 
         // set IID of the item, if missing
         if (item.iid === null || item.iid === undefined) {
-            let iid = this.ins(cid, data, {flush})
+            let iid = this.ins(cid, data, opts)
             if (iid instanceof Promise) iid = await iid
             item.iid = iid
         }
         else {
             await this.assignIID(item.id)
-            return this.put(item.id, data, {flush})
+            return this.put(item.id, data, opts)
         }
     }
 
-    insertMany(...items) {
-        this.checkWritable()
-        return Promise.all(items.map(item => this.insert(item, {flush: false})))
-                      .then(() => this.flush())
-    }
+    // insertMany(...items) {
+    //     this.checkWritable()
+    //     return Promise.all(items.map(item => this.insert(item, {flush: false})))
+    //                   .then(() => this.flush())
+    // }
 
     async *scan(cid) {
         /* Iterate over all items in this DB (if no `cid`), or over the items of a given category. */
-        if (cid !== undefined) return this.scanCategory(cid)
+        if (cid !== undefined) return this.scan(cid)
         return this.scanAll()
     }
     async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
@@ -297,12 +358,11 @@ class FileDB extends DB {
     }
     _del(id, opts)  { return this.records.delete(id) }
     _put(id, data)  { this.records.set(id, data) }
-
-    _ins(cid, data) {
-        let iid = this.createIID(cid)
-        this.records.set([cid, iid], data)
-        return iid
-    }
+    // _ins(id, data)  {
+    //     let iid = this.createIID(cid)
+    //     this.records.set([cid, iid], data)
+    //     return iid
+    // }
 
     async *scan(cid = null) {
         let all = (cid === null)
@@ -363,6 +423,9 @@ export function stackDB(...db) {
         prev = next
     }
     return prev
+}
+
+export class StackDB extends DB {
 }
 
 // export class RingsDB extends DB {

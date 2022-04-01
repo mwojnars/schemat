@@ -60,30 +60,35 @@ class Schemat {
         return bootstrap(db)
     }
 
-    async move({cid, iid, new_iid}) {
+    async move({id, newid}) {
+        /* id, new_iid - strings of the form "CID:IID" */
 
-        let id    = [cid, iid]
-        let newid = [cid, new_iid]
+        id = id.split(':').map(Number)
+        newid = newid.split(':').map(Number)
 
-        if (id[0] === ROOT_CID && newid[0] === ROOT_CID && id[0] !== newid[0])
-            throw new Error(`move: `)
+        let [cid, iid] = id
+        let [new_cid, new_iid] = newid
+
+        if ((cid === ROOT_CID || new_cid === ROOT_CID) && cid !== new_cid)
+            throw new Error(`cannot change a category item (CID=${ROOT_CID}) to a non-category (CID=${cid || new_cid}) or back`)
 
         if (await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID
-        let data = await this.db.get(id)
-        if (data === undefined) throw new Error(`item not found: [${id}]`)
+        let db = await this.db.find(id)
+        if (db === undefined) throw new Error(`item not found: [${id}]`)
+        let data = await db.get(id)
 
-        // save a copy under the new ID
-        await this.db.put(newid, data)      //flush: false
+        // save a copy under the new ID; this will propagate to a higher-level DB if `id` can't be stored in `db`
+        await db.put(newid, data)
         let newItem = this.registry.getItem(newid)
 
         // update children of a category item: change their CID to `new_iid`
-        if (id[0] === ROOT_CID)
+        if (cid === ROOT_CID)
             for await (let child of this.db.scan(iid))
-                await this.move({cid: child.cid, iid: child.iid, new_cid: new_iid})
+                await this.move({id: child.id, newid: [new_iid, child.iid]})
 
         // update references
         for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
@@ -91,7 +96,7 @@ class Schemat {
             ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
             let jsonData = ref.dumpData()
             if (jsonData !== ref.jsonData)
-                await ref.db.put(ref.id, jsonData)      //flush: false
+                await this.db.update(ref)      //flush: false
         }
 
         // remove the old item from DB
@@ -115,7 +120,8 @@ async function main() {
             }
         )
         .command(
-            'move <cid> <iid> <new_iid>',
+            'move <id> <newid>',
+            // 'move <cid> <iid> <new_iid>',
             'change IID of a given item; update references nested within standard data types; if the item is a category than CID of child items is updated, too',
             // (yargs) => yargs
             //     .positional('cid')

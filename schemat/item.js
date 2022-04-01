@@ -183,8 +183,8 @@ export class Item {
 
     jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
-    db              // database, element of a DB stack, where this item was read from; undefined in newborn items;
-                    // updates are first sent to this DB, and only propagated to a higher-level DB if necessary
+    // db           // database, element of a DB stack, where this item was read from; undefined in newborn items;
+    //              // updates are first sent to this DB, and only propagated to a higher-level DB if necessary
 
     //metadata      // system properties: current version, category's version, status etc.
 
@@ -1035,7 +1035,7 @@ export class Category extends Item {
            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
          */
         let items = []
-        for await (const item of this.registry.scanCategory(this)) {
+        for await (const item of this.registry.scan(this)) {
             await item.load()
             items.push(item)
         }
@@ -1112,7 +1112,7 @@ export class Category extends Item {
     }
 
     VIEW_admin({extra = null}) {
-        const scan = () => this.registry.scanCategory(this)         // returns an async generator that requires "for await"
+        const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
         const [newItems, setNewItems] = useState([])                // newly added items

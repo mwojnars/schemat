@@ -158,7 +158,7 @@ export class Registry {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
         let Site = await this.getCategory(SITE_CID)
-        let scan = this.scanCategory(Site, {limit: 1})
+        let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret) throw new Error(`no Site item found in the DB`)
         return ret.value.id
@@ -218,19 +218,21 @@ export class Registry {
         this.session?.countLoaded(id)
         return this.db.select(id)
     }
-    async *scanCategory(category, {limit} = {}) {
+    async *scan(category = null, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. A generator. */
-        category.assertLoaded()
-        let records = this.db.scan(category.iid)
+        if (category) category.assertLoaded()
+        let records = this.db.scan(category?.iid)
         let count = 0
 
         for await (const [id, data] of records) {
             if (limit !== undefined && count >= limit) break
             let [cid, iid] = id
-            assert(cid === category.iid)
+            assert(!category || cid === category.iid)
+
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
+                if (!category) category = await this.getCategory(cid)
                 let item = await category.new(null, iid)
                 await item.reload(undefined, data)
                 yield item
