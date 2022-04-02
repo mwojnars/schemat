@@ -122,8 +122,7 @@ export class DB extends Item {
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
-    async checkNew(id, msg)     { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
-    // checkWritable(id)           { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
+    async checkNew(id, msg)     { if (await this._get(id)) throw new Error(msg + ` [${id}]`) }
 
     createIID(cid) {
         /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
@@ -216,14 +215,20 @@ export class DB extends Item {
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
            in this id being still accessible in its older version.
          */
-        if (!this.writable(key))
-            if (this.nextDB) return this.nextDB.put(key, data, opts)
-            else this.throwNotWritable(key)
+        // if (!this.writable(key))
+        //     if (this.nextDB) return this.nextDB.put(key, data, opts)
+        //     else this.throwNotWritable(key)
 
-        let {flush = true} = opts
-        let ret = this._put(key, data, opts)
-        if (ret instanceof Promise && flush) return ret.then(() => this.flush())
-        return flush ? this.flush() : ret
+        if (this.writable(key)) {
+            let {flush = true} = opts
+            let ret = this._put(key, data, opts)
+            if (ret instanceof Promise && flush) return ret.then(() => this.flush())
+            return flush ? this.flush() : ret
+        }
+        if (this.nextDB) return this.nextDB.put(key, data, opts)
+        if (this.readOnly) this.throwReadOnly({key})
+        assert(!this.validIID(key))
+        this.throwInvalidIID(key)
     }
     async ins(cid, data, opts = {}) {
         /* Low-level insert to a specific category.
