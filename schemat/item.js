@@ -272,6 +272,7 @@ export class Item {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
         }
+        this.jsonData = jsonData
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
         let state  = JSON.parse(jsonData)
         let data   = schema.decode(state)
