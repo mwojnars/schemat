@@ -91,8 +91,8 @@ class Schemat {
 
         // update children of a category item: change their CID to `new_iid`
         if (cid === ROOT_CID)
-            for await (let child of this.db.scan(iid))
-                await this.move({id: child.id, newid: [new_iid, child.iid]})
+            for await (let [child_id, _] of this.db.scan(iid))
+                await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
         // update references
         for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
