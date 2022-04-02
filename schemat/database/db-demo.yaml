@@ -108,6 +108,21 @@
     - 102
   title: ąłęÓŁŻŹŚ
 - __id:
+    - 4
+    - 100
+  name: favicon.ico
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+- __id:
+    - 5
+    - 106
+  name: domain
+  info: Folder with public static files that must be accessible at the domain
+    root, like .../favicon.ico, /robots.txt etc.
+  files:
+    favicon.ico:
+      - 4
+      - 100
+- __id:
     - 0
     - 200
   __data:
@@ -169,18 +184,3 @@
     - 100
   name: Post A
   text: Ala ma kota
-- __id:
-    - 4
-    - 100
-  name: favicon.ico
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
-- __id:
-    - 5
-    - 106
-  name: domain
-  info: Folder with public static files that must be accessible at the domain
-    root, like .../favicon.ico, /robots.txt etc.
-  files:
-    favicon.ico:
-      - 4
-      - 100
