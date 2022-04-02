@@ -108,11 +108,6 @@
     - 102
   title: ąłęÓŁŻŹŚ
 - __id:
-    - 4
-    - 100
-  name: favicon.ico
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
-- __id:
     - 5
     - 106
   name: domain
@@ -184,3 +179,8 @@
     - 100
   name: Post A
   text: Ala ma kota
+- __id:
+    - 4
+    - 100
+  name: favicon.ico
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico

@@ -106,7 +106,7 @@ export class DB extends Item {
     static ReadOnly = class extends DB.Error {
         static message = "no write access to the database"
     }
-    static RangeIID = class extends DB.Error {
+    static InvalidIID = class extends DB.Error {
         static message = "IID is out of range"
     }
     static NotWritable = class extends DB.Error {
@@ -117,17 +117,13 @@ export class DB extends Item {
 
     throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new DB.ReadOnly(msg, args) }
-    throwRangeIID(id)           { throw new DB.RangeIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    throwInvalidIID(id)         { throw new DB.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
     throwNotWritable(key)       { throw new DB.NotWritable({key, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
-    // checkWritable(id)           { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
+    validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
+    checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
     async checkNew(id, msg)     { if (await this.has(id)) throw new Error(msg + ` [${id}]`) }
-    checkIID(id, raise=true) {
-        if (id[1] < this.start_iid || (this.stop_iid && id[1] >= this.stop_iid))
-            if (raise) this.throwRangeIID(id)
-            else return false
-        return true
-    }
+    // checkWritable(id)           { if (this.readOnly) this.throwReadOnly(id ? {id} : undefined) }
 
     createIID(cid) {
         /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
@@ -155,7 +151,6 @@ export class DB extends Item {
     _get(key, opts)         { throw new NotImplemented() }      // return undefined if `key` not found
     _del(key, opts)         { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _put(key, data, opts)   { throw new NotImplemented() }      // no return value
-    _ins(cid, data, opts)   { throw new NotImplemented() }
 
     open(opts = {}) {
         /* Open this DB and all lower-level DBs in the stack. */
@@ -165,7 +160,7 @@ export class DB extends Item {
 
     writable(key) {
         /* Return true if `key` is allowed to be written here. */
-        return !this.readOnly && this.checkIID(key, false)
+        return !this.readOnly && this.validIID(key)
     }
 
     has(key) {
@@ -186,24 +181,30 @@ export class DB extends Item {
         /* Find the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
          */
-        let data = this._get(key, opts)
-        if (data instanceof Promise) data = await data              // must await here to check for "not found" result
-        if (data !== undefined) return data
+        if (this.validIID(key)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
+            let data = this._get(key, opts)
+            if (data instanceof Promise) data = await data      // must await here to check for "not found" result
+            if (data !== undefined) return data
+        }
         if (this.prevDB) return this.prevDB.get(key, opts)
     }
     async del(key, opts = {}) {
         /* Find and delete the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
            Return true on success, or false if the `key` was not found (no modifications done then).
          */
-        if (this.readOnly)
-            if (await this.has(key)) this.throwReadOnly({key})
-            else return this.prevDB ? this.prevDB.del(key, opts) : false
-        let {flush = true} = opts
-        let ret = this._del(key, opts)
-        if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-        if (!ret && this.prevDB) return this.prevDB.del(key, opts)
-        if (ret && flush) await this.flush()
-        return ret
+        if (this.writable(key)) {
+            let {flush = true} = opts
+            let ret = this._del(key, opts)
+            if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+            if (ret) {
+                if (flush) await this.flush()
+                return ret
+            }
+        }
+        else if (this.readOnly && this.validIID(key) && await this.has(key))
+            this.throwReadOnly({key})
+
+        return this.prevDB ? this.prevDB.del(key, opts) : false
     }
     put(key, data, opts = {}) {
         /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.

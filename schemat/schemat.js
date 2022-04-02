@@ -24,6 +24,8 @@ const HOST      = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 
+const IID_SPLIT = 100       // all system items have iid below this value; all custom items have iid >= this value
+
 
 /**********************************************************************************************************************/
 
@@ -35,10 +37,10 @@ class Schemat {
 
     async boot() {
         this.db = stackDB(  //new RingsDB(
-            new YamlDB(DB_ROOT + '/db-boot.yaml', {readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-base.yaml', {readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-conf.yaml', {start_iid: 0}),
-            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: 100}),
+            new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
+            new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
+            new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT}),
+            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: IID_SPLIT}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
 
@@ -63,9 +65,7 @@ class Schemat {
     async move({id, newid}) {
         /* id, new_iid - strings of the form "CID:IID" */
 
-        function convert(id_) {
-            return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_
-        }
+        function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
 
         id = convert(id)
         newid = convert(newid)
