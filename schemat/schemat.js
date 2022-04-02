@@ -63,8 +63,12 @@ class Schemat {
     async move({id, newid}) {
         /* id, new_iid - strings of the form "CID:IID" */
 
-        id = id.split(':').map(Number)
-        newid = newid.split(':').map(Number)
+        function convert(id_) {
+            return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_
+        }
+
+        id = convert(id)
+        newid = convert(newid)
 
         let [cid, iid] = id
         let [new_cid, new_iid] = newid
@@ -95,8 +99,10 @@ class Schemat {
             await ref.load()
             ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
             let jsonData = ref.dumpData()
-            if (jsonData !== ref.jsonData)
+            if (jsonData !== ref.jsonData) {
+                print(`move: updating reference(s) in item [${ref.id}]`)
                 await this.db.update(ref)      //flush: false
+            }
         }
 
         // remove the old item from DB
