@@ -49,10 +49,10 @@ export class ServerRegistry extends Registry {
         this.session = session
         return release
     }
-    stopSession(releaseMutex) {
+    async stopSession(releaseMutex) {
         assert(this.session, 'trying to stop a web session when none was started')
         // this.commit()
-        this.cache.evict()
+        await this.cache.evict()
         delete this.session
         releaseMutex()
     }

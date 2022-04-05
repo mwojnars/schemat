@@ -5,6 +5,8 @@
   fields:
     host:
       "@": schemat.type.STRING
+    port:
+      "@": schemat.type.STRING
     user:
       "@": schemat.type.STRING
     database:

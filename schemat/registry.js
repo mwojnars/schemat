@@ -307,7 +307,7 @@ export class Session {
     }
 
     async start()   { this.releaseMutex = await this.registry.startSession(this) }
-    stop()          { this.registry.stopSession(this.releaseMutex) }
+    async stop()    { return this.registry.stopSession(this.releaseMutex) }
     printCounts()   { print(`items requested ${this.itemsRequested.total()} times: `, this.itemsRequested)
                       print(`items loaded ${this.itemsLoaded.total()} times:    `, this.itemsLoaded) }
 

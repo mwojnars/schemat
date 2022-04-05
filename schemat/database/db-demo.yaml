@@ -187,9 +187,15 @@
     Connects through ssh tunneling. Must launch this in console beforehand:
     autossh -p 55522 -f paperity@srv.paperity.org -L 3307:127.0.0.1:3306 -N
   host: 127.0.0.1
+  port: "3307"
   user: paperity
   database: paperity
   password: pe45n1bc
   tables:
     /apps/paperity/Paper: pap_papers_view
     /apps/paperity/Journal: pap_journals
+- __id:
+    - 200
+    - 100
+  name: Post A
+  text: Ala ma kota

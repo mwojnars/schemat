@@ -325,6 +325,8 @@ export class Item {
            This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
            and attached to `this` at these stages. Subclasses may override this method as either sync or async.
          */
+    end() {}
+        /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
 
     /***  Dynamic loading of source code  ***/
 
@@ -384,7 +386,7 @@ export class Item {
 
     getPrototypes(data)     { return (data || this.data).getValues('prototype') }
 
-    get(path, default_, data) {
+    get(path, default_, data) {         // TODO: `data` arg is never used -> remove
 
         data || this.assertLoaded()
 
@@ -437,6 +439,18 @@ export class Item {
         if (reverse) inherited.reverse()
         for (const vals of inherited) values.push(...vals)
         return values
+    }
+
+    getSubset(...paths) {
+        /* Call .get() for multiple fields/paths, combine the results and return as an object with paths as keys.
+           The result may include a default value if one was defined for a particular field.
+         */
+        let subset = {}
+        for (let path of paths) {
+            let value = this.get(path)
+            if (value !== undefined) subset[path] = value
+        }
+        return subset
     }
 
     mergeSnippets(key, params, data) {
