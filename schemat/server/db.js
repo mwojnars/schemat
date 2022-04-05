@@ -256,12 +256,15 @@ export class DB extends Item {
     /***  high-level API (on items)  ***/
 
     async mutate(id, edits, opts = {}) {
-        /* Apply `edits` to an item's data and store under the `id` in this database or any higher db
+        /* Apply `edits` (an array of a single edit) to an item's data and store under the `id` in this database or any higher db
            that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
            in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
            on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
            FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
          */
+        assert(edits, 'missing array of edits')
+        if (!(edits instanceof Array)) edits = [edits]
+
         let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
 
         // find the record and its current database (this one or below) if `data` is missing
@@ -284,6 +287,12 @@ export class DB extends Item {
         return this.put(id, data)
     }
 
+    apply(dataSrc, edit) {
+        let {type, data} = edit
+        assert(type === 'data' && data)
+        return data
+    }
+
     async select(id) {
         /* Similar to get(), but throws an exception when `id` not found. */
         let rec = this.get(id)
@@ -295,12 +304,14 @@ export class DB extends Item {
     async update(item, opts = {}) {
         assert(item.has_data())
         assert(item.has_id())
+        return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
 
         // let db = await this.find(item.id)
         // if (!db) this.throwNotFound({id: item.id})
         // return db.put(item.id, item.dumpData(), opts)       // update is attempted on the DB where the item is actually located, but if that DB is read-only the update is forwarded to a higher-level DB and the item gets duplicated
-        if (!await this.has(item.id)) this.throwNotFound({id: item.id})
-        return this.put(item.id, item.dumpData(), opts)
+
+        // if (!await this.has(item.id)) this.throwNotFound({id: item.id})
+        // return this.put(item.id, item.dumpData(), opts)
     }
 
     async insert(item, opts = {}) {

@@ -179,3 +179,17 @@
     - 100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+- __id:
+    - 51
+    - 100
+  name: mysql-paperity
+  info: |
+    Connects through ssh tunneling. Must launch this in console beforehand:
+    autossh -p 55522 -f paperity@srv.paperity.org -L 3307:127.0.0.1:3306 -N
+  host: 127.0.0.1
+  user: paperity
+  database: paperity
+  password: pe45n1bc
+  tables:
+    /apps/paperity/Paper: pap_papers_view
+    /apps/paperity/Journal: pap_journals

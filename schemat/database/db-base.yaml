@@ -3,6 +3,14 @@
     - 51
   name: MysqlDB
   fields:
+    host:
+      "@": schemat.type.STRING
+    user:
+      "@": schemat.type.STRING
+    database:
+      "@": schemat.type.STRING
+    password:
+      "@": schemat.type.STRING
     connection:
       info: Javascript object containing connection parameters.
       "@": schemat.type.GENERIC
