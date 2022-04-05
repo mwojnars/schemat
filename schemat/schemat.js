@@ -38,8 +38,8 @@ class Schemat {
     async boot() {
         this.db = stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT}),
+            new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
+            new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
             new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: IID_SPLIT}),
         )
         this.registry = globalThis.registry = new ServerRegistry(this.db)
@@ -62,7 +62,7 @@ class Schemat {
         return bootstrap(db)
     }
 
-    async move({id, newid}) {
+    async move({id, newid, bottom, db: dbInsert}) {
         /* id, new_iid - strings of the form "CID:IID" */
 
         function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
@@ -72,41 +72,51 @@ class Schemat {
 
         let [cid, iid] = id
         let [new_cid, new_iid] = newid
+        let sameID = (cid === new_cid && iid === new_iid)
 
         if ((cid === ROOT_CID || new_cid === ROOT_CID) && cid !== new_cid)
             throw new Error(`cannot change a category item (CID=${ROOT_CID}) to a non-category (CID=${cid || new_cid}) or back`)
 
-        if (await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
+        if (!sameID && await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
+
+        // identify the source DB
+        let db = await this.db.find(id)
+        if (db === undefined) throw new Error(`item not found: [${id}]`)
+        if (db.readOnly) throw new Error(`the DB '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+
+        // identify the target DB
+        if (dbInsert) dbInsert = this.db.getDB(dbInsert)
+        else dbInsert = bottom ? this.db.bottom : db
+
+        if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same DB (${db.name}) without change of ID`)
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
-        // load the item from its current ID
-        let db = await this.db.find(id)
-        if (db === undefined) throw new Error(`item not found: [${id}]`)
+        // load the item from its current ID; save a copy under the new ID, this will propagate to a higher-level DB if `id` can't be stored in `db`
         let data = await db.get(id)
+        await dbInsert.put(newid, data)
 
-        // save a copy under the new ID; this will propagate to a higher-level DB if `id` can't be stored in `db`
-        await db.put(newid, data)
-        let newItem = this.registry.getItem(newid)
+        if (!sameID) {
+            // update children of a category item: change their CID to `new_iid`
+            if (cid === ROOT_CID && !sameID)
+                for await (let [child_id, _] of this.db.scan(iid))
+                    await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
-        // update children of a category item: change their CID to `new_iid`
-        if (cid === ROOT_CID)
-            for await (let [child_id, _] of this.db.scan(iid))
-                await this.move({id: child_id, newid: [new_iid, child_id[1]]})
-
-        // update references
-        for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
-            await ref.load()
-            ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
-            let jsonData = ref.dumpData()
-            if (jsonData !== ref.jsonData) {
-                print(`move: updating reference(s) in item [${ref.id}]`)
-                await this.db.update(ref)      //flush: false
+            // update references
+            let newItem = this.registry.getItem(newid)
+            for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
+                await ref.load()
+                ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
+                let jsonData = ref.dumpData()
+                if (jsonData !== ref.jsonData) {
+                    print(`move: updating reference(s) in item [${ref.id}]`)
+                    await this.db.update(ref)      //flush: false
+                }
             }
         }
 
         // remove the old item from DB
-        try { await this.db.del(id) }
+        try { await db.del(id) }
         catch (ex) {
             if (ex instanceof DB.ReadOnly) print('WARNING: could not delete the old item as the database is read-only')
         }
@@ -140,6 +150,15 @@ async function main() {
         .command(
             '_build_ [path_db_boot]', 'generate the core "db-boot" database anew',
         )
+        .option('bottom', {
+            alias: 'b',
+            description: 'if set, new items are inserted at the lowest possible DB level',
+            type: 'boolean'
+        })
+        .option('db', {
+            description: 'name of the DB in a stack where insertion of new items should start (can propagate upwards)',
+            type: 'string'
+        })
 
         .demandCommand(1, 'Please provide a command to run.')
         .help().alias('help', 'h')

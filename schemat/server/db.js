@@ -1,5 +1,6 @@
 import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
 import fs from 'fs'
+import path from 'path'
 import YAML from 'yaml'
 
 import { ItemsMap } from '../data.js'
@@ -82,6 +83,7 @@ import { Item } from "../item.js";
  */
 
 export class DB extends Item {
+    name                    // name of this DB for display and CLI options
     readOnly  = false       // if true, the database does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
@@ -91,6 +93,9 @@ export class DB extends Item {
     
     nextDB                  // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
     prevDB                  // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
+
+    get top()       { return this.nextDB ? this.nextDB.top : this }
+    get bottom()    { return this.prevDB ? this.prevDB.bottom : this }
 
     constructor(params = {}) {
         super()
@@ -112,6 +117,12 @@ export class DB extends Item {
     static NotWritable = class extends DB.Error {
         static message = "record cannot be written, the DB is either read-only or the key (iid) is outside the range"
     }
+
+    getDB(name) {
+        /* Find a DB in a stack (up to this level) by its name. Return undefined if not found. */
+        return this.name === name ? this : this.prevDB?.getDB(name)
+    }
+
 
     /***  internal API  ***/
 
@@ -215,10 +226,6 @@ export class DB extends Item {
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
            in this id being still accessible in its older version.
          */
-        // if (!this.writable(key))
-        //     if (this.nextDB) return this.nextDB.put(key, data, opts)
-        //     else this.throwNotWritable(key)
-
         if (this.writable(key)) {
             let {flush = true} = opts
             let ret = this._put(key, data, opts)
@@ -346,6 +353,7 @@ class FileDB extends DB {
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
+        this.name = path.basename(filename, path.extname(filename))
     }
 
     async flush()   { throw new NotImplemented() }

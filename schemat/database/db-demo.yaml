@@ -175,11 +175,6 @@
         }
       - class
 - __id:
-    - 200
-    - 100
-  name: Post A
-  text: Ala ma kota
-- __id:
     - 4
     - 100
   name: favicon.ico
