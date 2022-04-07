@@ -384,18 +384,18 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    getPrototypes(data)     { return (data || this.data).getValues('prototype') }
+    getPrototypes()     { return this.data.getValues('prototype') }
 
-    get(path, default_, data) {         // TODO: `data` arg is never used -> remove
+    get(path, opts = {}) {
 
-        data || this.assertLoaded()
+        this.assertLoaded()
 
         // search in this.data
-        let value = (data || this.data).findValue(path)
+        let value = this.data.findValue(path)
         if (value !== undefined) return value
 
         // search in prototypes
-        for (const proto of this.getPrototypes(data)) {
+        for (const proto of this.getPrototypes()) {
             value = proto.get(path)
             if (value !== undefined) return value
         }
@@ -407,30 +407,30 @@ export class Item {
                 return cat_default
         }
 
-        return default_
+        return opts.default
     }
 
-    async getLoaded(path, default_ = undefined) {
+    async getLoaded(path) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
-        let item = this.get(path, default_)
-        if (item !== default_) await item.load()
+        let item = this.get(path)
+        if (item !== undefined) await item.load()
         return item
     }
 
-    getMany(key, {inherit = true, reverse = true} = {}, data) {
+    getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
            Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
            in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
            or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
            The `key` can be an array of keys.
          */
-        data || this.assertLoaded()
+        this.assertLoaded()
 
         if (typeof key === 'string') key = [key]
-        let own = (data || this.data).getValues(...key)
+        let own = this.data.getValues(...key)
         if (!inherit) return own
 
-        let inherited = this.getPrototypes(data).map(p => p.getMany(key, {inherit, reverse}))
+        let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
         if (!inherited.length) return own
 
         // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
@@ -453,12 +453,12 @@ export class Item {
         return subset
     }
 
-    mergeSnippets(key, params, data) {
+    mergeSnippets(key, params) {
         /* Calls getMany() to find all entries with a given `key` including the environment-specific
            {key}_client OR {key}_server keys; assumes the values are strings.
            Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
         let env = this.registry.onServer ? 'server' : 'client'
-        let snippets = this.getMany([key, `${key}_${env}`], params, data)
+        let snippets = this.getMany([key, `${key}_${env}`], params)
         return snippets.join('\n')
     }
 
@@ -478,7 +478,7 @@ export class Item {
         return Catalog.merge(...catalogs)
     }
 
-    getName(default_)   { return this.get('name', default_) }
+    getName() { return this.get('name') || '' }
     getPath() {
         /* Default import path of this item. Starts with '/' (absolute path). */
         return this.get('path') || this.registry.site.systemPath(this)
@@ -772,7 +772,7 @@ export class Item {
            The `view` name should point to a method VIEW_{view} of the current Item's subclass.
          */
         if (title === undefined) {
-            let name = this.getName('')
+            let name = this.getName()
             let ciid = this.getStamp({html: false})
             title = `${name} ${ciid}`
         }
@@ -1007,12 +1007,12 @@ export class Category extends Item {
     //     /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
     //     return this.getInherited('handlers')
     // }
-    getDefault(field, default_ = undefined) {
-        /* Get default value of a field from category schema. Return `default` if no category default is configured. */
+    getDefault(field) {
+        /* Get default value of a field from category schema. Return undefined if no category default is configured. */
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
-        return schema ? schema.prop('default') : default_
+        return schema ? schema.prop('default') : undefined
     }
 
     getItemSchema() {
