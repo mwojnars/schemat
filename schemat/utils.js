@@ -220,7 +220,19 @@ export class Types {
 
     static amap = async (arr, fun) => await Promise.all(arr.map(async v => await fun(v)))
 
-    static getstate = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
+    // static getstate = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
+    static getstate = (obj) => {
+        /* obj's class may define __getstate__() method to generate a state by itself;
+           or __transient__ property with an array of attribute names to be excluded from the state. */
+        if (obj.__getstate__) return obj.__getstate__()
+        let transient = obj.constructor?.__transient__
+        if (transient instanceof Array) {
+            let state = {...obj}
+            transient.forEach(attr => {delete state[attr]})
+            return state
+        }
+        return obj
+    }
     static setstate = (cls, state) => {
         // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
         // __setstate__() can be async, in such case setstate() returns a promise;

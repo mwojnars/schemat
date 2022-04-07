@@ -197,6 +197,8 @@ export class Item {
 
     cache = new Map()       // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
+    static __transient__ = ['cache']
+
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
     get newborn()   { return this.iid === null }
@@ -206,7 +208,6 @@ export class Item {
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
-        // return this.cid !== null && this.cid !== undefined && this.iid !== null && this.iid !== undefined
     }
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }

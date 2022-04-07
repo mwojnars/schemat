@@ -15,8 +15,6 @@
         entries:
           - key: code
             value:
-              cache:
-                "@": schemat.data.Map
               info: Source code of a Javascript module to be created for this category. May
                 contain imports. Should export a Class that defines the class to
                 be used by items of this category. Alternatively, the Class can
@@ -24,29 +22,21 @@
               "@": schemat.type.CODE
           - key: class
             value:
-              cache:
-                "@": schemat.data.Map
               info: Source code of the class (a body without heading) that will be created for
                 this category. The class inherits from the `_boot_class`, or the
                 class of the first base category, or the top-level Item.
               "@": schemat.type.CODE
           - key: views
             value:
-              cache:
-                "@": schemat.data.Map
               info: "Source code of React functional components to be added dynamically to the
                 category's Class (`class` property) as VIEW_*(props) methods for
                 rendering item views. View methods are called bound: this=item
                 to be rendered."
               values:
-                cache:
-                  "@": schemat.data.Map
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG
           - key: cache_ttl
             value:
-              cache:
-                "@": schemat.data.Map
               info: Time To Live (TTL). Determines for how long (in seconds) an item of this
                 category is kept in a server-side cache after being loaded from
                 DB, for reuse by subsequent requests. A real number. If zero,
@@ -55,29 +45,21 @@
               "@": schemat.type.NUMBER
           - key: cached_methods
             value:
-              cache:
-                "@": schemat.data.Map
               info: Space- and/or comma-separated list of method names of this category's
                 class whose calls are to be cached via Item.setCaching().
               "@": schemat.type.STRING
           - key: fields
             value:
-              cache:
-                "@": schemat.data.Map
               info: Fields must have unique names.
               default:
                 entries:
                   - key: name
                     value:
-                      cache:
-                        "@": schemat.data.Map
                       info: Display name of the item. May contain spaces, punctuation, non-latin
                         characters.
                       "@": schemat.type.STRING
                   - key: path
                     value:
-                      cache:
-                        "@": schemat.data.Map
                       info: "Canonical path of this item within the SUN, for: display, resolving
                         relative code imports, resolving relative item
                         references (REF type), etc. If `path` is configured,
@@ -87,14 +69,10 @@
                       "@": schemat.type.PATH
                   - key: info
                     value:
-                      cache:
-                        "@": schemat.data.Map
                       info: Description of the item.
                       "@": schemat.type.TEXT
                   - key: prototype
                     value:
-                      cache:
-                        "@": schemat.data.Map
                       info: An item of the same category that serves as a prototype for this one, that
                         is, provides default values for missing properties of
                         this item. Multiple prototypes are allowed, the first
@@ -108,14 +86,10 @@
                       "@": schemat.type.ITEM
                 "@": schemat.data.Catalog
               values:
-                cache:
-                  "@": schemat.data.Map
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
           - key: _boot_class
             value:
-              cache:
-                "@": schemat.data.Map
               info: Name of a core Javascript class, subclass of Item, to be used for items of
                 this category. If `code` or `code_*` is configured, the class is
                 subclassed dynamically to insert the desired code. Should only
@@ -132,32 +106,22 @@
   _boot_class: schemat.item.Site
   fields:
     URL:
-      cache:
-        "@": schemat.data.Map
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": schemat.type.STRING
     path_internal:
-      cache:
-        "@": schemat.data.Map
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
       "@": schemat.type.PATH
     path_local:
-      cache:
-        "@": schemat.data.Map
       info: URL route of a FolderLocal that maps to the root folder of the Schemat's
         local installation.
       "@": schemat.type.PATH
     routes:
-      cache:
-        "@": schemat.data.Map
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
       values:
-        cache:
-          "@": schemat.data.Map
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
 - __id:
@@ -168,11 +132,7 @@
     prefix.
   fields:
     routes:
-      cache:
-        "@": schemat.data.Map
       values:
-        cache:
-          "@": schemat.data.Map
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
   _boot_class: schemat.item.Router
@@ -185,24 +145,16 @@
   cached_methods: read
   fields:
     content:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.CODE
     mimetype:
-      cache:
-        "@": schemat.data.Map
       info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
         appropriate type. If missing, response mimetype is inferred from the URL
         path extension, if present.
       "@": schemat.type.STRING
     format:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.STRING
     _is_file:
-      cache:
-        "@": schemat.data.Map
       default: true
       "@": schemat.type.BOOLEAN
 - __id:
@@ -216,8 +168,6 @@
   _boot_class: schemat.item.FileLocal
   fields:
     path:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.STRING
 - __id:
     - 0
@@ -228,16 +178,10 @@
   _boot_class: schemat.item.Folder
   fields:
     files:
-      cache:
-        "@": schemat.data.Map
       values:
-        cache:
-          "@": schemat.data.Map
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
     _is_folder:
-      cache:
-        "@": schemat.data.Map
       default: true
       "@": schemat.type.BOOLEAN
 - __id:
@@ -253,8 +197,6 @@
   _boot_class: schemat.item.FolderLocal
   fields:
     path:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.STRING
 - __id:
     - 0
@@ -265,16 +207,10 @@
   _boot_class: schemat.item.Application
   fields:
     findRoute:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.CODE
     urlPath:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.CODE
     _boot_class:
-      cache:
-        "@": schemat.data.Map
       "@": schemat.type.STRING
 - __id:
     - 0
@@ -286,8 +222,6 @@
   _boot_class: schemat.item.AppBasic
   fields:
     category:
-      cache:
-        "@": schemat.data.Map
       info: Optional category(ies) of items handled by this application.
       category_base:
         =:
@@ -296,8 +230,6 @@
         "@": (item)
       "@": schemat.type.ITEM
     drop_cid:
-      cache:
-        "@": schemat.data.Map
       info: If true, CID is excluded from URL paths. Requires that a single `category`
         is declared for the application; and implies that only the exact
         instances (no inheritance) of this category are handled (otherwise,
@@ -313,11 +245,7 @@
   _boot_class: schemat.item.AppSpaces
   fields:
     spaces:
-      cache:
-        "@": schemat.data.Map
       values:
-        cache:
-          "@": schemat.data.Map
         category_base:
           =:
             - 0
