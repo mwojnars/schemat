@@ -4,8 +4,8 @@ import {
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
 import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
-import { generic_schema, CATALOG, DATA } from './type.js'
 import { Catalog, Data } from './data.js'
+import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
 export const SITE_CID = 1

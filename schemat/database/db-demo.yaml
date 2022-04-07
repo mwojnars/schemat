@@ -49,6 +49,9 @@
     demo:
       - 5
       - 102
+    paperity:
+      - 5
+      - 107
 - __id:
     - 5
     - 104
@@ -199,3 +202,24 @@
     - 100
   name: Post A
   text: Ala ma kota
+- __id:
+    - 5
+    - 107
+  name: /paperity
+  files:
+    Journal:
+      - 0
+      - 201
+    Paper:
+      - 0
+      - 202
+- __id:
+    - 0
+    - 201
+  name: Journal
+  info: Paperity's Journal object.
+- __id:
+    - 0
+    - 202
+  name: Paper
+  info: Paperity's Paper object.

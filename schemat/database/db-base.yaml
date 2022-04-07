@@ -1,7 +1,21 @@
 - __id:
     - 0
+    - 50
+  name: YAML Database
+  info: Data stored in a YAML file.
+  prototype:
+    - 0
+    - 11
+  fields:
+    filename:
+      "@": schemat.type.STRING
+- __id:
+    - 0
     - 51
   name: MysqlDB
+  prototype:
+    - 0
+    - 11
   fields:
     host:
       "@": schemat.type.STRING
@@ -21,3 +35,11 @@
       values:
         "@": schemat.type.STRING
       "@": schemat.type.CATALOG
+    mapping:
+      info: Mapping of a category to an SQL table.
+      fields:
+        category:
+          "@": schemat.type.ITEM
+        table:
+          "@": schemat.type.STRING
+      "@": schemat.type.RECORD

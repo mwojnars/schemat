@@ -254,6 +254,18 @@
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
 - __id:
+    - 0
+    - 10
+  name: Schema
+  info: Category of items that represent schema types. Some of the items are
+    wrappers around system types (STRING, INTEGER etc.), while some others
+    implement new schema types from scratch.
+- __id:
+    - 0
+    - 11
+  name: Database
+  info: Base category for items that represent an abstract database layer.
+- __id:
     - 5
     - 1
   name: /system

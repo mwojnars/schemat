@@ -131,19 +131,6 @@ async function create_categories(Category) {
         //                 }
         //             `),
     })
-    // cat.Database = await Category.new({
-    //     name        : "Database",
-    //     info        : "Base category for items that represent an abstract database layer.",
-    // })
-    // cat.DatabaseYaml = await Category.new({
-    //     name        : "YAML Database",
-    //     info        : "Single-machine database stored in a YAML file.",
-    //     class       : 'schemat.item.DatabaseYaml',
-    //     prototype   : cat.Database,
-    //     fields      : C({
-    //         filename: new STRING(),
-    //     }),
-    // })
 
     cat.File = await Category.new(3, {
         name        : "File",
@@ -205,6 +192,16 @@ async function create_categories(Category) {
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         _boot_class : 'schemat.item.AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
+    })
+
+    cat.Schema = await Category.new(10, {
+        name        : "Schema",
+        info        : "Category of items that represent schema types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new schema types from scratch.",
+    })
+
+    cat.Database = await Category.new(11, {
+        name        : "Database",
+        info        : "Base category for items that represent an abstract database layer.",
     })
 
     return cat
