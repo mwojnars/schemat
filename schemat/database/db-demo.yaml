@@ -101,6 +101,10 @@
     static error() { throw new Error('Varia/code/error()') }
   fields:
     title:
+      cid: null
+      iid: null
+      cache:
+        "@": schemat.data.Map
       "@": schemat.type.STRING
 - __id:
     - 100

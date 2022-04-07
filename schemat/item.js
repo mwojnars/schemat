@@ -5,7 +5,7 @@ import {
 } from './react-utils.js'
 import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
 import { Catalog, Data } from './data.js'
-import { generic_schema, DATA } from './type.js'
+// import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
 export const SITE_CID = 1
@@ -250,19 +250,16 @@ export class Item {
     }
 
     async boot(data) {
-        /* Similar to load(), but sets this.data from `data` rather than from DB.
-           The item is initialized ("booted") after this method completes.
+        /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
+           In any case, the item and its .data is initialized ("booted") after this method completes.
          */
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         if (!(data instanceof Data)) data = new Data(data)
 
-        // await this.init(data)       // must be called before this.data is set to avoid concurrent async code treat this item as initialized
-
-        // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
-        // the item is initialized (this.data is present) while init() has not yet completed !!
         let init = this.init(data)                      // optional custom initialization after the data is loaded
-        if (init instanceof Promise) await init
+        if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+
         this.data = data
     }
 
@@ -283,8 +280,6 @@ export class Item {
         }
         else if (!this.category.loaded && this.category !== this) 
             await this.category.load()
-
-        // this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
@@ -308,22 +303,11 @@ export class Item {
         if (proto instanceof Promise) await proto
 
         await this.initClass(data)
-
-        // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
-        // the item is initialized (this.data is present) while init() has not yet completed !!
-
-        // let init = this.init(data)                      // optional custom initialization after the data is loaded
-        // if (init instanceof Promise) await init
-        // this.data   = data
-
         await this.boot(data)
 
         let ttl_ms  = this.category.get('cache_ttl') * 1000
         this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
-
-        // let init = this.init()                              // optional custom initialization after this.data is loaded
-        // if (init instanceof Promise) await init
 
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
@@ -975,10 +959,6 @@ export class Category extends Item {
         if (typeof data === 'number') [data, iid] = [iid, data]
         let module = await this.getModule()
         return module.Class.createNewborn(this, data, iid)
-        // let item = new module.Class(this)
-        // if (data) await item.boot(data)
-        // if (iid !== null) item.iid = iid
-        // return item
     }
 
     async getModule() {
@@ -1217,6 +1197,12 @@ export class RootCategory extends Category {
         return super.reload(false, jsonData)
     }
     async getModule() { return {Class: Category} }
+}
+
+/**********************************************************************************************************************/
+
+export class BuiltinItem extends Item {
+    /* Base class for builtin classes whose instances must behave like plain JS objects and items at the same time. */
 }
 
 /**********************************************************************************************************************/

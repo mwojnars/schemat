@@ -6,6 +6,8 @@ import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError,
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
+import { BuiltinItem } from './item.js'
+
 let csso = await tryimport('csso')
 
 
@@ -207,7 +209,7 @@ class Layout extends Component {
  **
  */
 
-export class Schema {
+export class Schema extends BuiltinItem {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
@@ -222,6 +224,7 @@ export class Schema {
     static initial = undefined
 
     constructor(params = {}) {
+        super()
         let {default_, info, blank, type} = params || {}         // params=null is valid
         if (info  !== undefined)    this.info  = info
         if (blank !== undefined)    this.blank = blank
