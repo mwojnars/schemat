@@ -220,16 +220,29 @@ export class Types {
 
     static amap = async (arr, fun) => await Promise.all(arr.map(async v => await fun(v)))
 
-    // static getstate = (obj) => obj['__getstate__'] ? obj['__getstate__']() : obj
+    static *inherited(cls, attr) {
+        /* Walk the prototype chain of `cls` class upwards and yield all values of a static attribute, `attr`. */
+        while (true) {
+            if (!cls || cls === Object || cls === Object.prototype) break
+            if (attr in cls) yield cls[attr]
+            cls = Object.getPrototypeOf(cls)
+        }
+    }
+
     static getstate = (obj) => {
-        /* obj's class may define __getstate__() method to generate a state by itself;
-           or __transient__ property with an array of attribute names to be excluded from the state. */
+        /* obj's class may define __getstate__() method to have full control over state generation;
+           or __transient__ property to with a list of attribute names to be excluded from an auto-generated state. */
         if (obj.__getstate__) return obj.__getstate__()
-        let transient = obj.constructor?.__transient__
-        if (transient instanceof Array) {
-            let state = {...obj}
-            transient.forEach(attr => {delete state[attr]})
-            return state
+        if (obj.constructor?.__transient__) {
+            let collect = []                            // combine __transient__ arrays from the prototype chain
+            for (const trans of T.inherited(obj.constructor, '__transient__'))
+                if (trans instanceof Array && trans !== collect[collect.length-1]) collect.push(trans)
+            let transient = [].concat(...collect)
+            if (transient.length) {
+                let state = {...obj}
+                transient.forEach(attr => {delete state[attr]})
+                return state
+            }
         }
         return obj
     }
