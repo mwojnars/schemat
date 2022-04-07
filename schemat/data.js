@@ -40,7 +40,7 @@ export class ItemsMap extends Map {
     _key(id) {
         assert(id)
         let [cid, iid] = id
-        assert(cid !== null && iid !== null)
+        assert((cid || cid === 0) && (iid || iid === 0))
         return `${cid}:${iid}`
     }
     set(id, obj) { super.set(this._key(id), obj) }

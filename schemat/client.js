@@ -65,8 +65,8 @@ class AjaxDB {
         print(`ajax download [${cid},${iid}]...`)
         return $.get(`${this.url}/${cid}:${iid}@json`)
     }
-    async *scan(cid = null) {
-        assert(cid !== null)
+    async *scan(cid) {
+        assert(cid || cid === 0)
         print(`ajax category scan [0,${cid}]...`)
         let records = await $.get(`${this.url}/0:${cid}@scan`)
         for (const rec of records) {            // rec's shape: {id, data}

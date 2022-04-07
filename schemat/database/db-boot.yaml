@@ -15,8 +15,6 @@
         entries:
           - key: code
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Source code of a Javascript module to be created for this category. May
@@ -26,8 +24,6 @@
               "@": schemat.type.CODE
           - key: class
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Source code of the class (a body without heading) that will be created for
@@ -36,8 +32,6 @@
               "@": schemat.type.CODE
           - key: views
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: "Source code of React functional components to be added dynamically to the
@@ -45,16 +39,12 @@
                 rendering item views. View methods are called bound: this=item
                 to be rendered."
               values:
-                cid: null
-                iid: null
                 cache:
                   "@": schemat.data.Map
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG
           - key: cache_ttl
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Time To Live (TTL). Determines for how long (in seconds) an item of this
@@ -65,8 +55,6 @@
               "@": schemat.type.NUMBER
           - key: cached_methods
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Space- and/or comma-separated list of method names of this category's
@@ -74,8 +62,6 @@
               "@": schemat.type.STRING
           - key: fields
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Fields must have unique names.
@@ -83,8 +69,6 @@
                 entries:
                   - key: name
                     value:
-                      cid: null
-                      iid: null
                       cache:
                         "@": schemat.data.Map
                       info: Display name of the item. May contain spaces, punctuation, non-latin
@@ -92,8 +76,6 @@
                       "@": schemat.type.STRING
                   - key: path
                     value:
-                      cid: null
-                      iid: null
                       cache:
                         "@": schemat.data.Map
                       info: "Canonical path of this item within the SUN, for: display, resolving
@@ -105,16 +87,12 @@
                       "@": schemat.type.PATH
                   - key: info
                     value:
-                      cid: null
-                      iid: null
                       cache:
                         "@": schemat.data.Map
                       info: Description of the item.
                       "@": schemat.type.TEXT
                   - key: prototype
                     value:
-                      cid: null
-                      iid: null
                       cache:
                         "@": schemat.data.Map
                       info: An item of the same category that serves as a prototype for this one, that
@@ -130,16 +108,12 @@
                       "@": schemat.type.ITEM
                 "@": schemat.data.Catalog
               values:
-                cid: null
-                iid: null
                 cache:
                   "@": schemat.data.Map
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
           - key: _boot_class
             value:
-              cid: null
-              iid: null
               cache:
                 "@": schemat.data.Map
               info: Name of a core Javascript class, subclass of Item, to be used for items of
@@ -158,40 +132,30 @@
   _boot_class: schemat.item.Site
   fields:
     URL:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
       "@": schemat.type.STRING
     path_internal:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
       "@": schemat.type.PATH
     path_local:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: URL route of a FolderLocal that maps to the root folder of the Schemat's
         local installation.
       "@": schemat.type.PATH
     routes:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
       values:
-        cid: null
-        iid: null
         cache:
           "@": schemat.data.Map
         "@": schemat.type.ITEM
@@ -204,13 +168,9 @@
     prefix.
   fields:
     routes:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       values:
-        cid: null
-        iid: null
         cache:
           "@": schemat.data.Map
         "@": schemat.type.ITEM
@@ -225,14 +185,10 @@
   cached_methods: read
   fields:
     content:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.CODE
     mimetype:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: MIME type string (must include '/') to be set as Content-Type when serving
@@ -241,14 +197,10 @@
         path extension, if present.
       "@": schemat.type.STRING
     format:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.STRING
     _is_file:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       default: true
@@ -264,8 +216,6 @@
   _boot_class: schemat.item.FileLocal
   fields:
     path:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.STRING
@@ -278,20 +228,14 @@
   _boot_class: schemat.item.Folder
   fields:
     files:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       values:
-        cid: null
-        iid: null
         cache:
           "@": schemat.data.Map
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
     _is_folder:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       default: true
@@ -309,8 +253,6 @@
   _boot_class: schemat.item.FolderLocal
   fields:
     path:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.STRING
@@ -323,20 +265,14 @@
   _boot_class: schemat.item.Application
   fields:
     findRoute:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.CODE
     urlPath:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.CODE
     _boot_class:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       "@": schemat.type.STRING
@@ -350,8 +286,6 @@
   _boot_class: schemat.item.AppBasic
   fields:
     category:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: Optional category(ies) of items handled by this application.
@@ -362,8 +296,6 @@
         "@": (item)
       "@": schemat.type.ITEM
     drop_cid:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       info: If true, CID is excluded from URL paths. Requires that a single `category`
@@ -381,13 +313,9 @@
   _boot_class: schemat.item.AppSpaces
   fields:
     spaces:
-      cid: null
-      iid: null
       cache:
         "@": schemat.data.Map
       values:
-        cid: null
-        iid: null
         cache:
           "@": schemat.data.Map
         category_base:

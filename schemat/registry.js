@@ -176,8 +176,8 @@ export class Registry {
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
         let [cid, iid] = id
-        if (cid === null) throw new Error('missing CID')
-        if (iid === null) throw new Error('missing IID')
+        if (!cid && cid !== 0) throw new Error('missing CID')
+        if (!iid && iid !== 0) throw new Error('missing IID')
         assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
 
         this.session?.countRequested(id)

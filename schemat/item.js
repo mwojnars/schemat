@@ -175,8 +175,8 @@ export class Item {
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    cid = null      // CID (Category ID) of this item; cannot be undefined, only "null" if missing
-    iid = null      // IID (Item ID within a category) of this item; cannot be undefined, only "null" if missing
+    cid             // CID (Category ID) of this item; can be undefined
+    iid             // IID (Item ID within a category) of this item; can be undefined
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -205,7 +205,8 @@ export class Item {
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
-        return this.cid !== null && this.cid !== undefined && this.iid !== null && this.iid !== undefined
+        return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
+        // return this.cid !== null && this.cid !== undefined && this.iid !== null && this.iid !== undefined
     }
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }

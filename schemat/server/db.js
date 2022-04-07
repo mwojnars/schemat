@@ -373,8 +373,8 @@ class FileDB extends DB {
     _del(id, opts)  { return this.records.delete(id) }
     _put(id, data)  { this.records.set(id, data) }
 
-    async *scan(cid = null) {
-        let all = (cid === null)
+    async *scan(cid) {
+        let all = (cid === undefined)
         for (const [id, data] of this.records.entries())
             if (all || id[0] === cid) yield [id, data]
     }
