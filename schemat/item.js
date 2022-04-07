@@ -212,17 +212,36 @@ export class Item {
 
 
     static createStub(id, registry) {
-        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached yet (only the Item class). */
-        let item = new Item()
+        /* Create a "stub" item of a given ID whose content can be loaded later on from DB with load().
+           The item is unloaded and usually NO specific class is attached yet.
+         */
+        let item = new this()
         let [cid, iid] = id
         item.cid = cid
         item.iid = iid
         item.registry = registry
         return item
     }
+    static async createUnlinked(data) {
+        /* Create an "unlinked" item that has `data` but no ID. The item has limited functionality: no load/save/transfer,
+           no category, registry etc. The item returned is always *booted* (this.data is present, can be empty).
+         */
+        let item = new this()
+        await item.boot(data)
+        return item
+    }
+    static async createNewborn(category, data, iid) {
+        /* Create a "newborn" item that has a category & CID assigned, and is intended for insertion to DB.
+           Arguments `data` and `iid` are optional. The item returned is *booted* (this.data is present, can be empty).
+         */
+        let item = new this(category)
+        if (iid !== null) item.iid = iid
+        await item.boot(data)
+        return item
+    }
 
     constructor(category = null) {
-        /* To set this.data, setData() must be called and awaited (!) separately after this constructor. */
+        /* To set this.data, boot() must be called and awaited (!) separately after this constructor. */
         if (category) {
             this.category = category
             this.registry = category.registry
@@ -230,9 +249,20 @@ export class Item {
         }
     }
 
-    async setData(data) {
+    async boot(data) {
+        /* Similar to load(), but sets this.data from `data` rather than from DB.
+           The item is initialized ("booted") after this method completes.
+         */
+        this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
+
         if (!(data instanceof Data)) data = new Data(data)
-        await this.init(data)       // must be called before this.data is set to avoid concurrent async code treat this item as initialized
+
+        // await this.init(data)       // must be called before this.data is set to avoid concurrent async code treat this item as initialized
+
+        // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
+        // the item is initialized (this.data is present) while init() has not yet completed !!
+        let init = this.init(data)                      // optional custom initialization after the data is loaded
+        if (init instanceof Promise) await init
         this.data = data
     }
 
@@ -254,7 +284,7 @@ export class Item {
         else if (!this.category.loaded && this.category !== this) 
             await this.category.load()
 
-        this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
+        // this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
@@ -270,7 +300,7 @@ export class Item {
             jsonData = await this.registry.loadData(this.id)
         }
         this.jsonData = jsonData
-        let schema = use_schema ? this.category.getItemSchema() : this._mod_type.generic_schema
+        let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
         let state  = JSON.parse(jsonData)
         let data   = schema.decode(state)
 
@@ -282,10 +312,12 @@ export class Item {
         // init() must be called BEFORE this.data is assigned, otherwise a concurrent async code may incorrectly assume
         // the item is initialized (this.data is present) while init() has not yet completed !!
 
-        let init = this.init(data)                      // optional custom initialization after the data is loaded
-        if (init instanceof Promise) await init
+        // let init = this.init(data)                      // optional custom initialization after the data is loaded
+        // if (init instanceof Promise) await init
+        // this.data   = data
 
-        this.data   = data
+        await this.boot(data)
+
         let ttl_ms  = this.category.get('cache_ttl') * 1000
         this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
@@ -312,7 +344,6 @@ export class Item {
     async initClass(data) {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        // let itemclass = this.category.module.Class
         let module = await this.category.getModule()
         T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
@@ -939,16 +970,15 @@ export class Category extends Item {
     async new(data = null, iid = null) {
         /*
         Create a newborn item of this category (not yet in DB); connect it with this.registry;
-        set its IID, or mark as pending for insertion to DB if no `iid` provided.
-        The order of `data` and `iid` arguments can be swapped.
+        set its IID if given. The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        // let item = new this.module.Class(this)
         let module = await this.getModule()
-        let item = new module.Class(this)
-        if (data) await item.setData(data)
-        if (iid !== null) item.iid = iid
-        return item
+        return module.Class.createNewborn(this, data, iid)
+        // let item = new module.Class(this)
+        // if (data) await item.boot(data)
+        // if (iid !== null) item.iid = iid
+        // return item
     }
 
     async getModule() {

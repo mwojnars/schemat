@@ -20,7 +20,7 @@ export function toString() {
     if (isObject) return `{${summary}}`         // special display form for plain Objects: {...} with no class name
 
     let gap = summary ? ' ' : ''
-    return `[${this.constructor.name}${gap}${summary}]`
+    return `[${this.constructor?.name || 'Object'}${gap}${summary}]`
 }
 
 Object.prototype.toString = toString
