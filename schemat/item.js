@@ -190,7 +190,7 @@ export class Item {
 
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
-    expiry          // timestamp when this item instance should be considered expired in Ragistry.cache; managed by registry
+    expiry          // timestamp when this item instance should be considered expired in Registry.cache; managed by registry
 
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
@@ -210,20 +210,15 @@ export class Item {
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
 
-    instanceof(category) {
-        /* Check whether this item belongs to a `category`, or its subcategory.
-           All comparisons along the way use item IDs, not object identity. The item must be loaded.
-        */
-        return this.category.inherits(category)
-    }
-    inherits(parent) {
-        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
-           True if parent==this. All comparisons by item ID.
-         */
-        if (this.has_id(parent.id)) return true
-        for (const proto of this.getPrototypes())
-            if (proto.inherits(parent)) return true
-        return false
+
+    static createStub(id, registry) {
+        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached yet (only the Item class). */
+        let item = new Item()
+        let [cid, iid] = id
+        item.cid = cid
+        item.iid = iid
+        item.registry = registry
+        return item
     }
 
     constructor(category = null) {
@@ -259,6 +254,8 @@ export class Item {
         else if (!this.category.loaded && this.category !== this) 
             await this.category.load()
 
+        this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
+
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
         this.data = this.reload(use_schema)
@@ -273,7 +270,7 @@ export class Item {
             jsonData = await this.registry.loadData(this.id)
         }
         this.jsonData = jsonData
-        let schema = use_schema ? this.category.getItemSchema() : generic_schema
+        let schema = use_schema ? this.category.getItemSchema() : this._mod_type.generic_schema
         let state  = JSON.parse(jsonData)
         let data   = schema.decode(state)
 
@@ -327,6 +324,22 @@ export class Item {
          */
     end() {}
         /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
+
+    instanceof(category) {
+        /* Check whether this item belongs to a `category`, or its subcategory.
+           All comparisons along the way use item IDs, not object identity. The item must be loaded.
+        */
+        return this.category.inherits(category)
+    }
+    inherits(parent) {
+        /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
+           True if parent==this. All comparisons by item ID.
+         */
+        if (this.has_id(parent.id)) return true
+        for (const proto of this.getPrototypes())
+            if (proto.inherits(parent)) return true
+        return false
+    }
 
     /***  Dynamic loading of source code  ***/
 
@@ -387,6 +400,12 @@ export class Item {
     getPrototypes()     { return this.data.getValues('prototype') }
 
     get(path, opts = {}) {
+        /* If opts.pure is true, the `path` is first searched for in `this` and `this.constructor`, only then in this.data. */
+
+        if (opts.pure) {
+            if (path in this) return this[path]
+            if (path in this.constructor) return this.constructor[path]
+        }
 
         this.assertLoaded()
 
@@ -401,7 +420,7 @@ export class Item {
         }
 
         // search in category's defaults
-        if (this.category !== this) {
+        if (this.category && this.category !== this) {
             let cat_default = this.category.getDefault(path)
             if (cat_default !== undefined)
                 return cat_default
@@ -524,7 +543,7 @@ export class Item {
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         this.assertLoaded()
-        let schema = use_schema ? this.getSchema() : generic_schema
+        let schema = use_schema ? this.getSchema() : this._mod_type.generic_schema
         return schema.encode(this.data)
     }
     dumpData(use_schema = true, compact = true) {
@@ -1018,7 +1037,7 @@ export class Category extends Item {
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         let fields = this.getFields()
-        return new DATA(fields.asDict())
+        return new this._mod_type.DATA(fields.asDict())
     }
     getAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */

@@ -171,15 +171,15 @@ export class Registry {
         return root
     }
 
-    createStub(id) {
-        /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class). */
-        let [cid, iid] = id
-        let item = new Item()
-        item.cid = cid
-        item.iid = iid
-        item.registry = this
-        return item
-    }
+    // createStub(id) {
+    //     /* Create a "stub" item of a given ID. The item is unloaded and NO specific class is attached (only the Item class). */
+    //     let [cid, iid] = id
+    //     let item = new Item()
+    //     item.cid = cid
+    //     item.iid = iid
+    //     item.registry = this
+    //     return item
+    // }
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
@@ -197,7 +197,8 @@ export class Registry {
         let item = this.cache.get(id)
         if (item) return item
 
-        let stub = this.createStub(id)
+        // let stub = this.createStub(id)
+        let stub = Item.createStub(id, this)
         this.cache.set(id, stub)            // a stub, until loaded, is scheduled for immediate removal (ttl=0) at the end of session
         return stub
     }
