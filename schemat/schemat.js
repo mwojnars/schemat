@@ -36,6 +36,13 @@ class Schemat {
     }
 
     async boot() {
+        // this.db = stackDB(
+        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readOnly: true}),
+        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readOnly: false}),
+        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT}),
+        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT}),
+        // )
+
         this.db = stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
@@ -59,6 +66,7 @@ class Schemat {
         /* Generate the core "db-boot" database file anew. */
         let {bootstrap} = await import('./server/bootstrap.js')
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+        await db.init()
         return bootstrap(db)
     }
 

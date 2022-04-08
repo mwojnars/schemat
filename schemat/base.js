@@ -11,7 +11,7 @@ import {DB} from './server/db.js'
 // let [rows, fields] = await db.execute('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050')
 
 
-class MySQL extends DB {
+export class MySQL extends DB {
 
     async init() {
         let conn = this.get('connection') || {}

@@ -1,10 +1,10 @@
 import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
-import fs from 'fs'
-import path from 'path'
-import YAML from 'yaml'
+// import fs from 'fs'
+// import path from 'path'
+// import YAML from 'yaml'
 
 import { ItemsMap } from '../data.js'
-import { Item } from "../item.js";
+import { Item } from '../item.js'
 
 /**********************************************************************************************************************
  **
@@ -84,9 +84,9 @@ import { Item } from "../item.js";
 
 export class DB extends Item {
     name                    // name of this DB for display and CLI options
-    readOnly  = false       // if true, the database does NOT accept modifications: inserts/updates/deletes
+    readOnly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
-    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    start_iid               // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
     stop_iid                // (optional) maximum IID of all items
 
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
@@ -103,6 +103,10 @@ export class DB extends Item {
         this.readOnly = readOnly
         this.start_iid = start_iid
     }
+    // init(data) {
+    //     this.readOnly = data.get('readOnly')
+    //     this.start_iid = data.get('start_iid') || 0
+    // }
 
     static Error = class extends BaseError {}
     static NotFound = class extends DB.Error {
@@ -162,8 +166,9 @@ export class DB extends Item {
     _del(key, opts)         { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _put(key, data, opts)   { throw new NotImplemented() }      // no return value
 
-    open(opts = {}) {
+    async open(opts = {}) {
         /* Open this DB and all lower-level DBs in the stack. */
+        await this.init()
         if (!this.prevDB) return this._open()
         return Promise.all([this.prevDB.open(), this._open()])
     }
@@ -364,9 +369,18 @@ class FileDB extends DB {
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
-        this.name = path.basename(filename, path.extname(filename))
+        // this.name = path.basename(filename, path.extname(filename))
+    }
+    async init() {
+        super.init()
+        let path = this._mod_path = await import('path')
+        this.name = path.basename(this.filename, path.extname(this.filename))
     }
 
+    // async _open() {
+    //     let path = this._mod_path = await import('path')
+    //     this.name = path.basename(this.filename, path.extname(this.filename))
+    // }
     async flush()   { throw new NotImplemented() }
 
     _get(id, opts)  { return this.records.get(id) }
@@ -383,9 +397,19 @@ class FileDB extends DB {
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
+    async init() {
+        await super.init()
+        this._mod_fs = await import('fs')
+        this._mod_YAML = (await import('yaml')).default
+    }
+
     async _open() {
-        let file = await fs.promises.readFile(this.filename, 'utf8')
-        let db = YAML.parse(file) || []
+        await super._open()
+        // this._mod_fs = await import('fs')
+        // this._mod_YAML = (await import('yaml')).default
+
+        let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
+        let db = this._mod_YAML.parse(file) || []
         this.records.clear()
         this.curr_iid.clear()
 
@@ -411,8 +435,8 @@ export class YamlDB extends FileDB {
                 let id = {__id: id_}, data = JSON.parse(data_)
                 return T.isDict(data) ? {...id, ...data} : {...id, __data: data}
             })
-        let out = YAML.stringify(recs)
-        return fs.promises.writeFile(this.filename, out, 'utf8')
+        let out = this._mod_YAML.stringify(recs)
+        return this._mod_fs.promises.writeFile(this.filename, out, 'utf8')
     }
 }
 

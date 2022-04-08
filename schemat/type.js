@@ -6,7 +6,7 @@ import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError,
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 
-import { BuiltinItem } from './item.js'
+import { Item } from './item.js'
 
 let csso = await tryimport('csso')
 
@@ -191,17 +191,17 @@ class Widget extends Component {}
 //     render() { return e(this.page, this.props) }
 // }
 
-class Layout extends Component {
-    /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
-       positions on a page.
-     */
-    static defaultProps = {
-        blocks: {},             // named blocks, e.g.: head, foot, main, side ... to be placed on a page
-    }
-    render() {
-        let {blocks} = this.props
-    }
-}
+// class Layout extends Component {
+//     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
+//        positions on a page.
+//      */
+//     static defaultProps = {
+//         blocks: {},             // named blocks, e.g.: head, foot, main, side ... to be placed on a page
+//     }
+//     render() {
+//         let {blocks} = this.props
+//     }
+// }
 
 /**********************************************************************************************************************
  **
@@ -209,7 +209,7 @@ class Layout extends Component {
  **
  */
 
-export class Schema extends BuiltinItem {
+export class Schema extends Item {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
@@ -233,12 +233,6 @@ export class Schema extends BuiltinItem {
         if ('default' in params)    this.default = params.default       // to pass it to Schema: as "default" or "default_"
         // if (multi !== undefined)    this.multi = multi
     }
-
-    // prop(name) {
-    //     /* Return the value of a given schema property as defined either in `this` or in the constructor (class-level default). */
-    //     let p = this[name]
-    //     return (p === undefined) ? this.constructor[name] : p
-    // }
 
     getInitial() {
         let initial = this.get('initial')

@@ -175,8 +175,8 @@ export class Item {
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
-    cid             // CID (Category ID) of this item; can be undefined
-    iid             // IID (Item ID within a category) of this item; can be undefined
+    cid             // CID (Category ID) of this item; can be undefined, null not allowed
+    iid             // IID (Item ID within a category) of this item; can be undefined, null not allowed
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -205,6 +205,8 @@ export class Item {
     get loaded()    { return this.has_data() && !(this.data instanceof Promise) }   // false if `data` is still loading (a Promise) !!
     get schema()    { return this.getSchema() }
 
+    get isShadow()  { return this.cid === undefined }
+
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
@@ -224,14 +226,14 @@ export class Item {
         item.registry = registry
         return item
     }
-    static async createUnlinked(data) {
-        /* Create an "unlinked" item that has `data` but no ID. The item has limited functionality: no load/save/transfer,
-           no category, registry etc. The item returned is always *booted* (this.data is present, can be empty).
-         */
-        let item = new this()
-        await item.boot(data)
-        return item
-    }
+    // static async createShadow(data) {
+    //     /* Create an "unlinked" item that has `data` but no ID. The item has limited functionality: no load/save/transfer,
+    //        no category, registry etc. The item returned is always *booted* (this.data is present, can be empty).
+    //      */
+    //     let item = new this()
+    //     await item.boot(data)
+    //     return item
+    // }
     static async createNewborn(category, data, iid) {
         /* Create a "newborn" item that has a category & CID assigned, and is intended for insertion to DB.
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data is present, can be empty).
@@ -417,9 +419,12 @@ export class Item {
     get(path, opts = {}) {
         /* If opts.pure is true, the `path` is first searched for in `this` and `this.constructor`, only then in this.data. */
 
-        if (opts.pure) {
-            if (path in this) return this[path]
-            if (path in this.constructor) return this.constructor[path]
+        if (this.isShadow) {     // if (opts.pure) {
+            assert(!this.data, 'this.data not allowed in a shadow item')
+            if (this[path] !== undefined) return this[path]
+            if (this.constructor[path] !== undefined) return this.constructor[path]
+            return opts.default
+            // if (this.isShadow && !this.has_data()) return opts.default
         }
 
         this.assertLoaded()
@@ -1203,15 +1208,21 @@ export class RootCategory extends Category {
 
 /**********************************************************************************************************************/
 
-export class BuiltinItem extends Item {
-    /* Base class for builtin classes whose instances must behave like plain JS objects and items at the same time. */
-
-    get(path, opts = {}) {
-        let {pure = true, ...rest} = opts               // set pure=true as a default in the options below
-        return super.get(path, {pure, ...rest})
-    }
-
-}
+// export class BuiltinItem extends Item {
+//     /* Base class for builtin classes whose instances must behave like plain JS objects and like items at the same time. */
+//
+//     // __setstate__(state) {
+//     //     Object.assign(this, state)
+//     //     // this.data = new Data()
+//     //     // await this.boot()
+//     //     return this
+//     // }
+//
+//     get(path, opts = {}) {
+//         let {pure = true, ...rest} = opts               // set pure=true as a default in the options
+//         return super.get(path, {pure, ...rest})
+//     }
+// }
 
 /**********************************************************************************************************************/
 
