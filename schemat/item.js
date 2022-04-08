@@ -414,8 +414,6 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    getPrototypes()     { return this.data.getValues('prototype') }
-
     get(path, opts = {}) {
         /* If opts.pure is true, the `path` is first searched for in `this` and `this.constructor`, only then in this.data. */
 
@@ -445,6 +443,8 @@ export class Item {
 
         return opts.default
     }
+
+    getPrototypes()     { return this.data.getValues('prototype') }
 
     async getLoaded(path) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
@@ -509,7 +509,7 @@ export class Item {
          */
         let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
         let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        let default_ = schemas.get(field).prop('default')
+        let default_ = schemas.get(field).get('default')
         catalogs.push(default_)
         return Catalog.merge(...catalogs)
     }
@@ -1043,7 +1043,7 @@ export class Category extends Item {
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
-        return schema ? schema.prop('default') : undefined
+        return schema ? schema.get('default') : undefined
     }
 
     getItemSchema() {
@@ -1205,6 +1205,12 @@ export class RootCategory extends Category {
 
 export class BuiltinItem extends Item {
     /* Base class for builtin classes whose instances must behave like plain JS objects and items at the same time. */
+
+    get(path, opts = {}) {
+        let {pure = true, ...rest} = opts               // set pure=true as a default in the options below
+        return super.get(path, {pure, ...rest})
+    }
+
 }
 
 /**********************************************************************************************************************/

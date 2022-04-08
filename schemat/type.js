@@ -234,14 +234,14 @@ export class Schema extends BuiltinItem {
         // if (multi !== undefined)    this.multi = multi
     }
 
-    prop(name) {
-        /* Return the value of a given schema property as defined either in `this` or in the constructor (class-level default). */
-        let p = this[name]
-        return (p === undefined) ? this.constructor[name] : p
-    }
+    // prop(name) {
+    //     /* Return the value of a given schema property as defined either in `this` or in the constructor (class-level default). */
+    //     let p = this[name]
+    //     return (p === undefined) ? this.constructor[name] : p
+    // }
 
     getInitial() {
-        let initial = this.prop('initial')
+        let initial = this.get('initial')
         return (typeof initial === 'function') ? initial() : initial
     }
 
@@ -683,7 +683,7 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
-            let dflt = `${schema.prop('default')}`
+            let dflt = `${schema.get('default')}`
             return SPAN(`${schema}`,
                     schema.default !== undefined &&
                         SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
@@ -1481,7 +1481,7 @@ export class DATA extends CATALOG {
             schema.collect(assets)
         this.constructor.Table.collect(assets)
     }
-    getValidKeys()          { return Object.getOwnPropertyNames(this.prop('fields')).sort() }
+    getValidKeys()          { return Object.getOwnPropertyNames(this.get('fields')).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
