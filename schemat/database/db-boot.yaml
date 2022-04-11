@@ -266,6 +266,14 @@
   name: Database
   info: Base category for items that represent an abstract database layer.
 - __id:
+    - 0
+    - 12
+  name: STRING
+  prototype:
+    - 0
+    - 10
+  _boot_class: schemat.type.STRING
+- __id:
     - 5
     - 1
   name: /system
@@ -282,3 +290,7 @@
     Site:
       - 0
       - 1
+- __id:
+    - 12
+    - 1
+  name: string (type)

@@ -238,7 +238,7 @@ export class Item {
         /* Create a "newborn" item that has a category & CID assigned, and is intended for insertion to DB.
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data is present, can be empty).
          */
-        let item = new this(category)
+        let item = new Item(category)
         if (iid !== null) item.iid = iid
         await item.boot(data)
         return item
@@ -257,6 +257,8 @@ export class Item {
         /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
            In any case, the item and its .data is initialized ("booted") after this method completes.
          */
+        await this.initClass()
+
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         if (!(data instanceof Data)) data = new Data(data)
@@ -306,7 +308,7 @@ export class Item {
         let proto  = this.initPrototypes(data)
         if (proto instanceof Promise) await proto
 
-        await this.initClass(data)
+        // await this.initClass()
         await this.boot(data)
 
         let ttl_ms  = this.category.get('cache_ttl') * 1000
@@ -329,7 +331,7 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    async initClass(data) {
+    async initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
         let module = await this.category.getModule()

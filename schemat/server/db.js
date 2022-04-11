@@ -1,8 +1,4 @@
 import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
-// import fs from 'fs'
-// import path from 'path'
-// import YAML from 'yaml'
-
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
@@ -405,9 +401,6 @@ export class YamlDB extends FileDB {
 
     async _open() {
         await super._open()
-        // this._mod_fs = await import('fs')
-        // this._mod_YAML = (await import('yaml')).default
-
         let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
         let db = this._mod_YAML.parse(file) || []
         this.records.clear()

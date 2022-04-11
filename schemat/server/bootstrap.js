@@ -204,6 +204,12 @@ async function create_categories(Category) {
         info        : "Base category for items that represent an abstract database layer.",
     })
 
+    cat.STRING = await Category.new(12, {
+        name        : "STRING",
+        prototype   : cat.Schema,
+        _boot_class : 'schemat.type.STRING',
+    })
+
     return cat
 }
 
@@ -211,7 +217,7 @@ async function create_categories(Category) {
 
 async function create_items(cat, Category) {
     let item = {}
-    
+
     // item.test_txt = await cat.File.new({content: "This is a test file."})
     // item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
     // item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
@@ -249,6 +255,8 @@ async function create_items(cat, Category) {
             'Site'          : cat.Site,
         }),
     })
+
+    item.string = await cat.STRING.new({name: "string (type)", })
 
     // item.utils_js   = await cat.File.new({content: `export let print = console.log`})
     // item.widgets_js = await cat.File.new({content: dedent(`
