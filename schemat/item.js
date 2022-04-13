@@ -214,10 +214,13 @@ export class Item {
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
 
-    static compare(item1, item2) {
-        /* Comparison function that can be passed to .sort() of an array to sort items, stubs, OR {cid, iid, data} records. */
-        let {cid: cid1, iid: iid1} = item1
-        let {cid: cid2, iid: iid2} = item2
+    static orderAscID(item1, item2) {
+        /* Ordering function that orders items by ascending ID. Can be passed to array.sort() to sort items, stubs,
+           OR {id, ...} records, OR {cid, iid, ...} records. */
+        let {id: id1, cid: cid1, iid: iid1} = item1
+        let {id: id2, cid: cid2, iid: iid2} = item2
+        if (id1) [cid1, iid1] = id1
+        if (id2) [cid2, iid2] = id2
         if ((cid1 < cid2) || (cid1 === cid2 && iid1 < iid2)) return -1
         if (cid1 === cid2 && iid1 === iid2) return 0
         return 1

@@ -74,7 +74,7 @@ class AjaxDB {
                 rec.data = JSON.stringify(rec.data)
                 this.keep(rec)
             }
-            yield [rec.id, rec.data]
+            yield rec  //[rec.id, rec.data]
         }
     }
 }

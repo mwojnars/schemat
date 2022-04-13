@@ -107,7 +107,7 @@ class Schemat {
         if (!sameID) {
             // update children of a category item: change their CID to `new_iid`
             if (cid === ROOT_CID && !sameID)
-                for await (let [child_id, _] of this.db.scan(iid))
+                for await (let {id: child_id} of this.db.scan(iid))
                     await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
             // update references

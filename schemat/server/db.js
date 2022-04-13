@@ -1,4 +1,4 @@
-import {assert, BaseError, NotImplemented, print, T, M} from '../utils.js'
+import {assert, BaseError, NotImplemented, print, T, merge} from '../utils.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
@@ -348,48 +348,14 @@ export class DB extends Item {
         /* Iterate over all items in this DB (if no `cid`), or over the items of a given category.
            The items are sorted by ID.
          */
-        // if (this.prevDB) return this.merge(this.prevDB.scan(cid), this._scan(cid))
-        // return this._scan(cid)
-        if (cid !== undefined) return this.scanCategory(cid)
-        return this.scanAll()
+        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
+        else yield* this._scan(cid)
+        // if (cid !== undefined) return this.scanCategory(cid)
+        // return this.scanAll()
     }
     async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
     async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
 
-/*
-    utils = await import('/local/utils.js')
-    function *f1() {yield 1; yield 2; yield 3;}
-    async function *f2() {yield 4}
-    async function *f3() {}
-
-    async function t() { for await (let v of merge(null, f1(), f2(), f3())) {console.log(v)} }
-    await t()
-
-*/
-
-    async *merge(compare, ...streams) {
-        /* Merge streams of records sorted in key ascending order. The streams can be asynchronous. */
-        // let compare = Item.compare
-        if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
-
-        // heads[i] is the next element from the i'th stream; `undefined` if the stream is empty
-        let heads = await T.amap(streams, async s => (await s.next()).value)
-
-        // drop empty streams
-        streams = streams.filter((v,i) => (heads[i] !== undefined))
-        heads   = heads.filter((v,i) => (v !== undefined))
-
-        while (streams.length > 1) {
-            let pos = M.argmin(heads, compare)          // index of the stream with the lowest next value
-            yield heads[pos]
-            heads[pos] = (await streams[pos].next()).value
-            if (heads[pos] === undefined) {             // drop the stream if no more elements
-                streams = streams.splice(pos, 1)
-                heads = heads.splice(pos, 1)
-            }
-        }
-        if (streams.length) yield* streams[0]
-    }
 }
 
 
@@ -422,10 +388,10 @@ class FileDB extends DB {
     _del(id, opts)  { return this.records.delete(id) }
     _put(id, data)  { this.records.set(id, data) }
 
-    async *scan(cid) {
+    async *_scan(cid) {
         let all = (cid === undefined)
         for (const [id, data] of this.records.entries())
-            if (all || id[0] === cid) yield [id, data]
+            if (all || id[0] === cid) yield {id, data}
     }
 }
 

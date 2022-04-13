@@ -261,27 +261,27 @@ export class Types {
 export class Maths {
     /* Common math operations. */
 
-    static argmin = (arr, compare, direction = 1) => {
+    static argmin = (arr, order, direction = 1) => {
         if (!arr.length) return undefined
-        if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+        if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
         let pos = -1         // current position of the minimum
-        arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || compare(v,arr[pos]) * direction < 0)) pos = i })
+        arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || order(v,arr[pos]) * direction < 0)) pos = i })
         return pos >= 0 ? pos : undefined
     }
-    static argmax = (arr, compare) => { return Maths.argmax(arr, compare, -1) }
+    static argmax = (arr, order) => { return Maths.argmax(arr, order, -1) }
 
-    static min = (arr, compare) => {
-        /* Like Math.min(), but supports a custom comparison function, compare(a,b), similar as array.sort() does;
-           and skips `undefined` values. The compare(a,b) function should return -1, 0, or 1.
+    static min = (arr, order) => {
+        /* Like Math.min(), but supports a custom ordering function, order(a,b), similar as array.sort() does;
+           and auto-skips `undefined` values. The order(a,b) function should return -1, 0, or 1.
          */
-        let pos = Maths.argmin(arr, compare)
+        let pos = Maths.argmin(arr, order)
         if (pos === undefined) return undefined
         return arr[pos]
     }
-    // static min = (arr, compare) => {
-    //     if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+    // static min = (arr, order) => {
+    //     if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
     //     let min = arr[0]
-    //     arr.forEach(v => {if (compare(min,v) < 0) min = v})
+    //     arr.forEach(v => {if (order(min,v) < 0) min = v})
     //     return min
     // }
 
@@ -349,10 +349,10 @@ export class ServerError extends BaseError {
     await (async function() { for await (let v of merge(null, [1,2,3].values(), [].values())) {console.log(v)} })()
 */
 
-export async function *merge(compare, ...streams) {
+export async function *merge(order, ...streams) {
     /* Merge sorted streams. The streams can be asynchronous. */
-    // let compare = Item.compare
-    if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+    // let order = Item.order
+    if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
 
     // heads[i] is the next available element from the i'th stream; `undefined` if the stream is empty
     let heads = await T.amap(streams, async s => (await s.next()).value)
@@ -362,7 +362,7 @@ export async function *merge(compare, ...streams) {
     heads   = heads.filter((v,i) => (v !== undefined))
 
     while (heads.length > 1) {
-        let pos = M.argmin(heads, compare)          // index of the stream with the lowest next value
+        let pos = M.argmin(heads, order)          // index of the stream with the lowest next value
         assert(pos !== undefined)
         yield heads[pos]
         heads[pos] = (await streams[pos].next()).value

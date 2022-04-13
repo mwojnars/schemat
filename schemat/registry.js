@@ -214,7 +214,7 @@ export class Registry {
         let records = this.db.scan(category?.iid)
         let count = 0
 
-        for await (const [id, data] of records) {
+        for await (const {id, data} of records) {
             if (limit !== undefined && count >= limit) break
             let [cid, iid] = id
             assert(!category || cid === category.iid)
