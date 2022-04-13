@@ -216,9 +216,10 @@ export class Types {
 
     // like mapDict, but for asynchronous `fun`
     static amapDict = async (obj, fun) =>
-        Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k, v]) => await fun(k, v))))
+        Object.fromEntries(await Promise.all(Object.entries(obj).map(([k, v]) => fun(k, v))))
+        // Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k, v]) => await fun(k, v))))
 
-    static amap = async (arr, fun) => await Promise.all(arr.map(async v => await fun(v)))
+    static amap = async (arr, fun) => await Promise.all(arr.map(fun))
 
     static *inherited(cls, attr) {
         /* Walk the prototype chain of `cls` class upwards and yield all values of a static attribute, `attr`. */
@@ -264,7 +265,7 @@ export class Maths {
         if (!arr.length) return undefined
         if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
         let pos = -1         // current position of the minimum
-        arr.forEach((v,i) => {if ((arr[pos] !== undefined) && (pos < 0 || compare(arr[pos],v) * direction < 0)) pos = i})
+        arr.forEach((v,i) => { if ((v !== undefined) && (pos < 0 || compare(v,arr[pos]) * direction < 0)) pos = i })
         return pos >= 0 ? pos : undefined
     }
     static argmax = (arr, compare) => { return Maths.argmax(arr, compare, -1) }
@@ -331,3 +332,47 @@ export class ServerError extends BaseError {
     }
 }
 
+
+
+/**********************************************************************************************************************/
+
+/*
+    utils = await import('/local/utils.js')
+    let {T, M, merge} = utils
+
+    function *f1() {yield 1; yield 2; yield 3;}
+    async function *f2() {yield 4}
+    async function *f3() {}
+
+    await (async function() { for await (let v of merge(null, f1(), f2(), f3())) {console.log(v)} })()
+    await (async function() { for await (let v of merge(null, f1(), f1())) {console.log(v)} })()
+    await (async function() { for await (let v of merge(null, [1,2,3].values(), [].values())) {console.log(v)} })()
+*/
+
+export async function *merge(compare, ...streams) {
+    /* Merge sorted streams. The streams can be asynchronous. */
+    // let compare = Item.compare
+    if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+
+    // heads[i] is the next available element from the i'th stream; `undefined` if the stream is empty
+    let heads = await T.amap(streams, async s => (await s.next()).value)
+
+    // drop empty streams
+    streams = streams.filter((v,i) => (heads[i] !== undefined))
+    heads   = heads.filter((v,i) => (v !== undefined))
+
+    while (heads.length > 1) {
+        let pos = M.argmin(heads, compare)          // index of the stream with the lowest next value
+        assert(pos !== undefined)
+        yield heads[pos]
+        heads[pos] = (await streams[pos].next()).value
+        if (heads[pos] === undefined) {             // drop the stream if no more elements
+            streams.splice(pos, 1)
+            heads.splice(pos, 1)
+        }
+    }
+    if (heads.length) {
+        yield heads[0]
+        yield* streams[0]
+    }
+}

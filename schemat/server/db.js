@@ -356,11 +356,24 @@ export class DB extends Item {
     async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
     async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
 
-    async *merge(compare, ...streams) {
-        /* Merge streams of records sorted in key ascending order. */
-        // let compare = Item.compare
+/*
+    utils = await import('/local/utils.js')
+    function *f1() {yield 1; yield 2; yield 3;}
+    async function *f2() {yield 4}
+    async function *f3() {}
 
-        let heads = streams.map(s => s.next().value)    // heads[i] is the next element from the i'th stream; `undefined` if the stream is empty
+    async function t() { for await (let v of merge(null, f1(), f2(), f3())) {console.log(v)} }
+    await t()
+
+*/
+
+    async *merge(compare, ...streams) {
+        /* Merge streams of records sorted in key ascending order. The streams can be asynchronous. */
+        // let compare = Item.compare
+        if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+
+        // heads[i] is the next element from the i'th stream; `undefined` if the stream is empty
+        let heads = await T.amap(streams, async s => (await s.next()).value)
 
         // drop empty streams
         streams = streams.filter((v,i) => (heads[i] !== undefined))
@@ -369,7 +382,7 @@ export class DB extends Item {
         while (streams.length > 1) {
             let pos = M.argmin(heads, compare)          // index of the stream with the lowest next value
             yield heads[pos]
-            heads[pos] = streams[pos].next().value
+            heads[pos] = (await streams[pos].next()).value
             if (heads[pos] === undefined) {             // drop the stream if no more elements
                 streams = streams.splice(pos, 1)
                 heads = heads.splice(pos, 1)
