@@ -214,6 +214,14 @@ export class Item {
     has_data()      { return !!this.data }
     assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
 
+    static compare(item1, item2) {
+        /* Comparison function that can be passed to .sort() of an array to sort items, stubs, OR {cid, iid, data} records. */
+        let {cid: cid1, iid: iid1} = item1
+        let {cid: cid2, iid: iid2} = item2
+        if ((cid1 < cid2) || (cid1 === cid2 && iid1 < iid2)) return -1
+        if (cid1 === cid2 && iid1 === iid2) return 0
+        return 1
+    }
 
     static createStub(id, registry) {
         /* Create a "stub" item of a given ID whose content can be loaded later on from DB with load().

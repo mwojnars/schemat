@@ -1,4 +1,4 @@
-import {assert, BaseError, NotImplemented, print, T} from '../utils.js'
+import {assert, BaseError, NotImplemented, print, T, M} from '../utils.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
@@ -345,12 +345,38 @@ export class DB extends Item {
     // }
 
     async *scan(cid) {
-        /* Iterate over all items in this DB (if no `cid`), or over the items of a given category. */
-        if (cid !== undefined) return this.scan(cid)
+        /* Iterate over all items in this DB (if no `cid`), or over the items of a given category.
+           The items are sorted by ID.
+         */
+        // if (this.prevDB) return this.merge(this.prevDB.scan(cid), this._scan(cid))
+        // return this._scan(cid)
+        if (cid !== undefined) return this.scanCategory(cid)
         return this.scanAll()
     }
     async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
     async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
+
+    async *merge(compare, ...streams) {
+        /* Merge streams of records sorted in key ascending order. */
+        // let compare = Item.compare
+
+        let heads = streams.map(s => s.next().value)    // heads[i] is the next element from the i'th stream; `undefined` if the stream is empty
+
+        // drop empty streams
+        streams = streams.filter((v,i) => (heads[i] !== undefined))
+        heads   = heads.filter((v,i) => (v !== undefined))
+
+        while (streams.length > 1) {
+            let pos = M.argmin(heads, compare)          // index of the stream with the lowest next value
+            yield heads[pos]
+            heads[pos] = streams[pos].next().value
+            if (heads[pos] === undefined) {             // drop the stream if no more elements
+                streams = streams.splice(pos, 1)
+                heads = heads.splice(pos, 1)
+            }
+        }
+        if (streams.length) yield* streams[0]
+    }
 }
 
 

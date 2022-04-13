@@ -257,7 +257,37 @@ export class Types {
     static clone = (obj) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj)
 }
 
-export class T extends Types {}     // T is an alias for Types
+export class Maths {
+    /* Common math operations. */
+
+    static argmin = (arr, compare, direction = 1) => {
+        if (!arr.length) return undefined
+        if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+        let pos = -1         // current position of the minimum
+        arr.forEach((v,i) => {if ((arr[pos] !== undefined) && (pos < 0 || compare(arr[pos],v) * direction < 0)) pos = i})
+        return pos >= 0 ? pos : undefined
+    }
+    static argmax = (arr, compare) => { return Maths.argmax(arr, compare, -1) }
+
+    static min = (arr, compare) => {
+        /* Like Math.min(), but supports a custom comparison function, compare(a,b), similar as array.sort() does;
+           and skips `undefined` values. The compare(a,b) function should return -1, 0, or 1.
+         */
+        let pos = Maths.argmin(arr, compare)
+        if (pos === undefined) return undefined
+        return arr[pos]
+    }
+    // static min = (arr, compare) => {
+    //     if (!compare) compare = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
+    //     let min = arr[0]
+    //     arr.forEach(v => {if (compare(min,v) < 0) min = v})
+    //     return min
+    // }
+
+}
+
+export let T = Types                    // T is an alias for Types
+export let M = Maths                    // M is an alias for Maths
 
 
 /**********************************************************************************************************************
