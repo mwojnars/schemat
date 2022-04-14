@@ -256,6 +256,20 @@ export class DB extends Item {
 
     /***  high-level API (on items)  ***/
 
+    async select(id) {
+        /* Similar to get(), but throws an exception when `id` not found. */
+        let rec = this.read(id)
+        if (rec instanceof Promise) rec = await rec
+        if (rec === undefined) this.throwNotFound({id})
+        return rec
+    }
+
+    async update(item, opts = {}) {
+        assert(item.has_data())
+        assert(item.has_id())
+        return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
+    }
+
     async mutate(id, edits, opts = {}) {
         /* Apply `edits` (an array of a single edit) to an item's data and store under the `id` in this database or any higher db
            that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
@@ -283,29 +297,9 @@ export class DB extends Item {
             else this.throwNotWritable(id)
 
         for (const edit of edits)                       // mutate `data` and save
-            data = this.apply(data, edit)
+            data = this._apply(data, edit)
 
         return this.save(id, data)
-    }
-
-    apply(dataSrc, edit) {
-        let {type, data} = edit
-        assert(type === 'data' && data)
-        return data
-    }
-
-    async select(id) {
-        /* Similar to get(), but throws an exception when `id` not found. */
-        let rec = this.read(id)
-        if (rec instanceof Promise) rec = await rec
-        if (rec === undefined) this.throwNotFound({id})
-        return rec
-    }
-
-    async update(item, opts = {}) {
-        assert(item.has_data())
-        assert(item.has_id())
-        return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
     }
 
     async insert(item, opts = {}) {
@@ -324,6 +318,12 @@ export class DB extends Item {
             item.iid = await this._create(cid, data, opts)
         else
             return this._assign(item.id, data, opts)
+    }
+
+    _apply(dataSrc, edit) {
+        let {type, data} = edit
+        assert(type === 'data' && data)
+        return data
     }
 
     async _create(cid, data, opts) {

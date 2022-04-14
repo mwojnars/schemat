@@ -12,7 +12,6 @@ import {DB} from './server/db.js'
 
 export class MySQL extends DB {
 
-    // async init() { return this.open() }
     async open() {
         let mysql = this._mod_mysql = await import('mysql2/promise')
         let conn  = this.get('connection') || {}
@@ -21,8 +20,6 @@ export class MySQL extends DB {
     }
     async close() { return this.db?.end() }             // deallocate mysql connection
     async end()   { return this.close()   }
-
-    // get(...args) { return Item.prototype.get.call(this, ...args) }
 
     async _read([cid, iid], opts) {
         let tables = this.get('tables')
