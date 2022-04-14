@@ -12,13 +12,15 @@ import {DB} from './server/db.js'
 
 export class MySQL extends DB {
 
-    async _open() {
+    async init() { return this.open() }
+    async open() {
         let mysql = this._mod_mysql = await import('mysql2/promise')
         let conn  = this.get('connection') || {}
         let args  = this.getSubset('host', 'post', 'user', 'database', 'password')
         this.db   = await mysql.createConnection({...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
-    async end() { if (this.db) return this.db.end() }       // deallocate mysql connection
+    async close() { return this.db?.end() }             // deallocate mysql connection
+    async end()   { return this.close()   }
 
     // get(...args) { return Item.prototype.get.call(this, ...args) }
 
@@ -30,7 +32,7 @@ export class MySQL extends DB {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement
         let select = spaces ? table : `SELECT * FROM ${table}`
 
-        let [rows, cols] = await this.db.execute(`${select} WHERE id = ?`, [iid])
+        let [rows, cols] = await this.db.execute(`${select} WHERE id = ? LIMIT 100`, [iid])
         return rows[0]                                  // flat object (encoded) is returned, not a JSON string
     }
     async *_scan(cid) {

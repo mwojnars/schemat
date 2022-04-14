@@ -62,7 +62,7 @@ class Schemat {
                 if (!registry) registry = await this.createRegistry(db)
                 db = registry.getLoaded(item)
             }
-            await db._open()
+            await db.open()
             if (registry) registry.setDB(db)
             prev = prev ? prev.stack(db) : db
         }
@@ -120,7 +120,7 @@ class Schemat {
         /* Generate the core "db-boot" database file anew. */
         let {bootstrap} = await import('./server/bootstrap.js')
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
-        await db._open()
+        await db.open()
         await db.erase()
         return bootstrap(db)
     }

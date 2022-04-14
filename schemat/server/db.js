@@ -107,7 +107,7 @@ export class DB extends Item {
         static message = "item ID not found in DB"
     }
     static ReadOnly = class extends DB.Error {
-        static message = "no write access to the database"
+        static message = "the database is for read-only access"
     }
     static InvalidIID = class extends DB.Error {
         static message = "IID is out of range"
@@ -123,6 +123,7 @@ export class DB extends Item {
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
+    checkReadOnly(key)          { if (this.readOnly) this.throwReadOnly({key}) }
     async checkNew(id, msg)     { if (await this._get(id)) throw new Error(msg + ` [${id}]`) }
 
     createIID(cid) {
@@ -147,13 +148,6 @@ export class DB extends Item {
 
     /***  DB stacking & administration  ***/
 
-    async erase() {
-        /* Remove all records from this database. Subclasses should override this method but always call super.erase(). */
-        if (this.readOnly) throw new Error("cannot erase a read-only database")
-        this.records.clear()
-        this.curr_iid.clear()
-    }
-
     stack(next) {
         /* Stack `next` DB on top of this one. */
         this.nextDB = next
@@ -166,19 +160,26 @@ export class DB extends Item {
         return this.name === name ? this : this.prevDB?.getDB(name)
     }
 
-    /***  low-level API (on encoded data)  ***/
+    async erase() {
+        /* Remove all records from this database; open() should be called first.
+           Subclasses should override this method but always call super.erase().
+         */
+        this.checkReadOnly()
+        this.records.clear()
+        this.curr_iid.clear()
+    }
 
-    _open(opts)             {}
+    open(opts) {}
+
+    /***  override in subclasses  ***/
+
     _get(key, opts)         { throw new NotImplemented() }      // return undefined if `key` not found
     _del(key, opts)         { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _put(key, data, opts)   { throw new NotImplemented() }      // no return value
+    *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 
-    // async open(opts = {}) {
-    //     /* Open this DB and all lower-level DBs in the stack. */
-    //     // await this.init()
-    //     if (!this.prevDB) return this._open()
-    //     return Promise.all([this.prevDB.open(), this._open()])
-    // }
+
+    /***  low-level API (on encoded data)  ***/
 
     writable(key) {
         /* Return true if `key` is allowed to be written here. */
@@ -193,14 +194,14 @@ export class DB extends Item {
     }
 
     async find(key) {
-        /* Return the top-most DB that contains the `key`, or undefined if `key` not found at any database level. */
+        /* Return the top-most DB that contains the `key`, or undefined if `key` not found at any level in the database stack. */
         let data = await this._get(key)
-        if (data !== undefined) return this  //{data, db: this}
+        if (data !== undefined) return this
         if (this.prevDB) return this.prevDB.find(key)
     }
 
     async get(key, opts = {}) {
-        /* Find the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
+        /* Find the top-most occurrence of `key` in this DB or any lower DB in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
          */
         if (this.validIID(key)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
@@ -211,7 +212,7 @@ export class DB extends Item {
         if (this.prevDB) return this.prevDB.get(key, opts)
     }
     async del(key, opts = {}) {
-        /* Find and delete the top-most occurrence of `key` in this DB or any lower-level DB in the stack (through .prevDB).
+        /* Find and delete the top-most occurrence of `key` in this DB or a lower DB in the stack (through .prevDB).
            Return true on success, or false if the `key` was not found (no modifications done then).
          */
         if (this.writable(key)) {
@@ -249,20 +250,13 @@ export class DB extends Item {
         assert(!this.validIID(key))
         this.throwInvalidIID(key)
     }
-    async ins(cid, data, opts = {}) {
-        /* Low-level insert to a specific category.
-           Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
-           If this db is readOnly, forward the operation to a higher-level DB (nextDB), or raise an exception.
-           Return the `iid`, possibly wrapped in a Promise.
+
+    async *scan(cid) {
+        /* Iterate over all records in this DB stack (if no `cid`), or over all records of a given category,
+           and yield them as {id, data} objects sorted by ascending ID.
          */
-        if (this.readOnly)
-            if (this.nextDB) return this.nextDB.ins(cid, data, opts)
-            else this.throwReadOnly({cid})
-        let {flush = true} = opts
-        let iid = this.createIID(cid)
-        await this._put([cid, iid], data, opts)
-        if (flush) await this.flush()
-        return iid
+        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
+        else yield* this._scan(cid)
     }
 
     /***  high-level API (on items)  ***/
@@ -317,13 +311,6 @@ export class DB extends Item {
         assert(item.has_data())
         assert(item.has_id())
         return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
-
-        // let db = await this.find(item.id)
-        // if (!db) this.throwNotFound({id: item.id})
-        // return db.put(item.id, item.dumpData(), opts)       // update is attempted on the DB where the item is actually located, but if that DB is read-only the update is forwarded to a higher-level DB and the item gets duplicated
-
-        // if (!await this.has(item.id)) this.throwNotFound({id: item.id})
-        // return this.put(item.id, item.dumpData(), opts)
     }
 
     async insert(item, opts = {}) {
@@ -337,34 +324,32 @@ export class DB extends Item {
         let data = item.dumpData()
         let cid  = item.cid
 
-        // set IID of the item, if missing
-        if (item.iid === null || item.iid === undefined) {
-            let iid = this.ins(cid, data, opts)
-            if (iid instanceof Promise) iid = await iid
-            item.iid = iid
-        }
-        else {
-            await this.assignIID(item.id)
-            return this.put(item.id, data, opts)
-        }
+        // create IID for the item if missing or use the provided IID; in any case, store `data` under the resulting ID
+        if (item.iid === undefined)
+            item.iid = await this._create(cid, data, opts)
+        else
+            return this._assign(item.id, data, opts)
     }
 
-    // insertMany(...items) {
-    //     this.checkWritable()
-    //     return Promise.all(items.map(item => this.insert(item, {flush: false})))
-    //                   .then(() => this.flush())
-    // }
-
-    async *scan(cid) {
-        /* Iterate over all items in this DB (if no `cid`), or over the items of a given category.
-           The items are sorted by ID.
+    async _create(cid, data, opts) {
+        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
+           If this db is readOnly, forward the operation to a higher DB (nextDB), or raise an exception.
+           Return the `iid`.
          */
-        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
-        else yield* this._scan(cid)
+        if (this.readOnly)
+            if (this.nextDB) return this.nextDB._create(cid, data, opts)
+            else this.throwReadOnly({cid})
+        let {flush = true} = opts
+        let iid = this.createIID(cid)
+        await this._put([cid, iid], data, opts)
+        if (flush) await this.flush()
+        return iid
     }
-    async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
-    async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
-
+    async _assign(id, data, opts) {
+        /* Register the `id` as a new item ID in the database and store `data` under this ID. */
+        await this.assignIID(id)
+        return this.put(id, data, opts)
+    }
 }
 
 
@@ -379,10 +364,9 @@ class FileDB extends DB {
     constructor(filename, params = {}) {
         super(params)
         this.filename = filename
-        // this.name = path.basename(filename, path.extname(filename))
     }
-    async _open() {
-        await super._open()
+    async open() {
+        await super.open()
         let fs = this._mod_fs = await import('fs')
         let path = this._mod_path = await import('path')
         this.name = path.basename(this.filename, path.extname(this.filename))
@@ -390,7 +374,6 @@ class FileDB extends DB {
         catch(ex) {}
     }
     async erase() {
-        /* Remove all records from this database. */
         await super.erase()
         await this._mod_fs.promises.writeFile(this.filename, '', {flag: 'w'})   // truncate the file
     }
@@ -411,14 +394,8 @@ class FileDB extends DB {
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
-    // async init() {
-    //     await super.init()
-    //     this._mod_fs = await import('fs')
-    //     this._mod_YAML = (await import('yaml')).default
-    // }
-
-    async _open() {
-        await super._open()
+    async open() {
+        await super.open()
         this._mod_YAML = (await import('yaml')).default
 
         let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
@@ -454,9 +431,6 @@ export class YamlDB extends FileDB {
 }
 
 /**********************************************************************************************************************/
-
-export class StackDB extends DB {
-}
 
 // export class RingsDB extends DB {
 //     /* Several databases used together like rings. Each read/write operation is executed
@@ -507,9 +481,3 @@ export class StackDB extends DB {
 //     }
 // }
 
-/**********************************************************************************************************************/
-
-export class MysqlDB extends DB {
-
-
-}
