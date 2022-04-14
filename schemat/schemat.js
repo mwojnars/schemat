@@ -9,7 +9,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from './utils.js'
-import {DB, YamlDB, stackDB} from "./server/db.js";
+import {DB, YamlDB} from "./server/db.js";
 import {ServerRegistry} from "./server/registry-s.js";
 import {ROOT_CID} from "./item.js";
 import {Server} from "./server.js";
@@ -36,24 +36,38 @@ class Schemat {
     }
 
     async boot() {
-        // this.db = stackDB(
-        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readOnly: true}),
-        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readOnly: false}),
-        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT}),
-        //     await YamlDB.createShadow({filename: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT}),
-        // )
-
-        this.db = stackDB(  //new RingsDB(
+        this.db = this.stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
             new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT}),
             new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: IID_SPLIT}),
+            // new MySQL({start_iid: IID_SPLIT, readOnly: true}),
         )
-        this.registry = globalThis.registry = new ServerRegistry(this.db)
+        this.registry = globalThis.registry = new ServerRegistry()
+        await this.registry.initClasspath()
 
         await this.db.open()
+        this.registry.db = this.db
         await this.registry.boot()
     }
+
+    stackDB(...db) {
+        /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
+           and the highest-priority database (db[-1]) placed at the top of the stack.
+           The databases are connected into a double-linked list through their .prevDB & .nextDB attributes.
+           Return the top database.
+         */
+        if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
+        let prev = db[0], next
+        for (next of db.slice(1)) {
+            prev = prev.stack(next)
+            // prev.nextDB = next
+            // next.prevDB = prev
+            // prev = next
+        }
+        return prev
+    }
+
 
     /*****  Core functionality  *****/
 

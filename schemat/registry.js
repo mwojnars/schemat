@@ -141,7 +141,7 @@ export class Registry {
         await classpath.add_module("schemat.item", "./item.js")
         await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
-        // await classpath.add_module("schemat.item", "./base.js")
+        await classpath.add_module("schemat.base", "./base.js")
 
         this.classpath = classpath
         // print('initClasspath() done')
@@ -149,7 +149,7 @@ export class Registry {
 
     async boot(site_id = null) {
         /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
-        await this.initClasspath()
+        // await this.initClasspath()
         await this.createRoot()
         if (!site_id) site_id = await this._findSite()
         this.site = await this.getLoaded(site_id)
@@ -164,12 +164,21 @@ export class Registry {
         return ret.value.id
     }
 
-    async createRoot() {
-        /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
+    async createRoot(root_data = null) {
+        /*
+        Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
+        are initialized from there rather, otherwise they are loaded from DB.
+        */
         let root = this.root = new RootCategory(this)
-        await root.load()
+        await (root_data ? root.boot(root_data) : root.load())
         return root
     }
+    // async createRoot() {
+    //     /* Create the RootCategory object, ID=(0,0), and load its data from DB. */
+    //     let root = this.root = new RootCategory(this)
+    //     await root.load()
+    //     return root
+    // }
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,

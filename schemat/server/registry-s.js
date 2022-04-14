@@ -32,15 +32,15 @@ export class ServerRegistry extends Registry {
         this.db = db
     }
 
-    async createRoot(root_data = null) {
-        /*
-        Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
-        are initialized from there rather than being loaded from DB.
-        */
-        let root = this.root = new RootCategory(this, root_data)
-        await (root_data ? root.boot(root_data) : root.load())
-        return root
-    }
+    // async createRoot(root_data = null) {
+    //     /*
+    //     Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
+    //     are initialized from there rather than being loaded from DB.
+    //     */
+    //     let root = this.root = new RootCategory(this, root_data)
+    //     await (root_data ? root.boot(root_data) : root.load())
+    //     return root
+    // }
 
     async startSession(session) {
         let release = await this.sessionMutex.acquire()

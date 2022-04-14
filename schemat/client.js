@@ -109,6 +109,7 @@ export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
     let registry = globalThis.registry = new ClientRegistry(data)
+    await registry.initClasspath()
     await registry.boot(data)
 
     // print('root:', await registry.getItem([0,0], {load: true}))

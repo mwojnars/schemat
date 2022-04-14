@@ -16,6 +16,7 @@
   prototype:
     - 0
     - 11
+  _boot_class: schemat.base.MySQL
   fields:
     host:
       "@": schemat.type.STRING

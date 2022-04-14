@@ -1,5 +1,4 @@
 // import mysql from 'mysql2'
-import mysql from 'mysql2/promise'
 import {DB} from './server/db.js'
 
 //let db = mysql.createConnection(srv)
@@ -13,12 +12,15 @@ import {DB} from './server/db.js'
 
 export class MySQL extends DB {
 
-    async init() {
-        let conn = this.get('connection') || {}
-        let args = this.getSubset('host', 'post', 'user', 'database', 'password')
-        this.db = await mysql.createConnection({...conn, ...args})      // individual parameters, if defined, override the 'connection' object
+    async _open() {
+        let mysql = this._mod_mysql = await import('mysql2/promise')
+        let conn  = this.get('connection') || {}
+        let args  = this.getSubset('host', 'post', 'user', 'database', 'password')
+        this.db   = await mysql.createConnection({...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
-    async end() { return this.db.end() }
+    async end() { if (this.db) return this.db.end() }       // deallocate mysql connection
+
+    // get(...args) { return Item.prototype.get.call(this, ...args) }
 
     async _get([cid, iid], opts) {
         let tables = this.get('tables')
@@ -31,7 +33,7 @@ export class MySQL extends DB {
         let [rows, cols] = await this.db.execute(`${select} WHERE id = ?`, [iid])
         return rows[0]                                  // flat object (encoded) is returned, not a JSON string
     }
-    async *scanCategory(cid) {
+    async *_scan(cid) {
     }
 
 }

@@ -104,6 +104,8 @@ export class DB extends Item {
     //     this.start_iid = data.get('start_iid') || 0
     // }
 
+    /***  internal API: errors & checks  ***/
+
     static Error = class extends BaseError {}
     static NotFound = class extends DB.Error {
         static message = "item ID not found in DB"
@@ -117,14 +119,6 @@ export class DB extends Item {
     static NotWritable = class extends DB.Error {
         static message = "record cannot be written, the DB is either read-only or the key (iid) is outside the range"
     }
-
-    getDB(name) {
-        /* Find a DB in a stack (up to this level) by its name. Return undefined if not found. */
-        return this.name === name ? this : this.prevDB?.getDB(name)
-    }
-
-
-    /***  internal API  ***/
 
     throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new DB.ReadOnly(msg, args) }
@@ -154,6 +148,21 @@ export class DB extends Item {
         this.checkIID(id)
         this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
     }
+
+    /***  DB stacking  ***/
+
+    stack(next) {
+        /* Stack `next` DB on top of this one. */
+        this.nextDB = next
+        next.prevDB = this
+        return next
+    }
+
+    getDB(name) {
+        /* Find a DB in a stack (up to this level) by its name. Return undefined if not found. */
+        return this.name === name ? this : this.prevDB?.getDB(name)
+    }
+
 
     /***  low-level API (on encoded data)  ***/
 
@@ -437,22 +446,6 @@ export class YamlDB extends FileDB {
 }
 
 /**********************************************************************************************************************/
-
-export function stackDB(...db) {
-    /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
-       and the highest-priority database (db[-1]) placed at the top of the stack.
-       The databases are connected into a double-linked list through their .prevDB & .nextDB attributes.
-       Return the top database.
-     */
-    if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
-    let prev = db[0], next
-    for (next of db.slice(1)) {
-        prev.nextDB = next
-        next.prevDB = prev
-        prev = next
-    }
-    return prev
-}
 
 export class StackDB extends DB {
 }
