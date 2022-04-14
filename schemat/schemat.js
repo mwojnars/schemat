@@ -156,8 +156,8 @@ class Schemat {
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher-level DB if `id` can't be stored in `db`
-        let data = await db.get(id)
-        await dbInsert.put(newid, data)
+        let data = await db.read(id)
+        await dbInsert.save(newid, data)
 
         if (!sameID) {
             // update children of a category item: change their CID to `new_iid`
@@ -179,7 +179,7 @@ class Schemat {
         }
 
         // remove the old item from DB
-        try { await db.del(id) }
+        try { await db.drop(id) }
         catch (ex) {
             if (ex instanceof DB.ReadOnly) print('WARNING: could not delete the old item as the database is read-only')
         }

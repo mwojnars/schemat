@@ -12,7 +12,7 @@ import {DB} from './server/db.js'
 
 export class MySQL extends DB {
 
-    async init() { return this.open() }
+    // async init() { return this.open() }
     async open() {
         let mysql = this._mod_mysql = await import('mysql2/promise')
         let conn  = this.get('connection') || {}
@@ -24,7 +24,7 @@ export class MySQL extends DB {
 
     // get(...args) { return Item.prototype.get.call(this, ...args) }
 
-    async _get([cid, iid], opts) {
+    async _read([cid, iid], opts) {
         let tables = this.get('tables')
         let table = tables[cid]                         // map CID to the name of a sql table
         table = table.trim()
