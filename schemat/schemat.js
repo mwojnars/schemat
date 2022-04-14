@@ -35,22 +35,6 @@ class Schemat {
         this.opts = opts
     }
 
-    async boot__() {
-        this.db = this.stackDB(  //new RingsDB(
-            new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
-            new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
-            new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT}),
-            new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: IID_SPLIT}),
-            // new MySQL({start_iid: IID_SPLIT, readOnly: true}),
-        )
-        this.registry = globalThis.registry = new ServerRegistry()
-        await this.registry.initClasspath()
-
-        await this.db.open()
-        this.registry.db = this.db
-        await this.registry.boot()
-    }
-
     async boot() {
         let databases = [
             {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readOnly: true},
@@ -66,7 +50,8 @@ class Schemat {
         /* Incrementally create, open, and connect into a stack, a number of databases according to the `databases` specifications.
            The databases[0] is the bottom of the stack, and databases[-1] is the top.
            The databases get connected into a double-linked list through their .prevDB & .nextDB attributes.
-           The registry is created and initialized at the end, or just before the first from-DB database is to be loaded.
+           The registry is created and initialized at the end, or just before the first item-database
+           (a database that's stored as an item in a previous database layer) is to be loaded.
            Return the top database.
          */
         let prev, db, registry
@@ -84,6 +69,7 @@ class Schemat {
         if (!registry) await this.createRegistry(db)
         return db
     }
+
     async createRegistry(db) {
         if (!db) throw new Error(`at least one DB layer is needed for Registry initialization`)
         let registry = this.registry = globalThis.registry = new ServerRegistry()
@@ -93,18 +79,34 @@ class Schemat {
         return registry
     }
 
-    stackDB(...db) {
-        /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
-           and the highest-priority database (db[-1]) placed at the top of the stack.
-           The databases are connected into a double-linked list through their .prevDB & .nextDB attributes.
-           Return the top database.
-         */
-        if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
-        let prev = db[0], next
-        for (next of db.slice(1))
-            prev = prev.stack(next)
-        return prev
-    }
+    // async boot() {
+    //     this.db = this.stackDB(  //new RingsDB(
+    //         new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
+    //         new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
+    //         new YamlDB(DB_ROOT + '/db-conf.yaml', {stop_iid:  IID_SPLIT}),
+    //         new YamlDB(DB_ROOT + '/db-demo.yaml', {start_iid: IID_SPLIT}),
+    //         // new MySQL({start_iid: IID_SPLIT, readOnly: true}),
+    //     )
+    //     this.registry = globalThis.registry = new ServerRegistry()
+    //     await this.registry.initClasspath()
+    //
+    //     await this.db.open()
+    //     this.registry.db = this.db
+    //     await this.registry.boot()
+    // }
+    //
+    // stackDB(...db) {
+    //     /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
+    //        and the highest-priority database (db[-1]) placed at the top of the stack.
+    //        The databases are connected into a double-linked list through their .prevDB & .nextDB attributes.
+    //        Return the top database.
+    //      */
+    //     if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
+    //     let prev = db[0], next
+    //     for (next of db.slice(1))
+    //         prev = prev.stack(next)
+    //     return prev
+    // }
 
 
     /*****  Core functionality  *****/
@@ -118,7 +120,8 @@ class Schemat {
         /* Generate the core "db-boot" database file anew. */
         let {bootstrap} = await import('./server/bootstrap.js')
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
-        await db.init()
+        await db._open()
+        await db.erase()
         return bootstrap(db)
     }
 

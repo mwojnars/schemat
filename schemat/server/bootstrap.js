@@ -344,7 +344,5 @@ export async function bootstrap(db) {
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
         await db.insert(item, {flush: false})
     await db.flush()
-
-    // await db.insertMany(Category, ...Object.values(cats), ...Object.values(items))
 }
 

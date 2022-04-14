@@ -145,7 +145,14 @@ export class DB extends Item {
         this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
     }
 
-    /***  DB stacking  ***/
+    /***  DB stacking & administration  ***/
+
+    async erase() {
+        /* Remove all records from this database. Subclasses should override this method but always call super.erase(). */
+        if (this.readOnly) throw new Error("cannot erase a read-only database")
+        this.records.clear()
+        this.curr_iid.clear()
+    }
 
     stack(next) {
         /* Stack `next` DB on top of this one. */
@@ -159,7 +166,6 @@ export class DB extends Item {
         return this.name === name ? this : this.prevDB?.getDB(name)
     }
 
-
     /***  low-level API (on encoded data)  ***/
 
     _open(opts)             {}
@@ -167,12 +173,12 @@ export class DB extends Item {
     _del(key, opts)         { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _put(key, data, opts)   { throw new NotImplemented() }      // no return value
 
-    async open(opts = {}) {
-        /* Open this DB and all lower-level DBs in the stack. */
-        // await this.init()
-        if (!this.prevDB) return this._open()
-        return Promise.all([this.prevDB.open(), this._open()])
-    }
+    // async open(opts = {}) {
+    //     /* Open this DB and all lower-level DBs in the stack. */
+    //     // await this.init()
+    //     if (!this.prevDB) return this._open()
+    //     return Promise.all([this.prevDB.open(), this._open()])
+    // }
 
     writable(key) {
         /* Return true if `key` is allowed to be written here. */
@@ -377,8 +383,16 @@ class FileDB extends DB {
     }
     async _open() {
         await super._open()
+        let fs = this._mod_fs = await import('fs')
         let path = this._mod_path = await import('path')
         this.name = path.basename(this.filename, path.extname(this.filename))
+        try {await fs.promises.writeFile(this.filename, '', {flag: 'wx'})}      // create an empty file if it doesn't exist yet
+        catch(ex) {}
+    }
+    async erase() {
+        /* Remove all records from this database. */
+        await super.erase()
+        await this._mod_fs.promises.writeFile(this.filename, '', {flag: 'w'})   // truncate the file
     }
 
     async flush()   { throw new NotImplemented() }
@@ -405,7 +419,6 @@ export class YamlDB extends FileDB {
 
     async _open() {
         await super._open()
-        this._mod_fs = await import('fs')
         this._mod_YAML = (await import('yaml')).default
 
         let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
