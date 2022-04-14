@@ -189,7 +189,7 @@
   info: |
     Connects through ssh tunneling. Must launch this in console beforehand:
     autossh -p 55522 -f paperity@srv.paperity.org -L 3307:127.0.0.1:3306 -N
-  host: 127.0.0.1
+  host: localhost
   port: "3307"
   user: paperity
   database: paperity

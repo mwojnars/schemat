@@ -41,7 +41,7 @@ class Schemat {
             {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readOnly: false},
             {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
-            // {item: ..., readOnly: true},
+            {item: [51,100], readOnly: true},
         ]
         this.db = await this.stack(...databases)
     }
@@ -57,10 +57,11 @@ class Schemat {
         let prev, db, registry
         for (let spec of databases) {
             let {file, item, ...opts} = spec
-            if (file) db = new YamlDB(file, opts)
-            else {
+            if (file) db = new YamlDB(file, opts)               // db is a local file
+            else {                                              // db is an item that must be loaded from a lower DB
                 if (!registry) registry = await this.createRegistry(db)
-                db = registry.getLoaded(item)
+                db = await registry.getLoaded(item)
+                db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
             }
             await db.open()
             if (registry) registry.setDB(db)

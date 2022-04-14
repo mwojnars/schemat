@@ -74,18 +74,18 @@ export class ItemsCache extends ItemsMap {
        For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
      */
 
-    set(id, item, ttl_ms = null) {
-        /* If ttl_ms=null or 0, the item is scheduled for immediate removal upon evict(). */
-        if (ttl_ms) item.expiry = Date.now() + ttl_ms
-        super.set(id, item)
-    }
+    // set(id, item, ttl) {
+    //     // if (ttl_ms) item.expiry = Date.now() + ttl_ms
+    //     item.setExpiry(ttl)
+    //     super.set(id, item)
+    // }
     evict() {
         let proto = Map.prototype           // accessing delete() of a super-super class must be done manually through a prototype
         let now   = Date.now()
         let ends  = []
 
         for (let [key, item] of this.entries())
-            if (!item.expiry || item.expiry <= now) {
+            if (item.expiry === undefined || (0 < item.expiry && item.expiry <= now)) {
                 proto.delete.call(this, key)            // since we pass a key, not an ID, we need to call a super-super method here
                 let end = item.end()
                 if (end instanceof Promise) ends.push(end)

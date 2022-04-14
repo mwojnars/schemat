@@ -190,7 +190,7 @@ export class Item {
 
     category        // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
-    expiry          // timestamp when this item instance should be considered expired in Registry.cache; managed by registry
+    expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
@@ -322,12 +322,21 @@ export class Item {
         // await this.initClass()
         await this.boot(data)
 
-        let ttl_ms  = this.category.get('cache_ttl') * 1000
-        this.expiry = Date.now() + ttl_ms
+        this.setExpiry(this.category.get('cache_ttl'))
+        // let ttl_ms  = this.category.get('cache_ttl') * 1000
+        // this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
 
         return data
         // TODO: initialize item metadata - the remaining attributes from `record`
+    }
+
+    setExpiry(ttl) {
+        /* Time To Live (ttl) is expressed in seconds. */
+        if (ttl === undefined) return                           // leave the expiry date unchanged
+        if (ttl === 'never' || ttl < 0) this.expiry = 0         // never evict
+        else if (ttl === 0) delete this.expiry                  // immediate eviction at the end of web session
+        else this.expiry = Date.now() + ttl * 1000
     }
 
     initPrototypes(data) {
@@ -1202,6 +1211,7 @@ Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAs
 export class RootCategory extends Category {
     cid = ROOT_CID
     iid = ROOT_CID
+    expiry = 0                                  // never evict from Registry
 
     constructor(registry) {
         super(null)

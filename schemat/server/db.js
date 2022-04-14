@@ -82,7 +82,7 @@ export class DB extends Item {
     name                    // name of this DB for display and CLI options
     readOnly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
-    start_iid               // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
     stop_iid                // (optional) maximum IID of all items
 
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}

@@ -193,7 +193,7 @@ export class Registry {
         if (item) return item
 
         let stub = Item.createStub(id, this)
-        this.cache.set(id, stub)            // a stub, until loaded, is scheduled for immediate removal (ttl=0) at the end of session
+        this.cache.set(id, stub)            // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 

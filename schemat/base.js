@@ -13,15 +13,21 @@ import {DB} from './server/db.js'
 export class MySQL extends DB {
 
     async open() {
-        let mysql = this._mod_mysql = await import('mysql2/promise')
-        let conn  = this.get('connection') || {}
-        let args  = this.getSubset('host', 'post', 'user', 'database', 'password')
-        this.db   = await mysql.createConnection({...conn, ...args})      // individual parameters, if defined, override the 'connection' object
+        this._mod_mysql = await import('mysql2/promise')
+        this.db = await this._connect()
     }
     async close() { return this.db?.end() }             // deallocate mysql connection
     async end()   { return this.close()   }
 
+    async _connect() {
+        let conn  = this.get('connection') || {}
+        let args  = this.getSubset('host', 'port', 'user', 'database', 'password')
+        return this._mod_mysql.createConnection({...conn, ...args})      // individual parameters, if defined, override the 'connection' object
+    }
+
     async _read([cid, iid], opts) {
+        return
+
         let tables = this.get('tables')
         let table = tables[cid]                         // map CID to the name of a sql table
         table = table.trim()
@@ -29,10 +35,9 @@ export class MySQL extends DB {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement
         let select = spaces ? table : `SELECT * FROM ${table}`
 
-        let [rows, cols] = await this.db.execute(`${select} WHERE id = ? LIMIT 100`, [iid])
+        let [rows, cols] = await this.db.execute(`${select} WHERE id = ? LIMIT 10`, [iid])
         return rows[0]                                  // flat object (encoded) is returned, not a JSON string
     }
-    async *_scan(cid) {
-    }
+    async *_scan(cid) {}
 
 }
