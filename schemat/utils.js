@@ -336,42 +336,35 @@ export class ServerError extends BaseError {
 
 /**********************************************************************************************************************/
 
-/*
-    utils = await import('/local/utils.js')
-    let {T, M, merge} = utils
-
-    function *f1() {yield 1; yield 2; yield 3;}
-    async function *f2() {yield 4}
-    async function *f3() {}
-
-    await (async function() { for await (let v of merge(null, f1(), f2(), f3())) {console.log(v)} })()
-    await (async function() { for await (let v of merge(null, f1(), f1())) {console.log(v)} })()
-    await (async function() { for await (let v of merge(null, [1,2,3].values(), [].values())) {console.log(v)} })()
-*/
-
 export async function *merge(order, ...streams) {
-    /* Merge sorted streams. The streams can be asynchronous. */
-    // let order = Item.order
+    /* Merge sorted streams according to the `order` function. The streams can be asynchronous. */
+
     if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
 
     // heads[i] is the next available element from the i'th stream; `undefined` if the stream is empty
     let heads = await T.amap(streams, async s => (await s.next()).value)
+    let last
 
     // drop empty streams
     streams = streams.filter((v,i) => (heads[i] !== undefined))
     heads   = heads.filter((v,i) => (v !== undefined))
 
     while (heads.length > 1) {
-        let pos = M.argmin(heads, order)          // index of the stream with the lowest next value
+        let pos = M.argmin(heads, order)        // index of the stream with the lowest next value
         assert(pos !== undefined)
-        yield heads[pos]
+        if (last !== undefined && order(last, heads[pos]) > 0)
+            throw new Error('ordering of an input stream is incompatible with the `order()` function')
+        yield (last = heads[pos])
+        // last = heads[pos]
+        // yield heads[pos]
+
         heads[pos] = (await streams[pos].next()).value
-        if (heads[pos] === undefined) {             // drop the stream if no more elements
+        if (heads[pos] === undefined) {         // drop the stream if no more elements
             streams.splice(pos, 1)
             heads.splice(pos, 1)
         }
     }
-    if (heads.length) {
+    if (heads.length) {                         // when a single source remains forward all of its contents without intermediate heads[] and argmin()
         yield heads[0]
         yield* streams[0]
     }

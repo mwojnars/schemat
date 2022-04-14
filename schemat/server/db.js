@@ -350,8 +350,6 @@ export class DB extends Item {
          */
         if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
         else yield* this._scan(cid)
-        // if (cid !== undefined) return this.scanCategory(cid)
-        // return this.scanAll()
     }
     async *scanAll()            { throw new NotImplemented() }      // iterate over all items in this db
     async *scanCategory(cid)    { throw new NotImplemented() }      // iterate over all items in a given category
