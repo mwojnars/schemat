@@ -17,10 +17,10 @@ export class ServerRegistry extends Registry {
     sessionMutex = new Mutex()  // a mutex to lock Registry for only one concurrent session (https://github.com/DirtyHairy/async-mutex);
                                 // new requests wait until the current session completes, see Session.start()
 
-    // staging area...
-    inserts = []                // a list of newly created items scheduled for insertion to DB
-    edits   = new ItemsMap()    // a list of edits per each item scheduled for write to DB: item.id -> edits;
-                                // each edit is an object {oper,data,action,args}
+    // // staging area...
+    // inserts = []                // a list of newly created items scheduled for insertion to DB
+    // edits   = new ItemsMap()    // a list of edits per each item scheduled for write to DB: item.id -> edits;
+    //                             // each edit is an object {oper,data,action,args}
 
     // staging = []                // list of modified or newly created items that will be updated/inserted to DB
     //                             // on next commit(); the items will be commited to DB in the SAME order as in this list
@@ -31,16 +31,6 @@ export class ServerRegistry extends Registry {
         super()
         this.db = db
     }
-
-    // async createRoot(root_data = null) {
-    //     /*
-    //     Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
-    //     are initialized from there rather than being loaded from DB.
-    //     */
-    //     let root = this.root = new RootCategory(this, root_data)
-    //     await (root_data ? root.boot(root_data) : root.load())
-    //     return root
-    // }
 
     async startSession(session) {
         let release = await this.sessionMutex.acquire()

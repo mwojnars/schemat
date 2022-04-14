@@ -35,7 +35,7 @@ class Schemat {
         this.opts = opts
     }
 
-    async boot() {
+    async boot__() {
         this.db = this.stackDB(  //new RingsDB(
             new YamlDB(DB_ROOT + '/db-boot.yaml', {stop_iid:  IID_SPLIT, readOnly: true}),
             new YamlDB(DB_ROOT + '/db-base.yaml', {stop_iid:  IID_SPLIT, readOnly: false}),
@@ -51,6 +51,48 @@ class Schemat {
         await this.registry.boot()
     }
 
+    async boot() {
+        let databases = [
+            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readOnly: true},
+            {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readOnly: false},
+            {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},
+            {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
+            // {item: ..., readOnly: true},
+        ]
+        this.db = await this.stack(...databases)
+    }
+
+    async stack(...databases) {
+        /* Incrementally create, open, and connect into a stack, a number of databases according to the `databases` specifications.
+           The databases[0] is the bottom of the stack, and databases[-1] is the top.
+           The databases get connected into a double-linked list through their .prevDB & .nextDB attributes.
+           The registry is created and initialized at the end, or just before the first from-DB database is to be loaded.
+           Return the top database.
+         */
+        let prev, db, registry
+        for (let spec of databases) {
+            let {file, item, ...opts} = spec
+            if (file) db = new YamlDB(file, opts)
+            else {
+                if (!registry) registry = await this.createRegistry(db)
+                db = registry.getLoaded(item)
+            }
+            await db._open()
+            if (registry) registry.setDB(db)
+            prev = prev ? prev.stack(db) : db
+        }
+        if (!registry) await this.createRegistry(db)
+        return db
+    }
+    async createRegistry(db) {
+        if (!db) throw new Error(`at least one DB layer is needed for Registry initialization`)
+        let registry = this.registry = globalThis.registry = new ServerRegistry()
+        await registry.initClasspath()
+        registry.setDB(db)
+        await this.registry.boot()
+        return registry
+    }
+
     stackDB(...db) {
         /* Connect a number of DB databases, `db`, into a stack, with db[0] being the bottom of the stack,
            and the highest-priority database (db[-1]) placed at the top of the stack.
@@ -59,12 +101,8 @@ class Schemat {
          */
         if (!db.length) throw new Error('the list of databases to stackDB() cannot be empty')
         let prev = db[0], next
-        for (next of db.slice(1)) {
+        for (next of db.slice(1))
             prev = prev.stack(next)
-            // prev.nextDB = next
-            // next.prevDB = prev
-            // prev = next
-        }
         return prev
     }
 

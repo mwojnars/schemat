@@ -99,10 +99,6 @@ export class DB extends Item {
         this.readOnly = readOnly
         this.start_iid = start_iid
     }
-    // init(data) {
-    //     this.readOnly = data.get('readOnly')
-    //     this.start_iid = data.get('start_iid') || 0
-    // }
 
     /***  internal API: errors & checks  ***/
 
@@ -173,7 +169,7 @@ export class DB extends Item {
 
     async open(opts = {}) {
         /* Open this DB and all lower-level DBs in the stack. */
-        await this.init()
+        // await this.init()
         if (!this.prevDB) return this._open()
         return Promise.all([this.prevDB.open(), this._open()])
     }
@@ -379,16 +375,12 @@ class FileDB extends DB {
         this.filename = filename
         // this.name = path.basename(filename, path.extname(filename))
     }
-    async init() {
-        super.init()
+    async _open() {
+        await super._open()
         let path = this._mod_path = await import('path')
         this.name = path.basename(this.filename, path.extname(this.filename))
     }
 
-    // async _open() {
-    //     let path = this._mod_path = await import('path')
-    //     this.name = path.basename(this.filename, path.extname(this.filename))
-    // }
     async flush()   { throw new NotImplemented() }
 
     _get(id, opts)  { return this.records.get(id) }
@@ -405,14 +397,17 @@ class FileDB extends DB {
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
-    async init() {
-        await super.init()
-        this._mod_fs = await import('fs')
-        this._mod_YAML = (await import('yaml')).default
-    }
+    // async init() {
+    //     await super.init()
+    //     this._mod_fs = await import('fs')
+    //     this._mod_YAML = (await import('yaml')).default
+    // }
 
     async _open() {
         await super._open()
+        this._mod_fs = await import('fs')
+        this._mod_YAML = (await import('yaml')).default
+
         let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
         let db = this._mod_YAML.parse(file) || []
         this.records.clear()
