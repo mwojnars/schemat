@@ -197,6 +197,7 @@
   tables:
     /apps/paperity/Paper: pap_papers_view
     /apps/paperity/Journal: pap_journals
+  readonly: true
 - __id:
     - 200
     - 100

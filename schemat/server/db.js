@@ -80,7 +80,7 @@ import { Item } from '../item.js'
 
 export class DB extends Item {
     name                    // name of this DB for display and CLI options
-    readOnly                // if true, the database does NOT accept modifications: inserts/updates/deletes
+    readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
     stop_iid                // (optional) maximum IID of all items
@@ -95,8 +95,8 @@ export class DB extends Item {
 
     constructor(params = {}) {
         super()
-        let {readOnly = false, start_iid = 0} = params
-        this.readOnly = readOnly
+        let {readonly = false, start_iid = 0} = params
+        this.readonly = readonly
         this.start_iid = start_iid
     }
 
@@ -118,33 +118,13 @@ export class DB extends Item {
 
     throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new DB.ReadOnly(msg, args) }
-    throwInvalidIID(id)         { throw new DB.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
     throwNotWritable(key)       { throw new DB.NotWritable({key, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    throwInvalidIID(id)         { throw new DB.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
-    checkReadOnly(key)          { if (this.readOnly) this.throwReadOnly({key}) }
+    checkReadOnly(key)          { if (this.get('readonly')) this.throwReadOnly({key}) }
     async checkNew(id, msg)     { if (await this._read(id)) throw new Error(msg + ` [${id}]`) }
-
-    createIID(cid) {
-        /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
-           Update this.curr_iid accordingly.
-         */
-        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the DB
-        let iid = Math.max(max + 1, this.start_iid)
-        this.checkIID([cid, iid])                           // check against upper bound if present
-        this.curr_iid.set(cid, iid)
-        return iid
-    }
-    async assignIID(id) {
-        /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
-           Update this.curr_iid accordingly.
-         */
-        let [cid, iid] = id
-        await this.checkNew(id, "the item already exists")
-        this.checkIID(id)
-        this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
-    }
 
     /***  DB stacking & administration  ***/
 
@@ -169,7 +149,10 @@ export class DB extends Item {
         this.curr_iid.clear()
     }
 
-    open(opts) {}
+    open(opts) {
+        this.start_iid = this.start_iid || 0
+        this.curr_iid  = new Map()
+    }
 
     /***  override in subclasses  ***/
 
@@ -183,7 +166,7 @@ export class DB extends Item {
 
     writable(key) {
         /* Return true if `key` is allowed to be written here. */
-        return !this.readOnly && this.validIID(key)
+        return !this.get('readonly') && (key === undefined || this.validIID(key))
     }
 
     async find(key) {
@@ -219,16 +202,16 @@ export class DB extends Item {
                 return ret
             }
         }
-        else if (this.readOnly && this.validIID(key) && await this.find(key))
+        else if (!this.writable() && this.validIID(key) && await this.find(key))
             this.throwReadOnly({key})
 
         return this.prevDB ? this.prevDB.drop(key, opts) : false
     }
     save(key, data, opts = {}) {
         /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
-           If this db is readOnly or the `key` is out of allowed range, the operation is forwarded
+           If this db is readonly or the `key` is out of allowed range, the operation is forwarded
            to a higher-level DB (nextDB), or an exception is raised.
-           If the db already contains the `id` but is readOnly, this method will duplicate the same `id`
+           If the db already contains the `id` but is readonly, this method will duplicate the same `id`
            into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
            may remove this new instance of `id`, while keeping the old one in this db, which will become
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
@@ -241,7 +224,7 @@ export class DB extends Item {
             return flush ? this.flush() : ret
         }
         if (this.nextDB) return this.nextDB.save(key, data, opts)
-        if (this.readOnly) this.throwReadOnly({key})
+        if (!this.writable()) this.throwReadOnly({key})
         assert(!this.validIID(key))
         this.throwInvalidIID(key)
     }
@@ -271,7 +254,7 @@ export class DB extends Item {
     }
 
     async mutate(id, edits, opts = {}) {
-        /* Apply `edits` (an array of a single edit) to an item's data and store under the `id` in this database or any higher db
+        /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
            that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
            in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
            on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
@@ -282,7 +265,7 @@ export class DB extends Item {
 
         let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
 
-        // find the record and its current database (this one or below) if `data` is missing
+        // (1) find the record and its current database (this one or below) if `data` is missing
         if (search) {
             let db = await this.find(id)
             if (db === undefined) this.throwNotFound(id)
@@ -291,7 +274,7 @@ export class DB extends Item {
 
         let data = await this.read(id)                  // update `data` with the most recent version from db
 
-        // propagate to a higher-level db if the mutated record can't be saved here
+        // (2) propagate to a higher-level db if the mutated record can't be saved here
         if (!this.writable(id))
             if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
             else this.throwNotWritable(id)
@@ -300,6 +283,12 @@ export class DB extends Item {
             data = this._apply(data, edit)
 
         return this.save(id, data)
+    }
+
+    _apply(dataSrc, edit) {
+        let {type, data} = edit
+        assert(type === 'data' && data)
+        return data
     }
 
     async insert(item, opts = {}) {
@@ -315,36 +304,62 @@ export class DB extends Item {
 
         // create IID for the item if missing or use the provided IID; in any case, store `data` under the resulting ID
         if (item.iid === undefined)
-            item.iid = await this._create(cid, data, opts)
+            item.iid = await this.insertWithCID(cid, data, opts)
         else
-            return this._assign(item.id, data, opts)
+            return this.insertWithIID(item.id, data, opts)
     }
 
-    _apply(dataSrc, edit) {
-        let {type, data} = edit
-        assert(type === 'data' && data)
-        return data
-    }
-
-    async _create(cid, data, opts) {
+    async insertWithCID(cid, data, opts) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
-           If this db is readOnly, forward the operation to a higher DB (nextDB), or raise an exception.
+           If this db is readonly, forward the operation to a higher DB (nextDB), or raise an exception.
            Return the `iid`.
          */
-        if (this.readOnly)
-            if (this.nextDB) return this.nextDB._create(cid, data, opts)
-            else this.throwReadOnly({cid})
-        let {flush = true} = opts
-        let iid = this.createIID(cid)
+        if (!this.writable())
+            if (this.nextDB) return this.nextDB.insertWithCID(cid, data, opts)
+            else this.throwReadOnly()
+        let iid = this._createIID(cid)
         await this._save([cid, iid], data, opts)
+        let {flush = true} = opts
         if (flush) await this.flush()
         return iid
     }
-    async _assign(id, data, opts) {
-        /* Register the `id` as a new item ID in the database and store `data` under this ID. */
-        await this.assignIID(id)
-        return this.save(id, data, opts)
+    _createIID(cid) {
+        /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
+           Update this.curr_iid accordingly.
+         */
+        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the DB
+        let iid = Math.max(max + 1, this.start_iid)
+        let id  = [cid, iid]
+        if (!this.validIID(id))                             // check against the upper IID bound if present
+            throw new DB.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
+        this.curr_iid.set(cid, iid)
+        return iid
     }
+
+    async insertWithIID(id, data, opts) {
+        /* Register the `id` as a new item ID in the database and store `data` under this ID. */
+        if (!this.writable(id))
+            if (this.nextDB) return this.nextDB.insertWithIID(id, data, opts)
+            else this.throwNotWritable(id)
+
+        await this.checkNew(id, "the item already exists")
+        // this.checkIID(id)
+        let [cid, iid] = id
+        this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
+        await this._save(id, data, opts)
+        let {flush = true} = opts
+        if (flush) await this.flush()
+    }
+    // async _assignIID(id) {
+    //     /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
+    //        Update this.curr_iid accordingly.
+    //      */
+    //     let [cid, iid] = id
+    //     await this.checkNew(id, "the item already exists")
+    //     this.checkIID(id)
+    //     this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
+    // }
+
 }
 
 

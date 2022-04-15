@@ -37,11 +37,11 @@ class Schemat {
 
     async boot() {
         let databases = [
-            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readOnly: true},
-            {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readOnly: false},
-            {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},
+            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readonly: true},
+            {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readonly: false},
+            {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},  // update: true/false, insert: true/false
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
-            {item: [51,100], readOnly: true},
+            {item: [51,100]},
         ]
         this.db = await this.stack(...databases)
     }
@@ -117,7 +117,7 @@ class Schemat {
         // identify the source DB
         let db = await this.db.find(id)
         if (db === undefined) throw new Error(`item not found: [${id}]`)
-        if (db.readOnly) throw new Error(`the DB '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+        if (db.readonly) throw new Error(`the DB '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target DB
         if (dbInsert) dbInsert = this.db.getDB(dbInsert)

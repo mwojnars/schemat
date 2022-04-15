@@ -13,6 +13,7 @@ import {DB} from './server/db.js'
 export class MySQL extends DB {
 
     async open() {
+        await super.open()
         this._mod_mysql = await import('mysql2/promise')
         this.db = await this._connect()
     }
@@ -38,6 +39,8 @@ export class MySQL extends DB {
         let [rows, cols] = await this.db.execute(`${select} WHERE id = ? LIMIT 10`, [iid])
         return rows[0]                                  // flat object (encoded) is returned, not a JSON string
     }
+    _drop(key, opts) { return false }
+
     async *_scan(cid) {}
 
 }
