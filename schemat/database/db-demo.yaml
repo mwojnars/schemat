@@ -195,8 +195,10 @@
   database: paperity
   password: pe45n1bc
   tables:
-    /apps/paperity/Paper: pap_papers_view
+    "201": pap_journals
+    "202": pap_papers_view
     /apps/paperity/Journal: pap_journals
+    /apps/paperity/Paper: pap_papers_view
   readonly: true
 - __id:
     - 200
@@ -219,6 +221,11 @@
     - 201
   name: Journal
   info: Paperity's Journal object.
+  fields:
+    pid:
+      "@": schemat.type.INTEGER
+    title:
+      "@": schemat.type.STRING
 - __id:
     - 0
     - 202

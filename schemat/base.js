@@ -27,20 +27,47 @@ export class MySQL extends DB {
     }
 
     async _read([cid, iid], opts) {
-        return
-
-        let tables = this.get('tables')
-        let table = tables[cid]                         // map CID to the name of a sql table
-        table = table.trim()
-
-        let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement
-        let select = spaces ? table : `SELECT * FROM ${table}`
-
-        let [rows, cols] = await this.db.execute(`${select} WHERE id = ? LIMIT 10`, [iid])
-        return rows[0]                                  // flat object (encoded) is returned, not a JSON string
+        let select = this._select(cid)
+        if (!select) return
+        let query  = `${select} WHERE id = ? LIMIT 1`
+        let [rows, cols] = await this.db.execute(query, [iid])
+        if (rows.length) return JSON.stringify(rows[0])     // flat object (encoded) from DB is returned as a JSON string
     }
-    _drop(key, opts) { return false }
 
-    async *_scan(cid) {}
+    async *_scan(cid, {offset = 0, limit = 100} = {}) {
+        let query = this._select(cid)
+        if (!query) return
+        if (limit) {
+            query += ` LIMIT ${limit}`
+            if (offset) query += ` OFFSET ${offset}`        // offset is only allowed together with limit in MySQL
+        }
+        let category = await this.registry.getCategory(cid)
+        let [rows, cols] = await this.db.execute(query)
+        for (let row of rows) yield this._convert(row, category)
+            // let id = [cid, row.id]
+            // delete row.id
+            // yield {id, data: JSON.stringify(row)}
+    }
+
+    _select(cid) {
+        /* Build the SELECT... FROM... part of a query for a given CID. Return undefined if this particular CID is unsupported. */
+        let tables = this.get('tables')
+        let table  = tables.get(`${cid}`)               // map CID to the name of a sql table
+        if (!table) return
+        table = table.trim()
+        let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
+        return spaces ? table : `SELECT * FROM ${table}`
+    }
+    _convert(row, category) {
+        /* Convert a `row` of data to an encoded flat object of a given category, compatible with the category's schema. */
+        let id = [category.iid, row.id]
+        delete row.id
+        let fields = category.getFields()
+        let keys   = Object.keys(row)
+        for (let key of keys) if (!fields.has(key)) delete row[key]     // drop DB fields with no corresponding category field
+        return {id, data: JSON.stringify(row)}
+    }
+
+    _drop(key, opts) { return false }
 
 }
