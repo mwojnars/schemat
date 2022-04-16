@@ -29,9 +29,10 @@ export class MySQL extends DB {
     async _read([cid, iid], opts) {
         let select = this._select(cid)
         if (!select) return
-        let query  = `${select} WHERE id = ? LIMIT 1`
+        let query = `${select} WHERE id = ? LIMIT 1`
+        let category = await this.registry.getCategory(cid)
         let [rows, cols] = await this.db.execute(query, [iid])
-        if (rows.length) return JSON.stringify(rows[0])     // flat object (encoded) from DB is returned as a JSON string
+        if (rows.length) return this._convert(rows[0], category)
     }
 
     async *_scan(cid, {offset = 0, limit = 100} = {}) {
@@ -43,10 +44,8 @@ export class MySQL extends DB {
         }
         let category = await this.registry.getCategory(cid)
         let [rows, cols] = await this.db.execute(query)
-        for (let row of rows) yield this._convert(row, category)
-            // let id = [cid, row.id]
-            // delete row.id
-            // yield {id, data: JSON.stringify(row)}
+        for (let row of rows)
+            yield {id: [cid, row.id], data: this._convert(row, category)}
     }
 
     _select(cid) {
@@ -59,13 +58,11 @@ export class MySQL extends DB {
         return spaces ? table : `SELECT * FROM ${table}`
     }
     _convert(row, category) {
-        /* Convert a `row` of data to an encoded flat object of a given category, compatible with the category's schema. */
-        let id = [category.iid, row.id]
-        delete row.id
+        /* Clean and convert a `row` of data to JSON string compatible with the category's schema. */
         let fields = category.getFields()
         let keys   = Object.keys(row)
         for (let key of keys) if (!fields.has(key)) delete row[key]     // drop DB fields with no corresponding category field
-        return {id, data: JSON.stringify(row)}
+        return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
     }
 
     _drop(key, opts) { return false }
