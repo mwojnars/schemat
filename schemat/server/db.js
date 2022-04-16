@@ -87,8 +87,8 @@ export class DB extends Item {
 
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
     
-    nextDB                  // higher-priority DB put on top of this one in a DB stack; used as a fallback for put() and ins()
-    prevDB                  // lower-priority DB placed beneath this one in a DB stack; used as a fallback for get() and del()
+    nextDB                  // higher-priority DB put on top of this one in a DB stack; fallback for save/mutate/update()
+    prevDB                  // lower-priority DB placed beneath this one in a DB stack; fallback for read/drop/insert()
 
     get top()       { return this.nextDB ? this.nextDB.top : this }
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }
@@ -202,7 +202,7 @@ export class DB extends Item {
                 return ret
             }
         }
-        else if (!this.writable() && this.validIID(key) && await this.find(key))
+        else if (!this.writable() && this.validIID(key) && await this._read(key))
             this.throwReadOnly({key})
 
         return this.prevDB ? this.prevDB.drop(key, opts) : false
@@ -294,8 +294,7 @@ export class DB extends Item {
     async insert(item, opts = {}) {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
-           If item.iid is missing, a new IID is assigned - it can be retrieved from `item.iid`
-           after the function completes.
+           If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
          */
         assert(item.has_data())
         assert(item.cid || item.cid === 0)
@@ -311,11 +310,11 @@ export class DB extends Item {
 
     async insertWithCID(cid, data, opts) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
-           If this db is readonly, forward the operation to a higher DB (nextDB), or raise an exception.
+           If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
            Return the `iid`.
          */
         if (!this.writable())
-            if (this.nextDB) return this.nextDB.insertWithCID(cid, data, opts)
+            if (this.prevDB) return this.prevDB.insertWithCID(cid, data, opts)
             else this.throwReadOnly()
         let iid = this._createIID(cid)
         await this._save([cid, iid], data, opts)
@@ -339,11 +338,10 @@ export class DB extends Item {
     async insertWithIID(id, data, opts) {
         /* Register the `id` as a new item ID in the database and store `data` under this ID. */
         if (!this.writable(id))
-            if (this.nextDB) return this.nextDB.insertWithIID(id, data, opts)
+            if (this.prevDB) return this.prevDB.insertWithIID(id, data, opts)
             else this.throwNotWritable(id)
 
         await this.checkNew(id, "the item already exists")
-        // this.checkIID(id)
         let [cid, iid] = id
         this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
         await this._save(id, data, opts)
