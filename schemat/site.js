@@ -257,7 +257,10 @@ export class AppBasic extends Application {
     findRoute(request) {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), id
-        try { id = step.split(':').map(Number) }
+        try {
+            id = step.split(':').map(Number)
+            assert(id[0] !== undefined && id[1] !== undefined)
+        }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
         return [this.registry.getItem(id), request.move(step), true]

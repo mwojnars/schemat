@@ -139,7 +139,7 @@ export class Request {
         return this
     }
 
-    throwNotFound(msg, args)  { throw new Request.NotFound(msg, args || {'remaining path': this.path}) }
+    throwNotFound(msg, args)  { throw new Request.NotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 }
 
 
@@ -1019,22 +1019,22 @@ export class Category extends Item {
 
     getCode() {
         /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
-           import the Base class, create a Class definition from `class`, append view methods, export the new Class.
+           import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
 
-        // generate code for import/load of the Base class
-        let base = 'let Base = Item'                                    // Item class is available globally, no need to import
+        // generate code for import/load of the base class
+        let base = 'let Class = Item'                                    // Item class is available globally, no need to import
         let boot = this.get('_boot_class')
-        let path, name = splitLast(this.get('class_name') || '', '/')
+        let path, name = splitLast(this.get('class_path') || '', '/')
 
-        if (boot)               base = `let Base = registry.getClass('${boot}')`
-        else if (name && path)  base = `import {${name} as Base} from ${path}`
+        if (boot)               base = `let Class = registry.getClass('${boot}')`
+        else if (name && path)  base = `import {${name} as Class} from '${path}'`
 
-        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Base} from ${path}`)
-        // let base = `let Base = ` + (load || 'Item')
+        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Class} from ${path}`)
+        // let base = `let Class = ` + (load || 'Item')
 
         // module's top-level `code` and `class_body`
-        let code      = this.mergeSnippets('code')
+        let module    = this.mergeSnippets('code')
         let classBody = this.mergeSnippets('class_body')
 
         // extends Class body with VIEW_* methods (`views`)
@@ -1046,7 +1046,7 @@ export class Category extends Item {
 
         // Class definition and export statement
         let className = `Class_${this.cid}_${this.iid}`
-        let classCode = classBody ? `class ${className} extends Base {\n${classBody}\n}` : `let ${className} = Base`
+        let classCode = classBody ? `class ${className} extends Class {\n${classBody}\n}` : `let ${className} = Class`
         let classExpo = `export {${className} as Class}`
 
         // append setCaching() statement for selected methods
@@ -1055,7 +1055,7 @@ export class Category extends Item {
         if (cached) cached = cached.split(/\s+/).map(m => `'${m}'`)
         let setCaching = cached ? `${className}.setCaching(${cached.join(',')})` : ''
 
-        let snippets  = [base, code, classCode, classExpo, setCaching].filter(Boolean)
+        let snippets  = [base, module, classCode, classExpo, setCaching].filter(Boolean)
         return snippets.join('\n')
     }
 
