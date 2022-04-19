@@ -205,7 +205,8 @@ export class Item {
     get loaded()    { return this.has_data() && !(this.data instanceof Promise) }   // false if `data` is still loading (a Promise) !!
     get schema()    { return this.getSchema() }
 
-    get isShadow()  { return this.cid === undefined }
+    get isShadow()    { return this.cid === undefined }
+    get isCategory()  { return this.cid === ROOT_CID }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]

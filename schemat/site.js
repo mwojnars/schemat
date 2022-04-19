@@ -57,8 +57,11 @@ export class Site extends Router {
 
     async init()   { if (this.registry.onServer) this._vm = await import('vm') }
 
-    async getItem(path) {
-        /* URL-call that returns a target item pointed to by `path`. Utilizes the target item's CALL_item() endpoint. */
+    async findItem(path) {
+        /* URL-call that requests and returns an item pointed to by `path`.
+           The request is handled by the target item's CALL_item() endpoint.
+           The item is fully loaded (this is a prerequisite to calling CALL_*()).
+         */
         return this.route(new Request({path, method: '@item'}))
     }
 
@@ -69,7 +72,7 @@ export class Site extends Router {
 
     async getApplication(route, strategy = 'last') {
         /* URL-call to an application installed as a routing node at the end of `route` path. */
-        let Application = await this.getItem('/system/Application')
+        let Application = await this.findItem('/system/Application')
         print('Application:', Application)
         let app = await this.getRouteNode(route, strategy)
         if (app.instanceof(Application)) return app

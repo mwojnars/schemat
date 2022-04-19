@@ -195,8 +195,6 @@
   database: paperity
   password: pe45n1bc
   tables:
-    "201": pap_journals
-    "202": pap_papers_view
     /apps/paperity/Journal: pap_journals
     /apps/paperity/Paper: pap_papers_view
   readonly: true
