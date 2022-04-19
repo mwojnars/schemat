@@ -94,7 +94,7 @@
     - 100
   name: Varia
   info: Category of items that do not belong to any specific category.
-  class: >-
+  class_body: >-
     static check() { import('/local/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
@@ -157,7 +157,7 @@
             let text = this.get('text')
             return P('Post', BR(), text)
         }
-      - class
+      - class_body
     - - |-
         // FOR RECORD ONLY...
         // this method works OK (no await import)
@@ -176,7 +176,7 @@
             this.utils = utils
             console.log('this.utils #1:', this.utils)
         }
-      - class
+      - class_body
 - __id:
     - 4
     - 100

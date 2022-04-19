@@ -17,10 +17,11 @@
             value:
               info: Source code of a Javascript module to be created for this category. May
                 contain imports. Should export a Class that defines the class to
-                be used by items of this category. Alternatively, the Class can
-                be defined through a `class` and/or `views` properties.
+                be used by items of this category. Alternatively, the Class'es
+                body can be defined through the `class_body` and/or `views`
+                properties.
               "@": schemat.type.CODE
-          - key: class
+          - key: class_body
             value:
               info: Source code of the class (a body without heading) that will be created for
                 this category. The class inherits from the `_boot_class`, or the
@@ -29,9 +30,9 @@
           - key: views
             value:
               info: "Source code of React functional components to be added dynamically to the
-                category's Class (`class` property) as VIEW_*(props) methods for
-                rendering item views. View methods are called bound: this=item
-                to be rendered."
+                category's Class (`class_body` property) as VIEW_*(props)
+                methods for rendering item views. View methods are called bound:
+                this=item to be rendered."
               values:
                 "@": schemat.type.CODE
               "@": schemat.type.CATALOG

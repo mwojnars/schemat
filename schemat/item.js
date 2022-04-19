@@ -1021,12 +1021,21 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
            import the Base class, create a Class definition from `class`, append view methods, export the new Class.
          */
-        let name = this.get('_boot_class')
-        let base = `let Base = ` + (name ? `registry.getClass('${name}')` : 'Item')     // Item class is available globally without import
 
-        // module's top-level `code` and Class body (`class`)
+        // generate code for import/load of the Base class
+        let base = 'let Base = Item'                                    // Item class is available globally, no need to import
+        let boot = this.get('_boot_class')
+        let path, name = splitLast(this.get('class_name') || '', '/')
+
+        if (boot)               base = `let Base = registry.getClass('${boot}')`
+        else if (name && path)  base = `import {${name} as Base} from ${path}`
+
+        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Base} from ${path}`)
+        // let base = `let Base = ` + (load || 'Item')
+
+        // module's top-level `code` and `class_body`
         let code      = this.mergeSnippets('code')
-        let classBody = this.mergeSnippets('class')
+        let classBody = this.mergeSnippets('class_body')
 
         // extends Class body with VIEW_* methods (`views`)
         let methods = []
