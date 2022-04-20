@@ -1,4 +1,18 @@
-## Schemat / Hyperweb
+# Schemat / Hyperweb
+
+## Introduction
+
+- Similar to a desktop app, Schemat's web application is fully built of **objects** (**items**).
+  Unlike in desktop programming, however, all the application's objects are stored in a database using automatic
+  schema-driven **serialization**, and are accessible **server-side** and **client-side** alike in a way 
+  that is transparent to the programmer.
+- Thanks to the Schemat's Universal Namespace (**SUN**) which standardizes the way how application's objects 
+  and all functional parts are named, each object is accessible through the same import path on both the server
+  and the client, which greatly simplifies coding. 
+- 
+
+
+## Programming Guide
 
 ### Boot Up
 

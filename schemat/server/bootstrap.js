@@ -184,7 +184,8 @@ async function create_categories(Category) {
     cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        _boot_class : 'schemat.item.AppBasic',
+        class_path  : '/local/site.js:AppBasic',
+        // _boot_class : 'schemat.item.AppBasic',
         fields      : C({
             category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
@@ -193,7 +194,8 @@ async function create_categories(Category) {
     cat.AppSpaces = await Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        _boot_class : 'schemat.item.AppSpaces',
+        class_path  : '/local/site.js:AppSpaces',
+        // _boot_class : 'schemat.item.AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
 

@@ -234,7 +234,7 @@
   info: Application that serves items on simple URLs of the form /CID:IID. Mainly
     used for system & admin purposes, or as a last-resort default for URL
     generation.
-  _boot_class: schemat.item.AppBasic
+  class_path: /local/site.js:AppBasic
   fields:
     category:
       info: Optional category(ies) of items handled by this application.
@@ -257,7 +257,7 @@
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  _boot_class: schemat.item.AppSpaces
+  class_path: /local/site.js:AppSpaces
   fields:
     spaces:
       values:
