@@ -1015,45 +1015,26 @@ export class Category extends Item {
         let module = await site.parseModule(source, path)
         return module.namespace
     }
-    _hasCustomCode() {
-        return this.get('class_init') || this.get('class_body') || this.get('views') || this.get('cached_methods')
-    }
 
     getCode() {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
         let base = this._codeBaseClass()
-
-        // module's top-level `class_init` and `class_body`
         let init = this.mergeSnippets('class_init')
-        let body = this.mergeSnippets('class_body')
-
-        // extends Class body with VIEW_* methods (`views`)
-        let methods = []
-        let views = this.getInherited('views')
-        for (let {key: vname, value: vbody} of views)
-            methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
-        body += methods.join('\n')
-
-        // Class definition and export statement
         let name = this.get('class_name') || `Class_${this.cid}_${this.iid}`
-        let code = body ? `class ${name} extends Base {\n${body}\n}\nlet Class = ${name}` : 'let Class = Base'
-        let expo = `export {Class, Class as ${name}, Class as default}`
-        // let code = classBody ? `class ${name} extends Base {\n${classBody}\n}` : `let ${name} = Base`
-        // let expo = `export {${name} as Class}`
+        let code = this._codeClass(name)
+        let expo = `export {Base, Class, Class as ${name}, Class as default}`
 
-        // append setCaching() statement for selected methods
-        let cached = this.getMany('cached_methods')
-        cached = cached.join(' ').replaceAll(',', ' ').trim()
-        if (cached) cached = cached.split(/\s+/).map(m => `'${m}'`)
-        let caching = cached ? `${name}.setCaching(${cached.join(',')})` : ''
-
-        let snippets = [base, init, code, expo, caching].filter(Boolean)
+        let snippets = [base, init, code, expo].filter(Boolean)
         return snippets.join('\n')
     }
+
+    _hasCustomCode() {
+        return this.get('class_init') || this.get('class_body') || this.get('views')
+    }
     _codeBaseClass() {
-        // generate code for import/load of the base class
+        /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
         let boot = this.get('_boot_class')
         let path, name = splitLast(this.get('class_path') || '', ':')
 
@@ -1065,6 +1046,36 @@ export class Category extends Item {
 
         // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Base} from ${path}`)
         // let base = `let Base = ` + (load || 'Item')
+    }
+    _codeClass(name) {
+        /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */
+        let body = this._codeBody()
+        if (!body) return 'let Class = Base'
+        let code = `class ${name} extends Base {\n${body}\n}`
+        if (name !== 'Class') code += `\nlet Class = ${name}`
+        let cache = this._codeCache()
+        if (cache) code += '\n' + cache
+        return code
+    }
+    _codeBody() {
+        /* Source code of this category's dynamic Class body. */
+        let body = this.mergeSnippets('class_body')
+
+        // extend body with VIEW_* methods (`views`)
+        let methods = []
+        let views = this.getInherited('views')
+        for (let {key: vname, value: vbody} of views)
+            methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
+
+        return body + methods.join('\n')
+    }
+    _codeCache() {
+        /* Source code of setCaching() statement for selected methods of a custom Class. */
+        let cached = this.getMany('cached_methods')
+        cached = cached.join(' ').replaceAll(',', ' ').trim()
+        if (!cached) return ''
+        cached = cached.split(/\s+/).map(m => `'${m}'`)
+        return `Class.setCaching(${cached.join(',')})`
     }
 
     getItem(iid) {

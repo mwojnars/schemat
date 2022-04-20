@@ -15,11 +15,10 @@
         entries:
           - key: class_init
             value:
-              info: Source code of a Javascript module to be created for this category. May
-                contain imports. Should export a Class that defines the class to
-                be used by items of this category. Alternatively, the Class'es
-                body can be defined through the `class_body` and/or `views`
-                properties.
+              info: Module-level initialization for this category's Javascript class.
+                Typically contains import statements and global variables.
+                Preceeds the Class definition (`class_body`, `views`) in the
+                category's module code.
               "@": schemat.type.CODE
           - key: class_body
             value:
@@ -47,7 +46,9 @@
           - key: cached_methods
             value:
               info: Space- and/or comma-separated list of method names of this category's
-                class whose calls are to be cached via Item.setCaching().
+                Class whose calls are to be cached via Item.setCaching(). Only
+                used when a custom subclass is created through the `class_body`
+                or `views` properties.
               "@": schemat.type.STRING
           - key: fields
             value:
