@@ -13,7 +13,7 @@
     - key: fields
       value:
         entries:
-          - key: code
+          - key: class_init
             value:
               info: Source code of a Javascript module to be created for this category. May
                 contain imports. Should export a Class that defines the class to
@@ -92,7 +92,7 @@
           - key: _boot_class
             value:
               info: Name of a core Javascript class, subclass of Item, to be used for items of
-                this category. If `code` or `code_*` is configured, the class is
+                this category. If `class_body` is configured, the class is
                 subclassed dynamically to insert the desired code. Should only
                 be used for core Schemat categories.
               "@": schemat.type.STRING

@@ -130,7 +130,7 @@
           "@": schemat.type.STRING
       - fields
     - - import { P, BR } from '/local/react-utils.js'
-      - code
+      - class_init
     - - view: |
           let text = this.get('text')
           return P('Post:', BR(), text)
@@ -148,7 +148,7 @@
         // console.log('registry:', registry)
         // console.log('Item:', Item)
         // console.log('vm:', vm)
-      - code
+      - class_init
     - - |
         VIEW_view_old() {
             this.assertLoaded()

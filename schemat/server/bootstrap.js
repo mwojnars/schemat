@@ -30,9 +30,10 @@ let default_fields = C({
 
 // fields of categories, including the root category
 let root_fields = C({
-    code         : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class'es body can be defined through the `class_body` and/or `views` properties."}),
-    class_body        : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
+    class_init   : new CODE({info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
+    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
     views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added dynamically to the category's Class (`class_body` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),
+    // module    : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class'es body can be defined through the `class_body` and/or `views` properties."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
@@ -40,7 +41,7 @@ let root_fields = C({
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's class whose calls are to be cached via Item.setCaching()."}),
     fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
 
-    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `code` or `code_*` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
+    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
 
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),
     //handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),

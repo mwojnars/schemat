@@ -30,8 +30,8 @@ export const SITE_CID = 1
 //     submit() { print('Submit clicked') }
 //     Buttons() {
 //         return DIV({style: {textAlign:'right', paddingTop:'20px'}},
-//             BUTTON({id: 'reset' , className: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
-//             BUTTON({id: 'submit', className: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
+//             BUTTON({id: 'reset' , name: 'btn btn-secondary', onClick: this.reset,  disabled: false}, 'Reset'), ' ',
+//             BUTTON({id: 'submit', name: 'btn btn-primary',   onClick: this.submit, disabled: false}, 'Submit'),
 //         )
 //     }
 // }
@@ -1002,8 +1002,7 @@ export class Category extends Item {
             // when booting up, a couple of core items must be created before registry.site becomes available
             let name = this.get('_boot_class')
             if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
-            if (this.get('code') || this.get('class') || this.get('views') || this.get('cached_methods'))
-                throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
+            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
             let Class = this.registry.getClass(name)
             return {Class}
         }
@@ -1016,47 +1015,56 @@ export class Category extends Item {
         let module = await site.parseModule(source, path)
         return module.namespace
     }
+    _hasCustomCode() {
+        return this.get('class_init') || this.get('class_body') || this.get('views') || this.get('cached_methods')
+    }
 
     getCode() {
-        /* Combine all code snippets of this category, including inherited ones, and combine into a module source code.
-           import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
+        /* Combine all code snippets of this category, including inherited ones, into a module source code.
+           Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
+        let base = this._codeBaseClass()
 
-        // generate code for import/load of the base class
-        let base = 'let Class = Item'                                    // Item class is available globally, no need to import
-        let boot = this.get('_boot_class')
-        let path, name = splitLast(this.get('class_path') || '', '/')
-
-        if (boot)               base = `let Class = registry.getClass('${boot}')`
-        else if (name && path)  base = `import {${name} as Class} from '${path}'`
-
-        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Class} from ${path}`)
-        // let base = `let Class = ` + (load || 'Item')
-
-        // module's top-level `code` and `class_body`
-        let module    = this.mergeSnippets('code')
-        let classBody = this.mergeSnippets('class_body')
+        // module's top-level `class_init` and `class_body`
+        let init = this.mergeSnippets('class_init')
+        let body = this.mergeSnippets('class_body')
 
         // extends Class body with VIEW_* methods (`views`)
         let methods = []
         let views = this.getInherited('views')
         for (let {key: vname, value: vbody} of views)
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
-        classBody += methods.join('\n')
+        body += methods.join('\n')
 
         // Class definition and export statement
-        let className = `Class_${this.cid}_${this.iid}`
-        let classCode = classBody ? `class ${className} extends Class {\n${classBody}\n}` : `let ${className} = Class`
-        let classExpo = `export {${className} as Class}`
+        let name = this.get('class_name') || `Class_${this.cid}_${this.iid}`
+        let code = body ? `class ${name} extends Base {\n${body}\n}\nlet Class = ${name}` : 'let Class = Base'
+        let expo = `export {Class, Class as ${name}, Class as default}`
+        // let code = classBody ? `class ${name} extends Base {\n${classBody}\n}` : `let ${name} = Base`
+        // let expo = `export {${name} as Class}`
 
         // append setCaching() statement for selected methods
         let cached = this.getMany('cached_methods')
         cached = cached.join(' ').replaceAll(',', ' ').trim()
         if (cached) cached = cached.split(/\s+/).map(m => `'${m}'`)
-        let setCaching = cached ? `${className}.setCaching(${cached.join(',')})` : ''
+        let caching = cached ? `${name}.setCaching(${cached.join(',')})` : ''
 
-        let snippets  = [base, module, classCode, classExpo, setCaching].filter(Boolean)
+        let snippets = [base, init, code, expo, caching].filter(Boolean)
         return snippets.join('\n')
+    }
+    _codeBaseClass() {
+        // generate code for import/load of the base class
+        let boot = this.get('_boot_class')
+        let path, name = splitLast(this.get('class_path') || '', ':')
+
+        if (boot)               return `let Base = registry.getClass('${boot}')`
+        else if (name && path)  return `import {${name} as Base} from '${path}'`
+        else if (path)          return `import Base from '${path}'`
+
+        return 'let Base = Item'                            // Item class is available globally, no need to import
+
+        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Base} from ${path}`)
+        // let base = `let Base = ` + (load || 'Item')
     }
 
     getItem(iid) {
