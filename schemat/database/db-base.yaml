@@ -16,7 +16,7 @@
   prototype:
     - 0
     - 11
-  class_init: Base = (await import('/local/base.js')).MySQL
+  class_path: /local/base.js:MySQL
   fields:
     host:
       "@": schemat.type.STRING

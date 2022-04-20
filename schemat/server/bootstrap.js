@@ -28,8 +28,10 @@ let default_fields = C({
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
 })
 
-// fields of categories, including the root category
+// fields inside a category instance, including the root category
 let root_fields = C({
+    class_path   : new STRING({info: "SUN path to a Javascript file that contains a (base) class for this category. May contain an optional class name appended after colon ':'. If the class name is missing (no colon), default import from the file is used."}),
+    class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
     class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `_boot_class`, or the class of the first base category, or the top-level Item."}),
     views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added dynamically to the category's Class (`class_body` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),

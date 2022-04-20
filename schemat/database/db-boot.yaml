@@ -13,6 +13,19 @@
     - key: fields
       value:
         entries:
+          - key: class_path
+            value:
+              info: SUN path to a Javascript file that contains a (base) class for this
+                category. May contain an optional class name appended after
+                colon ':'. If the class name is missing (no colon), default
+                import from the file is used.
+              "@": schemat.type.STRING
+          - key: class_name
+            value:
+              info: Custom internal name for the Class of this category, for debugging. Also
+                used as an alias when exporting the Class from the category's
+                module.
+              "@": schemat.type.STRING
           - key: class_init
             value:
               info: Module-level initialization for this category's Javascript class.

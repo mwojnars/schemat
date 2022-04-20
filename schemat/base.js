@@ -95,3 +95,5 @@ export class MySQL extends DB {
     _drop(key, opts) { return false }
 
 }
+
+export {MySQL as default}

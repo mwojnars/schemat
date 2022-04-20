@@ -1003,12 +1003,10 @@ export class Category extends Item {
             let name = this.get('_boot_class')
             if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
-            let Class = this.registry.getClass(name)
-            return {Class}
+            return {Class: this.registry.getClass(name)}
         }
 
         let path = this.getPath()
-
         if (this.registry.onClient) return import(path + '@import')
 
         let source = this.getCode()
@@ -1020,9 +1018,9 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let base = this._codeBaseClass()
-        let init = this.mergeSnippets('class_init')
         let name = this.get('class_name') || `Class_${this.cid}_${this.iid}`
+        let base = this._codeBaseClass()
+        let init = this._codeInit()
         let code = this._codeClass(name)
         let expo = `export {Base, Class, Class as ${name}, Class as default}`
 
@@ -1030,22 +1028,19 @@ export class Category extends Item {
         return snippets.join('\n')
     }
 
-    _hasCustomCode() {
-        return this.get('class_init') || this.get('class_body') || this.get('views')
-    }
+    _hasCustomCode() { return this._codeInit() || this._codeBody() }  //this.get('class_body') || this.get('views')
+
+    _codeInit()      { return this.mergeSnippets('class_init') }
     _codeBaseClass() {
         /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
         let boot = this.get('_boot_class')
-        let path, name = splitLast(this.get('class_path') || '', ':')
+        let [path, name] = splitLast(this.get('class_path') || '', ':')
 
         if (boot)               return `let Base = registry.getClass('${boot}')`
         else if (name && path)  return `import {${name} as Base} from '${path}'`
         else if (path)          return `import Base from '${path}'`
 
         return 'let Base = Item'                            // Item class is available globally, no need to import
-
-        // let load = (boot && `registry.getClass('${boot}')`) || (name && path && `import {${name} as Base} from ${path}`)
-        // let base = `let Base = ` + (load || 'Item')
     }
     _codeClass(name) {
         /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */

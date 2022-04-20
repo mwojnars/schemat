@@ -157,7 +157,8 @@ export function splitFirst(s, sep = ' ') {
 
 export function splitLast(s, sep = ' ') {
     /* Split `s` on the last occurrence of `sep` and return BOTH parts as an array, [left,right];
-       or return ["",s] if no occurrence of `sep` was found. */
+       or return [s,""] if no occurrence of `sep` was found. */
+    if (!s.includes(sep)) return [s, ""]
     let right = s.split(sep).pop()
     let left = s.substring(0, s.length - right.length - sep.length)
     return [left, right]
