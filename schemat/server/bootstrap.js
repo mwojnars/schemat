@@ -113,8 +113,8 @@ async function create_categories(Category) {
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
-            path_local      : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             routes          : new CATALOG(new ITEM(), {info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
+            //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
             //database    : new ITEM({type: cat.Database, info: "Global database layer"}),

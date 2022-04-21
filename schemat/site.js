@@ -98,6 +98,8 @@ export class Site extends Router {
         // TODO: cache module objects, parameter Site:cache_modules_ttl
         // TODO: for circular dependency return an unfinished module (use cache for this)
 
+        assert(this.registry.onServer)
+
         // make `path` absolute
         if (path[0] === '.') {
             if (!referrer) throw new Error(`missing referrer for a relative import path: '${path}'`)
@@ -111,8 +113,7 @@ export class Site extends Router {
         // standard local import for non-SUN paths
         if (path[0] !== '/') return this.localImport(path)
 
-        // local import if `path` starts with `path_local`
-        // let local = this.get('path_local')
+        // local import if `path` starts with PATH_LOCAL_SUN
         let local = this.registry.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
             return this.localImport(this.registry.PATH_LOCAL_WORKING + '/' + path.slice((local + '/').length))

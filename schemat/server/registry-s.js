@@ -18,10 +18,6 @@ export class ServerRegistry extends Registry {
                                 // new requests wait until the current session completes, see Session.start()
 
     // // staging area...
-    // inserts = []                // a list of newly created items scheduled for insertion to DB
-    // edits   = new ItemsMap()    // a list of edits per each item scheduled for write to DB: item.id -> edits;
-    //                             // each edit is an object {oper,data,action,args}
-
     // staging = []                // list of modified or newly created items that will be updated/inserted to DB
     //                             // on next commit(); the items will be commited to DB in the SAME order as in this list
     // staging_ids = new Map()     // dict of items with a non-empty ID that have already been added to `staging`,

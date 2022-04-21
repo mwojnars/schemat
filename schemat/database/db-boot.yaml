@@ -128,10 +128,6 @@
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
       "@": schemat.type.PATH
-    path_local:
-      info: URL route of a FolderLocal that maps to the root folder of the Schemat's
-        local installation.
-      "@": schemat.type.PATH
     routes:
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
