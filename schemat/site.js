@@ -112,9 +112,11 @@ export class Site extends Router {
         if (path[0] !== '/') return this.localImport(path)
 
         // local import if `path` starts with `path_local`
-        let local = this.get('path_local')
-        if (local && path.startsWith(local + '/'))
-            return this.localImport('./' + path.slice((local + '/').length))
+        // let local = this.get('path_local')
+        let local = this.registry.PATH_LOCAL_SUN
+        if (path.startsWith(local + '/'))
+            return this.localImport(this.registry.PATH_LOCAL_WORKING + '/' + path.slice((local + '/').length))
+            // return this.localImport('./' + path.slice((local + '/').length))
 
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)

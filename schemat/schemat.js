@@ -73,7 +73,7 @@ class Schemat {
 
     async createRegistry(db) {
         if (!db) throw new Error(`at least one DB layer is needed for Registry initialization`)
-        let registry = this.registry = globalThis.registry = new ServerRegistry()
+        let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
         await registry.initClasspath()
         registry.setDB(db)
         await this.registry.boot()
