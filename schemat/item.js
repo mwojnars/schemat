@@ -10,7 +10,7 @@ import { Catalog, Data } from './data.js'
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
-// import * as utils from 'http://127.0.0.1:3000/local/utils.js'
+// import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
@@ -844,7 +844,7 @@ export class Item {
         if (body === undefined) body = `
             <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
             <div id="react-root">${this.render(view)}</div>
-            <script async type="module"> import {boot} from "/local/client.js"; boot('${view}'); </script>
+            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
         `
         return dedentFull(`
             <!DOCTYPE html><html>

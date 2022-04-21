@@ -4,7 +4,7 @@
   name: catalog.wiki
   URL: http://127.0.0.1:3000
   path_internal: /$
-  path_local: /local
+  path_local: /system/local
   routes:
     - - - 8
         - 101
@@ -12,9 +12,6 @@
     - - - 5
         - 103
       - apps
-    - - - 6
-        - 101
-      - local
     - - - 5
         - 104
       - site
@@ -64,11 +61,6 @@
       - 3
       - 102
 - __id:
-    - 6
-    - 101
-  name: /local
-  path: .
-- __id:
     - 8
     - 101
   name: /$
@@ -95,7 +87,7 @@
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
-    static check() { import('/local/utils.js').then(mod =>
+    static check() { import('/system/local/utils.js').then(mod =>
     console.log("Varia.code: imported ", mod)) }
 
     static error() { throw new Error('Varia/code/error()') }
@@ -129,7 +121,7 @@
     - - text:
           "@": schemat.type.STRING
       - fields
-    - - import { P, BR } from '/local/react-utils.js'
+    - - import { P, BR } from '/system/local/react-utils.js'
       - class_init
     - - view: |
           let text = this.get('text')
@@ -142,7 +134,7 @@
         // console.log('TwitterPost/code executed')
 
         // import {check} from '/site/widgets.js'
-        // import {Item} from '/local/item.js'
+        // import {Item} from '/system/local/item.js'
         // import vm from 'vm'
         // check()
         // console.log('registry:', registry)

@@ -150,7 +150,7 @@
       values:
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
-  _boot_class: schemat.item.Router
+  class_path: /system/local/site.js:Router
 - __id:
     - 0
     - 3
@@ -219,14 +219,7 @@
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_path: /local/site.js:Application
-  fields:
-    findRoute:
-      "@": schemat.type.CODE
-    urlPath:
-      "@": schemat.type.CODE
-    _boot_class:
-      "@": schemat.type.STRING
+  class_path: /system/local/site.js:Application
 - __id:
     - 0
     - 8
@@ -234,7 +227,7 @@
   info: Application that serves items on simple URLs of the form /CID:IID. Mainly
     used for system & admin purposes, or as a last-resort default for URL
     generation.
-  class_path: /local/site.js:AppBasic
+  class_path: /system/local/site.js:AppBasic
   fields:
     category:
       info: Optional category(ies) of items handled by this application.
@@ -257,7 +250,7 @@
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_path: /local/site.js:AppSpaces
+  class_path: /system/local/site.js:AppSpaces
   fields:
     spaces:
       values:
@@ -287,12 +280,20 @@
   prototype:
     - 0
     - 10
-  class_path: /local/type.js:STRING
+  class_path: /system/local/type.js:STRING
+- __id:
+    - 6
+    - 1
+  name: /local
+  path: .
 - __id:
     - 5
     - 1
   name: /system
   files:
+    local:
+      - 6
+      - 1
     Application:
       - 0
       - 7

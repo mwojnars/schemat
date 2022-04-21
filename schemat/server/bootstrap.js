@@ -7,6 +7,11 @@ import {ROOT_CID, SITE_CID} from '../item.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from '../data.js'
+import {fileURLToPath} from 'url'
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
+const __dirname  = path.dirname(__filename)
 
 
 /**********************************************************************************************************************
@@ -123,7 +128,8 @@ async function create_categories(Category) {
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG(new ITEM()),
         }),
-        _boot_class : 'schemat.item.Router',
+        class_path  : '/system/local/site.js:Router',
+        // _boot_class : 'schemat.item.Router',
         // code        : dedent(`
         //                 findRoute(request) {
         //                     let step   = request.step()
@@ -138,6 +144,7 @@ async function create_categories(Category) {
     cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
+        // class_path  : '/system/local/site.js:File',
         _boot_class : 'schemat.item.File',
         cached_methods: "read",
         fields      : C({
@@ -177,16 +184,14 @@ async function create_categories(Category) {
     cat.Application = await Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class_path  : '/local/site.js:Application',
-        // _boot_class : 'schemat.item.Application',
-        fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
+        class_path  : '/system/local/site.js:Application',
+        // fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
     cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class_path  : '/local/site.js:AppBasic',
-        // _boot_class : 'schemat.item.AppBasic',
+        class_path  : '/system/local/site.js:AppBasic',
         fields      : C({
             category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
@@ -195,8 +200,7 @@ async function create_categories(Category) {
     cat.AppSpaces = await Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_path  : '/local/site.js:AppSpaces',
-        // _boot_class : 'schemat.item.AppSpaces',
+        class_path  : '/system/local/site.js:AppSpaces',
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
 
@@ -213,8 +217,7 @@ async function create_categories(Category) {
     cat.STRING = await Category.new(12, {
         name        : "STRING",
         prototype   : cat.Schema,
-        class_path  : '/local/type.js:STRING',
-        // _boot_class : 'schemat.type.STRING',
+        class_path  : '/system/local/type.js:STRING',
     })
 
     return cat
@@ -254,8 +257,12 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
     // })
 
+    // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
+    item.dir_local  = await cat.FolderLocal.new({name: '/local', path: '.'})   //path.dirname(__dirname)
+
     item.dir_system = await cat.Folder.new({name: "/system",
         files: C({
+            'local'         : item.dir_local,
             'Application'   : cat.Application,
             'File'          : cat.File,
             'Folder'        : cat.Folder,
