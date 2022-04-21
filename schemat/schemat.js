@@ -71,12 +71,12 @@ class Schemat {
         return db
     }
 
-    async createRegistry(db) {
+    async createRegistry(db, boot = true) {
         if (!db) throw new Error(`at least one DB layer is needed for Registry initialization`)
         let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
         await registry.initClasspath()
         registry.setDB(db)
-        await this.registry.boot()
+        if (boot) await this.registry.boot()
         return registry
     }
 
@@ -94,7 +94,8 @@ class Schemat {
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
         await db.open()
         await db.erase()
-        return bootstrap(__dirname, db)
+        let registry = await this.createRegistry(db, false)
+        return bootstrap(registry)
     }
 
     async move({id, newid, bottom, db: dbInsert}) {
