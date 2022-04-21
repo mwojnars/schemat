@@ -1001,7 +1001,7 @@ export class Category extends Item {
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
             let name = this.get('_boot_class')
-            // print('boot item, _boot_class =', name)
+            print('_boot_class =', name, '(boot item)')
             if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
             return {Class: this.registry.getClass(name)}

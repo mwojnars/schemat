@@ -219,7 +219,7 @@
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  _boot_class: schemat.item.Application
+  class_path: /local/site.js:Application
   fields:
     findRoute:
       "@": schemat.type.CODE
@@ -287,7 +287,7 @@
   prototype:
     - 0
     - 10
-  _boot_class: schemat.type.STRING
+  class_path: /local/type.js:STRING
 - __id:
     - 5
     - 1
@@ -305,7 +305,3 @@
     Site:
       - 0
       - 1
-- __id:
-    - 12
-    - 1
-  name: string (type)

@@ -177,7 +177,8 @@ async function create_categories(Category) {
     cat.Application = await Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        _boot_class : 'schemat.item.Application',
+        class_path  : '/local/site.js:Application',
+        // _boot_class : 'schemat.item.Application',
         fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
@@ -212,7 +213,8 @@ async function create_categories(Category) {
     cat.STRING = await Category.new(12, {
         name        : "STRING",
         prototype   : cat.Schema,
-        _boot_class : 'schemat.type.STRING',
+        class_path  : '/local/type.js:STRING',
+        // _boot_class : 'schemat.type.STRING',
     })
 
     return cat
@@ -261,7 +263,7 @@ async function create_items(cat, Category) {
         }),
     })
 
-    item.string = await cat.STRING.new({name: "string (type)", })
+    // item.string = await cat.STRING.new({name: "string (type)", })
 
     // item.utils_js   = await cat.File.new({content: `export let print = console.log`})
     // item.widgets_js = await cat.File.new({content: dedent(`
