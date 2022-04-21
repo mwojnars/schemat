@@ -1042,14 +1042,10 @@ export class Category extends Item {
     _codeInit()      { return this.mergeSnippets('class_init') }
     _codeBaseClass() {
         /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
-        let boot = this.get('_boot_class')
         let [path, name] = this.getClassPath()
-
-        if (boot)               return `let Base = registry.getClass('${boot}')`
-        else if (name && path)  return `import {${name} as Base} from '${path}'`
-        else if (path)          return `import Base from '${path}'`
-
-        return 'let Base = Item'                            // Item class is available globally, no need to import
+        if (name && path) return `import {${name} as Base} from '${path}'`
+        else if (path)    return `import Base from '${path}'`
+        else              return 'let Base = Item'              // Item class is available globally, no need to import
     }
     _codeClass(name) {
         /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */

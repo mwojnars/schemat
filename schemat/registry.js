@@ -138,10 +138,10 @@ export class Registry {
 
         classpath.set_many("schemat.data", Map)                             // schemat.data.Map
         await classpath.add_module("schemat.data", "./data.js")
-        await classpath.add_module("schemat.item", "./item.js")
-        await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
         await classpath.add_module("schemat.type", "./type.js")
-        await classpath.add_module("schemat.base", "./base.js")
+        // await classpath.add_module("schemat.item", "./item.js")
+        // await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
+        // await classpath.add_module("schemat.base", "./base.js")
 
         this.classpath = classpath
         // print('initClasspath() done')

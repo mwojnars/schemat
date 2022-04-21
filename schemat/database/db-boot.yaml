@@ -36,8 +36,8 @@
           - key: class_body
             value:
               info: Source code of the class (a body without heading) that will be created for
-                this category. The class inherits from the `_boot_class`, or the
-                class of the first base category, or the top-level Item.
+                this category. The class inherits from the `class_path` class,
+                or the class of the first base category, or the top-level Item.
               "@": schemat.type.CODE
           - key: views
             value:
