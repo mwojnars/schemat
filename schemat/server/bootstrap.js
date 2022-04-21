@@ -48,7 +48,7 @@ let root_fields = C({
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
     fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
 
-    _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
+    // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
 
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),
     //handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),
@@ -89,7 +89,8 @@ let root_fields = C({
 let root_data = {
     name        : "Category",
     info        : "Category of items that represent categories",
-    _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
+    class_path  : '/system/local/item.js:Category',
+    // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,
 }
@@ -108,7 +109,8 @@ async function create_categories(Category) {
     cat.Site = await Category.new(SITE_CID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
-        _boot_class : 'schemat.item.Site',
+        class_path  : '/system/local/site.js:Site',
+        // _boot_class : 'schemat.item.Site',
         // prototype   : cat.Router,
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
@@ -144,8 +146,8 @@ async function create_categories(Category) {
     cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
-        // class_path  : '/system/local/site.js:File',
-        _boot_class : 'schemat.item.File',
+        class_path  : '/system/local/site.js:File',
+        // _boot_class : 'schemat.item.File',
         cached_methods: "read",
         fields      : C({
             content     : new CODE(),      // VARIANT(bin : BYTES(), txt : TEXT()),
@@ -158,7 +160,8 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        _boot_class : 'schemat.item.FileLocal',
+        class_path  : '/system/local/site.js:FileLocal',
+        // _boot_class : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
             //format: new STRING(),             // file format: pdf, xlsx, ...
@@ -167,7 +170,8 @@ async function create_categories(Category) {
     cat.Folder = await Category.new(5, {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        _boot_class : 'schemat.item.Folder',
+        class_path  : '/system/local/site.js:Folder',
+        // _boot_class : 'schemat.item.Folder',
         fields      : C({
             files       : new CATALOG(new ITEM()),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
@@ -177,7 +181,8 @@ async function create_categories(Category) {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
-        _boot_class : 'schemat.item.FolderLocal',
+        class_path  : '/system/local/site.js:FolderLocal',
+        // _boot_class : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })
 
@@ -340,12 +345,12 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(db) {
+export async function bootstrap(path, db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
     print(`Starting full RESET of DB, core items will be created anew in: ${db.filename}`)
 
-    let registry = globalThis.registry = new ServerRegistry(db)
+    let registry = globalThis.registry = new ServerRegistry(path, db)
     await registry.initClasspath()
 
     let Category = await registry.createRoot(root_data)             // create root category

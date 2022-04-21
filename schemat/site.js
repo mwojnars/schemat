@@ -116,7 +116,8 @@ export class Site extends Router {
         // local import if `path` starts with PATH_LOCAL_SUN
         let local = this.registry.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(this.registry.PATH_LOCAL_WORKING + '/' + path.slice((local + '/').length))
+            return this.localImport(this.registry.convertLocalPath(path))
+            // return this.localImport(this.registry.PATH_LOCAL_FS + '/' + path.slice((local + '/').length))
             // return this.localImport('./' + path.slice((local + '/').length))
 
         let source = await this.route(new Request({path, method: '@text'}))

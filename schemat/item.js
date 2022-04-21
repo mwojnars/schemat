@@ -998,18 +998,34 @@ export class Category extends Item {
            or the default path built from the item's ID on the site's system path.
          */
         let site = this.registry.site
+        let onServer = this.registry.onServer
+
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            let name = this.get('_boot_class')
-            print('_boot_class =', name, '(boot item)')
-            if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
-            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
-            return {Class: this.registry.getClass(name)}
+            let [path, name] = this._getClassPath()
+            if (!path) throw new Error(`missing 'class_path' property for a boot category: ${this.id_str}`)
+            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot category: ${this.id_str}`)
+
+            if (onServer) {
+                let local = this.registry.PATH_LOCAL_SUN
+                if (!path.startsWith(local + '/')) throw new Error(`boot category can import its class from "${local}" path only, not "${path}"`)
+                path = this.registry.convertLocalPath(path)       // convert the path from SUN to local filesystem representation
+            }
+
+            let mod = await import(path)
+            let Class = mod[name || 'default']
+            return {Class}
+
+            // let name = this.get('_boot_class')
+            // print('_boot_class =', name, '(boot item)')
+            // if (!name) throw new Error(`missing '_boot_class' property for a boot item: ${this.id_str}`)
+            // if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot item: ${this.id_str}`)
+            // return {Class: this.registry.getClass(name)}
         }
         // if (this.get('_boot_class')) print('non-boot item having _boot_class =', this.get('_boot_class'))
 
         let path = this.getPath()
-        if (this.registry.onClient) return import(path + '@import')
+        if (!onServer) return import(path + '@import')
 
         let source = this.getCode()
         let module = await site.parseModule(source, path)
@@ -1036,7 +1052,7 @@ export class Category extends Item {
     _codeBaseClass() {
         /* Source code that imports/loads the base class, Base, for a custom Class of this category. */
         let boot = this.get('_boot_class')
-        let [path, name] = splitLast(this.get('class_path') || '', ':')
+        let [path, name] = this._getClassPath()
 
         if (boot)               return `let Base = registry.getClass('${boot}')`
         else if (name && path)  return `import {${name} as Base} from '${path}'`
@@ -1074,6 +1090,7 @@ export class Category extends Item {
         cached = cached.split(/\s+/).map(m => `'${m}'`)
         return `Class.setCaching(${cached.join(',')})`
     }
+    _getClassPath() { return splitLast(this.get('class_path') || '', ':') }   // [path, name]
 
     getItem(iid) {
         /*

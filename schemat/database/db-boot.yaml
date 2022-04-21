@@ -6,8 +6,8 @@
       value: Category
     - key: info
       value: Category of items that represent categories
-    - key: _boot_class
-      value: schemat.item.Category
+    - key: class_path
+      value: /system/local/item.js:Category
     - key: cache_ttl
       value: 60
     - key: fields
@@ -103,13 +103,6 @@
               values:
                 "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
-          - key: _boot_class
-            value:
-              info: Name of a core Javascript class, subclass of Item, to be used for items of
-                this category. If `class_body` is configured, the class is
-                subclassed dynamically to insert the desired code. Should only
-                be used for core Schemat categories.
-              "@": schemat.type.STRING
         "@": schemat.data.Catalog
   "@": schemat.data.Data
 - __id:
@@ -118,7 +111,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  _boot_class: schemat.item.Site
+  class_path: /system/local/site.js:Site
   fields:
     URL:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -152,7 +145,7 @@
     - 3
   name: File
   info: File with a text content.
-  _boot_class: schemat.item.File
+  class_path: /system/local/site.js:File
   cached_methods: read
   fields:
     content:
@@ -176,7 +169,7 @@
   prototype:
     - 0
     - 3
-  _boot_class: schemat.item.FileLocal
+  class_path: /system/local/site.js:FileLocal
   fields:
     path:
       "@": schemat.type.STRING
@@ -186,7 +179,7 @@
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  _boot_class: schemat.item.Folder
+  class_path: /system/local/site.js:Folder
   fields:
     files:
       values:
@@ -205,7 +198,7 @@
   prototype:
     - 0
     - 5
-  _boot_class: schemat.item.FolderLocal
+  class_path: /system/local/site.js:FolderLocal
   fields:
     path:
       "@": schemat.type.STRING

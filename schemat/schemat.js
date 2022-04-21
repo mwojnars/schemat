@@ -94,7 +94,7 @@ class Schemat {
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
         await db.open()
         await db.erase()
-        return bootstrap(db)
+        return bootstrap(__dirname, db)
     }
 
     async move({id, newid, bottom, db: dbInsert}) {

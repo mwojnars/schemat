@@ -23,12 +23,20 @@ export class ServerRegistry extends Registry {
     // staging_ids = new Map()     // dict of items with a non-empty ID that have already been added to `staging`,
     //                             // to avoid repeated insertion of the same item twice and to verify its identity (newborn items excluded)
 
-    PATH_LOCAL_SUN = "/system/local"        // SUN folder that maps to local filesystem folder, PATH_LOCAL_WORKING;
-    PATH_LOCAL_WORKING                      // scripts from PATH_LOCAL_* can be imported by system items during startup
+    PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
+    PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
 
-    constructor(path) {
+    constructor(path, db) {
         super()
-        this.PATH_LOCAL_WORKING = path      // no trailing '/' (!)
+        this.PATH_LOCAL_FS = path       // no trailing '/' (!)
+        if (db) this.setDB(db)
+    }
+
+    convertLocalPath(path) {
+        /* Convert a /system/local/... import path from SUN to a local filesystem representation. */
+        let local = this.PATH_LOCAL_SUN
+        assert(path.startsWith(local + '/'))
+        return this.PATH_LOCAL_FS + path.slice(local.length)
     }
 
     async startSession(session) {
