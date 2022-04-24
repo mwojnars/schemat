@@ -1506,8 +1506,8 @@ export class SchemaPrototype extends Item {
        encode/decode through dynamic code.
      */
 
-    async init(data) {
-        let [path, name] = data.get('class_path')
+    async init() {
+        let [path, name] = this.get('class_path')
         let module = await import(path)
         this.class = module[name || 'default']
     }

@@ -6,7 +6,7 @@ import {print, assert, dedentCommon as dedent} from '../utils.js'
 import {ROOT_CID, SITE_CID} from '../item.js'
 import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
-import {Catalog} from '../data.js'
+import {Catalog, Data} from '../data.js'
 import {fileURLToPath} from 'url'
 import path from "path";
 
@@ -86,14 +86,14 @@ let root_fields = C({
                                         // leaving this upgrade-write for a background process; typically ~0.01
 })
 
-let root_data = {
+let root_data = new Data({
     name        : "Category",
     info        : "Category of items that represent categories",
     class_path  : '/system/local/item.js:Category',
     // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
     fields      : root_fields,
-}
+})
 
 /**********************************************************************************************************************
  **

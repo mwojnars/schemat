@@ -254,6 +254,7 @@ export class Item {
          */
         let item = new Item(category)
         if (iid !== null) item.iid = iid
+        if (!(data instanceof Data)) data = new Data(data)
         await item.boot(data)
         return item
     }
@@ -271,16 +272,15 @@ export class Item {
         /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
            In any case, the item and its .data is initialized ("booted") after this method completes.
          */
-        await this.initClass()
+        if (data) this.data = data
+        // if (!(data instanceof Data)) data = new Data(data)
 
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
-        if (!(data instanceof Data)) data = new Data(data)
+        await this.initClass()
 
-        let init = this.init(data)                      // optional custom initialization after the data is loaded
+        let init = this.init()                          // optional custom initialization after the data is loaded
         if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
-
-        this.data = data
     }
 
     async load(field = null, use_schema = true) {
@@ -318,13 +318,13 @@ export class Item {
         this.jsonData = jsonData
         let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
         let state  = JSON.parse(jsonData)
-        let data   = schema.decode(state)
+        this.data  = schema.decode(state)
 
-        let proto  = this.initPrototypes(data)
+        let proto  = this.initPrototypes()
         if (proto instanceof Promise) await proto
 
         // await this.initClass()
-        await this.boot(data)
+        await this.boot(this.data)
         this.isLoading = false
 
         this.setExpiry(this.category.get('cache_ttl'))
@@ -332,8 +332,7 @@ export class Item {
         // this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
 
-        return data
-        // TODO: initialize item metadata - the remaining attributes from `record`
+        // return data
     }
 
     setExpiry(ttl) {
@@ -344,11 +343,11 @@ export class Item {
         else this.expiry = Date.now() + ttl * 1000
     }
 
-    initPrototypes(data) {
+    initPrototypes() {
         /* Load all prototypes and check that they belong to the same category (exactly) as this item,
            otherwise the schema of some fields may be incompatible or missing.
          */
-        let prototypes = data.getValues('prototype')
+        let prototypes = this.data.getValues('prototype')
         for (const p of prototypes)
             if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.isLoaded)
@@ -363,10 +362,9 @@ export class Item {
         T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
 
-    init(data) {}
-        /* Optional category-specific initialization after the data is loaded, but not yet assigned to this.data.
-           This can't be implemented by overriding load/reload(), because the ultimate class is not yet determined
-           and attached to `this` at these stages. Subclasses may override this method as either sync or async.
+    init() {}
+        /* Optional category-specific initialization after this.data is loaded, but the item is not yet fully initialized.
+           Subclasses may override this method as either sync or async.
          */
     end() {}
         /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
