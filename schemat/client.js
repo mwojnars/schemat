@@ -118,7 +118,7 @@ export async function boot(view) {
 
     let root = document.querySelector("#react-root")
     let item = registry.session.item
-    assert(item.loaded)
+    assert(item.isLoaded)
     // print('main item:', item)
 
     item.render(view, root)

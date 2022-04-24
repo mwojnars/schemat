@@ -89,7 +89,7 @@ export class ItemsCache extends ItemsMap {
                 proto.delete.call(this, key)            // since we pass a key, not an ID, we need to call a super-super method here
                 let end = item.end()
                 if (end instanceof Promise) ends.push(end)
-                // print('item evicted:', key, item.loaded ? '' : '(stub)' )
+                // print('item evicted:', key, item.isLoaded ? '' : '(stub)' )
             }
 
         if (ends.length) return Promise.all(ends)

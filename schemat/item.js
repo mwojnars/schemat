@@ -201,19 +201,21 @@ export class Item {
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
-    get newborn()   { return this.iid === null }
-    get loaded()    { return this.has_data() && !(this.data instanceof Promise) }   // false if `data` is still loading (a Promise) !!
     get schema()    { return this.getSchema() }
 
-    get isShadow()    { return this.cid === undefined }
-    get isCategory()  { return this.cid === ROOT_CID }
+    isLoading           // holds the Promise created at the start of reload() and fulfilled when load() completes
+    get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
+    get isShadow()      { return this.cid === undefined }
+    get isCategory()    { return this.cid === ROOT_CID }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
     }
-    has_data()      { return !!this.data }
-    assertLoaded()  { if (!this.loaded) throw new ItemNotLoaded(this) }
+    assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
+
+    // get newborn()   { return this.iid === null }
+    // has_data()      { return !!this.data }
 
     static orderAscID(item1, item2) {
         /* Ordering function that orders items by ascending ID. Can be passed to array.sort() to sort items, stubs,
@@ -284,11 +286,12 @@ export class Item {
     async load(field = null, use_schema = true) {
         /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
 
-        // if field !== null && field in this.loaded: return      // this will be needed when partial loading from indexes is available
+        // if field !== null && field in this.isLoaded: return      // this will be needed when partial loading from indexes is available
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
-        if (this.loaded) return this
-        if (this.data) return this.data.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
+        if (this.isLoaded) return this
+        if (this.isLoading) return this.isLoading.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
+        // if (this.data) return this.data.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
 
         if (!this.category) {
             // load the category and set a proper class for this item - stubs only have Item as their class,
@@ -296,14 +299,14 @@ export class Item {
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
         }
-        else if (!this.category.loaded && this.category !== this) 
+        else if (!this.category.isLoaded && this.category !== this) 
             await this.category.load()
 
         // store a Promise that will eventually load this item's data, this is to avoid race conditions;
         // the promise will be replaced in this.data with an actual `data` object when ready
-        this.data = this.reload(use_schema)
+        this.isLoading = this.reload(use_schema)
 
-        return this.data.then(() => this)
+        return this.isLoading.then(() => this)
     }
 
     async reload(use_schema = true, jsonData = null) {
@@ -322,6 +325,7 @@ export class Item {
 
         // await this.initClass()
         await this.boot(data)
+        this.isLoading = false
 
         this.setExpiry(this.category.get('cache_ttl'))
         // let ttl_ms  = this.category.get('cache_ttl') * 1000
@@ -347,7 +351,7 @@ export class Item {
         let prototypes = data.getValues('prototype')
         for (const p of prototypes)
             if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
-        prototypes = prototypes.filter(p => !p.loaded)
+        prototypes = prototypes.filter(p => !p.isLoaded)
         if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
@@ -727,7 +731,7 @@ export class Item {
         let [node, req, target] = this._findRouteChecked(request)
         if (node instanceof Promise) node = await node
         if (!node instanceof Item) throw new Error("internal error, expected an item as a target node of a URL route")
-        if (!node.loaded) await node.load()
+        if (!node.isLoaded) await node.load()
         if (typeof target === 'function') target = target(node)         // delayed target test after the node is loaded
         return target ? node.handle(req) : node.route(req)
     }
@@ -743,7 +747,7 @@ export class Item {
         try {
             let [node, req, target] = this._findRouteChecked(request)
             if (node instanceof Promise) node = await node
-            if (!node.loaded) await node.load()
+            if (!node.isLoaded) await node.load()
             if (typeof target === 'function') target = target(node)     // delayed target test after the node is loaded
             if (target) return [node, req]
             return node.routeNode(req, strategy)

@@ -16,7 +16,6 @@ export class JSONx {
     static FLAG_DICT  = "(dict)"       // special value of ATTR_CLASS that denotes a dict wrapper for another dict containing the reserved "@" key
     static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
-    // static PATH_ITEM  = "schemat.item.Item"
 
     constructor() {
         // for now, this constructor is only used internally in static encode() & static decode()
@@ -57,7 +56,6 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        // let Item = registry.getClass(JSONx.PATH_ITEM)
         if (obj instanceof Item && obj.has_id()) {
             // if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
@@ -143,7 +141,6 @@ export class JSONx {
         if (cls === Map)
             return new Map(Object.entries(this.decode_dict(state)))
 
-        // let Item = registry.getClass(JSONx.PATH_ITEM)
         if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
             return registry.getItem(state)
 

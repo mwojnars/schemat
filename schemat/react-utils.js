@@ -291,7 +291,7 @@ export function useItemLoading(raise = false) {
     }, [missingItems])
 
     function assertLoaded(item) {
-        if (item.loaded) return true
+        if (item.isLoaded) return true
         if (!missingItems.includes(item))
             setMissingItems(prev => [...prev, item])
         if (raise) throw new ItemNotLoaded()
@@ -319,7 +319,7 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
         }
         render() {
             const loaded = (item) => {
-                if (item.loaded) return true
+                if (item.isLoaded) return true
                 if (!this.state.missingItems.includes(item))
                     setTimeout(() => this.setState((prev) => ({missingItems: [...prev.missingItems, item]})))
                     // NOTE: setState() calls must be delayed until after render(), otherwise a React warning is produced:

@@ -5,7 +5,6 @@ import { ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
-
 import { Item } from './item.js'
 
 let csso = await tryimport('csso')
@@ -209,7 +208,7 @@ class Widget extends Component {}
  **
  */
 
-export class Schema extends Item {
+export class Schema { //extends Item {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
@@ -224,7 +223,7 @@ export class Schema extends Item {
     static initial = undefined
 
     constructor(params = {}) {
-        super()
+        // super()
         let {default_, info, blank, type} = params || {}         // params=null is valid
         if (info  !== undefined)    this.info  = info
         if (blank !== undefined)    this.blank = blank
@@ -232,6 +231,11 @@ export class Schema extends Item {
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
         if ('default' in params)    this.default = params.default       // to pass it to Schema: as "default" or "default_"
         // if (multi !== undefined)    this.multi = multi
+    }
+
+    get(prop) {
+        if (this[prop] !== undefined) return this[prop]
+        if (this.constructor[prop] !== undefined) return this.constructor[prop]
     }
 
     getInitial() {
@@ -755,7 +759,7 @@ export class ITEM extends Schema {
 
         // verify inheritance from a base category - only for LOADED items !!
         if (this.category_base)
-            if (item.has_data() && !item.instanceof(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
+            if (item.isLoaded && !item.instanceof(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
 
         // return IID alone if an exact category is known
         if (this.category_exact) {
@@ -1479,6 +1483,40 @@ export class DATA extends CATALOG {
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
+
+/**********************************************************************************************************************
+ **
+ **  Schema IN DB
+ **
+ */
+
+export class SchemaWrapper extends Schema {
+    /* Wrapper for a schema type implemented as an item of the Schema category. */
+    proto           // item of the Schema category implementing this schema type
+    props           // properties to be passed to calls of prototype.valid/encode/decode()
+
+    async init()            { await this.proto.load() }
+    valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
+    encode(obj, props)      { return this.proto.encode(obj, {...this.props, ...props}) }
+    decode(obj, props)      { return this.proto.decode(obj, {...this.props, ...props}) }
+}
+
+export class SchemaPrototype extends Item {
+    /* Schema implemented as an item that's stored in DB. May point back to a plain schema class or provide its own
+       encode/decode through dynamic code.
+     */
+
+    async init(data) {
+        let [path, name] = data.get('class_path')
+        let module = await import(path)
+        this.class = module[name || 'default']
+    }
+
+    encode(obj, props) {
+
+    }
+
+}
 
 /**********************************************************************************************************************/
 

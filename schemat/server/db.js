@@ -248,7 +248,6 @@ export class DB extends Item {
     }
 
     async update(item, opts = {}) {
-        assert(item.has_data())
         assert(item.has_id())
         return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
     }
@@ -296,7 +295,6 @@ export class DB extends Item {
            this IID is not yet present in the DB), or not.
            If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
          */
-        assert(item.has_data())
         assert(item.cid || item.cid === 0)
         let data = item.dumpData()
         let cid  = item.cid
