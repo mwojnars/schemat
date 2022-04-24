@@ -290,8 +290,7 @@ export class Item {
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
         if (this.isLoaded) return this
-        if (this.isLoading) return this.isLoading.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
-        // if (this.data) return this.data.then(() => this)    // loading has already started, must wait rather than load again (`data` is a Promise)
+        if (this.isLoading) return this.isLoading           // loading has already started, should wait rather than load again
 
         if (!this.category) {
             // load the category and set a proper class for this item - stubs only have Item as their class,
@@ -302,11 +301,7 @@ export class Item {
         else if (!this.category.isLoaded && this.category !== this) 
             await this.category.load()
 
-        // store a Promise that will eventually load this item's data, this is to avoid race conditions;
-        // the promise will be replaced in this.data with an actual `data` object when ready
-        this.isLoading = this.reload(use_schema)
-
-        return this.isLoading.then(() => this)
+        return this.isLoading = this.reload(use_schema)     // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async reload(use_schema = true, jsonData = null) {
@@ -324,7 +319,7 @@ export class Item {
         if (proto instanceof Promise) await proto
 
         // await this.initClass()
-        await this.boot(this.data)
+        await this.boot()
         this.isLoading = false
 
         this.setExpiry(this.category.get('cache_ttl'))
@@ -332,7 +327,7 @@ export class Item {
         // this.expiry = Date.now() + ttl_ms
         // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
 
-        // return data
+        return this
     }
 
     setExpiry(ttl) {
