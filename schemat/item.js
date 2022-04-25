@@ -1000,13 +1000,6 @@ export class Category extends Item {
             let [path, name] = this.getClassPath()
             if (!path) throw new Error(`missing 'class_path' property for a boot category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot category: ${this.id_str}`)
-            // if (onServer) {
-            //     let local = this.registry.PATH_LOCAL_SUN
-            //     if (!path.startsWith(local + '/')) throw new Error(`a boot category can import its class from "${local}" path only, not "${path}"`)
-            //     path = this.registry.directImportPath(path)           // convert the path from SUN to local filesystem representation
-            // }
-            // else path += '@import'
-
             return {Class: await this.registry.importDirect(path, name || 'default')}
 
             // let mod = await import(path)

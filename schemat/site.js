@@ -79,19 +79,19 @@ export class Site extends Router {
         throw new Request.NotFound("not an application")
     }
 
-    async import(path, referrer) {
-        /* General-purpose import of JS files and code snippets from Schemat's Universal Namespace (SUN).
-           On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
-           optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
-           with '@import@file' access method designators appended to path; the `referrer` must be empty.
-         */
-        // if (this.registry.onClient) {
-        //     if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
-        //     return import(path)  //'@import@file'
-        // }
-        let module = await this.importModule(path + '@import', referrer)
-        return module.namespace
-    }
+    // async import(path, referrer) {
+    //     /* General-purpose import of JS files and code snippets from Schemat's Universal Namespace (SUN).
+    //        On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
+    //        optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
+    //        with '@import@file' access method designators appended to path; the `referrer` must be empty.
+    //      */
+    //     // if (this.registry.onClient) {
+    //     //     if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
+    //     //     return import(path)  //'@import@file'
+    //     // }
+    //     let module = await this.importModule(path, referrer)
+    //     return module.namespace
+    // }
 
     async importModule(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
@@ -117,8 +117,6 @@ export class Site extends Router {
         let local = this.registry.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
             return this.localImport(this.registry.directImportPath(path))
-            // return this.localImport(this.registry.PATH_LOCAL_FS + '/' + path.slice((local + '/').length))
-            // return this.localImport('./' + path.slice((local + '/').length))
 
         let source = await this.route(new Request({path, method: '@text'}))
         if (!source) throw new Error(`Site.importModule(), path not found: ${path}`)
@@ -127,7 +125,7 @@ export class Site extends Router {
     }
 
     async localImport(path) {
-        /* Import a module from the local installation using standard import(); return as a vm.SyntheticModule. */
+        /* Import a module from the local installation (server-side) using standard import(); return a vm.SyntheticModule. */
         print('localImport() path:', path)
         const vm    = this._vm
         let local   = await import(path)

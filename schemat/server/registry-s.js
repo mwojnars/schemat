@@ -39,6 +39,17 @@ export class ServerRegistry extends Registry {
         return this.PATH_LOCAL_FS + path.slice(local.length)
     }
 
+    async import(path, name) {
+        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
+        assert(this.site, 'the site must be loaded before a high-level import from the SUN is called')
+        let module = await this.site.importModule(path)     // VM module
+        module = module.namespace                           // standard object
+        return name ? module[name] : module
+
+        // let module = this.site.import(path)
+        // return name ? (await module)[name] : module
+    }
+
     async startSession(session) {
         let release = await this.sessionMutex.acquire()
         assert(!this.session, 'trying to process a new web request when another one is still open')

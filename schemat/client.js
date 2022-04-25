@@ -95,6 +95,15 @@ class ClientRegistry extends Registry {
         for (let rec of data.items)
             await this.getLoaded(rec.id)            // preload all boot items from copies passed in constructor()
     }
+
+    directImportPath(path) { return this.remoteImportPath(path) }
+    remoteImportPath(path) { return path + '@import' }      //'@import@file'
+
+    async import(path, name) {
+        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
+        let module = import(this.remoteImportPath(path))
+        return name ? (await module)[name] : module
+    }
 }
 
 /**********************************************************************************************************************

@@ -1511,8 +1511,7 @@ export class SchemaPrototype extends Item {
 
     async init() {
         let [path, name] = splitClasspath(this.get('class_path'))
-        let module = await this.registry.import(path)
-        this.class = module[name || 'default']
+        this.class = await this.registry.import(path, name || 'default')
         assert(T.isClass(this.class))
     }
 

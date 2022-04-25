@@ -1,6 +1,6 @@
 "use strict";
 
-import { print, assert, splitLast } from './utils.js'
+import {print, assert, splitLast, NotImplemented} from './utils.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
@@ -257,22 +257,16 @@ export class Registry {
 
     /***  import  ***/
 
-    directImportPath(path) { return path + '@import' }
+    import(path, name)      { throw new NotImplemented() }
+    directImportPath(path)  { throw new NotImplemented() }
 
     async importDirect(path, name) {
         /* Direct (low-level) import of a module and (optionally) its element, `name`, from a SUN path,
-           using only plain import() rather than the generic routing mechanism - use Site.import() if the latter is needed.
+           using only plain import() rather than the generic routing mechanism - use .import() if the latter is needed.
            Works on a server and a client; performs any needed path conversion along the way.
            On a server, the `path` is restricted to subpaths of the PATH_LOCAL_SUN (/system/local) folder.
          */
         let module = import(this.directImportPath(path))
-        return name ? (await module)[name] : module
-    }
-
-    async import(path, name) {
-        /* High-level import of a module and (optionally) its element, `name`, from a SUN path. */
-        assert(this.site, 'the site must be loaded before a high-level import from the SUN is called')
-        let module = this.site.import(path)
         return name ? (await module)[name] : module
     }
 }
