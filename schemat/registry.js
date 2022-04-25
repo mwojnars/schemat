@@ -166,14 +166,16 @@ export class Registry {
         return ret.value.id
     }
 
-    async createRoot(root_data = null) {
+    async createRoot(data) {
         /*
-        Create the RootCategory object, ID=(0,0). If `root_data` is provided, the properties
-        are initialized from there rather, otherwise they are loaded from DB.
+        Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
+        are initialized from there, otherwise they are loaded from DB.
         */
         let root = this.root = new RootCategory(this)
-        await (root_data ? root.boot(root_data) : root.load())
-        return root
+        return root.reload({data})
+        // await (root_data ? root.reload({data: root_data}) : root.load())
+        // await (root_data ? root.boot(root_data) : root.load())
+        // return root
     }
 
     getItem(id, {version = null} = {}) {

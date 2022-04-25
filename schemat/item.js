@@ -256,12 +256,13 @@ export class Item {
          */
         let item = new Item(category)
         if (iid !== null) item.iid = iid
-        return item.boot(data)
+        return item.reload({data})
+        // return item.boot(data)
     }
-    static async createLoaded(category, iid, data) {
+    static async createLoaded(category, iid, jsonData) {
         let item = new Item(category)
         item.iid = iid
-        return item.isLoading = item.reload({jsonData: data})
+        return item.isLoading = item.reload({jsonData})
     }
 
     constructor(category = null) {
@@ -273,14 +274,14 @@ export class Item {
         }
     }
 
-    async boot(data) {
+    async boot() {
         /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
            In any case, the item and its .data is initialized ("booted") after this method completes.
          */
-        if (data) {
-            if (!(data instanceof Data)) data = new Data(data)
-            this.data = data
-        }
+        // if (data) {
+        //     if (!(data instanceof Data)) data = new Data(data)
+        //     this.data = data
+        // }
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         await this.initClass()
@@ -320,6 +321,7 @@ export class Item {
             await this.category.load()
 
         this.data = opts.data || await this._loadData(opts)
+        if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
         let proto = this.initPrototypes()
         if (proto instanceof Promise) await proto
