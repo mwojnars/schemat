@@ -257,8 +257,13 @@ export class Registry {
 
     /***  import  ***/
 
-    import(path, name)      { throw new NotImplemented() }
-    directImportPath(path)  { throw new NotImplemented() }
+    import(path, name) {
+        /* High-level import of a module and (optionally) its element, `name`, from a SUN path.
+           Uses the site's routing mechanism to locate the `path` anywhere across the SUN namespace.
+           Implemented in subclasses. Can be called client-side and server-side alike.
+         */
+        throw new NotImplemented()
+    }
 
     async importDirect(path, name) {
         /* Direct (low-level) import of a module and (optionally) its element, `name`, from a SUN path,
@@ -269,6 +274,8 @@ export class Registry {
         let module = import(this.directImportPath(path))
         return name ? (await module)[name] : module
     }
+
+    directImportPath(path)  { throw new NotImplemented() }
 }
 
 

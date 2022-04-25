@@ -79,20 +79,6 @@ export class Site extends Router {
         throw new Request.NotFound("not an application")
     }
 
-    // async import(path, referrer) {
-    //     /* General-purpose import of JS files and code snippets from Schemat's Universal Namespace (SUN).
-    //        On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
-    //        optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
-    //        with '@import@file' access method designators appended to path; the `referrer` must be empty.
-    //      */
-    //     // if (this.registry.onClient) {
-    //     //     if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
-    //     //     return import(path)  //'@import@file'
-    //     // }
-    //     let module = await this.importModule(path, referrer)
-    //     return module.namespace
-    // }
-
     async importModule(path, referrer) {
         /* Custom import of JS files and code snippets from Schemat's Universal Namespace (SUN). Returns a vm.Module object. */
         // TODO: cache module objects, parameter Site:cache_modules_ttl

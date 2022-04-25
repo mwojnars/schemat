@@ -993,7 +993,7 @@ export class Category extends Item {
            or the default path built from the item's ID on the site's system path.
          */
         let site = this.registry.site
-        let onServer = this.registry.onServer
+        let onClient = this.registry.onClient
 
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
@@ -1001,14 +1001,10 @@ export class Category extends Item {
             if (!path) throw new Error(`missing 'class_path' property for a boot category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot category: ${this.id_str}`)
             return {Class: await this.registry.importDirect(path, name || 'default')}
-
-            // let mod = await import(path)
-            // let Class = mod[name || 'default']
-            // return {Class}
         }
 
         let path = this.getPath()
-        if (!onServer) return import(path + '@import')
+        if (onClient) return this.registry.import(path)
 
         let source = this.getCode()
         let module = await site.parseModule(source, path)
