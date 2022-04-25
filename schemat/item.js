@@ -257,7 +257,6 @@ export class Item {
         let item = new Item(category)
         if (iid !== null) item.iid = iid
         return item.reload({data})
-        // return item.boot(data)
     }
     static async createLoaded(category, iid, jsonData) {
         let item = new Item(category)
@@ -274,46 +273,26 @@ export class Item {
         }
     }
 
-    async boot() {
-        /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
-           In any case, the item and its .data is initialized ("booted") after this method completes.
-         */
-        // if (data) {
-        //     if (!(data instanceof Data)) data = new Data(data)
-        //     this.data = data
-        // }
-        this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
-
-        await this.initClass()
-
-        let init = this.init()                          // optional custom initialization after the data is loaded
-        if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
-        return this
-    }
-
-    async load(field = null, use_schema = true) {
-        /* Load full data of this item (this.data) from a DB, if not loaded yet. Load category. Return this.data. */
-
+    async load(opts = {}) {
+        /* Load full data of this item (this.data) if not loaded yet. Return this object. */
         // if field !== null && field in this.isLoaded: return      // this will be needed when partial loading from indexes is available
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
-
         if (this.isLoaded) return this
         if (this.isLoading) return this.isLoading       // loading has already started, should wait rather than load again
-        return this.reload({use_schema})                // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.reload(opts)                        // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async reload(opts = {}) {
-        if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this may only happen when called directly, not through load()
-        return this.isLoading = this.reload__(opts)     // keep a Promise that will eventually load this item's data to avoid race conditions
+        if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
+        return this.isLoading = this.boot(opts)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async reload__(opts = {}) {
+    async boot(opts = {}) {
         /* (Re)initialize this item. Load this.data from a DB, or from a JSON-encoded string, opts.jsonData, or take from opts.data.
            Set up the class and prototypes. Call init().
+           Boot options (opts): {use_schema, jsonData, data}
          */
-        if (!this.category) {
-            // load the category and set a proper class for this item - stubs only have Item as their class,
-            // which must be changed when an item gets loaded and linked to its category
+        if (!this.category) {                               // initialize this.category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
         }
@@ -323,17 +302,33 @@ export class Item {
         this.data = opts.data || await this._loadData(opts)
         if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
-        let proto = this.initPrototypes()
+        let proto = this.initPrototypes()                   // load prototypes
         if (proto instanceof Promise) await proto
 
         this.setExpiry(this.category.get('cache_ttl'))
+        this._mod_type = await import('./type.js')          // to allow synchronous access to DATA and generic_schema in other methods later on
 
-        // await this.initClass()
-        await this.boot()
+        await this.initClass()                              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+
+        let init = this.init()                              // optional custom initialization after the data is loaded
+        if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+
         this.isLoading = false
-
         return this
     }
+    // async boot() {
+    //     /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
+    //        In any case, the item and its .data is initialized ("booted") after this method completes.
+    //      */
+    //     this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
+    //
+    //     await this.initClass()
+    //
+    //     let init = this.init()                          // optional custom initialization after the data is loaded
+    //     if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+    //     return this
+    // }
+
     async _loadData({use_schema = true, jsonData} = {}) {
         if (jsonData === undefined) jsonData = await this._loadDataJson()
         let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema

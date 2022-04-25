@@ -173,9 +173,6 @@ export class Registry {
         */
         let root = this.root = new RootCategory(this)
         return root.reload({data})
-        // await (root_data ? root.reload({data: root_data}) : root.load())
-        // await (root_data ? root.boot(root_data) : root.load())
-        // return root
     }
 
     getItem(id, {version = null} = {}) {
