@@ -862,18 +862,28 @@ export class MAP extends Schema {
     If no schema is provided, `generic_schema` is used as a default for values, or STRING() for keys.
     */
 
-    // the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
-    static keys_default   = new STRING()
-    static values_default = generic_schema
+    // // the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
+    // static keys_default   = new STRING()
+    // static values_default = generic_schema
+    //
+    // get _keys()     { return this.keys || this.constructor.keys_default }
+    // get _values()   { return this.values || this.constructor.values_default }
+    //
+    // constructor(props = {}) {
+    //     super(props)
+    //     let {keys, values} = props
+    //     if (keys)   this.keys = keys            // schema of keys of app-layer dicts
+    //     if (values) this.values = values        // schema of values of app-layer dicts
+    // }
 
-    get _keys()     { return this.keys || this.constructor.keys_default }
-    get _values()   { return this.values || this.constructor.values_default }
-
-    constructor(values, keys, props = {}) {
-        super(props)
-        if (keys)   this.keys = keys            // schema of keys of app-layer dicts
-        if (values) this.values = values        // schema of values of app-layer dicts
+    static defaultProps = {
+        keys:       new STRING(),               // schema of keys of app-layer dicts
+        values:     generic_schema,             // schema of values of app-layer dicts
     }
+
+    get _keys()     { return this.props.keys }
+    get _values()   { return this.props.values }
+
     encode(d) {
         let type = this.type || Object
         if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
@@ -923,10 +933,16 @@ export class RECORD extends Schema {
     - unlike in MAP, where all values share the same schema. RECORD does not encode keys, but passes them unmodified.
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
-    constructor(fields, props = {}) {
-        super(props)
-        this.fields = fields            // plain object containing field names and their schemas
+    // constructor(fields, props = {}) {
+    //     super(props)
+    //     this.fields = fields            // plain object containing field names and their schemas
+    // }
+    static defaultProps = {
+        fields: {},                     // plain object containing field names and their schemas
     }
+
+    get fields()    { return this.props.fields }
+
     encode(data) {
         /* Encode & compactify values of fields through per-field schema definitions. */
         if (this.type) {

@@ -41,13 +41,5 @@
       values:
         "@": schemat.type.STRING
       "@": schemat.type.CATALOG
-    mapping:
-      info: Mapping of a category to an SQL table.
-      fields:
-        category:
-          "@": schemat.type.ITEM
-        table:
-          "@": schemat.type.STRING
-      "@": schemat.type.RECORD
     readonly:
       "@": schemat.type.BOOLEAN
