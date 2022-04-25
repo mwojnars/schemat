@@ -208,7 +208,7 @@ class Widget extends Component {}
  **
  */
 
-export class Schema { //extends Item {
+export class Schema {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
@@ -222,18 +222,35 @@ export class Schema { //extends Item {
 
     static initial = undefined
 
-    constructor(params = {}) {
-        // super()
-        let {default_, info, blank, type} = params || {}         // params=null is valid
+    static defaultProps = {}
+
+    static __transient__ = ['__props']
+
+    constructor(props = {}) {
+        this.__props = props = props || {}                              // props=null/undefined is valid
+        let {default_, info, blank, type} = props
         if (info  !== undefined)    this.info  = info
         if (blank !== undefined)    this.blank = blank
         if (type  !== undefined)    this.type  = type
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
-        if ('default' in params)    this.default = params.default       // to pass it to Schema: as "default" or "default_"
+        if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
         // if (multi !== undefined)    this.multi = multi
     }
 
-    init() {}
+    init() {}           // override in subclasses to perform initialization to be called in Category.init(); can be async
+
+    static getDefaultProps() {
+        /* Return all defaultProps from the prototype chain combined. */
+        return Object.assign({}, ...[...T.inherited(this, 'defaultProps')].reverse())
+    }
+    // _initProps() {
+    //     /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
+    //     this.props = {...this.constructor.getDefaultProps(), ...this.__props}
+    // }
+
+    get props() {
+        return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
+    }
 
     get(prop) {
         if (this[prop] !== undefined) return this[prop]
@@ -748,10 +765,10 @@ export class ITEM extends Schema {
     category_exact      // (optional) an exact category of the items being encoded; stored as an object
                         // because during bootstrap there's no IID yet (!) when this ITEM is being created
 
-    constructor(params = {}) {
-        /* `params.exact` may contain a category object for exact category checks. */
-        let {type, type_exact, ...base_params} = params
-        super(base_params)
+    constructor(props = {}) {
+        /* `props.exact` may contain a category object for exact category checks. */
+        let {type, type_exact, ...base_props} = props
+        super(base_props)
         if (type) this.category_base = type
         if (type_exact) this.category_exact = type_exact
     }
@@ -852,8 +869,8 @@ export class MAP extends Schema {
     get _keys()     { return this.keys || this.constructor.keys_default }
     get _values()   { return this.values || this.constructor.values_default }
 
-    constructor(values, keys, params = {}) {
-        super(params)
+    constructor(values, keys, props = {}) {
+        super(props)
         if (keys)   this.keys = keys            // schema of keys of app-layer dicts
         if (values) this.values = values        // schema of values of app-layer dicts
     }
@@ -906,8 +923,8 @@ export class RECORD extends Schema {
     - unlike in MAP, where all values share the same schema. RECORD does not encode keys, but passes them unmodified.
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
-    constructor(fields, params = {}) {
-        super(params)
+    constructor(fields, props = {}) {
+        super(props)
         this.fields = fields            // plain object containing field names and their schemas
     }
     encode(data) {
@@ -982,9 +999,9 @@ export class CATALOG extends Schema {
     getValidKeys()  { return undefined }
 
 
-    constructor(values, params = {}) {
-        super(params)
-        let {keys} = params
+    constructor(values, props = {}) {
+        super(props)
+        let {keys} = props
         if (keys)   this.keys = keys
         if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
@@ -1467,8 +1484,8 @@ export class DATA extends CATALOG {
 
     fields         // plain object with field names and their schemas; null means a default schema should be used for a given field
 
-    constructor(fields, params = {}) {
-        super(null, params)
+    constructor(fields, props = {}) {
+        super(null, props)
         this.fields = fields
     }
     subschema(key) {
@@ -1488,7 +1505,7 @@ export class DATA extends CATALOG {
 
 /**********************************************************************************************************************
  **
- **  Schema IN DB
+ **  SCHEMA WRAPPER (schema in DB)
  **
  */
 
@@ -1497,9 +1514,8 @@ export class SchemaWrapper extends Schema {
        Specifies a schema type + particular property values (schema constraints etc.) to be used during encoding/decoding.
      */
     proto                   // item of the Schema category implementing this schema type
-    props                   // properties to be passed to prototype.valid/encode/decode()
-    
-    schema                  // the actual Schema instance to be used for encode/decode, provided by `proto` during init()
+    props                   // properties to be passed to a newly created `schema`
+    schema                  // the actual Schema instance used for encode/decode, provided by `proto` during init()
     
     async init() { 
         await this.proto.load()
@@ -1507,13 +1523,9 @@ export class SchemaWrapper extends Schema {
         this.schema = this.proto.createSchema(this.props)
     }
     
-    valid(obj)          { return this.schema.valid(obj)  }
-    encode(obj)         { return this.schema.encode(obj) }
-    decode(obj)         { return this.schema.decode(obj) }
-
-    // valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
-    // encode(obj, props)      { return this.proto.encode(obj, {...this.props, ...props}) }
-    // decode(obj, props)      { return this.proto.decode(obj, {...this.props, ...props}) }
+    valid(obj)              { return this.schema.valid(obj)  }
+    encode(obj)             { return this.schema.encode(obj) }
+    decode(obj)             { return this.schema.decode(obj) }
 
     __getstate__()          { return {proto: this.proto.id, props: this.props} }
     __setstate__(state)     {
@@ -1527,22 +1539,15 @@ export class SchemaPrototype extends Item {
     /* Schema implemented as an item that's stored in DB. May point back to a plain schema class or provide its own
        encode/decode through dynamic code.
      */
-
     async init() {
         let [path, name] = splitClasspath(this.get('class_path'))
         this.schemaClass = await this.registry.import(path, name || 'default')
         assert(T.isClass(this.schemaClass))
     }
-
     createSchema(props) {
         let schema = new this.schemaClass()
         return Object.assign(schema, props)
     }
-
-    // valid(obj, props)       { return this.createSchema(props).valid(obj)  }
-    // encode(obj, props)      { return this.createSchema(props).encode(obj) }
-    // decode(obj, props)      { return this.createSchema(props).decode(obj) }
-
 }
 
 function splitClasspath(path) { return splitLast(path || '', ':') }   // [path, name]
