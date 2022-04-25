@@ -124,7 +124,6 @@ export class Site extends Router {
         await module.link(() => {})
         await module.evaluate()
         return {...module.namespace, __vmModule__: module}
-        // return module
     }
 
     async parseModule(source, path) {

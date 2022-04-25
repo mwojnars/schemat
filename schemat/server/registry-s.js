@@ -43,9 +43,6 @@ export class ServerRegistry extends Registry {
         assert(this.site, 'the site must be loaded before a high-level import from the SUN is called')
         let module = this.site.importModule(path)
         return name ? (await module)[name] : module
-        // let module = await this.site.importModule(path)         // VM module
-        // module = module.namespace                               // standard object
-        // return name ? module[name] : module
     }
 
     async startSession(session) {

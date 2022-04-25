@@ -3,7 +3,7 @@ import {
     e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
     TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
 } from './react-utils.js'
-import {print, assert, T, escape_html, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
+import {print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
 import { Catalog, Data } from './data.js'
 // import { generic_schema, DATA } from './type.js'
 
@@ -212,6 +212,8 @@ export class Item {
         if (id) return this.cid === id[0] && this.iid === id[1]
         return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
     }
+
+    assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
 
     // get newborn()   { return this.iid === null }
@@ -254,8 +256,12 @@ export class Item {
          */
         let item = new Item(category)
         if (iid !== null) item.iid = iid
-        if (!(data instanceof Data)) data = new Data(data)
         return item.boot(data)
+    }
+    static async createLoaded(category, iid, data) {
+        let item = new Item(category)
+        item.iid = iid
+        return item.isLoading = item.reload({jsonData: data})
     }
 
     constructor(category = null) {
@@ -271,7 +277,10 @@ export class Item {
         /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
            In any case, the item and its .data is initialized ("booted") after this method completes.
          */
-        if (data) this.data = data
+        if (data) {
+            if (!(data instanceof Data)) data = new Data(data)
+            this.data = data
+        }
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         await this.initClass()
@@ -299,19 +308,18 @@ export class Item {
         else if (!this.category.isLoaded && this.category !== this) 
             await this.category.load()
 
-        return this.isLoading = this.reload(use_schema)     // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.isLoading = this.reload({use_schema})     // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async reload(use_schema = true, jsonData = null) {
+    async reload(opts = {}) {
         /* Return this item's Data object newly loaded from a DB or parsed from a JSON-encoded string, `jsonData`. */
-        if (jsonData === null) {
-            if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            jsonData = await this.registry.loadData(this.id)
-        }
-        this.jsonData = jsonData
-        let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
-        let state  = JSON.parse(jsonData)
-        this.data  = schema.decode(state)
+        // if (jsonData === null) jsonData = await this._loadJsonData()
+        // this.jsonData = jsonData
+        //
+        // let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
+        // let state  = JSON.parse(jsonData)
+        // this.data  = schema.decode(state)
+        this.data = await this._loadData(opts)
 
         let proto  = this.initPrototypes()
         if (proto instanceof Promise) await proto
@@ -321,11 +329,20 @@ export class Item {
         this.isLoading = false
 
         this.setExpiry(this.category.get('cache_ttl'))
-        // let ttl_ms  = this.category.get('cache_ttl') * 1000
-        // this.expiry = Date.now() + ttl_ms
-        // print('ttl:', ttl_ms/1000, `(${this.id_str})`)
 
         return this
+    }
+    async _loadData({use_schema = true, jsonData = null}) {
+        if (jsonData === null) jsonData = await this._loadDataJson()
+        this.jsonData = jsonData
+
+        let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
+        let state = JSON.parse(jsonData)
+        return schema.decode(state)
+    }
+    async _loadDataJson() {
+        if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
+        return this.registry.loadData(this.id)
     }
 
     setExpiry(ttl) {
@@ -445,7 +462,7 @@ export class Item {
             // if (this.isShadow && !this.has_data()) return opts.default
         }
 
-        this.assertLoaded()
+        this.assertData()
 
         // search in this.data
         let value = this.data.findValue(path)
@@ -982,8 +999,9 @@ export class Category extends Item {
         set its IID if given. The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let module = await this.getModule()
-        return module.Class.createNewborn(this, data, iid)
+        return Item.createNewborn(this, data, iid)
+        // let module = await this.getModule()
+        // return module.Class.createNewborn(this, data, iid)
     }
 
     async getModule() {
@@ -998,8 +1016,8 @@ export class Category extends Item {
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
             let [path, name] = this.getClassPath()
-            if (!path) throw new Error(`missing 'class_path' property for a boot category: ${this.id_str}`)
-            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot category: ${this.id_str}`)
+            if (!path) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
+            if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category: ${this.id_str}`)
             return {Class: await this.registry.importDirect(path, name || 'default')}
         }
 
@@ -1008,8 +1026,6 @@ export class Category extends Item {
 
         let source = this.getCode()
         return site.parseModule(source, path)
-        // let module = await site.parseModule(source, path)
-        // return module.namespace
     }
 
     getCode() {
@@ -1241,9 +1257,9 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    async reload(use_schema = false, jsonData = null) {
+    async reload(opts) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.reload(false, jsonData)
+        return super.reload({...opts, use_schema: false})
     }
     async getModule() { return {Class: Category} }
 }

@@ -1491,9 +1491,8 @@ export class DATA extends CATALOG {
  */
 
 export class SchemaWrapper extends Schema {
-    /* Wrapper for a schema type implemented as an item of the Schema category.
-       Specifies a schema type + particular property values (schema constraints etc.)
-       to be used during encoding/decoding.
+    /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
+       Specifies a schema type + particular property values (schema constraints etc.) to be used during encoding/decoding.
      */
     proto           // item of the Schema category implementing this schema type
     props           // properties to be passed to prototype.valid/encode/decode()
