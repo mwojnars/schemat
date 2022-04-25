@@ -297,47 +297,45 @@ export class Item {
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
 
         if (this.isLoaded) return this
-        if (this.isLoading) return this.isLoading           // loading has already started, should wait rather than load again
+        if (this.isLoading) return this.isLoading       // loading has already started, should wait rather than load again
+        return this.reload({use_schema})                // keep a Promise that will eventually load this item's data to avoid race conditions
+    }
 
+    async reload(opts = {}) {
+        if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this may only happen when called directly, not through load()
+        return this.isLoading = this.reload__(opts)     // keep a Promise that will eventually load this item's data to avoid race conditions
+    }
+
+    async reload__(opts = {}) {
+        /* (Re)initialize this item. Load this.data from a DB, or from a JSON-encoded string, opts.jsonData, or take from opts.data.
+           Set up the class and prototypes. Call init().
+         */
         if (!this.category) {
             // load the category and set a proper class for this item - stubs only have Item as their class,
             // which must be changed when an item gets loaded and linked to its category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
         }
-        else if (!this.category.isLoaded && this.category !== this) 
+        else if (!this.category.isLoaded && this.category !== this)
             await this.category.load()
 
-        return this.isLoading = this.reload({use_schema})     // keep a Promise that will eventually load this item's data to avoid race conditions
-    }
+        this.data = opts.data || await this._loadData(opts)
 
-    async reload(opts = {}) {
-        /* Return this item's Data object newly loaded from a DB or parsed from a JSON-encoded string, `jsonData`. */
-        // if (jsonData === null) jsonData = await this._loadJsonData()
-        // this.jsonData = jsonData
-        //
-        // let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
-        // let state  = JSON.parse(jsonData)
-        // this.data  = schema.decode(state)
-        this.data = await this._loadData(opts)
-
-        let proto  = this.initPrototypes()
+        let proto = this.initPrototypes()
         if (proto instanceof Promise) await proto
+
+        this.setExpiry(this.category.get('cache_ttl'))
 
         // await this.initClass()
         await this.boot()
         this.isLoading = false
 
-        this.setExpiry(this.category.get('cache_ttl'))
-
         return this
     }
-    async _loadData({use_schema = true, jsonData = null}) {
-        if (jsonData === null) jsonData = await this._loadDataJson()
-        this.jsonData = jsonData
-
+    async _loadData({use_schema = true, jsonData} = {}) {
+        if (jsonData === undefined) jsonData = await this._loadDataJson()
         let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
-        let state = JSON.parse(jsonData)
+        let state = JSON.parse(this.jsonData = jsonData)
         return schema.decode(state)
     }
     async _loadDataJson() {
