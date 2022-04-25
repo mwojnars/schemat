@@ -261,7 +261,7 @@ export class Item {
     static async createLoaded(category, iid, jsonData) {
         let item = new Item(category)
         item.iid = iid
-        return item.isLoading = item.reload({jsonData})
+        return item.reload({jsonData})
     }
 
     constructor(category = null) {
@@ -988,15 +988,14 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
-    async new(data = null, iid = null) {
+    async new(data, iid) {
         /*
-        Create a newborn item of this category (not yet in DB); connect it with this.registry;
+        Create a newborn item of this category (not yet in DB) and set its `data`; connect it with this.registry;
         set its IID if given. The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
+        assert(data)
         return Item.createNewborn(this, data, iid)
-        // let module = await this.getModule()
-        // return module.Class.createNewborn(this, data, iid)
     }
 
     async getModule() {

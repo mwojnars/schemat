@@ -231,7 +231,7 @@ export class DB extends Item {
 
     async *scan(cid) {
         /* Iterate over all records in this DB stack (if no `cid`), or over all records of a given category,
-           and yield them as {id, data} objects sorted by ascending ID, with `data` being a JSON string.
+           and yield them as {id, data} objects sorted by ascending ID, `data` being a JSON string.
          */
         if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
         else yield* this._scan(cid)

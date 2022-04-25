@@ -220,7 +220,7 @@ export class Registry {
         let records = this.db.scan(category?.iid)
         let count = 0
 
-        for await (const {id, data} of records) {
+        for await (const {id, data: jsonData} of records) {
             if (limit !== undefined && count >= limit) break
             let [cid, iid] = id
             assert(!category || cid === category.iid)
@@ -228,10 +228,11 @@ export class Registry {
             if (cid === ROOT_CID && iid === ROOT_CID)
                 yield this.root
             else {
-                let cat  = category || await this.getCategory(cid)
-                let item = await cat.new(null, iid)
-                await item.reload({jsonData: data})
-                yield item
+                let cat = category || await this.getCategory(cid)
+                yield Item.createLoaded(cat, iid, jsonData)
+                // let item = await cat.new(null, iid)
+                // await item.reload({jsonData})
+                // yield item
             }
             count++
         }
