@@ -209,12 +209,18 @@ async function create_categories(Category) {
         fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
     })
 
-    // cat.Schema = await Category.new(10, {
-    //     name        : "Schema",
-    //     info        : "Category of items that represent schema types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new schema types from scratch.",
-    //     class_path  : '/system/local/type.js:SchemaPrototype',
-    //     fields      : C({encode: new CODE(), decode: new CODE()}), //, properties: new CATALOG(new GENERIC())}),
-    // })
+    cat.Schema = await Category.new(10, {
+        name        : "Schema",
+        info        : "Category of items that represent schema types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new schema types by themselves using dynamic code.",
+        class_path  : '/system/local/type.js:SchemaPrototype',
+        fields      : C({
+            class_path  : new STRING(),
+            encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
+            decode      : new CODE(),
+            initial     : new GENERIC(),
+            properties  : new CATALOG(new SCHEMA()),
+        }),
+    })
 
     cat.Database = await Category.new(11, {
         name        : "Database",
@@ -277,13 +283,10 @@ async function create_items(cat, Category) {
         }),
     })
 
-    // item.string = await cat.Schema.new({
+    // item.STRING = await cat.Schema.new({
     //     name            : "STRING",
     //     class_path      : "/system/local/type.js:STRING",
     // })
-
-
-    // item.string = await cat.STRING.new({name: "string (type)", })
 
     // item.utils_js   = await cat.File.new({content: `export let print = console.log`})
     // item.widgets_js = await cat.File.new({content: dedent(`

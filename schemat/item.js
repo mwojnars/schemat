@@ -255,8 +255,7 @@ export class Item {
         let item = new Item(category)
         if (iid !== null) item.iid = iid
         if (!(data instanceof Data)) data = new Data(data)
-        await item.boot(data)
-        return item
+        return item.boot(data)
     }
 
     constructor(category = null) {
@@ -273,14 +272,13 @@ export class Item {
            In any case, the item and its .data is initialized ("booted") after this method completes.
          */
         if (data) this.data = data
-        // if (!(data instanceof Data)) data = new Data(data)
-
         this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
 
         await this.initClass()
 
         let init = this.init()                          // optional custom initialization after the data is loaded
         if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+        return this
     }
 
     async load(field = null, use_schema = true) {
@@ -358,7 +356,7 @@ export class Item {
     }
 
     init() {}
-        /* Optional category-specific initialization after this.data is loaded, but the item is not yet fully initialized.
+        /* Optional category-specific initialization after this.data is loaded.
            Subclasses may override this method as either sync or async.
          */
     end() {}
@@ -1002,14 +1000,18 @@ export class Category extends Item {
             let [path, name] = this.getClassPath()
             if (!path) throw new Error(`missing 'class_path' property for a boot category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a boot category: ${this.id_str}`)
-            if (onServer) {
-                let local = this.registry.PATH_LOCAL_SUN
-                if (!path.startsWith(local + '/')) throw new Error(`boot category can import its class from "${local}" path only, not "${path}"`)
-                path = this.registry.convertLocalPath(path)       // convert the path from SUN to local filesystem representation
-            }
-            let mod = await import(path)
-            let Class = mod[name || 'default']
-            return {Class}
+            // if (onServer) {
+            //     let local = this.registry.PATH_LOCAL_SUN
+            //     if (!path.startsWith(local + '/')) throw new Error(`a boot category can import its class from "${local}" path only, not "${path}"`)
+            //     path = this.registry.directImportPath(path)           // convert the path from SUN to local filesystem representation
+            // }
+            // else path += '@import'
+
+            return {Class: await this.registry.importDirect(path, name || 'default')}
+
+            // let mod = await import(path)
+            // let Class = mod[name || 'default']
+            // return {Class}
         }
 
         let path = this.getPath()

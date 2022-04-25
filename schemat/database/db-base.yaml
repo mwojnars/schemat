@@ -1,7 +1,8 @@
 - __id:
-    - 12
+    - 10
     - 1
-  name: string (type)
+  name: STRING
+  class_path: /system/local/type.js:STRING
 - __id:
     - 0
     - 50

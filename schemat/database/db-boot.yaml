@@ -252,6 +252,29 @@
       "@": schemat.type.CATALOG
 - __id:
     - 0
+    - 10
+  name: Schema
+  info: Category of items that represent schema types. Some of the items are
+    wrappers around system types (STRING, INTEGER etc.), while some others
+    implement new schema types by themselves using dynamic code.
+  class_path: /system/local/type.js:SchemaPrototype
+  fields:
+    class_path:
+      "@": schemat.type.STRING
+    encode:
+      info: Body of a function with the signature `encode(obj,props={})`. Should
+        return a state that encodes the input object/value, `obj`.
+      "@": schemat.type.CODE
+    decode:
+      "@": schemat.type.CODE
+    initial:
+      "@": schemat.type.GENERIC
+    properties:
+      values:
+        "@": schemat.type.SCHEMA
+      "@": schemat.type.CATALOG
+- __id:
+    - 0
     - 11
   name: Database
   info: Base category for items that represent an abstract database layer.

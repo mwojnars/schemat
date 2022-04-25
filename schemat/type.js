@@ -2,7 +2,7 @@ import { React, MaterialUI } from './resources.js'
 import { e, cl, st, css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 import { ItemLoadingHOC } from './react-utils.js'
-import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError, ItemNotLoaded } from './utils.js'
+import { T, assert, print, tryimport, trycatch, truncate, DataError, ValueError, splitLast } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 import { Item } from './item.js'
@@ -1491,9 +1491,12 @@ export class DATA extends CATALOG {
  */
 
 export class SchemaWrapper extends Schema {
-    /* Wrapper for a schema type implemented as an item of the Schema category. */
+    /* Wrapper for a schema type implemented as an item of the Schema category.
+       Specifies a schema type + particular property values (schema constraints etc.)
+       to be used during encoding/decoding.
+     */
     proto           // item of the Schema category implementing this schema type
-    props           // properties to be passed to calls of prototype.valid/encode/decode()
+    props           // properties to be passed to prototype.valid/encode/decode()
 
     async init()            { await this.proto.load() }
     valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
@@ -1507,16 +1510,20 @@ export class SchemaPrototype extends Item {
      */
 
     async init() {
-        let [path, name] = this.get('class_path')
-        let module = await import(path)
+        let [path, name] = splitClasspath(this.get('class_path'))
+        let module = await this.registry.import(path)
         this.class = module[name || 'default']
+        assert(T.isClass(this.class))
     }
 
-    encode(obj, props) {
-
-    }
+    valid(obj, props)       { return this.class.valid(obj, props)  }
+    encode(obj, props)      { return this.class.encode(obj, props) }
+    decode(obj, props)      { return this.class.decode(obj, props) }
 
 }
+
+function splitClasspath(path) { return splitLast(path || '', ':') }   // [path, name]
+
 
 /**********************************************************************************************************************/
 

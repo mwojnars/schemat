@@ -80,7 +80,7 @@ export class Site extends Router {
     }
 
     async import(path, referrer) {
-        /* Import JS files and code snippets from Schemat's Universal Namespace.
+        /* General-purpose import of JS files and code snippets from Schemat's Universal Namespace (SUN).
            On a server, returns a namespace object extracted from a vm.Module loaded by importModule();
            optional `referrer` is a vm.Module object. On a client, calls the standard import(path),
            with '@import@file' access method designators appended to path; the `referrer` must be empty.
@@ -89,7 +89,7 @@ export class Site extends Router {
         //     if (referrer) throw Error(`referrer not allowed when calling Site.import() on a client`)
         //     return import(path)  //'@import@file'
         // }
-        let module = await this.importModule(path, referrer)
+        let module = await this.importModule(path + '@import', referrer)
         return module.namespace
     }
 
@@ -116,7 +116,7 @@ export class Site extends Router {
         // local import if `path` starts with PATH_LOCAL_SUN
         let local = this.registry.PATH_LOCAL_SUN
         if (path.startsWith(local + '/'))
-            return this.localImport(this.registry.convertLocalPath(path))
+            return this.localImport(this.registry.directImportPath(path))
             // return this.localImport(this.registry.PATH_LOCAL_FS + '/' + path.slice((local + '/').length))
             // return this.localImport('./' + path.slice((local + '/').length))
 

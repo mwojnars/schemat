@@ -32,10 +32,10 @@ export class ServerRegistry extends Registry {
         if (db) this.setDB(db)
     }
 
-    convertLocalPath(path) {
+    directImportPath(path) {
         /* Convert a /system/local/... import path from SUN to a local filesystem representation. */
         let local = this.PATH_LOCAL_SUN
-        assert(path.startsWith(local + '/'))
+        if (!path.startsWith(local + '/')) throw new Error(`can use direct import from "${local}" path only, not "${path}"`)
         return this.PATH_LOCAL_FS + path.slice(local.length)
     }
 
