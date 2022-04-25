@@ -230,9 +230,6 @@ export class Registry {
             else {
                 let cat = category || await this.getCategory(cid)
                 yield Item.createLoaded(cat, iid, jsonData)
-                // let item = await cat.new(null, iid)
-                // await item.reload({jsonData})
-                // yield item
             }
             count++
         }

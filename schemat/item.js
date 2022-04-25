@@ -252,25 +252,24 @@ export class Item {
     // }
     static async createNewborn(category, data, iid) {
         /* Create a "newborn" item that has a category & CID assigned, and is intended for insertion to DB.
-           Arguments `data` and `iid` are optional. The item returned is *booted* (this.data is present, can be empty).
+           Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
          */
-        let item = new Item(category)
-        if (iid !== null) item.iid = iid
+        let item = new Item(category, iid)
         return item.reload({data})
     }
     static async createLoaded(category, iid, jsonData) {
-        let item = new Item(category)
-        item.iid = iid
+        let item = new Item(category, iid)
         return item.reload({jsonData})
     }
 
-    constructor(category = null) {
-        /* To set this.data, boot() must be called and awaited (!) separately after this constructor. */
+    constructor(category, iid) {
+        /* To set this.data, load() or reload() must be called after this constructor. */
         if (category) {
             this.category = category
             this.registry = category.registry
             this.cid      = category.iid
         }
+        if (iid !== undefined) this.iid = iid
     }
 
     async load(opts = {}) {
