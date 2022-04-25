@@ -123,7 +123,8 @@ export class Site extends Router {
         )
         await module.link(() => {})
         await module.evaluate()
-        return module
+        return {...module.namespace, __vmModule__: module}
+        // return module
     }
 
     async parseModule(source, path) {
@@ -134,15 +135,14 @@ export class Site extends Router {
         // submodules must use the same^^ context as referrer (if not globalThis), otherwise an error is raised
 
         let identifier = Site.DOMAIN_SCHEMAT + path
-        let linker = async (specifier, ref, extra) =>
-            await this.importModule(specifier, ref)
+        let linker = async (specifier, ref, extra) => (await this.importModule(specifier, ref)).__vmModule__
         let initializeImportMeta = (meta) => {meta.url = identifier}
 
         let module = new vm.SourceTextModule(source, {context, identifier, initializeImportMeta, importModuleDynamically: linker})
 
         await module.link(linker)
         await module.evaluate()
-        return module
+        return {...module.namespace, __vmModule__: module}
     }
 
     _unprefix(path) { return path.startsWith(Site.DOMAIN_SCHEMAT) ? path.slice(Site.DOMAIN_SCHEMAT.length) : path }

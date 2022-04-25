@@ -1007,8 +1007,9 @@ export class Category extends Item {
         if (onClient) return this.registry.import(path)
 
         let source = this.getCode()
-        let module = await site.parseModule(source, path)
-        return module.namespace
+        return site.parseModule(source, path)
+        // let module = await site.parseModule(source, path)
+        // return module.namespace
     }
 
     getCode() {
