@@ -1496,13 +1496,24 @@ export class SchemaWrapper extends Schema {
     /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
        Specifies a schema type + particular property values (schema constraints etc.) to be used during encoding/decoding.
      */
-    proto           // item of the Schema category implementing this schema type
-    props           // properties to be passed to prototype.valid/encode/decode()
+    proto                   // item of the Schema category implementing this schema type
+    props                   // properties to be passed to prototype.valid/encode/decode()
+    
+    schema                  // the actual Schema instance to be used for encode/decode, provided by `proto` during init()
+    
+    async init() { 
+        await this.proto.load()
+        assert(this.proto instanceof SchemaPrototype)
+        this.schema = this.proto.createSchema(this.props)
+    }
+    
+    valid(obj)          { return this.schema.valid(obj)  }
+    encode(obj)         { return this.schema.encode(obj) }
+    decode(obj)         { return this.schema.decode(obj) }
 
-    async init()            { await this.proto.load() }
-    valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
-    encode(obj, props)      { return this.proto.encode(obj, {...this.props, ...props}) }
-    decode(obj, props)      { return this.proto.decode(obj, {...this.props, ...props}) }
+    // valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
+    // encode(obj, props)      { return this.proto.encode(obj, {...this.props, ...props}) }
+    // decode(obj, props)      { return this.proto.decode(obj, {...this.props, ...props}) }
 
     __getstate__()          { return {proto: this.proto.id, props: this.props} }
     __setstate__(state)     {
@@ -1519,13 +1530,18 @@ export class SchemaPrototype extends Item {
 
     async init() {
         let [path, name] = splitClasspath(this.get('class_path'))
-        this.class = await this.registry.import(path, name || 'default')
-        assert(T.isClass(this.class))
+        this.schemaClass = await this.registry.import(path, name || 'default')
+        assert(T.isClass(this.schemaClass))
     }
 
-    valid(obj, props)       { return (new this.class()).valid(obj, props)  }
-    encode(obj, props)      { return (new this.class()).encode(obj, props) }
-    decode(obj, props)      { return (new this.class()).decode(obj, props) }
+    createSchema(props) {
+        let schema = new this.schemaClass()
+        return Object.assign(schema, props)
+    }
+
+    // valid(obj, props)       { return this.createSchema(props).valid(obj)  }
+    // encode(obj, props)      { return this.createSchema(props).encode(obj) }
+    // decode(obj, props)      { return this.createSchema(props).decode(obj) }
 
 }
 
