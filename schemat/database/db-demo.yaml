@@ -118,7 +118,11 @@
     - - TwitterPost
       - name
     - - text:
-          "@": schemat.type.STRING
+          proto:
+            - 10
+            - 1
+          props: {}
+          "@": schemat.type.SchemaWrapper
       - fields
     - - import { P, BR } from '/system/local/react-utils.js'
       - class_init

@@ -250,16 +250,14 @@ export class Item {
     //     await item.boot(data)
     //     return item
     // }
-    static async createNewborn(category, data, iid) {
-        /* Create a "newborn" item that has a category & CID assigned, and is intended for insertion to DB.
+    static async createNewborn(category, iid, data) {
+        /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
          */
-        let item = new Item(category, iid)
-        return item.reload({data})
+        return new Item(category, iid).reload({data})
     }
     static async createLoaded(category, iid, jsonData) {
-        let item = new Item(category, iid)
-        return item.reload({jsonData})
+        return new Item(category, iid).reload({jsonData})
     }
 
     constructor(category, iid) {
@@ -987,6 +985,16 @@ export class Category extends Item {
     also acts as a manager that controls access to and creation of new items within category.
     */
 
+    init() { return this._initSchema() }
+
+    _initSchema() {
+        // initialize schema objects inside `fields`; in particular, SchemaWrapper class requires
+        // explicit async initialization to load sublinked items
+        let fields = this.get('fields') || []
+        let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
+        if (calls.length) return Promise.all(calls)
+    }
+
     async new(data, iid) {
         /*
         Create a newborn item of this category (not yet in DB) and set its `data`; connect it with this.registry;
@@ -994,7 +1002,7 @@ export class Category extends Item {
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
         assert(data)
-        return Item.createNewborn(this, data, iid)
+        return Item.createNewborn(this, iid, data)
     }
 
     async getModule() {

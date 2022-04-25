@@ -233,6 +233,8 @@ export class Schema { //extends Item {
         // if (multi !== undefined)    this.multi = multi
     }
 
+    init() {}
+
     get(prop) {
         if (this[prop] !== undefined) return this[prop]
         if (this.constructor[prop] !== undefined) return this.constructor[prop]
@@ -1501,6 +1503,13 @@ export class SchemaWrapper extends Schema {
     valid(obj, props)       { return this.proto.valid(obj, {...this.props, ...props})  }
     encode(obj, props)      { return this.proto.encode(obj, {...this.props, ...props}) }
     decode(obj, props)      { return this.proto.decode(obj, {...this.props, ...props}) }
+
+    __getstate__()          { return {proto: this.proto.id, props: this.props} }
+    __setstate__(state)     {
+        this.proto = globalThis.registry.getItem(state.proto)
+        this.props = state.props
+        return this
+    }
 }
 
 export class SchemaPrototype extends Item {
@@ -1514,9 +1523,9 @@ export class SchemaPrototype extends Item {
         assert(T.isClass(this.class))
     }
 
-    valid(obj, props)       { return this.class.valid(obj, props)  }
-    encode(obj, props)      { return this.class.encode(obj, props) }
-    decode(obj, props)      { return this.class.decode(obj, props) }
+    valid(obj, props)       { return (new this.class()).valid(obj, props)  }
+    encode(obj, props)      { return (new this.class()).encode(obj, props) }
+    decode(obj, props)      { return (new this.class()).decode(obj, props) }
 
 }
 
