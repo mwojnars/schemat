@@ -221,7 +221,7 @@
   fields:
     category:
       info: Optional category(ies) of items handled by this application.
-      category_base:
+      category:
         =:
           - 0
           - 0
@@ -244,7 +244,7 @@
   fields:
     spaces:
       values:
-        category_base:
+        category:
           =:
             - 0
             - 0

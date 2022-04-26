@@ -780,47 +780,46 @@ export class ITEM extends Schema {
     ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
     which is not possible with a GENERIC.
     */
-    category_base       // (optional) a base category the items should inherit from
-    category_exact      // (optional) an exact category of the items being encoded; stored as an object
-                        // because during bootstrap there's no IID yet (!) when this ITEM is being created
+    // category_base       // (optional) a base category the items should inherit from
+    // category_exact      // (optional) an exact category of the items being encoded; stored as an object
+    //                     // because during bootstrap there's no IID yet (!) when this ITEM is being created
+    //
+    // constructor(props = {}) {
+    //     /* `props.exact` may contain a category object for exact category checks. */
+    //     let {type, type_exact, ...rest} = props
+    //     super(rest)
+    //     if (type) this.category_base = type
+    //     if (type_exact) this.category_exact = type_exact
+    // }
 
-    constructor(props = {}) {
-        /* `props.exact` may contain a category object for exact category checks. */
-        let {type, type_exact, ...rest} = props
-        super(rest)
-        if (type) this.category_base = type
-        if (type_exact) this.category_exact = type_exact
+    static defaultProps = {
+        category:  undefined,       // base category the items should inherit from
+        exact:     false,           // if true, the items must belong to this exact `category`, not any subcategory
     }
 
-    // static defaultProps = {
-    //     type:   undefined,          // base category the items should inherit from
-    //     typeExact:  undefined,          // exact category of the items being encoded; stored as an object
-    // }
-    //
-    // get category_base()     { return this.props.type }
-    // get category_exact()    { return this.props.typeExact }
+    // get category_base()     { return this.props.category }
+    // get category_exact()    { return this.props.categoryExact }
 
     encode(item) {
-        if (!item.has_id())
-            throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
+        if (!item.has_id()) throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
-        // verify inheritance from a base category - only for LOADED items !!
-        if (this.category_base)
-            if (item.isLoaded && !item.instanceof(this.category_base)) throw new Error(`expected an item of base category ${this.category_base}, got ${item}`)
-
-        // return IID alone if an exact category is known
-        if (this.category_exact) {
-            let cid = this.category_exact.iid
-            if (item.cid !== cid) throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
-            return item.iid
+        let {category, exact} = this.props      // verify inheritance from a base category - only for LOADED items !!
+        if (category) {
+            if (item.isLoaded && !item.instanceof(category)) throw new Error(`expected an item of base category ${category}, got ${item}`)
+            if (exact) {
+                let cid = category.iid          // output IID alone if an exact category is known
+                if (item.cid !== cid) throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
+                return item.iid
+            }
         }
         return item.id
     }
+
     decode(value) {
-        let cid, iid
+        let cid, iid, {category, exact} = this.props
         if (typeof value === "number") {                                // decoding an IID alone
-            let ref_cid = this.category_exact?.iid
-            if (ref_cid === undefined) throw new DataError(`expected a [CID,IID] pair, but got only IID=${iid}`)
+            let ref_cid = exact && category ? category.iid : undefined
+            if (ref_cid === undefined) throw new DataError(`expected a [CID,IID] pair, but only got IID=${iid}`)
             cid = ref_cid
             iid = value
         } else if (value instanceof Array && value.length === 2)        // decoding a full ID = [CID,IID]

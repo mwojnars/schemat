@@ -119,7 +119,7 @@ async function create_categories(Category) {
             //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
-            //database    : new ITEM({type: cat.Database, info: "Global database layer"}),
+            //database    : new ITEM({category: cat.Database, info: "Global database layer"}),
         }),
     })
 
@@ -198,7 +198,7 @@ async function create_categories(Category) {
         info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
         class_path  : '/system/local/site.js:AppBasic',
         fields      : C({
-            category    : new ITEM({type: Category, info: "Optional category(ies) of items handled by this application."}),
+            category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
             drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
         }),
     })
@@ -206,7 +206,7 @@ async function create_categories(Category) {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_path  : '/system/local/site.js:AppSpaces',
-        fields      : C({spaces: new CATALOG(new ITEM({type: Category}))}),
+        fields      : C({spaces: new CATALOG(new ITEM({category: Category}))}),
     })
 
     cat.Schema = await Category.new(10, {
