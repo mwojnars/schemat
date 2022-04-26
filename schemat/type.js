@@ -780,32 +780,17 @@ export class ITEM extends Schema {
     ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
     which is not possible with a GENERIC.
     */
-    // category_base       // (optional) a base category the items should inherit from
-    // category_exact      // (optional) an exact category of the items being encoded; stored as an object
-    //                     // because during bootstrap there's no IID yet (!) when this ITEM is being created
-    //
-    // constructor(props = {}) {
-    //     /* `props.exact` may contain a category object for exact category checks. */
-    //     let {type, type_exact, ...rest} = props
-    //     super(rest)
-    //     if (type) this.category_base = type
-    //     if (type_exact) this.category_exact = type_exact
-    // }
-
     static defaultProps = {
-        category:  undefined,       // base category the items should inherit from
-        exact:     false,           // if true, the items must belong to this exact `category`, not any subcategory
+        category:  undefined,       // base category for all the items to be encoded
+        exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
-
-    // get category_base()     { return this.props.category }
-    // get category_exact()    { return this.props.categoryExact }
 
     encode(item) {
         if (!item.has_id()) throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
         let {category, exact} = this.props      // verify inheritance from a base category - only for LOADED items !!
         if (category) {
-            if (item.isLoaded && !item.instanceof(category)) throw new Error(`expected an item of base category ${category}, got ${item}`)
+            if (item.isLoaded && !item.instanceof(category)) throw new Error(`expected an item of category ${category}, got ${item}`)
             if (exact) {
                 let cid = category.iid          // output IID alone if an exact category is known
                 if (item.cid !== cid) throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
@@ -889,34 +874,16 @@ export class MAP extends Schema {
     If no schema is provided, `generic_schema` is used as a default for values, or STRING() for keys.
     */
 
-    // // the defaults are configured at class level for easy subclassing and to reduce output when this schema is serialized
-    // static keys_default   = new STRING()
-    // static values_default = generic_schema
-    //
-    // get _keys()     { return this.keys || this.constructor.keys_default }
-    // get _values()   { return this.values || this.constructor.values_default }
-    //
-    // constructor(props = {}) {
-    //     super(props)
-    //     let {keys, values} = props
-    //     if (keys)   this.keys = keys            // schema of keys of app-layer dicts
-    //     if (values) this.values = values        // schema of values of app-layer dicts
-    // }
-
     static defaultProps = {
         keys:       new STRING(),               // schema of keys of app-layer dicts
         values:     generic_schema,             // schema of values of app-layer dicts
     }
 
-    get _keys()     { return this.props.keys }
-    get _values()   { return this.props.values }
-
     encode(d) {
         let type = this.type || Object
         if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
 
-        let schema_keys   = this._keys
-        let schema_values = this._values
+        let {keys: schema_keys, values: schema_values} = this.props
         let state = {}
 
         // encode keys & values through predefined field types
@@ -931,8 +898,7 @@ export class MAP extends Schema {
 
         if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
-        let schema_keys   = this._keys
-        let schema_values = this._values
+        let {keys: schema_keys, values: schema_values} = this.props
         let d = new (this.type || Object)
 
         // decode keys & values through predefined field types
@@ -944,13 +910,13 @@ export class MAP extends Schema {
         return d
     }
     collect(assets) {
-        this._keys.collect(assets)
-        this._values.collect(assets)
+        this.props.keys.collect(assets)
+        this.props.values.collect(assets)
     }
 
     toString() {
         let name   = this.constructor.name
-        return `${name}(${this._values}, ${this._keys})`
+        return `${name}(${this.props.values}, ${this.props.keys})`
     }
 }
 
