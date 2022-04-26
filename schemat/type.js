@@ -926,15 +926,10 @@ export class RECORD extends Schema {
     - unlike in MAP, where all values share the same schema. RECORD does not encode keys, but passes them unmodified.
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
-    // constructor(fields, props = {}) {
-    //     super(props)
-    //     this.fields = fields            // plain object containing field names and their schemas
-    // }
-    static defaultProps = {
-        fields: {},                     // plain object containing field names and their schemas
-    }
 
-    get fields()    { return this.props.fields }
+    static defaultProps = {
+        fields: {},                     // object containing field names and their schemas
+    }
 
     encode(data) {
         /* Encode & compactify values of fields through per-field schema definitions. */
@@ -955,12 +950,13 @@ export class RECORD extends Schema {
         return data
     }
     _schema(name) {
-        if (!this.fields.hasOwnProperty(name))
-            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(this.fields)}`)
-        return this.fields[name] || generic_schema
+        let {fields} = this.props
+        if (!fields.hasOwnProperty(name))
+            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
+        return fields[name] || generic_schema
     }
     collect(assets) {
-        for (let schema of Object.values(this.fields))
+        for (let schema of Object.values(this.props.fields))
             schema.collect(assets)
     }
 }
