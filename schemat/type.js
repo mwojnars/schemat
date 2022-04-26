@@ -224,17 +224,18 @@ export class Schema {
 
     static defaultProps = {}
 
-    static __transient__ = ['__props']
+    static __transient__ = ['__props', 'props']
 
     constructor(props = {}) {
         this.__props = props = props || {}                              // props=null/undefined is valid
         let {default_, info, blank, type} = props
         if (info  !== undefined)    this.info  = info
         if (blank !== undefined)    this.blank = blank
-        if (type  !== undefined)    this.type  = type
+        // if (type  !== undefined)    this.type  = type
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
         if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
-        // if (multi !== undefined)    this.multi = multi
+
+        // this._initProps()
     }
 
     init() {}           // override in subclasses to perform initialization to be called in Category.init(); can be async
@@ -246,6 +247,11 @@ export class Schema {
     // _initProps() {
     //     /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
     //     this.props = {...this.constructor.getDefaultProps(), ...this.__props}
+    // }
+    // setstate(state) {
+    //     Object.assign(this, state)
+    //     this._initProps()
+    //     return this
     // }
 
     get props() {
@@ -767,11 +773,20 @@ export class ITEM extends Schema {
 
     constructor(props = {}) {
         /* `props.exact` may contain a category object for exact category checks. */
-        let {type, type_exact, ...base_props} = props
-        super(base_props)
+        super(props)
+        let {type, type_exact} = props
         if (type) this.category_base = type
         if (type_exact) this.category_exact = type_exact
     }
+
+    // static defaultProps = {
+    //     type:       undefined,          // base category the items should inherit from
+    //     typeExact:  undefined,          // exact category of the items being encoded; stored as an object
+    // }
+    //
+    // get category_base()     { return this.props.type }
+    // get category_exact()    { return this.props.typeExact }
+
     encode(item) {
         if (!item.has_id())
             throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
@@ -1527,26 +1542,29 @@ export class DATA extends CATALOG {
 
 export class SchemaWrapper extends Schema {
     /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
-       Specifies a schema type + particular property values (schema constraints etc.) to be used during encoding/decoding.
+       Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
      */
-    proto                   // item of the Schema category implementing this schema type
-    props                   // properties to be passed to a newly created `schema`
-    schema                  // the actual Schema instance used for encode/decode, provided by `proto` during init()
+    prototype               // item of the Schema category implementing this schema type
+    properties              // properties to be passed to a newly created `schema`
+    schema                  // the actual Schema instance used for encode/decode, provided by `prototype` during init()
     
     async init() { 
-        await this.proto.load()
-        assert(this.proto instanceof SchemaPrototype)
-        this.schema = this.proto.createSchema(this.props)
+        await this.prototype.load()
+        assert(this.prototype instanceof SchemaPrototype)
+        this.schema = this.prototype.createSchema(this.properties)
     }
     
     valid(obj)              { return this.schema.valid(obj)  }
     encode(obj)             { return this.schema.encode(obj) }
     decode(obj)             { return this.schema.decode(obj) }
 
-    __getstate__()          { return {proto: this.proto.id, props: this.props} }
+    __getstate__()          { return [this.prototype.id, this.properties] }
     __setstate__(state)     {
-        this.proto = globalThis.registry.getItem(state.proto)
-        this.props = state.props
+        let id, props
+        if (state.proto) { id = state.proto; props = state.props }
+        else [id, props] = state
+        this.prototype  = globalThis.registry.getItem(id)
+        this.properties = props
         return this
     }
 }

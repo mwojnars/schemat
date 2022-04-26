@@ -71,9 +71,8 @@ export class JSONx {
             state = this.encode_dict(Object.fromEntries(obj.entries()))
         else {
             state = T.getstate(obj)
-            // if (obj !== state) state = this.encode(state)
-            // if (T.isDict(obj))
-            state = this.encode_dict(state)                // TODO: allow non-dict state from getstate()
+            state = obj !== state ? this.encode(state) : this.encode_dict(state)
+            // state = this.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
         }
@@ -144,7 +143,9 @@ export class JSONx {
         if (T.isSubclass(cls, Item) && state instanceof Array)      // all Item instances except unlinked ones are created/loaded through Registry
             return registry.getItem(state)
 
-        state = this.decode_dict(state)
+        state = this.decode(state)
+        // state = this.decode_dict(state)
+
         // let obj = this.decode_dict(state)
         // Object.setPrototypeOf(obj, cls)
         // // let obj = Object.create(cls, obj)
