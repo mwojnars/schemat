@@ -81,6 +81,7 @@
                         callers can only import this item's code through the
                         `path`, so that the code is always interpreted the same
                         and can be cached after parsing."
+                      unique: true
                       "@": schemat.type.PATH
                   - key: info
                     value:

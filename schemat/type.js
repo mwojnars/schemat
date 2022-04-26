@@ -212,19 +212,21 @@ export class Schema {
 
     // common properties of schemas; can be utilized by subclasses or callers:
 
-    info            // human-readable description of this schema: what values are accepted and how they are interpreted
-    default         // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
-    unique          // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
-    blank           // if true, `null` should be treated as a valid value
-    type            // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
-    initial         // initial value assigned to a newly created data element of this schema
-    // multi        // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+    static defaultProps = {
+        info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
+        default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
+        unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
+        blank   : undefined,    // if true, `null` should be treated as a valid value
+        type    : undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
+        initial : undefined,    // initial value assigned to a newly created data element of this schema
+        // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+    }
 
     static initial = undefined
 
-    static defaultProps = {}
-
     static __transient__ = ['__props', 'props']
+
+    __props = {}        // own properties, not including the defaults; this.props = defaults (with inherited) + __props
 
     constructor(props = {}) {
         this.__props = props = props || {}                              // props=null/undefined is valid
@@ -249,14 +251,21 @@ export class Schema {
     //     /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
     //     this.props = {...this.constructor.getDefaultProps(), ...this.__props}
     // }
-    // getstate() { return this.__props }
-    // setstate(state) {
-    //     //Object.assign(this, state)
-    //     assert(T.isDict(state))
-    //     this.__props = state
-    //     this.initProps()
-    //     return this
-    // }
+
+    __getstate__() {
+        let state = {...this, ...this.__props}
+        delete state['__props']
+        return state
+    }
+    // __getstate__() { return this.__props }
+
+    __setstate__(state) {
+        assert(T.isDict(state))
+        Object.assign(this, state)      //TODO: drop
+        this.__props = state
+        this.initProps()
+        return this
+    }
 
     get props() {
         return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
@@ -777,14 +786,14 @@ export class ITEM extends Schema {
 
     constructor(props = {}) {
         /* `props.exact` may contain a category object for exact category checks. */
-        super(props)
-        let {type, type_exact} = props
+        let {type, type_exact, ...rest} = props
+        super(rest)
         if (type) this.category_base = type
         if (type_exact) this.category_exact = type_exact
     }
 
     // static defaultProps = {
-    //     type:       undefined,          // base category the items should inherit from
+    //     type:   undefined,          // base category the items should inherit from
     //     typeExact:  undefined,          // exact category of the items being encoded; stored as an object
     // }
     //
