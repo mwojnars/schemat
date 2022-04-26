@@ -235,22 +235,26 @@ export class Schema {
         if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
         if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
 
-        // this._initProps()
+        this.initProps()
     }
 
-    init() {}           // override in subclasses to perform initialization to be called in Category.init(); can be async
+    init() {}               // called from Category.init(); override as async in subclasses to perform asynchronous initialization
 
     static getDefaultProps() {
         /* Return all defaultProps from the prototype chain combined. */
         return Object.assign({}, ...[...T.inherited(this, 'defaultProps')].reverse())
     }
-    // _initProps() {
+    initProps() {}
+    // initProps() {
     //     /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
     //     this.props = {...this.constructor.getDefaultProps(), ...this.__props}
     // }
+    // getstate() { return this.__props }
     // setstate(state) {
-    //     Object.assign(this, state)
-    //     this._initProps()
+    //     //Object.assign(this, state)
+    //     assert(T.isDict(state))
+    //     this.__props = state
+    //     this.initProps()
     //     return this
     // }
 
@@ -1544,27 +1548,30 @@ export class SchemaWrapper extends Schema {
     /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
        Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
      */
-    prototype               // item of the Schema category implementing this schema type
-    properties              // properties to be passed to a newly created `schema`
-    schema                  // the actual Schema instance used for encode/decode, provided by `prototype` during init()
+    static defaultProps = {
+        prototype:  undefined,          // item of the Schema category implementing this schema type
+        properties: undefined,          // properties to be passed to a newly created `schema`
+    }
+
+    schema                              // the actual Schema instance used for encode/decode, provided by `prototype` during init()
     
-    async init() { 
-        await this.prototype.load()
-        assert(this.prototype instanceof SchemaPrototype)
-        this.schema = this.prototype.createSchema(this.properties)
+    async init() {
+        let {prototype, properties} = this.props
+        await prototype.load()
+        assert(prototype instanceof SchemaPrototype)
+        this.schema = prototype.createSchema(properties)
     }
     
     valid(obj)              { return this.schema.valid(obj)  }
     encode(obj)             { return this.schema.encode(obj) }
     decode(obj)             { return this.schema.decode(obj) }
 
-    __getstate__()          { return [this.prototype.id, this.properties] }
+    __getstate__()          { return [this.props.prototype.id, this.props.properties] }
     __setstate__(state)     {
-        let id, props
-        if (state.proto) { id = state.proto; props = state.props }
-        else [id, props] = state
-        this.prototype  = globalThis.registry.getItem(id)
-        this.properties = props
+        let [id, props] = state
+        this.__props.prototype  = globalThis.registry.getItem(id)
+        this.__props.properties = props
+        this.initProps()
         return this
     }
 }
