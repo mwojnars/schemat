@@ -1487,25 +1487,28 @@ export class DATA extends CATALOG {
        Primarily used for encoding Item.data. Not intended for other uses.
      */
 
-    // static keys_obligatory = true
 
-    fields         // plain object with field names and their schemas; null means a default schema should be used for a given field
-
-    constructor(props = {}) {
-        super(props)
-        this.fields = props.fields
+    static defaultProps = {
+        fields: {},             // object with field names and their schemas; null means a default schema should be used for a given field
+        // keys_obligatory: true,
     }
+
+    // constructor(props = {}) {
+    //     super(props)
+    //     this.fields = props.fields
+    // }
     subschema(key) {
-        if (!this.fields.hasOwnProperty(key))
-            throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(this.fields)}]`)
-        return this.fields[key] || this.constructor.values_default
+        let {fields} = this.props
+        if (!fields.hasOwnProperty(key))
+            throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
+        return fields[key] || this.constructor.values_default
     }
     collect(assets) {
-        for (let schema of Object.values(this.fields))
+        for (let schema of Object.values(this.props.fields))
             schema.collect(assets)
         this.constructor.Table.collect(assets)
     }
-    getValidKeys()          { return Object.getOwnPropertyNames(this.get('fields')).sort() }
+    getValidKeys()          { return Object.getOwnPropertyNames(this.props.fields).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
