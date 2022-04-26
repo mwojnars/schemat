@@ -224,7 +224,7 @@ export class Schema {
 
     static initial = undefined
 
-    static __transient__ = ['__props', 'props']
+    // static __transient__ = ['__props', 'props']
 
     __props = {}        // own properties, not including the defaults; this.props = defaults (with inherited) + __props
 
@@ -721,10 +721,10 @@ export class SCHEMA extends GENERIC {
             let {value: schema} = this.props
             let dflt = `${schema.get('default')}`
             return SPAN(`${schema}`,
-                    schema.default !== undefined &&
+                    schema.props.default !== undefined &&
                         SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
-                    schema.info &&
-                        SPAN(cl('info'), ` • ${schema.info}`),   // smaller dot: &middot;  larger dot: •
+                    schema.props.info &&
+                        SPAN(cl('info'), ` • ${schema.props.info}`),   // smaller dot: &middot;  larger dot: •
                     )
         }
     }
@@ -984,33 +984,33 @@ export class CATALOG extends Schema {
      */
 
     static defaultProps = {
-        keys:   undefined,      // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
-        values: undefined,      // common schema of values of an input catalog
+        keys:   new STRING({blank: true}),      // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
+        values: new GENERIC({multi: true}),     // common schema of values of an input catalog
+        // keys_mandatory : false,
+        // keys_forbidden : false,
+        // keys_unique    : false,
+        // keys_empty_ok  : false,
     }
 
     static initial = () => new Catalog()
 
     get isCatalog() { return true }
 
-    // static keys_mandatory = false
-    // static keys_forbidden  = false
-    // static keys_unique     = false
-    // static keys_empty_ok   = false
+    // static keys_default   = new STRING({blank: true})
+    // static values_default = new GENERIC({multi: true})
 
-    static keys_default   = new STRING({blank: true})
-    static values_default = new GENERIC({multi: true})
+    // get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
+    // subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
 
-    get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
-    subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
-                                                                                // an exception or return undefined if `key` is not allowed
+    subschema(key)  { return this.props.values }        // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
 
     constructor(props = {}) {
         super(props)
-        let {keys, values} = props
-        if (keys)   this.keys = keys
-        if (values) this.values = values
+        let {keys} = props
+        // if (keys)   this.keys = keys
+        // if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
     encode(cat) {
@@ -1022,7 +1022,7 @@ export class CATALOG extends Schema {
     _to_dict(cat) {
         /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */
         let state = {}
-        let encode_key = (k) => this._keys.encode(k)
+        let encode_key = (k) => this.props.keys.encode(k)
         for (const e of cat.entries())
             state[encode_key(e.key)] = this.subschema(e.key).encode(e.value)
         return state
@@ -1031,7 +1031,7 @@ export class CATALOG extends Schema {
         /* Encode a catalog as a list of tuples [value,key,label,comment], possibly truncated if label/comment
            is missing, and with `value` being schema-encoded.
          */
-        let encode_key = (k) => this._keys.encode(k)
+        let encode_key = (k) => this.props.keys.encode(k)
         return cat.getEntries().map(e => {
             let value = this.subschema(e.key).encode(e.value)
             let tuple = [value, encode_key(e.key), e.label, e.comment]
@@ -1048,7 +1048,7 @@ export class CATALOG extends Schema {
         throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
     }
     _from_dict(state) {
-        let schema_keys = this._keys
+        let schema_keys = this.props.keys
         let entries = Object.entries(state).map(([key, value]) => ({
             key:   schema_keys.decode(key),
             value: this.subschema(key).decode(value),
@@ -1057,7 +1057,7 @@ export class CATALOG extends Schema {
     }
     _from_list(state) {
         let cat = new Catalog()
-        let schema_keys = this._keys
+        let schema_keys = this.props.keys
         for (let [value, key, label, comment] of state) {
             key = schema_keys.decode(key)
             value = this.subschema(key).decode(value)
@@ -1067,19 +1067,18 @@ export class CATALOG extends Schema {
     }
 
     collect(assets) {
-        this._keys.collect(assets)
-        this.subschema().collect(assets)
+        this.props.keys.collect(assets)
+        this.props.values.collect(assets)
         this.constructor.Table.collect(assets)
     }
 
     toString() {
-        let name   = this.constructor.name
-        let keys   = this.keys || this.constructor.keys_default
-        let values = this.values || this.constructor.values_default
-        if (T.ofType(keys, STRING))
-            return `${name}(${values})`
-        else
-            return `${name}(${values}, ${keys})`
+        let name = this.constructor.name
+        let {keys, values} = this.props
+        // let keys   = this.keys || this.constructor.keys_default
+        // let values = this.values || this.constructor.values_default
+        if (T.ofType(keys, STRING))  return `${name}(${values})`
+        else                         return `${name}(${values}, ${keys})`
     }
 
     find(path = null, default_ = undefined, sep = '/') {
@@ -1314,7 +1313,7 @@ CATALOG.Table = class extends Component {
                      save, flash, error}
 
         return DIV(cl('entry-head'),
-                  DIV(cl('cell cell-key'),   this.key(entry, schema?.info, ops)),
+                  DIV(cl('cell cell-key'),   this.key(entry, schema?.props.info, ops)),
                   DIV(cl('cell cell-value'), schema && this.embed(schema.display(props)), flashBox, errorBox),
                )
     }
@@ -1325,7 +1324,7 @@ CATALOG.Table = class extends Component {
         let empty  = false //!subcat.length   -- this becomes INVALID when entries are inserted/deleted inside `subcat`
         let toggle = () => !empty && setFolded(f => !f)
         let expand = {state: empty && 'empty' || folded && 'folded' || 'expanded', toggle}
-        let key    = this.key(entry, schema?.info, ops, expand)
+        let key    = this.key(entry, schema?.props.info, ops, expand)
 
         return FRAGMENT(
             DIV(cl('entry-head'), {key: 'head'},
@@ -1487,21 +1486,16 @@ export class DATA extends CATALOG {
        Primarily used for encoding Item.data. Not intended for other uses.
      */
 
-
     static defaultProps = {
         fields: {},             // object with field names and their schemas; null means a default schema should be used for a given field
         // keys_obligatory: true,
     }
 
-    // constructor(props = {}) {
-    //     super(props)
-    //     this.fields = props.fields
-    // }
     subschema(key) {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key))
             throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.constructor.values_default
+        return fields[key] || this.props.values  //this.constructor.values_default
     }
     collect(assets) {
         for (let schema of Object.values(this.props.fields))
