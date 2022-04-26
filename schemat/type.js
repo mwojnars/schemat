@@ -983,6 +983,11 @@ export class CATALOG extends Schema {
     - keys not allowed (what about labels then?)
      */
 
+    static defaultProps = {
+        keys:   undefined,      // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
+        values: undefined,      // common schema of values of an input catalog
+    }
+
     static initial = () => new Catalog()
 
     get isCatalog() { return true }
@@ -995,18 +1000,15 @@ export class CATALOG extends Schema {
     static keys_default   = new STRING({blank: true})
     static values_default = new GENERIC({multi: true})
 
-    keys        // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
-    values      // common schema of values of an input catalog
-
     get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
     subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
                                                                                 // an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
 
-    constructor(values, props = {}) {
+    constructor(props = {}) {
         super(props)
-        let {keys} = props
+        let {keys, values} = props
         if (keys)   this.keys = keys
         if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
@@ -1489,9 +1491,9 @@ export class DATA extends CATALOG {
 
     fields         // plain object with field names and their schemas; null means a default schema should be used for a given field
 
-    constructor(fields, props = {}) {
-        super(null, props)
-        this.fields = fields
+    constructor(props = {}) {
+        super(props)
+        this.fields = props.fields
     }
     subschema(key) {
         if (!this.fields.hasOwnProperty(key))

@@ -39,21 +39,21 @@ let root_fields = C({
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
     class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
-    views        : new CATALOG(new CODE(), {info: "Source code of React functional components to be added dynamically to the category's Class (`class_body` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),
+    views        : new CATALOG({values: new CODE(), info: "Source code of React functional components to be added dynamically to the category's Class (`class_body` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),
     // module    : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class'es body can be defined through the `class_body` and/or `views` properties."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
-    fields       : new CATALOG(new SCHEMA(), {info: "Fields must have unique names.", default: default_fields}),
+    fields       : new CATALOG({values: new SCHEMA(), info: "Fields must have unique names.", default: default_fields}),
 
     // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
 
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),
-    //handlers     : new CATALOG(new CODE(), {info: "Methods for server-side handling of web requests."}),
+    //handlers     : new CATALOG({values: new CODE(), info: "Methods for server-side handling of web requests."}),
 
-    //indexes    : new CATALOG(new ITEM(Index)),
+    //indexes    : new CATALOG({values: new ITEM(Index)}),
 
     //custom_fields : BOOLEAN(default : False, info : "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()")
 
@@ -115,7 +115,7 @@ async function create_categories(Category) {
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes          : new CATALOG(new ITEM(), {info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
+            routes          : new CATALOG({values: new ITEM(), info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
             //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
@@ -128,7 +128,7 @@ async function create_categories(Category) {
         info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
         fields      : C({
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-            routes      : new CATALOG(new ITEM()),
+            routes      : new CATALOG({values: new ITEM()}),
         }),
         class_path  : '/system/local/site.js:Router',
         // _boot_class : 'schemat.item.Router',
@@ -173,7 +173,7 @@ async function create_categories(Category) {
         class_path  : '/system/local/site.js:Folder',
         // _boot_class : 'schemat.item.Folder',
         fields      : C({
-            files       : new CATALOG(new ITEM()),          // file & directory names mapped to item IDs
+            files       : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
             _is_folder  : new BOOLEAN({default: true}),
         }),
     })
@@ -206,7 +206,7 @@ async function create_categories(Category) {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_path  : '/system/local/site.js:AppSpaces',
-        fields      : C({spaces: new CATALOG(new ITEM({category: Category}))}),
+        fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
     })
 
     cat.Schema = await Category.new(10, {
@@ -218,7 +218,7 @@ async function create_categories(Category) {
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
             decode      : new CODE(),
             initial     : new GENERIC(),
-            properties  : new CATALOG(new SCHEMA()),
+            properties  : new CATALOG({values: new SCHEMA()}),
         }),
     })
 
@@ -267,7 +267,7 @@ async function create_items(cat, Category) {
     //     name        : "AppSpaces",
     //     info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
     //     class       : 'schemat.item.AppSpaces',
-    //     // fields      : C({spaces: new CATALOG(new ITEM({type_exact: Category}))}),
+    //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
     // })
 
     // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"

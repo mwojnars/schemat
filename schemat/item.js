@@ -1112,7 +1112,7 @@ export class Category extends Item {
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         let fields = this.getFields()
-        return new this._mod_type.DATA(fields.asDict())
+        return new this._mod_type.DATA({fields: fields.asDict()})
     }
     getAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
