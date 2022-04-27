@@ -271,13 +271,13 @@ export class Schema {
         return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
     }
 
-    get(prop) {
-        if (this[prop] !== undefined) return this[prop]
-        if (this.constructor[prop] !== undefined) return this.constructor[prop]
-    }
+    // get(prop) {
+    //     if (this[prop] !== undefined) return this[prop]
+    //     if (this.constructor[prop] !== undefined) return this.constructor[prop]
+    // }
 
     getInitial() {
-        let initial = this.get('initial')
+        let initial = this.constructor.initial
         return (typeof initial === 'function') ? initial() : initial
     }
 
@@ -719,7 +719,7 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
-            let dflt = `${schema.get('default')}`
+            let dflt = `${schema.props.default}`
             return SPAN(`${schema}`,
                     schema.props.default !== undefined &&
                         SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
@@ -992,25 +992,16 @@ export class CATALOG extends Schema {
         // keys_empty_ok  : false,
     }
 
+    subschema(key)  { return this.props.values }    // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    getValidKeys()  { return undefined }
+
     static initial = () => new Catalog()
 
     get isCatalog() { return true }
 
-    // static keys_default   = new STRING({blank: true})
-    // static values_default = new GENERIC({multi: true})
-
-    // get _keys()     { return this.keys || this.constructor.keys_default }       // schema of keys
-    // subschema(key)  { return this.values || this.constructor.values_default }   // schema of values of a `key`; subclasses should throw
-
-    subschema(key)  { return this.props.values }        // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
-    getValidKeys()  { return undefined }
-
-
     constructor(props = {}) {
         super(props)
         let {keys} = props
-        // if (keys)   this.keys = keys
-        // if (values) this.values = values
         if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
     encode(cat) {
@@ -1075,8 +1066,6 @@ export class CATALOG extends Schema {
     toString() {
         let name = this.constructor.name
         let {keys, values} = this.props
-        // let keys   = this.keys || this.constructor.keys_default
-        // let values = this.values || this.constructor.values_default
         if (T.ofType(keys, STRING))  return `${name}(${values})`
         else                         return `${name}(${values}, ${keys})`
     }
@@ -1495,7 +1484,7 @@ export class DATA extends CATALOG {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key))
             throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
-        return fields[key] || this.props.values  //this.constructor.values_default
+        return fields[key] || this.props.values
     }
     collect(assets) {
         for (let schema of Object.values(this.props.fields))

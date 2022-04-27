@@ -541,7 +541,7 @@ export class Item {
          */
         let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
         let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        let default_ = schemas.get(field).get('default')
+        let default_ = schemas.get(field).props.default
         catalogs.push(default_)
         return Catalog.merge(...catalogs)
     }
@@ -1106,7 +1106,7 @@ export class Category extends Item {
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
-        return schema ? schema.get('default') : undefined
+        return schema ? schema.props.default : undefined
     }
 
     getItemSchema() {
