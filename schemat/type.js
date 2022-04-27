@@ -222,21 +222,14 @@ export class Schema {
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
     }
 
-    static initial = undefined
+    // static initial = undefined
 
     // static __transient__ = ['__props', 'props']
 
     __props = {}        // own properties, not including the defaults; this.props = defaults (with inherited) + __props
 
     constructor(props = {}) {
-        this.__props = props = props || {}                              // props=null/undefined is valid
-        // let {default_, info, blank, type} = props
-        // if (info  !== undefined)    this.info  = info
-        // if (blank !== undefined)    this.blank = blank
-        // // if (type  !== undefined)    this.type  = type
-        // if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
-        // if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
-
+        this.__props = props || {}                  // props=null/undefined is valid
         this.initProps()
     }
 
@@ -277,7 +270,8 @@ export class Schema {
     // }
 
     getInitial() {
-        let initial = this.constructor.initial
+        /* `props.initial` can be a value or a function; this method provides support for both cases. */
+        let {initial} = this.props //this.constructor.initial
         return (typeof initial === 'function') ? initial() : initial
     }
 
@@ -452,12 +446,14 @@ export class Primitive extends Schema {
 
 export class BOOLEAN extends Primitive {
     static stype = "boolean"
-    static initial = false
+    static defaultProps = {initial: false}
+    // static initial = false
 }
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static initial = 0
+    static defaultProps = {initial: 0}
+    // static initial = 0
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -467,8 +463,9 @@ export class INTEGER extends NUMBER {
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
-    static initial = ''
-    static charcase = false         // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
+    static defaultProps = {initial: '', charcase: false}
+    // static initial = ''
+    // static charcase = false         // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
 
     static Widget = class extends Primitive.Widget {
         empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
@@ -989,8 +986,9 @@ export class CATALOG extends Schema {
      */
 
     static defaultProps = {
-        keys:   new STRING({blank: true}),      // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
-        values: new GENERIC({multi: true}),     // common schema of values of an input catalog
+        keys:    new STRING({blank: true}),     // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
+        values:  new GENERIC({multi: true}),    // common schema of values of an input catalog
+        initial: () => new Catalog(),
         // keys_mandatory : false,
         // keys_forbidden : false,
         // keys_unique    : false,
@@ -1000,7 +998,7 @@ export class CATALOG extends Schema {
     subschema(key)  { return this.props.values }    // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
-    static initial = () => new Catalog()
+    // static initial = () => new Catalog()
 
     get isCatalog() { return true }
 
