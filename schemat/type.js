@@ -213,7 +213,7 @@ export class Schema {
     // common properties of schemas; can be utilized by subclasses or callers:
 
     static defaultProps = {
-        info    : 'No info available',    // human-readable description of this schema: what values are accepted and how they are interpreted
+        info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
         default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
         unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         blank   : undefined,    // if true, `null` should be treated as a valid value
@@ -652,14 +652,14 @@ export class GENERIC extends Schema {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
 
     static defaultProps = {
-        type: undefined,
+        class: undefined,
         //types: undefined,
     }
 
     valid(obj) {
-        let {type} = this.props
-        if (type && !(obj instanceof type))
-            throw new ValueError(`invalid object type, expected an instance of ${type}, got ${obj} instead`)
+        let {class: class_} = this.props
+        if (class_ && !(obj instanceof class_))
+            throw new ValueError(`invalid object type, expected an instance of ${class_}, got ${obj} instead`)
         return obj
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
@@ -682,14 +682,16 @@ export let generic_string = new STRING()
 
 
 class DERIVED extends GENERIC {
-    derived     // function derived(data) called when the value is requested
+    static defaultProps = {
+        derive: undefined,          // function derive() called to compute the item's derived property, with `this` bound to the item
+    }
     get readonly() { return true }
 }
 
 /**********************************************************************************************************************/
 
 export class SCHEMA extends GENERIC {
-    static type = Schema
+    static defaultProps = {class: Schema}
 
     static Widget = class extends GENERIC.Widget {
         scope = 'Schema-SCHEMA'
@@ -857,13 +859,13 @@ export class MAP extends Schema {
     */
 
     static defaultProps = {
-        type:       Object,                     // class of input objects
+        class:      Object,                     // class of input objects
         keys:       new STRING(),               // schema of keys of app-layer dicts
         values:     generic_schema,             // schema of values of app-layer dicts
     }
 
     encode(d) {
-        let {type, keys: schema_keys, values: schema_values} = this.props
+        let {class: type, keys: schema_keys, values: schema_values} = this.props
         if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
 
         let state = {}                                      // encode keys & values through predefined field types
@@ -878,7 +880,7 @@ export class MAP extends Schema {
 
         if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
-        let {type, keys: schema_keys, values: schema_values} = this.props
+        let {class: type, keys: schema_keys, values: schema_values} = this.props
         let d = new type()
 
         // decode keys & values through predefined field types
@@ -908,13 +910,13 @@ export class RECORD extends Schema {
     */
 
     static defaultProps = {
-        type:   undefined,
+        class:  undefined,
         fields: {},                     // object containing field names and their schemas
     }
 
     encode(data) {
         /* Encode & compactify values of fields through per-field schema definitions. */
-        let {type} = this.props
+        let {class: type} = this.props
         if (type) {
             if (!T.ofType(data, type)) throw new DataError(`expected an instance of ${type}, got ${data}`)
             data = T.getstate(data)
@@ -928,7 +930,7 @@ export class RECORD extends Schema {
         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
         let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
         // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-        let {type} = this.props
+        let {class: type} = this.props
         if (type) return T.setstate(type, data)
         return data
     }
@@ -1489,8 +1491,8 @@ export class SchemaWrapper extends Schema {
        Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
      */
     static defaultProps = {
-        prototype:  undefined,          // item of the Schema category implementing this schema type
-        properties: undefined,          // properties to be passed to a newly created `schema`
+        prototype:  undefined,          // item of the Schema category (instance of SchemaPrototype) implementing `this.schema`
+        properties: {},                 // properties to be passed to `prototype` to create `this.schema`
     }
 
     schema                              // the actual Schema instance to be used for encode/decode, provided by `prototype` during init()
@@ -1502,18 +1504,18 @@ export class SchemaWrapper extends Schema {
         this.schema = prototype.createSchema(properties)
     }
     
-    valid(obj)              { return this.schema.valid(obj)  }
-    encode(obj)             { return this.schema.encode(obj) }
-    decode(obj)             { return this.schema.decode(obj) }
+    valid(obj)      { return this.schema.valid(obj)  }
+    encode(obj)     { return this.schema.encode(obj) }
+    decode(obj)     { return this.schema.decode(obj) }
 
-    __getstate__()          { return [this.props.prototype.id, this.props.properties] }
-    __setstate__(state)     {
-        let [id, props] = state
-        this.__props.prototype  = globalThis.registry.getItem(id)
-        this.__props.properties = props
-        this.initProps()
-        return this
-    }
+    // __getstate__()          { return [this.props.prototype.id, this.props.properties] }
+    // __setstate__(state)     {
+    //     let [id, props] = state
+    //     this.__props.prototype  = globalThis.registry.getItem(id)
+    //     this.__props.properties = props
+    //     this.initProps()
+    //     return this
+    // }
 }
 
 export class SchemaPrototype extends Item {
