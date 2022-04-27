@@ -230,12 +230,12 @@ export class Schema {
 
     constructor(props = {}) {
         this.__props = props = props || {}                              // props=null/undefined is valid
-        let {default_, info, blank, type} = props
-        if (info  !== undefined)    this.info  = info
-        if (blank !== undefined)    this.blank = blank
-        // if (type  !== undefined)    this.type  = type
-        if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
-        if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
+        // let {default_, info, blank, type} = props
+        // if (info  !== undefined)    this.info  = info
+        // if (blank !== undefined)    this.blank = blank
+        // // if (type  !== undefined)    this.type  = type
+        // if (default_ !== undefined) this.default = default_             // because "default" is a JS keyword, there are two ways
+        // if ('default' in props)     this.default = props.default        // to pass it to Schema: as "default" or "default_"
 
         this.initProps()
     }
@@ -439,7 +439,7 @@ export class Primitive extends Schema {
 
     valid(value) {
         let t = this.constructor.stype
-        if (typeof value === t || (this.blank && (value === null || value === undefined)))
+        if (typeof value === t || (this.props.blank && (value === null || value === undefined)))
             return value
         throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
     }
@@ -673,11 +673,15 @@ export class PATH extends STRING {
 export class GENERIC extends Schema {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
 
-    get _type() { return this.type || this.constructor.type }
+    static defaultProps = {
+        type: undefined,
+        //types: undefined,
+    }
 
     valid(obj) {
-        if (this._type && !(obj instanceof this._type))
-            throw new ValueError(`invalid object type, expected an instance of ${this._type}, got ${obj} instead`)
+        let {type} = this.props
+        if (type && !(obj instanceof type))
+            throw new ValueError(`invalid object type, expected an instance of ${type}, got ${obj} instead`)
         return obj
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
@@ -875,18 +879,16 @@ export class MAP extends Schema {
     */
 
     static defaultProps = {
+        type:       Object,                     // class of input objects
         keys:       new STRING(),               // schema of keys of app-layer dicts
         values:     generic_schema,             // schema of values of app-layer dicts
     }
 
     encode(d) {
-        let type = this.type || Object
+        let {type, keys: schema_keys, values: schema_values} = this.props
         if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
 
-        let {keys: schema_keys, values: schema_values} = this.props
-        let state = {}
-
-        // encode keys & values through predefined field types
+        let state = {}                                      // encode keys & values through predefined field types
         for (let [key, value] of Object.entries(d)) {
             let k = schema_keys.encode(key)
             if (k in state) throw new DataError(`two different keys encoded to the same state (${k}) in MAP, one of them: ${key}`)
@@ -898,8 +900,8 @@ export class MAP extends Schema {
 
         if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
 
-        let {keys: schema_keys, values: schema_values} = this.props
-        let d = new (this.type || Object)
+        let {type, keys: schema_keys, values: schema_values} = this.props
+        let d = new type()
 
         // decode keys & values through predefined field types
         for (let [key, value] of Object.entries(state)) {
@@ -928,13 +930,15 @@ export class RECORD extends Schema {
     */
 
     static defaultProps = {
+        type:   undefined,
         fields: {},                     // object containing field names and their schemas
     }
 
     encode(data) {
         /* Encode & compactify values of fields through per-field schema definitions. */
-        if (this.type) {
-            if (!T.ofType(data, this.type)) throw new DataError(`expected an instance of ${this.type}, got ${data}`)
+        let {type} = this.props
+        if (type) {
+            if (!T.ofType(data, type)) throw new DataError(`expected an instance of ${type}, got ${data}`)
             data = T.getstate(data)
         }
         else if (!T.isDict(data))
@@ -946,7 +950,8 @@ export class RECORD extends Schema {
         if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
         let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
         // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-        if (this.type) return T.setstate(this.type, data)
+        let {type} = this.props
+        if (type) return T.setstate(type, data)
         return data
     }
     _schema(name) {
@@ -1511,7 +1516,7 @@ export class SchemaWrapper extends Schema {
         properties: undefined,          // properties to be passed to a newly created `schema`
     }
 
-    schema                              // the actual Schema instance used for encode/decode, provided by `prototype` during init()
+    schema                              // the actual Schema instance to be used for encode/decode, provided by `prototype` during init()
     
     async init() {
         let {prototype, properties} = this.props

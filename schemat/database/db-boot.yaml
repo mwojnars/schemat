@@ -41,20 +41,20 @@
               "@": schemat.type.CODE
           - key: views
             value:
+              values:
+                "@": schemat.type.CODE
               info: "Source code of React functional components to be added dynamically to the
                 category's Class (`class_body` property) as VIEW_*(props)
                 methods for rendering item views. View methods are called bound:
                 this=item to be rendered."
-              values:
-                "@": schemat.type.CODE
               "@": schemat.type.CATALOG
           - key: cache_ttl
             value:
+              default: 5
               info: Time To Live (TTL). Determines for how long (in seconds) an item of this
                 category is kept in a server-side cache after being loaded from
                 DB, for reuse by subsequent requests. A real number. If zero,
                 the items are evicted immediately after each request.
-              default: 5
               "@": schemat.type.NUMBER
           - key: cached_methods
             value:
@@ -65,6 +65,8 @@
               "@": schemat.type.STRING
           - key: fields
             value:
+              values:
+                "@": schemat.type.SCHEMA
               info: Fields must have unique names.
               default:
                 entries:
@@ -75,13 +77,13 @@
                       "@": schemat.type.STRING
                   - key: path
                     value:
+                      unique: true
                       info: "Canonical path of this item within the SUN, for: display, resolving
                         relative code imports, resolving relative item
                         references (REF type), etc. If `path` is configured,
                         callers can only import this item's code through the
                         `path`, so that the code is always interpreted the same
                         and can be cached after parsing."
-                      unique: true
                       "@": schemat.type.PATH
                   - key: info
                     value:
@@ -101,8 +103,6 @@
                         defined in base categories.
                       "@": schemat.type.ITEM
                 "@": schemat.data.Catalog
-              values:
-                "@": schemat.type.SCHEMA
               "@": schemat.type.CATALOG
         "@": schemat.data.Catalog
   "@": schemat.data.Data
@@ -123,11 +123,11 @@
         items. The application should handle all items.
       "@": schemat.type.PATH
     routes:
+      values:
+        "@": schemat.type.ITEM
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
-      values:
-        "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
 - __id:
     - 0
@@ -220,12 +220,12 @@
   class_path: /system/local/site.js:AppBasic
   fields:
     category:
-      info: Optional category(ies) of items handled by this application.
       category:
         =:
           - 0
           - 0
         "@": (item)
+      info: Optional category(ies) of items handled by this application.
       "@": schemat.type.ITEM
     drop_cid:
       info: If true, CID is excluded from URL paths. Requires that a single `category`
