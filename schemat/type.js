@@ -239,18 +239,19 @@ export class Schema {
         /* Return all defaultProps from the prototype chain combined. */
         return Object.assign({}, ...[...T.inherited(this, 'defaultProps')].reverse())
     }
-    initProps() {}
-    // initProps() {
-    //     /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
-    //     this.props = {...this.constructor.getDefaultProps(), ...this.__props}
-    // }
 
-    __getstate__() {
-        let state = {...this, ...this.__props}
-        delete state['__props']
-        return state
+    // initProps() {}
+    initProps() {
+        /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
+        this.props = {...this.constructor.getDefaultProps(), ...this.__props}
     }
-    // __getstate__() { return this.__props }
+
+    // __getstate__() {
+    //     let state = {...this, ...this.__props}
+    //     delete state['__props']
+    //     return state
+    // }
+    __getstate__() { return this.__props }
 
     __setstate__(state) {
         assert(T.isDict(state))
@@ -260,9 +261,9 @@ export class Schema {
         return this
     }
 
-    get props() {
-        return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
-    }
+    // get props() {
+    //     return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
+    // }
 
     // get(prop) {
     //     if (this[prop] !== undefined) return this[prop]
