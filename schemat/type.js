@@ -213,7 +213,7 @@ export class Schema {
     // common properties of schemas; can be utilized by subclasses or callers:
 
     static defaultProps = {
-        info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
+        info    : 'No info available',    // human-readable description of this schema: what values are accepted and how they are interpreted
         default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
         unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         blank   : undefined,    // if true, `null` should be treated as a valid value
@@ -222,53 +222,34 @@ export class Schema {
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
     }
 
-    // static initial = undefined
-
-    // static __transient__ = ['__props', 'props']
-
-    __props = {}        // own properties, not including the defaults; this.props = defaults (with inherited) + __props
-
-    constructor(props = {}) {
-        this.__props = props || {}                  // props=null/undefined is valid
-        this.initProps()
-    }
-
-    init() {}               // called from Category.init(); override as async in subclasses to perform asynchronous initialization
-
     static getDefaultProps() {
         /* Return all defaultProps from the prototype chain combined. */
         return Object.assign({}, ...[...T.inherited(this, 'defaultProps')].reverse())
     }
 
-    // initProps() {}
+    __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props
+
+
+    constructor(props = {}) {
+        this.__props = props || {}      // props=null/undefined is also valid
+        this.initProps()
+    }
+
+    init() {}                   // called from Category.init(); subclasses should override this method as async to perform asynchronous initialization
+
     initProps() {
         /* Create this.props by combining the constructor's defaultProps (own and inherited) with own props (this.__props). */
         this.props = {...this.constructor.getDefaultProps(), ...this.__props}
     }
 
-    // __getstate__() {
-    //     let state = {...this, ...this.__props}
-    //     delete state['__props']
-    //     return state
-    // }
-    __getstate__() { return this.__props }
+    __getstate__()      { return this.__props }
 
     __setstate__(state) {
         assert(T.isDict(state))
-        Object.assign(this, state)      //TODO: drop
         this.__props = state
         this.initProps()
         return this
     }
-
-    // get props() {
-    //     return {...this.constructor, ...this.constructor.getDefaultProps(), ...this, ...this.__props}
-    // }
-
-    // get(prop) {
-    //     if (this[prop] !== undefined) return this[prop]
-    //     if (this.constructor[prop] !== undefined) return this.constructor[prop]
-    // }
 
     getInitial() {
         /* `props.initial` can be a value or a function; this method provides support for both cases. */
@@ -448,13 +429,11 @@ export class Primitive extends Schema {
 export class BOOLEAN extends Primitive {
     static stype = "boolean"
     static defaultProps = {initial: false}
-    // static initial = false
 }
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
     static defaultProps = {initial: 0}
-    // static initial = 0
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
@@ -464,9 +443,10 @@ export class INTEGER extends NUMBER {
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
-    static defaultProps = {initial: '', charcase: false}
-    // static initial = ''
-    // static charcase = false         // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
+    static defaultProps = {
+        initial: '',
+        // charcase: false,            // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
+    }
 
     static Widget = class extends Primitive.Widget {
         empty(value)    { return !value && NBSP }  //SPAN(cl('key-missing'), "(missing)") }
@@ -998,8 +978,6 @@ export class CATALOG extends Schema {
 
     subschema(key)  { return this.props.values }    // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
-
-    // static initial = () => new Catalog()
 
     get isCatalog() { return true }
 
