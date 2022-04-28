@@ -711,6 +711,20 @@ export class DERIVED extends GENERIC {
 export class SCHEMA extends GENERIC {
     static defaultProps = {class: Schema}
 
+    encode(schema) {
+        // special more concise array-form encoding for SchemaWrapper, which is going to be the most common schema object
+        if (schema instanceof SchemaWrapper) return [schema.props.prototype.id, schema.props.properties]
+        return super.encode(schema)
+    }
+    decode(state) {
+        if (state instanceof Array) {
+            let [id, properties] = state
+            let prototype = globalThis.registry.getItem(id)
+            return new SchemaWrapper({prototype, properties})
+        }
+        return super.decode(state)
+    }
+
     static Widget = class extends GENERIC.Widget {
         scope = 'Schema-SCHEMA'
         static style = () => this.safeCSS({stopper: '|'})
