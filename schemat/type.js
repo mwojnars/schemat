@@ -210,16 +210,22 @@ class Widget extends Component {}
 
 export class Schema {
 
-    // common properties of schemas; can be utilized by subclasses or callers:
+    get isCatalog() { return false }
+    get isDerived() { return false }
+    get isWrapper() { return false }
 
+    // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
         info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
         default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
         unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         blank   : undefined,    // if true, `null` should be treated as a valid value
-        type    : undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         initial : undefined,    // initial value assigned to a newly created data element of this schema
+        // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+
+        // impute: undefined,   // function to be called to compute a field value if imputation is needed (during item modification in DB)
+        // imputeIf: "always",  // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
     }
 
     static getDefaultProps() {
@@ -255,6 +261,12 @@ export class Schema {
         /* `props.initial` can be a value or a function; this method provides support for both cases. */
         let {initial} = this.props //this.constructor.initial
         return (typeof initial === 'function') ? initial() : initial
+    }
+
+    instanceof(schemaClass) {
+        /* Check if this schema is an instance of a particular `schemaClass`, OR is a SchemaWrapper
+           around a `schemaClass` (implemented in SchemaWrapper.instanceof()). */
+        return this instanceof schemaClass
     }
 
     valid(value) {
@@ -681,11 +693,17 @@ export let generic_schema = new GENERIC()
 export let generic_string = new STRING()
 
 
-class DERIVED extends GENERIC {
+export class DERIVED extends GENERIC {
+
+    get isDerived() { return true }
+    // get isReadonly() { return true }
+
     static defaultProps = {
-        derive: undefined,          // function derive() called to compute the item's derived property, with `this` bound to the item
+        derive: undefined,      // function derive(item) is called to compute the item's derived property; inside the function,
+                                // `this` references the schema object (this.props is available), the `item` is in `isLoading`
+                                // state, item.data can be accessed; the function can be async; if undefined is returned
+                                // by derive(), it's replaced with schema.props.default
     }
-    get readonly() { return true }
 }
 
 /**********************************************************************************************************************/
@@ -968,6 +986,8 @@ export class CATALOG extends Schema {
     - keys not allowed (what about labels then?)
      */
 
+    get isCatalog() { return true }
+
     static defaultProps = {
         keys:    new STRING({blank: true}),     // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
         values:  new GENERIC({multi: true}),    // common schema of values of an input catalog
@@ -981,12 +1001,10 @@ export class CATALOG extends Schema {
     subschema(key)  { return this.props.values }    // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
-    get isCatalog() { return true }
-
     constructor(props = {}) {
         super(props)
         let {keys} = props
-        if (keys && !(keys instanceof STRING)) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
+        if (keys && !(keys.instanceof(STRING))) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
     encode(cat) {
         /* Encode & compactify values of fields through per-field schema definitions. */
@@ -1064,7 +1082,7 @@ export class CATALOG extends Schema {
         let schema  = this.subschema(path[0])             // make one step forward, then call get() recursively
         let subpath = path.slice(1)
         if (!subpath.length)            return schema
-        if (schema instanceof CATALOG)  return schema.find(subpath, default_)
+        if (schema.instanceof(CATALOG)) return schema.find(subpath, default_)
         return default_
     }
 
@@ -1406,7 +1424,7 @@ CATALOG.Table = class extends Component {
     Catalog({item, value, schema, path, color, start_color}) {
         /* If `start_color` is undefined, the same `color` is used for all rows. */
         assert(value  instanceof Catalog)
-        assert(schema instanceof CATALOG)
+        assert(schema.instanceof(CATALOG))
 
         let catalog  = value
         let getColor = pos => start_color ? 1 + (start_color + pos - 1) % 2 : color
@@ -1490,6 +1508,8 @@ export class SchemaWrapper extends Schema {
     /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
        Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
      */
+    get isWrapper() { return true }
+
     static defaultProps = {
         prototype:  undefined,          // item of the Schema category (instance of SchemaPrototype) implementing `this.schema`
         properties: {},                 // properties to be passed to `prototype` to create `this.schema`
@@ -1503,10 +1523,10 @@ export class SchemaWrapper extends Schema {
         assert(prototype instanceof SchemaPrototype)
         this.schema = prototype.createSchema(properties)
     }
-    
-    valid(obj)      { return this.schema.valid(obj)  }
-    encode(obj)     { return this.schema.encode(obj) }
-    decode(obj)     { return this.schema.decode(obj) }
+    instanceof(cls)     { return this.schema instanceof cls }
+    valid(obj)          { return this.schema.valid(obj)  }
+    encode(obj)         { return this.schema.encode(obj) }
+    decode(obj)         { return this.schema.decode(obj) }
 
     // __getstate__()          { return [this.props.prototype.id, this.props.properties] }
     // __setstate__(state)     {
