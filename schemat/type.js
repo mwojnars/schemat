@@ -219,7 +219,7 @@ export class Schema {
         info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
         default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
         unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
-        blank   : undefined,    // if true, `null` should be treated as a valid value
+        blank   : undefined,    // if true, `null` and `undefined` are treated as a valid value
         initial : undefined,    // initial value assigned to a newly created data element of this schema
         // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
@@ -269,13 +269,28 @@ export class Schema {
         return this instanceof schemaClass
     }
 
-    valid(value) {
-        /* Validate and normalize an app-layer `value` before encoding.
-           Return a normalized value, or throw ValueError.
-         */
-        return value
-        // throw new ValueError(value)
+    validate(obj) {
+        /* Validate and preprocess an object to be encoded. */
+        this.check(obj)                         // raises an exception if `obj` is invalid
+        return this.normalize(obj)              // cleans up and preprocesses the `obj` to a canonical form
     }
+    check(obj) {
+        /* Check if the object (before normalization) is valid for this schema, throw an exception if not. */
+        if (!this.props.blank && (obj === null || obj === undefined))
+            throw new ValueError(`expected a non-blank value, but got '${obj}'`)
+    }
+    normalize(obj) {
+        /* Clean up and/or convert the object to a canonical form before encoding. */
+        return obj
+    }
+
+    // valid(value) {
+    //     /* Validate and normalize an app-layer `value` before encoding.
+    //        Return a normalized value, or throw ValueError.
+    //      */
+    //     return value
+    //     // throw new ValueError(value)
+    // }
 
     encode(value) {
         /*
@@ -390,7 +405,7 @@ Schema.Widget = class extends Widget {
         try {
             let {schema, flash, save} = this.props
             value = this.decode(value)
-            value = schema.valid(value)         // validate and normalize the decoded value; exception is raised on error
+            value = schema.validate(value)      // validate and normalize the decoded value; exception is raised on error
             flash("SAVING...")
             await save(value)                   // push the new decoded value to the parent
             flash("SAVED")
@@ -425,10 +440,10 @@ export class Primitive extends Schema {
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
-    valid(value) {
+    check(value) {
+        super.check(value)
         let t = this.constructor.stype
-        if (typeof value === t || (this.props.blank && (value === null || value === undefined)))
-            return value
+        if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return
         throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
     }
     encode(value) {
@@ -445,10 +460,24 @@ export class BOOLEAN extends Primitive {
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
-    static defaultProps = {initial: 0}
+    static defaultProps = {
+        initial: 0,
+        min:     undefined,         // minimum value allowed (>=)
+        max:     undefined,         // maximum value allowed (<=)
+    }
+    check(value) {
+        super.check(value)
+        let {min, max} = this.props
+        if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
+        if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
+    }
 }
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
+    check(value) {
+        super.check(value)
+        if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
+    }
 }
 
 
@@ -468,10 +497,8 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
-    valid(value) {
-        /* Trim leading/trailing whitespace. Replace with `null` if empty string. */
-        value = super.valid(value)
-        return value.trim()
+    normalize(value) {
+        return super.normalize(value).trim()        // trim leading/trailing whitespace
     }
 }
 
@@ -668,11 +695,11 @@ export class GENERIC extends Schema {
         //types: undefined,
     }
 
-    valid(obj) {
+    check(obj) {
+        super.check(obj)
         let {class: class_} = this.props
         if (class_ && !(obj instanceof class_))
             throw new ValueError(`invalid object type, expected an instance of ${class_}, got ${obj} instead`)
-        return obj
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
@@ -735,6 +762,7 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
+            if (schema instanceof SchemaWrapper) schema = schema.schema
             let dflt = `${schema.props.default}`
             return SPAN(`${schema}`,
                     schema.props.default !== undefined &&
@@ -1538,7 +1566,7 @@ export class SchemaWrapper extends Schema {
         this.schema = prototype.createSchema(properties)
     }
     instanceof(cls)     { return this.schema instanceof cls }
-    valid(obj)          { return this.schema.valid(obj)  }
+    validate(obj)       { return this.schema.validate(obj) }
     encode(obj)         { return this.schema.encode(obj) }
     decode(obj)         { return this.schema.decode(obj) }
 
