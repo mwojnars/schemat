@@ -132,11 +132,11 @@ export class Catalog {
     *entries()          { yield* this._entries }
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
 
-    flat(last = false) {
-        /* Return a flat object containing all entries converted to {key: value} attributes.
-           For repeated keys, only one value is included: the last one if last=true, or the first one otherwise.
+    flat(first = true) {
+        /* Return a flat object containing all the entries converted to {key: value} attributes.
+           For repeated keys, only one value is included: the first one if first=true (default), or the last one, otherwise.
          */
-        let entries = last ? this._entries : [...this._entries].reverse()
+        let entries = first ? [...this._entries].reverse() : this._entries
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 

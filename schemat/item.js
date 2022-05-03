@@ -443,12 +443,12 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    flat(last = false) {
-        /* Return this.data converted to a flat object. For repeated fields, only one value is included:
-           the last one if last=true, or the first one otherwise (default).
+    flat(first = true) {
+        /* Return this.data converted to a flat object. For repeated keys, only one value is included:
+           the first one if first=true (default), or the last one, otherwise.
           */
         this.assertLoaded()
-        return this.data.flat(last)
+        return this.data.flat(first)
     }
 
     get(path, opts = {}) {
@@ -1021,20 +1021,45 @@ export class Category extends Item {
          */
         let site = this.registry.site
         let onClient = this.registry.onClient
+        let [classPath, name] = this.getClassPath()
 
         if (!site) {
             // when booting up, a couple of core items must be created before registry.site becomes available
-            let [path, name] = this.getClassPath()
-            if (!path) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
+            if (!classPath) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category: ${this.id_str}`)
-            return {Class: await this.registry.importDirect(path, name || 'default')}
+            return this.getBaseClassModule(classPath, name)
+            // return {Class: await this.registry.importDirect(classPath, name || 'default')}
         }
 
-        let path = this.getPath()
-        if (onClient) return this.registry.import(path)
+        let modulePath = this.getPath()
 
-        let source = this.getCode()
-        return site.parseModule(source, path)
+        try {
+            return await (onClient ?
+                            this.registry.import(modulePath) :
+                            site.parseModule(this.getCode(), modulePath)
+            )
+        }
+        catch (ex) {
+            print(`ERROR when parsing dynamic code for category ${this.id_str}, will use a base class instead. Cause:\n`, ex)
+            return this.getBaseClassModule(classPath, name)
+        }
+    }
+
+    async getBaseClassModule(path, name) {
+        /* Return a {Class} object that contains the base class (without dynamic code) for items of this category. */
+        if (!path) [path, name] = this.getClassPath()
+        if (!path) {
+            let proto = this.getPrototypes()[0]
+            if (!proto) return {Class: Item}
+            let module = await proto.getModule()
+            return {Class: module.Class}
+        }
+        return {Class: await this.registry.importDirect(path, name || 'default')}
+    }
+
+    getClassPath() {
+        /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
+        return splitLast(this.get('class_path') || '', ':')
     }
 
     getCode() {
@@ -1091,7 +1116,6 @@ export class Category extends Item {
         cached = cached.split(/\s+/).map(m => `'${m}'`)
         return `Class.setCaching(${cached.join(',')})`
     }
-    getClassPath() { return splitLast(this.get('class_path') || '', ':') }   // [path, name]
 
     getItem(iid) {
         /*
