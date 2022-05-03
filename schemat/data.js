@@ -126,12 +126,19 @@ export class Catalog {
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
-    asDict()            { return Object.fromEntries(this._entries.map(e => [e.key, e.value])) }
     map(fun)            { return Array.from(this._entries, fun) }
     *keys()             { yield* this._keys.keys() }
     *values()           { yield* this._entries.map(e => e.value) }
     *entries()          { yield* this._entries }
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
+
+    flat(last = false) {
+        /* Return a flat object containing all entries converted to {key: value} attributes.
+           For repeated keys, only one value is included: the last one if last=true, or the first one otherwise.
+         */
+        let entries = last ? this._entries : [...this._entries].reverse()
+        return Object.fromEntries(entries.map(e => [e.key, e.value]))
+    }
 
     constructor(data = null) {
         if (!data) return

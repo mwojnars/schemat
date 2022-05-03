@@ -443,6 +443,14 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
+    flat(last = false) {
+        /* Return this.data converted to a flat object. For repeated fields, only one value is included:
+           the last one if last=true, or the first one otherwise (default).
+          */
+        this.assertLoaded()
+        return this.data.flat(last)
+    }
+
     get(path, opts = {}) {
         /* If opts.pure is true, the `path` is first searched for in `this` and `this.constructor`, only then in this.data. */
 
@@ -1112,7 +1120,7 @@ export class Category extends Item {
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         let fields = this.getFields()
-        return new this._mod_type.DATA({fields: fields.asDict()})
+        return new this._mod_type.DATA({fields: fields.flat()})
     }
     getAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */

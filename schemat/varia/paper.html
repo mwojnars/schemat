@@ -1,0 +1,109 @@
+
+
+
+
+<!--
+    let paper = this.flat()
+-->
+
+<div class="panel panel-body panel-content bg-white" style="height: auto !important;">
+    <h1>${paper.title}</h1>
+    <p class="text-muted">
+        <a class="bib-journal" href="/journal/150093/markets-globalization-development-review">___JOURNAL-TITLE___</a>,
+        ___MONTH-YEAR___
+    </p>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-xs-12">
+            <p class="hidden-md hidden-lg author-names" style="margin-top:0"><a
+                    href="/search/?q=authors%3A%22Takehiko+Yogo%22">___AUTHOR-1___</a></p>
+            <div class="hidden-xs hidden-sm lead author-names text-right">
+                <a href="/search/?q=authors%3A%22Takehiko+Yogo%22">___AUTHOR-1___</a>
+            </div>
+        </div>
+        <div class="col-lg-9 col-md-9 col-xs-12">
+            <blockquote>${paper.abstract}</blockquote>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-xs-6">
+
+            <iframe id="twitter-widget-0" scrolling="no" allowtransparency="true" allowfullscreen="true"
+                    class="twitter-share-button twitter-share-button-rendered twitter-tweet-button"
+                    style="position: static; visibility: visible; width: 73px; height: 20px;"
+                    title="Twitter Tweet Button"
+                    src="https://platform.twitter.com/widgets/tweet_button.bbd13993eb53d3a11ac08f5e8cf9d6a4.en.html#dnt=false&amp;id=twitter-widget-0&amp;lang=en&amp;original_referer=https%3A%2F%2Fpaperity.org%2Fp%2F221400867%2Fhow-to-face-design-thinking-human-centered-problem-solving-and-designers-attitude-to&amp;size=m&amp;text=How%20to%20face%20%22design%20thinking%22%3A%20Human-centered%20problem%20solving%20and%20designer%27s%20attitude%20to%20approach%20(pdf)%20%7C%20Paperity&amp;time=1651576404950&amp;type=share&amp;url=https%3A%2F%2Fpaperity.org%2Fp%2F221400867%2Fhow-to-face-design-thinking-human-centered-problem-solving-and-designers-attitude-to&amp;via=Paperity"
+                    frameborder="0"></iframe>
+            <script>!function (d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
+                if (!d.getElementById(id)) {
+                    js = d.createElement(s);
+                    js.id = id;
+                    js.src = p + '://platform.twitter.com/widgets.js';
+                    fjs.parentNode.insertBefore(js, fjs);
+                }
+            }(document, 'script', 'twitter-wjs');</script>
+        </div>
+
+        <div class="col-xs-6 text-right">
+            <button title="Copy full text to clipboard" id="copy-button" class="btn btn-sm btn-default"
+                    onclick="alertFlash();">
+                <span class="glyphicon glyphicon-edit"></span>
+            </button>
+            <button title="Full screen" class="btn btn-sm btn-default" data-toggle="modal"
+                    data-target="#full-screen-viewer">
+                <span class="glyphicon glyphicon-fullscreen"></span>
+            </button>
+        </div>
+    </div>
+
+
+    <div class="pdf-viewer" id="pdf-viewer">
+        <object data="https://digitalcommons.uri.edu/cgi/viewcontent.cgi?article=1090&amp;context=mgdr#toolbar=1&amp;navpanes=0&amp;messages=0&amp;page=1&amp;zoom=page-width&amp;view=FitH"
+                type="application/pdf" style="margin-bottom:-10px" alt="Please wait" id="fulltext-viewer" width="100%"
+                height="100%">
+            <div class="well">
+
+                <div class="alert bg-red">
+                    <p> A PDF file should load here. If you do not see its contents
+                        the file may be temporarily unavailable at the journal website
+                        or you do not have a PDF plug-in installed and enabled in your browser.
+                    </p>
+                    <p> Alternatively, you can download the file locally and open with any standalone PDF reader: </p>
+                    <p><a href="${paper.url_pdf}" rel="nofollow">${paper.url_pdf}</a></p>
+                </div>
+                <div id="rawtext" class="">
+                    <h4>${paper.title}</h4>
+                    <div class="pre-wrap">${paper.rawtext}</div>
+                </div>
+            </div>
+        </object>
+    </div>
+
+    <div class="modal fade" id="full-screen-viewer">
+        <div class="modal-dialog modal-full">
+            <div class="modal-content modal-full pdf-viewer-full">
+                <div class="pull-right">
+                    <a href="javascript:closeFullScreenViewer();" class=""><span
+                            class="pdf-viewer-full-close glyphicon glyphicon-remove"> </span></a>
+                </div>
+                <div class="modal-body modal-full" id="pdf-viewer-full" style="padding-bottom:0; padding-left:0">
+                    <div id="full-screen-viewer-object"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="endnote">
+        <br>
+        This is a preview of a remote PDF: <a
+            href="${paper.url_pdf}"
+            rel="nofollow noopener" target="_blank">${paper.url_pdf}</a>
+    </p>
+    <p class="endnote">
+        ___AUTHOR-1-3___. <i>${paper.title}</i>, ___JOURNAL-TITLE___, ${paper.year}, ___VOLUME___, ___ISSUE___,
+    </p>
+
+</div>

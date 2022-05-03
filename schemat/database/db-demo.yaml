@@ -280,3 +280,92 @@
     - 202
   name: Paper
   info: Paperity's Paper object.
+  fields:
+    pid:
+      - - 10
+        - 3
+      - {}
+    title:
+      - - 10
+        - 1
+      - {}
+    authors:
+      - - 10
+        - 1
+      - {}
+    url:
+      - - 10
+        - 4
+      - {}
+    homepage:
+      - - 10
+        - 4
+      - {}
+    abstract:
+      - - 10
+        - 1
+      - {}
+    journal_id:
+      - - 10
+        - 2
+      - {}
+    date:
+      - - 10
+        - 1
+      - {}
+    birth:
+      - - 10
+        - 1
+      - {}
+    year:
+      - - 10
+        - 2
+      - {}
+    languages:
+      - - 10
+        - 1
+      - {}
+    created_at:
+      - - 10
+        - 1
+      - {}
+    updated_at:
+      - - 10
+        - 1
+      - {}
+    harvested_at:
+      - - 10
+        - 1
+      - {}
+    extracted_at:
+      - - 10
+        - 1
+      - {}
+    published_at:
+      - - 10
+        - 1
+      - {}
+    doi:
+      - - 10
+        - 1
+      - {}
+    url_pdf:
+      - - 10
+        - 4
+      - {}
+    pdf_name:
+      - - 10
+        - 1
+      - {}
+    rawtext:
+      - - 10
+        - 1
+      - {}
+    source_url:
+      - - 10
+        - 4
+      - {}
+    pic_original_name:
+      - - 10
+        - 1
+      - {}
