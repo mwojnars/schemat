@@ -1,3 +1,5 @@
+// import { Temporal } from './libs/js-temporal/polyfill.js'
+
 import { React, MaterialUI } from './resources.js'
 import { e, cl, st, css, cssPrepend, interpolate, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
@@ -8,6 +10,8 @@ import { Catalog } from './data.js'
 import { Item } from './item.js'
 
 let csso = await tryimport('csso')
+
+// print('Temporal:', Temporal)
 
 
 /**********************************************************************************************************************
@@ -224,8 +228,10 @@ export class Schema {
         // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
-        // impute: undefined,   // function to be called to compute a field value if imputation is needed (during item modification in DB)
-        // imputeIf: "always",  // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
+        // NOT USED currently
+        impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
+        imputeIf: "always",     // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
+        imputeFlag: false,      // if true, a boolean flag is attached to the encoded value to indicate if it originates from automatic imputation; the decoded value is wrapped up in an Imputable wrapper to allow reading the flag
     }
 
     static getDefaultProps() {
@@ -277,7 +283,7 @@ export class Schema {
     check(obj) {
         /* Check if the object (before normalization) is valid for this schema, throw an exception if not. */
         if (!this.props.blank && (obj === null || obj === undefined))
-            throw new ValueError(`expected a non-blank value, but got '${obj}'`)
+            throw new ValueError(`expected a non-blank value, but got '${obj}' instead`)
     }
     normalize(obj) {
         /* Clean up and/or convert the object to a canonical form before encoding. */
@@ -481,6 +487,12 @@ export class INTEGER extends NUMBER {
 }
 
 
+/**********************************************************************************************************************
+ **
+ **  STRING and TEXT types
+ **
+ */
+
 export class Textual extends Primitive {
     /* Intermediate base class for string-based types: STRING, TEXT, CODE. Provides common widget implementation. */
     static stype = "string"
@@ -499,6 +511,12 @@ export class Textual extends Primitive {
 export class STRING extends Textual {
     normalize(value) {
         return super.normalize(value).trim()        // trim leading/trailing whitespace
+    }
+}
+export class URL extends STRING {
+    /* For now, URL schema does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
+    static Widget = class extends STRING.Widget {
+        view(v) { return A({href: v}, v) }
     }
 }
 
@@ -680,6 +698,26 @@ export class PATH extends STRING {
     relative        // if True, relative paths are allowed in addition to absolute ones
 }
 
+/**********************************************************************************************************************
+ **
+ **  DATE* types
+ **
+ */
+
+export class DATE extends STRING {
+    /* Date (no time, no timezone). Serialized to a string "YYYY-MM-DD". */
+
+    check(value) {
+        if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
+    }
+    encode(value) {
+
+    }
+}
+
+export class DATETIME extends STRING {
+    /* Date+time. May contain a timezone specification. Serialized to a string. */
+}
 
 /**********************************************************************************************************************
  **
@@ -762,7 +800,10 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Schema.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
-            if (schema instanceof SchemaWrapper) schema = schema.schema
+            if (schema instanceof SchemaWrapper) {
+                if (!schema.schema) return "SchemaWrapper (not loaded)"
+                schema = schema.schema
+            }
             let dflt = `${schema.props.default}`
             return SPAN(`${schema}`,
                     schema.props.default !== undefined &&
@@ -1569,6 +1610,7 @@ export class SchemaWrapper extends Schema {
     validate(obj)       { return this.schema.validate(obj) }
     encode(obj)         { return this.schema.encode(obj) }
     decode(obj)         { return this.schema.decode(obj) }
+    display(props)      { return this.schema.display(props) }
 
     // __getstate__()          { return [this.props.prototype.id, this.props.properties] }
     // __setstate__(state)     {

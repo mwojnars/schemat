@@ -4,6 +4,21 @@
   name: STRING
   class_path: /system/local/type.js:STRING
 - __id:
+    - 10
+    - 2
+  name: NUMBER
+  class_path: /system/local/type.js:NUMBER
+- __id:
+    - 10
+    - 3
+  name: INTEGER
+  class_path: /system/local/type.js:INTEGER
+- __id:
+    - 10
+    - 4
+  name: URL
+  class_path: /system/local/type.js:URL
+- __id:
     - 0
     - 50
   name: YAML Database

@@ -214,9 +214,67 @@
   info: Paperity's Journal object.
   fields:
     pid:
-      "@": schemat.type.INTEGER
+      - - 10
+        - 3
+      - {}
     title:
       "@": schemat.type.STRING
+    issn:
+      - - 10
+        - 1
+      - {}
+    publisher:
+      - - 10
+        - 1
+      - {}
+    url:
+      - - 10
+        - 4
+      - {}
+    homepage:
+      - - 10
+        - 4
+      - {}
+    xid:
+      - - 10
+        - 1
+      - {}
+    description:
+      - - 10
+        - 1
+      - {}
+    source_url:
+      - - 10
+        - 4
+      - {}
+    created_at:
+      - - 10
+        - 1
+      - {}
+    updated_at:
+      - - 10
+        - 1
+      - {}
+    indexed_at:
+      - - 10
+        - 1
+      - {}
+    indexed_full:
+      - - 10
+        - 1
+      - {}
+    published_at:
+      - - 10
+        - 1
+      - {}
+    papers_all:
+      - - 10
+        - 3
+      - {}
+    papers_published:
+      - - 10
+        - 3
+      - {}
 - __id:
     - 0
     - 202

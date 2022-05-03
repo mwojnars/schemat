@@ -88,6 +88,9 @@ Bootstrap, Bootstrap Icons -- large number of different classes; TODO: drop this
 
 */
 
+// let React_ = require("react")
+// exports.React_ = React_
+// module.exports = {React_}
 
 let {                                                               // on client...
     React,
