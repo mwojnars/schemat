@@ -39,6 +39,17 @@
                 this category. The class inherits from the `class_path` class,
                 or the class of the first base category, or the top-level Item.
               "@": schemat.type.CODE
+          - key: pages
+            value:
+              values:
+                "@": schemat.type.CODE
+              info: Source code of React class components that render HTML response pages for
+                particular URL endpoints of this category's items. Each entry in
+                `pages` is a name of the endpoint + the body of a class
+                component inheriting from the `Page` base class. NO class header
+                or surrounding braces {...}, they are added automatically.
+                Static attributes/methods are allowed.
+              "@": schemat.type.CATALOG
           - key: views
             value:
               values:
