@@ -1,14 +1,14 @@
-import { T, assert, print, tryimport } from './utils.js'
+import { T, assert, print, tryimport, dedentFull } from './utils.js'
 import { e, cssPrepend, interpolate } from './react-utils.js'
 import { DIV } from './react-utils.js'
-import { React } from './resources.js'
+import { React, Resources } from './resources.js'
 
 let csso = await tryimport('csso')
 
 
 /**********************************************************************************************************************
  **
- **  WIDGETS
+ **  ASSETS & WIDGET
  **
  */
 
@@ -175,15 +175,120 @@ export class Component extends React.Component {
 
 export class Widget extends Component {}
 
-export class Page extends Component {
-    /*  */
 
-    page(props) {
-        /* Functional React (sub)component. Either this function, or render(), should be overriden in subclasses. */
-        return null
+/**********************************************************************************************************************
+ **
+ **  HTML COMPONENTS
+ **
+ */
+
+export class Page {
+    /* Base class for classes that generate a complete HTML response when their page() method is called.
+       A Page is NOT a React component itself, only some part(s) of it (the body) can be React components.
+       The base class takes care of inserting control code that loads initial items and maintains the link between
+       the client and the server.
+       Selected instance methods can be overriden by subclasses to customize all, or part, of page generation process.
+       Most of the methods when called are bound to the item being rendered, not a Page instance.
+     */
+
+    // static page(item, request) { return new this().page(item, request) }        // page() can be called on a class or instance
+
+    static page(item, request) {
+        /* Generate an HTML page to be sent as a response to a GET request;
+           fill the page with HTML contents rendered from a view() function (React functional component).
+         */
+        let proto  = this.prototype
+        let title  = proto.title.call(item, request)
+        let assets = proto.assets.call(item, request)
+        let body   = proto.body.call(item, request)
+        return proto.frame.call(item, {title, assets, body})
     }
 
-    render() { return e(this.page, this.props) }
+    // page(item, request) {
+    //     /* Generate an HTML page to be sent as a response to a GET request;
+    //        fill the page with HTML contents rendered from a view function (React functional component).
+    //        The `view` name should point to a method VIEW_{view} of the current Item's subclass.
+    //      */
+    //     let title  = this.title.call(item, request)
+    //     let assets = this.assets.call(item, request)
+    //     let body   = this.body.call(item, request)
+    //     return this.frame.call(item, {title, assets, body})
+    // }
+
+    frame({title, assets, body}) {
+        /* Here, `this` is bound to the item being rendered. */
+        return dedentFull(`
+            <!DOCTYPE html><html>
+            <head>
+                <title>${title}</title>
+                ${assets}
+            </head>`) +
+            `<body>\n${body}\n</body></html>`
+    }
+
+    title(request) {
+        /* HTML title to be put in the head/title of the response page. By default, the item's name & ID is returned.
+           Here, `this` is bound to the item being rendered. */
+        // let title = item.get('html_title')
+        // if (title instanceof Function) title = title({request, view})           // this can still return undefined
+        let name = this.getName()
+        let ciid = this.getStamp({html: false})
+        return `${name} ${ciid}`
+    }
+
+    assets(request) {
+        /* HTML to be put in the head section of the response page to import global assets: scripts, styles.
+           Here, `this` is bound to the item being rendered. */
+        let globalAssets = Resources.clientAssets
+        let staticAssets = this.category.getItemAssets().renderAll()
+        let customAssets = this.category.get('html_assets')
+        let assets = [globalAssets, staticAssets, customAssets]
+        return assets .filter(a => a && a.trim()) .join('\n')
+    }
+
+    body(request) {
+        /* Here, `this` is bound to the item being rendered. */
+        let {view} = request
+        return `
+            <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
+            <div id="react-root">${this.render(props)}</div>
+            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
+        `
+    }
+
+    view(request) {
+        /* React functional component that renders the contents of the response HTML page.
+           Here, `this` is bound to the item being rendered. */
+        return "Missing view() method of a Page component"
+    }
+
+    render(props, targetElement = null) {
+        /* Render the view() into an HTMLElement (client-side) if `targetElement` is given,
+           or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
+           so only a part of the HTML output is actually rendered. For workaround, see:
+            - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
+            - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
+            - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
+         */
+        let {item} = props
+        item.assertLoaded()
+        if (!targetElement) print(`SSR render() of ${item.id_str}`)
+        let view = e(this.view.bind(item), props)
+        return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    }
+}
+
+// let _page_ = {
+//     assets(request) { return `abc` },
+//     title(request) {},
+// }
+
+export class ViewPage extends Page {
+    /* A Page whose HTML body is rendered from a "view" component. Defaults are used for the remaining HTML code. */
+
+    
+
 }
 
 // export class Layout extends Component {

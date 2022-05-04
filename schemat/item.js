@@ -68,6 +68,8 @@ export class Request {
     args            // dict of arguments for the handler function; taken from req.query (if a web request) or passed directly (internal request)
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
+    item            // target item responsible for actual handling of the request, as found by the routing procedure
+
     get position() {
         /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
         assert(this.pathFull.endsWith(this.path))
@@ -815,6 +817,7 @@ export class Item {
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
+        request.item = this
         if (request.path) return this.handlePartial(request)
 
         let req, res
@@ -833,10 +836,12 @@ export class Item {
             let handler  = this[hdl_name]
             if (handler) return handler.call(this, {request, req, res})
 
-            if (`VIEW_${method}` in this) {
-                session.view = method
+            let pageClass = this.constructor[`PAGE_${method}`]
+            if (pageClass) return pageClass.page({request, item: this})
+
+            if (`VIEW_${method}` in this)
+                // session.view = method
                 return this.page({request, view: method})
-            }
         }
 
         request.throwNotFound(`no handler found for the @-access method(s): ${methods}`)
