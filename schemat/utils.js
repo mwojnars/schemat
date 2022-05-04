@@ -199,6 +199,7 @@ export class Types {
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
     static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a pure object (dict), no class assigned
     static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // test if x is an object of class T exactly (NOT of a subclass)
+    static isFunction     = (f) => (f instanceof Function)                                    // test if f is a function; accepts class constructors, too (!)
     static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // test if C is a class (a constructor function with .prototype); false for arrays
     static isSubclass     = (C, B) => (C === B || C.prototype instanceof B)             // test if C is subclass of B, including C===B
     static isMissing      = (obj) => (obj === null || obj === undefined)                // test if obj is null or undefined (two cases of "missingness")

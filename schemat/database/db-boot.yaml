@@ -43,11 +43,16 @@
             value:
               values:
                 "@": schemat.type.CODE
-              info: "Source code of React functional components to be added dynamically to the
-                category's Class (`class_body` property) as VIEW_*(props)
-                methods for rendering item views. View methods are called bound:
-                this=item to be rendered."
+              info: Source code of React functional components to be added dynamically to the
+                category's Class body as VIEW_name(props) methods for rendering
+                item views. When called, view methods have `this` bound to the
+                item that is to be rendered.
               "@": schemat.type.CATALOG
+          - key: html_assets
+            value:
+              info: HTML code to be inserted in the html/head section of every page that is
+                rendered from a view function of this category.
+              "@": schemat.type.CODE
           - key: cache_ttl
             value:
               default: 5

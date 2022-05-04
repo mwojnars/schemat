@@ -842,30 +842,46 @@ export class Item {
         request.throwNotFound(`no handler found for the @-access method(s): ${methods}`)
     }
 
-    page({title, head, body, request, view} = {}) {
-        /* Generate an HTML page to be sent as a response for a GET request;
+    page({title, assets, body, request, view} = {}) {
+        /* Generate an HTML page to be sent as a response to a GET request;
            fill the page with HTML contents rendered from a view function (React functional component).
            The `view` name should point to a method VIEW_{view} of the current Item's subclass.
          */
+        if (title  === undefined) title = this._htmlTitle({request, view})
+        if (assets === undefined) assets = this._htmlAssets()
+        body = (body || '') + this._htmlBody({request, view})
+        return dedentFull(`
+            <!DOCTYPE html><html>
+            <head>
+                <title>${title}</title>
+                ${assets}
+            </head>`) +
+            `<body>\n${body}\n</body></html>`
+    }
+    _htmlTitle({request, view}) {
+        /* Get/compute a title for an HTML response page for a given request & view name. */
+        let title = this.get('html_title')
+        if (title instanceof Function) title = title({request, view})           // this can still return undefined
         if (title === undefined) {
             let name = this.getName()
             let ciid = this.getStamp({html: false})
             title = `${name} ${ciid}`
         }
-        if (head === undefined) head = this.category.getAssets().renderAll()
-        if (body === undefined) body = `
+        return title
+    }
+    _htmlAssets() {
+        let globalAssets = Resources.clientAssets
+        let staticAssets = this.category.getItemAssets().renderAll()
+        let customAssets = this.category.get('html_assets')
+        let assets = [globalAssets, staticAssets, customAssets]
+        return assets .filter(a => a && a.trim()) .join('\n')
+    }
+    _htmlBody({request, view}) {
+        return `
             <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
             <div id="react-root">${this.render(view)}</div>
             <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
         `
-        return dedentFull(`
-            <!DOCTYPE html><html>
-            <head>
-                <title>${title}</title>
-                ${Resources.clientAssets}
-                ${head}
-            </head>`) +
-            `<body>${body}</body></html>`
     }
 
     render(view, targetElement = null) {
@@ -1146,7 +1162,7 @@ export class Category extends Item {
         let fields = this.getFields()
         return new this._mod_type.DATA({fields: fields.flat()})
     }
-    getAssets() {
+    getItemAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
         return this.getItemSchema().getAssets()
     }

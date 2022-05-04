@@ -183,16 +183,16 @@ class Component extends React.Component {
 
 class Widget extends Component {}
 
-// export class Page extends Component {
-//     /*  */
-//
-//     page(props) {
-//         /* Functional React (sub)component. Either this function, or render(), should be overriden in subclasses. */
-//         return null
-//     }
-//
-//     render() { return e(this.page, this.props) }
-// }
+export class Page extends Component {
+    /*  */
+
+    page(props) {
+        /* Functional React (sub)component. Either this function, or render(), should be overriden in subclasses. */
+        return null
+    }
+
+    render() { return e(this.page, this.props) }
+}
 
 // class Layout extends Component {
 //     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined

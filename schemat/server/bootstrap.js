@@ -39,10 +39,12 @@ let root_fields = C({
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
     class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
-    views        : new CATALOG({values: new CODE(), info: "Source code of React functional components to be added dynamically to the category's Class (`class_body` property) as VIEW_*(props) methods for rendering item views. View methods are called bound: this=item to be rendered."}),
+    views        : new CATALOG({values: new CODE(), info: "Source code of React functional components to be added dynamically to the category's Class body as VIEW_name(props) methods for rendering item views. When called, view methods have `this` bound to the item that is to be rendered."}),
     // module    : new CODE({info: "Source code of a Javascript module to be created for this category. May contain imports. Should export a Class that defines the class to be used by items of this category. Alternatively, the Class'es body can be defined through the `class_body` and/or `views` properties."}),
     // code_client  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a client (exclusively)."}),
     // code_server  : new CODE({info: "Source code appended to the body of this category's class when the category is loaded on a server (exclusively)."}),
+
+    html_assets  : new CODE({info: "HTML code to be inserted in the html/head section of every page that is rendered from a view function of this category."}),
 
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
