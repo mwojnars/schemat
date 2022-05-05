@@ -223,13 +223,26 @@ export class Types {
 
     static amap = async (arr, fun) => await Promise.all(arr.map(fun))
 
-    static *inherited(cls, attr) {
-        /* Walk the prototype chain of `cls` class upwards and yield all values of a static attribute, `attr`. */
+    // static *inherited(cls, attr) {
+    //     /* Walk the prototype chain of `cls` class upwards and yield all values of a static attribute, `attr`. */
+    //     /* Return an array of all values of a static attribute, `attr`, found in the prototype chain of `cls`. */
+    //     while (true) {
+    //         if (!cls || cls === Object || cls === Object.prototype) break
+    //         if (Object.getOwnPropertyNames(cls).includes(attr)) yield cls[attr]
+    //         cls = Object.getPrototypeOf(cls)
+    //     }
+    // }
+
+    static inherited(cls, attr) {
+        /* Return an array of all values of a static attribute, `attr`, found in the prototype chain of `cls`.
+           Top base class'es value is placed at the beginning of the array, while the leaf value is at the end. */
+        let values = []
         while (true) {
             if (!cls || cls === Object || cls === Object.prototype) break
-            if (attr in cls) yield cls[attr]
+            if (Object.getOwnPropertyNames(cls).includes(attr)) values.push(cls[attr])
             cls = Object.getPrototypeOf(cls)
         }
+        return values.reverse()
     }
 
     static getstate = (obj) => {
