@@ -145,6 +145,33 @@ export class Request {
 }
 
 
+export class Handler {
+    /* Utility class that holds function(s) that together implement a web handler for a specific @-endpoint
+       of the items in a particular category.
+       All the functions get bound to the target item when called, i.e., to the item that was discovered
+       through the routing process and is responsible for handling the request.
+       As such, the functions can be viewed as methods of the Item class, with `this` bound to an Item instance.
+       All the functions accept a single argument, `context` (`ctx`), of the shape:
+
+                context = {request, req, res, item, handler}
+     */
+
+    // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls
+    GET
+    POST
+    CALL
+
+    // medium-level functions for HTML page generation (GET requests)
+    page
+    head
+    body
+
+    // specialized functions for rendering HTML pages from React components ("views")
+    title
+    assets
+    view
+}
+
 /**********************************************************************************************************************
  **
  **  ITEM & CATEGORY
@@ -197,7 +224,10 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
-    cache = new Map()       // cache of values of methods configured for caching in Item.setCaching(); values can be promises
+    cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
+
+    static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
+    static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
 
     static __transient__ = ['cache']
 
@@ -205,7 +235,7 @@ export class Item {
     get id_str()    { return `[${this.cid},${this.iid}]` }
     get schema()    { return this.getSchema() }
 
-    isLoading           // holds the Promise created at the start of reload() and fulfilled when load() completes
+    isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
     get isShadow()      { return this.cid === undefined }
     get isCategory()    { return this.cid === ROOT_CID }
@@ -831,21 +861,28 @@ export class Item {
             ;[req, res] = session.channels
         }
 
-        for (let method of methods) {
-            let hdl_name = `${request.type}_${method}`
+        // for (let endpoint of methods) {
+        //     let handler = this.getHandlers()[endpoint]
+        //     if (handler) return handler.run({request, req, res, handler, item: this})
+        // }
+
+        for (let endpoint of methods) {
+            let hdl_name = `${request.type}_${endpoint}`
             let handler  = this[hdl_name]
             if (handler) return handler.call(this, {request, req, res})
 
-            let pageClass = this.constructor[`PAGE_${method}`]
+            let pageClass = this.constructor[`PAGE_${endpoint}`]
             if (pageClass) return pageClass.page({request, item: this})
 
-            if (`VIEW_${method}` in this)
-                // session.view = method
-                return this.page({request, view: method})
+            if (`VIEW_${endpoint}` in this)
+                // session.view = endpoint
+                return this.page({request, view: endpoint})
         }
 
-        request.throwNotFound(`no handler found for the @-access method(s): ${methods}`)
+        request.throwNotFound(`no handler found for the access method(s): ${methods}`)
     }
+
+    getHandlers() { return T.inheritedMerge(this.constructor, 'handlers') }
 
     page({title, assets, body, request, view} = {}) {
         /* Generate an HTML page to be sent as a response to a GET request;
@@ -900,8 +937,8 @@ export class Item {
         this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
         view = this[`VIEW_${view}`]
-        view = view.bind(this)
-        return targetElement ? ReactDOM.render(e(view), targetElement) : ReactDOM.renderToString(e(view))
+        view = e(view.bind(this))
+        return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
 
@@ -911,16 +948,17 @@ export class Item {
     CALL_item()         { return this }
     GET_json({res})     { res.sendItem(this) }
 
-    VIEW_default(props) { return this.VIEW_admin(props) }
+    VIEW_default()      { return this.VIEW_admin() }
+    VIEW_admin()        { return this.page_admin() }
 
-    VIEW_admin({extra = null}) {
+    page_admin({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
             e(this.Title.bind(this)),
             H2('Properties'),
-            e(this.DataTable.bind(this)),
+            e(this.Properties.bind(this)),
             extra,
         )
     }
@@ -930,7 +968,10 @@ export class Item {
     //     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
     // }
 
+    // standard components for rendering this item's pages...
+
     Title() {
+        /* <H1> element to be displayed as a page title. */
         let name = this.getName()
         let ciid = this.getStamp()
         if (name)
@@ -939,7 +980,7 @@ export class Item {
             return H1(HTML(ciid))
     }
 
-    DataTable() {
+    Properties() {
         /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
         // let changes = new Changes(this)
         return FRAGMENT(
@@ -1273,7 +1314,7 @@ export class Category extends Item {
         ))
     }
 
-    VIEW_admin({extra = null}) {
+    VIEW_admin() {
         const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
@@ -1281,15 +1322,32 @@ export class Category extends Item {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return super.VIEW_admin({item: this, extra: FRAGMENT(
+        return this.page_admin({extra: FRAGMENT(
             H2('Items'),
             e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),
             e(this.Items, {items: newItems, itemRemoved}),
             e(this.NewItem.bind(this), {itemAdded}),
-            extra,
         )})
     }
+
+    // VIEW_admin({extra = null}) {
+    //     const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+    //     const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
+    //
+    //     const [newItems, setNewItems] = useState([])                // newly added items
+    //     const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
+    //     const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
+    //
+    //     return super.VIEW_admin({item: this, extra: FRAGMENT(
+    //         H2('Items'),
+    //         e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
+    //         H3('Add item'),
+    //         e(this.Items, {items: newItems, itemRemoved}),
+    //         e(this.NewItem.bind(this), {itemAdded}),
+    //         extra,
+    //     )})
+    // }
 }
 
 Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'

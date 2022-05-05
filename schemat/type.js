@@ -43,7 +43,7 @@ export class Schema {
 
     static getDefaultProps() {
         /* Return all defaultProps from the prototype chain combined. */
-        return Object.assign({}, ...[...T.inherited(this, 'defaultProps')].reverse())
+        return T.inheritedMerge(this, 'defaultProps')
     }
 
     __props = {}                // own properties, i.e., excluding the defaults; this.props = defaults (with inherited) + __props

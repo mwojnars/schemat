@@ -183,12 +183,12 @@ export class Widget extends Component {}
  */
 
 export class Page {
-    /* Base class for classes that generate a complete HTML response when their page() method is called.
-       A Page is NOT a React component itself, only some part(s) of it (the body) can be React components.
+    /* Collection of methods that together generate a complete HTML response for a particular URL endpoint.
+       Most of the methods when called are bound to the item being rendered, not a Page instance.
+       A Page is NOT a React component itself, but some part(s) of it (the body) can be React components.
        The base class takes care of inserting control code that loads initial items and maintains the link between
        the client and the server.
        Selected instance methods can be overriden by subclasses to customize all, or part, of page generation process.
-       Most of the methods when called are bound to the item being rendered, not a Page instance.
      */
 
     // static page(item, request) { return new this().page(item, request) }        // page() can be called on a class or instance
@@ -290,6 +290,24 @@ export class ViewPage extends Page {
     
 
 }
+
+export class Page_ {
+    /* Container for a number of functions that together - after binding to an Item instance -
+       can be used to generate the HTML contents of a web response page.
+     */
+    html        // static HTML code of the entire response, starting with DOCTYPE and <html> section
+    head        // inner code of the html/meta section
+    body        // inner code of the html/body section
+}
+
+export class View extends Page_ {
+    /* A specialized container that provides individual functions for .
+     */
+    title
+    assets
+    view        // React functional component that renders the entire contents of the page
+}
+
 
 // export class Layout extends Component {
 //     /* Takes a number of named blocks, e.g.: head, foot, main, side, ... and places them in predefined
