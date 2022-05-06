@@ -272,6 +272,8 @@ export class Item {
     ? info     -- a string like `name`, but longer ~300-500 ??
     */
 
+    static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
+
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
@@ -1218,7 +1220,7 @@ export class Category extends Item {
         return snippets.join('\n')
     }
 
-    _hasCustomCode() { return this._codeInit() || this._codeBody() }  //this.get('class_body') || this.get('views')
+    _hasCustomCode() { return this._codeInit() || this._codeBody() }
 
     _codeInit()      { return this.mergeSnippets('class_init') }
     _codeBaseClass() {
@@ -1234,21 +1236,32 @@ export class Category extends Item {
         if (!body) return 'let Class = Base'
         let code = `class ${name} extends Base {\n${body}\n}`
         if (name !== 'Class') code += `\nlet Class = ${name}`
+        let hdlr = this._codeHandlers()
+        // if (hdlr) code += '\n' + hdlr
         let cache = this._codeCache()
-        if (cache) code += '\n' + cache
-        return code
+        // if (cache) code += '\n' + cache
+        return [code, hdlr, cache] .filter(Boolean) .join('\n')
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
         let body = this.mergeSnippets('class_body')
 
-        // extend body with VIEW_* methods (`views`)
+        // extend body with VIEW_* methods
         let methods = []
         let views = this.getInherited('views')
         for (let {key: vname, value: vbody} of views)
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
 
         return body + methods.join('\n')
+    }
+    _codeHandlers() {
+        let views = this.getInherited('views')
+        if (!views.length) return
+        let names = views.map(({key}) => key)
+        let hdlrs = names.map(name => `${name}: new Item.Handler()`)
+        let code  = `Class.handlers = {${hdlrs.join(', ')}}`
+        print('_codeHandlers():', code)
+        return code
     }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */
@@ -1431,12 +1444,6 @@ export class Category extends Item {
 }
 
 Category.handlers = {
-    // default: new Handler(),
-    // item:    new Handler(),
-    // json:    new Handler(),
-    // admin:   new Handler(),
-    // edit:    new Handler(),
-    // delete:  new Handler(),
     import:  new Handler({GET: Category.prototype.GET_import}),
     scan:    new Handler({GET: Category.prototype.GET_scan}),
     new:     new Handler(),
