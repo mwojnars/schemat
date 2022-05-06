@@ -373,7 +373,19 @@
     import { H1, H4, DIV, A, P, BR, SPAN, FRAGMENT, BLOCKQUOTE } 
     from '/system/local/react-utils.js'
   handlers:
-    view: >-
+    view: >+
+      view() {
+          let paper = this.flat()
+          return (
+              DIV({className: "container"}, 
+              DIV({className: "row"},
+              DIV({className: "col col-sm-9 col-xs-12 custom-col-lg-9"},
+              DIV({className: "panel panel-body panel-content bg-white"},
+                  H1(paper.title),
+          )))))
+      }
+
+
       assets() {
           return `
           <script src="https://paperity.org/static/js/dc9afabe2e.js"></script>
@@ -386,14 +398,11 @@
           
           <link href="https://paperity.org/static/css/paperity.css" rel="stylesheet">
           <script src="https://paperity.org/static/js/paperity.js"></script>
+          
+          <style>body {width: revert; padding: 10px;}</style>
           `
       }
 
-
-      view() {
-          let paper = this.flat()
-          return H1(paper.title)
-      }
     view__draft: >-
       view() {
           let paper = this.flat()
