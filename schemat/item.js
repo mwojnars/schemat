@@ -243,7 +243,7 @@ export class Handler {
            Here, `this` is bound to the item being rendered. */
         let method = `VIEW_${endpoint}`
         if (method in this) return e(this[method].bind(this))
-        throw new Request.NotFound(`GET/page/view() function not found in handler for '@${endpoint}'`)
+        throw new Request.NotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
         // throw new Request.NotFound('view() function is missing in a handler')
         // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
     }
