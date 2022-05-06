@@ -148,7 +148,7 @@ export class Request {
 export class Handler {
     /* Utility class that holds function(s) that together implement a web handler for a specific @-endpoint
        of the items in a particular category.
-       All the functions get bound to the target item when called, i.e., to the item that was discovered
+       All the functions except run() get bound to the target item when called, i.e., to the item that was discovered
        through the routing process and is responsible for handling the request.
        As such, the functions can be viewed as methods of the Item class, with `this` bound to an Item instance.
        All the functions accept a single argument, `context` (`ctx`), of the shape:
@@ -156,20 +156,91 @@ export class Handler {
                 context = {request, req, res, item, handler}
      */
 
-    // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls
-    GET
-    POST
-    CALL
+    // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
+    // each of the functions may return a Promise (!)
 
-    // medium-level functions for HTML page generation (GET requests)
-    page
-    head
-    body
+    GET(ctx)    { return ctx.handler.page.call(this, ctx) }
+    POST(ctx)   {
+        let method = `POST_${ctx.endpoint}`
+        if (method in this) return this[method].call(this, ctx)
+        ctx.request.throwNotFound(`POST handler not found for '@${ctx.endpoint}'`)
+    }
+    CALL(ctx)   {
+        let method = `CALL_${ctx.endpoint}`
+        if (method in this) return this[method].call(this, ctx)
+        ctx.request.throwNotFound(`CALL handler not found for '@${ctx.endpoint}'`)
+    }
 
-    // specialized functions for rendering HTML pages from React components ("views")
-    title
-    assets
-    view
+    // lower-level functions for HTML page generation (GET requests) ...
+
+    page(ctx) {
+        /* page() defines an HTML frame for the entire page and fills it out with elements
+           computed by other, more specific, methods of the handler. */
+        let {request, endpoint, handler} = ctx
+        if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
+
+        let body   = handler.body.call(this, ctx)
+        let title  = handler.title.call(this, ctx)
+        let assets = handler.assets.call(this, ctx)
+
+        return dedentFull
+        (`
+            <!DOCTYPE html><html>
+            <head>
+                <title>${title}</title>
+                ${assets}
+            </head>
+            <body>\n${body}\n</body></html>
+        `)
+
+        // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
+    }
+
+    title(ctx) {
+        /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
+        let name = this.getName()
+        let ciid = this.getStamp({html: false})
+        return `${name} ${ciid}`
+    }
+
+    assets(ctx) {
+        /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
+        let globalAssets = Resources.clientAssets
+        let staticAssets = this.category.getItemAssets().renderAll()
+        let customAssets = this.category.get('html_assets')
+        let assets = [globalAssets, staticAssets, customAssets]
+        return assets .filter(a => a && a.trim()) .join('\n')
+    }
+
+    body(ctx) {
+        /* Here, `this` is bound to the item being rendered. */
+        let {request, endpoint: view} = ctx
+        let component = this.render(view)
+        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
+        return `
+            <p id="data-session" style="display:none">${session}</p>
+            <div id="react-root">${component}</div>
+            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
+        `
+    }
+
+    view(ctx) {
+        /* React functional component that renders the contents of the response HTML page.
+           Here, `this` is bound to the item being rendered. */
+        return "Missing view() method of a Page component"
+    }
+
+
+    constructor(props = {})      { Object.assign(this, props) }
+
+    run(context) {
+        let {request, item} = context
+        let httpMethod = request.type
+        if (!httpMethod || !this[httpMethod])
+            throw new Error(`missing or incorrect request.type (httpMethod): ${httpMethod}, ${this[httpMethod]}`)
+        // print('Handler.run():', this, httpMethod, this[httpMethod])
+        return this[httpMethod].call(item, context)     // may return a Promise
+    }
 }
 
 /**********************************************************************************************************************
@@ -861,25 +932,21 @@ export class Item {
             ;[req, res] = session.channels
         }
 
-        // for (let endpoint of methods) {
-        //     let handler = this.getHandlers()[endpoint]
-        //     if (handler) return handler.run({request, req, res, handler, item: this})
-        // }
-
         for (let endpoint of methods) {
-            let hdl_name = `${request.type}_${endpoint}`
-            let handler  = this[hdl_name]
-            if (handler) return handler.call(this, {request, req, res})
-
-            let pageClass = this.constructor[`PAGE_${endpoint}`]
-            if (pageClass) return pageClass.page({request, item: this})
-
-            if (`VIEW_${endpoint}` in this)
-                // session.view = endpoint
-                return this.page({request, view: endpoint})
+            let handler = this.getHandlers()[endpoint]
+            if (handler) return handler.run({request, req, res, handler, endpoint, item: this})
         }
 
-        request.throwNotFound(`no handler found for the access method(s): ${methods}`)
+        // for (let endpoint of methods) {
+        //     let hdl_name = `${request.type}_${endpoint}`
+        //     let handler  = this[hdl_name]
+        //     if (handler) return handler.call(this, {request, req, res})
+        //
+        //     if (`VIEW_${endpoint}` in this)
+        //         return this.page({request, view: endpoint})
+        // }
+
+        request.throwNotFound(`no handler found for [${methods}] access method(s)`)
     }
 
     getHandlers() { return T.inheritedMerge(this.constructor, 'handlers') }
@@ -919,9 +986,11 @@ export class Item {
         return assets .filter(a => a && a.trim()) .join('\n')
     }
     _htmlBody({request, view}) {
+        let component = this.render(view)
+        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
         return `
-            <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
-            <div id="react-root">${this.render(view)}</div>
+            <p id="data-session" style="display:none">${session}</p>
+            <div id="react-root">${component}</div>
             <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
         `
     }
@@ -936,7 +1005,9 @@ export class Item {
          */
         this.assertLoaded()
         if (!targetElement) print(`SSR render() of ${this.id_str}`)
-        view = this[`VIEW_${view}`]
+        let method = `VIEW_${view}`
+        if (!(method in this)) throw new Request.NotFound(`GET handler/page/view not found for '@${view}'`)
+        view = this[method]
         view = e(view.bind(this))
         return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
@@ -1015,6 +1086,15 @@ export class Item {
                 this.prototype[name] = cached(name, fun)
         }
     }
+}
+
+Item.handlers = {
+    default: new Handler(),
+    item:    new Handler(),
+    json:    new Handler({GET: Item.prototype.GET_json}),
+    admin:   new Handler(),
+    edit:    new Handler(),
+    delete:  new Handler(),
 }
 
 Item.setCaching('getPrototypes', 'getPath', 'render')
@@ -1348,6 +1428,18 @@ export class Category extends Item {
     //         extra,
     //     )})
     // }
+}
+
+Category.handlers = {
+    // default: new Handler(),
+    // item:    new Handler(),
+    // json:    new Handler(),
+    // admin:   new Handler(),
+    // edit:    new Handler(),
+    // delete:  new Handler(),
+    import:  new Handler({GET: Category.prototype.GET_import}),
+    scan:    new Handler({GET: Category.prototype.GET_scan}),
+    new:     new Handler(),
 }
 
 Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'

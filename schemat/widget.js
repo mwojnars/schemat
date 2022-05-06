@@ -226,42 +226,6 @@ export class Page {
             `<body>\n${body}\n</body></html>`
     }
 
-    title(request) {
-        /* HTML title to be put in the head/title of the response page. By default, the item's name & ID is returned.
-           Here, `this` is bound to the item being rendered. */
-        // let title = item.get('html_title')
-        // if (title instanceof Function) title = title({request, view})           // this can still return undefined
-        let name = this.getName()
-        let ciid = this.getStamp({html: false})
-        return `${name} ${ciid}`
-    }
-
-    assets(request) {
-        /* HTML to be put in the head section of the response page to import global assets: scripts, styles.
-           Here, `this` is bound to the item being rendered. */
-        let globalAssets = Resources.clientAssets
-        let staticAssets = this.category.getItemAssets().renderAll()
-        let customAssets = this.category.get('html_assets')
-        let assets = [globalAssets, staticAssets, customAssets]
-        return assets .filter(a => a && a.trim()) .join('\n')
-    }
-
-    body(request) {
-        /* Here, `this` is bound to the item being rendered. */
-        let {view} = request
-        return `
-            <p id="data-session" style="display:none">${btoa(encodeURIComponent(JSON.stringify(request.session.dump())))}</p>
-            <div id="react-root">${this.render(props)}</div>
-            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
-        `
-    }
-
-    view(request) {
-        /* React functional component that renders the contents of the response HTML page.
-           Here, `this` is bound to the item being rendered. */
-        return "Missing view() method of a Page component"
-    }
-
     render(props, targetElement = null) {
         /* Render the view() into an HTMLElement (client-side) if `targetElement` is given,
            or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
