@@ -263,9 +263,15 @@ export class Catalog {
     }
 
     static merge(...catalogs) {
-        /* Merge `catalogs` into a new Catalog instance.
-           Only the entries with keys are included in the result, one entry per key.
-           If a key occurs multiple times in `catalogs`, the first occurrence is used.
+        /* Merge `catalogs` into a new Catalog. Only the entries with keys are included in the result,
+           one entry per key. If a key occurs multiple times in `catalogs`, the LAST occurrence is used.
+         */
+        return Catalog.mergeReversed(...catalogs.reverse())
+    }
+
+    static mergeReversed(...catalogs) {
+        /* Merge `catalogs` into a new Catalog. Only the entries with keys are included in the result,
+           one entry per key. If a key occurs multiple times in `catalogs`, the FIRST occurrence is used.
          */
         let catalog = new Catalog()
         for (const cat of catalogs) {

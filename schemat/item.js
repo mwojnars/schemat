@@ -1,9 +1,9 @@
+import { print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded,
+         ServerError, indent, dedentFull, splitLast, BaseError } from './utils.js'
+import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
+         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson } from './react-utils.js'
+
 import { Resources, ReactDOM } from './resources.js'
-import {
-    e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
-    TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson
-} from './react-utils.js'
-import {print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded, ServerError, dedentFull, splitLast, BaseError} from './utils.js'
 import { Catalog, Data } from './data.js'
 // import { generic_schema, DATA } from './type.js'
 
@@ -181,6 +181,7 @@ export class Handler {
 
         let body   = handler.body.call(this, ctx)
         let title  = handler.title.call(this, ctx)
+        let common = handler.common.call(this, ctx)
         let assets = handler.assets.call(this, ctx)
 
         return dedentFull
@@ -188,6 +189,7 @@ export class Handler {
             <!DOCTYPE html><html>
             <head>
                 <title>${title}</title>
+                ${common}
                 ${assets}
             </head>
             <body>\n${body}\n</body></html>
@@ -203,8 +205,8 @@ export class Handler {
         return `${name} ${ciid}`
     }
 
-    assets(ctx) {
-        /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
+    common(ctx) {
+        /* Shared global HTML assets: scripts, styles. */
         let globalAssets = Resources.clientAssets
         let staticAssets = this.category.getItemAssets().renderAll()
         let customAssets = this.category.get('html_assets')
@@ -212,22 +214,38 @@ export class Handler {
         return assets .filter(a => a && a.trim()) .join('\n')
     }
 
+    assets(ctx) {
+        /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
+        return ''
+    }
+
     body(ctx) {
         /* Here, `this` is bound to the item being rendered. */
-        let {request, endpoint: view} = ctx
-        let component = this.render(view)
+        let {request, endpoint} = ctx
+
+        // let {handler, item} = ctx
+        // let view = e(handler.view.bind(item), ctx)
+        // let html = targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+
+        let html    = this.render(endpoint)
         let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
         return `
             <p id="data-session" style="display:none">${session}</p>
-            <div id="react-root">${component}</div>
-            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
+            <div id="react-root">${html}</div>
+            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
         `
     }
 
-    view(ctx) {
-        /* React functional component that renders the contents of the response HTML page.
+    view({endpoint}) {
+        /* React functional component that renders the actual (visible) content of the HTML response page.
+           View function is called through Item.render() and only accepts a part of the full context,
+           so that allow client-side hydration (re-rendering).
            Here, `this` is bound to the item being rendered. */
-        return "Missing view() method of a Page component"
+        let method = `VIEW_${endpoint}`
+        if (method in this) return e(this[method].bind(this))
+        throw new Request.NotFound(`GET/page/view() function not found in handler for '@${endpoint}'`)
+        // throw new Request.NotFound('view() function is missing in a handler')
+        // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
     }
 
 
@@ -654,6 +672,7 @@ export class Item {
          */
         let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
         let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        if  (!schemas.has(field)) return new Catalog()
         let default_ = schemas.get(field).props.default
         catalogs.push(default_)
         return Catalog.merge(...catalogs)
@@ -997,7 +1016,7 @@ export class Item {
         `
     }
 
-    render(view, targetElement = null) {
+    render(endpoint, targetElement = null) {
         /* Render this item's `view` (name) into an HTMLElement (client-side) if `targetElement` is given,
            or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
            so only a part of the HTML output is actually rendered. For workaround, see:
@@ -1006,11 +1025,15 @@ export class Item {
             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
          */
         this.assertLoaded()
-        if (!targetElement) print(`SSR render() of ${this.id_str}`)
-        let method = `VIEW_${view}`
-        if (!(method in this)) throw new Request.NotFound(`GET handler/page/view not found for '@${view}'`)
-        view = this[method]
-        view = e(view.bind(this))
+        if (!targetElement) print(`SSR render('${endpoint}') of ${this.id_str}`)
+
+        let handler = this.getHandlers()[endpoint]
+        let view    = e(handler.view.bind(this), {endpoint})
+
+        // let method = `VIEW_${endpoint}`
+        // if (!(method in this)) throw new Request.NotFound(`GET handler/page/view not found for '@${endpoint}'`)
+        // let view = e(this[method].bind(this))
+
         return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
@@ -1233,35 +1256,43 @@ export class Category extends Item {
     _codeClass(name) {
         /* Source code that defines a custom Class of this category, possibly in a reduced form of Class=Base. */
         let body = this._codeBody()
-        if (!body) return 'let Class = Base'
-        let code = `class ${name} extends Base {\n${body}\n}`
-        if (name !== 'Class') code += `\nlet Class = ${name}`
-        let hdlr = this._codeHandlers()
-        // if (hdlr) code += '\n' + hdlr
+        // if (!body) return 'let Class = Base'
+        let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
+        if (name !== 'Class') def += `\nlet Class = ${name}`
+        let views = this._codeViewsHandlers()
+        let hdlrs = this._codeHandlers()
         let cache = this._codeCache()
-        // if (cache) code += '\n' + cache
-        return [code, hdlr, cache] .filter(Boolean) .join('\n')
+        return [def, views, hdlrs, cache] .filter(Boolean) .join('\n')
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
         let body = this.mergeSnippets('class_body')
-
-        // extend body with VIEW_* methods
         let methods = []
-        let views = this.getInherited('views')
+        let views = this.getInherited('views')                      // extend body with VIEW_* methods
         for (let {key: vname, value: vbody} of views)
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
-
         return body + methods.join('\n')
     }
-    _codeHandlers() {
+    _codeViewsHandlers() {
         let views = this.getInherited('views')
         if (!views.length) return
         let names = views.map(({key}) => key)
         let hdlrs = names.map(name => `${name}: new Item.Handler()`)
-        let code  = `Class.handlers = {${hdlrs.join(', ')}}`
-        print('_codeHandlers():', code)
+        let code  = `Class.handlers = {...Class.handlers, ${hdlrs.join(', ')}}`
+        print('_codeViewsHandlers():', code)
         return code
+    }
+    _codeHandlers() {
+        let entries = this.getInherited('handlers')
+        if (!entries.length) return
+        let catg = `${this.cid}_${this.iid}`
+        let className = (name) => `Handler_${catg}_${name}`
+        let handlers = entries.map(({key: name, value: code}) =>
+            `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
+        )
+        return `Class.handlers = {...Class.handlers, \n${handlers.join(',\n')}\n}`
+        // print('_codeHandlers():', code)
+        // return code
     }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */

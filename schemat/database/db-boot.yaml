@@ -46,6 +46,13 @@
               info: Source code of functions that generate static HTML response for particular
                 access methods of this category's items.
               "@": schemat.type.CATALOG
+          - key: handlers
+            value:
+              values:
+                "@": schemat.type.CODE
+              info: Body of Handler subclasses that generate HTML response for particular
+                access methods of this category's items.
+              "@": schemat.type.CATALOG
           - key: views
             value:
               values:

@@ -99,6 +99,11 @@ export function escape_html(string) {
 //         size = min(map(len, lines))
 //         return lines[0][:size]                      # when all lines are prefixes of each other take the shortest one
 
+export function indent(text, prefix = ' ') {
+    /* Return `text` with `prefix` prepended to every line. */
+    return prefix + text.replace(/\n/g, '\n' + prefix)
+}
+
 export function dedentFull(text) {
     /* Remove all leading whitespace in each line of `text` and drop empty lines. */
     return text.trimLeft().replace(/\n\s+/g, '\n')
