@@ -315,6 +315,9 @@ export class Item {
     editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
                     // hence it should NOT be used for reading
 
+    client          // Item.Client instance initialized during boot(); only present on a client
+    server          // Item.Server instance initialized during boot(); only present on a server
+
     cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
@@ -428,7 +431,8 @@ export class Item {
         this.setExpiry(this.category.get('cache_ttl'))
         this._mod_type = await import('./type.js')          // to allow synchronous access to DATA and generic_schema in other methods later on
 
-        await this.initClass()                              // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+        await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+        this._initAgent()
 
         let init = this.init()                              // optional custom initialization after the data is loaded
         if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
@@ -436,18 +440,6 @@ export class Item {
         this.isLoading = false
         return this
     }
-    // async boot() {
-    //     /* Initialize item's data (this.data) from `data`. If `data` is missing, this.data is set to empty.
-    //        In any case, the item and its .data is initialized ("booted") after this method completes.
-    //      */
-    //     this._mod_type = await import('./type.js')      // to allow synchronous access to DATA and generic_schema in other methods
-    //
-    //     await this.initClass()
-    //
-    //     let init = this.init()                          // optional custom initialization after the data is loaded
-    //     if (init instanceof Promise) await init         // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
-    //     return this
-    // }
 
     async _loadData({use_schema = true, jsonData} = {}) {
         if (jsonData === undefined) jsonData = await this._loadDataJson()
@@ -480,11 +472,16 @@ export class Item {
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
     }
 
-    async initClass() {
+    async _initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
         let module = await this.category.getModule()
         T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
+    }
+    _initAgent() {
+        /* Initialize this.client or this.server depending on the environment. */
+        if (this.registry.onClient) this.client = new Item.Client(this)
+        else                        this.server = new Item.Server(this)
     }
 
     init() {}
@@ -760,37 +757,38 @@ export class Item {
 
     /***  Editing item's data  ***/
 
-    async getEditable() {
-        /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
-        return this.registry.getEditable(this.id)
-        // let item = T.clone(this)
-        // if (this.data) item.data = new Data(await this.data)
-        // return item
-    }
+    // async getEditable() {
+    //     /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
+    //     return this.registry.getEditable(this.id)
+    //     // let item = T.clone(this)
+    //     // if (this.data) item.data = new Data(await this.data)
+    //     // return item
+    // }
 
     edit(...edits) {
         this.editable = true    // TODO...
         if (!this.editable) throw new Error("this item is not editable")
         for (let [edit, args] of edits) {
             print('edit: ', [edit, args])
-            this[`_edit_${edit}`].call(this, ...args)
+            this.server[`make_${edit}`].call(this, ...args)
+            // this[`_edit_${edit}`].call(this, ...args)
         }
     }
 
-    _edit_insert(path, pos, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-        this.data.insert(path, pos, entry)
-    }
-    _edit_delete(path) {
-        this.data.delete(path)
-    }
-    _edit_update(path, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        this.data.update(path, entry)
-    }
-    _edit_move(path, pos1, pos2) {
-        this.data.move(path, pos1, pos2)
-    }
+    // _edit_insert(path, pos, entry) {
+    //     if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+    //     this.data.insert(path, pos, entry)
+    // }
+    // _edit_delete(path) {
+    //     this.data.delete(path)
+    // }
+    // _edit_update(path, entry) {
+    //     if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+    //     this.data.update(path, entry)
+    // }
+    // _edit_move(path, pos1, pos2) {
+    //     this.data.move(path, pos1, pos2)
+    // }
 
     async POST_edit({req, res}) {
         /* Web handler for all types of edits of this.data. */
@@ -1123,6 +1121,41 @@ Item.handlers = {
 }
 
 Item.setCaching('getPrototypes', 'getPath', 'render')
+
+/**********************************************************************************************************************/
+
+Item.Agent = class {
+    /* Base class for communication and data-modification agents (Client/Server) of an Item. */
+    constructor(item) {
+        this.item = item                // the parent Item object
+    }
+}
+
+Item.Client = class extends Item.Agent {
+    /* Client-side API for the Item's internal communication. */
+}
+
+Item.Server = class extends Item.Agent {
+    /* Server-side API for the Item's internal communication. */
+
+
+    // in make_*() methods below, `this` is always bound to the parent Item instance (!) not a Server
+
+    make_insert(path, pos, entry) {
+        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+        this.data.insert(path, pos, entry)
+    }
+    make_delete(path) {
+        this.data.delete(path)
+    }
+    make_update(path, entry) {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        this.data.update(path, entry)
+    }
+    make_move(path, pos1, pos2) {
+        this.data.move(path, pos1, pos2)
+    }
+}
 
 
 /**********************************************************************************************************************/
