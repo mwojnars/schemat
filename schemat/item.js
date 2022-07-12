@@ -1,5 +1,7 @@
-import { print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded,
-         ServerError, indent, dedentFull, splitLast, BaseError } from './utils.js'
+import {
+    print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded,
+    ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented
+} from './utils.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson } from './react-utils.js'
 
@@ -312,11 +314,15 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
-                    // hence it should NOT be used for reading
+    action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
+                    // agent that groups the methods which can be called in either environment (cli/srv), but whose
+                    // actual execution always takes place on the server - the client-side implementation only forwards the call
 
-    client          // Item.Client instance initialized during boot(); only present on a client
-    server          // Item.Server instance initialized during boot(); only present on a server
+    // client          // Item.Client instance initialized during boot(); only present on a client
+    // server          // Item.Server instance initialized during boot(); only present on a server
+
+    // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
+    //                 // hence it should NOT be used for reading
 
     cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
@@ -479,9 +485,11 @@ export class Item {
         T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
     _initAgent() {
-        /* Initialize this.client or this.server depending on the environment. */
-        if (this.registry.onClient) this.client = new Item.Client(this)
-        else                        this.server = new Item.Server(this)
+        /* Initialize this.action agent depending on the environment. */
+        let cls = this.registry.onClient ? Item.Client : Item.Server
+        this.action = new cls(this)
+        // if (this.registry.onClient) this.client = new Item.Client(this)
+        // else                        this.server = new Item.Server(this)
     }
 
     init() {}
@@ -757,46 +765,29 @@ export class Item {
 
     /***  Editing item's data  ***/
 
-    // async getEditable() {
-    //     /* DRAFT. Make a copy of this Item object and extend it with methods from EditableItem. */
-    //     return this.registry.getEditable(this.id)
-    //     // let item = T.clone(this)
-    //     // if (this.data) item.data = new Data(await this.data)
-    //     // return item
-    // }
-
-    edit(...edits) {
-        this.editable = true    // TODO...
-        if (!this.editable) throw new Error("this item is not editable")
-        for (let [edit, args] of edits) {
-            print('edit: ', [edit, args])
-            this.server[`make_${edit}`].call(this, ...args)
-            // this[`_edit_${edit}`].call(this, ...args)
-        }
-    }
-
-    // _edit_insert(path, pos, entry) {
-    //     if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-    //     this.data.insert(path, pos, entry)
-    // }
-    // _edit_delete(path) {
-    //     this.data.delete(path)
-    // }
-    // _edit_update(path, entry) {
-    //     if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-    //     this.data.update(path, entry)
-    // }
-    // _edit_move(path, pos1, pos2) {
-    //     this.data.move(path, pos1, pos2)
+    // edit(...edits) {
+    //     // this.editable = true    // TODO...
+    //     // if (!this.editable) throw new Error("this item is not editable")
+    //     for (let [edit, args] of edits) {
+    //         print('edit: ', [edit, args])
+    //         this.action[`make_${edit}`].call(this, ...args)
+    //     }
     // }
 
     async POST_edit({req, res}) {
         /* Web handler for all types of edits of this.data. */
         let edits = req.body
         assert(edits instanceof Array)
-        this.edit(...edits)
-        let out = await this.registry.update(this)
-        return res.json(out || {})
+        // this.edit(...edits)
+        for (let [edit, args] of edits) {
+            print('edit: ', [edit, args])
+            let err = this.action.trigger(edit, ...args)
+            // this.action[`make_${edit}`].call(this, ...args)
+            if (err) return res.json(err)
+        }
+        // let out = await this.registry.update(this)
+        // return res.json(out || {})
+        return res.json({})
     }
 
     async remote_edit_insert(path, pos, entry)   {
@@ -835,6 +826,22 @@ export class Item {
         // return txt ? JSON.parse(txt) : undefined
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
+
+    async POST_trigger({req, res}) {
+        /* Web handler for action execution requests (RPC calls) directed to `this.action` agent. */
+        assert(req.body instanceof Array)
+        assert(req.body.length === 2)
+        let [action, args] = req.body
+        print('edit: ', [action, args])
+        if (!(args instanceof Array)) args = [args]
+        let out = this.action.trigger(action, ...args)
+        if (out instanceof Promise) out = await out
+        // this.action[action].call(this, ...args)
+        // this.serve(action, this, args)
+        // let out = await this.registry.update(this)
+        return res.json(out || {})
+    }
+
 
     /***  Client-server communication protocols (operation chains)  ***/
 
@@ -1125,35 +1132,98 @@ Item.setCaching('getPrototypes', 'getPath', 'render')
 /**********************************************************************************************************************/
 
 Item.Agent = class {
-    /* Base class for communication and data-modification agents (Client/Server) of an Item. */
+    /* Base class for action-performing agents (Client/Server) of an Item.
+       The actions typically perform a server-side data modification, but can be called
+       either server-side or client-side - the latter call is forwarded to the server.
+     */
     constructor(item) {
         this.item = item                // the parent Item object
     }
-}
 
-Item.Client = class extends Item.Agent {
-    /* Client-side API for the Item's internal communication. */
+    trigger(action, ...args) { throw new NotImplemented() }
 }
 
 Item.Server = class extends Item.Agent {
-    /* Server-side API for the Item's internal communication. */
+    /* A set of server-side actions (RPC calls) that can be executed on an item. */
 
+    static reserved = ['constructor', 'trigger']            // list of all the Server methods that are NOT actions
 
-    // in make_*() methods below, `this` is always bound to the parent Item instance (!) not a Server
+    trigger(action, ...args) {
+        /* May return a promise. */
+        const method = this[action]
+        if (!method || Item.Server.reserved.includes(action) || !(method instanceof Function))
+            throw new Error(`unknown action: '${action}'`)
+        return method.call(this, this.item, ...args)
+    }
 
-    make_insert(path, pos, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-        this.data.insert(path, pos, entry)
+    insert(item, path, pos, entry) {
+        if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
+        item.data.insert(path, pos, entry)
+        return item.registry.update(item)
     }
-    make_delete(path) {
-        this.data.delete(path)
+    delete(item, path) {
+        item.data.delete(path)
+        return item.registry.update(item)
     }
-    make_update(path, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        this.data.update(path, entry)
+    update(item, path, entry) {
+        if (entry.value !== undefined) entry.value = item.getSchema(path).decode(entry.value)
+        item.data.update(path, entry)
+        return item.registry.update(item)
     }
-    make_move(path, pos1, pos2) {
-        this.data.move(path, pos1, pos2)
+    move(item, path, pos1, pos2) {
+        item.data.move(path, pos1, pos2)
+        return item.registry.update(item)
+    }
+
+    // in the actions below, `this` is always bound to the parent Item instance, not a Server (!)
+
+    // make_insert(path, pos, entry) {
+    //     if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+    //     this.data.insert(path, pos, entry)
+    // }
+    // make_delete(path) {
+    //     this.data.delete(path)
+    // }
+    // make_update(path, entry) {
+    //     if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+    //     this.data.update(path, entry)
+    // }
+    // make_move(path, pos1, pos2) {
+    //     this.data.move(path, pos1, pos2)
+    // }
+}
+
+Item.Client = class extends Item.Agent {
+    /* Client-side API for triggering server-side actions (RPC calls) on an item. */
+
+    async trigger(endpoint, data, {args, params} = {}) {
+        /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
+           send `data` if any; return a response body parsed from JSON to an object.
+         */
+        let url = this.url(endpoint)
+        let res = await fetchJson(url, data, params)        // Response object
+        if (!res.ok) throw new ServerError(res)
+        return res.json()
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+    }
+
+    async insert_field(path, pos, entry)   {
+        /* `entry.value` must have been schema-encoded already (!) */
+        // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
+        return this.trigger('edit', [['insert', [path, pos, entry]]])
+    }
+    async delete_field(path)   {
+        return this.trigger('edit', [['delete', [path]]])
+    }
+    async update_field(path, entry)   {
+        /* `entry.value` must have been schema-encoded already (!) */
+        // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+        return this.trigger('edit', [['update', [path, entry]]])
+    }
+    async move_field(path, pos1, pos2) {
+        return this.trigger('edit', [['move', [path, pos1, pos2]]])
     }
 }
 
@@ -1418,6 +1488,10 @@ export class Category extends Item {
         /* A list (table) of items. */
         if (!items || items.length === 0) return null
         const remove = (item) => item.remote_delete().then(() => itemRemoved && itemRemoved(item))
+        // const remove = (item) => item.action.delete().then(() => itemRemoved && itemRemoved(item))
+        // item.action.delete()
+        // item.action.delete_self()
+        // item.action.delete_field()
 
         return delayed_render(async () => {
             let rows = []

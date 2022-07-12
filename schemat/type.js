@@ -1305,6 +1305,11 @@ CATALOG.Table = class extends Component {
         },
         updateKey: (pos, newKey) => {
             return item.remote_edit_update([...path, pos], {key: newKey})
+            // return item.client.send_field_update([...path, pos], {key: newKey})
+            // return item.client.update_field()
+            // return item.server.field_update()
+            // return item.server.update_field()
+            // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, schema) => {
             return item.remote_edit_update([...path, pos], {value: schema.encode(newValue)})
