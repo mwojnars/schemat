@@ -31,12 +31,16 @@ export class Router extends Item {
 
         // check for empty '' route segment(s) in the routing table, there can be multiple ones;
         // try the first one, or proceed to the next one if NotFound is raised...
-        for (let {value: node} of routes.getEmpty())
-            try { return await node.load().then(n => n.route(request.copy())) }
+        let lastEx
+        let defaultRoutes = routes.getEmpty()
+        for (let {value: defaultNode} of defaultRoutes)
+            try { return await defaultNode.load().then(n => n.route(request.copy())) }
             catch(ex) {
                 if (!(ex instanceof Request.NotFound)) throw ex
+                lastEx = ex
             }
 
+        if (lastEx) throw lastEx
         request.throwNotFound()
     }
 

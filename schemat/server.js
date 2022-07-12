@@ -27,7 +27,17 @@ RES.sendItems = function(items) {
     let states = items.map(item => item.encodeSelf())
     this.json(states)
 }
-
+RES.error = function(...args) {
+    /* `args` contain a text message and/or a numeric status code. */
+    let msg, code = 500
+    for (const arg of args) {
+        const t = typeof arg
+        if (t === 'string') msg = arg
+        else if (t === 'number') code = arg
+    }
+    if (msg) this.status(code).send(msg)
+    else this.sendStatus(code)
+}
 
 /**********************************************************************************************************************
  **

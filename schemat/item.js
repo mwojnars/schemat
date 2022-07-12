@@ -765,47 +765,38 @@ export class Item {
 
     /***  Editing item's data  ***/
 
-    // edit(...edits) {
-    //     // this.editable = true    // TODO...
-    //     // if (!this.editable) throw new Error("this item is not editable")
-    //     for (let [edit, args] of edits) {
-    //         print('edit: ', [edit, args])
-    //         this.action[`make_${edit}`].call(this, ...args)
-    //     }
-    // }
-
     async POST_edit({req, res}) {
         /* Web handler for all types of edits of this.data. */
         let edits = req.body
+        let outputs = []
         assert(edits instanceof Array)
-        // this.edit(...edits)
+
         for (let [edit, args] of edits) {
             print('edit: ', [edit, args])
-            let err = this.action.trigger(edit, ...args)
-            // this.action[`make_${edit}`].call(this, ...args)
-            if (err) return res.json(err)
+            let out = await this.action.trigger(edit, ...args)
+            outputs.push(out)
         }
         // let out = await this.registry.update(this)
         // return res.json(out || {})
-        return res.json({})
+        return res.json({outputs})
     }
 
-    async remote_edit_insert(path, pos, entry)   {
-        /* `entry.value` must have been schema-encoded already (!) */
-        // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
-        return this.remote('edit', [['insert', [path, pos, entry]]])
-    }
-    async remote_edit_delete(path)   {
-        return this.remote('edit', [['delete', [path]]])
-    }
-    async remote_edit_update(path, entry)   {
-        /* `entry.value` must have been schema-encoded already (!) */
-        // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
-        return this.remote('edit', [['update', [path, entry]]])
-    }
-    async remote_edit_move(path, pos1, pos2) {
-        return this.remote('edit', [['move', [path, pos1, pos2]]])
-    }
+    // async remote_edit_insert(path, pos, entry)   {
+    //     /* `entry.value` must have been schema-encoded already (!) */
+    //     // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
+    //     return this.remote('edit', [['insert', [path, pos, entry]]])
+    // }
+    // async remote_edit_delete(path)   {
+    //     return this.remote('edit', [['delete', [path]]])
+    // }
+    // async remote_edit_update(path, entry)   {
+    //     /* `entry.value` must have been schema-encoded already (!) */
+    //     // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+    //     return this.remote('edit', [['update', [path, entry]]])
+    // }
+    // async remote_edit_move(path, pos1, pos2) {
+    //     return this.remote('edit', [['move', [path, pos1, pos2]]])
+    // }
 
     async POST_delete({res}) {
         await this.registry.delete(this)
@@ -828,18 +819,39 @@ export class Item {
     }
 
     async POST_trigger({req, res}) {
-        /* Web handler for action execution requests (RPC calls) directed to `this.action` agent. */
-        assert(req.body instanceof Array)
-        assert(req.body.length === 2)
-        let [action, args] = req.body
-        print('edit: ', [action, args])
+        /* Web handler for action execution requests (RPC calls) directed to the .action agent of this item.
+           The request JSON body should be an object {action, args}; `args` is an array (of arguments),
+           or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
+         */
+        // assert(req.body instanceof Array)
+        // assert(req.body.length === 2)
+        // let [action, args] = req.body
+
+        let {action, args} = req.body
+        if (!action) res.error("Missing 'action'")
+        if (args === undefined) args = []
         if (!(args instanceof Array)) args = [args]
+
+        print(`action '${action}', args ${args}`)
         let out = this.action.trigger(action, ...args)
         if (out instanceof Promise) out = await out
         // this.action[action].call(this, ...args)
         // this.serve(action, this, args)
         // let out = await this.registry.update(this)
         return res.json(out || {})
+    }
+
+    async remote_edit_insert(path, pos, entry)   {
+        return this.action.insert(path, pos, entry)
+    }
+    async remote_edit_delete(path)   {
+        return this.action.delete(path)
+    }
+    async remote_edit_update(path, entry)   {
+        return this.action.update(path, entry)
+    }
+    async remote_edit_move(path, pos1, pos2) {
+        return this.action.move(path, pos1, pos2)
     }
 
 
@@ -943,6 +955,10 @@ export class Item {
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
+
+        Each handler MUST be declared in the `handlers` property of this item's category,
+        otherwise it won't be recognized. The default list of handlers for an Item is defined below,
+        after Item class definition.
         */
         request.item = this
         if (request.path) return this.handlePartial(request)
@@ -1123,7 +1139,8 @@ Item.handlers = {
     item:    new Handler(),
     json:    new Handler({GET: Item.prototype.GET_json}),
     admin:   new Handler(),
-    edit:    new Handler(),
+    // edit:    new Handler(),
+    trigger: new Handler(),
     delete:  new Handler(),
 }
 
@@ -1196,12 +1213,13 @@ Item.Server = class extends Item.Agent {
 Item.Client = class extends Item.Agent {
     /* Client-side API for triggering server-side actions (RPC calls) on an item. */
 
-    async trigger(endpoint, data, {args, params} = {}) {
+    // async trigger(endpoint, data, {args, params} = {}) {
+    async trigger(action, ...args) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
          */
-        let url = this.url(endpoint)
-        let res = await fetchJson(url, data, params)        // Response object
+        let url = this.item.url('trigger')
+        let res = await fetchJson(url, {action, args})        // Response object
         if (!res.ok) throw new ServerError(res)
         return res.json()
         // let txt = await res.text()
@@ -1209,21 +1227,21 @@ Item.Client = class extends Item.Agent {
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
-    async insert_field(path, pos, entry)   {
+    async insert(path, pos, entry)   {
         /* `entry.value` must have been schema-encoded already (!) */
         // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
-        return this.trigger('edit', [['insert', [path, pos, entry]]])
+        return this.trigger('insert', path, pos, entry)
     }
-    async delete_field(path)   {
-        return this.trigger('edit', [['delete', [path]]])
+    async delete(path)   {
+        return this.trigger('delete', path)
     }
-    async update_field(path, entry)   {
+    async update(path, entry)   {
         /* `entry.value` must have been schema-encoded already (!) */
         // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
-        return this.trigger('edit', [['update', [path, entry]]])
+        return this.trigger('update', path, entry)
     }
-    async move_field(path, pos1, pos2) {
-        return this.trigger('edit', [['move', [path, pos1, pos2]]])
+    async move(path, pos1, pos2) {
+        return this.trigger('move', path, pos1, pos2)
     }
 }
 
