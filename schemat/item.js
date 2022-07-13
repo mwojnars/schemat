@@ -765,22 +765,22 @@ export class Item {
 
     /***  Editing item's data  ***/
 
-    async POST_edit({req, res}) {
-        /* Web handler for all types of edits of this.data. */
-        let edits = req.body
-        let outputs = []
-        assert(edits instanceof Array)
-
-        for (let [edit, args] of edits) {
-            print('edit: ', [edit, args])
-            let out = await this.action.trigger(edit, ...args)
-            outputs.push(out)
-        }
-        // let out = await this.registry.update(this)
-        // return res.json(out || {})
-        return res.json({outputs})
-    }
-
+    // async POST_edit({req, res}) {
+    //     /* Web handler for all types of edits of this.data. */
+    //     let edits = req.body
+    //     let outputs = []
+    //     assert(edits instanceof Array)
+    //
+    //     for (let [edit, args] of edits) {
+    //         print('edit: ', [edit, args])
+    //         let out = await this.action.trigger(edit, ...args)
+    //         outputs.push(out)
+    //     }
+    //     // let out = await this.registry.update(this)
+    //     // return res.json(out || {})
+    //     return res.json({outputs})
+    // }
+    //
     // async remote_edit_insert(path, pos, entry)   {
     //     /* `entry.value` must have been schema-encoded already (!) */
     //     // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
@@ -831,8 +831,8 @@ export class Item {
         if (!action) res.error("Missing 'action'")
         if (args === undefined) args = []
         if (!(args instanceof Array)) args = [args]
-
-        print(`action '${action}', args ${args}`)
+        print(req.body)
+        
         let out = this.action.trigger(action, ...args)
         if (out instanceof Promise) out = await out
         // this.action[action].call(this, ...args)
@@ -841,18 +841,18 @@ export class Item {
         return res.json(out || {})
     }
 
-    async remote_edit_insert(path, pos, entry)   {
-        return this.action.insert(path, pos, entry)
-    }
-    async remote_edit_delete(path)   {
-        return this.action.delete(path)
-    }
-    async remote_edit_update(path, entry)   {
-        return this.action.update(path, entry)
-    }
-    async remote_edit_move(path, pos1, pos2) {
-        return this.action.move(path, pos1, pos2)
-    }
+    // async remote_edit_insert(path, pos, entry)   {
+    //     return this.action.insert_field(path, pos, entry)
+    // }
+    // async remote_edit_delete(path)   {
+    //     return this.action.delete_field(path)
+    // }
+    // async remote_edit_update(path, entry)   {
+    //     return this.action.update_field(path, entry)
+    // }
+    // async remote_edit_move(path, pos1, pos2) {
+    //     return this.action.move_field(path, pos1, pos2)
+    // }
 
 
     /***  Client-server communication protocols (operation chains)  ***/
@@ -1161,9 +1161,11 @@ Item.Agent = class {
 }
 
 Item.Server = class extends Item.Agent {
-    /* A set of server-side actions (RPC calls) that can be executed on an item. */
+    /* A set of server-side actions (RPC calls) that can be executed on an item when triggered
+       from a client (remotely) or a server (locally).
+     */
 
-    static reserved = ['constructor', 'trigger']            // list of all the Server methods that are NOT actions
+    static reserved = ['constructor', 'trigger']            // methods that are NOT actions
 
     trigger(action, ...args) {
         /* May return a promise. */
@@ -1173,21 +1175,21 @@ Item.Server = class extends Item.Agent {
         return method.call(this, this.item, ...args)
     }
 
-    insert(item, path, pos, entry) {
+    insert_field(item, path, pos, entry) {
         if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
         item.data.insert(path, pos, entry)
         return item.registry.update(item)
     }
-    delete(item, path) {
+    delete_field(item, path) {
         item.data.delete(path)
         return item.registry.update(item)
     }
-    update(item, path, entry) {
+    update_field(item, path, entry) {
         if (entry.value !== undefined) entry.value = item.getSchema(path).decode(entry.value)
         item.data.update(path, entry)
         return item.registry.update(item)
     }
-    move(item, path, pos1, pos2) {
+    move_field(item, path, pos1, pos2) {
         item.data.move(path, pos1, pos2)
         return item.registry.update(item)
     }
@@ -1213,7 +1215,6 @@ Item.Server = class extends Item.Agent {
 Item.Client = class extends Item.Agent {
     /* Client-side API for triggering server-side actions (RPC calls) on an item. */
 
-    // async trigger(endpoint, data, {args, params} = {}) {
     async trigger(action, ...args) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
@@ -1227,21 +1228,21 @@ Item.Client = class extends Item.Agent {
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
-    async insert(path, pos, entry)   {
+    async insert_field(path, pos, entry)   {
         /* `entry.value` must have been schema-encoded already (!) */
         // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
-        return this.trigger('insert', path, pos, entry)
+        return this.trigger('insert_field', path, pos, entry)
     }
-    async delete(path)   {
-        return this.trigger('delete', path)
+    async delete_field(path)   {
+        return this.trigger('delete_field', path)
     }
-    async update(path, entry)   {
+    async update_field(path, entry)   {
         /* `entry.value` must have been schema-encoded already (!) */
         // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
-        return this.trigger('update', path, entry)
+        return this.trigger('update_field', path, entry)
     }
-    async move(path, pos1, pos2) {
-        return this.trigger('move', path, pos1, pos2)
+    async move_field(path, pos1, pos2) {
+        return this.trigger('move_field', path, pos1, pos2)
     }
 }
 

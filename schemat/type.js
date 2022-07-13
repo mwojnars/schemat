@@ -1254,14 +1254,14 @@ CATALOG.Table = class extends Component {
         delete: async (pos) => {
             /* delete the entry at position `pos`; TODO: only mark the entry as deleted (entry.deleted=true) and allow undelete */
             // TODO: lock/freeze/suspense the UI until the server responds to prevent user from making multiple modifications at the same time
-            await item.remote_edit_delete([...path, pos])
+            await item.action.delete_field([...path, pos])
             setEntries(prev => [...prev.slice(0,pos), ...prev.slice(pos+1)])
         },
 
         move: async (pos, delta) => {
             // move the entry at position `pos` by `delta` positions up or down, delta = +1 or -1
             assert(delta === -1 || delta === +1)
-            await item.remote_edit_move(path, pos, pos+delta)
+            await item.action.move_field(path, pos, pos+delta)
             setEntries(prev => {
                 // if (pos+delta < 0 || pos+delta >= prev.length) return prev
                 let entries = [...prev];
@@ -1296,15 +1296,15 @@ CATALOG.Table = class extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (schema.isCatalog) item.remote_edit_insert(path, pos, {key, value: schema.encode(value) })
+                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: schema.encode(value) })
                 else prev[pos].saveNew = (value) =>
-                    item.remote_edit_insert(path, pos, {key, value: schema.encode(value)}).then(() => unnew())
+                    item.action.insert_field(path, pos, {key, value: schema.encode(value)}).then(() => unnew())
 
                 return [...prev]
             })
         },
         updateKey: (pos, newKey) => {
-            return item.remote_edit_update([...path, pos], {key: newKey})
+            return item.action.update_field([...path, pos], {key: newKey})
             // return item.client.send_field_update([...path, pos], {key: newKey})
             // return item.client.update_field()
             // return item.server.field_update()
@@ -1312,7 +1312,7 @@ CATALOG.Table = class extends Component {
             // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, schema) => {
-            return item.remote_edit_update([...path, pos], {value: schema.encode(newValue)})
+            return item.action.update_field([...path, pos], {value: schema.encode(newValue)})
         }
     }}
 
