@@ -765,45 +765,13 @@ export class Item {
 
     /***  Editing item's data  ***/
 
-    // async POST_edit({req, res}) {
-    //     /* Web handler for all types of edits of this.data. */
-    //     let edits = req.body
-    //     let outputs = []
-    //     assert(edits instanceof Array)
-    //
-    //     for (let [edit, args] of edits) {
-    //         print('edit: ', [edit, args])
-    //         let out = await this.action.trigger(edit, ...args)
-    //         outputs.push(out)
-    //     }
-    //     // let out = await this.registry.update(this)
-    //     // return res.json(out || {})
-    //     return res.json({outputs})
-    // }
-    //
-    // async remote_edit_insert(path, pos, entry)   {
-    //     /* `entry.value` must have been schema-encoded already (!) */
-    //     // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
-    //     return this.remote('edit', [['insert', [path, pos, entry]]])
-    // }
-    // async remote_edit_delete(path)   {
-    //     return this.remote('edit', [['delete', [path]]])
-    // }
-    // async remote_edit_update(path, entry)   {
-    //     /* `entry.value` must have been schema-encoded already (!) */
-    //     // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
-    //     return this.remote('edit', [['update', [path, entry]]])
-    // }
-    // async remote_edit_move(path, pos1, pos2) {
-    //     return this.remote('edit', [['move', [path, pos1, pos2]]])
+    // async POST_delete({res}) {
+    //     await this.registry.delete(this)
+    //     return res.json({})
     // }
 
-    async POST_delete({res}) {
-        await this.registry.delete(this)
-        return res.json({})
-    }
-
-    async remote_delete()       { return this.remote('delete') }
+    // async remote_delete()       { return this.remote('delete') }
+    async remote_delete()       { return this.action.delete_self() }
 
     async remote(endpoint, data, {args, params} = {}) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
@@ -818,53 +786,24 @@ export class Item {
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
-    async POST_trigger({req, res}) {
+    async POST_action({req, res}) {
         /* Web handler for action execution requests (RPC calls) directed to the .action agent of this item.
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
-        // assert(req.body instanceof Array)
-        // assert(req.body.length === 2)
-        // let [action, args] = req.body
-
         let {action, args} = req.body
         if (!action) res.error("Missing 'action'")
         if (args === undefined) args = []
         if (!(args instanceof Array)) args = [args]
         print(req.body)
-        
+
         let out = this.action.trigger(action, ...args)
         if (out instanceof Promise) out = await out
-        // this.action[action].call(this, ...args)
-        // this.serve(action, this, args)
-        // let out = await this.registry.update(this)
         return res.json(out || {})
     }
 
-    // async remote_edit_insert(path, pos, entry)   {
-    //     return this.action.insert_field(path, pos, entry)
-    // }
-    // async remote_edit_delete(path)   {
-    //     return this.action.delete_field(path)
-    // }
-    // async remote_edit_update(path, entry)   {
-    //     return this.action.update_field(path, entry)
-    // }
-    // async remote_edit_move(path, pos1, pos2) {
-    //     return this.action.move_field(path, pos1, pos2)
-    // }
 
-
-    /***  Client-server communication protocols (operation chains)  ***/
-
-    // delete = Protocol({
-    //     onclient:  async function () {},         // bound to `delete` when called on client
-    //     onserver:  async function () {},         // bound to `delete` when called on a web app process, or a db process
-    //     onfront:   async function () {},   (web handler)
-    //     onback:    ...                     (db handler)
-    // })
-
-    /***  Routing & handling requests (server side)  ***/
+    /***  Routing & handling requests (server-side)  ***/
 
     async route(request) {
         /*
@@ -1139,9 +1078,8 @@ Item.handlers = {
     item:    new Handler(),
     json:    new Handler({GET: Item.prototype.GET_json}),
     admin:   new Handler(),
-    // edit:    new Handler(),
-    trigger: new Handler(),
-    delete:  new Handler(),
+    action:  new Handler(),
+    // delete:  new Handler(),
 }
 
 Item.setCaching('getPrototypes', 'getPath', 'render')
@@ -1174,6 +1112,10 @@ Item.Server = class extends Item.Agent {
             throw new Error(`unknown action: '${action}'`)
         return method.call(this, this.item, ...args)
     }
+
+    // actions...
+
+    delete_self(item)   { return item.registry.delete(item) }
 
     insert_field(item, path, pos, entry) {
         if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
@@ -1219,13 +1161,17 @@ Item.Client = class extends Item.Agent {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
          */
-        let url = this.item.url('trigger')
+        let url = this.item.url('action')
         let res = await fetchJson(url, {action, args})        // Response object
         if (!res.ok) throw new ServerError(res)
         return res.json()
         // let txt = await res.text()
         // return txt ? JSON.parse(txt) : undefined
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+    }
+
+    async delete_self() {
+        return this.trigger('delete_self')
     }
 
     async insert_field(path, pos, entry)   {
