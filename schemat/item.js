@@ -301,8 +301,8 @@ export class Item {
 
     static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
-    static Client                       // each Item subclass may have its own Client/Server agents with their own set of actions
-    static Server
+    // static Client                       // each Item subclass may have its own Client/Server agents with their own set of actions
+    // static Server
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
@@ -324,10 +324,13 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
-                    // agent that groups the methods which can be called in either environment (cli/srv), but whose
-                    // actual execution always takes place on the server - the client-side implementation only forwards the call
+    action          // array of triggers for the RPC actions allowed by this item's class or category;
+                    // available server-side and client-side, but with a different implementation of triggers
 
+    // action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
+    //                 // agent that groups the methods which can be called in either environment (cli/srv), but whose
+    //                 // actual execution always takes place on the server - the client-side implementation only forwards the call
+    //
     // client          // Item.Client instance initialized during boot(); only present on a client
     // server          // Item.Server instance initialized during boot(); only present on a server
 
@@ -497,12 +500,7 @@ export class Item {
     }
 
     _initActions() {
-        /* Initialize the collection of action triggers (this.action) in a way compatible with the current environment (cli/srv). */
-
-        // let cls = this.registry.onClient ? Item.Client : Item.Server
-        // this.action = new cls(this)
-        // return
-
+        /* Create action triggers (this.action[...]) in a way compatible with the current environment (cli/srv). */
         let actions = Object.entries(this.getActions())
         this.action = {}
 
@@ -512,23 +510,6 @@ export class Item {
         else
             for (let [name, method] of actions)
                 this.action[name] = (...args) => this._forwardAction(name, method, ...args)     // may return a Promise
-    }
-
-    _executeAction(action, ctx, ...args) {
-        /* Server-side execution of an action after a request was received from the web or internal url-call. */
-        let actions = this.getActions()
-        let method  = actions[action]
-        return method.call(this, ctx, ...args)
-    }
-    async _forwardAction(action, method, ...args) {
-        /* Client-side RPC to the server to execute an action server-side. */
-        let url = this.url('action')                        // TODO: use method.endpoint instead of 'action'
-        let res = await fetchJson(url, {action, args})      // TODO: use method.protocol to select I/O format
-        if (!res.ok) throw new ServerError(res)             // res = Response object
-        return res.json()
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
     init() {}
@@ -808,6 +789,27 @@ export class Item {
 
     /***  Client/Server actions (RPC calls)  ***/
 
+    _executeAction(action, ctx, ...args) {
+        /* Server-side execution of an action after a request was received from the web or internal url-call.
+           May return a Promise (depending on the action).
+         */
+        let actions = this.getActions()
+        let method  = actions[action]
+        if (!method) throw new Error(`Unknown action: '${action}'`)
+        return method.call(this, ctx, ...args)
+    }
+
+    async _forwardAction(action, method, ...args) {
+        /* Client-side RPC to the server to execute an action server-side. */
+        let url = this.url('action')                        // TODO: use method.endpoint instead of 'action'
+        let res = await fetchJson(url, {action, args})      // TODO: use method.protocol to select I/O format
+        if (!res.ok) throw new ServerError(res)             // res = Response object
+        return res.json()
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+    }
+
     async remote(endpoint, data, {args, params} = {}) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
@@ -822,7 +824,7 @@ export class Item {
     }
 
     async POST_action(ctx) {
-        /* Web handler for action execution requests (RPC calls) to be passed to the .Server instance kept under this.action.
+        /* Web handler for action execution requests (RPC calls).
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
@@ -833,7 +835,6 @@ export class Item {
         if (!(args instanceof Array)) args = [args]
         print(req.body)
 
-        // let out = this.action.trigger(action, ctx, ...args)
         let out = this._executeAction(action, ctx, ...args)
         if (out instanceof Promise) out = await out
         return res.json(out || {})
@@ -1156,98 +1157,98 @@ Item.actions = {
 }
 
 
-Item.Agent = class {
-    /* Base class for action-performing agents (Client/Server) of an Item.
-       The actions typically perform a server-side data modification, but can be called
-       either server-side or client-side - the latter call is forwarded to the server.
-     */
-    constructor(item) {
-        this.item = item                // the parent Item object
-    }
-
-    trigger(action, ...args) { throw new NotImplemented() }
-}
-
-Item.Server = class extends Item.Agent {
-    /* A set of server-side actions (RPC calls) that can be executed on an item when triggered
-       from a client (remotely) or a server (locally).
-       All methods of the class or its subclass, except the methods listed in `reserved`,
-       are automatically treated as actions (!).
-     */
-
-    static reserved = ['constructor', 'trigger']            // all methods except these are treated as actions
-
-    trigger(action, ctx = {}, ...args) {
-        /* May return a promise. */
-        // const actions = this.actions || this.constructor.actions
-        // const method = this.actions?.[action] || this.constructor.actions[action]
-        const method = this[action]
-        if (!method || Item.Server.reserved.includes(action) || !(method instanceof Function))
-            throw new Error(`unknown action: '${action}'`)
-        return method.call(this, this.item, ctx, ...args)
-    }
-
-    // actions...
-
-    delete_self(item, ctx)   { return item.registry.delete(item) }
-
-    insert_field(item, ctx, path, pos, entry) {
-        if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
-        item.data.insert(path, pos, entry)
-        return item.registry.update(item)
-    }
-    delete_field(item, ctx, path) {
-        item.data.delete(path)
-        return item.registry.update(item)
-    }
-    update_field(item, ctx, path, entry) {
-        if (entry.value !== undefined) entry.value = item.getSchema(path).decode(entry.value)
-        item.data.update(path, entry)
-        return item.registry.update(item)
-    }
-    move_field(item, ctx, path, pos1, pos2) {
-        item.data.move(path, pos1, pos2)
-        return item.registry.update(item)
-    }
-}
-
-Item.Client = class extends Item.Agent {
-    /* Client-side API for triggering server-side actions (RPC calls) on an item. */
-
-    async trigger(action, ...args) {
-        /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
-           send `data` if any; return a response body parsed from JSON to an object.
-         */
-        let url = this.item.url('action')
-        let res = await fetchJson(url, {action, args})        // Response object
-        if (!res.ok) throw new ServerError(res)
-        return res.json()
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
-    }
-
-    async delete_self() {
-        return this.trigger('delete_self')
-    }
-
-    async insert_field(path, pos, entry)   {
-        /* `entry.value` must have been schema-encoded already (!) */
-        // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
-        return this.trigger('insert_field', path, pos, entry)
-    }
-    async delete_field(path)   {
-        return this.trigger('delete_field', path)
-    }
-    async update_field(path, entry)   {
-        /* `entry.value` must have been schema-encoded already (!) */
-        // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
-        return this.trigger('update_field', path, entry)
-    }
-    async move_field(path, pos1, pos2) {
-        return this.trigger('move_field', path, pos1, pos2)
-    }
-}
+// Item.Agent = class {
+//     /* Base class for action-performing agents (Client/Server) of an Item.
+//        The actions typically perform a server-side data modification, but can be called
+//        either server-side or client-side - the latter call is forwarded to the server.
+//      */
+//     constructor(item) {
+//         this.item = item                // the parent Item object
+//     }
+//
+//     trigger(action, ...args) { throw new NotImplemented() }
+// }
+//
+// Item.Server = class extends Item.Agent {
+//     /* A set of server-side actions (RPC calls) that can be executed on an item when triggered
+//        from a client (remotely) or a server (locally).
+//        All methods of the class or its subclass, except the methods listed in `reserved`,
+//        are automatically treated as actions (!).
+//      */
+//
+//     static reserved = ['constructor', 'trigger']            // all methods except these are treated as actions
+//
+//     trigger(action, ctx = {}, ...args) {
+//         /* May return a promise. */
+//         // const actions = this.actions || this.constructor.actions
+//         // const method = this.actions?.[action] || this.constructor.actions[action]
+//         const method = this[action]
+//         if (!method || Item.Server.reserved.includes(action) || !(method instanceof Function))
+//             throw new Error(`unknown action: '${action}'`)
+//         return method.call(this, this.item, ctx, ...args)
+//     }
+//
+//     // actions...
+//
+//     delete_self(item, ctx)   { return item.registry.delete(item) }
+//
+//     insert_field(item, ctx, path, pos, entry) {
+//         if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
+//         item.data.insert(path, pos, entry)
+//         return item.registry.update(item)
+//     }
+//     delete_field(item, ctx, path) {
+//         item.data.delete(path)
+//         return item.registry.update(item)
+//     }
+//     update_field(item, ctx, path, entry) {
+//         if (entry.value !== undefined) entry.value = item.getSchema(path).decode(entry.value)
+//         item.data.update(path, entry)
+//         return item.registry.update(item)
+//     }
+//     move_field(item, ctx, path, pos1, pos2) {
+//         item.data.move(path, pos1, pos2)
+//         return item.registry.update(item)
+//     }
+// }
+//
+// Item.Client = class extends Item.Agent {
+//     /* Client-side API for triggering server-side actions (RPC calls) on an item. */
+//
+//     async trigger(action, ...args) {
+//         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
+//            send `data` if any; return a response body parsed from JSON to an object.
+//          */
+//         let url = this.item.url('action')
+//         let res = await fetchJson(url, {action, args})        // Response object
+//         if (!res.ok) throw new ServerError(res)
+//         return res.json()
+//         // let txt = await res.text()
+//         // return txt ? JSON.parse(txt) : undefined
+//         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+//     }
+//
+//     async delete_self() {
+//         return this.trigger('delete_self')
+//     }
+//
+//     async insert_field(path, pos, entry)   {
+//         /* `entry.value` must have been schema-encoded already (!) */
+//         // if (entry.value !== undefined) entry.value = this.getSchema([...path, pos]).encode(entry.value)
+//         return this.trigger('insert_field', path, pos, entry)
+//     }
+//     async delete_field(path)   {
+//         return this.trigger('delete_field', path)
+//     }
+//     async update_field(path, entry)   {
+//         /* `entry.value` must have been schema-encoded already (!) */
+//         // if (entry.value !== undefined) entry.value = this.getSchema(path).encode(entry.value)
+//         return this.trigger('update_field', path, entry)
+//     }
+//     async move_field(path, pos1, pos2) {
+//         return this.trigger('move_field', path, pos1, pos2)
+//     }
+// }
 
 
 /**********************************************************************************************************************/
@@ -1609,18 +1610,17 @@ Category.handlers = {
 }
 
 
-Category.Server = class extends Item.Server {
-
-    async new_item(category) {
-        // return item.registry.delete(item)
-        let data = await (new Data).__setstate__(req.body)
-        let item = await category.new(data)
-        await category.registry.insert(item)
-        // await category.registry.commit()
-        res.sendItem(item)
-    }
-
-}
+// Category.Server = class extends Item.Server {
+//
+//     async new_item(category) {
+//         // return item.registry.delete(item)
+//         let data = await (new Data).__setstate__(req.body)
+//         let item = await category.new(data)
+//         await category.registry.insert(item)
+//         // await category.registry.commit()
+//         res.sendItem(item)
+//     }
+// }
 
 
 /**********************************************************************************************************************/
