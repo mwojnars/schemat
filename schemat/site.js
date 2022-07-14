@@ -327,7 +327,7 @@ export class File extends Item {
     //     return module[symbol]
     // }
 
-    GET_default(args) { return this.GET_file(args) }
+    GET_default(ctx) { return this.GET_file(ctx) }
 
     GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)

@@ -147,6 +147,13 @@ export class Request {
 }
 
 
+export class RequestContext {
+    /* Wrapper around the contextual information passed to request handlers. */
+    constructor({request, req, res, handler, endpoint, item}) {
+        Object.assign(this, {request, req, res, handler, endpoint, item})
+    }
+}
+
 export class Handler {
     /* Utility class that holds function(s) that together implement a web handler for a specific @-endpoint
        of the items in a particular category.
@@ -155,7 +162,7 @@ export class Handler {
        As such, the functions can be viewed as methods of the Item class, with `this` bound to an Item instance.
        All the functions accept a single argument, `context` (`ctx`), of the shape:
 
-                context = {request, req, res, item, handler}
+                context = {request, req, res, item, handler, endpoint}
      */
 
     // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
@@ -294,6 +301,9 @@ export class Item {
 
     static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
+    static Client                       // each Item subclass may have its own Client/Server agents with their own set of actions
+    static Server
+
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
@@ -328,7 +338,8 @@ export class Item {
 
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
-
+    static actions    = {}      // collection of action functions (RPC calls); each action is accessible from a server or a client
+    
     static __transient__ = ['cache']
 
     get id()        { return [this.cid, this.iid] }
@@ -438,7 +449,7 @@ export class Item {
         this._mod_type = await import('./type.js')          // to allow synchronous access to DATA and generic_schema in other methods later on
 
         await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-        this._initAgent()
+        this._initActions()
 
         let init = this.init()                              // optional custom initialization after the data is loaded
         if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
@@ -484,12 +495,40 @@ export class Item {
         let module = await this.category.getModule()
         T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
-    _initAgent() {
-        /* Initialize this.action agent depending on the environment. */
-        let cls = this.registry.onClient ? Item.Client : Item.Server
-        this.action = new cls(this)
-        // if (this.registry.onClient) this.client = new Item.Client(this)
-        // else                        this.server = new Item.Server(this)
+
+    _initActions() {
+        /* Initialize the collection of action triggers (this.action) in a way compatible with the current environment (cli/srv). */
+
+        // let cls = this.registry.onClient ? Item.Client : Item.Server
+        // this.action = new cls(this)
+        // return
+
+        let actions = Object.entries(this.getActions())
+        this.action = {}
+
+        if (this.registry.onServer)
+            for (let [name, method] of actions)
+                this.action[name] = (...args) => method.call(this, {}, ...args)                 // may return a Promise
+        else
+            for (let [name, method] of actions)
+                this.action[name] = (...args) => this._forwardAction(name, method, ...args)     // may return a Promise
+    }
+
+    _executeAction(action, ctx, ...args) {
+        /* Server-side execution of an action after a request was received from the web or internal url-call. */
+        let actions = this.getActions()
+        let method  = actions[action]
+        return method.call(this, ctx, ...args)
+    }
+    async _forwardAction(action, method, ...args) {
+        /* Client-side RPC to the server to execute an action server-side. */
+        let url = this.url('action')                        // TODO: use method.endpoint instead of 'action'
+        let res = await fetchJson(url, {action, args})      // TODO: use method.protocol to select I/O format
+        if (!res.ok) throw new ServerError(res)             // res = Response object
+        return res.json()
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
     init() {}
@@ -657,15 +696,6 @@ export class Item {
         return subset
     }
 
-    mergeSnippets(key, params) {
-        /* Calls getMany() to find all entries with a given `key` including the environment-specific
-           {key}_client OR {key}_server keys; assumes the values are strings.
-           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
-        let env = this.registry.onServer ? 'server' : 'client'
-        let snippets = this.getMany([key, `${key}_${env}`], params)
-        return snippets.join('\n')
-    }
-
     getInherited(field) {
         /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
            from prototypes + the schema's default catalog for this field.
@@ -726,6 +756,19 @@ export class Item {
         return schema.find(keys)
     }
 
+    getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
+
+    getActions()    { return this.constructor.actions }
+
+    mergeSnippets(key, params) {
+        /* Calls getMany() to find all entries with a given `key` including the environment-specific
+           {key}_client OR {key}_server keys; assumes the values are strings.
+           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
+        let env = this.registry.onServer ? 'server' : 'client'
+        let snippets = this.getMany([key, `${key}_${env}`], params)
+        return snippets.join('\n')
+    }
+
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         this.assertLoaded()
@@ -763,15 +806,7 @@ export class Item {
         return path
     }
 
-    /***  Editing item's data  ***/
-
-    // async POST_delete({res}) {
-    //     await this.registry.delete(this)
-    //     return res.json({})
-    // }
-
-    // async remote_delete()       { return this.remote('delete') }
-    async remote_delete()       { return this.action.delete_self() }
+    /***  Client/Server actions (RPC calls)  ***/
 
     async remote(endpoint, data, {args, params} = {}) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
@@ -786,18 +821,20 @@ export class Item {
         // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
-    async POST_action({req, res}) {
-        /* Web handler for action execution requests (RPC calls) directed to the .action agent of this item.
+    async POST_action(ctx) {
+        /* Web handler for action execution requests (RPC calls) to be passed to the .Server instance kept under this.action.
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
+        let {req, res} = ctx                    // RequestContext
         let {action, args} = req.body
         if (!action) res.error("Missing 'action'")
         if (args === undefined) args = []
         if (!(args instanceof Array)) args = [args]
         print(req.body)
 
-        let out = this.action.trigger(action, ...args)
+        // let out = this.action.trigger(action, ctx, ...args)
+        let out = this._executeAction(action, ctx, ...args)
         if (out instanceof Promise) out = await out
         return res.json(out || {})
     }
@@ -915,7 +952,8 @@ export class Item {
 
         for (let endpoint of methods) {
             let handler = this.getHandlers()[endpoint]
-            if (handler) return handler.run({request, req, res, handler, endpoint, item: this})
+            let context = new RequestContext({request, req, res, handler, endpoint, item: this})
+            if (handler) return handler.run(context)
         }
 
         // for (let endpoint of methods) {
@@ -929,8 +967,6 @@ export class Item {
 
         request.throwNotFound(`no handler found for [${methods}] access method(s)`)
     }
-
-    getHandlers() { return T.inheritedMerge(this.constructor, 'handlers') }
 
     page({title, assets, body, request, view} = {}) {
         /* Generate an HTML page to be sent as a response to a GET request;
@@ -1073,18 +1109,52 @@ export class Item {
     }
 }
 
+/**********************************************************************************************************************/
+
+Item.setCaching('getPrototypes', 'getPath', 'getActions', 'render')
+
 Item.handlers = {
     default: new Handler(),
     item:    new Handler(),
     json:    new Handler({GET: Item.prototype.GET_json}),
     admin:   new Handler(),
     action:  new Handler(),
-    // delete:  new Handler(),
 }
 
-Item.setCaching('getPrototypes', 'getPath', 'render')
+Item.actions = {
 
-/**********************************************************************************************************************/
+    // When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
+    // in the context of their item, like if they were regular methods of the Item (sub)class.
+    // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
+    // of arguments. In a special case when an action is called directly on the server through
+    // item.action.XXX(), `ctx` is {}, which can be a valid argument for some actions - supporting this type
+    // of calls is NOT mandatory, though.
+
+    // decorators (???):
+    // - endpoint to intermediate this action
+    // - GET/POST/CALL type(s) selector
+    delete_self(ctx)   { return this.registry.delete(this) },
+
+    insert_field(ctx, path, pos, entry) {
+        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+        this.data.insert(path, pos, entry)
+        return this.registry.update(this)
+    },
+    delete_field(ctx, path) {
+        this.data.delete(path)
+        return this.registry.update(this)
+    },
+    update_field(ctx, path, entry) {
+        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+        this.data.update(path, entry)
+        return this.registry.update(this)
+    },
+    move_field(ctx, path, pos1, pos2) {
+        this.data.move(path, pos1, pos2)
+        return this.registry.update(this)
+    },
+}
+
 
 Item.Agent = class {
     /* Base class for action-performing agents (Client/Server) of an Item.
@@ -1101,57 +1171,44 @@ Item.Agent = class {
 Item.Server = class extends Item.Agent {
     /* A set of server-side actions (RPC calls) that can be executed on an item when triggered
        from a client (remotely) or a server (locally).
+       All methods of the class or its subclass, except the methods listed in `reserved`,
+       are automatically treated as actions (!).
      */
 
-    static reserved = ['constructor', 'trigger']            // methods that are NOT actions
+    static reserved = ['constructor', 'trigger']            // all methods except these are treated as actions
 
-    trigger(action, ...args) {
+    trigger(action, ctx = {}, ...args) {
         /* May return a promise. */
+        // const actions = this.actions || this.constructor.actions
+        // const method = this.actions?.[action] || this.constructor.actions[action]
         const method = this[action]
         if (!method || Item.Server.reserved.includes(action) || !(method instanceof Function))
             throw new Error(`unknown action: '${action}'`)
-        return method.call(this, this.item, ...args)
+        return method.call(this, this.item, ctx, ...args)
     }
 
     // actions...
 
-    delete_self(item)   { return item.registry.delete(item) }
+    delete_self(item, ctx)   { return item.registry.delete(item) }
 
-    insert_field(item, path, pos, entry) {
+    insert_field(item, ctx, path, pos, entry) {
         if (entry.value !== undefined) entry.value = item.getSchema([...path, entry.key]).decode(entry.value)
         item.data.insert(path, pos, entry)
         return item.registry.update(item)
     }
-    delete_field(item, path) {
+    delete_field(item, ctx, path) {
         item.data.delete(path)
         return item.registry.update(item)
     }
-    update_field(item, path, entry) {
+    update_field(item, ctx, path, entry) {
         if (entry.value !== undefined) entry.value = item.getSchema(path).decode(entry.value)
         item.data.update(path, entry)
         return item.registry.update(item)
     }
-    move_field(item, path, pos1, pos2) {
+    move_field(item, ctx, path, pos1, pos2) {
         item.data.move(path, pos1, pos2)
         return item.registry.update(item)
     }
-
-    // in the actions below, `this` is always bound to the parent Item instance, not a Server (!)
-
-    // make_insert(path, pos, entry) {
-    //     if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-    //     this.data.insert(path, pos, entry)
-    // }
-    // make_delete(path) {
-    //     this.data.delete(path)
-    // }
-    // make_update(path, entry) {
-    //     if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-    //     this.data.update(path, entry)
-    // }
-    // make_move(path, pos1, pos2) {
-    //     this.data.move(path, pos1, pos2)
-    // }
 }
 
 Item.Client = class extends Item.Agent {
@@ -1448,15 +1505,12 @@ export class Category extends Item {
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }
     async remote_new(data)  { return this.remote('new', data) }
+    // async remote_new(data)  { return this.action.new_item(data) }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
         if (!items || items.length === 0) return null
-        const remove = (item) => item.remote_delete().then(() => itemRemoved && itemRemoved(item))
-        // const remove = (item) => item.action.delete().then(() => itemRemoved && itemRemoved(item))
-        // item.action.delete()
-        // item.action.delete_self()
-        // item.action.delete_field()
+        const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
 
         return delayed_render(async () => {
             let rows = []
@@ -1546,13 +1600,27 @@ export class Category extends Item {
     // }
 }
 
+Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+
 Category.handlers = {
     import:  new Handler({GET: Category.prototype.GET_import}),
     scan:    new Handler({GET: Category.prototype.GET_scan}),
     new:     new Handler(),
 }
 
-Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+
+Category.Server = class extends Item.Server {
+
+    async new_item(category) {
+        // return item.registry.delete(item)
+        let data = await (new Data).__setstate__(req.body)
+        let item = await category.new(data)
+        await category.registry.insert(item)
+        // await category.registry.commit()
+        res.sendItem(item)
+    }
+
+}
 
 
 /**********************************************************************************************************************/
