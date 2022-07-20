@@ -924,22 +924,6 @@ export class Item {
     }
 
 
-    /***  Actions (RPC calls)  ***/
-
-    async remote(endpoint, data, {args, params} = {}) {
-        /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
-           send `data` if any; return a response body parsed from JSON to an object.
-         */
-        let url = this.url(endpoint)
-        let res = await fetchJson(url, data, params)        // Response object
-        if (!res.ok) throw new ServerError(res)
-        return res.json()
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
-    }
-
-
     /***  Page rendering  ***/
 
     page({title, assets, body, request, view} = {}) {
@@ -1375,7 +1359,6 @@ export class Category extends Item {
         }
         res.sendItems(items)
     }
-    // async remote_new(data)  { return this.action.new_item(data) }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
