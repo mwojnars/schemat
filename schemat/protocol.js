@@ -1,5 +1,5 @@
 import {fetchJson} from "./react-utils.js";
-import {print, assert, ServerError} from "./utils.js";
+import {print, assert, ServerError, NotFound, RequestFailed} from "./utils.js";
 
 
 export class Agent {
@@ -44,13 +44,19 @@ export class Protocol {
         this.actions[name] = method
     }
 
+    // the methods below may return a Promise or be declared as async in subclasses
     client(agent, action, ...args)  { throw new Error(`internal client-side call not allowed for this protocol`) }
+    server(agent, ctx)              { throw new Error(`missing server implementation`) }
 }
 
 export class GenericProtocol extends Protocol {
     /* General-purpose HTTP protocol. Does not interpret input/output data in any way. The action function is free to use
        `req` and `res` objects as it sees fit. This protocol only accepts one action per endpoint.
      */
+    async client(agent, action, ...args) {
+    }
+    server(agent, ctx) {
+    }
 }
 
 export class HtmlProtocol extends GenericProtocol {
@@ -59,22 +65,41 @@ export class HtmlProtocol extends GenericProtocol {
 
 export class JsonProtocol extends Protocol {
     /* JSON communication over HTTP POST. The server interprets req.body as a JSON string of the form {action, args}
-       and calls the action indicated by the `action` name parameter. If the function completes correctly, its `result` is sent
-       as a JSON-serialized object of the form {result}; otherwise, if an exception (`error`) was caught,
+       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
+       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
        it's sent as a JSON-serialized object of the form: {error}.
      */
     static multipleActions = true
+
+    _encodeRequest(action, args)    { return {action, args} }
+    _decodeRequest(body)            { let {action, args} = body; return {action, args} }
+
+    _sendResponse({res}, output, error) {
+        /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
+           HTTP status code if an exception was caught. */
+        if (error) return res.status(error.code).send({error})
+        output = (output !== undefined && output) || {}         // output=undefined is replaced with {}
+        return res.json(output)
+    }
+    // _decodeResponse(res) {
+    //     /* `res` is a client-side JS Response object */
+    //     if (res.ok) return res.json()
+    //     let error = res.json()
+    //     throw new RequestFailed(res)
+    //
+    //     // let txt = await res.text()
+    //     // return txt ? JSON.parse(txt) : undefined
+    //     // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+    // }
 
     async client(agent, action, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         assert(this.access === 'POST')
         let url = agent.url(this.endpoint)
-        let res = await fetchJson(url, {action, args})
-        if (!res.ok) throw new ServerError(res)             // res = Response object
-        return res.json()
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+        let req = this._encodeRequest(action, args)         // json string
+        let res = await fetchJson(url, req)                 // client-side JS Response object
+        if (res.ok) return res.json()
+        throw new RequestFailed(await res.json())
     }
 
     async server(agent, ctx) {
@@ -82,20 +107,28 @@ export class JsonProtocol extends Protocol {
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
-        let {req, res} = ctx                    // RequestContext
-        let {action, args} = req.body
-        if (!action) res.error("Missing 'action'")
-        if (args === undefined) args = []
-        if (!(args instanceof Array)) args = [args]
-        print(req.body)
+        let out, ex
+        try {
+            let {req, res} = ctx                    // RequestContext
+            let {action, args} = this._decodeRequest(req.body)
+            if (!action) throw new NotFound("missing action name")
 
-        let method = this.actions[action]
-        if (!method) throw new Error(`Unknown action: '${action}'`)
-        let out = method.call(agent, ctx, ...args)
-        if (out instanceof Promise) out = await out
-        return res.json(out || {})
+            if (args === undefined) args = []
+            if (!(args instanceof Array)) args = [args]
+            print(req.body)
+
+            let method = this.actions[action]
+            if (!method) throw new NotFound(`unknown action: '${action}'`)
+
+            out = method.call(agent, ctx, ...args)
+            if (out instanceof Promise) out = await out
+        }
+        catch (e) {ex = e}
+        return this._sendResponse(ctx, out, ex)
     }
 }
+
+export class JsonSimpleProtocol extends JsonProtocol {}
 
 
 export function action(...args) {
@@ -118,10 +151,8 @@ export function action(...args) {
     if (!method) throw new Error(`missing action function`)
 
     if (protocol) method.protocol = protocol
-    if (endpoint) {
-        method.endpoint = endpoint
-        if (!method.name) method.name = endpoint.replace('/', '_')
-    }
+    if (endpoint) method.endpoint = endpoint
+    // if (!method.name) method.name = endpoint.replace('/', '_')
     return method
 }
 

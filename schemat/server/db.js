@@ -267,7 +267,7 @@ export class DB extends Item {
         // (1) find the record and its current database (this one or below) if `data` is missing
         if (search) {
             let db = await this.find(id)
-            if (db === undefined) this.throwNotFound(id)
+            if (db === undefined) this.throwNotFound({id})
             return db.mutate(id, edits, {...opts, search: false})
         }
 

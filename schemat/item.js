@@ -1,13 +1,13 @@
 import {
     print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded,
-    ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented
+    ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented, NotFound
 } from './utils.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson } from './react-utils.js'
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import { GenericProtocol, HtmlProtocol, JsonProtocol, API } from "./protocol.js"
+import { GenericProtocol, HtmlProtocol, JsonProtocol, API, action } from "./protocol.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -58,7 +58,7 @@ export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    static NotFound = class extends BaseError {
+    static NotFound = class extends NotFound {
         static message = "URL path not found"
     }
 
@@ -502,20 +502,8 @@ export class Item {
     }
 
     _initActions() {
-        /* Create web endpoints and action triggers (this.action[...]) in a way compatible with the current environment (cli/srv). */
-        // let actions = Object.entries(this.getActions())
-        // this.action = {}
-        //
-        // if (this.registry.onServer)
-        //     for (let [name, method] of actions)
-        //         this.action[name] = (...args) => method.call(this, {}, ...args)                 // may return a Promise
-        // else
-        //     for (let [name, method] of actions)
-        //         this.action[name] = (...args) => this._forwardAction(name, method, ...args)     // may return a Promise
-
-        this.api = this.constructor.api
-        this.action = this.api.getTriggers(this, this.registry.onServer)
-        // print('this.action__:', this.action__)
+        this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
+        // print('this.action:', this.action)
     }
 
     // static initAPI(actions) {
@@ -938,45 +926,6 @@ export class Item {
 
     /***  Actions (RPC calls)  ***/
 
-    // async _forwardAction(action, method, ...args) {
-    //     /* Client-side RPC that sends a request to the server to execute an action server-side. */
-    //     let endpoint = method.endpoint || 'action'
-    //     let url = this.url(endpoint)
-    //     let res = await fetchJson(url, {action, args})      // TODO: use method.protocol to select I/O format
-    //     if (!res.ok) throw new ServerError(res)             // res = Response object
-    //     return res.json()
-    //     // let txt = await res.text()
-    //     // return txt ? JSON.parse(txt) : undefined
-    //     // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
-    // }
-    //
-    // async POST_action(ctx) {
-    //     /* Web handler for action execution requests (RPC calls).
-    //        The request JSON body should be an object {action, args}; `args` is an array (of arguments),
-    //        or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
-    //      */
-    //     let {req, res} = ctx                    // RequestContext
-    //     let {action, args} = req.body
-    //     if (!action) res.error("Missing 'action'")
-    //     if (args === undefined) args = []
-    //     if (!(args instanceof Array)) args = [args]
-    //     print(req.body)
-    //
-    //     let out = this._executeAction(action, ctx, ...args)
-    //     if (out instanceof Promise) out = await out
-    //     return res.json(out || {})
-    // }
-    //
-    // _executeAction(action, ctx, ...args) {
-    //     /* Server-side execution of an action after a request was received from the web or internal url-call.
-    //        May return a Promise (depending on the action).
-    //      */
-    //     let actions = this.getActions()
-    //     let method  = actions[action]
-    //     if (!method) throw new Error(`Unknown action: '${action}'`)
-    //     return method.call(this, ctx, ...args)
-    // }
-
     async remote(endpoint, data, {args, params} = {}) {
         /* Connect from client to an @endpoint of an internal API using HTTP POST by default;
            send `data` if any; return a response body parsed from JSON to an object.
@@ -1143,7 +1092,6 @@ Item.handlers = {
     item:    new Handler(),
     json:    new Handler({GET: Item.prototype.GET_json}),
     admin:   new Handler(),
-    // action:  new Handler(),
 }
 
 Item.actions = {
@@ -1542,24 +1490,20 @@ Category.handlers = {
     new:     new Handler(),
 }
 
-Category.actions = {
-    ...Item.actions,
-
-    // new_item: action('new/POST', GenericProtocol, async function ({req, res}) {
-    // })
-
-    async new_item({req, res}) {
-        // return item.registry.delete(item)
-        let data = await (new Data).__setstate__(req.body)
-        let item = await this.new(data)
-        await this.registry.insert(item)
-        // await category.registry.commit()
-        res.sendItem(item)
-    }
-}
-
-Category.actions.new_item.endpoint = 'new/POST'
-// Category.actions.new_item.protocol = new Protocol(GenericHandler, ...)
+// Category.actions = {
+//     ...Item.actions,
+//
+//     new_item:   action('new/POST', JsonSimpleProtocol, async function ({req, res})
+//     {
+//         let data = await (new Data).__setstate__(req.body)
+//         let item = await this.new(data)
+//         await this.registry.insert(item)
+//         // await category.registry.commit()
+//         res.sendItem(item)
+//     })
+// }
+//
+// Category.api = new API(Category.actions)
 
 /* action protocols:
    - json_generic
