@@ -44,22 +44,44 @@ export class Protocol {
         this.actions[name] = method
     }
 
+    _singleActionName() {
+        /* Check there's exactly one action and return its name. */
+        let actions = Object.keys(this.actions)
+        assert(actions.length === 1)
+        return actions[0]
+    }
+    _singleActionMethod() {
+        /* Check there's exactly one action and return its function. */
+        let methods = Object.values(this.actions)
+        assert(methods.length === 1)
+        return methods[0]
+    }
+
     // the methods below may return a Promise or be declared as async in subclasses
     client(agent, action, ...args)  { throw new Error(`internal client-side call not allowed for this protocol`) }
     server(agent, ctx)              { throw new Error(`missing server implementation`) }
 }
 
-export class GenericProtocol extends Protocol {
-    /* General-purpose HTTP protocol. Does not interpret input/output data in any way. The action function is free to use
-       `req` and `res` objects as it sees fit. This protocol only accepts one action per endpoint.
+export class HttpProtocol extends Protocol {
+    /* General-purpose HTTP protocol. Does not interpret input/output data in any way; the action function
+       uses `req` and `res` objects directly, and it is also responsible for error handling.
+       The client() returns response body as a raw string. This protocol only accepts one action per endpoint.
      */
+    _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
+
     async client(agent, action, ...args) {
+        let url = agent.url(this.endpoint)
+        let res = await fetch(url)                  // client-side JS Response object
+        if (res.ok) return res.text()
+        return this._decodeError(res)
     }
-    server(agent, ctx) {
+    async server(agent, ctx) {
+        let method = this._singleActionMethod()
+        return method.call(agent, ctx)
     }
 }
 
-export class HtmlProtocol extends GenericProtocol {
+export class HtmlProtocol extends HttpProtocol {
     /* A protocol that sends web pages in response to browser-invoked web requests. No client() for internal calls. */
 }
 
@@ -84,18 +106,19 @@ export class JsonProtocol extends Protocol {
         output = (output !== undefined && output) || {}         // output=undefined is replaced with {}
         return res.json(output)
     }
+    async _decodeError(res) {
+        let error = await res.json()
+        throw new RequestFailed({...error, code: res.status})
+    }
 
     async client(agent, action, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        assert(this.access === 'POST')
+        // assert(this.access === 'POST')
         let url = agent.url(this.endpoint)
         let req = this._encodeRequest(action, args)         // json string
         let res = await fetchJson(url, req)                 // client-side JS Response object
         if (res.ok) return res.json()
-        throw new RequestFailed(await res.json())
-        // let txt = await res.text()
-        // return txt ? JSON.parse(txt) : undefined
-        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
+        return this._decodeError(res)
     }
 
     async server(agent, ctx) {
@@ -128,11 +151,7 @@ export class JsonSimpleProtocol extends JsonProtocol {
     /* Single action accepting a single argument. */
 
     _encodeRequest(action, args)    { return args[0] }
-    _decodeRequest(body)            {
-        let actions = Object.keys(this.actions)
-        assert(actions.length === 1)
-        return {action: actions[0], args: [body]}
-    }
+    _decodeRequest(body)            { return {action: this._singleActionName(), args: [body]} }
 }
 
 

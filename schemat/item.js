@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import { JsonSimpleProtocol, API, action } from "./protocol.js"
+import { HttpProtocol, JsonSimpleProtocol, API, action } from "./protocol.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -1173,7 +1173,7 @@ export class Category extends Item {
     }
 
     async getModule() {
-        /* Parse the source code of this item (from getCode()) and return the module's namespace object.
+        /* Parse the source code of this item (from getSource()) and return the module's namespace object.
            Use this.getPath() as the module's path for the linking of nested imports in parseModule():
            this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
          */
@@ -1194,7 +1194,7 @@ export class Category extends Item {
         try {
             return await (onClient ?
                             this.registry.import(modulePath) :
-                            site.parseModule(this.getCode(), modulePath)
+                            site.parseModule(this.getSource(), modulePath)
             )
         }
         catch (ex) {
@@ -1220,7 +1220,7 @@ export class Category extends Item {
         return splitLast(this.get('class_path') || '', ':')
     }
 
-    getCode() {
+    getSource() {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
@@ -1331,7 +1331,7 @@ export class Category extends Item {
     _checkPath(request) {
         /* Check if the request's path is compatible with the default path of this item. Throw an exception if not. */
         let path  = request.pathFull
-        let dpath = this.getPath()              // `path` must be equal the default path of this item
+        let dpath = this.getPath()              // `path` must be equal to the default path of this item
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
@@ -1340,25 +1340,25 @@ export class Category extends Item {
     //     this._checkPath(request)
     //     return this.getModule()
     // }
-    GET_import({request, res}) {
-        /* Send JS source code of this category with a proper MIME type configured. */
-        this._checkPath(request)
-        res.type('js')
-        res.send(this.getCode())
-    }
 
-    async GET_scan({res}) {
-        /* Retrieve all children of this category and send to client as a JSON.
-           TODO: set a size limit & offset (pagination).
-           TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-         */
-        let items = []
-        for await (const item of this.registry.scan(this)) {
-            await item.load()
-            items.push(item)
-        }
-        res.sendItems(items)
-    }
+    // GET_import({request, res}) {
+    //     /* Send JS source code of this category with a proper MIME type configured. */
+    //     this._checkPath(request)
+    //     res.type('js')
+    //     res.send(this.getSource())
+    // }
+    // async GET_scan({res}) {
+    //     /* Retrieve all children of this category and send to client as a JSON.
+    //        TODO: set a size limit & offset (pagination).
+    //        TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+    //      */
+    //     let items = []
+    //     for await (const item of this.registry.scan(this)) {
+    //         await item.load()
+    //         items.push(item)
+    //     }
+    //     res.sendItems(items)
+    // }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
@@ -1453,15 +1453,37 @@ export class Category extends Item {
     // }
 }
 
-Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-Category.handlers = {
-    import:  new Handler({GET: Category.prototype.GET_import}),
-    scan:    new Handler({GET: Category.prototype.GET_scan}),
-}
+// Category.handlers = {
+//     import:  new Handler({GET: Category.prototype.GET_import}),
+//     scan:    new Handler({GET: Category.prototype.GET_scan}),
+// }
 
 Category.actions = {
     ...Item.actions,
+
+    import:     action('import/GET', HttpProtocol, function ({request, res})
+    {
+        /* Send JS source code of this category with a proper MIME type to allow remote import. */
+        this._checkPath(request)
+        res.type('js')
+        res.send(this.getSource())
+    }),
+
+    scan:       action('scan/GET', HttpProtocol, async function ({res})
+    {
+        /* Retrieve all children of this category and send to client as a JSON array.
+           TODO: set a size limit & offset (pagination).
+           TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+         */
+        let items = []
+        for await (const item of this.registry.scan(this)) {
+            await item.load()
+            items.push(item)
+        }
+        res.sendItems(items)
+    }),
 
     new_item:   action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
     {
@@ -1472,7 +1494,7 @@ Category.actions = {
         // await category.registry.commit()
         return item.encodeSelf()
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    })
+    }),
 }
 
 Category.api = new API(Category.actions)
