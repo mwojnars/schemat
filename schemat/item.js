@@ -1335,30 +1335,6 @@ export class Category extends Item {
         if (path !== dpath)
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
-    // CALL_import({request}) {
-    //     /* Return this category's module object in response to an internal call. */
-    //     this._checkPath(request)
-    //     return this.getModule()
-    // }
-
-    // GET_import({request, res}) {
-    //     /* Send JS source code of this category with a proper MIME type configured. */
-    //     this._checkPath(request)
-    //     res.type('js')
-    //     res.send(this.getSource())
-    // }
-    // async GET_scan({res}) {
-    //     /* Retrieve all children of this category and send to client as a JSON.
-    //        TODO: set a size limit & offset (pagination).
-    //        TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-    //      */
-    //     let items = []
-    //     for await (const item of this.registry.scan(this)) {
-    //         await item.load()
-    //         items.push(item)
-    //     }
-    //     res.sendItems(items)
-    // }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
@@ -1455,15 +1431,10 @@ export class Category extends Item {
 
 Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-// Category.handlers = {
-//     import:  new Handler({GET: Category.prototype.GET_import}),
-//     scan:    new Handler({GET: Category.prototype.GET_scan}),
-// }
-
 Category.actions = {
     ...Item.actions,
 
-    import:     action('import/GET', HttpProtocol, function ({request, res})
+    import: action('import/GET', HttpProtocol, function ({request, res})
     {
         /* Send JS source code of this category with a proper MIME type to allow remote import. */
         this._checkPath(request)
@@ -1471,7 +1442,7 @@ Category.actions = {
         res.send(this.getSource())
     }),
 
-    scan:       action('scan/GET', HttpProtocol, async function ({res})
+    scan: action('scan/GET', HttpProtocol, async function ({res})
     {
         /* Retrieve all children of this category and send to client as a JSON array.
            TODO: set a size limit & offset (pagination).
@@ -1485,7 +1456,7 @@ Category.actions = {
         res.sendItems(items)
     }),
 
-    new_item:   action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
+    new_item: action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1500,11 +1471,6 @@ Category.actions = {
 Category.api = new API(Category.actions)
 
 /* action protocols:
-   - json_generic
-     - input:   {action, args}
-     - output:  {result, error: {code, message, exception}}
-   - json_args
-   - json_arg
    ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
 */
 
