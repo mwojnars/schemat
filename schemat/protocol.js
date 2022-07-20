@@ -74,23 +74,16 @@ export class JsonProtocol extends Protocol {
     _encodeRequest(action, args)    { return {action, args} }
     _decodeRequest(body)            { let {action, args} = body; return {action, args} }
 
-    _sendResponse({res}, output, error) {
+    _sendResponse({res}, output, error, defaultCode = 500) {
         /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
            HTTP status code if an exception was caught. */
-        if (error) return res.status(error.code).send({error})
+        if (error) {
+            res.status(error.code || defaultCode).send({error})
+            throw error
+        }
         output = (output !== undefined && output) || {}         // output=undefined is replaced with {}
         return res.json(output)
     }
-    // _decodeResponse(res) {
-    //     /* `res` is a client-side JS Response object */
-    //     if (res.ok) return res.json()
-    //     let error = res.json()
-    //     throw new RequestFailed(res)
-    //
-    //     // let txt = await res.text()
-    //     // return txt ? JSON.parse(txt) : undefined
-    //     // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
-    // }
 
     async client(agent, action, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
@@ -100,6 +93,9 @@ export class JsonProtocol extends Protocol {
         let res = await fetchJson(url, req)                 // client-side JS Response object
         if (res.ok) return res.json()
         throw new RequestFailed(await res.json())
+        // let txt = await res.text()
+        // return txt ? JSON.parse(txt) : undefined
+        // throw new Error(`server error: ${res.status} ${res.statusText}, response ${msg}`)
     }
 
     async server(agent, ctx) {
@@ -128,7 +124,16 @@ export class JsonProtocol extends Protocol {
     }
 }
 
-export class JsonSimpleProtocol extends JsonProtocol {}
+export class JsonSimpleProtocol extends JsonProtocol {
+    /* Single action accepting a single argument. */
+
+    _encodeRequest(action, args)    { return args[0] }
+    _decodeRequest(body)            {
+        let actions = Object.keys(this.actions)
+        assert(actions.length === 1)
+        return {action: actions[0], args: [body]}
+    }
+}
 
 
 export function action(...args) {

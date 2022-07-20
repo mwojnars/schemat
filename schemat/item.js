@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import { GenericProtocol, HtmlProtocol, JsonProtocol, API, action } from "./protocol.js"
+import { JsonSimpleProtocol, API, action } from "./protocol.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -1375,19 +1375,19 @@ export class Category extends Item {
         }
         res.sendItems(items)
     }
-    async POST_new({req, res}) {
-        /* Web handler to create a new item in this category based on request data. */
-        // print('request body:  ', req.body)
-        // req.body is an object representing state of a Data instance, decoded from JSON by middleware
-        let data = await (new Data).__setstate__(req.body)
-        let item = await this.new(data)
-        await this.registry.insert(item)
-        // await this.registry.commit()
-        res.sendItem(item)
-        // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    }
-    async remote_new(data)  { return this.remote('new', data) }
-    // async remote_new(data)  { return this.action.new_item(data) }
+    // async POST_new({req, res}) {
+    //     /* Web handler to create a new item in this category based on request data. */
+    //     // print('request body:  ', req.body)
+    //     // req.body is an object representing state of a Data instance, decoded from JSON by middleware
+    //     let data = await (new Data).__setstate__(req.body)
+    //     let item = await this.new(data)
+    //     await this.registry.insert(item)
+    //     // await this.registry.commit()
+    //     res.sendItem(item)
+    //     // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+    // }
+    // async remote_new(data)  { return this.remote('new', data) }
+    async remote_new(data)  { return this.action.new_item(data) }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
@@ -1487,23 +1487,24 @@ Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAs
 Category.handlers = {
     import:  new Handler({GET: Category.prototype.GET_import}),
     scan:    new Handler({GET: Category.prototype.GET_scan}),
-    new:     new Handler(),
+    // new:     new Handler(),
 }
 
-// Category.actions = {
-//     ...Item.actions,
-//
-//     new_item:   action('new/POST', JsonSimpleProtocol, async function ({req, res})
-//     {
-//         let data = await (new Data).__setstate__(req.body)
-//         let item = await this.new(data)
-//         await this.registry.insert(item)
-//         // await category.registry.commit()
-//         res.sendItem(item)
-//     })
-// }
-//
-// Category.api = new API(Category.actions)
+Category.actions = {
+    ...Item.actions,
+
+    new_item:   action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
+    {
+        let data = await (new Data).__setstate__(dataState)   // (req.body)
+        let item = await this.new(data)
+        await this.registry.insert(item)
+        // await category.registry.commit()
+        return item.encodeSelf()
+        // ctx.res.sendItem(item)
+    })
+}
+
+Category.api = new API(Category.actions)
 
 /* action protocols:
    - json_generic
