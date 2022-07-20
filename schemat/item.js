@@ -1375,19 +1375,7 @@ export class Category extends Item {
         }
         res.sendItems(items)
     }
-    // async POST_new({req, res}) {
-    //     /* Web handler to create a new item in this category based on request data. */
-    //     // print('request body:  ', req.body)
-    //     // req.body is an object representing state of a Data instance, decoded from JSON by middleware
-    //     let data = await (new Data).__setstate__(req.body)
-    //     let item = await this.new(data)
-    //     await this.registry.insert(item)
-    //     // await this.registry.commit()
-    //     res.sendItem(item)
-    //     // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    // }
-    // async remote_new(data)  { return this.remote('new', data) }
-    async remote_new(data)  { return this.action.new_item(data) }
+    // async remote_new(data)  { return this.action.new_item(data) }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items. */
@@ -1429,7 +1417,7 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await this.remote_new(data.__getstate__())      // TODO: validate & encode `data` through category's schema
+            let record = await this.action.new_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
@@ -1487,7 +1475,6 @@ Category.setCaching('getModule', 'getCode', 'getFields', 'getItemSchema', 'getAs
 Category.handlers = {
     import:  new Handler({GET: Category.prototype.GET_import}),
     scan:    new Handler({GET: Category.prototype.GET_scan}),
-    // new:     new Handler(),
 }
 
 Category.actions = {
@@ -1495,12 +1482,13 @@ Category.actions = {
 
     new_item:   action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
     {
-        let data = await (new Data).__setstate__(dataState)   // (req.body)
+        /* Create a new item in this category based on request data. */
+        let data = await (new Data).__setstate__(dataState)
         let item = await this.new(data)
         await this.registry.insert(item)
         // await category.registry.commit()
         return item.encodeSelf()
-        // ctx.res.sendItem(item)
+        // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     })
 }
 
