@@ -1,5 +1,4 @@
-import {fetchJson} from "./react-utils.js";
-import {print, assert, ServerError, NotFound, RequestFailed} from "./utils.js";
+import { print, assert, NotFound, RequestFailed } from "./utils.js"
 
 
 export class Agent {
@@ -40,7 +39,7 @@ export class Protocol {
         if (!this.constructor.multipleActions && Object.keys(this.actions).length)
             throw new Error(`cannot add '${name}' action, multiple actions not allowed for this protocol`)
         if (protocolClass !== this.constructor)
-            throw new Error(`inconsistent protocol declared for '${name}' and another action on the same endpoint`)
+            throw new Error(`inconsistent protocol declared for '${name}' and another action on the same endpoint ('${this.endpoint}')`)
         this.actions[name] = method
     }
 
@@ -81,11 +80,10 @@ export class HttpProtocol extends Protocol {
     }
 }
 
-export class HtmlProtocol extends HttpProtocol {
-    /* A protocol that sends web pages in response to browser-invoked web requests. No client() for internal calls. */
-}
 
-export class JsonProtocol extends Protocol {
+/*************************************************************************************************/
+
+export class JsonProtocol extends HttpProtocol {
     /* JSON communication over HTTP POST. The server interprets req.body as a JSON string of the form {action, args}
        and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
        as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
@@ -94,7 +92,20 @@ export class JsonProtocol extends Protocol {
     static multipleActions = true
 
     _encodeRequest(action, args)    { return {action, args} }
-    _decodeRequest(body)            { let {action, args} = body; return {action, args} }
+    _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
+
+    async _fetch(url, data, method = 'POST') {
+        /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
+           For GET requests, `data` must be undefined (body not allowed).
+         */
+        let params = {method, headers: {}}
+        if (data !== undefined) {
+            if (method === 'GET') throw new Error(`HTTP GET not allowed to send JSON data in body, url=${url}`)
+            params.body = JSON.stringify(data)
+            // params.headers['Content-Type'] = 'application/json; charset=utf-8'
+        }
+        return fetch(url, params)
+    }
 
     _sendResponse({res}, output, error, defaultCode = 500) {
         /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
@@ -113,10 +124,9 @@ export class JsonProtocol extends Protocol {
 
     async client(agent, action, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        // assert(this.access === 'POST')
-        let url = agent.url(this.endpoint)
-        let req = this._encodeRequest(action, args)         // json string
-        let res = await fetchJson(url, req)                 // client-side JS Response object
+        let url  = agent.url(this.endpoint)
+        let data = this._encodeRequest(action, args)            // json string
+        let res  = await this._fetch(url, data, this.access)    // client-side JS Response object
         if (res.ok) return res.json()
         return this._decodeError(res)
     }
@@ -128,8 +138,9 @@ export class JsonProtocol extends Protocol {
          */
         let out, ex
         try {
-            let {req, res} = ctx                    // RequestContext
-            let {action, args} = this._decodeRequest(req.body)
+            let {req} = ctx     // RequestContext
+            let body  = req.body ? JSON.parse(req.body) : undefined
+            let {action, args} = this._decodeRequest(body)
             if (!action) throw new NotFound("missing action name")
 
             if (args === undefined) args = []
@@ -148,12 +159,23 @@ export class JsonProtocol extends Protocol {
 }
 
 export class JsonSimpleProtocol extends JsonProtocol {
-    /* Single action accepting a single argument. */
+    /* Single action accepting one argument, or none. */
 
     _encodeRequest(action, args)    { return args[0] }
-    _decodeRequest(body)            { return {action: this._singleActionName(), args: [body]} }
+    _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
 }
 
+/**********************************************************************************************************************/
+
+export class HtmlPage extends Protocol {
+    /* Sends an HTML page in response to a browser-invoked web request. Internal calls not allowed. */
+}
+
+export class ReactPage extends HtmlPage {
+    /* Generates a React-based HTML page. */
+}
+
+/**********************************************************************************************************************/
 
 export function action(...args) {
     /* Takes an RPC action function (method) and decorates it (in place) with parameters:
@@ -191,11 +213,10 @@ export class API {
         this.defaultEndpoint = defaultEndpoint
         for (let [action, method] of Object.entries(actions))
             this.addAction(action, method)
-        print('this.endpoints:', this.endpoints)
     }
     addAction(action, method) {
         let endpoint = method.endpoint || this.defaultEndpoint
-        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlProtocol) || JsonProtocol
+        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || JsonProtocol
         let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol(endpoint)
         handler.addAction(action, method, protocol)
     }

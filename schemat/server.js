@@ -3,8 +3,9 @@
 
 import os from 'os'
 import cluster from 'cluster'
-// import http from 'http'
 import express from 'express'
+import bodyParser from 'body-parser'
+// import http from 'http'
 
 import {assert, print, sleep} from './utils.js'
 import {Session} from './registry.js'
@@ -95,8 +96,9 @@ export class Server {
         //  - multer:      https://www.npmjs.com/package/multer and https://expressjs.com/en/5x/api.html#req.body
         //  - fileupload:  https://www.npmjs.com/package/express-fileupload & https://stackoverflow.com/a/50243907/1202674 (newer one, possibly easier)
 
-        app.use(express.json())                                 // for parsing application/json
+        // app.use(express.json())                                 // for parsing application/json to req.body object
         app.use(express.urlencoded({extended: false}))          // for parsing application/x-www-form-urlencoded
+        app.use(bodyParser.text({type: '*/*', limit: '10MB'}))  // for setting req.body string from plain-text body (if not json MIME-type)
 
         app.all('*', (req, res) => this.handle(req, res))
         // web.get('*', async (req, res) => {

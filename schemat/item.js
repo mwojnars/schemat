@@ -3,7 +3,7 @@ import {
     ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented, NotFound
 } from './utils.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
-         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML, fetchJson } from './react-utils.js'
+         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
@@ -506,12 +506,15 @@ export class Item {
         // print('this.action:', this.action)
     }
 
-    // static initAPI(actions) {
-    //     /* Collect a dictionary of all web endpoints exposed by this item as declared by its actions.
-    //        Impute action configurations and create action triggers (this.action.X()).
-    //      */
-    //     this.api = new API(actions)
-    // }
+    static initAPI(actions) {
+        /* Collect a dictionary of all web endpoints exposed by this item as declared by its actions.
+           Impute action configurations and create action triggers (this.action.X()).
+         */
+        let name = this.name
+        this.api = new API(actions)
+        print(`${name} actions:`, actions)
+        print(`${name}.api.endpoints:`, this.api.endpoints)
+    }
 
     init() {}
         /* Optional category-specific initialization after this.data is loaded.
@@ -1083,13 +1086,16 @@ Item.actions = {
     // When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
     // in the context of their item, like if they were regular methods of the Item (sub)class.
     // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
-    // of arguments. In a special case when an action is called directly on the server through
-    // item.action.XXX(), `ctx` is {}, which can be a valid argument for some actions - supporting this type
-    // of calls is NOT mandatory, though.
+    // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
+    // `ctx` is {}, which can be a valid argument for some actions - supporting this type
+    // of calls is NOT mandatory, though. By default, an action is linked to the @action (JsonProtocol) endpoint,
+    // if not declared otherwise.
 
-    // decorators (???):
-    // - endpoint = endpoint name + connection mode (GET/POST/CALL)
-    // - RPC protocol (I/O), as a class not instance
+    json: action('json/GET', JsonSimpleProtocol, function ({res})
+    {
+        res.sendItem(this)
+    }),
+
     delete_self(ctx)   { return this.registry.delete(this) },
 
     insert_field(ctx, path, pos, entry) {
@@ -1112,9 +1118,7 @@ Item.actions = {
     },
 }
 
-Item.api = new API(Item.actions)
-// Item.initAPI(Item.actions)
-
+Item.initAPI(Item.actions)
 
 
 /**********************************************************************************************************************/
@@ -1434,15 +1438,15 @@ Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'get
 Category.actions = {
     ...Item.actions,
 
-    import: action('import/GET', HttpProtocol, function ({request, res})
+    get_source: action('import/GET', HttpProtocol, function ({request, res})
     {
-        /* Send JS source code of this category with a proper MIME type to allow remote import. */
+        /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
         this._checkPath(request)
         res.type('js')
         res.send(this.getSource())
     }),
 
-    scan: action('scan/GET', HttpProtocol, async function ({res})
+    get_items: action('scan/GET', HttpProtocol, async function ({res})
     {
         /* Retrieve all children of this category and send to client as a JSON array.
            TODO: set a size limit & offset (pagination).
@@ -1468,7 +1472,7 @@ Category.actions = {
     }),
 }
 
-Category.api = new API(Category.actions)
+Category.initAPI(Category.actions)
 
 /* action protocols:
    ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?

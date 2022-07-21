@@ -332,24 +332,6 @@ export const ItemLoadingHOC = (classComponent, config = {raise: false}) =>
         }
     }
 
-/*************************************************************************************************/
-
-export async function fetchJson(url, data, params) {
-    /* Stringify and send the `data` object as JSON through POST (if present), or request a `url` through GET.
-       Return the received JSON response parsed into an object.
-     */
-    params = params ? {...params} : {}
-    if (!params.method) params.method = 'POST'
-    if (!params.headers) params.headers = {}
-    if (data !== undefined) {
-        params.body = JSON.stringify(data)
-        if (!params.headers['Content-Type']) params.headers['Content-Type'] = 'application/json; charset=utf-8'
-    }
-    return fetch(url, params)
-    // let response = await fetch(url, params)
-    // return response.json()
-}
-
 
 /**********************************************************************************************************************
  **
