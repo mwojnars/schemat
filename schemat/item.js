@@ -999,7 +999,6 @@ export class Item {
 
     CALL_default()      { return this }         // internal url-calls return the target item (an object) by default
     CALL_item()         { return this }
-    GET_json({res})     { res.sendItem(this) }
 
     VIEW_default()      { return this.VIEW_admin() }
     VIEW_admin()        { return this.page_admin() }
@@ -1077,7 +1076,6 @@ Item.setCaching('getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'rende
 Item.handlers = {
     default: new Handler(),
     item:    new Handler(),
-    json:    new Handler({GET: Item.prototype.GET_json}),
     admin:   new Handler(),
 }
 
@@ -1093,7 +1091,7 @@ Item.actions = {
 
     json: action('json/GET', JsonSimpleProtocol, function ({res})
     {
-        res.sendItem(this)
+        return this.encodeSelf()
     }),
 
     delete_self(ctx)   { return this.registry.delete(this) },
