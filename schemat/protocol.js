@@ -71,8 +71,8 @@ export class HttpProtocol extends Protocol {
     async client(agent, action, ...args) {
         let url = agent.url(this.endpoint)
         let res = await fetch(url)                  // client-side JS Response object
-        if (res.ok) return res.text()
-        return this._decodeError(res)
+        if (!res.ok) return this._decodeError(res)
+        return res.text()
     }
     async server(agent, ctx) {
         let method = this._singleActionMethod()
@@ -96,13 +96,12 @@ export class JsonProtocol extends HttpProtocol {
 
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
-           For GET requests, `data` must be undefined (body not allowed).
+           For GET requests, `data` must be missing (undefined), as we don't allow body in GET.
          */
         let params = {method, headers: {}}
         if (data !== undefined) {
-            if (method === 'GET') throw new Error(`HTTP GET not allowed to send JSON data in body, url=${url}`)
+            if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
             params.body = JSON.stringify(data)
-            // params.headers['Content-Type'] = 'application/json; charset=utf-8'
         }
         return fetch(url, params)
     }
@@ -110,12 +109,14 @@ export class JsonProtocol extends HttpProtocol {
     _sendResponse({res}, output, error, defaultCode = 500) {
         /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
            HTTP status code if an exception was caught. */
+        res.type('json')
         if (error) {
-            res.status(error.code || defaultCode).send({error})
+            res.status(error.code || defaultCode)
+            res.send({error})
             throw error
         }
-        output = (output !== undefined && output) || {}         // output=undefined is replaced with {}
-        return res.json(output)
+        if (output === undefined) res.end()             // missing output --> empty response body
+        res.json(output)
     }
     async _decodeError(res) {
         let error = await res.json()
@@ -127,8 +128,9 @@ export class JsonProtocol extends HttpProtocol {
         let url  = agent.url(this.endpoint)
         let data = this._encodeRequest(action, args)            // json string
         let res  = await this._fetch(url, data, this.access)    // client-side JS Response object
-        if (res.ok) return res.json()
-        return this._decodeError(res)
+        if (!res.ok) return this._decodeError(res)
+        let out  = await res.text()                             // json string or empty
+        if (out) return JSON.parse(out)
     }
 
     async server(agent, ctx) {
