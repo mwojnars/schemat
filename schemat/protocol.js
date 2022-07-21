@@ -25,8 +25,9 @@ export class Protocol {
 
     actions = {}                        // {name: method}, collection of all actions handled by this protocol instance
 
-    constructor(endpoint) {
-        assert(endpoint)
+    constructor(endpoint = undefined) {
+        // assert(endpoint)
+        if (endpoint === undefined) return
         let parts = endpoint.split('/')
         if (parts.length !== 2) throw new Error(`incorrect endpoint: ${endpoint}`)
         this.endpoint = parts[0]
@@ -57,8 +58,15 @@ export class Protocol {
     }
 
     // the methods below may return a Promise or be declared as async in subclasses
-    client(agent, action, ...args)  { throw new Error(`internal client-side call not allowed for this protocol`) }
+    client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
     server(agent, ctx)              { throw new Error(`missing server implementation`) }
+}
+
+export class InternalProtocol extends Protocol {
+    /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
+       but executed server-side (exclusively).
+     */
+    async server(agent, ctx)    { return this._singleActionMethod().call(agent, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -74,10 +82,7 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    async server(agent, ctx) {
-        let method = this._singleActionMethod()
-        return method.call(agent, ctx)
-    }
+    async server(agent, ctx)    { return this._singleActionMethod().call(agent, ctx) }
 }
 
 

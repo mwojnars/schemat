@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import { HttpProtocol, JsonSimpleProtocol, API, action } from "./protocol.js"
+import {HttpProtocol, JsonSimpleProtocol, API, action, JsonProtocol, InternalProtocol} from "./protocol.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -997,8 +997,8 @@ export class Item {
 
     /***  Handlers & Components  ***/
 
-    CALL_default()      { return this }         // internal url-calls return the target item (an object) by default
-    CALL_item()         { return this }
+    // CALL_default()      { return this }         // internal url-calls return the target item (an object) by default
+    // CALL_item()         { return this }
 
     VIEW_default()      { return this.VIEW_admin() }
     VIEW_admin()        { return this.page_admin() }
@@ -1075,7 +1075,7 @@ Item.setCaching('getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'rende
 
 Item.handlers = {
     default: new Handler(),
-    item:    new Handler(),
+    // item:    new Handler(),
     admin:   new Handler(),
 }
 
@@ -1089,7 +1089,10 @@ Item.actions = {
     // of calls is NOT mandatory, though. By default, an action is linked to the @action (JsonProtocol) endpoint,
     // if not declared otherwise.
 
-    json: action('json/GET', JsonSimpleProtocol, function ({res})
+    call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
+    call_default:   action('default/CALL', InternalProtocol, function() { return this }),
+
+    get_json:       action('json/GET', JsonSimpleProtocol, function({res})
     {
         return this.encodeSelf()
     }),
@@ -1117,6 +1120,43 @@ Item.actions = {
 }
 
 Item.initAPI(Item.actions)
+
+// Item.api = new API({http: {
+//     // endpoints...
+//     json_GET: new JsonSimpleProtocol({
+//
+//         json({res}) { return this.encodeSelf() }
+//
+//     }),
+//
+//     action_POST: new JsonProtocol({
+//
+//         delete_self(ctx)   { return this.registry.delete(this) },
+//
+//         insert_field(ctx, path, pos, entry) {
+//             if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+//             this.data.insert(path, pos, entry)
+//             return this.registry.update(this)
+//         },
+//
+//         delete_field(ctx, path) {
+//             this.data.delete(path)
+//             return this.registry.update(this)
+//         },
+//
+//         update_field(ctx, path, entry) {
+//             if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+//             this.data.update(path, entry)
+//             return this.registry.update(this)
+//         },
+//
+//         move_field(ctx, path, pos1, pos2) {
+//             this.data.move(path, pos1, pos2)
+//             return this.registry.update(this)
+//         },
+//
+//     }),
+// }})
 
 
 /**********************************************************************************************************************/

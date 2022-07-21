@@ -1,6 +1,6 @@
 import { print, assert, splitLast, T } from './utils.js'
 import { ItemsMap } from './data.js'
-import {Category, Item, Request} from './item.js'
+import {Category, Handler, Item, Request} from './item.js'
 
 /**********************************************************************************************************************/
 
@@ -348,7 +348,10 @@ export class File extends Item {
 }
 
 File.setCaching('read')
-
+File.handlers = {
+    file: new Handler(),
+    text: new Handler(),
+}
 
 export class FileLocal extends File {
     async init()   { if (this.registry.onServer) this._fs = await import('fs') }
