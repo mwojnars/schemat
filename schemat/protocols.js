@@ -1,13 +1,44 @@
-import { print, assert, NotFound, RequestFailed } from "./utils.js"
+import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
 
 
 export class Agent {
-    /* An item or any another object that exposes an API through endpoints, actions & protocols. */
+    /* Base class for objects that implement client-server communication (API) for external and internal calls.
 
-    static api          // instance of the API class
+       In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
+       programming interface (action.*) in each of these environments, but always executing the actions on the server:
+       actions triggered on a client get redirected to the server, execute there, and the result is communicated
+       back to the client.
+
+       In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
+       sent directly to the server. A client-side instance of the agent is not needed then.
+
+       The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
+     */
+
+    api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
+    action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
+
+    constructor(api = null) {
+        if (api) this.setAgentAPI(api)
+    }
+
+    _getAgentEnvironment() {
+        /* Override in subclasses to return the name of the current environment: "client" or "server". */
+        throw new Error("not implemented")
+    }
+    _getAgentParents() {
+        /* Override in subclasses to return a list of agents this one directly inherits from. */
+        throw new Error("not implemented")
+    }
+
+    setAgentAPI(api) {
+        /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
+        if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
+        this.api = api
+        this.action = this.api.getTriggers(this)
+    }
 
     url(endpoint) {}
-    execute(action, ctx, ...args) {}
 }
 
 
@@ -25,9 +56,19 @@ export class Protocol {
 
     actions = {}                        // {name: method}, collection of all actions handled by this protocol instance
 
-    constructor(endpoint = undefined) {
-        // assert(endpoint)
-        if (endpoint === undefined) return
+    // constructor(endpoint = undefined) {
+    //     if (endpoint === undefined) return
+    //     this.setEndpoint(endpoint)
+    // }
+
+    constructor(actions) {
+        if (typeof actions === 'function')
+            actions = [actions]
+        if (T.isArray(actions)) {}
+    }
+
+    setEndpoint(endpoint) {
+        assert(endpoint)
         let parts = endpoint.split('/')
         if (parts.length !== 2) throw new Error(`incorrect endpoint: ${endpoint}`)
         this.endpoint = parts[0]
@@ -50,11 +91,11 @@ export class Protocol {
         assert(actions.length === 1)
         return actions[0]
     }
-    _singleActionMethod() {
+    _singleActionCall(agent, ctx) {
         /* Check there's exactly one action and return its function. */
         let methods = Object.values(this.actions)
         assert(methods.length === 1)
-        return methods[0]
+        return methods[0].call(agent, ctx)
     }
 
     // the methods below may return a Promise or be declared as async in subclasses
@@ -66,7 +107,7 @@ export class InternalProtocol extends Protocol {
     /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
        but executed server-side (exclusively).
      */
-    async server(agent, ctx)    { return this._singleActionMethod().call(agent, ctx) }
+    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -82,9 +123,21 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    async server(agent, ctx)    { return this._singleActionMethod().call(agent, ctx) }
+    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
 }
 
+
+/**********************************************************************************************************************/
+
+export class HtmlPage extends HttpProtocol {
+    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
+       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+     */
+}
+
+export class ReactPage extends HtmlPage {
+    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+}
 
 /*************************************************************************************************/
 
@@ -174,16 +227,6 @@ export class JsonSimpleProtocol extends JsonProtocol {
 
 /**********************************************************************************************************************/
 
-export class HtmlPage extends Protocol {
-    /* Sends an HTML page in response to a browser-invoked web request. Internal calls not allowed. */
-}
-
-export class ReactPage extends HtmlPage {
-    /* Generates a React-based HTML page. */
-}
-
-/**********************************************************************************************************************/
-
 export function action(...args) {
     /* Takes an RPC action function (method) and decorates it (in place) with parameters:
        - method.endpoint -- endpoint name with access mode, as a string of the form "name/MODE" (MODE is GET/POST/CALL)
@@ -214,17 +257,32 @@ export function action(...args) {
 export class API {
     /* Collection of remote actions exposed on particular web/RPC/API endpoints, each endpoint operating a particular protocol. */
 
+    environment         // 'client' or 'server'
     endpoints = {}      // {name/MODE: protocol_instance}, where MODE is an access method (GET/POST/CALL)
 
-    constructor(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
-        this.defaultEndpoint = defaultEndpoint
+    // constructor(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
+    //     this.defaultEndpoint = defaultEndpoint
+    //     for (let [action, method] of Object.entries(actions))
+    //         this.addAction(action, method)
+    // }
+
+    // constructor(endpoints, environment) {
+    //     this.endpoints = endpoints
+    //     this.environment = environment
+    // }
+
+    static fromActions(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
+        let api = new API()
+        api.defaultEndpoint = defaultEndpoint
         for (let [action, method] of Object.entries(actions))
-            this.addAction(action, method)
+            api.addAction(action, method)
+        return api
     }
     addAction(action, method) {
         let endpoint = method.endpoint || this.defaultEndpoint
         let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || JsonProtocol
-        let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol(endpoint)
+        let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol()
+        handler.setEndpoint(endpoint)
         handler.addAction(action, method, protocol)
     }
 
@@ -233,6 +291,7 @@ export class API {
            in a way compatible with the current environment (cli/srv).
          */
         let triggers = {}
+        if (typeof onServer === 'string') onServer = (onServer === 'server')
 
         for (let handler of Object.values(this.endpoints))
             for (let [action, method] of Object.entries(handler.actions)) {
@@ -244,4 +303,12 @@ export class API {
 
         return triggers
     }
+
+    findHandler(endpoint, httpMethod) {
+        return this.endpoints[`${endpoint}/${httpMethod}`]
+    }
 }
+
+/* action protocols:
+   ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
+*/

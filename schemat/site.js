@@ -1,6 +1,7 @@
 import { print, assert, splitLast, T } from './utils.js'
 import { ItemsMap } from './data.js'
-import {Category, Handler, Item, Request} from './item.js'
+import { Category, Handler, Item, Request } from './item.js'
+import { action, HttpProtocol, InternalProtocol } from "./protocols.js";
 
 /**********************************************************************************************************************/
 
@@ -306,13 +307,6 @@ export class File extends Item {
         return this.process(this.content())
     }
 
-    CALL_text({request}) {
-        /* Plain text of this File for Site.import() etc. */
-        let txt = this.read()
-        if (txt === undefined) request.throwNotFound()
-        return txt
-    }
-
     // async CALL_import({request}) {
     //     /* Parse the file as a JS module. Return the module, or a selected symbol if request.path is non-empty.
     //        A function for parsing module's source code, parse(source), must be passed in `args` by the caller,
@@ -327,14 +321,6 @@ export class File extends Item {
     //     return module[symbol]
     // }
 
-    GET_default(ctx) { return this.GET_file(ctx) }
-
-    GET_file({res, request}) {                      // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
-        this.setMimeType(res, request.pathFull)
-        let txt = this.read()
-        if (txt === undefined) request.throwNotFound()
-        res.send(txt)
-    }
     setMimeType(res, path) {
         // use the `mimetype` property if present...
         let mimetype = this.get('mimetype')
@@ -348,10 +334,27 @@ export class File extends Item {
 }
 
 File.setCaching('read')
-File.handlers = {
-    file: new Handler(),
-    text: new Handler(),
+
+File.actions = {
+    ...Item.actions,
+
+    get_text: action('text/CALL', InternalProtocol, function ({request}) {
+        /* Plain text of this File for Site.import() etc. */
+        let txt = this.read()
+        if (txt === undefined) request.throwNotFound()
+        return txt
+    }),
+    get_file: action('file/GET', HttpProtocol, function ({res, request}) {
+        // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
+        this.setMimeType(res, request.pathFull)
+        let txt = this.read()
+        if (txt === undefined) request.throwNotFound()
+        res.send(txt)
+    }),
+    // get_default: actionRedirect('default/GET', 'file/GET'),
 }
+File.initAPI(File.actions)
+
 
 export class FileLocal extends File {
     async init()   { if (this.registry.onServer) this._fs = await import('fs') }

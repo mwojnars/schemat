@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import {HttpProtocol, JsonSimpleProtocol, API, action, JsonProtocol, InternalProtocol} from "./protocol.js"
+import {HttpProtocol, JsonSimpleProtocol, API, action, JsonProtocol, InternalProtocol} from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -156,7 +156,7 @@ export class RequestContext {
 }
 
 export class Handler {
-    /* Utility class that holds function(s) that together implement a web handler for a specific @-endpoint
+    /* Utility class that holds function(s) that together implement a web handler for a specific endpoint
        of the items in a particular category.
        All the functions except run() get bound to the target item when called, i.e., to the item that was discovered
        through the routing process and is responsible for handling the request.
@@ -165,6 +165,17 @@ export class Handler {
 
                 context = {request, req, res, item, handler, endpoint}
      */
+
+    constructor(props = {})      { Object.assign(this, props) }
+
+    run(context) {
+        let {request, item} = context
+        let httpMethod = request.type
+        if (!httpMethod || !this[httpMethod])
+            throw new Error(`missing or incorrect request.type (httpMethod): ${httpMethod}, ${this[httpMethod]}`)
+        // print('Handler.run():', this, httpMethod, this[httpMethod])
+        return this[httpMethod].call(item, context)     // may return a Promise
+    }
 
     // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
     // each of the functions may return a Promise (!)
@@ -240,8 +251,8 @@ export class Handler {
         let html    = this.render(endpoint)
         let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
         return `
-            <p id="data-session" style="display:none">${session}</p>
             <div id="react-root">${html}</div>
+            <p id="data-session" style="display:none">${session}</p>
             <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
         `
     }
@@ -256,18 +267,6 @@ export class Handler {
         throw new Request.NotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
         // throw new Request.NotFound('view() function is missing in a handler')
         // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
-    }
-
-
-    constructor(props = {})      { Object.assign(this, props) }
-
-    run(context) {
-        let {request, item} = context
-        let httpMethod = request.type
-        if (!httpMethod || !this[httpMethod])
-            throw new Error(`missing or incorrect request.type (httpMethod): ${httpMethod}, ${this[httpMethod]}`)
-        // print('Handler.run():', this, httpMethod, this[httpMethod])
-        return this[httpMethod].call(item, context)     // may return a Promise
     }
 }
 
@@ -326,7 +325,7 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    action          // array of triggers for the RPC actions allowed by this item's class or category;
+    action          // collection of triggers for the RPC actions allowed by this item's class or category;
                     // available server-side and client-side, but with a different implementation of triggers
 
     // action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
@@ -511,7 +510,7 @@ export class Item {
            Impute action configurations and create action triggers (this.action.X()).
          */
         let name = this.name
-        this.api = new API(actions)
+        this.api = API.fromActions(actions) //new API(actions)
         print(`${name} actions:`, actions)
         print(`${name}.api.endpoints:`, this.api.endpoints)
     }
@@ -902,16 +901,17 @@ export class Item {
             ;[req, res] = session.channels
         }
 
-        let endpoints = this.constructor.api.endpoints
+        let api = this.constructor.api
         let httpMethod = request.type
 
         for (let endpoint of methods) {
-            let handler = this.getHandlers()[endpoint]
-            let context = new RequestContext({request, req, res, handler, endpoint, item: this})
-            if (handler) return handler.run(context)
+            let context = new RequestContext({request, req, res, endpoint, item: this})
 
-            let handler2 = endpoints[`${endpoint}/${httpMethod}`]
-            if (handler2) return handler2.server(this, context)
+            let handler2 = this.getHandlers()[endpoint]
+            if (handler2) return handler2.run({...context, handler: handler2})
+
+            let handler = api.findHandler(endpoint, httpMethod)
+            if (handler) return handler.server(this, context)
         }
 
         // for (let endpoint of methods) {
@@ -1001,9 +1001,9 @@ export class Item {
     // CALL_item()         { return this }
 
     VIEW_default()      { return this.VIEW_admin() }
-    VIEW_admin()        { return this.page_admin() }
+    VIEW_admin()        { return this.view_admin() }
 
-    page_admin({extra = null} = {}) {
+    view_admin({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
@@ -1091,11 +1091,7 @@ Item.actions = {
 
     call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
     call_default:   action('default/CALL', InternalProtocol, function() { return this }),
-
-    get_json:       action('json/GET', JsonSimpleProtocol, function({res})
-    {
-        return this.encodeSelf()
-    }),
+    get_json:       action('json/GET',   JsonSimpleProtocol, function() { return this.encodeSelf() }),
 
     delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1121,15 +1117,15 @@ Item.actions = {
 
 Item.initAPI(Item.actions)
 
-// Item.api = new API({http: {
-//     // endpoints...
-//     json_GET: new JsonSimpleProtocol({
+// Item.api = new API({ // http endpoints...
 //
-//         json({res}) { return this.encodeSelf() }
+//     'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
 //
-//     }),
+//     'default/CALL': new InternalProtocol  (function() { return this }),
+//     'item/CALL':    new InternalProtocol  (function() { return this }),
+//     'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
 //
-//     action_POST: new JsonProtocol({
+//     'action/POST': new JsonProtocol({
 //
 //         delete_self(ctx)   { return this.registry.delete(this) },
 //
@@ -1156,7 +1152,14 @@ Item.initAPI(Item.actions)
 //         },
 //
 //     }),
-// }})
+// })
+
+// Category.api = new API(Category, {
+//     'new/POST': new JsonSimpleProtocol(),
+//     'action/POST': {
+//         action_xxx(ctx) {},
+//     }
+// })
 
 
 /**********************************************************************************************************************/
@@ -1443,7 +1446,7 @@ export class Category extends Item {
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-        return this.page_admin({extra: FRAGMENT(
+        return this.view_admin({extra: FRAGMENT(
             H2('Items'),
             e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),
@@ -1509,12 +1512,8 @@ Category.actions = {
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
     }),
 }
-
 Category.initAPI(Category.actions)
 
-/* action protocols:
-   ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
-*/
 
 /**********************************************************************************************************************/
 
