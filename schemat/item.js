@@ -325,7 +325,8 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    action          // collection of triggers for the RPC actions allowed by this item's class or category;
+    api             // API instance that defines this item's endpoints, actions, and protocols for each endpoint
+    action          // collection of triggers for the RPC actions allowed by this item's api;
                     // available server-side and client-side, but with a different implementation of triggers
 
     // action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
@@ -509,10 +510,9 @@ export class Item {
         /* Collect a dictionary of all web endpoints exposed by this item as declared by its actions.
            Impute action configurations and create action triggers (this.action.X()).
          */
-        let name = this.name
-        this.api = API.fromActions(actions) //new API(actions)
-        print(`${name} actions:`, actions)
-        print(`${name}.api.endpoints:`, this.api.endpoints)
+        this.api = API.fromActions(actions) //new API({actions})
+        print(`${this.name} actions:`, actions)
+        print(`${this.name}.api.endpoints:`, this.api.endpoints)
     }
 
     init() {}
@@ -997,9 +997,6 @@ export class Item {
 
     /***  Handlers & Components  ***/
 
-    // CALL_default()      { return this }         // internal url-calls return the target item (an object) by default
-    // CALL_item()         { return this }
-
     VIEW_default()      { return this.VIEW_admin() }
     VIEW_admin()        { return this.view_admin() }
 
@@ -1152,13 +1149,6 @@ Item.initAPI(Item.actions)
 //         },
 //
 //     }),
-// })
-
-// Category.api = new API(Category, {
-//     'new/POST': new JsonSimpleProtocol(),
-//     'action/POST': {
-//         action_xxx(ctx) {},
-//     }
 // })
 
 
@@ -1476,10 +1466,52 @@ export class Category extends Item {
 
 Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-Category.actions = {
-    ...Item.actions,
+// Category.actions = {
+//     ...Item.actions,
+//
+//     get_source: action('import/GET', HttpProtocol, function ({request, res})
+//     {
+//         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+//         this._checkPath(request)
+//         res.type('js')
+//         res.send(this.getSource())
+//     }),
+//
+//     get_items: action('scan/GET', HttpProtocol, async function ({res})
+//     {
+//         /* Retrieve all children of this category and send to client as a JSON array.
+//            TODO: set a size limit & offset (pagination).
+//            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+//          */
+//         let items = []
+//         for await (const item of this.registry.scan(this)) {
+//             await item.load()
+//             items.push(item)
+//         }
+//         res.sendItems(items)
+//     }),
+//
+//     new_item: action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
+//     {
+//         /* Create a new item in this category based on request data. */
+//         let data = await (new Data).__setstate__(dataState)
+//         let item = await this.new(data)
+//         await this.registry.insert(item)
+//         // await category.registry.commit()
+//         return item.encodeSelf()
+//         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+//     }),
+// }
+// Category.initAPI(Category.actions)
 
-    get_source: action('import/GET', HttpProtocol, function ({request, res})
+Category.api = new API([Item.api], {   // http endpoints...
+
+    // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
+    // 'default/CALL': new InternalProtocol  (function() { return this }),
+    // 'item/CALL':    new InternalProtocol  (function() { return this }),
+    // 'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
+
+    'import/GET':   new HttpProtocol(function ({request, res})
     {
         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
         this._checkPath(request)
@@ -1487,7 +1519,7 @@ Category.actions = {
         res.send(this.getSource())
     }),
 
-    get_items: action('scan/GET', HttpProtocol, async function ({res})
+    'scan/GET':     new HttpProtocol(async function ({res})
     {
         /* Retrieve all children of this category and send to client as a JSON array.
            TODO: set a size limit & offset (pagination).
@@ -1501,7 +1533,7 @@ Category.actions = {
         res.sendItems(items)
     }),
 
-    new_item: action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
+    'new/POST':     new JsonSimpleProtocol({'new_item': async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1510,9 +1542,14 @@ Category.actions = {
         // await category.registry.commit()
         return item.encodeSelf()
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    }),
-}
-Category.initAPI(Category.actions)
+    }}),
+
+})
+
+// Category.initActions('create/POST', ['new/POST', 'new_item'], ...)
+// Category.initActions({
+//     'new_item': ['new/POST', 'new_item', ...other fixed args for protocol.client()]
+// })
 
 
 /**********************************************************************************************************************/

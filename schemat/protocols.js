@@ -1,45 +1,45 @@
 import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
 
 
-export class Agent {
-    /* Base class for objects that implement client-server communication (API) for external and internal calls.
-
-       In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
-       programming interface (action.*) in each of these environments, but always executing the actions on the server:
-       actions triggered on a client get redirected to the server, execute there, and the result is communicated
-       back to the client.
-
-       In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
-       sent directly to the server. A client-side instance of the agent is not needed then.
-
-       The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
-     */
-
-    api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
-    action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
-
-    constructor(api = null) {
-        if (api) this.setAgentAPI(api)
-    }
-
-    _getAgentEnvironment() {
-        /* Override in subclasses to return the name of the current environment: "client" or "server". */
-        throw new Error("not implemented")
-    }
-    _getAgentParents() {
-        /* Override in subclasses to return a list of agents this one directly inherits from. */
-        throw new Error("not implemented")
-    }
-
-    setAgentAPI(api) {
-        /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
-        if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
-        this.api = api
-        this.action = this.api.getTriggers(this)
-    }
-
-    url(endpoint) {}
-}
+// export class Agent {
+//     /* Base class for objects that implement client-server communication (API) for external and internal calls.
+//
+//        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
+//        programming interface (action.*) in each of these environments, but always executing the actions on the server:
+//        actions triggered on a client get redirected to the server, execute there, and the result is communicated
+//        back to the client.
+//
+//        In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
+//        sent directly to the server. A client-side instance of the agent is not needed then.
+//
+//        The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
+//      */
+//
+//     api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
+//     action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
+//
+//     constructor(api = null) {
+//         if (api) this.setAgentAPI(api)
+//     }
+//
+//     _getAgentEnvironment() {
+//         /* Override in subclasses to return the name of the current environment: "client" or "server". */
+//         throw new Error("not implemented")
+//     }
+//     _getAgentParents() {
+//         /* Override in subclasses to return a list of agents this one directly inherits from. */
+//         throw new Error("not implemented")
+//     }
+//
+//     setAgentAPI(api) {
+//         /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
+//         if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
+//         this.api = api
+//         this.action = this.api.getTriggers(this)
+//     }
+//
+//     url(endpoint) {}
+// }
 
 
 export class Protocol {
@@ -47,6 +47,7 @@ export class Protocol {
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
        through the server() method when a web request arrives. The protocol may also consist
        of a client() implemention that performs internal RPC calls to the remote server() method.
+       Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
     static multipleActions = false      // true if multiple actions per endpoint are allowed
@@ -54,17 +55,22 @@ export class Protocol {
     endpoint                            // name of the endpoint, access mode excluded
     access                              // access mode of the endpoint: GET/POST/CALL
 
-    actions = {}                        // {name: method}, collection of all actions handled by this protocol instance
+    actions                             // {name: method}, specification of actions handled by this protocol instance
 
     // constructor(endpoint = undefined) {
-    //     if (endpoint === undefined) return
-    //     this.setEndpoint(endpoint)
+    //     if (endpoint !== undefined) this.setEndpoint(endpoint)
     // }
 
-    constructor(actions) {
-        if (typeof actions === 'function')
-            actions = [actions]
-        if (T.isArray(actions)) {}
+    constructor(actions = {}) {
+        if (typeof actions === 'function') actions = {'': actions}
+        if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
+            throw new Error(`multiple actions not allowed for this protocol`)
+        this.actions = actions
+    }
+
+    merge(protocol) {
+        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
+        return protocol
     }
 
     setEndpoint(endpoint) {
@@ -129,15 +135,15 @@ export class HttpProtocol extends Protocol {
 
 /**********************************************************************************************************************/
 
-export class HtmlPage extends HttpProtocol {
-    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
-       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
-     */
-}
-
-export class ReactPage extends HtmlPage {
-    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
-}
+// export class HtmlPage extends HttpProtocol {
+//     /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
+//        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+//      */
+// }
+//
+// export class ReactPage extends HtmlPage {
+//     /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+// }
 
 /*************************************************************************************************/
 
@@ -147,7 +153,23 @@ export class JsonProtocol extends HttpProtocol {
        as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
        it's sent as a JSON-serialized object of the form: {error}.
      */
-    static multipleActions = true
+    static multipleActions = true           // TODO: remove multipleActions
+
+    merge(protocol) {
+        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
+
+        let c1 = T.getClass(this)
+        let c2 = T.getClass(protocol)
+        if (c1 !== c2) return protocol          // `protocol` can be null
+
+        // create a new protocol instance with `actions` combined
+        let actions = {...this.actions, ...protocol.actions}
+        let proto = new c1(actions)
+
+        proto.endpoint = this.endpoint
+        proto.access = this.access
+        return proto
+    }
 
     _encodeRequest(action, args)    { return {action, args} }
     _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
@@ -257,7 +279,7 @@ export function action(...args) {
 export class API {
     /* Collection of remote actions exposed on particular web/RPC/API endpoints, each endpoint operating a particular protocol. */
 
-    environment         // 'client' or 'server'
+    // environment      // 'client' or 'server'
     endpoints = {}      // {name/MODE: protocol_instance}, where MODE is an access method (GET/POST/CALL)
 
     // constructor(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
@@ -266,9 +288,49 @@ export class API {
     //         this.addAction(action, method)
     // }
 
-    // constructor(endpoints, environment) {
-    //     this.endpoints = endpoints
-    //     this.environment = environment
+    constructor(parents = [], endpoints = {}) {                 // environment = null) {
+        // this.environment = environment
+        for (let [endpoint, protocol] of Object.entries(endpoints))
+            protocol.setEndpoint(endpoint)
+        if (parents && !T.isArray(parents))
+            parents = [parents]
+
+        // this.endpoints = parents.length ? this.mergeEndpoints(parents, endpoints) : endpoints
+
+        for (let endpts of [...parents.reverse().map(p=>p.endpoints), endpoints])
+            this.add(endpts)
+    }
+
+    add(endpoints) {
+        /* Add `endpoints` dict to `this.endpoints`. If an endpoint already exists its protocol gets merged with the new
+           protocol instance (e.g., actions of both protocols are combined), or replaced if a given protocol class
+           doesn't implement merge() method. If protocol==null in `endpoints`, a given endpoint is removed from this.
+         */
+        for (let [endpoint, protocol] of Object.entries(endpoints))
+            if (protocol == null) delete this.endpoints[endpoint]
+            else {
+                let previous = this.endpoints[endpoint]
+                this.endpoints[endpoint] = previous ? previous.merge(protocol) : protocol
+            }
+    }
+
+    // mergeEndpoints(parents, child) {
+    //     /* Merge endpoints of multiple inheriting APIs.
+    //        If an endpoint occurs multiple times, the child's or foremost parent's protocol is used;
+    //        or, if there is a collection of actions (in a child) instead of a protocol instance, the actions
+    //        get merged into the protocol of a parent.
+    //      */
+    //     let api = new API()
+    //
+    //     let merged = {}
+    //     for (let endpoints of [...parents.reverse(), child])
+    //         for (let [endpoint, protocol] of Object.entries(endpoints)) {
+    //             if (endpoint in merged) {
+    //                 if (protocol.constructor.multipleActions)
+    //             }
+    //             else merged[endpoint] = protocol
+    //         }
+    //     return merged
     // }
 
     static fromActions(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
@@ -295,7 +357,8 @@ export class API {
 
         for (let handler of Object.values(this.endpoints))
             for (let [action, method] of Object.entries(handler.actions)) {
-                if (action in triggers) throw new Error(`duplicate action name: '${action}`)
+                if (!action) continue       // don't generate triggers for unnamed actions
+                if (action in triggers) throw new Error(`duplicate action name: '${action}'`)
                 triggers[action] = onServer
                     ? (...args) => method.call(agent, {}, ...args)              // may return a Promise
                     : (...args) => handler.client(agent, action, ...args)       // may return a Promise
