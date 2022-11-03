@@ -60,16 +60,16 @@ export class Protocol {
 
     actions                             // {name: method}, specification of actions handled by this protocol instance
 
+    get action() {
+        /* Check there's exactly one action and return its function. */
+        let methods = Object.values(this.actions)
+        assert(methods.length === 1)
+        return methods[0]
+    }
+
     constructor(action = null) {
         this.actions = action ? {'': action} : {}
     }
-
-    // constructor(actions = {}) {
-    //     if (typeof actions === 'function') actions = {'': actions}
-    //     if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
-    //         throw new Error(`multiple actions not allowed for this protocol`)
-    //     this.actions = actions
-    // }
 
     merge(protocol) {
         /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
@@ -84,18 +84,12 @@ export class Protocol {
         this.access   = parts[1]
     }
 
-    _singleActionName() {
-        /* Check there's exactly one action and return its name. */
-        let actions = Object.keys(this.actions)
-        assert(actions.length === 1)
-        return actions[0]
-    }
-    _singleActionCall(agent, ctx) {
-        /* Check there's exactly one action and return its function. */
-        let methods = Object.values(this.actions)
-        assert(methods.length === 1)
-        return methods[0].call(agent, ctx)
-    }
+    // _singleActionCall(agent, ctx) {
+    //     /* Check there's exactly one action and return its function. */
+    //     let methods = Object.values(this.actions)
+    //     assert(methods.length === 1)
+    //     return methods[0].call(agent, ctx)
+    // }
 
     // the methods below may return a Promise or be declared as async in subclasses
     client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
@@ -112,7 +106,7 @@ export class InternalProtocol extends Protocol {
     /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
        but executed server-side (exclusively).
      */
-    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
+    async server(agent, ctx)    { return this.action.call(agent, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -128,7 +122,7 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
+    async server(agent, ctx)    { return this.action.call(agent, ctx) }
 }
 
 
@@ -258,6 +252,13 @@ export class ActionsProtocol extends HttpProtocol {
 
 export class JsonProtocol extends ActionsProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
+
+    _singleActionName() {
+        /* Check there's exactly one action and return its name. */
+        let actions = Object.keys(this.actions)
+        assert(actions.length === 1)
+        return actions[0]
+    }
 
     _encodeRequest(action, args)    { return args[0] }
     _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
