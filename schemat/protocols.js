@@ -60,19 +60,10 @@ export class Protocol {
                     // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
                     // like a method of the agent; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
-                    // without protocol.server()
+                    // instead of protocol.server()
 
-    // get action() {
-    //     /* Check there's exactly one action and return its function. */
-    //     let methods = Object.values(this.actions)
-    //     assert(methods.length === 1)
-    //     return methods[0]
-    // }
 
-    constructor(action = null) {
-        this.action = action
-        // this.actions = action ? {'': action} : {}
-    }
+    constructor(action = null)  { this.action = action }
 
     merge(protocol) {
         /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
@@ -136,39 +127,13 @@ export class HttpProtocol extends Protocol {
 
 /*************************************************************************************************/
 
-export class ActionsProtocol extends HttpProtocol {
-    /* JSON-based communication over HTTP POST that handles multiple actions.
-       The server interprets req.body as a JSON string of the form {action, args}
-       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
-       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
-       it's sent as a JSON-serialized object of the form: {error}.
-     */
+export class JsonProtocol2 extends HttpProtocol {
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    actions                 // {name: method}, specification of actions handled by this protocol
+    get actions()   { return {'action': this.action} }
 
-    constructor(actions = {}) {
-        super()
-        this.actions = actions
-    }
-
-    merge(protocol) {
-        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
-
-        let c1 = T.getClass(this)
-        let c2 = T.getClass(protocol)
-        if (c1 !== c2) return protocol          // `protocol` can be null
-
-        // create a new protocol instance with `actions` combined
-        let actions = {...this.actions, ...protocol.actions}
-        let proto = new c1(actions)
-
-        proto.endpoint = this.endpoint
-        proto.access = this.access
-        return proto
-    }
-
-    _encodeRequest(action, args)    { return {action, args} }
-    _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
+    _encodeRequest(action, args)    { return args[0] }
+    _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? [body] : []} }
 
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
@@ -234,18 +199,52 @@ export class ActionsProtocol extends HttpProtocol {
     }
 
     execute(agent, ctx, action, ...args) {
-        /* The actual execution of an action, without pre- & post-processing of web requests/responses.
-           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
-           if only the corresponding action method supports this.
-         */
         let method = this.actions[action]
         if (!method) throw new NotFound(`unknown action: '${action}'`)
         return method.call(agent, ctx, ...args)
     }
 }
 
+export class ActionsProtocol extends JsonProtocol2 {
+    /* JSON-based communication over HTTP POST that handles multiple actions.
+       The server interprets req.body as a JSON string of the form {action, args}
+       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
+       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
+       it's sent as a JSON-serialized object of the form: {error}.
+     */
+
+    actions                 // {name: action_function}, specification of actions handled by this protocol
+
+    constructor(actions = {}) {
+        super()
+        this.actions = actions
+    }
+
+    merge(protocol) {
+        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
+
+        let c1 = T.getClass(this)
+        let c2 = T.getClass(protocol)
+        if (c1 !== c2) return protocol          // `protocol` can be null
+
+        // create a new protocol instance with `actions` combined
+        let actions = {...this.actions, ...protocol.actions}
+        let proto = new c1(actions)
+
+        proto.endpoint = this.endpoint
+        proto.access = this.access
+        return proto
+    }
+
+    _encodeRequest(action, args)    { return {action, args} }
+    _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
+
+}
+
 export class JsonProtocol extends ActionsProtocol {
-    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
+       The action accepts a single argument that's sent as the JSON body of the web request.
+     */
 
     _singleActionName() {
         /* Check there's exactly one action and return its name. */

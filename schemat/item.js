@@ -1086,8 +1086,7 @@ Item.handlers = {
 // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
 // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
 // `ctx` is {}, which can be a valid argument for some actions - supporting this type
-// of calls is NOT mandatory, though. By default, an action is linked to the @action (ActionsProtocol) endpoint,
-// if not declared otherwise.
+// of calls is NOT mandatory, though.
 
 Item.api = new API([], { // http endpoints...
 
@@ -1099,7 +1098,7 @@ Item.api = new API([], { // http endpoints...
 
     'default/CALL': new InternalProtocol(function() { return this }),
     'item/CALL':    new InternalProtocol(function() { return this }),
-    'json/GET':     new JsonProtocol({'get_json': function() { return this.encodeSelf() }}),
+    'json/GET':     new JsonProtocol({'action': function() { return this.encodeSelf() }}),
 
     // internal actions called by UI
     'action/POST':  new  ActionsProtocol({
@@ -1134,7 +1133,7 @@ Item.api = new API([], { // http endpoints...
 // print(`Item.api.endpoints:`, Item.api.endpoints)
 
 Item.actions = {
-    'get_json':         ['json/GET',    'get_json'],
+    'get_json':         ['json/GET',    'action'],
     'delete_self':      ['action/POST', 'delete_self'],
     'insert_field':     ['action/POST', 'insert_field'],
     'delete_field':     ['action/POST', 'delete_field'],
@@ -1483,7 +1482,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.sendItems(items)
     }),
 
-    'new/POST':     new JsonProtocol({'new_item': async function (ctx, dataState)
+    'new/POST':     new JsonProtocol({'action': async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1500,7 +1499,7 @@ Category.actions = {
     ...Item.actions,
     // 'create':       'POST/create',
     // 'new_item':     ['POST/new', 'new_item'],
-    'new_item':     ['new/POST', 'new_item'],
+    'new_item':     ['new/POST', 'action'],
 }
 
 // Category.initActions({
