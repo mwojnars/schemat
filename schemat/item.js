@@ -502,17 +502,9 @@ export class Item {
     }
 
     _initActions() {
+        /* Create action triggers (this.action.X()) from the class'es API. */
         this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
         // print('this.action:', this.action)
-    }
-
-    static initAPI(actions) {
-        /* Collect a dictionary of all web endpoints exposed by this item as declared by its actions.
-           Impute action configurations and create action triggers (this.action.X()).
-         */
-        this.api = API.fromActions(actions) //new API({actions})
-        print(`${this.name} actions:`, actions)
-        print(`${this.name}.api.endpoints:`, this.api.endpoints)
     }
 
     init() {}
@@ -1076,36 +1068,6 @@ Item.handlers = {
     admin:   new Handler(),
 }
 
-// Item.actions = {
-//
-//     call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
-//     call_default:   action('default/CALL', InternalProtocol, function() { return this }),
-//     get_json:       action('json/GET',         JsonProtocol, function() { return this.encodeSelf() }),
-//
-//     delete_self(ctx)   { return this.registry.delete(this) },
-//
-//     insert_field(ctx, path, pos, entry) {
-//         if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-//         this.data.insert(path, pos, entry)
-//         return this.registry.update(this)
-//     },
-//     delete_field(ctx, path) {
-//         this.data.delete(path)
-//         return this.registry.update(this)
-//     },
-//     update_field(ctx, path, entry) {
-//         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-//         this.data.update(path, entry)
-//         return this.registry.update(this)
-//     },
-//     move_field(ctx, path, pos1, pos2) {
-//         this.data.move(path, pos1, pos2)
-//         return this.registry.update(this)
-//     },
-// }
-//
-// Item.initAPI(Item.actions)
-
 
 // When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
 // in the context of their item, like if they were regular methods of the Item (sub)class.
@@ -1471,43 +1433,6 @@ export class Category extends Item {
 
 Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-// Category.actions = {
-//     ...Item.actions,
-//
-//     get_source: action('import/GET', HttpProtocol, function ({request, res})
-//     {
-//         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-//         this._checkPath(request)
-//         res.type('js')
-//         res.send(this.getSource())
-//     }),
-//
-//     get_items: action('scan/GET', HttpProtocol, async function ({res})
-//     {
-//         /* Retrieve all children of this category and send to client as a JSON array.
-//            TODO: set a size limit & offset (pagination).
-//            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-//          */
-//         let items = []
-//         for await (const item of this.registry.scan(this)) {
-//             await item.load()
-//             items.push(item)
-//         }
-//         res.sendItems(items)
-//     }),
-//
-//     new_item: action('new/POST', JsonProtocol, async function (ctx, dataState)
-//     {
-//         /* Create a new item in this category based on request data. */
-//         let data = await (new Data).__setstate__(dataState)
-//         let item = await this.new(data)
-//         await this.registry.insert(item)
-//         // await category.registry.commit()
-//         return item.encodeSelf()
-//         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-//     }),
-// }
-// Category.initAPI(Category.actions)
 
 Category.api = new API([Item.api], {   // http endpoints...
 
