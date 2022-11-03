@@ -84,12 +84,12 @@ export class Protocol {
         this.access   = parts[1]
     }
 
-    addAction(name, method, protocolClass) {
+    addAction(name, method, protocolClass = null) {
         if (name in this.actions)
             throw new Error(`duplicate action definition ('${name}') for a protocol`)
         if (!this.constructor.multipleActions && Object.keys(this.actions).length)
             throw new Error(`cannot add '${name}' action, multiple actions not allowed for this protocol`)
-        if (protocolClass !== this.constructor)
+        if (protocolClass && protocolClass !== this.constructor)
             throw new Error(`inconsistent protocol declared for '${name}' and another action on the same endpoint ('${this.endpoint}')`)
         this.actions[name] = method
     }
@@ -138,15 +138,15 @@ export class HttpProtocol extends Protocol {
 
 /**********************************************************************************************************************/
 
-// export class HtmlPage extends HttpProtocol {
-//     /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
-//        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
-//      */
-// }
-//
-// export class ReactPage extends HtmlPage {
-//     /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
-// }
+export class HtmlPage extends HttpProtocol {
+    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
+       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+     */
+}
+
+export class ReactPage extends HtmlPage {
+    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+}
 
 /*************************************************************************************************/
 
@@ -227,7 +227,8 @@ export class ActionsProtocol extends HttpProtocol {
             let {req} = ctx     // RequestContext
             let body  = req.body ? JSON.parse(req.body) : undefined
             let {action, args} = this._decodeRequest(body)
-            if (!action) throw new NotFound("missing action name")
+            if (!action)
+                throw new NotFound("missing action name")
 
             if (args === undefined) args = []
             if (!(args instanceof Array)) args = [args]

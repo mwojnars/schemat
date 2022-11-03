@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import {HttpProtocol, JsonProtocol, API, action, ActionsProtocol, InternalProtocol} from "./protocols.js"
+import { HttpProtocol, JsonProtocol, API, action, ActionsProtocol, InternalProtocol, HtmlPage } from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -742,7 +742,7 @@ export class Item {
 
     getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
 
-    getActions()    { return this.constructor.actions }
+    // getActions()    { return this.constructor.actions }
 
     mergeSnippets(key, params) {
         /* Calls getMany() to find all entries with a given `key` including the environment-specific
@@ -1076,80 +1076,85 @@ Item.handlers = {
     admin:   new Handler(),
 }
 
-Item.actions = {
+// Item.actions = {
+//
+//     call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
+//     call_default:   action('default/CALL', InternalProtocol, function() { return this }),
+//     get_json:       action('json/GET',         JsonProtocol, function() { return this.encodeSelf() }),
+//
+//     delete_self(ctx)   { return this.registry.delete(this) },
+//
+//     insert_field(ctx, path, pos, entry) {
+//         if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+//         this.data.insert(path, pos, entry)
+//         return this.registry.update(this)
+//     },
+//     delete_field(ctx, path) {
+//         this.data.delete(path)
+//         return this.registry.update(this)
+//     },
+//     update_field(ctx, path, entry) {
+//         if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+//         this.data.update(path, entry)
+//         return this.registry.update(this)
+//     },
+//     move_field(ctx, path, pos1, pos2) {
+//         this.data.move(path, pos1, pos2)
+//         return this.registry.update(this)
+//     },
+// }
+//
+// Item.initAPI(Item.actions)
 
-    // When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
-    // in the context of their item, like if they were regular methods of the Item (sub)class.
-    // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
-    // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
-    // `ctx` is {}, which can be a valid argument for some actions - supporting this type
-    // of calls is NOT mandatory, though. By default, an action is linked to the @action (ActionsProtocol) endpoint,
-    // if not declared otherwise.
 
-    call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
-    call_default:   action('default/CALL', InternalProtocol, function() { return this }),
-    get_json:       action('json/GET',   JsonProtocol, function() { return this.encodeSelf() }),
+// When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
+// in the context of their item, like if they were regular methods of the Item (sub)class.
+// The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
+// of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
+// `ctx` is {}, which can be a valid argument for some actions - supporting this type
+// of calls is NOT mandatory, though. By default, an action is linked to the @action (ActionsProtocol) endpoint,
+// if not declared otherwise.
 
-    delete_self(ctx)   { return this.registry.delete(this) },
+Item.api = new API([], { // http endpoints...
 
-    insert_field(ctx, path, pos, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-        this.data.insert(path, pos, entry)
-        return this.registry.update(this)
-    },
-    delete_field(ctx, path) {
-        this.data.delete(path)
-        return this.registry.update(this)
-    },
-    update_field(ctx, path, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        this.data.update(path, entry)
-        return this.registry.update(this)
-    },
-    move_field(ctx, path, pos1, pos2) {
-        this.data.move(path, pos1, pos2)
-        return this.registry.update(this)
-    },
-}
+    // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
 
-Item.initAPI(Item.actions)
+    'default/CALL': new InternalProtocol(function() { return this }),
+    'item/CALL':    new InternalProtocol(function() { return this }),
+    'json/GET':     new JsonProtocol({'get_json': function() { return this.encodeSelf() }}),
 
-// Item.api = new API({ // http endpoints...
-//
-//     'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
-//
-//     'default/CALL': new InternalProtocol  (function() { return this }),
-//     'item/CALL':    new InternalProtocol  (function() { return this }),
-//     'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
-//
-//     'action/POST': new ActionsProtocol({
-//
-//         delete_self(ctx)   { return this.registry.delete(this) },
-//
-//         insert_field(ctx, path, pos, entry) {
-//             if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-//             this.data.insert(path, pos, entry)
-//             return this.registry.update(this)
-//         },
-//
-//         delete_field(ctx, path) {
-//             this.data.delete(path)
-//             return this.registry.update(this)
-//         },
-//
-//         update_field(ctx, path, entry) {
-//             if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-//             this.data.update(path, entry)
-//             return this.registry.update(this)
-//         },
-//
-//         move_field(ctx, path, pos1, pos2) {
-//             this.data.move(path, pos1, pos2)
-//             return this.registry.update(this)
-//         },
-//
-//     }),
-// })
+    // internal actions called by UI
+    'action/POST':  new  ActionsProtocol({
+
+        delete_self(ctx)   { return this.registry.delete(this) },
+
+        insert_field(ctx, path, pos, entry) {
+            if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+            this.data.insert(path, pos, entry)
+            return this.registry.update(this)
+        },
+
+        delete_field(ctx, path) {
+            this.data.delete(path)
+            return this.registry.update(this)
+        },
+
+        update_field(ctx, path, entry) {
+            if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+            this.data.update(path, entry)
+            return this.registry.update(this)
+        },
+
+        move_field(ctx, path, pos1, pos2) {
+            this.data.move(path, pos1, pos2)
+            return this.registry.update(this)
+        },
+
+    }),
+})
+
+// print(`Item.api.endpoints:`, Item.api.endpoints)
+
 
 
 /**********************************************************************************************************************/
@@ -1505,11 +1510,6 @@ Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'get
 // Category.initAPI(Category.actions)
 
 Category.api = new API([Item.api], {   // http endpoints...
-
-    // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
-    // 'default/CALL': new InternalProtocol  (function() { return this }),
-    // 'item/CALL':    new InternalProtocol  (function() { return this }),
-    // 'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
 
     'import/GET':   new HttpProtocol(function ({request, res})
     {
