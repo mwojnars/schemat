@@ -78,22 +78,32 @@ export class Protocol {
         this.access   = parts[1]
     }
 
-    // the methods below may return a Promise or be declared as async in subclasses
-    client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
-    server(agent, ctx)              { throw new Error(`missing server-side implementation for the protocol`) }
-    execute(agent, ctx, ...args)    { throw new Error(`missing server-side execute() implementation for the protocol`) }
+    // the methods below may return a Promise or be declared as async in subclasses...
+
+    client(agent, action, ...args) {
+        /* Subclasses should override client() method to encode `args` in a protocol-specific way. */
+        throw new Error(`client-side internal call not allowed for this protocol`)
+    }
+
+    server(agent, ctx) {
+        /* Subclasses should override server() method to decode arguments for execute() in a protocol-specific way. */
+        throw new Error(`missing server-side implementation for the protocol`)
+    }
+
+    execute(agent, ctx, ...args) {
         /* The actual execution of an action, without pre- & post-processing of web requests/responses.
            Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
-           if only the corresponding action method supports this.
+           if only the action function supports this.
          */
-
+        return this.action.call(agent, ctx, ...args)
+    }
 }
 
 export class InternalProtocol extends Protocol {
     /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
        but executed server-side (exclusively).
      */
-    async server(agent, ctx)    { return this.action.call(agent, ctx) }
+    server(agent, ctx)  { return this.execute(agent, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -109,7 +119,7 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    async server(agent, ctx)    { return this.action.call(agent, ctx) }
+    server(agent, ctx)  { return this.execute(agent, ctx) }
 }
 
 
@@ -184,8 +194,6 @@ export class JsonProtocol extends HttpProtocol {
             let {req} = ctx     // RequestContext
             let body  = req.body ? JSON.parse(req.body) : undefined
             let {action, args} = this._decodeRequest(body)
-            if (!action)
-                throw new NotFound("missing action name")
 
             if (args === undefined) args = []
             if (!(args instanceof Array)) args = [args]
@@ -199,9 +207,7 @@ export class JsonProtocol extends HttpProtocol {
     }
 
     execute(agent, ctx, action, ...args) {
-        let method = this.actions[action]
-        if (!method) throw new NotFound(`unknown action: '${action}'`)
-        return method.call(agent, ctx, ...args)
+        return this.action.call(agent, ctx, ...args)
     }
 }
 
@@ -237,25 +243,35 @@ export class ActionsProtocol extends JsonProtocol {
     }
 
     _encodeRequest(action, args)    { return {action, args} }
-    _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
-
-}
-
-export class JsonProtocol2 extends ActionsProtocol {
-    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
-       The action accepts a single argument that's sent as the JSON body of the web request.
-     */
-
-    _singleActionName() {
-        /* Check there's exactly one action and return its name. */
-        let actions = Object.keys(this.actions)
-        assert(actions.length === 1)
-        return actions[0]
+    _decodeRequest(body) {
+        // return typeof body === 'string' ? JSON.parse(body) : body
+        let {action, args} = (typeof body === 'string' ? JSON.parse(body) : body)
+        if (!action) throw new NotFound("missing action name")
+        return {action, args}
     }
 
-    _encodeRequest(action, args)    { return args[0] }
-    _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
+    execute(agent, ctx, action, ...args) {
+        let method = this.actions[action]
+        if (!method) throw new NotFound(`unknown action: '${action}'`)
+        return method.call(agent, ctx, ...args)
+    }
 }
+
+// export class JsonProtocol2 extends ActionsProtocol {
+//     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
+//        The action accepts a single argument that's sent as the JSON body of the web request.
+//      */
+//
+//     _singleActionName() {
+//         /* Check there's exactly one action and return its name. */
+//         let actions = Object.keys(this.actions)
+//         assert(actions.length === 1)
+//         return actions[0]
+//     }
+//
+//     _encodeRequest(action, args)    { return args[0] }
+//     _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
+// }
 
 /**********************************************************************************************************************/
 
