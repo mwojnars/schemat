@@ -244,7 +244,7 @@ export class ActionsProtocol extends HttpProtocol {
     }
 }
 
-export class JsonSimpleProtocol extends ActionsProtocol {
+export class JsonProtocol extends ActionsProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
     _encodeRequest(action, args)    { return args[0] }

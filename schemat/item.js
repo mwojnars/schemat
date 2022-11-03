@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import {HttpProtocol, JsonSimpleProtocol, API, action, ActionsProtocol, InternalProtocol} from "./protocols.js"
+import {HttpProtocol, JsonProtocol, API, action, ActionsProtocol, InternalProtocol} from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -1088,7 +1088,7 @@ Item.actions = {
 
     call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
     call_default:   action('default/CALL', InternalProtocol, function() { return this }),
-    get_json:       action('json/GET',   JsonSimpleProtocol, function() { return this.encodeSelf() }),
+    get_json:       action('json/GET',   JsonProtocol, function() { return this.encodeSelf() }),
 
     delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1120,7 +1120,7 @@ Item.initAPI(Item.actions)
 //
 //     'default/CALL': new InternalProtocol  (function() { return this }),
 //     'item/CALL':    new InternalProtocol  (function() { return this }),
-//     'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
+//     'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
 //
 //     'action/POST': new ActionsProtocol({
 //
@@ -1491,7 +1491,7 @@ Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'get
 //         res.sendItems(items)
 //     }),
 //
-//     new_item: action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
+//     new_item: action('new/POST', JsonProtocol, async function (ctx, dataState)
 //     {
 //         /* Create a new item in this category based on request data. */
 //         let data = await (new Data).__setstate__(dataState)
@@ -1509,7 +1509,7 @@ Category.api = new API([Item.api], {   // http endpoints...
     // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
     // 'default/CALL': new InternalProtocol  (function() { return this }),
     // 'item/CALL':    new InternalProtocol  (function() { return this }),
-    // 'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
+    // 'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
 
     'import/GET':   new HttpProtocol(function ({request, res})
     {
@@ -1533,7 +1533,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.sendItems(items)
     }),
 
-    'new/POST':     new JsonSimpleProtocol({'new_item': async function (ctx, dataState)
+    'new/POST':     new JsonProtocol({'new_item': async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
