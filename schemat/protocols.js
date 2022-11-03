@@ -52,6 +52,9 @@ export class Protocol {
 
     static multipleActions = false      // true if multiple actions per endpoint are allowed
 
+    address                             // protocol-specific string that identifies the connection; typically,
+                                        // a URL endpoint for HTTP protocols, or topic name for Kafka protocols
+
     endpoint                            // name of the endpoint, access mode excluded
     access                              // access mode of the endpoint: GET/POST/CALL
 
