@@ -325,7 +325,6 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    api             // API instance that defines this item's endpoints, actions, and protocols for each endpoint
     action          // collection of triggers for the RPC actions allowed by this item's api;
                     // available server-side and client-side, but with a different implementation of triggers
 
@@ -344,7 +343,8 @@ export class Item {
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
     static actions    = {}      // collection of action functions (RPC calls); each action is accessible from a server or a client
-    
+    static api        = null    // API instance that defines this item's endpoints and protocols
+
     static __transient__ = ['cache']
 
     get id()        { return [this.cid, this.iid] }
@@ -504,6 +504,23 @@ export class Item {
     _initActions() {
         /* Create action triggers (this.action.X()) from the class'es API. */
         this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
+        return
+
+        this.action = {}
+        let api = this.constructor.api
+
+        // create a trigger for each action and store in `this.action`
+        for (let [name, spec] of Object.entries(this.actions)) {
+            if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
+            if (typeof spec === 'string') spec = [spec]
+            let endpoint = spec[0]
+            let args = spec.slice(1)
+            let handler = api.get(endpoint)
+            this.action[name] = this.registry.onServer
+                ? (...args) => method.call(this, {}, ...args)              // may return a Promise
+                : (...args) => handler.client(this, action, ...args)       // may return a Promise
+        }
+
         // print('this.action:', this.action)
     }
 
@@ -733,8 +750,6 @@ export class Item {
     }
 
     getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
-
-    // getActions()    { return this.constructor.actions }
 
     mergeSnippets(key, params) {
         /* Calls getMany() to find all entries with a given `key` including the environment-specific
@@ -1475,7 +1490,11 @@ Category.api = new API([Item.api], {   // http endpoints...
 
 })
 
-// Category.initActions('create/POST', ['new/POST', 'new_item'], ...)
+// Category.actions = {
+//     // 'create':       'POST/create',
+//     'new_item':     ['POST/new', 'new_item'],
+// }
+
 // Category.initActions({
 //     'new_item': ['new/POST', 'new_item', ...other fixed args for protocol.client()]
 // })

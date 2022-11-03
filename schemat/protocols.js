@@ -60,16 +60,16 @@ export class Protocol {
 
     actions                             // {name: method}, specification of actions handled by this protocol instance
 
-    // constructor(endpoint = undefined) {
-    //     if (endpoint !== undefined) this.setEndpoint(endpoint)
-    // }
-
-    constructor(actions = {}) {
-        if (typeof actions === 'function') actions = {'': actions}
-        if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
-            throw new Error(`multiple actions not allowed for this protocol`)
-        this.actions = actions
+    constructor(action = null) {
+        this.actions = action ? {'': action} : {}
     }
+
+    // constructor(actions = {}) {
+    //     if (typeof actions === 'function') actions = {'': actions}
+    //     if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
+    //         throw new Error(`multiple actions not allowed for this protocol`)
+    //     this.actions = actions
+    // }
 
     merge(protocol) {
         /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
@@ -149,6 +149,14 @@ export class ActionsProtocol extends HttpProtocol {
      */
     static multipleActions = true           // TODO: remove multipleActions
 
+    constructor(actions = {}) {
+        super()
+        // if (typeof actions === 'function') actions = {'': actions}
+        // if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
+        //     throw new Error(`multiple actions not allowed for this protocol`)
+        this.actions = actions
+    }
+
     merge(protocol) {
         /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
 
@@ -224,14 +232,24 @@ export class ActionsProtocol extends HttpProtocol {
             if (!(args instanceof Array)) args = [args]
             print(req.body)
 
-            let method = this.actions[action]
-            if (!method) throw new NotFound(`unknown action: '${action}'`)
+            // let method = this.actions[action]
+            // if (!method) throw new NotFound(`unknown action: '${action}'`)
+            // out = method.call(agent, ctx, ...args)
 
-            out = method.call(agent, ctx, ...args)
+            out = this.execute(agent, ctx, action, ...args)
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}
         return this._sendResponse(ctx, out, ex)
+    }
+
+    execute(agent, ctx, action, ...args) {
+        /* The actual execution of an action, without pre- & post-processing of web requests/responses.
+           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context (!).
+         */
+        let method = this.actions[action]
+        if (!method) throw new NotFound(`unknown action: '${action}'`)
+        return method.call(agent, ctx, ...args)
     }
 }
 
@@ -299,6 +317,11 @@ export class API {
                 let previous = this.endpoints[endpoint]
                 this.endpoints[endpoint] = previous ? previous.merge(protocol) : protocol
             }
+    }
+
+    get(endpoint) {
+        /* `endpoint` is a full endpoint string: mode/name. */
+        return this.endpoints[endpoint]
     }
 
     getTriggers(agent, onServer) {
