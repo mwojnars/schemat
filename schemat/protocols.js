@@ -327,25 +327,24 @@ export class API {
         return this.endpoints[endpoint]
     }
 
-    getTriggers(agent, onServer) {
-        /* Convert the endpoints and their actions to internal action triggers (trigger.XYZ()),
-           in a way compatible with the current environment (cli/srv).
-         */
-        let triggers = {}
-        if (typeof onServer === 'string') onServer = (onServer === 'server')
-
-        for (let handler of Object.values(this.endpoints))
-            for (let [action, method] of Object.entries(handler.actions)) {
-                if (!action) continue       // don't generate triggers for unnamed actions
-                if (action in triggers) throw new Error(`duplicate action name: '${action}'`)
-                triggers[action] = onServer
-                    // ? (...args) => method.call(agent, {}, ...args)              // may return a Promise
-                    ? (...args) => handler.execute(agent, {}, action, ...args)              // may return a Promise
-                    : (...args) => handler.client(agent, action, ...args)       // may return a Promise
-            }
-
-        return triggers
-    }
+    // getTriggers(agent, onServer) {
+    //     /* Convert the endpoints and their actions to internal action triggers (trigger.XYZ()),
+    //        in a way compatible with the current environment (cli/srv).
+    //      */
+    //     let triggers = {}
+    //     if (typeof onServer === 'string') onServer = (onServer === 'server')
+    //
+    //     for (let handler of Object.values(this.endpoints))
+    //         for (let action of Object.keys(handler.actions)) {
+    //             if (!action) continue       // don't generate triggers for unnamed actions
+    //             if (action in triggers) throw new Error(`duplicate action name: '${action}'`)
+    //             triggers[action] = onServer
+    //                 ? (...args) => handler.execute(agent, {}, action, ...args)      // may return a Promise
+    //                 : (...args) => handler.client(agent, action, ...args)           // may return a Promise
+    //         }
+    //
+    //     return triggers
+    // }
 
     findHandler(endpoint, httpMethod) {
         return this.endpoints[`${endpoint}/${httpMethod}`]

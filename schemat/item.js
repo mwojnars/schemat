@@ -342,7 +342,7 @@ export class Item {
 
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
-    static actions    = {}      // collection of action functions (RPC calls); each action is accessible from a server or a client
+    static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
     static api        = null    // API instance that defines this item's endpoints and protocols
 
     static __transient__ = ['cache']
@@ -503,25 +503,27 @@ export class Item {
 
     _initActions() {
         /* Create action triggers (this.action.X()) from the class'es API. */
-        this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
-        return
+
+        // this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
+        // print('this.action:', this.action)
+        // return
 
         this.action = {}
         let api = this.constructor.api
 
         // create a trigger for each action and store in `this.action`
-        for (let [name, spec] of Object.entries(this.actions)) {
+        for (let [name, spec] of Object.entries(this.constructor.actions)) {
             if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
             if (typeof spec === 'string') spec = [spec]
             let endpoint = spec[0]
-            let args = spec.slice(1)
-            let handler = api.get(endpoint)
+            let fixed    = spec.slice(1)            // fixed arguments to the triggered call, typically an action name
+            let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
-                ? (...args) => method.call(this, {}, ...args)              // may return a Promise
-                : (...args) => handler.client(this, action, ...args)       // may return a Promise
+                ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
+                : (...args) => handler.client(this, ...fixed, ...args)          // may return a Promise
         }
 
-        // print('this.action:', this.action)
+        print('this.action:', this.action)
     }
 
     init() {}
@@ -1136,6 +1138,15 @@ Item.api = new API([], { // http endpoints...
 
 // print(`Item.api.endpoints:`, Item.api.endpoints)
 
+Item.actions = {
+    'get_json':         ['json/GET',    'get_json'],
+    'delete_self':      ['action/POST', 'delete_self'],
+    'insert_field':     ['action/POST', 'insert_field'],
+    'delete_field':     ['action/POST', 'delete_field'],
+    'update_field':     ['action/POST', 'update_field'],
+    'move_field':       ['action/POST', 'move_field'],
+}
+
 
 
 /**********************************************************************************************************************/
@@ -1490,10 +1501,12 @@ Category.api = new API([Item.api], {   // http endpoints...
 
 })
 
-// Category.actions = {
-//     // 'create':       'POST/create',
-//     'new_item':     ['POST/new', 'new_item'],
-// }
+Category.actions = {
+    ...Item.actions,
+    // 'create':       'POST/create',
+    // 'new_item':     ['POST/new', 'new_item'],
+    'new_item':     ['new/POST', 'new_item'],
+}
 
 // Category.initActions({
 //     'new_item': ['new/POST', 'new_item', ...other fixed args for protocol.client()]
