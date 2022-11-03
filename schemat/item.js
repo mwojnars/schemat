@@ -504,26 +504,21 @@ export class Item {
     _initActions() {
         /* Create action triggers (this.action.X()) from the class'es API. */
 
-        // this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
-        // print('this.action:', this.action)
-        // return
-
-        this.action = {}
         let api = this.constructor.api
+        this.action = {}
 
         // create a trigger for each action and store in `this.action`
         for (let [name, spec] of Object.entries(this.constructor.actions)) {
             if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
             if (typeof spec === 'string') spec = [spec]
             let endpoint = spec[0]
-            let fixed    = spec.slice(1)            // fixed arguments to the triggered call, typically an action name
+            let fixed    = spec.slice(1)            // fixed arguments to the call, typically an action name
             let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
                 ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
                 : (...args) => handler.client(this, ...fixed, ...args)          // may return a Promise
         }
-
-        print('this.action:', this.action)
+        // print('this.action:', this.action)
     }
 
     init() {}
