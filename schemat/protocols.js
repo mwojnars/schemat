@@ -84,16 +84,6 @@ export class Protocol {
         this.access   = parts[1]
     }
 
-    addAction(name, method, protocolClass = null) {
-        if (name in this.actions)
-            throw new Error(`duplicate action definition ('${name}') for a protocol`)
-        if (!this.constructor.multipleActions && Object.keys(this.actions).length)
-            throw new Error(`cannot add '${name}' action, multiple actions not allowed for this protocol`)
-        if (protocolClass && protocolClass !== this.constructor)
-            throw new Error(`inconsistent protocol declared for '${name}' and another action on the same endpoint ('${this.endpoint}')`)
-        this.actions[name] = method
-    }
-
     _singleActionName() {
         /* Check there's exactly one action and return its name. */
         let actions = Object.keys(this.actions)
@@ -287,12 +277,6 @@ export class API {
     // environment      // 'client' or 'server'
     endpoints = {}      // {name/MODE: protocol_instance}, where MODE is an access method (GET/POST/CALL)
 
-    // constructor(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
-    //     this.defaultEndpoint = defaultEndpoint
-    //     for (let [action, method] of Object.entries(actions))
-    //         this.addAction(action, method)
-    // }
-
     constructor(parents = [], endpoints = {}) {                 // environment = null) {
         // this.environment = environment
         for (let [endpoint, protocol] of Object.entries(endpoints))
@@ -309,7 +293,7 @@ export class API {
     add(endpoints) {
         /* Add `endpoints` dict to `this.endpoints`. If an endpoint already exists its protocol gets merged with the new
            protocol instance (e.g., actions of both protocols are combined), or replaced if a given protocol class
-           doesn't implement merge() method. If protocol==null in `endpoints`, a given endpoint is removed from this.
+           doesn't implement merge(). If protocol==null in `endpoints`, the endpoint is removed from `this`.
          */
         for (let [endpoint, protocol] of Object.entries(endpoints))
             if (protocol == null) delete this.endpoints[endpoint]
@@ -317,40 +301,6 @@ export class API {
                 let previous = this.endpoints[endpoint]
                 this.endpoints[endpoint] = previous ? previous.merge(protocol) : protocol
             }
-    }
-
-    // mergeEndpoints(parents, child) {
-    //     /* Merge endpoints of multiple inheriting APIs.
-    //        If an endpoint occurs multiple times, the child's or foremost parent's protocol is used;
-    //        or, if there is a collection of actions (in a child) instead of a protocol instance, the actions
-    //        get merged into the protocol of a parent.
-    //      */
-    //     let api = new API()
-    //
-    //     let merged = {}
-    //     for (let endpoints of [...parents.reverse(), child])
-    //         for (let [endpoint, protocol] of Object.entries(endpoints)) {
-    //             if (endpoint in merged) {
-    //                 if (protocol.constructor.multipleActions)
-    //             }
-    //             else merged[endpoint] = protocol
-    //         }
-    //     return merged
-    // }
-
-    static fromActions(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
-        let api = new API()
-        api.defaultEndpoint = defaultEndpoint
-        for (let [action, method] of Object.entries(actions))
-            api.addAction(action, method)
-        return api
-    }
-    addAction(action, method) {
-        let endpoint = method.endpoint || this.defaultEndpoint
-        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || ActionsProtocol
-        let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol()
-        handler.setEndpoint(endpoint)
-        handler.addAction(action, method, protocol)
     }
 
     getTriggers(agent, onServer) {
