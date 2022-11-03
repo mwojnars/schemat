@@ -150,8 +150,9 @@ export class HttpProtocol extends Protocol {
 
 /*************************************************************************************************/
 
-export class JsonProtocol extends HttpProtocol {
-    /* JSON communication over HTTP POST. The server interprets req.body as a JSON string of the form {action, args}
+export class ActionsProtocol extends HttpProtocol {
+    /* JSON-based communication over HTTP POST that handles multiple actions.
+       The server interprets req.body as a JSON string of the form {action, args}
        and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
        as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
        it's sent as a JSON-serialized object of the form: {error}.
@@ -243,8 +244,8 @@ export class JsonProtocol extends HttpProtocol {
     }
 }
 
-export class JsonSimpleProtocol extends JsonProtocol {
-    /* Single action accepting one argument, or none. */
+export class JsonSimpleProtocol extends ActionsProtocol {
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
     _encodeRequest(action, args)    { return args[0] }
     _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
@@ -345,7 +346,7 @@ export class API {
     }
     addAction(action, method) {
         let endpoint = method.endpoint || this.defaultEndpoint
-        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || JsonProtocol
+        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || ActionsProtocol
         let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol()
         handler.setEndpoint(endpoint)
         handler.addAction(action, method, protocol)

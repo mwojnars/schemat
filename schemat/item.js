@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import {HttpProtocol, JsonSimpleProtocol, API, action, JsonProtocol, InternalProtocol} from "./protocols.js"
+import {HttpProtocol, JsonSimpleProtocol, API, action, ActionsProtocol, InternalProtocol} from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -1083,7 +1083,7 @@ Item.actions = {
     // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
     // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
     // `ctx` is {}, which can be a valid argument for some actions - supporting this type
-    // of calls is NOT mandatory, though. By default, an action is linked to the @action (JsonProtocol) endpoint,
+    // of calls is NOT mandatory, though. By default, an action is linked to the @action (ActionsProtocol) endpoint,
     // if not declared otherwise.
 
     call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
@@ -1122,7 +1122,7 @@ Item.initAPI(Item.actions)
 //     'item/CALL':    new InternalProtocol  (function() { return this }),
 //     'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
 //
-//     'action/POST': new JsonProtocol({
+//     'action/POST': new ActionsProtocol({
 //
 //         delete_self(ctx)   { return this.registry.delete(this) },
 //
