@@ -99,7 +99,13 @@ export class Protocol {
 
     // the methods below may return a Promise or be declared as async in subclasses
     client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
-    server(agent, ctx)              { throw new Error(`missing server implementation`) }
+    server(agent, ctx)              { throw new Error(`missing server-side implementation for the protocol`) }
+    execute(agent, ctx, ...args)    { throw new Error(`missing server-side execute() implementation for the protocol`) }
+        /* The actual execution of an action, without pre- & post-processing of web requests/responses.
+           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
+           if only the corresponding action method supports this.
+         */
+
 }
 
 export class InternalProtocol extends Protocol {
@@ -232,10 +238,6 @@ export class ActionsProtocol extends HttpProtocol {
             if (!(args instanceof Array)) args = [args]
             print(req.body)
 
-            // let method = this.actions[action]
-            // if (!method) throw new NotFound(`unknown action: '${action}'`)
-            // out = method.call(agent, ctx, ...args)
-
             out = this.execute(agent, ctx, action, ...args)
             if (out instanceof Promise) out = await out
         }
@@ -245,7 +247,8 @@ export class ActionsProtocol extends HttpProtocol {
 
     execute(agent, ctx, action, ...args) {
         /* The actual execution of an action, without pre- & post-processing of web requests/responses.
-           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context (!).
+           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
+           if only the corresponding action method supports this.
          */
         let method = this.actions[action]
         if (!method) throw new NotFound(`unknown action: '${action}'`)
@@ -336,7 +339,8 @@ export class API {
                 if (!action) continue       // don't generate triggers for unnamed actions
                 if (action in triggers) throw new Error(`duplicate action name: '${action}'`)
                 triggers[action] = onServer
-                    ? (...args) => method.call(agent, {}, ...args)              // may return a Promise
+                    // ? (...args) => method.call(agent, {}, ...args)              // may return a Promise
+                    ? (...args) => handler.execute(agent, {}, action, ...args)              // may return a Promise
                     : (...args) => handler.client(agent, action, ...args)       // may return a Promise
             }
 
