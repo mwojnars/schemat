@@ -1098,7 +1098,7 @@ Item.api = new API([], { // http endpoints...
 
     'default/CALL': new InternalProtocol(function() { return this }),
     'item/CALL':    new InternalProtocol(function() { return this }),
-    'json/GET':     new JsonProtocol({'action': function() { return this.encodeSelf() }}),
+    'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
 
     // internal actions called by UI
     'action/POST':  new  ActionsProtocol({
@@ -1482,7 +1482,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.sendItems(items)
     }),
 
-    'new/POST':     new JsonProtocol({'action': async function (ctx, dataState)
+    'new/POST':     new JsonProtocol(async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1491,7 +1491,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         // await category.registry.commit()
         return item.encodeSelf()
         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    }}),
+    }),
 
 })
 

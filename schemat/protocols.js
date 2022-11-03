@@ -127,7 +127,7 @@ export class HttpProtocol extends Protocol {
 
 /*************************************************************************************************/
 
-export class JsonProtocol2 extends HttpProtocol {
+export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
     get actions()   { return {'action': this.action} }
@@ -205,7 +205,7 @@ export class JsonProtocol2 extends HttpProtocol {
     }
 }
 
-export class ActionsProtocol extends JsonProtocol2 {
+export class ActionsProtocol extends JsonProtocol {
     /* JSON-based communication over HTTP POST that handles multiple actions.
        The server interprets req.body as a JSON string of the form {action, args}
        and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
@@ -241,7 +241,7 @@ export class ActionsProtocol extends JsonProtocol2 {
 
 }
 
-export class JsonProtocol extends ActionsProtocol {
+export class JsonProtocol2 extends ActionsProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
        The action accepts a single argument that's sent as the JSON body of the web request.
      */
