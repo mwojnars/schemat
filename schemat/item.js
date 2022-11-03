@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import { HttpProtocol, JsonProtocol, API, action, ActionsProtocol, InternalProtocol, HtmlPage } from "./protocols.js"
+import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -1080,6 +1080,10 @@ Item.handlers = {
 Item.api = new API([], { // http endpoints...
 
     // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
+
+    // 'CALL/default': new InternalProtocol(function() { return this }),
+    // 'CALL/item':    new InternalProtocol(function() { return this }),
+    // 'GET/json':     new JsonProtocol({'get_json': function() { return this.encodeSelf() }}),
 
     'default/CALL': new InternalProtocol(function() { return this }),
     'item/CALL':    new InternalProtocol(function() { return this }),

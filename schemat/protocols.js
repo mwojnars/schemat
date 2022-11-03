@@ -128,15 +128,15 @@ export class HttpProtocol extends Protocol {
 
 /**********************************************************************************************************************/
 
-export class HtmlPage extends HttpProtocol {
-    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
-       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
-     */
-}
-
-export class ReactPage extends HtmlPage {
-    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
-}
+// export class HtmlPage extends HttpProtocol {
+//     /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
+//        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+//      */
+// }
+//
+// export class ReactPage extends HtmlPage {
+//     /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+// }
 
 /*************************************************************************************************/
 
@@ -244,30 +244,30 @@ export class JsonProtocol extends ActionsProtocol {
 
 /**********************************************************************************************************************/
 
-export function action(...args) {
-    /* Takes an RPC action function (method) and decorates it (in place) with parameters:
-       - method.endpoint -- endpoint name with access mode, as a string of the form "name/MODE" (MODE is GET/POST/CALL)
-       - method.protocol -- subclass of Protocol whose instance will perform the actual client/server communication.
-       The `args` may contain (in any order):
-       - a string, interpreted as an endpoint in the form "name/MODE", where MODE is GET, POST, or CALL;
-       - a protocol class;
-       - an access function.
-       Only the function is obligatory.
-     */
-    let endpoint, protocol, method
-    for (let arg of args)
-        if (typeof arg === 'string')                        endpoint = arg
-        else if (arg.prototype instanceof Protocol)         protocol = arg
-        else if (typeof arg === 'function')                 method   = arg
-        else throw new Error(`incorrect argument: ${arg}`)
-
-    if (!method) throw new Error(`missing action function`)
-
-    if (protocol) method.protocol = protocol
-    if (endpoint) method.endpoint = endpoint
-    // if (!method.name) method.name = endpoint.replace('/', '_')
-    return method
-}
+// export function action(...args) {
+//     /* Takes an RPC action function (method) and decorates it (in place) with parameters:
+//        - method.endpoint -- endpoint name with access mode, as a string of the form "name/MODE" (MODE is GET/POST/CALL)
+//        - method.protocol -- subclass of Protocol whose instance will perform the actual client/server communication.
+//        The `args` may contain (in any order):
+//        - a string, interpreted as an endpoint in the form "name/MODE", where MODE is GET, POST, or CALL;
+//        - a protocol class;
+//        - an access function.
+//        Only the function is obligatory.
+//      */
+//     let endpoint, protocol, method
+//     for (let arg of args)
+//         if (typeof arg === 'string')                        endpoint = arg
+//         else if (arg.prototype instanceof Protocol)         protocol = arg
+//         else if (typeof arg === 'function')                 method   = arg
+//         else throw new Error(`incorrect argument: ${arg}`)
+//
+//     if (!method) throw new Error(`missing action function`)
+//
+//     if (protocol) method.protocol = protocol
+//     if (endpoint) method.endpoint = endpoint
+//     // if (!method.name) method.name = endpoint.replace('/', '_')
+//     return method
+// }
 
 /**********************************************************************************************************************/
 
@@ -283,8 +283,6 @@ export class API {
             protocol.setEndpoint(endpoint)
         if (parents && !T.isArray(parents))
             parents = [parents]
-
-        // this.endpoints = parents.length ? this.mergeEndpoints(parents, endpoints) : endpoints
 
         for (let endpts of [...parents.reverse().map(p=>p.endpoints), endpoints])
             this.add(endpts)
