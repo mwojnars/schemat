@@ -50,25 +50,28 @@ export class Protocol {
        Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
-    static multipleActions = false      // true if multiple actions per endpoint are allowed
+    address         // protocol-specific string that identifies the connection; typically,
+                    // a URL endpoint for HTTP protocols, or topic name for Kafka protocols
 
-    address                             // protocol-specific string that identifies the connection; typically,
-                                        // a URL endpoint for HTTP protocols, or topic name for Kafka protocols
+    endpoint        // name of the endpoint, access mode excluded
+    access          // access mode of the endpoint: GET/POST/CALL
 
-    endpoint                            // name of the endpoint, access mode excluded
-    access                              // access mode of the endpoint: GET/POST/CALL
+    action          // action(ctx, ...args) function to be called when the protocol is invoked;
+                    // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
+                    // like a method of the agent; `ctx` is a RequestContext, or {} in the case when an action
+                    // is called directly on the server through item.action.XXX() which invokes protocol.execute()
+                    // without protocol.server()
 
-    actions                             // {name: method}, specification of actions handled by this protocol instance
-
-    get action() {
-        /* Check there's exactly one action and return its function. */
-        let methods = Object.values(this.actions)
-        assert(methods.length === 1)
-        return methods[0]
-    }
+    // get action() {
+    //     /* Check there's exactly one action and return its function. */
+    //     let methods = Object.values(this.actions)
+    //     assert(methods.length === 1)
+    //     return methods[0]
+    // }
 
     constructor(action = null) {
-        this.actions = action ? {'': action} : {}
+        this.action = action
+        // this.actions = action ? {'': action} : {}
     }
 
     merge(protocol) {
@@ -83,13 +86,6 @@ export class Protocol {
         this.endpoint = parts[0]
         this.access   = parts[1]
     }
-
-    // _singleActionCall(agent, ctx) {
-    //     /* Check there's exactly one action and return its function. */
-    //     let methods = Object.values(this.actions)
-    //     assert(methods.length === 1)
-    //     return methods[0].call(agent, ctx)
-    // }
 
     // the methods below may return a Promise or be declared as async in subclasses
     client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
@@ -147,13 +143,11 @@ export class ActionsProtocol extends HttpProtocol {
        as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
        it's sent as a JSON-serialized object of the form: {error}.
      */
-    static multipleActions = true           // TODO: remove multipleActions
+
+    actions                 // {name: method}, specification of actions handled by this protocol
 
     constructor(actions = {}) {
         super()
-        // if (typeof actions === 'function') actions = {'': actions}
-        // if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
-        //     throw new Error(`multiple actions not allowed for this protocol`)
         this.actions = actions
     }
 
