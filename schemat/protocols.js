@@ -140,14 +140,6 @@ export class HttpProtocol extends Protocol {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    // _decodeRequest(body) {
-    //     if (body === undefined) return []  //{args: []}
-    //     return body
-    //     // let [action, ...args] = body
-    //     // if (!action) throw new NotFound("missing action name")
-    //     // return [action, ...args]
-    // }
-
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
            For GET requests, `data` must be missing (undefined), as we don't allow body in GET.
@@ -193,17 +185,12 @@ export class JsonProtocol extends HttpProtocol {
          */
         let out, ex
         try {
-            // `req.body` can have already been decoded by middleware if mimetype=json was set in the request, or can be {}
             let {req: {body}}  = ctx        // RequestContext
             // print(body)
 
+            // `body` can have already been decoded by middleware if mimetype=json was set in the request; it can also be {}
             let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
-
-            // let [action, ...args] = body
-            // let [action, ...args] = this._decodeRequest(body)
-            // if (args === undefined) args = []
-            // if (!(args instanceof Array)) args = [args]
 
             out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
@@ -212,7 +199,7 @@ export class JsonProtocol extends HttpProtocol {
         return this._sendResponse(ctx, out, ex)
     }
 
-    execute(agent, ctx, action, ...args) {
+    execute(agent, ctx, ...args) {
         return this.action.call(agent, ctx, ...args)
     }
 }

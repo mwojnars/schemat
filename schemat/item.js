@@ -1133,7 +1133,7 @@ Item.api = new API([], { // http endpoints...
 
 Item.actions = {
     // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
-    'get_json':         ['json/GET',    'action'],
+    'get_json':         ['json/GET'],
     'delete_self':      ['action/POST', 'delete_self'],
     'insert_field':     ['action/POST', 'insert_field'],
     'delete_field':     ['action/POST', 'delete_field'],
@@ -1499,7 +1499,7 @@ Category.actions = {
     ...Item.actions,
     // 'create':       'POST/create',
     // 'new_item':     ['POST/new', 'new_item'],
-    'new_item':     ['new/POST', 'action'],
+    'new_item':     ['new/POST'],
 }
 
 // Category.initActions({
