@@ -143,11 +143,11 @@ export class JsonProtocol extends HttpProtocol {
     // _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? body : []} }
 
     _decodeRequest(body) {
-        if (body === undefined) return {args: []}
+        if (body === undefined) return []  //{args: []}
         let [action, ...args] = body
-        // let [action, ...args] = (typeof body === 'string' ? JSON.parse(body) : body)
         if (!action) throw new NotFound("missing action name")
-        return {action, args}
+        return [action, ...args]
+        // return {action, args}
     }
 
     async _fetch(url, data, method = 'POST') {
@@ -196,17 +196,15 @@ export class JsonProtocol extends HttpProtocol {
         let out, ex
         try {
             // here, req.body can already be decoded by middleware if mimetype=json was set in the request
-            let {req} = ctx     // RequestContext
-            let body  = T.notEmpty(req.body) ? JSON.parse(req.body) : undefined
-            // if (T.isEmpty(body) && body !== undefined) {
-            //     print(req.body, body)
-            //     print(JSON.parse(req.body))
-            // }
-            let {action, args} = this._decodeRequest(body)
+            let {req}  = ctx     // RequestContext
+            let {body} = req
+            body = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : undefined)
+            // print(req.body)
 
-            if (args === undefined) args = []
-            if (!(args instanceof Array)) args = [args]
-            print(req.body)
+            let [action, ...args] = this._decodeRequest(body)
+
+            // if (args === undefined) args = []
+            // if (!(args instanceof Array)) args = [args]
 
             out = this.execute(agent, ctx, action, ...args)
             if (out instanceof Promise) out = await out
