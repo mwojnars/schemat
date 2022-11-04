@@ -408,6 +408,15 @@ export class Item {
         return new Item(category, iid).reload({jsonData})
     }
 
+    static createAPI(endpoints, actions = {}) {
+        /* Create .api and .actions of this Item (sub)class. */
+        let base = Object.getPrototypeOf(this)
+        if (!T.isSubclass(base, Item)) base = undefined
+        this.api = new API(base ? [base.api] : [], endpoints)
+        this.actions = base ? {...base.actions, ...actions} : actions
+    }
+
+
     constructor(category, iid) {
         /* To set this.data, load() or reload() must be called after this constructor. */
         if (category) {
@@ -1087,60 +1096,56 @@ Item.handlers = {
 // `ctx` is {}, which can be a valid argument for some actions - supporting this type
 // of calls is NOT mandatory, though.
 
-Item.api = new API([], { // http endpoints...
+// Item.api = new API([], { // http endpoints...
+Item.createAPI(
+    {
+        // http endpoints...
+        // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
+        'CALL/default': new InternalProtocol(function() { return this }),
+        'CALL/item':    new InternalProtocol(function() { return this }),
+        'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
 
-    // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
+        // internal actions called by UI
+        'POST/action':  new  ActionsProtocol({
 
-    // 'CALL/default': new InternalProtocol(function() { return this }),
-    // 'CALL/item':    new InternalProtocol(function() { return this }),
-    // 'GET/json':     new JsonProtocol({'get_json': function() { return this.encodeSelf() }}),
+            delete_self(ctx)   { return this.registry.delete(this) },
 
-    'CALL/default': new InternalProtocol(function() { return this }),
-    'CALL/item':    new InternalProtocol(function() { return this }),
-    'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
+            insert_field(ctx, path, pos, entry) {
+                if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                this.data.insert(path, pos, entry)
+                return this.registry.update(this)
+            },
 
-    // internal actions called by UI
-    'POST/action':  new  ActionsProtocol({
+            delete_field(ctx, path) {
+                this.data.delete(path)
+                return this.registry.update(this)
+            },
 
-        delete_self(ctx)   { return this.registry.delete(this) },
+            update_field(ctx, path, entry) {
+                if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                this.data.update(path, entry)
+                return this.registry.update(this)
+            },
 
-        insert_field(ctx, path, pos, entry) {
-            if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-            this.data.insert(path, pos, entry)
-            return this.registry.update(this)
-        },
+            move_field(ctx, path, pos1, pos2) {
+                this.data.move(path, pos1, pos2)
+                return this.registry.update(this)
+            },
 
-        delete_field(ctx, path) {
-            this.data.delete(path)
-            return this.registry.update(this)
-        },
-
-        update_field(ctx, path, entry) {
-            if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-            this.data.update(path, entry)
-            return this.registry.update(this)
-        },
-
-        move_field(ctx, path, pos1, pos2) {
-            this.data.move(path, pos1, pos2)
-            return this.registry.update(this)
-        },
-
-    }),
-})
-
+        }),
+    },
+    {
+        // actions...
+        // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
+        'get_json':         ['GET/json'],
+        'delete_self':      ['POST/action', 'delete_self'],
+        'insert_field':     ['POST/action', 'insert_field'],
+        'delete_field':     ['POST/action', 'delete_field'],
+        'update_field':     ['POST/action', 'update_field'],
+        'move_field':       ['POST/action', 'move_field'],
+    }
+)
 // print(`Item.api.endpoints:`, Item.api.endpoints)
-
-Item.actions = {
-    // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
-    'get_json':         ['GET/json'],
-    'delete_self':      ['POST/action', 'delete_self'],
-    'insert_field':     ['POST/action', 'insert_field'],
-    'delete_field':     ['POST/action', 'delete_field'],
-    'update_field':     ['POST/action', 'update_field'],
-    'move_field':       ['POST/action', 'move_field'],
-}
-
 
 
 /**********************************************************************************************************************/
@@ -1458,47 +1463,54 @@ export class Category extends Item {
 Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 
-Category.api = new API([Item.api], {   // http endpoints...
-
-    'GET/import':   new HttpProtocol(function ({request, res})
+// Category.api = new API([Item.api], {   // http endpoints...
+Category.createAPI(
     {
-        /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-        this._checkPath(request)
-        res.type('js')
-        res.send(this.getSource())
-    }),
+        // http endpoints...
 
-    'GET/scan':     new HttpProtocol(async function ({res})
+        'GET/import':   new HttpProtocol(function ({request, res})
+        {
+            /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+            this._checkPath(request)
+            res.type('js')
+            res.send(this.getSource())
+        }),
+
+        'GET/scan':     new HttpProtocol(async function ({res})
+        {
+            /* Retrieve all children of this category and send to client as a JSON array.
+               TODO: set a size limit & offset (pagination).
+               TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+             */
+            let items = []
+            for await (const item of this.registry.scan(this)) {
+                await item.load()
+                items.push(item)
+            }
+            res.sendItems(items)
+        }),
+
+        'POST/create':  new JsonProtocol(async function (ctx, dataState)
+        {
+            /* Create a new item in this category based on request data. */
+            let data = await (new Data).__setstate__(dataState)
+            let item = await this.new(data)
+            await this.registry.insert(item)
+            // await category.registry.commit()
+            return item.encodeSelf()
+            // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        }),
+    },
     {
-        /* Retrieve all children of this category and send to client as a JSON array.
-           TODO: set a size limit & offset (pagination).
-           TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-         */
-        let items = []
-        for await (const item of this.registry.scan(this)) {
-            await item.load()
-            items.push(item)
-        }
-        res.sendItems(items)
-    }),
+        // actions...
+        'create_item':      ['POST/create'],
+    }
+)
 
-    'POST/create':  new JsonProtocol(async function (ctx, dataState)
-    {
-        /* Create a new item in this category based on request data. */
-        let data = await (new Data).__setstate__(dataState)
-        let item = await this.new(data)
-        await this.registry.insert(item)
-        // await category.registry.commit()
-        return item.encodeSelf()
-        // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    }),
-
-})
-
-Category.actions = {
-    ...Item.actions,
-    'create_item':      ['POST/create'],
-}
+// Category.actions = {
+//     ...Item.actions,
+//     'create_item':      ['POST/create'],
+// }
 
 
 /**********************************************************************************************************************/

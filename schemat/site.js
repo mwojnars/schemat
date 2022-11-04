@@ -335,7 +335,8 @@ export class File extends Item {
 
 File.setCaching('read')
 
-File.api = new API([Item.api], {        // endpoints...
+// File.api = new API([Item.api], {        // endpoints...
+File.createAPI({        // endpoints...
 
     'CALL/text':    new InternalProtocol(function ({request})
     {
