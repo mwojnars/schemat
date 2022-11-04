@@ -59,9 +59,9 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.server()
 
+    get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
+    get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
 
-    get endpoint() { return this._splitAddress()[0] }       // name of the endpoint, no access method
-    get method()   { return this._splitAddress()[1] }       // access method of the endpoint: GET/POST/CALL
 
     constructor(action = null) { this.action = action }
 
@@ -237,38 +237,11 @@ export class ActionsProtocol extends JsonProtocol {
 
 /**********************************************************************************************************************/
 
-// export function action(...args) {
-//     /* Takes an RPC action function (method) and decorates it (in place) with parameters:
-//        - method.endpoint -- endpoint name with access mode, as a string of the form "name/MODE" (MODE is GET/POST/CALL)
-//        - method.protocol -- subclass of Protocol whose instance will perform the actual client/server communication.
-//        The `args` may contain (in any order):
-//        - a string, interpreted as an endpoint in the form "name/MODE", where MODE is GET, POST, or CALL;
-//        - a protocol class;
-//        - an access function.
-//        Only the function is obligatory.
-//      */
-//     let endpoint, protocol, method
-//     for (let arg of args)
-//         if (typeof arg === 'string')                        endpoint = arg
-//         else if (arg.prototype instanceof Protocol)         protocol = arg
-//         else if (typeof arg === 'function')                 method   = arg
-//         else throw new Error(`incorrect argument: ${arg}`)
-//
-//     if (!method) throw new Error(`missing action function`)
-//
-//     if (protocol) method.protocol = protocol
-//     if (endpoint) method.endpoint = endpoint
-//     // if (!method.name) method.name = endpoint.replace('/', '_')
-//     return method
-// }
-
-/**********************************************************************************************************************/
-
 export class API {
     /* Collection of remote actions exposed on particular web/RPC/API endpoints, each endpoint operating a particular protocol. */
 
     // environment      // 'client' or 'server'
-    endpoints = {}      // {name/MODE: protocol_instance}, where MODE is an access method (GET/POST/CALL)
+    endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
 
     constructor(parents = [], endpoints = {}) {                 // environment = null) {
         // this.environment = environment
@@ -300,7 +273,7 @@ export class API {
     }
 
     findHandler(endpoint, httpMethod) {
-        return this.endpoints[`${endpoint}/${httpMethod}`]
+        return this.endpoints[`${httpMethod}/${endpoint}`]
     }
 }
 

@@ -337,7 +337,7 @@ File.setCaching('read')
 
 File.api = new API([Item.api], {        // endpoints...
 
-    'text/CALL':    new InternalProtocol(function ({request})
+    'CALL/text':    new InternalProtocol(function ({request})
     {
         /* Plain text of this File for Site.import() etc. */
         let txt = this.read()
@@ -345,7 +345,7 @@ File.api = new API([Item.api], {        // endpoints...
         return txt
     }),
 
-    'file/GET':     new HttpProtocol(function ({res, request})
+    'GET/file':     new HttpProtocol(function ({res, request})
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)

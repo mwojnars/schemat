@@ -1089,18 +1089,18 @@ Item.handlers = {
 
 Item.api = new API([], { // http endpoints...
 
-    // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
+    // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
 
     // 'CALL/default': new InternalProtocol(function() { return this }),
     // 'CALL/item':    new InternalProtocol(function() { return this }),
     // 'GET/json':     new JsonProtocol({'get_json': function() { return this.encodeSelf() }}),
 
-    'default/CALL': new InternalProtocol(function() { return this }),
-    'item/CALL':    new InternalProtocol(function() { return this }),
-    'json/GET':     new JsonProtocol(function() { return this.encodeSelf() }),
+    'CALL/default': new InternalProtocol(function() { return this }),
+    'CALL/item':    new InternalProtocol(function() { return this }),
+    'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
 
     // internal actions called by UI
-    'action/POST':  new  ActionsProtocol({
+    'POST/action':  new  ActionsProtocol({
 
         delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1133,12 +1133,12 @@ Item.api = new API([], { // http endpoints...
 
 Item.actions = {
     // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
-    'get_json':         ['json/GET'],
-    'delete_self':      ['action/POST', 'delete_self'],
-    'insert_field':     ['action/POST', 'insert_field'],
-    'delete_field':     ['action/POST', 'delete_field'],
-    'update_field':     ['action/POST', 'update_field'],
-    'move_field':       ['action/POST', 'move_field'],
+    'get_json':         ['GET/json'],
+    'delete_self':      ['POST/action', 'delete_self'],
+    'insert_field':     ['POST/action', 'insert_field'],
+    'delete_field':     ['POST/action', 'delete_field'],
+    'update_field':     ['POST/action', 'update_field'],
+    'move_field':       ['POST/action', 'move_field'],
 }
 
 
@@ -1460,7 +1460,7 @@ Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'get
 
 Category.api = new API([Item.api], {   // http endpoints...
 
-    'import/GET':   new HttpProtocol(function ({request, res})
+    'GET/import':   new HttpProtocol(function ({request, res})
     {
         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
         this._checkPath(request)
@@ -1468,7 +1468,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.send(this.getSource())
     }),
 
-    'scan/GET':     new HttpProtocol(async function ({res})
+    'GET/scan':     new HttpProtocol(async function ({res})
     {
         /* Retrieve all children of this category and send to client as a JSON array.
            TODO: set a size limit & offset (pagination).
@@ -1482,7 +1482,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.sendItems(items)
     }),
 
-    'new/POST':     new JsonProtocol(async function (ctx, dataState)
+    'POST/new':     new JsonProtocol(async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1498,13 +1498,8 @@ Category.api = new API([Item.api], {   // http endpoints...
 Category.actions = {
     ...Item.actions,
     // 'create':       'POST/create',
-    // 'new_item':     ['POST/new', 'new_item'],
-    'new_item':     ['new/POST'],
+    'new_item':     ['POST/new'],
 }
-
-// Category.initActions({
-//     'new_item': ['new/POST', 'new_item', ...other fixed args for protocol.client()]
-// })
 
 
 /**********************************************************************************************************************/
