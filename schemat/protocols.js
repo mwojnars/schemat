@@ -140,8 +140,6 @@ export class HttpProtocol extends Protocol {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    get actions()   { return {'action': this.action} }
-
     _encodeRequest(action, args)    { return args[0] }
     _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? [body] : []} }
 
@@ -256,22 +254,6 @@ export class ActionsProtocol extends JsonProtocol {
         return method.call(agent, ctx, ...args)
     }
 }
-
-// export class JsonProtocol2 extends ActionsProtocol {
-//     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
-//        The action accepts a single argument that's sent as the JSON body of the web request.
-//      */
-//
-//     _singleActionName() {
-//         /* Check there's exactly one action and return its name. */
-//         let actions = Object.keys(this.actions)
-//         assert(actions.length === 1)
-//         return actions[0]
-//     }
-//
-//     _encodeRequest(action, args)    { return args[0] }
-//     _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
-// }
 
 /**********************************************************************************************************************/
 
