@@ -1096,7 +1096,6 @@ Item.handlers = {
 // `ctx` is {}, which can be a valid argument for some actions - supporting this type
 // of calls is NOT mandatory, though.
 
-// Item.api = new API([], { // http endpoints...
 Item.createAPI(
     {
         // http endpoints...
@@ -1462,8 +1461,6 @@ export class Category extends Item {
 
 Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-
-// Category.api = new API([Item.api], {   // http endpoints...
 Category.createAPI(
     {
         // http endpoints...
@@ -1506,11 +1503,6 @@ Category.createAPI(
         'create_item':      ['POST/create'],
     }
 )
-
-// Category.actions = {
-//     ...Item.actions,
-//     'create_item':      ['POST/create'],
-// }
 
 
 /**********************************************************************************************************************/
