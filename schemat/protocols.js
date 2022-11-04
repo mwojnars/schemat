@@ -140,10 +140,8 @@ export class HttpProtocol extends Protocol {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    // _encodeRequest(action, args)    { return args }
     // _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? body : []} }
 
-    _encodeRequest(action, args)    { return [action, ...args] }
     _decodeRequest(body) {
         if (body === undefined) return {args: []}
         let [action, ...args] = body
@@ -181,13 +179,12 @@ export class JsonProtocol extends HttpProtocol {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async client(agent, action, ...args) {
+    async client(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url  = agent.url(this.endpoint)
-        let data = this._encodeRequest(action, args)            // json string
-        let res  = await this._fetch(url, data, this.access)    // client-side JS Response object
+        let url = agent.url(this.endpoint)
+        let res = await this._fetch(url, args, this.access)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
-        let out  = await res.text()                             // json string or empty
+        let out = await res.text()                              // json string or empty
         if (out) return JSON.parse(out)
     }
 
