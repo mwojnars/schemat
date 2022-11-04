@@ -510,7 +510,7 @@ export class Item {
         // create a trigger for each action and store in `this.action`
         for (let [name, spec] of Object.entries(this.constructor.actions)) {
             if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
-            if (typeof spec === 'string') spec = [spec]
+            // if (typeof spec === 'string') spec = [spec]
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
             let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
@@ -1402,7 +1402,7 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await this.action.new_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
+            let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
@@ -1482,7 +1482,7 @@ Category.api = new API([Item.api], {   // http endpoints...
         res.sendItems(items)
     }),
 
-    'POST/new':     new JsonProtocol(async function (ctx, dataState)
+    'POST/create':  new JsonProtocol(async function (ctx, dataState)
     {
         /* Create a new item in this category based on request data. */
         let data = await (new Data).__setstate__(dataState)
@@ -1497,8 +1497,7 @@ Category.api = new API([Item.api], {   // http endpoints...
 
 Category.actions = {
     ...Item.actions,
-    // 'create':       'POST/create',
-    'new_item':     ['POST/new'],
+    'create_item':      ['POST/create'],
 }
 
 
