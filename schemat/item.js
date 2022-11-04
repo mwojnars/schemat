@@ -1132,6 +1132,7 @@ Item.api = new API([], { // http endpoints...
 // print(`Item.api.endpoints:`, Item.api.endpoints)
 
 Item.actions = {
+    // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
     'get_json':         ['json/GET',    'action'],
     'delete_self':      ['action/POST', 'delete_self'],
     'insert_field':     ['action/POST', 'insert_field'],

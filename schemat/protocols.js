@@ -140,15 +140,13 @@ export class HttpProtocol extends Protocol {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    // _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? body : []} }
-
-    _decodeRequest(body) {
-        if (body === undefined) return []  //{args: []}
-        let [action, ...args] = body
-        if (!action) throw new NotFound("missing action name")
-        return [action, ...args]
-        // return {action, args}
-    }
+    // _decodeRequest(body) {
+    //     if (body === undefined) return []  //{args: []}
+    //     return body
+    //     // let [action, ...args] = body
+    //     // if (!action) throw new NotFound("missing action name")
+    //     // return [action, ...args]
+    // }
 
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
@@ -195,18 +193,19 @@ export class JsonProtocol extends HttpProtocol {
          */
         let out, ex
         try {
-            // here, req.body can already be decoded by middleware if mimetype=json was set in the request
-            let {req}  = ctx     // RequestContext
-            let {body} = req
-            body = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : undefined)
-            // print(req.body)
+            // `req.body` can have already been decoded by middleware if mimetype=json was set in the request, or can be {}
+            let {req: {body}}  = ctx        // RequestContext
+            // print(body)
 
-            let [action, ...args] = this._decodeRequest(body)
+            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+            if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
+            // let [action, ...args] = body
+            // let [action, ...args] = this._decodeRequest(body)
             // if (args === undefined) args = []
             // if (!(args instanceof Array)) args = [args]
 
-            out = this.execute(agent, ctx, action, ...args)
+            out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}
