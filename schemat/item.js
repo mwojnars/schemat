@@ -511,8 +511,7 @@ export class Item {
         for (let [name, spec] of Object.entries(this.constructor.actions)) {
             if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
             if (typeof spec === 'string') spec = [spec]
-            let endpoint = spec[0]
-            let fixed    = spec.slice(1)            // fixed arguments to the call, typically an action name
+            let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
             let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
                 ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise

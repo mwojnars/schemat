@@ -140,8 +140,17 @@ export class HttpProtocol extends Protocol {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    _encodeRequest(action, args)    { return args[0] }
-    _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? [body] : []} }
+    // _encodeRequest(action, args)    { return args }
+    // _decodeRequest(body)            { return {action: 'action', args: body !== undefined ? body : []} }
+
+    _encodeRequest(action, args)    { return [action, ...args] }
+    _decodeRequest(body) {
+        if (body === undefined) return {args: []}
+        let [action, ...args] = body
+        // let [action, ...args] = (typeof body === 'string' ? JSON.parse(body) : body)
+        if (!action) throw new NotFound("missing action name")
+        return {action, args}
+    }
 
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
@@ -183,14 +192,19 @@ export class JsonProtocol extends HttpProtocol {
     }
 
     async server(agent, ctx) {
-        /* Server-side request handler for execution of an RPC call.
+        /* Server-side request handler for execution of an RPC call or a regular web request from a browser.
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
         let out, ex
         try {
+            // here, req.body can already be decoded by middleware if mimetype=json was set in the request
             let {req} = ctx     // RequestContext
-            let body  = req.body ? JSON.parse(req.body) : undefined
+            let body  = T.notEmpty(req.body) ? JSON.parse(req.body) : undefined
+            // if (T.isEmpty(body) && body !== undefined) {
+            //     print(req.body, body)
+            //     print(JSON.parse(req.body))
+            // }
             let {action, args} = this._decodeRequest(body)
 
             if (args === undefined) args = []
@@ -238,14 +252,6 @@ export class ActionsProtocol extends JsonProtocol {
         proto.endpoint = this.endpoint
         proto.access = this.access
         return proto
-    }
-
-    _encodeRequest(action, args)    { return {action, args} }
-    _decodeRequest(body) {
-        // return typeof body === 'string' ? JSON.parse(body) : body
-        let {action, args} = (typeof body === 'string' ? JSON.parse(body) : body)
-        if (!action) throw new NotFound("missing action name")
-        return {action, args}
     }
 
     execute(agent, ctx, action, ...args) {
