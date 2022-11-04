@@ -198,10 +198,6 @@ export class JsonProtocol extends HttpProtocol {
         catch (e) {ex = e}
         return this._sendResponse(ctx, out, ex)
     }
-
-    execute(agent, ctx, ...args) {
-        return this.action.call(agent, ctx, ...args)
-    }
 }
 
 export class ActionsProtocol extends JsonProtocol {
