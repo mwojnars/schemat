@@ -50,11 +50,8 @@ export class Protocol {
        Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
-    address         // protocol-specific string that identifies the connection; typically,
-                    // a URL endpoint for HTTP protocols, or topic name for Kafka protocols
-
-    endpoint        // name of the endpoint, access mode excluded
-    access          // access mode of the endpoint: GET/POST/CALL
+    address         // protocol-specific string that identifies the connection; typically, for HTTP, has the form of
+                    // "METHOD/endpoint", where METHOD is one of GET/POST/CALL; for Kafka: a topic name
 
     action          // action(ctx, ...args) function to be called when the protocol is invoked;
                     // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
@@ -63,19 +60,23 @@ export class Protocol {
                     // instead of protocol.server()
 
 
-    constructor(action = null)  { this.action = action }
+    get endpoint() { return this._splitAddress()[0] }       // name of the endpoint, no access method
+    get method()   { return this._splitAddress()[1] }       // access method of the endpoint: GET/POST/CALL
+
+    constructor(action = null) { this.action = action }
+
+    setAddress(address) { this.address = address }
+
+    _splitAddress() {
+        assert(this.address)
+        let parts = this.address.split('/')
+        if (parts.length !== 2) throw new Error(`incorrect address format for a protocol: ${this.address}`)
+        return parts
+    }
 
     merge(protocol) {
         /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
         return protocol
-    }
-
-    setEndpoint(endpoint) {
-        assert(endpoint)
-        let parts = endpoint.split('/')
-        if (parts.length !== 2) throw new Error(`incorrect endpoint: ${endpoint}`)
-        this.endpoint = parts[0]
-        this.access   = parts[1]
     }
 
     // the methods below may return a Promise or be declared as async in subclasses...
@@ -172,7 +173,7 @@ export class JsonProtocol extends HttpProtocol {
     async client(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
-        let res = await this._fetch(url, args, this.access)     // client-side JS Response object
+        let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         let out = await res.text()                              // json string or empty
         if (out) return JSON.parse(out)
@@ -188,7 +189,7 @@ export class JsonProtocol extends HttpProtocol {
             let {req: {body}}  = ctx        // RequestContext
             // print(body)
 
-            // `body` can have already been decoded by middleware if mimetype=json was set in the request; it can also be {}
+            // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
             let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
@@ -224,11 +225,7 @@ export class ActionsProtocol extends JsonProtocol {
 
         // create a new protocol instance with `actions` combined
         let actions = {...this.actions, ...protocol.actions}
-        let proto = new c1(actions)
-
-        proto.endpoint = this.endpoint
-        proto.access = this.access
-        return proto
+        return new c1(actions)
     }
 
     execute(agent, ctx, action, ...args) {
@@ -276,7 +273,7 @@ export class API {
     constructor(parents = [], endpoints = {}) {                 // environment = null) {
         // this.environment = environment
         for (let [endpoint, protocol] of Object.entries(endpoints))
-            protocol.setEndpoint(endpoint)
+            protocol.setAddress(endpoint)
         if (parents && !T.isArray(parents))
             parents = [parents]
 
