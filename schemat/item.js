@@ -333,6 +333,7 @@ export class Item {
 
     cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
+    static category             // like instance-level `category`, but accessible from the class
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
@@ -498,10 +499,8 @@ export class Item {
 
     async _initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
-        if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
+        if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
         T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
-        // let module = await this.category.getModule()
-        // T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
 
     _initActions() {
@@ -1200,7 +1199,9 @@ export class Category extends Item {
 
     async getItemClass() {
         let module = await this.getModule()
-        return module.Class
+        let cls = module.Class
+        cls.category = this
+        return cls
     }
 
     async getModule() {
@@ -1240,9 +1241,6 @@ export class Category extends Item {
         if (!path) {
             let proto = this.getPrototypes()[0]
             return {Class: proto ? await proto.getItemClass() : Item}
-            // if (!proto) return {Class: Item}
-            // let module = await proto.getModule()
-            // return {Class: module.Class}
         }
         return {Class: await this.registry.importDirect(path, name || 'default')}
     }
@@ -1528,7 +1526,6 @@ export class RootCategory extends Category {
         return super.reload({...opts, use_schema: false})
     }
     getItemClass() { return Category }
-    // async getModule() { return {Class: Category} }
 }
 
 /**********************************************************************************************************************/
