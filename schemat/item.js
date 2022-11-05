@@ -1198,6 +1198,7 @@ export class Category extends Item {
     }
 
     async getItemClass() {
+        /* Return the dynamically created class to be used for items of this category. */
         let module = await this.getModule()
         let cls = module.Class
         cls.category = this
@@ -1217,8 +1218,7 @@ export class Category extends Item {
             // when booting up, a couple of core items must be created before registry.site becomes available
             if (!classPath) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category: ${this.id_str}`)
-            return this.getBaseClassModule(classPath, name)
-            // return {Class: await this.registry.importDirect(classPath, name || 'default')}
+            return {Class: this.getDefaultClass(classPath, name)}
         }
 
         let modulePath = this.getPath()
@@ -1230,19 +1230,19 @@ export class Category extends Item {
             )
         }
         catch (ex) {
-            print(`ERROR when parsing dynamic code for category ${this.id_str}, will use a base class instead. Cause:\n`, ex)
-            return this.getBaseClassModule(classPath, name)
+            print(`ERROR when parsing dynamic code for category ${this.id_str}, will use a default class instead. Cause:\n`, ex)
+            return {Class: this.getDefaultClass(classPath, name)}
         }
     }
 
-    async getBaseClassModule(path, name) {
-        /* Return a {Class} object that contains the base class (without dynamic code) for items of this category. */
+    async getDefaultClass(path, name) {
+        /* Return a default class to be used for items of this category when dynamic code is not present or fails to parse. */
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this.getPrototypes()[0]
-            return {Class: proto ? await proto.getItemClass() : Item}
+            return proto ? await proto.getItemClass() : Item
         }
-        return {Class: await this.registry.importDirect(path, name || 'default')}
+        return await this.registry.importDirect(path, name || 'default')
     }
 
     getClassPath() {
