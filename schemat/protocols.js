@@ -50,25 +50,28 @@ export class Protocol {
        Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
-    static multipleActions = false      // true if multiple actions per endpoint are allowed
+    address         // protocol-specific string that identifies the connection; typically, for HTTP, has the form of
+                    // "METHOD/endpoint", where METHOD is one of GET/POST/CALL; for Kafka: a topic name
 
-    address                             // protocol-specific string that identifies the connection; typically,
-                                        // a URL endpoint for HTTP protocols, or topic name for Kafka protocols
+    action          // action(ctx, ...args) function to be called when the protocol is invoked;
+                    // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
+                    // like a method of the agent; `ctx` is a RequestContext, or {} in the case when an action
+                    // is called directly on the server through item.action.XXX() which invokes protocol.execute()
+                    // instead of protocol.server()
 
-    endpoint                            // name of the endpoint, access mode excluded
-    access                              // access mode of the endpoint: GET/POST/CALL
+    get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
+    get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
 
-    actions                             // {name: method}, specification of actions handled by this protocol instance
 
-    // constructor(endpoint = undefined) {
-    //     if (endpoint !== undefined) this.setEndpoint(endpoint)
-    // }
+    constructor(action = null) { this.action = action }
 
-    constructor(actions = {}) {
-        if (typeof actions === 'function') actions = {'': actions}
-        if (!this.constructor.multipleActions && Object.keys(actions).length >= 2)
-            throw new Error(`multiple actions not allowed for this protocol`)
-        this.actions = actions
+    setAddress(address) { this.address = address }
+
+    _splitAddress() {
+        assert(this.address)
+        let parts = this.address.split('/')
+        if (parts.length !== 2) throw new Error(`incorrect address format for a protocol: ${this.address}`)
+        return parts
     }
 
     merge(protocol) {
@@ -76,47 +79,32 @@ export class Protocol {
         return protocol
     }
 
-    setEndpoint(endpoint) {
-        assert(endpoint)
-        let parts = endpoint.split('/')
-        if (parts.length !== 2) throw new Error(`incorrect endpoint: ${endpoint}`)
-        this.endpoint = parts[0]
-        this.access   = parts[1]
+    // the methods below may return a Promise or be declared as async in subclasses...
+
+    client(agent, action, ...args) {
+        /* Subclasses should override client() method to encode `args` in a protocol-specific way. */
+        throw new Error(`client-side internal call not allowed for this protocol`)
     }
 
-    addAction(name, method, protocolClass) {
-        if (name in this.actions)
-            throw new Error(`duplicate action definition ('${name}') for a protocol`)
-        if (!this.constructor.multipleActions && Object.keys(this.actions).length)
-            throw new Error(`cannot add '${name}' action, multiple actions not allowed for this protocol`)
-        if (protocolClass !== this.constructor)
-            throw new Error(`inconsistent protocol declared for '${name}' and another action on the same endpoint ('${this.endpoint}')`)
-        this.actions[name] = method
+    server(agent, ctx) {
+        /* Subclasses should override server() method to decode arguments for execute() in a protocol-specific way. */
+        throw new Error(`missing server-side implementation for the protocol`)
     }
 
-    _singleActionName() {
-        /* Check there's exactly one action and return its name. */
-        let actions = Object.keys(this.actions)
-        assert(actions.length === 1)
-        return actions[0]
+    execute(agent, ctx, ...args) {
+        /* The actual execution of an action, without pre- & post-processing of web requests/responses.
+           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
+           if only the action function supports this.
+         */
+        return this.action.call(agent, ctx, ...args)
     }
-    _singleActionCall(agent, ctx) {
-        /* Check there's exactly one action and return its function. */
-        let methods = Object.values(this.actions)
-        assert(methods.length === 1)
-        return methods[0].call(agent, ctx)
-    }
-
-    // the methods below may return a Promise or be declared as async in subclasses
-    client(agent, action, ...args)  { throw new Error(`client-side internal call not allowed for this protocol`) }
-    server(agent, ctx)              { throw new Error(`missing server implementation`) }
 }
 
 export class InternalProtocol extends Protocol {
     /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
        but executed server-side (exclusively).
      */
-    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
+    server(agent, ctx)  { return this.execute(agent, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -132,7 +120,7 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    async server(agent, ctx)    { return this._singleActionCall(agent, ctx) }
+    server(agent, ctx)  { return this.execute(agent, ctx) }
 }
 
 
@@ -151,31 +139,7 @@ export class HttpProtocol extends Protocol {
 /*************************************************************************************************/
 
 export class JsonProtocol extends HttpProtocol {
-    /* JSON communication over HTTP POST. The server interprets req.body as a JSON string of the form {action, args}
-       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
-       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
-       it's sent as a JSON-serialized object of the form: {error}.
-     */
-    static multipleActions = true           // TODO: remove multipleActions
-
-    merge(protocol) {
-        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
-
-        let c1 = T.getClass(this)
-        let c2 = T.getClass(protocol)
-        if (c1 !== c2) return protocol          // `protocol` can be null
-
-        // create a new protocol instance with `actions` combined
-        let actions = {...this.actions, ...protocol.actions}
-        let proto = new c1(actions)
-
-        proto.endpoint = this.endpoint
-        proto.access = this.access
-        return proto
-    }
-
-    _encodeRequest(action, args)    { return {action, args} }
-    _decodeRequest(body)            { return typeof body === 'string' ? JSON.parse(body) : body }
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
@@ -206,36 +170,30 @@ export class JsonProtocol extends HttpProtocol {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async client(agent, action, ...args) {
+    async client(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url  = agent.url(this.endpoint)
-        let data = this._encodeRequest(action, args)            // json string
-        let res  = await this._fetch(url, data, this.access)    // client-side JS Response object
+        let url = agent.url(this.endpoint)
+        let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
-        let out  = await res.text()                             // json string or empty
+        let out = await res.text()                              // json string or empty
         if (out) return JSON.parse(out)
     }
 
     async server(agent, ctx) {
-        /* Server-side request handler for execution of an RPC call.
+        /* Server-side request handler for execution of an RPC call or a regular web request from a browser.
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
         let out, ex
         try {
-            let {req} = ctx     // RequestContext
-            let body  = req.body ? JSON.parse(req.body) : undefined
-            let {action, args} = this._decodeRequest(body)
-            if (!action) throw new NotFound("missing action name")
+            let {req: {body}}  = ctx        // RequestContext
+            // print(body)
 
-            if (args === undefined) args = []
-            if (!(args instanceof Array)) args = [args]
-            print(req.body)
+            // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
+            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+            if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
-            let method = this.actions[action]
-            if (!method) throw new NotFound(`unknown action: '${action}'`)
-
-            out = method.call(agent, ctx, ...args)
+            out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}
@@ -243,38 +201,38 @@ export class JsonProtocol extends HttpProtocol {
     }
 }
 
-export class JsonSimpleProtocol extends JsonProtocol {
-    /* Single action accepting one argument, or none. */
-
-    _encodeRequest(action, args)    { return args[0] }
-    _decodeRequest(body)            { return {action: this._singleActionName(), args: body !== undefined ? [body] : []} }
-}
-
-/**********************************************************************************************************************/
-
-export function action(...args) {
-    /* Takes an RPC action function (method) and decorates it (in place) with parameters:
-       - method.endpoint -- endpoint name with access mode, as a string of the form "name/MODE" (MODE is GET/POST/CALL)
-       - method.protocol -- subclass of Protocol whose instance will perform the actual client/server communication.
-       The `args` may contain (in any order):
-       - a string, interpreted as an endpoint in the form "name/MODE", where MODE is GET, POST, or CALL;
-       - a protocol class;
-       - an access function.
-       Only the function is obligatory.
+export class ActionsProtocol extends JsonProtocol {
+    /* JSON-based communication over HTTP POST that handles multiple actions.
+       The server interprets req.body as a JSON string of the form {action, args}
+       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
+       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
+       it's sent as a JSON-serialized object of the form: {error}.
      */
-    let endpoint, protocol, method
-    for (let arg of args)
-        if (typeof arg === 'string')                        endpoint = arg
-        else if (arg.prototype instanceof Protocol)         protocol = arg
-        else if (typeof arg === 'function')                 method   = arg
-        else throw new Error(`incorrect argument: ${arg}`)
 
-    if (!method) throw new Error(`missing action function`)
+    actions                 // {name: action_function}, specification of actions handled by this protocol
 
-    if (protocol) method.protocol = protocol
-    if (endpoint) method.endpoint = endpoint
-    // if (!method.name) method.name = endpoint.replace('/', '_')
-    return method
+    constructor(actions = {}) {
+        super()
+        this.actions = actions
+    }
+
+    merge(protocol) {
+        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
+
+        let c1 = T.getClass(this)
+        let c2 = T.getClass(protocol)
+        if (c1 !== c2) return protocol          // `protocol` can be null
+
+        // create a new protocol instance with `actions` combined
+        let actions = {...this.actions, ...protocol.actions}
+        return new c1(actions)
+    }
+
+    execute(agent, ctx, action, ...args) {
+        let method = this.actions[action]
+        if (!method) throw new NotFound(`unknown action: '${action}'`)
+        return method.call(agent, ctx, ...args)
+    }
 }
 
 /**********************************************************************************************************************/
@@ -283,22 +241,14 @@ export class API {
     /* Collection of remote actions exposed on particular web/RPC/API endpoints, each endpoint operating a particular protocol. */
 
     // environment      // 'client' or 'server'
-    endpoints = {}      // {name/MODE: protocol_instance}, where MODE is an access method (GET/POST/CALL)
-
-    // constructor(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
-    //     this.defaultEndpoint = defaultEndpoint
-    //     for (let [action, method] of Object.entries(actions))
-    //         this.addAction(action, method)
-    // }
+    endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
 
     constructor(parents = [], endpoints = {}) {                 // environment = null) {
         // this.environment = environment
         for (let [endpoint, protocol] of Object.entries(endpoints))
-            protocol.setEndpoint(endpoint)
+            protocol.setAddress(endpoint)
         if (parents && !T.isArray(parents))
             parents = [parents]
-
-        // this.endpoints = parents.length ? this.mergeEndpoints(parents, endpoints) : endpoints
 
         for (let endpts of [...parents.reverse().map(p=>p.endpoints), endpoints])
             this.add(endpts)
@@ -307,7 +257,7 @@ export class API {
     add(endpoints) {
         /* Add `endpoints` dict to `this.endpoints`. If an endpoint already exists its protocol gets merged with the new
            protocol instance (e.g., actions of both protocols are combined), or replaced if a given protocol class
-           doesn't implement merge() method. If protocol==null in `endpoints`, a given endpoint is removed from this.
+           doesn't implement merge(). If protocol==null in `endpoints`, the endpoint is removed from `this`.
          */
         for (let [endpoint, protocol] of Object.entries(endpoints))
             if (protocol == null) delete this.endpoints[endpoint]
@@ -317,61 +267,13 @@ export class API {
             }
     }
 
-    // mergeEndpoints(parents, child) {
-    //     /* Merge endpoints of multiple inheriting APIs.
-    //        If an endpoint occurs multiple times, the child's or foremost parent's protocol is used;
-    //        or, if there is a collection of actions (in a child) instead of a protocol instance, the actions
-    //        get merged into the protocol of a parent.
-    //      */
-    //     let api = new API()
-    //
-    //     let merged = {}
-    //     for (let endpoints of [...parents.reverse(), child])
-    //         for (let [endpoint, protocol] of Object.entries(endpoints)) {
-    //             if (endpoint in merged) {
-    //                 if (protocol.constructor.multipleActions)
-    //             }
-    //             else merged[endpoint] = protocol
-    //         }
-    //     return merged
-    // }
-
-    static fromActions(actions = {}, {defaultEndpoint = 'action/POST'} = {}) {
-        let api = new API()
-        api.defaultEndpoint = defaultEndpoint
-        for (let [action, method] of Object.entries(actions))
-            api.addAction(action, method)
-        return api
-    }
-    addAction(action, method) {
-        let endpoint = method.endpoint || this.defaultEndpoint
-        let protocol = method.protocol || (endpoint.endsWith('/GET') && HtmlPage) || JsonProtocol
-        let handler  = this.endpoints[endpoint] = this.endpoints[endpoint] || new protocol()
-        handler.setEndpoint(endpoint)
-        handler.addAction(action, method, protocol)
-    }
-
-    getTriggers(agent, onServer) {
-        /* Convert the endpoints and their actions to internal action triggers (trigger.XYZ()),
-           in a way compatible with the current environment (cli/srv).
-         */
-        let triggers = {}
-        if (typeof onServer === 'string') onServer = (onServer === 'server')
-
-        for (let handler of Object.values(this.endpoints))
-            for (let [action, method] of Object.entries(handler.actions)) {
-                if (!action) continue       // don't generate triggers for unnamed actions
-                if (action in triggers) throw new Error(`duplicate action name: '${action}'`)
-                triggers[action] = onServer
-                    ? (...args) => method.call(agent, {}, ...args)              // may return a Promise
-                    : (...args) => handler.client(agent, action, ...args)       // may return a Promise
-            }
-
-        return triggers
+    get(endpoint) {
+        /* `endpoint` is a full endpoint string: mode/name. */
+        return this.endpoints[endpoint]
     }
 
     findHandler(endpoint, httpMethod) {
-        return this.endpoints[`${endpoint}/${httpMethod}`]
+        return this.endpoints[`${httpMethod}/${endpoint}`]
     }
 }
 

@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Catalog, Data } from './data.js'
-import {HttpProtocol, JsonSimpleProtocol, API, action, JsonProtocol, InternalProtocol} from "./protocols.js"
+import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 // import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
@@ -325,16 +325,8 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    api             // API instance that defines this item's endpoints, actions, and protocols for each endpoint
-    action          // collection of triggers for the RPC actions allowed by this item's api;
-                    // available server-side and client-side, but with a different implementation of triggers
-
-    // action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
-    //                 // agent that groups the methods which can be called in either environment (cli/srv), but whose
-    //                 // actual execution always takes place on the server - the client-side implementation only forwards the call
-    //
-    // client          // Item.Client instance initialized during boot(); only present on a client
-    // server          // Item.Server instance initialized during boot(); only present on a server
+    action          // collection of triggers for RPC actions exposed by this item's API;
+                    // present server-side and client-side, but with a different implementation of triggers
 
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
@@ -343,8 +335,9 @@ export class Item {
 
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
-    static actions    = {}      // collection of action functions (RPC calls); each action is accessible from a server or a client
-    
+    static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
+    static api        = null    // API instance that defines this item's endpoints and protocols
+
     static __transient__ = ['cache']
 
     get id()        { return [this.cid, this.iid] }
@@ -407,6 +400,15 @@ export class Item {
     static async createLoaded(category, iid, jsonData) {
         return new Item(category, iid).reload({jsonData})
     }
+
+    static createAPI(endpoints, actions = {}) {
+        /* Create .api and .actions of this Item (sub)class. */
+        let base = Object.getPrototypeOf(this)
+        if (!T.isSubclass(base, Item)) base = undefined
+        this.api = new API(base ? [base.api] : [], endpoints)
+        this.actions = base ? {...base.actions, ...actions} : actions
+    }
+
 
     constructor(category, iid) {
         /* To set this.data, load() or reload() must be called after this constructor. */
@@ -497,22 +499,28 @@ export class Item {
     async _initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        let module = await this.category.getModule()
-        T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
+        T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
+        // let module = await this.category.getModule()
+        // T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
 
     _initActions() {
-        this.action = this.constructor.api.getTriggers(this, this.registry.onServer)
-        // print('this.action:', this.action)
-    }
+        /* Create action triggers (this.action.X()) from the class'es API. */
 
-    static initAPI(actions) {
-        /* Collect a dictionary of all web endpoints exposed by this item as declared by its actions.
-           Impute action configurations and create action triggers (this.action.X()).
-         */
-        this.api = API.fromActions(actions) //new API({actions})
-        print(`${this.name} actions:`, actions)
-        print(`${this.name}.api.endpoints:`, this.api.endpoints)
+        let api = this.constructor.api
+        this.action = {}
+
+        // create a trigger for each action and store in `this.action`
+        for (let [name, spec] of Object.entries(this.constructor.actions)) {
+            if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
+            // if (typeof spec === 'string') spec = [spec]
+            let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
+            let handler  = api.get(endpoint)
+            this.action[name] = this.registry.onServer
+                ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
+                : (...args) => handler.client(this, ...fixed, ...args)          // may return a Promise
+        }
+        // print('this.action:', this.action)
     }
 
     init() {}
@@ -741,8 +749,6 @@ export class Item {
     }
 
     getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
-
-    getActions()    { return this.constructor.actions }
 
     mergeSnippets(key, params) {
         /* Calls getMany() to find all entries with a given `key` including the environment-specific
@@ -1064,6 +1070,8 @@ export class Item {
                 this.prototype[name] = cached(name, fun)
         }
     }
+
+    static cachedMethods = ['getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'render']
 }
 
 /**********************************************************************************************************************/
@@ -1076,80 +1084,63 @@ Item.handlers = {
     admin:   new Handler(),
 }
 
-Item.actions = {
 
-    // When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
-    // in the context of their item, like if they were regular methods of the Item (sub)class.
-    // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
-    // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
-    // `ctx` is {}, which can be a valid argument for some actions - supporting this type
-    // of calls is NOT mandatory, though. By default, an action is linked to the @action (JsonProtocol) endpoint,
-    // if not declared otherwise.
+// When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
+// in the context of their item, like if they were regular methods of the Item (sub)class.
+// The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
+// of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
+// `ctx` is {}, which can be a valid argument for some actions - supporting this type
+// of calls is NOT mandatory, though.
 
-    call_item:      action('item/CALL',    InternalProtocol, function() { return this }),
-    call_default:   action('default/CALL', InternalProtocol, function() { return this }),
-    get_json:       action('json/GET',   JsonSimpleProtocol, function() { return this.encodeSelf() }),
+Item.createAPI(
+    {
+        // http endpoints...
+        // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
+        'CALL/default': new InternalProtocol(function() { return this }),
+        'CALL/item':    new InternalProtocol(function() { return this }),
+        'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
 
-    delete_self(ctx)   { return this.registry.delete(this) },
+        // internal actions called by UI
+        'POST/action':  new ActionsProtocol({
 
-    insert_field(ctx, path, pos, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-        this.data.insert(path, pos, entry)
-        return this.registry.update(this)
+            delete_self(ctx)   { return this.registry.delete(this) },
+
+            insert_field(ctx, path, pos, entry) {
+                if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                this.data.insert(path, pos, entry)
+                return this.registry.update(this)
+            },
+
+            delete_field(ctx, path) {
+                this.data.delete(path)
+                return this.registry.update(this)
+            },
+
+            update_field(ctx, path, entry) {
+                if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                this.data.update(path, entry)
+                return this.registry.update(this)
+            },
+
+            move_field(ctx, path, pos1, pos2) {
+                this.data.move(path, pos1, pos2)
+                return this.registry.update(this)
+            },
+
+        }),
     },
-    delete_field(ctx, path) {
-        this.data.delete(path)
-        return this.registry.update(this)
-    },
-    update_field(ctx, path, entry) {
-        if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-        this.data.update(path, entry)
-        return this.registry.update(this)
-    },
-    move_field(ctx, path, pos1, pos2) {
-        this.data.move(path, pos1, pos2)
-        return this.registry.update(this)
-    },
-}
-
-Item.initAPI(Item.actions)
-
-// Item.api = new API({ // http endpoints...
-//
-//     'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
-//
-//     'default/CALL': new InternalProtocol  (function() { return this }),
-//     'item/CALL':    new InternalProtocol  (function() { return this }),
-//     'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
-//
-//     'action/POST': new JsonProtocol({
-//
-//         delete_self(ctx)   { return this.registry.delete(this) },
-//
-//         insert_field(ctx, path, pos, entry) {
-//             if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
-//             this.data.insert(path, pos, entry)
-//             return this.registry.update(this)
-//         },
-//
-//         delete_field(ctx, path) {
-//             this.data.delete(path)
-//             return this.registry.update(this)
-//         },
-//
-//         update_field(ctx, path, entry) {
-//             if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
-//             this.data.update(path, entry)
-//             return this.registry.update(this)
-//         },
-//
-//         move_field(ctx, path, pos1, pos2) {
-//             this.data.move(path, pos1, pos2)
-//             return this.registry.update(this)
-//         },
-//
-//     }),
-// })
+    {
+        // actions...
+        // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
+        'get_json':         ['GET/json'],
+        'delete_self':      ['POST/action', 'delete_self'],
+        'insert_field':     ['POST/action', 'insert_field'],
+        'delete_field':     ['POST/action', 'delete_field'],
+        'update_field':     ['POST/action', 'update_field'],
+        'move_field':       ['POST/action', 'move_field'],
+    }
+)
+// print(`Item.api.endpoints:`, Item.api.endpoints)
 
 
 /**********************************************************************************************************************/
@@ -1207,9 +1198,14 @@ export class Category extends Item {
         return Item.createNewborn(this, iid, data)
     }
 
+    async getItemClass() {
+        let module = await this.getModule()
+        return module.Class
+    }
+
     async getModule() {
-        /* Parse the source code of this item (from getSource()) and return the module's namespace object.
-           Use this.getPath() as the module's path for the linking of nested imports in parseModule():
+        /* Parse the source code of this category (from getSource()) and return as a module's namespace object.
+           This method uses this.getPath() as the module's path for linking nested imports in parseModule():
            this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
          */
         let site = this.registry.site
@@ -1243,9 +1239,10 @@ export class Category extends Item {
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this.getPrototypes()[0]
-            if (!proto) return {Class: Item}
-            let module = await proto.getModule()
-            return {Class: module.Class}
+            return {Class: proto ? await proto.getItemClass() : Item}
+            // if (!proto) return {Class: Item}
+            // let module = await proto.getModule()
+            // return {Class: module.Class}
         }
         return {Class: await this.registry.importDirect(path, name || 'default')}
     }
@@ -1411,7 +1408,7 @@ export class Category extends Item {
             let data = new Data()
             for (let [k, v] of fdata) data.push(k, v)
 
-            let record = await this.action.new_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
+            let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
@@ -1464,92 +1461,50 @@ export class Category extends Item {
     // }
 }
 
-Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getItemClass', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
-// Category.actions = {
-//     ...Item.actions,
-//
-//     get_source: action('import/GET', HttpProtocol, function ({request, res})
-//     {
-//         /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-//         this._checkPath(request)
-//         res.type('js')
-//         res.send(this.getSource())
-//     }),
-//
-//     get_items: action('scan/GET', HttpProtocol, async function ({res})
-//     {
-//         /* Retrieve all children of this category and send to client as a JSON array.
-//            TODO: set a size limit & offset (pagination).
-//            TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-//          */
-//         let items = []
-//         for await (const item of this.registry.scan(this)) {
-//             await item.load()
-//             items.push(item)
-//         }
-//         res.sendItems(items)
-//     }),
-//
-//     new_item: action('new/POST', JsonSimpleProtocol, async function (ctx, dataState)
-//     {
-//         /* Create a new item in this category based on request data. */
-//         let data = await (new Data).__setstate__(dataState)
-//         let item = await this.new(data)
-//         await this.registry.insert(item)
-//         // await category.registry.commit()
-//         return item.encodeSelf()
-//         // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-//     }),
-// }
-// Category.initAPI(Category.actions)
-
-Category.api = new API([Item.api], {   // http endpoints...
-
-    // 'default/GET':  new HtmlPage({title: '', assets: '', body: ''}),
-    // 'default/CALL': new InternalProtocol  (function() { return this }),
-    // 'item/CALL':    new InternalProtocol  (function() { return this }),
-    // 'json/GET':     new JsonSimpleProtocol(function() { return this.encodeSelf() }),
-
-    'import/GET':   new HttpProtocol(function ({request, res})
+Category.createAPI(
     {
-        /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
-        this._checkPath(request)
-        res.type('js')
-        res.send(this.getSource())
-    }),
+        // http endpoints...
 
-    'scan/GET':     new HttpProtocol(async function ({res})
+        'GET/import':   new HttpProtocol(function ({request, res})
+        {
+            /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
+            this._checkPath(request)
+            res.type('js')
+            res.send(this.getSource())
+        }),
+
+        'GET/scan':     new HttpProtocol(async function ({res})
+        {
+            /* Retrieve all children of this category and send to client as a JSON array.
+               TODO: set a size limit & offset (pagination).
+               TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
+             */
+            let items = []
+            for await (const item of this.registry.scan(this)) {
+                await item.load()
+                items.push(item)
+            }
+            res.sendItems(items)
+        }),
+
+        'POST/create':  new JsonProtocol(async function (ctx, dataState)
+        {
+            /* Create a new item in this category based on request data. */
+            let data = await (new Data).__setstate__(dataState)
+            let item = await this.new(data)
+            await this.registry.insert(item)
+            // await category.registry.commit()
+            return item.encodeSelf()
+            // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        }),
+    },
     {
-        /* Retrieve all children of this category and send to client as a JSON array.
-           TODO: set a size limit & offset (pagination).
-           TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-         */
-        let items = []
-        for await (const item of this.registry.scan(this)) {
-            await item.load()
-            items.push(item)
-        }
-        res.sendItems(items)
-    }),
-
-    'new/POST':     new JsonSimpleProtocol({'new_item': async function (ctx, dataState)
-    {
-        /* Create a new item in this category based on request data. */
-        let data = await (new Data).__setstate__(dataState)
-        let item = await this.new(data)
-        await this.registry.insert(item)
-        // await category.registry.commit()
-        return item.encodeSelf()
-        // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-    }}),
-
-})
-
-// Category.initActions('create/POST', ['new/POST', 'new_item'], ...)
-// Category.initActions({
-//     'new_item': ['new/POST', 'new_item', ...other fixed args for protocol.client()]
-// })
+        // actions...
+        'create_item':      ['POST/create'],
+    }
+)
 
 
 /**********************************************************************************************************************/
@@ -1572,7 +1527,8 @@ export class RootCategory extends Category {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload({...opts, use_schema: false})
     }
-    async getModule() { return {Class: Category} }
+    getItemClass() { return Category }
+    // async getModule() { return {Class: Category} }
 }
 
 /**********************************************************************************************************************/
