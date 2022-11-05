@@ -325,15 +325,8 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    action          // collection of triggers for the RPC actions allowed by this item's api;
-                    // available server-side and client-side, but with a different implementation of triggers
-
-    // action          // Item.Client or Item.Server instance, depending on the current environment; an action-performing
-    //                 // agent that groups the methods which can be called in either environment (cli/srv), but whose
-    //                 // actual execution always takes place on the server - the client-side implementation only forwards the call
-    //
-    // client          // Item.Client instance initialized during boot(); only present on a client
-    // server          // Item.Server instance initialized during boot(); only present on a server
+    action          // collection of triggers for RPC actions exposed by this item's API;
+                    // present server-side and client-side, but with a different implementation of triggers
 
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
@@ -506,8 +499,9 @@ export class Item {
     async _initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         if (this.category === this) return          // special case for RootCategory: its class is already set up, prevent circular deps
-        let module = await this.category.getModule()
-        T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
+        T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
+        // let module = await this.category.getModule()
+        // T.setClass(this, module.Class)              // change the actual class of this item from Item to the category's proper class
     }
 
     _initActions() {
@@ -1076,6 +1070,8 @@ export class Item {
                 this.prototype[name] = cached(name, fun)
         }
     }
+
+    static cachedMethods = ['getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'render']
 }
 
 /**********************************************************************************************************************/
@@ -1105,7 +1101,7 @@ Item.createAPI(
         'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
 
         // internal actions called by UI
-        'POST/action':  new  ActionsProtocol({
+        'POST/action':  new ActionsProtocol({
 
             delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1202,9 +1198,14 @@ export class Category extends Item {
         return Item.createNewborn(this, iid, data)
     }
 
+    async getItemClass() {
+        let module = await this.getModule()
+        return module.Class
+    }
+
     async getModule() {
-        /* Parse the source code of this item (from getSource()) and return the module's namespace object.
-           Use this.getPath() as the module's path for the linking of nested imports in parseModule():
+        /* Parse the source code of this category (from getSource()) and return as a module's namespace object.
+           This method uses this.getPath() as the module's path for linking nested imports in parseModule():
            this is either the item's `path` property, or the default path built from the item's ID on the site's system path.
          */
         let site = this.registry.site
@@ -1238,9 +1239,10 @@ export class Category extends Item {
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this.getPrototypes()[0]
-            if (!proto) return {Class: Item}
-            let module = await proto.getModule()
-            return {Class: module.Class}
+            return {Class: proto ? await proto.getItemClass() : Item}
+            // if (!proto) return {Class: Item}
+            // let module = await proto.getModule()
+            // return {Class: module.Class}
         }
         return {Class: await this.registry.importDirect(path, name || 'default')}
     }
@@ -1459,7 +1461,7 @@ export class Category extends Item {
     // }
 }
 
-Category.setCaching('getModule', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getItemClass', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 Category.createAPI(
     {
@@ -1525,7 +1527,8 @@ export class RootCategory extends Category {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload({...opts, use_schema: false})
     }
-    async getModule() { return {Class: Category} }
+    getItemClass() { return Category }
+    // async getModule() { return {Class: Category} }
 }
 
 /**********************************************************************************************************************/
