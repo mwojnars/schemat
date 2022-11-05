@@ -1201,7 +1201,8 @@ export class Category extends Item {
         /* Return the dynamically created class to be used for items of this category. */
         let module = await this.getModule()
         let cls = module.Class
-        cls.category = this
+        // assert(cls.category === undefined || cls.category === this, this, cls.category)
+        // cls.category = this
         return cls
     }
 
@@ -1236,13 +1237,17 @@ export class Category extends Item {
     }
 
     async getDefaultClass(path, name) {
-        /* Return a default class to be used for items of this category when dynamic code is not present or fails to parse. */
+        /* Return a default class to be used for items of this category when dynamic code is not present or fails to parse.
+           This class is always uniquely created by extending a standard/base class if needed.
+         */
+        let cls
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this.getPrototypes()[0]
-            return proto ? await proto.getItemClass() : Item
+            cls = proto ? await proto.getItemClass() : Item
         }
-        return await this.registry.importDirect(path, name || 'default')
+        else cls = await this.registry.importDirect(path, name || 'default')
+        // return (class default_class extends cls {})
     }
 
     getClassPath() {

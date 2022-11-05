@@ -34,9 +34,9 @@ Object.prototype.toString = toString
 
 export let print = console.log
 
-export function assert(test, msg = null) {
+export function assert(test, ...msg) {
     if (test) return
-    throw new Error(msg ? `assertion failed: ${msg}` : `assertion failed`)
+    throw new Error(msg.length ? `assertion failed: ${msg.length==1 ? msg[0] : msg}` : `assertion failed`)
     // console.assert(test)
 }
 
