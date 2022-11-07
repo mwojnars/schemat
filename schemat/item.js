@@ -1199,10 +1199,16 @@ export class Category extends Item {
 
     async getItemClass() {
         /* Return the dynamically created class to be used for items of this category. */
+        // below, module.Class is subclassed to allow safe addition of a static .category attribute,
+        // even when several categories share the `base` class, so each one needs a different value of .category
         let module = await this.getModule()
-        let cls = module.Class
+        let base = module.Class
+        let name = `${base.name}`
+        let cls = {[name]: class extends base {}}[name]
         // assert(cls.category === undefined || cls.category === this, this, cls.category)
-        // cls.category = this
+        cls.category = this
+        // print('base:', base)
+        // print('cls:', cls)
         return cls
     }
 
@@ -1219,7 +1225,7 @@ export class Category extends Item {
             // when booting up, a couple of core items must be created before registry.site becomes available
             if (!classPath) throw new Error(`missing 'class_path' property for a core category: ${this.id_str}`)
             if (this._hasCustomCode()) throw new Error(`dynamic code not allowed for a core category: ${this.id_str}`)
-            return {Class: this.getDefaultClass(classPath, name)}
+            return {Class: await this.getDefaultClass(classPath, name)}
         }
 
         let modulePath = this.getPath()
@@ -1232,7 +1238,7 @@ export class Category extends Item {
         }
         catch (ex) {
             print(`ERROR when parsing dynamic code for category ${this.id_str}, will use a default class instead. Cause:\n`, ex)
-            return {Class: this.getDefaultClass(classPath, name)}
+            return {Class: await this.getDefaultClass(classPath, name)}
         }
     }
 
@@ -1244,10 +1250,9 @@ export class Category extends Item {
         if (!path) [path, name] = this.getClassPath()
         if (!path) {
             let proto = this.getPrototypes()[0]
-            cls = proto ? await proto.getItemClass() : Item
+            return proto ? proto.getItemClass() : Item
         }
-        else cls = await this.registry.importDirect(path, name || 'default')
-        // return (class default_class extends cls {})
+        return this.registry.importDirect(path, name || 'default')
     }
 
     getClassPath() {

@@ -172,6 +172,7 @@ export class Registry {
         are initialized from there, otherwise they are loaded from DB.
         */
         let root = this.root = new RootCategory(this)
+        root.constructor.category = root
         return root.reload({data})
     }
 
