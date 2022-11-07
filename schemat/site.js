@@ -281,8 +281,6 @@ export class AppSpaces extends Application {
     }
 }
 
-AppSpaces.setCaching('spacesRev')
-
 
 /**********************************************************************************************************************
  **
@@ -332,8 +330,6 @@ export class File extends Item {
         if (ext !== name) res.type(ext)
     }
 }
-
-File.setCaching('read')
 
 File.createAPI({        // endpoints...
 

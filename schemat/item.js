@@ -609,17 +609,38 @@ export class Item {
         return this.data.flat(first)
     }
 
-    get(path, opts = {}) {
-        /* If opts.pure is true, the `path` is first searched for in `this` and `this.constructor`, only then in this.data. */
+    prop(path, _default = undefined) {
+        /* Read the item's property either from this.data using get(), or (if missing) from this object's regular attribute
+           - this allows defining attributes through DB or through item's class constructor.
+           If there are mutliple values for 'path', the first one is returned.
 
-        if (this.isShadow) {     // if (opts.pure) {
-            assert(!this.data, 'this.data not allowed in a shadow item')
-            if (this[path] !== undefined) return this[path]
-            if (this.constructor[path] !== undefined) return this.constructor[path]
-            return opts.default
-            // if (this.isShadow && !this.has_data()) return opts.default
+         */
+        if (!this.isShadow) {
+            // a "shadow" item doesn't map to a DB record, so its props can only be read from the object attributes
+            let value = this.get(path)
+            if (value !== undefined) return value
         }
 
+        let value = this[path]
+        if (value !== undefined) return value
+
+        return _default
+    }
+
+    // props(path) -- stream (iterator) of values matching a given path
+    // gets(path) -- stream (iterator) of values matching a given path
+
+    get(path, opts = {}) {
+
+        // if (this.isShadow) {
+        //     assert(false)
+        //     assert(!this.data, 'this.data not allowed in a shadow item')
+        //     if (this[path] !== undefined) return this[path]
+        //     if (this.constructor[path] !== undefined) return this.constructor[path]
+        //     return opts.default
+        // }
+
+        assert(!this.isShadow)
         this.assertData()
 
         // search in this.data
@@ -1331,6 +1352,7 @@ export class Category extends Item {
         cached = cached.join(' ').replaceAll(',', ' ').trim()
         if (!cached) return ''
         cached = cached.split(/\s+/).map(m => `'${m}'`)
+        print('_codeCache().cached:', cached)
         return `Class.setCaching(${cached.join(',')})`
     }
 

@@ -123,7 +123,7 @@ export class DB extends Item {
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
-    checkReadOnly(key)          { if (this.get('readonly')) this.throwReadOnly({key}) }
+    checkReadOnly(key)          { if (this.prop('readonly')) this.throwReadOnly({key}) }
     async checkNew(id, msg)     { if (await this._read(id)) throw new Error(msg + ` [${id}]`) }
 
     /***  DB stacking & administration  ***/
@@ -166,7 +166,7 @@ export class DB extends Item {
 
     writable(key) {
         /* Return true if `key` is allowed to be written here. */
-        return !this.get('readonly') && (key === undefined || this.validIID(key))
+        return !this.prop('readonly') && (key === undefined || this.validIID(key))
     }
 
     async find(key) {

@@ -58,3 +58,22 @@
       "@": schemat.type.CATALOG
     readonly:
       "@": schemat.type.BOOLEAN
+- __id:
+    - 0
+    - 9
+  name: AppSpaces
+  info: "Application for accessing public data through verbose paths of the form:
+    .../SPACE:IID, where SPACE is a text identifier assigned to a category in
+    `spaces` property."
+  class_path: /system/local/site.js:AppSpaces
+  fields:
+    spaces:
+      values:
+        category:
+          =:
+            - 0
+            - 0
+          "@": (item)
+        "@": schemat.type.ITEM
+      "@": schemat.type.CATALOG
+  cached_methods: spacesRev
