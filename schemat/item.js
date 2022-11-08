@@ -333,6 +333,8 @@ export class Item {
 
     cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
+    _dataAll = new Map()        // combined: own data + inherited + imputed; each field is computed and cached separately upon request
+
     static category             // like instance-level `category`, but accessible from the class
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
@@ -615,7 +617,7 @@ export class Item {
            If there are mutliple values for 'path', the first one is returned.
          */
         if (!this.isShadow) {
-            // a "shadow" item doesn't map to a DB record, so its props can only be read from the object attributes
+            // a "shadow" item doesn't map to a DB record, so its props can only be read from the object attributes, below
             let value = this.get(path)
             if (value !== undefined) return value
 
@@ -634,14 +636,6 @@ export class Item {
     // gets(path) -- stream (iterator) of values matching a given path
 
     get(path, opts = {}) {
-
-        // if (this.isShadow) {
-        //     assert(false)
-        //     assert(!this.data, 'this.data not allowed in a shadow item')
-        //     if (this[path] !== undefined) return this[path]
-        //     if (this.constructor[path] !== undefined) return this.constructor[path]
-        //     return opts.default
-        // }
 
         assert(!this.isShadow)
         this.assertData()
@@ -721,11 +715,26 @@ export class Item {
            http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
-        let schemas  = (this === this.category) ? this.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        if  (!schemas.has(field)) return new Catalog()
-        let default_ = schemas.get(field).props.default
+        let fields   = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        if  (!fields.has(field)) return new Catalog()
+        let default_ = fields.get(field).props.default
         catalogs.push(default_)
         return Catalog.merge(...catalogs)
+    }
+
+    *getsField__(field) {
+        let values = this._dataAll.get(field)       // array of values, or undefined
+        if (values) yield* values
+
+        let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        let schema = fields.get[field]
+        if (!schema) throw new Error(`not in schema: ${field}`)
+
+        let streams = [this, ...this.getPrototypes()].map(proto => proto.gets(field))
+
+        let entries = [...schema.merge(streams)]
+        this._dataAll.set(field, entries)
+        yield* entries
     }
 
     getName() { return this.get('name') || '' }

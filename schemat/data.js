@@ -180,7 +180,7 @@ export class Catalog {
         if (this._keys.has(key)) {
             let ids = this._keys.get(key)
             if (unique && ids.length > 1) throw new Error(`unique entry expected for '${key}', found ${ids.length} entries instead`)
-            return ids[0]
+            return ids.length ? ids[0] : undefined
         }
     }
 
@@ -188,6 +188,12 @@ export class Catalog {
         /* Return the `value` property of the first entry with a given `key`, or default_ if the key is missing. */
         let entry = this.getEntry(key, unique)
         return entry === undefined ? default_ : entry.value
+    }
+
+    *gets(key, values = true) {
+        /* Stream of all values (if values=true), or all entries, associated with a given `key`. Can be empty. */
+        for (const pos of (this._keys[key] || []))
+            yield values ? this._entries[pos].value : this._entries[pos]
     }
 
     getEntry(key, unique = false) {
