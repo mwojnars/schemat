@@ -190,9 +190,9 @@ export class Catalog {
         return entry === undefined ? default_ : entry.value
     }
 
-    *gets(keys = undefined, entries = true) {
-        /* Stream of all entries (if entries=true), or all values, associated with a given key (if `keys` is a string),
-           or keys (if `key` is an array); or a stream of all entries/values grouped by key if `keys` is undefined.
+    *gets(keys = undefined) {
+        /* Stream of all the entries associated with a given key (if `keys` is a string), or keys
+           (if `key` is an array); or a stream of all entries/values grouped by key if `keys` is undefined.
            The stream can be empty.
          */
         if (typeof keys === 'string') keys = [keys]
@@ -200,7 +200,7 @@ export class Catalog {
 
         for (const key of keys)
             for (const pos of (this._keys[key] || []))
-                yield entries ? this._entries[pos] : this._entries[pos].value
+                yield this._entries[pos]
     }
 
     getEntry(key, unique = false) {

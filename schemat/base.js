@@ -25,7 +25,7 @@ export class MySQL extends DB {
     async _connect() {
         let opts = {dateStrings: true}              // also of use if dateStrings=false: timezone='Z' means UTC, 'local' means take server's timezone
         let conn = this.get('connection') || {}
-        let args = this.getSubset('host', 'port', 'user', 'database', 'password')
+        let args = this.propObject('host', 'port', 'user', 'database', 'password')
         return this._mod_mysql.createConnection({...opts, ...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
 

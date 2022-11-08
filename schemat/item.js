@@ -603,16 +603,26 @@ export class Item {
 
     /***  READ access to item's data  ***/
 
-    flat(first = true) {
-        /* Return this.data converted to a flat object. For repeated keys, only one value is included:
-           the first one if first=true (default), or the last one, otherwise.
-          */
-        this.assertLoaded()
-        return this.data.flat(first)
+    // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
+    // prop(path)  -- the first value matching a given path; POJO attribute's value as a fallback
+    // props(path) -- stream (iterator) of values matching a given path
+    // gets(path)  -- stream (iterator) of entries matching a given path
+    //
+
+    propObject(...paths) {
+        /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
+           The result may include a default or POJO value if defined for a particular field.
+         */
+        let subset = {}
+        for (let path of paths) {
+            let value = this.prop(path)
+            if (value !== undefined) subset[path] = value
+        }
+        return subset
     }
 
     prop(path, _default = undefined) {
-        /* Read the item's property either from this.data using get(), or (if missing) from this object's regular attribute
+        /* Read the item's property either from this.data using get(), or (if missing) from this POJO's regular attribute
            - this allows defining attributes through DB or through item's class constructor.
            If there are mutliple values for 'path', the first one is returned.
          */
@@ -631,12 +641,6 @@ export class Item {
 
         return _default
     }
-
-    // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
-    // prop(path)  -- the first value matching a given path; POJO attribute's value as a fallback
-    // props(path) -- stream (iterator) of values matching a given path
-    // gets(path)  -- stream (iterator) of entries (?) matching a given path
-    //
 
     get(path, opts = {}) {
 
@@ -661,6 +665,14 @@ export class Item {
         }
 
         return opts.default
+    }
+
+    flat(first = true) {
+        /* Return this.data converted to a flat object. For repeated keys, only one value is included:
+           the first one if first=true (default), or the last one, otherwise.
+          */
+        this.assertLoaded()
+        return this.data.flat(first)
     }
 
     async getLoaded(path) {
@@ -694,19 +706,6 @@ export class Item {
         return values
     }
 
-    // propObject(...paths)
-    getSubset(...paths) {
-        /* Call .get() for multiple fields/paths, combine the results and return as an object with paths as keys.
-           The result may include a default value if one was defined for a particular field.
-         */
-        let subset = {}
-        for (let path of paths) {
-            let value = this.get(path)
-            if (value !== undefined) subset[path] = value
-        }
-        return subset
-    }
-
     getInherited(field) {
         /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
            from prototypes + the schema's default catalog for this field.
@@ -738,9 +737,13 @@ export class Item {
         let ancestors = this.getAncestors()
         let streams = ancestors.map(proto => proto.getsOwn__(field))
 
-        entries = [...schema.merge(streams)]
-        this._dataAll.set(field, entries)
-        yield* entries
+        if (schema.props.unique) {
+            let entries = [...schema.merge(streams)]
+            this._dataAll.set(field, entries)
+            yield* entries
+        } else
+            for (let stream of streams)
+                yield* stream
     }
 
     *getsOwn__(field = undefined) {
