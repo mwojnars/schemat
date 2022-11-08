@@ -604,10 +604,10 @@ export class Item {
     /***  READ access to item's data  ***/
 
     // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
-    // prop(path)  -- the first value matching a given path; POJO attribute's value as a fallback
-    // props(path) -- stream (iterator) of values matching a given path
-    // gets(path)  -- stream (iterator) of entries matching a given path
-    //
+    // prop(path)   -- the first value matching a given path; POJO attribute's value as a fallback
+    // props(path)  -- stream of values matching a given path
+    // gets(path)   -- stream of entries matching a given path
+    // getsField(f) -- stream of entries for a given field
 
     propObject(...paths) {
         /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
@@ -737,13 +737,9 @@ export class Item {
         let ancestors = this.getAncestors()
         let streams = ancestors.map(proto => proto.getsOwn__(field))
 
-        if (schema.props.unique) {
-            let entries = [...schema.merge(streams)]
-            this._dataAll.set(field, entries)
-            yield* entries
-        } else
-            for (let stream of streams)
-                yield* stream
+        entries = schema.merge(...streams)
+        this._dataAll.set(field, entries)
+        yield* entries
     }
 
     *getsOwn__(field = undefined) {

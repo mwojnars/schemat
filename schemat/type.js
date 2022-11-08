@@ -4,7 +4,7 @@ import { React, MaterialUI } from './resources.js'
 import { e, cl, st, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 import { ItemLoadingHOC } from './react-utils.js'
-import { T, assert, print, trycatch, truncate, DataError, ValueError, splitLast } from './utils.js'
+import { T, assert, print, trycatch, truncate, DataError, ValueError, splitLast, concat } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog } from './data.js'
 import { Item } from './item.js'
@@ -126,6 +126,25 @@ export class Schema {
     }
     decodeJson(dump)    { return this.decode(JSON.parse(dump)) }
     toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
+
+    merge(...multipleEntries) {
+        /* Merge multiple streams of entries whose .value matches this schema. Return an array of entries. */
+        return this.props.unique ? this.mergeValues(...multipleEntries) : concat(...multipleEntries)
+    }
+    mergeValues(...multipleEntries) {
+        /* Merge values of multiple streams of entries whose .value matches this schema.
+           Return a singleton array containing an entry whose .value is the result of the merge,
+           or an empty array if there was no input entry. Base class implementation uses the first entry
+           as the result of the merge. Subclasses may provide a different implementation.
+         */
+        assert(this.props.unique)
+        for (let entries of multipleEntries) {
+            let arr = [...entries]          // convert an iterator to an array
+            if (arr.length > 1) throw new Error("multiple values for a key in a unique-valued schema")
+            if (arr.length < 1) continue
+            return arr
+        }
+    }
 
     /***  UI  ***/
 
