@@ -169,6 +169,18 @@ export function splitLast(s, sep = ' ') {
     return [left, right]
 }
 
+
+export function concat(...arrays) {
+    /* Concatenate multiple arrays. */
+    return [].concat(...arrays)
+}
+
+export function unique(array) {
+    /* Filter out duplicates from `array` and return as a new array, order preserved. */
+    return array.filter((x, i, a) => a.indexOf(x) === i)
+}
+
+
 export function sleep(millis) {
     return new Promise(resolve => setTimeout(resolve, millis))
 }

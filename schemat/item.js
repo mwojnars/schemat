@@ -1,6 +1,6 @@
 import {
     print, assert, T, escape_html, ItemDataNotLoaded, ItemNotLoaded,
-    ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented, NotFound
+    ServerError, indent, dedentFull, splitLast, BaseError, NotImplemented, NotFound, concat, unique,
 } from './utils.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
@@ -632,8 +632,11 @@ export class Item {
         return _default
     }
 
+    // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
+    // prop(path)  -- the first value matching a given path; POJO attribute's value as a fallback
     // props(path) -- stream (iterator) of values matching a given path
-    // gets(path) -- stream (iterator) of values matching a given path
+    // gets(path)  -- stream (iterator) of entries (?) matching a given path
+    //
 
     get(path, opts = {}) {
 
@@ -659,8 +662,6 @@ export class Item {
 
         return opts.default
     }
-
-    getPrototypes()     { return this.data.getValues('prototype') }
 
     async getLoaded(path) {
         /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
@@ -693,6 +694,7 @@ export class Item {
         return values
     }
 
+    // propObject(...paths)
     getSubset(...paths) {
         /* Call .get() for multiple fields/paths, combine the results and return as an object with paths as keys.
            The result may include a default value if one was defined for a particular field.
@@ -710,9 +712,6 @@ export class Item {
            from prototypes + the schema's default catalog for this field.
            It's assumed that the catalogs have unique non-missing keys.
            If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
-           A possibly better method for MRO (Method Resolution Order) is C3 used in Python3:
-           https://en.wikipedia.org/wiki/C3_linearization
-           http://python-history.blogspot.com/2010/06/method-resolution-order.html
          */
         let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
         let fields   = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
@@ -723,19 +722,48 @@ export class Item {
     }
 
     *getsField__(field) {
-        let values = this._dataAll.get(field)       // array of values, or undefined
-        if (values) yield* values
+        /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
+           If the field schema doesn't allow multiple entries for the same key, only the first one is yielded;
+           or, if the field schema is a CATALOG or another "mergeable" type, the objects (own & inherited) get merged
+           into one (then the resulting entry contains {key, value} attributes only).
+           Once computed, the list of entries is cached in this._dataAll for future use.
+         */
+        let entries = this._dataAll.get(field)          // array of entries, or undefined
+        if (entries) yield* entries
 
         let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
         let schema = fields.get[field]
         if (!schema) throw new Error(`not in schema: ${field}`)
 
-        let streams = [this, ...this.getPrototypes()].map(proto => proto.gets(field))
+        let ancestors = this.getAncestors()
+        let streams = ancestors.map(proto => proto.getsOwn__(field))
 
-        let entries = [...schema.merge(streams)]
+        entries = [...schema.merge(streams)]
         this._dataAll.set(field, entries)
         yield* entries
     }
+
+    *getsOwn__(field = undefined) {
+        /* Generate a stream of own entries (from this.data) for a given field(s). No inherited/imputed entries.
+           `field` can be a string, or an array of strings, or undefined. The entries are grouped by keys.
+         */
+        assert(!this.isShadow)
+        this.assertData()
+        yield* this.data.gets(field)
+    }
+
+    getAncestors() {
+        /* Linearized list of all ancestors, with `this` at the first position.
+           TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
+           https://en.wikipedia.org/wiki/C3_linearization
+           http://python-history.blogspot.com/2010/06/method-resolution-order.html
+         */
+        let ancestors = this.getPrototypes().map(proto => proto.getAncestors())
+        return [this, ...unique(concat(ancestors))]
+    }
+
+    getPrototypes()     { return this.data.getValues('prototype') }
+
 
     getName() { return this.get('name') || '' }
     getPath() {
@@ -1108,7 +1136,7 @@ export class Item {
 
 /**********************************************************************************************************************/
 
-Item.setCaching('getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
+Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
 
 Item.handlers = {
     default: new Handler(),

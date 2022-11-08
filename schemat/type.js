@@ -882,6 +882,7 @@ export class CATALOG extends Schema {
         keys:    new STRING({blank: true}),     // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
         values:  new GENERIC({multi: true}),    // common schema of values of an input catalog
         initial: () => new Catalog(),
+        unique:  true,                          // typically, CATALOG fields shall not be repeated, but their content be merged during inheritance (requires unique=true)
         // keys_mandatory : false,
         // keys_forbidden : false,
         // keys_unique    : false,
