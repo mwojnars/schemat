@@ -212,6 +212,7 @@ async function create_categories(Category) {
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
         class_path  : '/system/local/site.js:AppSpaces',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
+        cached_methods: "spacesRev",
     })
 
     cat.Schema = await Category.new(10, {

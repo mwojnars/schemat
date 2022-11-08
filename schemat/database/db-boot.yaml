@@ -273,6 +273,7 @@
           "@": (item)
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
+  cached_methods: spacesRev
 - __id:
     - 0
     - 10
