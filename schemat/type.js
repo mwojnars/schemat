@@ -1377,6 +1377,8 @@ export class DATA extends CATALOG {
         // keys_obligatory: true,
     }
 
+    has(key) { return Object.hasOwn(this.fields, key) }
+
     subschema(key) {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key))

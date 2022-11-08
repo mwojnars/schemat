@@ -613,12 +613,15 @@ export class Item {
         /* Read the item's property either from this.data using get(), or (if missing) from this object's regular attribute
            - this allows defining attributes through DB or through item's class constructor.
            If there are mutliple values for 'path', the first one is returned.
-
          */
         if (!this.isShadow) {
             // a "shadow" item doesn't map to a DB record, so its props can only be read from the object attributes
             let value = this.get(path)
             if (value !== undefined) return value
+
+            // check that 'path' is valid according to schema, to block access to system fields like .data etc
+            let schema = this.getSchema()
+            if (!schema.has(path)) throw new Error(`field not in schema: ${path}`)
         }
 
         let value = this[path]
@@ -1091,12 +1094,12 @@ export class Item {
         }
     }
 
-    static cachedMethods = ['getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'render']
+    // static cached_methods = ['getPrototypes', ...]
 }
 
 /**********************************************************************************************************************/
 
-Item.setCaching('getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'render')
+Item.setCaching('getPrototypes', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
 
 Item.handlers = {
     default: new Handler(),

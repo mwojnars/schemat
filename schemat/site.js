@@ -264,6 +264,9 @@ export class AppSpaces extends Application {
     Application for accessing individual objects (items) through verbose paths of the form: .../SPACE:IID,
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
+
+    cached_methods = 'spacesRev'
+
     urlPath(item) {
         let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item.category.id)
