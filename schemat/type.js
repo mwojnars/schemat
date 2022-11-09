@@ -32,8 +32,11 @@ export class Schema {
         unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         blank   : undefined,    // if true, `null` and `undefined` are treated as a valid value
         initial : undefined,    // initial value assigned to a newly created data element of this schema
+
         // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
+
+        // unique, single, distinct, sole, solo,
 
         // NOT USED currently
         impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
@@ -127,15 +130,18 @@ export class Schema {
     decodeJson(dump)    { return this.decode(JSON.parse(dump)) }
     toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
 
-    merge(...multipleEntries) {
-        /* Merge multiple streams of entries whose .value matches this schema. Return an array of entries. */
-        return this.props.unique ? this.mergeValues(...multipleEntries) : concat(...multipleEntries)
+    combine(...multipleEntries) {
+        /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
+           The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
+         */
+        return this.props.unique ? this.merge(...multipleEntries) : concat(...multipleEntries)
     }
-    mergeValues(...multipleEntries) {
-        /* Merge values of multiple streams of entries whose .value matches this schema.
+    merge(...multipleEntries) {
+        /* Merge values of multiple streams of inherited entries whose .value matches this schema.
            Return a singleton array containing an entry whose .value is the result of the merge,
            or an empty array if there was no input entry. Base class implementation uses the first entry
            as the result of the merge. Subclasses may provide a different implementation.
+           The entry returned can be synthetic and contain {key, value} attributes only.
          */
         assert(this.props.unique)
         for (let entries of multipleEntries) {

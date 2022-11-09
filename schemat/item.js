@@ -333,7 +333,8 @@ export class Item {
 
     cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
 
-    _dataAll = new Map()        // combined: own data + inherited + imputed; each field is computed and cached separately upon request
+    _dataAll = new Map()        // {field: combined own data + inherited from ancestors + inherited from schema default + imputed}
+                                // each field is computed and cached separately, lazily upon request
 
     static category             // like instance-level `category`, but accessible from the class
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
@@ -659,7 +660,7 @@ export class Item {
 
         // search in category's defaults
         if (this.category && this.category !== this) {
-            let cat_default = this.category.getDefault(path)
+            let cat_default = this.category.getFieldDefault(path)
             if (cat_default !== undefined)
                 return cat_default
         }
@@ -720,11 +721,12 @@ export class Item {
         return Catalog.merge(...catalogs)
     }
 
-    *getsField__(field) {
+    *getsField(field) {
         /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
-           If the field schema doesn't allow multiple entries for the same key, only the first one is yielded;
-           or, if the field schema is a CATALOG or another "mergeable" type, the objects (own & inherited) get merged
-           into one (then the resulting entry contains {key, value} attributes only).
+           If the field schema doesn't allow multiple entries for a key, only the first one is yielded (for simple types);
+           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one, and the resulting
+           value object may include default elements as configured in the schema's "default" property;
+           the merged entry is synthetic and contains {key, value} attributes only.
            Once computed, the list of entries is cached in this._dataAll for future use.
          */
         let entries = this._dataAll.get(field)          // array of entries, or undefined
@@ -735,14 +737,14 @@ export class Item {
         if (!schema) throw new Error(`not in schema: ${field}`)
 
         let ancestors = this.getAncestors()
-        let streams = ancestors.map(proto => proto.getsOwn__(field))
+        let streams = ancestors.map(proto => proto.getsOwn(field))
 
-        entries = schema.merge(...streams)
+        entries = schema.combine(...streams)
         this._dataAll.set(field, entries)
         yield* entries
     }
 
-    *getsOwn__(field = undefined) {
+    *getsOwn(field = undefined) {
         /* Generate a stream of own entries (from this.data) for a given field(s). No inherited/imputed entries.
            `field` can be a string, or an array of strings, or undefined. The entries are grouped by keys.
          */
@@ -1411,8 +1413,8 @@ export class Category extends Item {
     //     /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
     //     return this.getInherited('handlers')
     // }
-    getDefault(field) {
-        /* Get default value of a field from category schema. Return undefined if no category default is configured. */
+    getFieldDefault(field) {
+        /* Get default value for an item's field as configured in the schema. Return undefined if no default is configured. */
         this.assertLoaded()
         let fields = this.getFields()
         let schema = fields.get(field)
