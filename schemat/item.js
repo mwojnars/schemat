@@ -723,10 +723,10 @@ export class Item {
 
     *getsField(field) {
         /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
-           If the field schema doesn't allow multiple entries for a key, only the first one is yielded (for simple types);
-           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one, and the resulting
-           value object may include default elements as configured in the schema's "default" property;
-           the merged entry is synthetic and contains {key, value} attributes only.
+           If the field schema doesn't allow multiple entries for a key, only the first one is yielded for simple types,
+           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one - a default object
+           as defined in schema.prop.default may also be included in the merge; the entry containing the merged object
+           is synthetic and includes {key, value} attributes only.
            Once computed, the list of entries is cached in this._dataAll for future use.
          */
         let entries = this._dataAll.get(field)          // array of entries, or undefined
