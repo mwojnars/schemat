@@ -140,26 +140,24 @@ export class Catalog {
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 
-    constructor(entries = null) {
-        if (!entries) return
+    constructor(entries) {
+        if (entries === undefined) return
         if (entries instanceof Catalog)
             entries = entries._entries
-        if (entries instanceof Array)
-            for (const entry of entries)
-                this.pushEntry(entry)
         else if (T.isDict(entries))
-            for (const [key, value] of Object.entries(entries))
-                this.pushEntry({key, value})
+            entries = Object.entries(entries).map(([key, value]) => ({key, value}))
+        this.init(entries, true)
     }
 
-    __setstate__(state)     { this.build(state.entries); return this }
+    __setstate__(state)     { this.init(state.entries); return this }
     __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
                             // value=undefined can't be serialized as it would get replaced with null after deserialization
 
-    build(entries) {
+    init(entries, clean = false) {
         /* (Re)build this._entries and this._keys from an array of `entries`. */
         this._keys = new Map()
-        this._entries = [...entries]
+        this._entries = clean ? entries.map(e => this._clean(e)) : [...entries]
+
         for (const [pos, entry] of this._entries.entries()) {
             const key = entry.key
             if (key === undefined || key === null) continue
@@ -449,7 +447,7 @@ export class Catalog {
             // general case: delete the entry, rearrange the _entries array, and rebuild this._keys from scratch
             let entry = this._entries[pos]
             let entries = [...this._entries.slice(0,pos), ...this._entries.slice(pos+1)]
-            this.build(entries)
+            this.init(entries)
         }
     }
     _insertAt(pos, entry) {
@@ -463,7 +461,7 @@ export class Catalog {
             // general case: insert the entry, rearrange the _entries array, and rebuild this._keys from scratch
             entry = this._clean(entry)
             let entries = [...this._entries.slice(0,pos), entry, ...this._entries.slice(pos)]
-            this.build(entries)
+            this.init(entries)
         }
     }
     _move(pos1, pos2) {
@@ -485,7 +483,7 @@ export class Catalog {
         //if (pos2 > pos1) pos2--
         entries = [...entries.slice(0,pos2), entry, ...entries.slice(pos2)]
 
-        this.build(entries)
+        this.init(entries)
     }
 
     /***  Higher-level edit operations  ***/
@@ -561,7 +559,7 @@ export class Catalog {
                 return e
             })
 
-        this.build(entries)
+        this.init(entries)
         // return new this.constructor(entries)
     }
 
