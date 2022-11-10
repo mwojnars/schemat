@@ -718,7 +718,7 @@ export class Item {
         if  (!fields.has(field)) return new Catalog()
         let default_ = fields.get(field).props.default
         catalogs.push(default_)
-        return Catalog.merge(...catalogs)
+        return Catalog.merge(catalogs)
     }
 
     *getsField(field) {

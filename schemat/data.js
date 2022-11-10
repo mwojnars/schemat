@@ -1,5 +1,5 @@
 // import BTree from 'sorted-btree'
-import { print, assert, T } from './utils.js'
+import { T, print, assert, concat } from './utils.js'
 
 
 /**********************************************************************************************************************
@@ -140,17 +140,15 @@ export class Catalog {
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 
-    constructor(data = null) {
-        if (!data) return
-        if (data instanceof Catalog)
-            data = data.getEntries()
-        if (data instanceof Array)
-            for (const entry of data) {
-                assert('value' in entry)
+    constructor(entries = null) {
+        if (!entries) return
+        if (entries instanceof Catalog)
+            entries = entries._entries
+        if (entries instanceof Array)
+            for (const entry of entries)
                 this.pushEntry(entry)
-            }
-        else if (T.isDict(data))
-            for (const [key, value] of Object.entries(data))
+        else if (T.isDict(entries))
+            for (const [key, value] of Object.entries(entries))
                 this.pushEntry({key, value})
     }
 
@@ -158,10 +156,10 @@ export class Catalog {
     __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
                             // value=undefined can't be serialized as it would get replaced with null after deserialization
 
-    build(entries = null) {
-        /* (Re)build this._keys mapping based on this._entries. */
+    build(entries) {
+        /* (Re)build this._entries and this._keys from an array of `entries`. */
         this._keys = new Map()
-        if (entries) this._entries = [...entries]
+        this._entries = [...entries]
         for (const [pos, entry] of this._entries.entries()) {
             const key = entry.key
             if (key === undefined || key === null) continue
@@ -275,23 +273,23 @@ export class Catalog {
         return default_
     }
 
-    static merge(...catalogs) {
-        /* Merge `catalogs` into a new Catalog. Only the entries with keys are included in the result,
-           one entry per key. If a key occurs multiple times in `catalogs`, the LAST occurrence is used.
+    static merge(catalogs, unique = true) {
+        /* Merge multiple `catalogs` into a new Catalog. The order of entries is preserved.
+           If unique=true, only the first entry with a given key is included in the result,
+           and the entries with missing keys are dropped. Otherwise, all input entries are passed to the output.
          */
-        return Catalog.mergeReversed(...catalogs.reverse())
-    }
 
-    static mergeReversed(...catalogs) {
-        /* Merge `catalogs` into a new Catalog. Only the entries with keys are included in the result,
-           one entry per key. If a key occurs multiple times in `catalogs`, the FIRST occurrence is used.
-         */
+        if (!unique) {
+            let entries = concat(catalogs.map(c => c._entries))
+        }
+
         let catalog = new Catalog()
         for (const cat of catalogs) {
             if (!cat) continue
-            for (const entry of cat)
-                if (entry.key !== undefined && !catalog.has(entry.key))
-                    catalog.pushEntry({...entry})
+            for (const entry of cat) {
+                if (unique && (entry.key === undefined || catalog.has(entry.key))) continue
+                catalog.pushEntry({...entry})
+            }
         }
         return catalog
     }

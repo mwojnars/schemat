@@ -134,16 +134,17 @@ export class Schema {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
          */
-        return this.props.unique ? this.merge(...multipleEntries) : concat(...multipleEntries)
+        if (!this.props.unique) return concat(...multipleEntries)
+        let entry = this.merge(...multipleEntries)
+        return entry !== undefined ? entry : []
     }
     merge(...multipleEntries) {
         /* For singleton schemas (prop.unique=true).
            Merge the values of multiple streams of inherited entries whose .value matches this schema.
-           Return a singleton array containing an entry whose .value is the result of the merge,
-           or an empty array if the value could not be determined.
+           Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
            The merged value may include information from the schema's default (prop.default).
            The entry returned can be synthetic and contain {key, value} attributes only.
-           Base class implementation uses the first entry as the result of the merge.
+           Base class implementation returns the first entry of `multipleEntries`.
            Subclasses may provide a different implementation.
          */
         assert(this.props.unique)
@@ -151,7 +152,7 @@ export class Schema {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
-            return arr
+            return arr[0]
         }
     }
 
@@ -1003,6 +1004,13 @@ export class CATALOG extends Schema {
         if (!subpath.length)            return schema
         if (schema.instanceof(CATALOG)) return schema.find(subpath, default_)
         return default_
+    }
+
+    merge(...multipleEntries) {
+        let default_ = this.props.default
+        let catalogs = concat(...multipleEntries, default_)     // default catalog is merged into the result, too
+        catalogs = catalogs.filter(c => c)                      // drop undefined elements (default_ can be undefined)
+        if (catalogs.length) return Catalog.merge(catalogs)
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
