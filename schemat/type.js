@@ -36,7 +36,7 @@ export class Schema {
         // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
-        // unique, single, distinct, sole, solo,
+        // unique, single, singleton, distinct, sole, solo;  repeat, repeated, ...
 
         // NOT USED currently
         impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
@@ -137,16 +137,19 @@ export class Schema {
         return this.props.unique ? this.merge(...multipleEntries) : concat(...multipleEntries)
     }
     merge(...multipleEntries) {
-        /* Merge values of multiple streams of inherited entries whose .value matches this schema.
+        /* For singleton schemas (prop.unique=true).
+           Merge the values of multiple streams of inherited entries whose .value matches this schema.
            Return a singleton array containing an entry whose .value is the result of the merge,
-           or an empty array if there was no input entry. Base class implementation uses the first entry
-           as the result of the merge. Subclasses may provide a different implementation.
+           or an empty array if the value could not be determined.
+           The merged value may include information from the schema's default (prop.default).
            The entry returned can be synthetic and contain {key, value} attributes only.
+           Base class implementation uses the first entry as the result of the merge.
+           Subclasses may provide a different implementation.
          */
         assert(this.props.unique)
         for (let entries of multipleEntries) {
             let arr = [...entries]          // convert an iterator to an array
-            if (arr.length > 1) throw new Error("multiple values for a key in a unique-valued schema")
+            if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
             return arr
         }
