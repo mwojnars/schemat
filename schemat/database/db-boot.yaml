@@ -124,6 +124,10 @@
                         way, subcategories inherit individual field schemas as
                         defined in base categories.
                       "@": schemat.type.ITEM
+                  - key: html_title
+                    value:
+                      info: HTML title to be used for when this item is rendered.
+                      "@": schemat.type.STRING
                 "@": schemat.data.Catalog
               "@": schemat.type.CATALOG
         "@": schemat.data.Catalog

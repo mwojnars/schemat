@@ -673,15 +673,13 @@ export class Item {
         }
         else fields = this.category.getFields()     //this.category.prop('fields')
 
-        // let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
         let schema = fields.get(prop)
-        if (!schema)
-            throw new Error(`not in schema: '${prop}'`)
+        if (!schema) throw new Error(`not in schema: '${prop}'`)
 
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
         let streams = ancestors.map(proto => proto.entriesRaw(prop))
 
-        entries = schema.combine(...streams)
+        entries = schema.combine(streams)
         this._dataAll.set(prop, entries)
         yield* entries
     }
@@ -773,6 +771,7 @@ export class Item {
         if  (!fields.has(field)) return new Catalog()
         let default_ = fields.get(field).props.default
         catalogs.push(default_)
+        catalogs = catalogs.filter(c => c)
         return Catalog.merge(catalogs)
     }
 
@@ -792,7 +791,7 @@ export class Item {
     getName() { return this.prop('name') || '' }
     getPath() {
         /* Default import path of this item. Starts with '/' (absolute path). */
-        return this.get('path') || this.registry.site.systemPath(this)
+        return this.prop('path') || this.registry.site.systemPath(this)
     }
 
     getStamp({html = true, brackets = true, max_len = null, ellipsis = '...'} = {}) {
@@ -1037,7 +1036,7 @@ export class Item {
     }
     _htmlTitle({request, view}) {
         /* Get/compute a title for an HTML response page for a given request & view name. */
-        let title = this.get('html_title')
+        let title = this.prop('html_title')
         if (title instanceof Function) title = title({request, view})           // this can still return undefined
         if (title === undefined) {
             let name = this.getName()
@@ -1049,7 +1048,7 @@ export class Item {
     _htmlAssets() {
         let globalAssets = Resources.clientAssets
         let staticAssets = this.category.getItemAssets().renderAll()
-        let customAssets = this.category.get('html_assets')
+        let customAssets = this.category.prop('html_assets')
         let assets = [globalAssets, staticAssets, customAssets]
         return assets .filter(a => a && a.trim()) .join('\n')
     }
@@ -1267,6 +1266,8 @@ export class Category extends Item {
     _initSchema() {
         // initialize schema objects inside `fields`; in particular, SchemaWrapper class requires
         // explicit async initialization to load sublinked items
+        // TODO: move initialization somewhere else; here, we don't have a guarantee that the initialized schema object
+        //       won't get replaced with a new one at some point; plus, inherited schemas are initialized multiple times
         let fields = this.get('fields') || []
         let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
         if (calls.length) return Promise.all(calls)

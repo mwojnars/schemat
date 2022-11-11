@@ -130,25 +130,25 @@ export class Schema {
     decodeJson(dump)    { return this.decode(JSON.parse(dump)) }
     toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
 
-    combine(...multipleEntries) {
+    combine(streamsOfEntries) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
          */
-        if (!this.props.unique) return concat(multipleEntries.map(g => [...g]))
-        let entry = this.merge(...multipleEntries)
-        return entry !== undefined ? entry : []
+        if (!this.props.unique) return concat(streamsOfEntries.map(stream => [...stream]))
+        let entry = this.merge(streamsOfEntries)
+        return entry !== undefined ? [entry] : []
     }
-    merge(...multipleEntries) {
+    merge(streamsOfEntries) {
         /* For singleton schemas (prop.unique=true).
            Merge the values of multiple streams of inherited entries whose .value matches this schema.
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
            The merged value may include information from the schema's default (prop.default).
            The entry returned can be synthetic and contain {key, value} attributes only.
-           Base class implementation returns the first entry of `multipleEntries`.
+           Base class implementation returns the first entry of `streamsOfEntries`.
            Subclasses may provide a different implementation.
          */
         assert(this.props.unique)
-        for (let entries of multipleEntries) {
+        for (let entries of streamsOfEntries) {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
@@ -1007,10 +1007,13 @@ export class CATALOG extends Schema {
         return default_
     }
 
-    merge(...multipleEntries) {
+    merge(streams) {
+        let entries  = concat(streams.map(s => [...s]))     // input streams of entries must be materialized before concat()
+        let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
-        let catalogs = concat([...multipleEntries, default_])   // default catalog is merged into the result, too
-        catalogs = catalogs.filter(c => c)                      // drop undefined elements (default_ can be undefined)
+        if (default_) catalogs.push(default_)                             // schema's default catalog is added to the result, too
+        // catalogs = catalogs.filter(c => c)                  // drop undefined elements (
+
         if (catalogs.length) return Catalog.merge(catalogs)
     }
 

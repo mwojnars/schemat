@@ -342,7 +342,7 @@ export class Catalog {
         }
         let catalog = new Catalog()
         for (const cat of catalogs)
-            for (const entry of (cat || []))
+            for (const entry of (cat._entries || []))
                 if (entry.key !== undefined && !catalog.has(entry.key))
                     catalog.pushEntry({...entry})
         return catalog
@@ -459,7 +459,7 @@ export class Catalog {
     }
 
     pushEntry(entry) {
-        /* Append `entry` to this._entries while keeping the existing occurrencies of entry.key.
+        /* Append `entry` (no copy!) to this._entries while keeping the existing occurrencies of entry.key.
            Drop unneeded props in `entry`, insert into this._entries, update this._keys.
          */
         entry = this._clean(entry)
