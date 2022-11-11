@@ -193,16 +193,21 @@ export class Catalog {
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 
-    constructor(...manyEntries) {
-        // if (entries === undefined) return
-        // if (!manyEntries.length) return
-        let entries = concat(manyEntries.map(ent => {
-            if (ent instanceof Catalog)
-                return ent._entries
-            else if (T.isDict(ent))
-                return Object.entries(ent).map(([key, value]) => ({key, value}))
-        }))
-        this.init(entries, true)
+    // constructor(entries) {
+    //     if (entries === undefined) return
+    //     if (entries instanceof Catalog)
+    //         entries = entries._entries
+    //     else if (T.isDict(entries))
+    //         entries = Object.entries(entries).map(([key, value]) => ({key, value}))
+    //     this.init(entries, true)
+    // }
+    constructor(...entries) {
+        entries = entries.map(ent =>
+                        (ent instanceof Catalog) ? ent._entries
+                        : T.isDict(ent) ? Object.entries(ent).map(([key, value]) => ({key, value}))
+                        : ent
+                    )
+        this.init(concat(entries), true)
     }
 
     __setstate__(state)     { this.init(state.entries); return this }
