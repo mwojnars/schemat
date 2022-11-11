@@ -13,7 +13,7 @@ function isstring(s) {
 }
 
 export class Path {
-    /* Static methods for manipulating routing paths that point into nested objects.
+    /* Static methods for manipulating access paths pointing into nested objects.
        A path can be a /-separated string, "A/B/C...", or an array of steps, each step being a name or an index,
        like in ["A", 2, "C", 5].
      */
@@ -42,20 +42,6 @@ export class Path {
     //     let obj = start
     //     let [step, tail] = this.split(path)
     //     return [next(obj, step), tail]
-    // }
-
-    // static walk(start, path, next = this.next) {
-    //     /* Starting from a `start` object move along the `path` of nested objects and return the first object found
-    //        at the end of the path. `path` can be a string or an array.
-    //      */
-    //     let obj = start
-    //     while (path.length) {
-    //         let [step, tail] = this.split(path)
-    //         obj = next(obj, step)
-    //         if (obj === undefined) throw new Error(`path not found: ${path}, missing step '${step}'`)
-    //         path = tail
-    //     }
-    //     return obj
     // }
 
     static *walk(start, path, next = this.next) {
@@ -207,12 +193,15 @@ export class Catalog {
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 
-    constructor(entries) {
-        if (entries === undefined) return
-        if (entries instanceof Catalog)
-            entries = entries._entries
-        else if (T.isDict(entries))
-            entries = Object.entries(entries).map(([key, value]) => ({key, value}))
+    constructor(...manyEntries) {
+        // if (entries === undefined) return
+        // if (!manyEntries.length) return
+        let entries = concat(manyEntries.map(ent => {
+            if (ent instanceof Catalog)
+                return ent._entries
+            else if (T.isDict(ent))
+                return Object.entries(ent).map(([key, value]) => ({key, value}))
+        }))
         this.init(entries, true)
     }
 

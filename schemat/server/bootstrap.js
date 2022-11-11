@@ -97,7 +97,7 @@ let root_data = new Data({
     class_path  : '/system/local/item.js:Category',
     // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'
     cache_ttl   : 60.0,
-    fields      : root_fields,
+    fields      : root_fields,  //{...default_fields, ...root_fields},
 })
 
 /**********************************************************************************************************************

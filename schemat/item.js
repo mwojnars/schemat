@@ -604,9 +604,9 @@ export class Item {
     /***  READ access to item's data  ***/
 
     // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
-    // prop(path)   -- the first value matching a given path; POJO attribute's value as a fallback
-    // props(path)  -- stream of values matching a given path
-    // entries(f)   -- stream of entries for a given property
+    // prop(path)    -- the first value matching a given path; POJO attribute's value as a fallback
+    // props(path)   -- stream of values matching a given path
+    // entries(prop) -- stream of entries for a given property
 
     propObject(...paths) {
         /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
@@ -627,7 +627,6 @@ export class Item {
          */
         if (!this.isShadow) {
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
-            // let value = this.get(path)
             let value = this.props(path).next().value
             if (value !== undefined) return value
 
@@ -638,7 +637,7 @@ export class Item {
             if (!schema.has(path)) throw new Error(`not in schema: ${path}`)
         }
 
-        // POJO attribute default
+        // POJO attribute value as a default
         let value = this[path]
         if (value !== undefined) return value
 
@@ -667,28 +666,24 @@ export class Item {
 
         let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
         let schema = fields.get(prop)
-        if (!schema) throw new Error(`not in schema: ${prop}`)
+        if (!schema)
+            throw new Error(`not in schema: '${prop}'`)
 
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
-        let streams = ancestors.map(proto => proto.entriesOwn(prop))
+        let streams = ancestors.map(proto => proto.entriesRaw(prop))
 
         entries = schema.combine(...streams)
         this._dataAll.set(prop, entries)
         yield* entries
     }
 
-    *entriesOwn(prop = undefined) {
+    *entriesRaw(prop = undefined) {
         /* Generate a stream of own entries (from this.data) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
         assert(!this.isShadow)
         this.assertData()
         yield* this.data.readEntries(prop)
-    }
-
-    getFirst(field) {       // TODO: use this method instead of get()
-        /* Like entries(field), but only the first entry is returned, or undefined. */
-        return this.entries(field).next().value
     }
 
     get(path, opts = {}) {
@@ -727,12 +722,12 @@ export class Item {
         return this.data.flat(first)
     }
 
-    async getLoaded(path) {
-        /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
-        let item = this.get(path)
-        if (item !== undefined) await item.load()
-        return item
-    }
+    // async getLoaded(path) {
+    //     /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
+    //     let item = this.get(path)
+    //     if (item !== undefined) await item.load()
+    //     return item
+    // }
 
     getMany(key, {inherit = true, reverse = true} = {}) {
         /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.

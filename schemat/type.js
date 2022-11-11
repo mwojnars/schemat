@@ -134,7 +134,7 @@ export class Schema {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
          */
-        if (!this.props.unique) return concat(...multipleEntries.map(g => [...g]))
+        if (!this.props.unique) return concat(multipleEntries.map(g => [...g]))
         let entry = this.merge(...multipleEntries)
         return entry !== undefined ? entry : []
     }
@@ -1009,7 +1009,7 @@ export class CATALOG extends Schema {
 
     merge(...multipleEntries) {
         let default_ = this.props.default
-        let catalogs = concat(...multipleEntries, default_)     // default catalog is merged into the result, too
+        let catalogs = concat([...multipleEntries, default_])   // default catalog is merged into the result, too
         catalogs = catalogs.filter(c => c)                      // drop undefined elements (default_ can be undefined)
         if (catalogs.length) return Catalog.merge(catalogs)
     }
