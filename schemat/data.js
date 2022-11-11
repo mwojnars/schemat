@@ -266,26 +266,31 @@ export class Catalog {
 
     *readEntries(keys = undefined) {
         /* Yield all the entries associated with a given key (if `keys` is a string), or with multiple keys
-           (if `key` is an array); or all the entries if `keys` is undefined. The output can be empty.
-           The same order of entries as in this._entries is preserved.
+           (if `key` is an array); or all the entries if `keys` is undefined. Keys can be strings or numbers (positions).
+           The same order of entries as in this._entries is preserved. The output can be empty.
          */
         if (keys === undefined) {
             yield* this._entries
             return
         }
-        if (typeof keys === 'string') keys = [keys]
+        if (!T.isArray(keys)) keys = [keys]
 
-        if (keys.length === 1)
+        if (keys.length === 1) {
             // if there's only one key we don't have to sort values by their positions in _entries, which is more efficient
-            for (const pos of (this._keys[keys[0]] || []))
-                yield this._entries[pos]
-
+            let key = keys[0]
+            if (typeof key === 'number') yield this._entries[key]
+            else
+                for (const pos of (this._keys[key] || []))
+                    yield this._entries[pos]
+        }
         else {
             let locs = []
-            for (const key of keys) {
-                let p = this._keys.get(key)
-                if (p) locs.push(...p)
-            }
+            for (const key of keys)
+                if (typeof key === 'number') locs.push(key)
+                else {
+                    let p = this._keys.get(key)
+                    if (p) locs.push(...p)
+                }
             yield* locs.sort().map(pos => this._entries[pos])
         }
     }
@@ -296,19 +301,6 @@ export class Catalog {
     }
 
     getEntries(keys) { return [...this.readEntries(keys)] }
-
-    // getEntries(...keys) {
-    //     /* Return the entries associated with the given keys. The same order of entries as in this._entries is preserved.
-    //        If no key was given, all the entries are returned.
-    //      */
-    //     if (!keys.length) return [...this._entries]
-    //     let locs = []
-    //     for (let key of keys) {
-    //         let p = this._keys.get(key)
-    //         if (p) locs.push(...p)
-    //     }
-    //     return locs.sort().map(pos => this._entries[pos])
-    // }
 
     getEmpty() {
         /* Return all entries with an empty key (missing, null, ''). */
