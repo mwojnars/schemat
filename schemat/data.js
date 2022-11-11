@@ -193,14 +193,6 @@ export class Catalog {
         return Object.fromEntries(entries.map(e => [e.key, e.value]))
     }
 
-    // constructor(entries) {
-    //     if (entries === undefined) return
-    //     if (entries instanceof Catalog)
-    //         entries = entries._entries
-    //     else if (T.isDict(entries))
-    //         entries = Object.entries(entries).map(([key, value]) => ({key, value}))
-    //     this.init(entries, true)
-    // }
     constructor(...entries) {
         entries = entries.map(ent =>
                         (ent instanceof Catalog) ? ent._entries

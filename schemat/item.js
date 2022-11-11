@@ -455,7 +455,7 @@ export class Item {
         let proto = this.initPrototypes()                   // load prototypes
         if (proto instanceof Promise) await proto
 
-        this.setExpiry(this.category.get('cache_ttl'))
+        this.setExpiry(this.category.prop('cache_ttl'))
         this._mod_type = await import('./type.js')          // to allow synchronous access to DATA and generic_schema in other methods later on
 
         await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
@@ -663,8 +663,17 @@ export class Item {
          */
         let entries = this._dataAll.get(prop)                              // array of entries, or undefined
         if (entries) yield* entries
+        let fields
 
-        let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        if (this === this.category) {
+            // RootCategory is a special case: we have to perform schema inheritance manually to avoid infinite recursion
+            let root_fields = this.data.get('fields')
+            let default_fields = root_fields.get('fields').props.default
+            fields = new Catalog(root_fields, default_fields)
+        }
+        else fields = this.category.getFields()     //this.category.prop('fields')
+
+        // let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
         let schema = fields.get(prop)
         if (!schema)
             throw new Error(`not in schema: '${prop}'`)
@@ -780,7 +789,7 @@ export class Item {
     getPrototypes()     { return this.data.getValues('prototype') }
 
 
-    getName() { return this.get('name') || '' }
+    getName() { return this.prop('name') || '' }
     getPath() {
         /* Default import path of this item. Starts with '/' (absolute path). */
         return this.get('path') || this.registry.site.systemPath(this)
