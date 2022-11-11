@@ -6,9 +6,8 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
 import { Resources, ReactDOM } from './resources.js'
-import { Catalog, Data } from './data.js'
+import { Path, Catalog, Data } from './data.js'
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
-// import { generic_schema, DATA } from './type.js'
 
 export const ROOT_CID = 0
 export const SITE_CID = 1
@@ -643,7 +642,68 @@ export class Item {
         return _default
     }
 
+    props__(path) {
+        // next/move/advance/forward/step ... move/find/search/
+
+        // let [step, tail] = Path.split(path)
+        // let [obj, tail] = Path.step(start, path)
+        // let obj = Path.walk(start, path)
+
+        // read the field of this item
+        let [field, tail] = Path.split(path)
+        let entry = this.gets(field).next().value
+        if (entry === undefined) return undefined
+
+        // walk down nested objects
+        return Path.walk(entry.value, tail)
+
+        // let field = path
+        // let entry = this.getsField(field).next().value
+        // if (entry === undefined) return undefined
+    }
+
+    getFirst(field) {
+        /* Like gets(field), but only returns the first entry, or undefined. */
+        return this.gets(field).next().value
+    }
+
+    *gets(field) {
+        /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
+           If the field schema doesn't allow multiple entries for a key, only the first one is yielded for simple types,
+           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one - a default object
+           as defined in schema.prop.default may also be included in the merge; the entry containing the merged object
+           is synthetic and includes {key, value} attributes only.
+           Once computed, the list of entries is cached in this._dataAll for future use.
+         */
+        let entries = this._dataAll.get(field)                              // array of entries, or undefined
+        if (entries) yield* entries
+
+        let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
+        let schema = fields.get[field]
+        if (!schema) throw new Error(`not in schema: ${field}`)
+
+        let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
+        let streams = ancestors.map(proto => proto.getsOwn(field))
+
+        entries = schema.combine(...streams)
+        this._dataAll.set(field, entries)
+        yield* entries
+    }
+
+    *getsOwn(field = undefined) {
+        /* Generate a stream of own entries (from this.data) for a given field(s). No inherited/imputed entries.
+           `field` can be a string, or an array of strings, or undefined. The entries are grouped by keys.
+         */
+        assert(!this.isShadow)
+        this.assertData()
+        yield* this.data.readEntries(field)
+    }
+
+
     get(path, opts = {}) {
+        /* Return the first value matching a `path` in this.data or in prototypes. If not found, return a default value
+           as configured in the category schema, or undefined.
+         */
 
         assert(!this.isShadow)
         this.assertData()
@@ -693,7 +753,7 @@ export class Item {
         this.assertLoaded()
 
         if (typeof key === 'string') key = [key]
-        let own = this.data.getValues(...key)
+        let own = this.data.getValues(key)
         if (!inherit) return own
 
         let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
@@ -719,38 +779,6 @@ export class Item {
         let default_ = fields.get(field).props.default
         catalogs.push(default_)
         return Catalog.merge(catalogs)
-    }
-
-    *getsField(field) {
-        /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
-           If the field schema doesn't allow multiple entries for a key, only the first one is yielded for simple types,
-           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one - a default object
-           as defined in schema.prop.default may also be included in the merge; the entry containing the merged object
-           is synthetic and includes {key, value} attributes only.
-           Once computed, the list of entries is cached in this._dataAll for future use.
-         */
-        let entries = this._dataAll.get(field)          // array of entries, or undefined
-        if (entries) yield* entries
-
-        let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        let schema = fields.get[field]
-        if (!schema) throw new Error(`not in schema: ${field}`)
-
-        let ancestors = this.getAncestors()
-        let streams = ancestors.map(proto => proto.getsOwn(field))
-
-        entries = schema.combine(...streams)
-        this._dataAll.set(field, entries)
-        yield* entries
-    }
-
-    *getsOwn(field = undefined) {
-        /* Generate a stream of own entries (from this.data) for a given field(s). No inherited/imputed entries.
-           `field` can be a string, or an array of strings, or undefined. The entries are grouped by keys.
-         */
-        assert(!this.isShadow)
-        this.assertData()
-        yield* this.data.gets(field)
     }
 
     getAncestors() {

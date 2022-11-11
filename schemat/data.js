@@ -1,5 +1,5 @@
 // import BTree from 'sorted-btree'
-import { T, print, assert, concat } from './utils.js'
+import { T, print, assert, concat, splitFirst } from './utils.js'
 
 
 /**********************************************************************************************************************
@@ -10,6 +10,76 @@ import { T, print, assert, concat } from './utils.js'
 
 function isstring(s) {
     return s === null || s === undefined || typeof s === 'string'
+}
+
+export class Path {
+    /* Static methods for manipulating routing paths that point into nested objects.
+       A path can be a /-separated string, "A/B/C...", or an array of steps, each step being a name or an index,
+       like in ["A", 2, "C", 5].
+     */
+
+    static SEPARATOR = '/'
+
+    static split(path) {
+        /* If `path` is a string, split it on the first occurrence of the separator and return as [head, tail] strings.
+           If `path` is an array, return [head, tail], where head=path[0] and tail=path.slice(1).
+         */
+        if (typeof path === 'string') return splitFirst(path, this.SEPARATOR)
+        let [head, ...tail] = path
+        return [head, tail]
+    }
+
+    static step(start, path, next = this.next) {
+        /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
+           where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
+         */
+        let obj = start
+        let [step, tail] = this.split(path)
+        return [next(obj, step), tail]
+    }
+
+    static walk(start, path, next = this.next) {
+        /* Starting from an object, `start`, move along the `path` of nested objects, and return the object
+           found at the end of the path. `path` can be a string or an array.
+         */
+        let obj = start
+        while (path.length) {
+            let [step, tail] = this.split(path)
+            obj = next(obj, step)
+            if (obj === undefined) throw new Error(`path not found: ${path}, missing step '${step}'`)
+            path = tail
+        }
+        return obj
+    }
+
+    static next(obj, step, generic = true) {
+        /* Take a `step` starting from a given object, and return the next (nested) object or value.
+           Typically, the next step reads an attribute of an object or an element of a collection (Catalog, Map).
+         */
+        if (obj instanceof Catalog || obj instanceof Map)
+            return obj.get(step)
+        if (generic) return obj[step]
+    }
+
+    static *walks(start, path, next = this.nexts) {
+        /* Generate a stream of all the nested objects of `start` whose location matches the `path`. The path can be
+           a string or an array. Multiple objects can be yielded if a Catalog with non-unique keys occurs on the path.
+         */
+        if (!path.length) return start
+        let [step, tail] = this.split(path)
+        for (let obj of next(start, step))
+            yield* this.walks(obj, tail, next)
+    }
+
+    static *nexts(obj, key, generic = true) {
+        /* Yield all sub-objects of an object or collection, `obj`, stored at a given key or attribute, `key`, of `obj`. */
+        if (obj instanceof Catalog)
+            for (const entry of obj.readEntries(key))
+                yield entry.value
+
+        else if (obj instanceof Map) yield obj.get(key)
+        else if (generic) yield obj[key]
+    }
 }
 
 
@@ -118,18 +188,18 @@ export class Catalog {
     */
 
     _entries = []               // plain objects with {key, value, label, comment} attributes
-    _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted
+    _keys    = new Map()        // for each key, a list of positions in _entries where this key occurs, sorted (!)
 
     get length()        { return this._entries.length }  //{ return this.size }
-    has(key)            { return this._keys.has(key)  }
+    has(key)            { return this._keys.has(key)  }                     // Map's interface
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
     isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
-    map(fun)            { return Array.from(this._entries, fun) }
-    *keys()             { yield* this._keys.keys() }
-    *values()           { yield* this._entries.map(e => e.value) }
-    *entries()          { yield* this._entries }
+    map(fun)            { return Array.from(this._entries, fun) }           // Array's interface
+    *keys()             { yield* this._keys.keys() }                        // Map's interface
+    *values()           { yield* this._entries.map(e => e.value) }          // Map's interface
+    *entries()          { yield* this._entries }                            // Map's interface
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
 
     flat(first = true) {
@@ -186,19 +256,6 @@ export class Catalog {
         return entry === undefined ? default_ : entry.value
     }
 
-    *gets(keys = undefined) {
-        /* Stream of all the entries associated with a given key (if `keys` is a string), or keys
-           (if `key` is an array); or a stream of all entries/values grouped by key if `keys` is undefined.
-           The stream can be empty.
-         */
-        if (typeof keys === 'string') keys = [keys]
-        else if (keys === undefined) keys = this._keys.keys()
-
-        for (const key of keys)
-            for (const pos of (this._keys[key] || []))
-                yield this._entries[pos]
-    }
-
     getEntry(key, unique = false) {
         /* Return the first entry with a given `key`, or the entry located at a given position if `key` is a number.
            If the key is missing, undefined is returned. Exception is raised if duplicates are present and unique=true.
@@ -207,23 +264,51 @@ export class Catalog {
         return this._entries[pos]
     }
 
-    getValues(...keys) {
-        /* Return an array of all values that are present for given top-level key(s). */
-        return this.getEntries(...keys).map(e => e.value)
+    *readEntries(keys = undefined) {
+        /* Yield all the entries associated with a given key (if `keys` is a string), or with multiple keys
+           (if `key` is an array); or all the entries if `keys` is undefined. The output can be empty.
+           The same order of entries as in this._entries is preserved.
+         */
+        if (keys === undefined) {
+            yield* this._entries
+            return
+        }
+        if (typeof keys === 'string') keys = [keys]
+
+        if (keys.length === 1)
+            // if there's only one key we don't have to sort values by their positions in _entries, which is more efficient
+            for (const pos of (this._keys[keys[0]] || []))
+                yield this._entries[pos]
+
+        else {
+            let locs = []
+            for (const key of keys) {
+                let p = this._keys.get(key)
+                if (p) locs.push(...p)
+            }
+            yield* locs.sort().map(pos => this._entries[pos])
+        }
     }
 
-    getEntries(...keys) {
-        /* Return the entries having the given keys. The order of entries is preserved (as in this._entries).
-           If no key was given, all entries are returned.
-         */
-        if (!keys.length) return [...this._entries]
-        let refs = []
-        for (let key of keys) {
-            let r = this._keys.get(key)
-            if (r) refs.push(...r)
-        }
-        return refs.sort().map(pos => this._entries[pos])
+    getValues(keys) {
+        /* Return an array of all values associated with a given top-level key(s). */
+        return this.getEntries(keys).map(e => e.value)
     }
+
+    getEntries(keys) { return [...this.readEntries(keys)] }
+
+    // getEntries(...keys) {
+    //     /* Return the entries associated with the given keys. The same order of entries as in this._entries is preserved.
+    //        If no key was given, all the entries are returned.
+    //      */
+    //     if (!keys.length) return [...this._entries]
+    //     let locs = []
+    //     for (let key of keys) {
+    //         let p = this._keys.get(key)
+    //         if (p) locs.push(...p)
+    //     }
+    //     return locs.sort().map(pos => this._entries[pos])
+    // }
 
     getEmpty() {
         /* Return all entries with an empty key (missing, null, ''). */

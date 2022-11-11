@@ -945,7 +945,8 @@ export class CATALOG extends Schema {
            is missing, and with `value` being schema-encoded.
          */
         let encode_key = (k) => this.props.keys.encode(k)
-        return cat.getEntries().map(e => {
+        return cat.getEntries().map(e =>
+        {
             let value = this.subschema(e.key).encode(e.value)
             let tuple = [value, encode_key(e.key), e.label, e.comment]
             tuple.slice(2).forEach(s => {if(!(T.isMissing(s) || typeof s === 'string')) throw new DataError(`expected a string, got ${s}`)})

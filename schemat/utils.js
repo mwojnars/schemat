@@ -153,8 +153,8 @@ export function truncate(s, length = 255, {end = '...', killwords = false, maxdr
 }
 
 export function splitFirst(s, sep = ' ') {
-    /* Split `s` on the first occurrence of `sep` and return BOTH parts as an array, [left,right];
-       or return [s,""] if no occurrence of `sep` was found. */
+    /* Split `s` on the first occurrence of `sep` and return BOTH substrings as [left, right].
+       Return [s, ""] if no occurrence of `sep` was found. */
     let left = s.split(sep, 1)[0]
     let right = s.slice(left.length + sep.length)
     return [left, right]
