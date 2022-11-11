@@ -143,7 +143,7 @@ export class Schema {
            Merge the values of multiple streams of inherited entries whose .value matches this schema.
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
            The merged value may include information from the schema's default (prop.default).
-           The entry returned can be synthetic and contain {key, value} attributes only.
+           The entry returned can be synthetic and contain {value} attribute only.
            Base class implementation returns the first entry of `streamsOfEntries`.
            Subclasses may provide a different implementation.
          */
@@ -1011,10 +1011,9 @@ export class CATALOG extends Schema {
         let entries  = concat(streams.map(s => [...s]))     // input streams of entries must be materialized before concat()
         let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
-        if (default_) catalogs.push(default_)                             // schema's default catalog is added to the result, too
-        // catalogs = catalogs.filter(c => c)                  // drop undefined elements (
-
-        if (catalogs.length) return Catalog.merge(catalogs)
+        if (default_) catalogs.push(default_)               // schema's default catalog is added to the result, too
+        // catalogs = catalogs.filter(c => c)               // drop undefined elements (default_)
+        if (catalogs.length) return {value: Catalog.merge(catalogs)}
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
@@ -1456,6 +1455,7 @@ export class SchemaWrapper extends Schema {
     schema                              // the actual Schema instance to be used for encode/decode, provided by `prototype` during init()
     
     async init() {
+        if (this.schema) return
         let {prototype, properties} = this.props
         await prototype.load()
         assert(prototype instanceof SchemaPrototype)

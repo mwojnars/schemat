@@ -1263,14 +1263,20 @@ export class Category extends Item {
 
     init() { return this._initSchema() }
 
-    _initSchema() {
+    async _initSchema() {
         // initialize schema objects inside `fields`; in particular, SchemaWrapper class requires
         // explicit async initialization to load sublinked items
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the initialized schema object
         //       won't get replaced with a new one at some point; plus, inherited schemas are initialized multiple times
-        let fields = this.get('fields') || []
-        let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
-        if (calls.length) return Promise.all(calls)
+
+        for (const entry of this.entriesRaw('fields')) {
+            let fields = entry.value
+            let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
+            if (calls.length) await Promise.all(calls)
+        }
+        // let fields = this.get('fields') || []
+        // let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
+        // if (calls.length) return Promise.all(calls)
     }
 
     async new(data, iid) {
