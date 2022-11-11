@@ -171,7 +171,7 @@ export function splitLast(s, sep = ' ') {
 
 
 export function concat(...arrays) {
-    /* Concatenate multiple arrays or iterators into an array. */
+    /* Concatenate multiple arrays into a new array. */
     return [].concat(...arrays)
 }
 

@@ -606,8 +606,7 @@ export class Item {
     // propObject(...paths) -- multiple prop(path) values wrapped up in a single POJO object {path_k: value_k}
     // prop(path)   -- the first value matching a given path; POJO attribute's value as a fallback
     // props(path)  -- stream of values matching a given path
-    // gets(path)   -- stream of entries matching a given path
-    // getsField(f) -- stream of entries for a given field
+    // entries(f)   -- stream of entries for a given property
 
     propObject(...paths) {
         /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
@@ -627,78 +626,70 @@ export class Item {
            If there are mutliple values for 'path', the first one is returned.
          */
         if (!this.isShadow) {
-            // a "shadow" item doesn't map to a DB record, so its props can only be read from the object attributes, below
-            let value = this.get(path)
+            // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
+            // let value = this.get(path)
+            let value = this.props(path).next().value
             if (value !== undefined) return value
 
+            // before falling back to a default value stored in a POJO attribute,
             // check that 'path' is valid according to schema, to block access to system fields like .data etc
+            // - this is done for non-shadow items only, because shadow ones don't have a schema
             let schema = this.getSchema()
-            if (!schema.has(path)) throw new Error(`field not in schema: ${path}`)
+            if (!schema.has(path)) throw new Error(`not in schema: ${path}`)
         }
 
+        // POJO attribute default
         let value = this[path]
         if (value !== undefined) return value
 
         return _default
     }
 
-    props__(path) {
-        // next/move/advance/forward/step ... move/find/search/
-
-        // let [step, tail] = Path.split(path)
-        // let [obj, tail] = Path.step(start, path)
-        // let obj = Path.walk(start, path)
-
-        // read the field of this item
-        let [field, tail] = Path.split(path)
-        let entry = this.gets(field).next().value
-        if (entry === undefined) return undefined
-
-        // walk down nested objects
-        return Path.walk(entry.value, tail)
-
-        // let field = path
-        // let entry = this.getsField(field).next().value
-        // if (entry === undefined) return undefined
+    *props(path) {
+        /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
+           a top-level property name, followed by subproperties separated by '/'. Alternatively, the path
+           can be an array of subsequent property names, or positions (in a nested array or Catalog).
+         */
+        let [prop, tail] = Path.splitAll(path)
+        for (const entry of this.entries(prop))         // find all the entries for a given `prop`
+            yield* Path.walk(entry.value, tail)        // walk down the `tail` path of nested objects
     }
 
-    getFirst(field) {
-        /* Like gets(field), but only returns the first entry, or undefined. */
-        return this.gets(field).next().value
-    }
-
-    *gets(field) {
-        /* Generate a stream of entries for a given `field`. Own entries are returned first, then the inherited ones.
-           If the field schema doesn't allow multiple entries for a key, only the first one is yielded for simple types,
-           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one - a default object
-           as defined in schema.prop.default may also be included in the merge; the entry containing the merged object
-           is synthetic and includes {key, value} attributes only.
+    *entries(prop) {
+        /* Generate a stream of valid entries for a given property: own and inherited.
+           If the schema doesn't allow multiple entries, only the first one is yielded, for simple types,
+           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one
+           - a default object as defined in the schema may also be included in the merge.
            Once computed, the list of entries is cached in this._dataAll for future use.
          */
-        let entries = this._dataAll.get(field)                              // array of entries, or undefined
+        let entries = this._dataAll.get(prop)                              // array of entries, or undefined
         if (entries) yield* entries
 
         let fields = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        let schema = fields.get[field]
-        if (!schema) throw new Error(`not in schema: ${field}`)
+        let schema = fields.get(prop)
+        if (!schema) throw new Error(`not in schema: ${prop}`)
 
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
-        let streams = ancestors.map(proto => proto.getsOwn(field))
+        let streams = ancestors.map(proto => proto.entriesOwn(prop))
 
         entries = schema.combine(...streams)
-        this._dataAll.set(field, entries)
+        this._dataAll.set(prop, entries)
         yield* entries
     }
 
-    *getsOwn(field = undefined) {
-        /* Generate a stream of own entries (from this.data) for a given field(s). No inherited/imputed entries.
-           `field` can be a string, or an array of strings, or undefined. The entries are grouped by keys.
+    *entriesOwn(prop = undefined) {
+        /* Generate a stream of own entries (from this.data) for a given property(s). No inherited/imputed entries.
+           `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
         assert(!this.isShadow)
         this.assertData()
-        yield* this.data.readEntries(field)
+        yield* this.data.readEntries(prop)
     }
 
+    getFirst(field) {       // TODO: use this method instead of get()
+        /* Like entries(field), but only the first entry is returned, or undefined. */
+        return this.entries(field).next().value
+    }
 
     get(path, opts = {}) {
         /* Return the first value matching a `path` in this.data or in prototypes. If not found, return a default value

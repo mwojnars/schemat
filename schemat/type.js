@@ -134,7 +134,7 @@ export class Schema {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
          */
-        if (!this.props.unique) return concat(...multipleEntries)
+        if (!this.props.unique) return concat(...multipleEntries.map(g => [...g]))
         let entry = this.merge(...multipleEntries)
         return entry !== undefined ? entry : []
     }
@@ -1415,7 +1415,7 @@ export class DATA extends CATALOG {
         // keys_obligatory: true,
     }
 
-    has(key) { return Object.hasOwn(this.fields, key) }
+    has(key) { return Object.hasOwn(this.props.fields, key) }
 
     subschema(key) {
         let {fields} = this.props

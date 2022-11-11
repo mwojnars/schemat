@@ -29,50 +29,47 @@ export class Path {
         return [head, tail]
     }
 
-    static step(start, path, next = this.next) {
-        /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
-           where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
-         */
-        let obj = start
-        let [step, tail] = this.split(path)
-        return [next(obj, step), tail]
+    static splitAll(path) {
+        /* Like .split(), but always returns an array as a `tail`, so no more string splits are required. */
+        let [head, ...tail] = (typeof path === 'string') ? path.split(this.SEPARATOR) : path
+        return [head, tail]
     }
 
-    static walk(start, path, next = this.next) {
-        /* Starting from an object, `start`, move along the `path` of nested objects, and return the object
-           found at the end of the path. `path` can be a string or an array.
-         */
-        let obj = start
-        while (path.length) {
-            let [step, tail] = this.split(path)
-            obj = next(obj, step)
-            if (obj === undefined) throw new Error(`path not found: ${path}, missing step '${step}'`)
-            path = tail
-        }
-        return obj
-    }
+    // static step(start, path, next = this.next) {
+    //     /* Starting from an object, `start`, move along the `path` of nested objects, and return [obj, tail],
+    //        where `obj` is the first object found after taking one step on the `path`, and `tail` is the remaining path.
+    //      */
+    //     let obj = start
+    //     let [step, tail] = this.split(path)
+    //     return [next(obj, step), tail]
+    // }
 
-    static next(obj, step, generic = true) {
-        /* Take a `step` starting from a given object, and return the next (nested) object or value.
-           Typically, the next step reads an attribute of an object or an element of a collection (Catalog, Map).
-         */
-        if (obj instanceof Catalog || obj instanceof Map)
-            return obj.get(step)
-        if (generic) return obj[step]
-    }
+    // static walk(start, path, next = this.next) {
+    //     /* Starting from a `start` object move along the `path` of nested objects and return the first object found
+    //        at the end of the path. `path` can be a string or an array.
+    //      */
+    //     let obj = start
+    //     while (path.length) {
+    //         let [step, tail] = this.split(path)
+    //         obj = next(obj, step)
+    //         if (obj === undefined) throw new Error(`path not found: ${path}, missing step '${step}'`)
+    //         path = tail
+    //     }
+    //     return obj
+    // }
 
-    static *walks(start, path, next = this.nexts) {
+    static *walk(start, path, next = this.next) {
         /* Generate a stream of all the nested objects of `start` whose location matches the `path`. The path can be
            a string or an array. Multiple objects can be yielded if a Catalog with non-unique keys occurs on the path.
          */
-        if (!path.length) return start
-        let [step, tail] = this.split(path)
+        if (!path.length) yield start
+        let [step, tail] = this.splitAll(path)
         for (let obj of next(start, step))
-            yield* this.walks(obj, tail, next)
+            yield* this.walk(obj, tail, next)
     }
 
-    static *nexts(obj, key, generic = true) {
-        /* Yield all sub-objects of an object or collection, `obj`, stored at a given key or attribute, `key`, of `obj`. */
+    static *next(obj, key, generic = true) {
+        /* Yield all elements of an object or collection, `obj`, stored at a given key or attribute, `key`. */
         if (obj instanceof Catalog)
             for (const entry of obj.readEntries(key))
                 yield entry.value
@@ -280,7 +277,7 @@ export class Catalog {
             let key = keys[0]
             if (typeof key === 'number') yield this._entries[key]
             else
-                for (const pos of (this._keys[key] || []))
+                for (const pos of (this._keys.get(key) || []))
                     yield this._entries[pos]
         }
         else {
@@ -303,7 +300,7 @@ export class Catalog {
     getEntries(keys) { return [...this.readEntries(keys)] }
 
     getEmpty() {
-        /* Return all entries with an empty key (missing, null, ''). */
+        /* Return all the entries with an empty key (missing, null, ''). */
         return this._entries.filter(e => !e.key)
     }
 
