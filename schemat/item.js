@@ -1266,17 +1266,15 @@ export class Category extends Item {
     async _initSchema() {
         // initialize schema objects inside `fields`; in particular, SchemaWrapper class requires
         // explicit async initialization to load sublinked items
-        // TODO: move initialization somewhere else; here, we don't have a guarantee that the initialized schema object
-        //       won't get replaced with a new one at some point; plus, inherited schemas are initialized multiple times
+
+        // TODO: move initialization somewhere else; here, we don't have a guarantee that the
+        //       initialized schema object won't get replaced with a new one at some point
 
         for (const entry of this.entriesRaw('fields')) {
             let fields = entry.value
             let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
             if (calls.length) await Promise.all(calls)
         }
-        // let fields = this.get('fields') || []
-        // let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
-        // if (calls.length) return Promise.all(calls)
     }
 
     async new(data, iid) {
@@ -1391,14 +1389,16 @@ export class Category extends Item {
         /* Source code of this category's dynamic Class body. */
         let body = this.mergeSnippets('class_body')
         let methods = []
-        let views = this.getInherited('views')                      // extend body with VIEW_* methods
-        for (let {key: vname, value: vbody} of views)
+        // let views = this.getInherited('views')                      // extend body with VIEW_* methods
+        let views = this.prop('views')                      // extend body with VIEW_* methods
+        for (let {key: vname, value: vbody} of views || [])
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
         return body + methods.join('\n')
     }
     _codeViewsHandlers() {
-        let views = this.getInherited('views')
-        if (!views.length) return
+        // let views = this.getInherited('views')
+        let views = this.prop('views')
+        if (!views?.length) return
         let names = views.map(({key}) => key)
         let hdlrs = names.map(name => `${name}: new Item.Handler()`)
         let code  = `Class.handlers = {...Class.handlers, ${hdlrs.join(', ')}}`
@@ -1406,8 +1406,9 @@ export class Category extends Item {
         return code
     }
     _codeHandlers() {
-        let entries = this.getInherited('handlers')
-        if (!entries.length) return
+        // let entries = this.getInherited('handlers')
+        let entries = this.prop('handlers')
+        if (!entries?.length) return
         let catg = `${this.cid}_${this.iid}`
         let className = (name) => `Handler_${catg}_${name}`
         let handlers = entries.map(({key: name, value: code}) =>
@@ -1439,10 +1440,7 @@ export class Category extends Item {
         /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
         return this.getInherited('fields')
     }
-    // getHandlers() {
-    //     /* Catalog of all the handlers available for items of this category, including the global-default and inherited ones. */
-    //     return this.getInherited('handlers')
-    // }
+
     getFieldDefault(field) {
         /* Get default value for an item's field as configured in the schema. Return undefined if no default is configured. */
         this.assertLoaded()
