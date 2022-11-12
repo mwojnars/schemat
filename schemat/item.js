@@ -229,7 +229,7 @@ export class Handler {
         /* Shared global HTML assets: scripts, styles. */
         let globalAssets = Resources.clientAssets
         let staticAssets = this.category.getItemAssets().renderAll()
-        let customAssets = this.category.get('html_assets')
+        let customAssets = this.category.prop('html_assets')
         let assets = [globalAssets, staticAssets, customAssets]
         return assets .filter(a => a && a.trim()) .join('\n')
     }
@@ -1332,14 +1332,14 @@ export class Category extends Item {
 
     getClassPath() {
         /* Return import path of this category's items' base class, as a pair [module_path, class_name]. */
-        return splitLast(this.get('class_path') || '', ':')
+        return splitLast(this.prop('class_path') || '', ':')
     }
 
     getSource() {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.get('class_name') || `Class_${this.cid}_${this.iid}`
+        let name = this.prop('class_name') || `Class_${this.cid}_${this.iid}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
