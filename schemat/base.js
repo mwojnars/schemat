@@ -24,7 +24,7 @@ export class MySQL extends DB {
 
     async _connect() {
         let opts = {dateStrings: true}              // also of use if dateStrings=false: timezone='Z' means UTC, 'local' means take server's timezone
-        let conn = this.get('connection') || {}
+        let conn = this.prop('connection') || {}
         let args = this.propObject('host', 'port', 'user', 'database', 'password')
         return this._mod_mysql.createConnection({...opts, ...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
@@ -57,7 +57,7 @@ export class MySQL extends DB {
     }
     async _initTables() {
         /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */
-        let tables = this.get('tables')
+        let tables = this.prop('tables')
         let sqlTables = new Map()
         for (let {key: path, value: sqlTable} of tables.entries()) {
             assert(path)
