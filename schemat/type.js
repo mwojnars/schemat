@@ -1482,7 +1482,7 @@ export class SchemaPrototype extends Item {
        encode/decode through dynamic code.
      */
     async init() {
-        let [path, name] = splitClasspath(this.get('class_path'))
+        let [path, name] = splitClasspath(this.prop('class_path'))
         this.schemaClass = await this.registry.import(path, name || 'default')
         assert(T.isClass(this.schemaClass))
     }

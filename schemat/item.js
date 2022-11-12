@@ -694,33 +694,34 @@ export class Item {
         yield* this.data.readEntries(prop)
     }
 
-    get(path, opts = {}) {
-        /* Return the first value matching a `path` in this.data or in prototypes. If not found, return a default value
-           as configured in the category schema, or undefined.
-         */
-
-        assert(!this.isShadow)
-        this.assertData()
-
-        // search in this.data
-        let value = this.data.findValue(path)
-        if (value !== undefined) return value
-
-        // search in prototypes
-        for (const proto of this.getPrototypes()) {
-            value = proto.get(path)
-            if (value !== undefined) return value
-        }
-
-        // search in category's defaults
-        if (this.category && this.category !== this) {
-            let cat_default = this.category.getFieldDefault(path)
-            if (cat_default !== undefined)
-                return cat_default
-        }
-
-        return opts.default
-    }
+    get(path, opts = {}) { throw new Error(`obsolete call: .get('${path}')`) }
+    // get(path, opts = {}) {
+    //     /* Return the first value matching a `path` in this.data or in prototypes. If not found, return a default value
+    //        as configured in the category schema, or undefined.
+    //      */
+    //
+    //     assert(!this.isShadow)
+    //     this.assertData()
+    //
+    //     // search in this.data
+    //     let value = this.data.findValue(path)
+    //     if (value !== undefined) return value
+    //
+    //     // search in prototypes
+    //     for (const proto of this.getPrototypes()) {
+    //         value = proto.get(path)
+    //         if (value !== undefined) return value
+    //     }
+    //
+    //     // search in category's defaults
+    //     if (this.category && this.category !== this) {
+    //         let cat_default = this.category.getFieldDefault(path)
+    //         if (cat_default !== undefined)
+    //             return cat_default
+    //     }
+    //
+    //     return opts.default
+    // }
 
     flat(first = true) {
         /* Return this.data converted to a flat object. For repeated keys, only one value is included:
