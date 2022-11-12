@@ -661,9 +661,8 @@ export class Item {
 
     *entries(prop) {
         /* Generate a stream of valid entries for a given property: own and inherited.
-           If the schema doesn't allow multiple entries, only the first one is yielded, for simple types,
-           or, for "mergeable" types like CATALOG, the objects (own & inherited) get merged into one
-           - a default of the schema is included in the merge.
+           If the schema doesn't allow multiple entries for `prop`, only the first one is yielded (for simple types),
+           or all the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached in this._dataAll for future use.
          */
         let entries = this._dataAll.get(prop)                              // array of entries, or undefined

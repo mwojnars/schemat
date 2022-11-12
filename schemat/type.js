@@ -28,15 +28,21 @@ export class Schema {
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
         info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
-        default : undefined,    // default value to be assumed when none was provided (yet) by a user (in a web form etc.)
-        unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         blank   : undefined,    // if true, `null` and `undefined` are treated as a valid value
+        unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
         initial : undefined,    // initial value assigned to a newly created data element of this schema
+        // repeated : undefined,
+        // repeat  : undefined,
+        // multi   : undefined,
+        default : undefined,    // default value to be used for a non-repeated property when no explicit value was provided;
+                                // since repeated properties behave like lists of varying length, and zero is a valid length,
+                                // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
         // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
-        // unique, single, singleton, distinct, sole, solo;  repeat, repeated, ...
+        // unique, single, singleton, distinct, sole, solo
+        // repeated, repeat, multi, multiple, many, poly, hetero, duplicated, replicated, iterated, recurrent, repetitive...
 
         // NOT USED currently
         impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
