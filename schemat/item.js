@@ -345,7 +345,7 @@ export class Item {
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
-    get schema()    { return this.getSchema() }
+    // get schema()    { return this.getSchema() }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
@@ -671,7 +671,7 @@ export class Item {
             let default_fields = root_fields.get('fields').props.default
             fields = new Catalog(root_fields, default_fields)
         }
-        else fields = this.category.getFields()     //this.category.prop('fields')
+        else fields = this.category.prop('fields')
 
         let schema = fields.get(prop)
         if (!schema) throw new Error(`not in schema: '${prop}'`)
@@ -759,21 +759,6 @@ export class Item {
         for (const vals of inherited) values.push(...vals)
         return values
     }
-
-    // getInherited(field) {
-    //     /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
-    //        from prototypes + the schema's default catalog for this field.
-    //        It's assumed that the catalogs have unique non-missing keys.
-    //        If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
-    //      */
-    //     let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
-    //     let fields   = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion
-    //     if  (!fields.has(field)) return new Catalog()
-    //     let default_ = fields.get(field).props.default
-    //     catalogs.push(default_)
-    //     catalogs = catalogs.filter(c => c)
-    //     return Catalog.merge(catalogs)
-    // }
 
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
@@ -1433,22 +1418,21 @@ export class Category extends Item {
         return this.registry.getItem([this.iid, iid])
     }
 
-    getFields() {
-        /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
-        return this.prop('fields')
-    }
+    // getFields() {
+    //     /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
+    //     return this.prop('fields')
+    // }
 
     getFieldDefault(field) {
         /* Get default value for an item's field as configured in the schema. Return undefined if no default is configured. */
         this.assertLoaded()
-        let fields = this.getFields()
-        let schema = fields.get(field)
+        let schema = this.getItemSchema().get(field)
         return schema ? schema.props.default : undefined
     }
 
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        let fields = this.getFields()
+        let fields = this.prop('fields')
         return new this._mod_type.DATA({fields: fields.flat()})
     }
     getItemAssets() {
@@ -1557,7 +1541,7 @@ export class Category extends Item {
     // }
 }
 
-Category.setCaching('getItemClass', 'getSource', 'getFields', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 Category.createAPI(
     {

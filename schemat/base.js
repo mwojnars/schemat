@@ -86,9 +86,9 @@ export class MySQL extends DB {
     }
     _convert(row, category) {
         /* Clean and convert a `row` of data to JSON string compatible with the category's schema. */
-        let fields = category.getFields()
+        let schema = category.getItemSchema()
         let keys   = Object.keys(row)
-        for (let key of keys) if (!fields.has(key)) delete row[key]     // drop DB fields with no corresponding category field
+        for (let key of keys) if (!schema.has(key)) delete row[key]     // drop DB fields with no corresponding category field
         return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
     }
 

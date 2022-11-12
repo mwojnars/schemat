@@ -908,8 +908,8 @@ export class CATALOG extends Schema {
     get isCatalog() { return true }
 
     static defaultProps = {
-        keys:    new STRING({blank: true}),     // common schema of keys of an input catalog; must be an instance of STRING or its subclass; primary for validation
-        values:  new GENERIC({multi: true}),    // common schema of values of an input catalog
+        keys:    new STRING({blank: true}),     // schema of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
+        values:  new GENERIC({multi: true}),    // schema of all values in the catalog
         initial: () => new Catalog(),
         unique:  true,                          // typically, CATALOG fields shall not be repeated, but their content be merged during inheritance (requires unique=true)
         // keys_mandatory : false,
@@ -1012,7 +1012,6 @@ export class CATALOG extends Schema {
         let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
         if (default_) catalogs.push(default_)               // schema's default catalog is added to the result, too
-        // catalogs = catalogs.filter(c => c)               // drop undefined elements (default_)
         if (catalogs.length) return {value: Catalog.merge(catalogs)}
     }
 
@@ -1418,6 +1417,7 @@ export class DATA extends CATALOG {
     }
 
     has(key) { return Object.hasOwn(this.props.fields, key) }
+    get(key) { return this.props.fields[key] }
 
     subschema(key) {
         let {fields} = this.props
