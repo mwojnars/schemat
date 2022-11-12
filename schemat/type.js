@@ -132,10 +132,16 @@ export class Schema {
 
     combine(streamsOfEntries) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
-           The streams are either concatenated or the entries are merged into one depending on `prop.single` of this schema.
+           The streams are either concatenated or the entries are merged into one, depending on `prop.unique`.
+           In the latter case, the default value (if present) is included in the merge as the last entry.
          */
         if (!this.props.unique) return concat(streamsOfEntries.map(stream => [...stream]))
-        let entry = this.merge(streamsOfEntries)
+
+        // include the default value is the merge, if present
+        let default_ = this.props.default
+        let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
+        let entry = this.merge(streams)
+
         return entry !== undefined ? [entry] : []
     }
     merge(streamsOfEntries) {
@@ -148,9 +154,7 @@ export class Schema {
            Subclasses may provide a different implementation.
          */
         assert(this.props.unique)
-        let default_ = this.props.default
-        let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
-        for (let entries of streams) {
+        for (let entries of streamsOfEntries) {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
@@ -1002,7 +1006,7 @@ export class CATALOG extends Schema {
          */
         if (!path || !path.length) return this
         assert(T.isArray(path))
-        let schema  = this.subschema(path[0])             // make one step forward, then call get() recursively
+        let schema  = this.subschema(path[0])               // make one step forward, then call get() recursively
         let subpath = path.slice(1)
         if (!subpath.length)            return schema
         if (schema.instanceof(CATALOG)) return schema.find(subpath, default_)
@@ -1010,10 +1014,9 @@ export class CATALOG extends Schema {
     }
 
     merge(streams) {
-        let entries  = concat(streams.map(s => [...s]))     // input streams of entries must be materialized before concat()
+        let entries = concat(streams.map(s => [...s]))      // input streams must be materialized before concat()
+        if (entries.length === 1) return entries[0]
         let catalogs = entries.map(e => e.value)
-        let default_ = this.props.default
-        if (default_) catalogs.push(default_)               // schema's default catalog is added to the result, too
         if (catalogs.length) return {value: Catalog.merge(catalogs, this.props.unique)}
     }
 
