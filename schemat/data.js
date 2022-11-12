@@ -336,6 +336,7 @@ export class Catalog {
            If unique=true, only the first entry with a given key is included in the result,
            and the entries with missing keys are dropped. Otherwise, all input entries are passed to the output.
          */
+        if (catalogs.length === 1) return catalogs[0]
         if (!unique) {
             let entries = concat(catalogs.map(c => c._entries))
             return new Catalog(entries)

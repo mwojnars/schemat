@@ -673,6 +673,7 @@ export class Item {
             fields = new Catalog(root_fields, default_fields)
         }
         else fields = this.category.prop('fields')
+        // TODO: use .getItemSchema() or .getSchema() instead
 
         let schema = fields.get(prop)
         if (!schema) throw new Error(`not in schema: '${prop}'`)
@@ -694,35 +695,6 @@ export class Item {
         yield* this.data.readEntries(prop)
     }
 
-    get(path, opts = {}) { throw new Error(`obsolete call: .get('${path}')`) }
-    // get(path, opts = {}) {
-    //     /* Return the first value matching a `path` in this.data or in prototypes. If not found, return a default value
-    //        as configured in the category schema, or undefined.
-    //      */
-    //
-    //     assert(!this.isShadow)
-    //     this.assertData()
-    //
-    //     // search in this.data
-    //     let value = this.data.findValue(path)
-    //     if (value !== undefined) return value
-    //
-    //     // search in prototypes
-    //     for (const proto of this.getPrototypes()) {
-    //         value = proto.get(path)
-    //         if (value !== undefined) return value
-    //     }
-    //
-    //     // search in category's defaults
-    //     if (this.category && this.category !== this) {
-    //         let cat_default = this.category.getFieldDefault(path)
-    //         if (cat_default !== undefined)
-    //             return cat_default
-    //     }
-    //
-    //     return opts.default
-    // }
-
     flat(first = true) {
         /* Return this.data converted to a flat object. For repeated keys, only one value is included:
            the first one if first=true (default), or the last one, otherwise.
@@ -732,7 +704,7 @@ export class Item {
     }
 
     // async getLoaded(path) {
-    //     /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for get+load. */
+    //     /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for load+get. */
     //     let item = this.get(path)
     //     if (item !== undefined) await item.load()
     //     return item
@@ -1418,13 +1390,6 @@ export class Category extends Item {
         but do NOT load remaining contents from DB (lazy loading).
         */
         return this.registry.getItem([this.iid, iid])
-    }
-
-    getFieldDefault(field) {
-        /* Get default value for an item's field as configured in the schema. Return undefined if no default is configured. */
-        // this.assertLoaded()
-        let schema = this.getItemSchema().get(field)
-        return schema?.props.default
     }
 
     getItemSchema() {
