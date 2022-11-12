@@ -125,7 +125,7 @@
     - - import { P, BR } from '/system/local/react-utils.js'
       - class_init
     - - view: |
-          let text = this.get('text')
+          let text = this.prop('text')
           return P('Post:', BR(), text)
       - views
     - - |
@@ -147,7 +147,7 @@
             this.assertLoaded()
             console.log('this.utils #2:', this.utils)
             console.log('TwitterPost: imported print()')
-            let text = this.get('text')
+            let text = this.prop('text')
             return P('Post', BR(), text)
         }
       - class_body

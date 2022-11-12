@@ -634,7 +634,8 @@ export class Item {
             // check that 'path' is valid according to schema, to block access to system fields like .data etc
             // - this is done for non-shadow items only, because shadow ones don't have a schema
             let schema = this.getSchema()
-            if (!schema.has(path)) throw new Error(`not in schema: ${path}`)
+            let [prop] = Path.split(path)
+            if (!schema.has(prop)) throw new Error(`not in schema: ${prop}`)
         }
 
         // POJO attribute value as a default

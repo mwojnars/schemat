@@ -76,8 +76,6 @@ export class MySQL extends DB {
 
     _select(cid) {
         /* Build the SELECT... FROM... part of a query for a given CID. Return undefined if this particular CID is unsupported. */
-        // let tables = this.get('tables')
-        // let table  = tables.get(`${cid}`)               // map CID to the name of a sql table
         let table = this._sqlTables.get(cid)
         if (!table) return
         table = table.trim()

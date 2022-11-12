@@ -151,6 +151,7 @@
     routes:
       values:
         "@": schemat.type.ITEM
+      unique: false
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
@@ -165,6 +166,7 @@
     routes:
       values:
         "@": schemat.type.ITEM
+      unique: false
       "@": schemat.type.CATALOG
   class_path: /system/local/site.js:Router
 - __id:

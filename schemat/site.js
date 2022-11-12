@@ -22,7 +22,7 @@ export class Router extends Item {
 
     async route(request) {
         let step   = request.step()
-        let routes = this.get('routes')
+        let routes = this.prop('routes')
         let node   = routes.get(step)
         if (step && node) return node.load().then(n => n.route(request.move(step)))
         // if (step && node) {
@@ -47,7 +47,7 @@ export class Router extends Item {
 
     // findRoute(request) {
     //     let step   = request.step()
-    //     let routes = this.get('routes')
+    //     let routes = this.prop('routes')
     //     let route  = routes.get(step)
     //     if (step && route)  return [route, request.move(step)]
     //     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route
@@ -177,24 +177,24 @@ export class Site extends Router {
 
     // findRoute(request) {
     //     return request.path ?
-    //         [this.get('router'), request, false] :
-    //         [this.get('empty_path'),  request,  true]
+    //         [this.prop('router'), request, false] :
+    //         [this.prop('empty_path'),  request,  true]
     // }
 
     systemURL() {
         /* Absolute base URL for system calls originating at a web client and targeting specific items. */
-        return this.get('URL') + this.get('path_internal')
+        return this.prop('URL') + this.prop('path_internal')
     }
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         assert(item.has_id())
         let [cid, iid] = item.id
-        return this.get('path_internal') + `/${cid}:${iid}`
+        return this.prop('path_internal') + `/${cid}:${iid}`
     }
 
     urlRaw(item) {
         /* Absolute raw URL for an `item`. TODO: reuse the AppBasic instead of the code below. */
-        return this.get('URL') + this.systemPath(item)
+        return this.prop('URL') + this.systemPath(item)
     }
 }
 
@@ -272,12 +272,12 @@ export class AppSpaces extends Application {
         let space = spaces_rev.get(item.category.id)
         if (space) return `${space}:${item.iid}`
     }
-    spacesRev() { return ItemsMap.reversed(this.get('spaces')) }
+    spacesRev() { return ItemsMap.reversed(this.prop('spaces')) }
 
     findRoute(request) {
         let step = request.step()
         let [space, item_id] = step.split(':')
-        let category = this.get(`spaces/${space}`)          // decode space identifier and convert to a category object
+        let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
         let item = category.load().then(c => c.getItem(Number(item_id)))
         return [item, request.pushApp(this).move(step), true]
@@ -301,7 +301,7 @@ export class File extends Item {
     }
     content() {
         /* Initial raw content of this file before any processing. */
-        return this.get('content')
+        return this.prop('content')
     }
     read() {
         /* Final post-processed (e.g., transpiled, compacted) content of this file. */
@@ -324,7 +324,7 @@ export class File extends Item {
 
     setMimeType(res, path) {
         // use the `mimetype` property if present...
-        let mimetype = this.get('mimetype')
+        let mimetype = this.prop('mimetype')
         if (mimetype) return res.type(mimetype)
 
         // ...otherwise, set Content-Type to match the URL path's extension, like in .../file.EXT
@@ -359,12 +359,12 @@ export class FileLocal extends File {
     async init()   { if (this.registry.onServer) this._fs = await import('fs') }
 
     content(encoding) {
-        let path = this.get('path')
+        let path = this.prop('path')
         if (path) return this._fs.readFileSync(path, {encoding})
     }
 
     // GET_file({res}) {
-    //     let path = this.get('path')
+    //     let path = this.prop('path')
     //     res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
     //
     //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
@@ -377,7 +377,7 @@ export class Folder extends Item {
     findRoute(request) {
         let step = request.step()
         if (!step) return [this, request, true]         // mark this folder as the target node of the route (true)
-        let item = this.get(`files/${step}`)
+        let item = this.prop(`files/${step}`)
         // request.pushMethod('@file')                     // if `item` doesn't provide @file method, its default one will be used
         return [item, request.move(step), item => !(item instanceof Folder)]
     }
@@ -398,7 +398,7 @@ export class FolderLocal extends Folder {
     }
 
     handlePartial(request) {
-        let root = this.get('path')
+        let root = this.prop('path')
         root = this._mod_path.resolve(root)                     // make `root` an absolute path
         if (!root) throw new Error('missing `path` property in a FolderLocal')
         let path = this._mod_path.join(root, request.path)      // this reduces the '..' special symbols, so we have to check

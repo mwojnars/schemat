@@ -121,7 +121,7 @@ async function create_categories(Category) {
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes          : new CATALOG({values: new ITEM(), info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
+            routes          : new CATALOG({values: new ITEM(), unique: false, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
             //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
@@ -134,14 +134,14 @@ async function create_categories(Category) {
         info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
         fields      : C({
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-            routes      : new CATALOG({values: new ITEM()}),
+            routes      : new CATALOG({values: new ITEM(), unique: false}),
         }),
         class_path  : '/system/local/site.js:Router',
         // _boot_class : 'schemat.item.Router',
         // code        : dedent(`
         //                 findRoute(request) {
         //                     let step   = request.step()
-        //                     let routes = this.get('routes')
+        //                     let routes = this.prop('routes')
         //                     let route  = routes.get(step)
         //                     if (step && route)  return [route, request.move(step)]
         //                     if (routes.has('')) return [routes.get(''), request]          // default (unnamed) route

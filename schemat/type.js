@@ -1012,7 +1012,7 @@ export class CATALOG extends Schema {
         let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
         if (default_) catalogs.push(default_)               // schema's default catalog is added to the result, too
-        if (catalogs.length) return {value: Catalog.merge(catalogs)}
+        if (catalogs.length) return {value: Catalog.merge(catalogs, this.props.unique)}
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
