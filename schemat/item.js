@@ -760,20 +760,20 @@ export class Item {
         return values
     }
 
-    getInherited(field) {
-        /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
-           from prototypes + the schema's default catalog for this field.
-           It's assumed that the catalogs have unique non-missing keys.
-           If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
-         */
-        let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
-        let fields   = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion: getFields() calls getInherited()
-        if  (!fields.has(field)) return new Catalog()
-        let default_ = fields.get(field).props.default
-        catalogs.push(default_)
-        catalogs = catalogs.filter(c => c)
-        return Catalog.merge(catalogs)
-    }
+    // getInherited(field) {
+    //     /* Like .get(field), but for a field holding a Catalog that needs to be merged with the catalogs inherited
+    //        from prototypes + the schema's default catalog for this field.
+    //        It's assumed that the catalogs have unique non-missing keys.
+    //        If a key occurs multiple times, its FIRST occurrence is used (closest to `this`).
+    //      */
+    //     let catalogs = [this, ...this.getPrototypes()].map(proto => proto.get(field))
+    //     let fields   = (this === this.category) ? this.data.get('fields') : this.category.getFields()    // special case for RootCategory to avoid infinite recursion
+    //     if  (!fields.has(field)) return new Catalog()
+    //     let default_ = fields.get(field).props.default
+    //     catalogs.push(default_)
+    //     catalogs = catalogs.filter(c => c)
+    //     return Catalog.merge(catalogs)
+    // }
 
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
@@ -1389,14 +1389,12 @@ export class Category extends Item {
         /* Source code of this category's dynamic Class body. */
         let body = this.mergeSnippets('class_body')
         let methods = []
-        // let views = this.getInherited('views')                      // extend body with VIEW_* methods
-        let views = this.prop('views')                      // extend body with VIEW_* methods
+        let views = this.prop('views')                              // extend body with VIEW_* methods
         for (let {key: vname, value: vbody} of views || [])
             methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
         return body + methods.join('\n')
     }
     _codeViewsHandlers() {
-        // let views = this.getInherited('views')
         let views = this.prop('views')
         if (!views?.length) return
         let names = views.map(({key}) => key)
@@ -1406,7 +1404,6 @@ export class Category extends Item {
         return code
     }
     _codeHandlers() {
-        // let entries = this.getInherited('handlers')
         let entries = this.prop('handlers')
         if (!entries?.length) return
         let catg = `${this.cid}_${this.iid}`
@@ -1438,7 +1435,7 @@ export class Category extends Item {
 
     getFields() {
         /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
-        return this.getInherited('fields')
+        return this.prop('fields')
     }
 
     getFieldDefault(field) {
