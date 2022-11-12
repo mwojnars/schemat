@@ -803,7 +803,7 @@ export class Item {
         /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
            as defined in this item's category's `fields` property. */
         let schema = this.category.getItemSchema()
-        if (!path || !path.length) return schema
+        if (!path?.length) return schema
 
         this.assertLoaded()
         let keys = [], data = this.data
@@ -1418,16 +1418,11 @@ export class Category extends Item {
         return this.registry.getItem([this.iid, iid])
     }
 
-    // getFields() {
-    //     /* Catalog of all the fields allowed for items of this category, including the global-default and inherited ones. */
-    //     return this.prop('fields')
-    // }
-
     getFieldDefault(field) {
         /* Get default value for an item's field as configured in the schema. Return undefined if no default is configured. */
-        this.assertLoaded()
+        // this.assertLoaded()
         let schema = this.getItemSchema().get(field)
-        return schema ? schema.props.default : undefined
+        return schema?.props.default
     }
 
     getItemSchema() {
