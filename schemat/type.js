@@ -132,16 +132,16 @@ export class Schema {
 
     combine(streamsOfEntries) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
-           The streams are either concatenated or the entries are merged into one, depending on `prop.unique`.
+           The streams are either concatenated, or the entries are merged into one, depending on `prop.unique`.
            In the latter case, the default value (if present) is included in the merge as the last entry.
          */
         if (!this.props.unique) return concat(streamsOfEntries.map(stream => [...stream]))
 
-        // include the default value is the merge, if present
+        // include the default value in the merge, if present
         let default_ = this.props.default
         let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
-        let entry = this.merge(streams)
 
+        let entry = this.merge(streams)
         return entry !== undefined ? [entry] : []
     }
     merge(streamsOfEntries) {
@@ -1017,6 +1017,8 @@ export class CATALOG extends Schema {
         let entries = concat(streams.map(s => [...s]))      // input streams must be materialized before concat()
         if (entries.length === 1) return entries[0]
         let catalogs = entries.map(e => e.value)
+        // TODO: inside Catalog.merge(), if unique=true, overlapping entries should be merged recursively
+        //       through combine() of props.values schema
         if (catalogs.length) return {value: Catalog.merge(catalogs, this.props.unique)}
     }
 
