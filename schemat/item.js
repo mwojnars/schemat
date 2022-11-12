@@ -442,6 +442,11 @@ export class Item {
            Set up the class and prototypes. Call init().
            Boot options (opts): {use_schema, jsonData, data}
          */
+
+        // import type.js to allow synchronous access to DATA and generic_schema in other methods;
+        // type.js DEPENDS on item.js, so it can't be imported at the top level!
+        this._mod_type = await import('./type.js')
+
         if (!this.category) {                               // initialize this.category
             assert(!T.isMissing(this.cid))
             this.category = await this.registry.getCategory(this.cid)
@@ -456,7 +461,6 @@ export class Item {
         if (proto instanceof Promise) await proto
 
         this.setExpiry(this.category.prop('cache_ttl'))
-        this._mod_type = await import('./type.js')          // to allow synchronous access to DATA and generic_schema in other methods later on
 
         await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
         this._initActions()
@@ -470,7 +474,7 @@ export class Item {
 
     async _loadData({use_schema = true, jsonData} = {}) {
         if (jsonData === undefined) jsonData = await this._loadDataJson()
-        let schema = use_schema ? this.category.getItemSchema() : (await import('./type.js')).generic_schema
+        let schema = use_schema ? this.category.getItemSchema() : this._mod_type.generic_schema
         let state = JSON.parse(this.jsonData = jsonData)
         return schema.decode(state)
     }
@@ -664,18 +668,18 @@ export class Item {
          */
         let entries = this._dataAll.get(prop)                              // array of entries, or undefined
         if (entries) yield* entries
-        let fields
 
-        if (this === this.category) {
-            // RootCategory is a special case: we have to perform schema inheritance manually to avoid infinite recursion
-            let root_fields = this.data.get('fields')
-            let default_fields = root_fields.get('fields').props.default
-            fields = new Catalog(root_fields, default_fields)
-        }
-        else fields = this.category.prop('fields')
-        // TODO: use .getItemSchema() or .getSchema() instead
+        // let fields
+        // if (this === this.category) {
+        //     // RootCategory is a special case: we have to perform schema inheritance manually to avoid infinite recursion
+        //     let root_fields = this.data.get('fields')
+        //     let default_fields = root_fields.get('fields').props.default
+        //     fields = new Catalog(root_fields, default_fields)
+        // }
+        // else fields = this.category.prop('fields')
+        // let schema = fields.get(prop)
 
-        let schema = fields.get(prop)
+        let schema = this.category.getItemSchema(prop)
         if (!schema) throw new Error(`not in schema: '${prop}'`)
 
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
@@ -1392,8 +1396,9 @@ export class Category extends Item {
         return this.registry.getItem([this.iid, iid])
     }
 
-    getItemSchema() {
+    getItemSchema(field = undefined) {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
+        if (field !== undefined) return this.getItemSchema().get(field)
         let fields = this.prop('fields')
         return new this._mod_type.DATA({fields: fields.flat()})
     }
@@ -1570,7 +1575,21 @@ export class RootCategory extends Category {
         return super.reload({...opts, use_schema: false})
     }
     getItemClass() { return Category }
+
+    getItemSchema(field = undefined) {
+        /* In RootCategory, this == this.category, for this reason must perform schema inheritance manually
+           (without this.prop()) to avoid infinite recursion.
+         */
+        if (field !== undefined) return this.getItemSchema().get(field)
+        let root_fields = this.data.get('fields')
+        let default_fields = root_fields.get('fields').props.default
+        let fields = new Catalog(root_fields, default_fields)
+        return new this._mod_type.DATA({fields: fields.flat()})
+    }
 }
+
+RootCategory.setCaching('getItemSchema')
+
 
 /**********************************************************************************************************************/
 
