@@ -669,16 +669,6 @@ export class Item {
         let entries = this._dataAll.get(prop)                              // array of entries, or undefined
         if (entries) yield* entries
 
-        // let fields
-        // if (this === this.category) {
-        //     // RootCategory is a special case: we have to perform schema inheritance manually to avoid infinite recursion
-        //     let root_fields = this.data.get('fields')
-        //     let default_fields = root_fields.get('fields').props.default
-        //     fields = new Catalog(root_fields, default_fields)
-        // }
-        // else fields = this.category.prop('fields')
-        // let schema = fields.get(prop)
-
         let schema = this.category.getItemSchema(prop)
         if (!schema) throw new Error(`not in schema: '${prop}'`)
 
@@ -1577,8 +1567,8 @@ export class RootCategory extends Category {
     getItemClass() { return Category }
 
     getItemSchema(field = undefined) {
-        /* In RootCategory, this == this.category, for this reason must perform schema inheritance manually
-           (without this.prop()) to avoid infinite recursion.
+        /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
+           schema inheritance manually (without this.prop()).
          */
         if (field !== undefined) return this.getItemSchema().get(field)
         let root_fields = this.data.get('fields')

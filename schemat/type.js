@@ -139,16 +139,18 @@ export class Schema {
         return entry !== undefined ? [entry] : []
     }
     merge(streamsOfEntries) {
-        /* For singleton schemas (prop.unique=true).
+        /* For single-valued schemas (prop.unique=true).
            Merge the values of multiple streams of inherited entries whose .value matches this schema.
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
-           The merged value may include information from the schema's default (prop.default).
+           The merged value may include or consist of the schema's default (prop.default).
            The entry returned can be synthetic and contain {value} attribute only.
-           Base class implementation returns the first entry of `streamsOfEntries`.
+           Base class implementation returns the first entry of `streamsOfEntries`, or default.
            Subclasses may provide a different implementation.
          */
         assert(this.props.unique)
-        for (let entries of streamsOfEntries) {
+        let default_ = this.props.default
+        let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
+        for (let entries of streams) {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
