@@ -1068,23 +1068,28 @@ export class Item {
            NOTE: methods cached can be async, in such case the value cached and returned is a Promise.
          */
         print(`${this.constructor.name}.setCaching(): ${methods}`)
+
         const cached = (name, fun) => {
-            function cachedMethod(...args) {
+            function wrapper(...args) {
+                let cache = this._methodCache                       // here, `this` is an Item instance
                 while (args.length && args[args.length-1] === undefined)
-                    args.pop()                                          // drop trailing `undefined` arguments
-                if (args.length) return fun.call(this, ...args)         // here and below, `this` is an Item instance
-                if (this._methodCache.has(name))
-                    return this._methodCache.get(name)                  // print(`${name}() from _methodCache`)
+                    args.pop()                                      // drop trailing `undefined` arguments
+                if (args.length) return fun.call(this, ...args)     // here and below, `this` is an Item instance
+                if (cache.has(name)) return cache.get(name)         // print(`${name}() from _methodCache`)
+
                 let value = fun.call(this)
-                this._methodCache.set(name, value)                      // may store a promise (!)
-                return value                                            // may return a promise (!), the caller should be aware
+                if (value instanceof Promise)                       // for async methods store the final value when available
+                    value.then(v => cache.set(name, v))             // to speed up subsequent access (no waiting for promise)
+
+                cache.set(name, value)                              // may store a promise (!)
+                return value                                        // may return a promise (!), the caller should be aware
             }
-            Object.defineProperty(cachedMethod, 'name', {value: `${name}_cached`})
-            cachedMethod.isCached = true                // for detection of an existing wrapper, to avoid repeated wrapping
-            return cachedMethod
+            Object.defineProperty(wrapper, 'name', {value: `${name}_cached`})
+            wrapper.isCached = true                                 // to detect an existing wrapper and avoid repeated wrapping
+            return wrapper
         }
         for (const name of methods) {
-            let fun = this.prototype[name]              // here, `this` is the Item class or its subclass
+            let fun = this.prototype[name]                          // here, `this` is the Item class or its subclass
             if (fun && !fun.isCached)
                 this.prototype[name] = cached(name, fun)
         }
@@ -1238,8 +1243,13 @@ export class Category extends Item {
         let base = module.Class
         let name = `${base.name}`
         let cls = {[name]: class extends base {}}[name]
-        // assert(cls.category === undefined || cls.category === this, this, cls.category)
+        let _category = T.getOwnProperty(cls, 'category')
+        assert(_category === undefined || _category === this, this, _category)
+
+        // if (_category !== undefined && _category !== this)
+        //     assert(false)
         cls.category = this
+
         // print('base:', base)
         // print('cls:', cls)
         return cls
@@ -1488,7 +1498,7 @@ export class Category extends Item {
     // }
 }
 
-Category.setCaching('getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
+Category.setCaching('getModule', 'getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 Category.createAPI(
     {
