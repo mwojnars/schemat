@@ -1005,18 +1005,11 @@ export class CATALOG extends Schema {
         else                         return `${name}(${values}, ${keys})`
     }
 
-    find(path = null, sep = '/') {
+    find(path = null) {
         /* Return a (nested) subschema at a given `path`, or `this` if `path` is empty.
            The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
-        assert(T.isArray(path))
-        // if (!path?.length) return this
-        // let schema  = this.subschema(path[0])               // make one step forward, then call get() recursively
-        // let subpath = path.slice(1)
-        // if (!subpath.length)            return schema
-        // if (schema.instanceof(CATALOG)) return schema.find(subpath)
-
         return Path.find(this, path, (schema, key) => {
             if (!(schema instanceof CATALOG)) throw new Error(`schema path not found: ${path}`)
             return [schema.subschema(key)]
