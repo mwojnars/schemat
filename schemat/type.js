@@ -6,7 +6,7 @@ import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUT
 import { ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, trycatch, truncate, DataError, ValueError, splitLast, concat } from './utils.js'
 import { JSONx } from './serialize.js'
-import { Catalog } from './data.js'
+import { Catalog, Path } from './data.js'
 import { Item } from './item.js'
 import { Assets, Component, Widget } from './widget.js'
 
@@ -1005,18 +1005,22 @@ export class CATALOG extends Schema {
         else                         return `${name}(${values}, ${keys})`
     }
 
-    find(path = null, default_ = undefined, sep = '/') {
+    find(path = null, sep = '/') {
         /* Return a (nested) subschema at a given `path`, or `this` if `path` is empty.
            The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
-        if (!path || !path.length) return this
         assert(T.isArray(path))
-        let schema  = this.subschema(path[0])               // make one step forward, then call get() recursively
-        let subpath = path.slice(1)
-        if (!subpath.length)            return schema
-        if (schema.instanceof(CATALOG)) return schema.find(subpath, default_)
-        return default_
+        // if (!path?.length) return this
+        // let schema  = this.subschema(path[0])               // make one step forward, then call get() recursively
+        // let subpath = path.slice(1)
+        // if (!subpath.length)            return schema
+        // if (schema.instanceof(CATALOG)) return schema.find(subpath)
+
+        return Path.find(this, path, (schema, key) => {
+            if (!(schema instanceof CATALOG)) throw new Error(`schema path not found: ${path}`)
+            return [schema.subschema(key)]
+        })
     }
 
     merge(streams) {

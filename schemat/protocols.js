@@ -126,15 +126,15 @@ export class HttpProtocol extends Protocol {
 
 /**********************************************************************************************************************/
 
-// export class HtmlPage extends HttpProtocol {
-//     /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
-//        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
-//      */
-// }
-//
-// export class ReactPage extends HtmlPage {
-//     /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
-// }
+export class HtmlPage extends HttpProtocol {
+    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via client().
+       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+     */
+}
+
+export class ReactPage extends HtmlPage {
+    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+}
 
 /*************************************************************************************************/
 

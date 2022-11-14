@@ -345,7 +345,6 @@ export class Item {
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
-    // get schema()    { return this.getSchema() }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
@@ -753,6 +752,8 @@ export class Item {
 
         this.assertLoaded()
         let keys = [], data = this.data
+
+        // convert numeric indices in `path` to keys
         for (let step of path) {
             assert(data instanceof Catalog)
             let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
@@ -1095,8 +1096,8 @@ export class Item {
         }
     }
 
-    static cached_methods = ['getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
-
+    // static cached_methods = ['getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
+    //
     // static initClass() {
     //     let methods = this.category.prop('cached_methods')
     //     this.setCaching(...methods)
@@ -1107,12 +1108,9 @@ export class Item {
 
 Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
 
-// Item.initClass()
-
 Item.handlers = {
-    default: new Handler(),
-    // item:    new Handler(),
-    admin:   new Handler(),
+    default: new Handler(),     // TODO: use protocols instead
+    admin:   new Handler(),     // TODO: use protocols instead
 }
 
 
@@ -1126,7 +1124,10 @@ Item.handlers = {
 Item.createAPI(
     {
         // http endpoints...
+
         // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
+        // 'GET/item':  new HtmlPage({title: '', assets: '', body: ''}),
+
         'CALL/default': new InternalProtocol(function() { return this }),
         'CALL/item':    new InternalProtocol(function() { return this }),
         'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),

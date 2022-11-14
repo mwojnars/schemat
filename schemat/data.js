@@ -44,6 +44,13 @@ export class Path {
     //     return [next(obj, step), tail]
     // }
 
+    static find(start, path, next = this.next) {
+        /* Return the first element encountered by walk(), or undefined. */
+        let walk = this.walk(start, path, next)
+        let elem = walk.next()
+        if (!elem.done) return elem.value
+    }
+
     static *walk(start, path, next = this.next) {
         /* Generate a stream of all the nested objects of `start` whose location matches the `path`. The path can be
            a string or an array. Multiple objects can be yielded if a Catalog with non-unique keys occurs on the path.
