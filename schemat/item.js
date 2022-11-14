@@ -706,30 +706,6 @@ export class Item {
     //     return item
     // }
 
-    // getMany(key, {inherit = true, reverse = true} = {}) {
-    //     /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-    //        Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
-    //        in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
-    //        or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
-    //        The `key` can be an array of keys.
-    //      */
-    //     this.assertLoaded()
-    //
-    //     if (typeof key === 'string') key = [key]
-    //     let own = this.data.getValues(key)
-    //     if (!inherit) return own
-    //
-    //     let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
-    //     if (!inherited.length) return own
-    //
-    //     // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
-    //     let values = []
-    //     inherited = [own, ...inherited]
-    //     if (reverse) inherited.reverse()
-    //     for (const vals of inherited) values.push(...vals)
-    //     return values
-    // }
-
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
            TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -938,7 +914,7 @@ export class Item {
 
         let req, res
         let {session, methods} = request
-        if (!methods.length) methods = ['default']   // methods = this.category.getMany('default_view', {reverse:false})
+        if (!methods.length) methods = ['default']
         // print('methods:', methods)
 
         if (session) {
