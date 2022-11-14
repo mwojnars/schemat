@@ -330,10 +330,10 @@ export class Item {
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
 
-    cache = new Map()           // cache of values of methods configured for caching in Item.setCaching(); values can be promises
-
     _dataAll = new Map()        // {field: combined own data + inherited from ancestors + inherited from schema default + imputed}
                                 // each field is computed and cached separately, lazily upon request
+
+    _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
     static category             // like instance-level `category`, but accessible from the class
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
@@ -341,7 +341,7 @@ export class Item {
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
     static api        = null    // API instance that defines this item's endpoints and protocols
 
-    static __transient__ = ['cache']
+    static __transient__ = ['_methodCache']
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -1062,19 +1062,22 @@ export class Item {
 
     static setCaching(...methods) {
         /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
-           The wrapper utilizes the `cache` property of an Item instance to store cached values.
+           The wrapper utilizes the `_methodCache` property of an Item instance to store cached values.
            NOTE: the value is cached and re-used only when the method was called without arguments;
                  otherwise, the original method is executed on each and every call.
+           NOTE: methods cached can be async, in such case the value cached and returned is a Promise.
          */
+        print(`${this.constructor.name}.setCaching(): ${methods}`)
         const cached = (name, fun) => {
             function cachedMethod(...args) {
                 while (args.length && args[args.length-1] === undefined)
                     args.pop()                                          // drop trailing `undefined` arguments
                 if (args.length) return fun.call(this, ...args)         // here and below, `this` is an Item instance
-                if (this.cache.has(name)) return this.cache.get(name)   // print(`${name}() from cache`)
+                if (this._methodCache.has(name))
+                    return this._methodCache.get(name)                  // print(`${name}() from _methodCache`)
                 let value = fun.call(this)
-                this.cache.set(name, value)             // may store a promise (!)
-                return value                            // may return a promise (!), the caller should be aware
+                this._methodCache.set(name, value)                      // may store a promise (!)
+                return value                                            // may return a promise (!), the caller should be aware
             }
             Object.defineProperty(cachedMethod, 'name', {value: `${name}_cached`})
             cachedMethod.isCached = true                // for detection of an existing wrapper, to avoid repeated wrapping
@@ -1087,12 +1090,19 @@ export class Item {
         }
     }
 
-    // static cached_methods = ['getPrototypes', ...]
+    static cached_methods = ['getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render']
+
+    // static initClass() {
+    //     let methods = this.category.prop('cached_methods')
+    //     this.setCaching(...methods)
+    // }
 }
 
 /**********************************************************************************************************************/
 
 Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
+
+// Item.initClass()
 
 Item.handlers = {
     default: new Handler(),
@@ -1350,12 +1360,12 @@ export class Category extends Item {
     }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */
-        let cached = this.propsReversed('cached_methods')
-        cached = cached.join(' ').replaceAll(',', ' ').trim()
-        if (!cached) return ''
-        cached = cached.split(/\s+/).map(m => `'${m}'`)
-        print('_codeCache().cached:', cached)
-        return `Class.setCaching(${cached.join(',')})`
+        let methods = this.propsReversed('cached_methods')
+        methods = methods.join(' ').replaceAll(',', ' ').trim()
+        if (!methods) return ''
+        methods = methods.split(/\s+/).map(m => `'${m}'`)
+        print('_codeCache().cached:', methods)
+        return `Class.setCaching(${methods.join(',')})`
     }
 
     getItem(iid) {
