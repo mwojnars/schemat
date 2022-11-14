@@ -61,7 +61,7 @@ export class Path {
                 yield entry.value
 
         else if (obj instanceof Map) yield obj.get(key)
-        else if (generic) yield obj[key]
+        else if (generic && (typeof obj === 'object')) yield obj[key]
     }
 }
 
@@ -156,7 +156,8 @@ export class ItemsCache extends ItemsMap {
  */
 
 export class Catalog {
-    /* An Array-like and Map-like collection of entries; each entry contains a `value`, an `id`, and an optional:
+    /* Catalog is an Array-like and Map-like collection of entries, an in-memory mini-database, where each entry
+       contains a `value`, an `id`, and an optional:
        - key,
        - label,
        - comment.

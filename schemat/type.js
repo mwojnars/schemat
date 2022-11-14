@@ -42,7 +42,7 @@ export class Schema {
         // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
 
         // unique, single, singleton, distinct, sole, solo
-        // repeated, repeat, multi, multiple, many, poly, hetero, duplicated, replicated, iterated, recurrent, repetitive...
+        // repeated, repeat, multi, multiple, many, poly, duplicated, replicated, iterated, recurrent, repetitive...
 
         // NOT USED currently
         impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)

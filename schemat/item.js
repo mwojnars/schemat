@@ -649,6 +649,9 @@ export class Item {
         return _default
     }
 
+    propsList(path)         { return [...this.props(path)] }
+    propsReversed(path)     { return [...this.props(path)].reverse() }
+
     *props(path) {
         /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
            a top-level property name, followed by subproperties separated by '/'. Alternatively, the path
@@ -656,7 +659,7 @@ export class Item {
          */
         let [prop, tail] = Path.splitAll(path)
         for (const entry of this.entries(prop))         // find all the entries for a given `prop`
-            yield* Path.walk(entry.value, tail)        // walk down the `tail` path of nested objects
+            yield* Path.walk(entry.value, tail)         // walk down the `tail` path of nested objects
     }
 
     *entries(prop) {
@@ -703,29 +706,29 @@ export class Item {
     //     return item
     // }
 
-    getMany(key, {inherit = true, reverse = true} = {}) {
-        /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
-           Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
-           in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
-           or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
-           The `key` can be an array of keys.
-         */
-        this.assertLoaded()
-
-        if (typeof key === 'string') key = [key]
-        let own = this.data.getValues(key)
-        if (!inherit) return own
-
-        let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
-        if (!inherited.length) return own
-
-        // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
-        let values = []
-        inherited = [own, ...inherited]
-        if (reverse) inherited.reverse()
-        for (const vals of inherited) values.push(...vals)
-        return values
-    }
+    // getMany(key, {inherit = true, reverse = true} = {}) {
+    //     /* Return an array (possibly empty) of all values assigned to a given `key` in this.data.
+    //        Default value (if defined) is NOT included. Values from prototypes are included if inherit=true,
+    //        in such case, the order of prototypes is preserved, with `this` included at the beginning (reverse=false);
+    //        or the order is reversed, with `this` included at the end of the result array (reverse=true, default).
+    //        The `key` can be an array of keys.
+    //      */
+    //     this.assertLoaded()
+    //
+    //     if (typeof key === 'string') key = [key]
+    //     let own = this.data.getValues(key)
+    //     if (!inherit) return own
+    //
+    //     let inherited = this.getPrototypes().map(p => p.getMany(key, {inherit, reverse}))
+    //     if (!inherited.length) return own
+    //
+    //     // WARN: this algorithm produces duplicates when multiple prototypes inherit from a common base object
+    //     let values = []
+    //     inherited = [own, ...inherited]
+    //     if (reverse) inherited.reverse()
+    //     for (const vals of inherited) values.push(...vals)
+    //     return values
+    // }
 
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
@@ -786,11 +789,13 @@ export class Item {
     getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
 
     mergeSnippets(key, params) {
-        /* Calls getMany() to find all entries with a given `key` including the environment-specific
-           {key}_client OR {key}_server keys; assumes the values are strings.
-           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets. */
-        let env = this.registry.onServer ? 'server' : 'client'
-        let snippets = this.getMany([key, `${key}_${env}`], params)
+        /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
+           including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
+           Returns \n-concatenation of the strings found. Used internally to retrieve & combine code snippets.
+         */
+        // let env = this.registry.onServer ? 'server' : 'client'
+        // let snippets = this.getMany([key, `${key}_${env}`], params)
+        let snippets = this.propsReversed(key)
         return snippets.join('\n')
     }
 
@@ -1369,7 +1374,7 @@ export class Category extends Item {
     }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */
-        let cached = this.getMany('cached_methods')
+        let cached = this.propsReversed('cached_methods')
         cached = cached.join(' ').replaceAll(',', ' ').trim()
         if (!cached) return ''
         cached = cached.split(/\s+/).map(m => `'${m}'`)
