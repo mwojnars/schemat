@@ -317,27 +317,27 @@ export class Catalog {
         return [pos, subpath, value]
     }
 
-    findValue(path, default_ = undefined) {
-        /* Return a value on a given path, or default_ if path not found. */
-        let entry = this.findEntry(path)
-        return entry === undefined ? default_ : entry.value
-    }
-
-    findEntry(path, default_ = undefined) {
-
-        // make one step forward, then call findEntry() recursively if needed
-        let [pos, subpath, subcat] = this.step(path, false)
-        if (pos < 0) return default_
-        if (!subpath.length) return this._entries[pos]
-
-        if (subcat instanceof Catalog)  return subcat.findEntry(subpath, default_)
-        if (subpath.length > 1)         return default_
-        let key = subpath[0]
-
-        if (subcat instanceof Map)  return {key, value: subcat.get(key)}        // last step inside a Map
-        if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
-        return default_
-    }
+    // findValue(path, default_ = undefined) {
+    //     /* Return a value on a given path, or default_ if path not found. */
+    //     let entry = this.findEntry(path)
+    //     return entry === undefined ? default_ : entry.value
+    // }
+    //
+    // findEntry(path, default_ = undefined) {
+    //
+    //     // make one step forward, then call findEntry() recursively if needed
+    //     let [pos, subpath, subcat] = this.step(path, false)
+    //     if (pos < 0) return default_
+    //     if (!subpath.length) return this._entries[pos]
+    //
+    //     if (subcat instanceof Catalog)  return subcat.findEntry(subpath, default_)
+    //     if (subpath.length > 1)         return default_
+    //     let key = subpath[0]
+    //
+    //     if (subcat instanceof Map)  return {key, value: subcat.get(key)}        // last step inside a Map
+    //     if (T.isDict(subcat))       return {key, value: subcat[key]}            // last step inside a plain object
+    //     return default_
+    // }
 
     static merge(catalogs, unique = true) {
         /* Merge multiple `catalogs` into a new Catalog. The order of entries is preserved.
