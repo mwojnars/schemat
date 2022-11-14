@@ -612,18 +612,6 @@ export class Item {
     // props(path)   -- stream of values matching a given path
     // entries(prop) -- stream of entries for a given property
 
-    propObject(...paths) {
-        /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
-           The result may include a default or POJO value if defined for a particular field.
-         */
-        let subset = {}
-        for (let path of paths) {
-            let value = this.prop(path)
-            if (value !== undefined) subset[path] = value
-        }
-        return subset
-    }
-
     prop(path, _default = undefined) {
         /* Read the item's property either from this.data using get(), or (if missing) from this POJO's regular attribute
            - this allows defining attributes through DB or through item's class constructor.
@@ -649,8 +637,17 @@ export class Item {
         return _default
     }
 
-    propsList(path)         { return [...this.props(path)] }
-    propsReversed(path)     { return [...this.props(path)].reverse() }
+    propObject(...paths) {
+        /* Read multiple prop(path) properties and combine the result into a single POJO object {path_k: value_k}.
+           The result may include a default or POJO value if defined for a particular field.
+         */
+        let subset = {}
+        for (let path of paths) {
+            let value = this.prop(path)
+            if (value !== undefined) subset[path] = value
+        }
+        return subset
+    }
 
     *props(path) {
         /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
@@ -661,6 +658,9 @@ export class Item {
         for (const entry of this.entries(prop))         // find all the entries for a given `prop`
             yield* Path.walk(entry.value, tail)         // walk down the `tail` path of nested objects
     }
+
+    propsList(path)         { return [...this.props(path)] }
+    propsReversed(path)     { return [...this.props(path)].reverse() }
 
     *entries(prop) {
         /* Generate a stream of valid entries for a given property: own and inherited.
