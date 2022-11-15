@@ -22,8 +22,6 @@ import { Assets, Component, Widget } from './widget.js'
 export class Schema {
 
     get isCatalog() { return false }
-    get isDerived() { return false }
-    get isWrapper() { return false }
 
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
@@ -597,19 +595,6 @@ export let generic_schema = new GENERIC()
 export let generic_string = new STRING()
 
 
-export class DERIVED extends GENERIC {
-
-    get isDerived() { return true }
-    // get isReadonly() { return true }
-
-    static defaultProps = {
-        derive: undefined,      // function derive(item) is called to compute the item's derived property; inside the function,
-                                // `this` references the schema object (this.props is available), the `item` is in `isLoading`
-                                // state, item.data can be accessed; the function can be async; if undefined is returned
-                                // by derive(), it's replaced with schema.props.default
-    }
-}
-
 /**********************************************************************************************************************/
 
 export class SCHEMA extends GENERIC {
@@ -1002,7 +987,7 @@ export class CATALOG extends Schema {
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
         return Path.find(this, path, (schema, key) => {
-            if (!(schema instanceof CATALOG)) throw new Error(`schema path not found: ${path}`)
+            if (!schema.isCatalog) throw new Error(`schema path not found: ${path}`)
             return [schema.subschema(key)]
         })
     }
@@ -1446,7 +1431,6 @@ export class SchemaWrapper extends Schema {
     /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
        Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
      */
-    get isWrapper() { return true }
 
     static defaultProps = {
         prototype:  undefined,          // item of the Schema category (instance of SchemaPrototype) implementing `this.schema`
