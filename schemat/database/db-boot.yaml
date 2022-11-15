@@ -28,6 +28,7 @@
               "@": schemat.type.STRING
           - key: class_init
             value:
+              repeated: true
               info: Module-level initialization for this category's Javascript class.
                 Typically contains import statements and global variables.
                 Preceeds the Class definition (`class_body`, `views`) in the
@@ -35,6 +36,7 @@
               "@": schemat.type.CODE
           - key: class_body
             value:
+              repeated: true
               info: Source code of the class (a body without heading) that will be created for
                 this category. The class inherits from the `class_path` class,
                 or the class of the first base category, or the top-level Item.
@@ -99,7 +101,6 @@
                       "@": schemat.type.STRING
                   - key: path
                     value:
-                      unique: true
                       info: "Canonical path of this item within the SUN, for: display, resolving
                         relative code imports, resolving relative item
                         references (REF type), etc. If `path` is configured,
@@ -151,7 +152,7 @@
     routes:
       values:
         "@": schemat.type.ITEM
-      unique: false
+      repeated: true
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
@@ -166,7 +167,7 @@
     routes:
       values:
         "@": schemat.type.ITEM
-      unique: false
+      repeated: true
       "@": schemat.type.CATALOG
   class_path: /system/local/site.js:Router
 - __id:

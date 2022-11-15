@@ -1068,7 +1068,7 @@ export class Item {
                  otherwise, the original method is executed on each and every call.
            NOTE: methods cached can be async, in such case the value cached and returned is a Promise.
          */
-        print(`${this.constructor.name}.setCaching(): ${methods}`)
+        // print(`${this.constructor.name}.setCaching(): ${methods}`)
 
         const cached = (name, fun) => {
             function wrapper(...args) {

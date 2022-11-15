@@ -27,27 +27,18 @@ export class Schema {
 
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
-        info    : undefined,    // human-readable description of this schema: what values are accepted and how they are interpreted
-        blank   : undefined,    // if true, `null` and `undefined` are treated as a valid value
-        unique  : undefined,    // if true and the schema describes a field in DATA, the field can't be repeated (unique value)
-        initial : undefined,    // initial value assigned to a newly created data element of this schema
-        // repeated : undefined,
-        // repeat  : undefined,
-        // multi   : undefined,
-        default : undefined,    // default value to be used for a non-repeated property when no explicit value was provided;
+        info     : undefined,   // human-readable description of this schema: what values are accepted and how they are interpreted
+        blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value
+        initial  : undefined,   // initial value assigned to a newly created data element of this schema
+        repeated : undefined,   // if true, the field described by this schema can be repeated, typically inside a CATALOG/RECORD/DATA
+        default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        // class: undefined,    // class constructor; if present, all values should be instances of `type` (exact or subclasses, depending on schema)
-        // multi: undefined,    // if true and the schema describes a field in DATA, the field can be repeated (multiple values)
-
-        // unique, single, singleton, distinct, sole, solo
-        // repeated, repeat, multi, multiple, many, poly, duplicated, replicated, iterated, recurrent, repetitive...
-
-        // NOT USED currently
-        impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
-        imputeIf: "always",     // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
-        imputeFlag: false,      // if true, a boolean flag is attached to the encoded value to indicate if it originates from automatic imputation; the decoded value is wrapped up in an Imputable wrapper to allow reading the flag
+        // // NOT USED currently
+        // impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
+        // imputeIf: "always",     // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
+        // imputeFlag: false,      // if true, a boolean flag is attached to the encoded value to indicate if it originates from automatic imputation; the decoded value is wrapped up in an Imputable wrapper to allow reading the flag
     }
 
     static getDefaultProps() {
@@ -138,10 +129,10 @@ export class Schema {
 
     combine(streamsOfEntries) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
-           The streams are either concatenated, or the entries are merged into one, depending on `prop.unique`.
+           The streams are either concatenated, or the entries are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is included in the merge as the last entry.
          */
-        if (!this.props.unique) return concat(streamsOfEntries.map(stream => [...stream]))
+        if (this.props.repeated) return concat(streamsOfEntries.map(stream => [...stream]))
 
         // include the default value in the merge, if present
         let default_ = this.props.default
@@ -151,7 +142,7 @@ export class Schema {
         return entry !== undefined ? [entry] : []
     }
     merge(streamsOfEntries) {
-        /* For single-valued schemas (prop.unique=true).
+        /* For single-valued schemas (prop.repeated is false).
            Merge the values of multiple streams of inherited entries whose .value matches this schema.
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
            The merged value may include or consist of the schema's default (prop.default).
@@ -159,7 +150,7 @@ export class Schema {
            Base class implementation returns the first entry of `streamsOfEntries`, or default.
            Subclasses may provide a different implementation.
          */
-        assert(this.props.unique)
+        assert(!this.props.repeated)
         for (let entries of streamsOfEntries) {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
@@ -910,7 +901,7 @@ export class CATALOG extends Schema {
     The schema may restrict the set of permitted keys in different ways:
     - require that a key name belongs to a predefined set of "fields"
     - no duplicate key names (across all non-missing names)
-    - no duplicates for a particular key name -- encoded in the key's subschema, subschema.unique=true
+    - no duplicates for a particular key name -- encoded in the key's subschema, subschema.repeated=false
     other constraints:
     - mandatory keys (empty key='' allowed)
     - empty key not allowed (by default key_empty_allowed=false)
@@ -920,10 +911,10 @@ export class CATALOG extends Schema {
     get isCatalog() { return true }
 
     static defaultProps = {
-        keys:    new STRING({blank: true}),     // schema of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
-        values:  new GENERIC({multi: true}),    // schema of all values in the catalog
-        initial: () => new Catalog(),
-        unique:  true,                          // typically, CATALOG fields shall not be repeated, but their content be merged during inheritance (requires unique=true)
+        keys:       new STRING({blank: true}),      // schema of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
+        values:     new GENERIC({multi: true}),     // schema of all values in the catalog
+        initial:    () => new Catalog(),
+        repeated:   false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
         // keys_mandatory : false,
         // keys_forbidden : false,
         // keys_unique    : false,
@@ -1020,9 +1011,9 @@ export class CATALOG extends Schema {
         let entries = concat(streams.map(s => [...s]))      // input streams must be materialized before concat()
         if (entries.length === 1) return entries[0]
         let catalogs = entries.map(e => e.value)
-        // TODO: inside Catalog.merge(), if unique=true, overlapping entries should be merged recursively
+        // TODO: inside Catalog.merge(), if repeated=false, overlapping entries should be merged recursively
         //       through combine() of props.values schema
-        if (catalogs.length) return {value: Catalog.merge(catalogs, this.props.unique)}
+        if (catalogs.length) return {value: Catalog.merge(catalogs, !this.props.repeated)}
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
@@ -1285,7 +1276,7 @@ CATALOG.Table = class extends Component {
     //         alert(msg); throw new Error(msg)
     //     }
     //     // check against duplicate names, if duplicates are not allowed
-    //     if (subschema.unique)
+    //     if (!subschema.repeated)
     //         for (let ent of entries) {}
     //     return true
     // }

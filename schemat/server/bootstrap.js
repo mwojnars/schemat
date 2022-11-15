@@ -26,7 +26,7 @@ let C = (...data) => new Catalog(...data)
 // global-default fields shared by all item types
 let default_fields = C({
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
-    path        : new PATH({unique: true, info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
+    path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
     prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
                                   "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, as well as for categories - the latter case represents category inheritance. " +
@@ -38,8 +38,8 @@ let default_fields = C({
 let root_fields = C({
     class_path   : new STRING({info: "SUN path to a Javascript file that contains a (base) class for this category. May contain an optional class name appended after colon ':'. If the class name is missing (no colon), default import from the file is used."}),
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
-    class_init   : new CODE({info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
-    class_body   : new CODE({info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
+    class_init   : new CODE({repeated: true, info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),
+    class_body   : new CODE({repeated: true, info: "Source code of the class (a body without heading) that will be created for this category. The class inherits from the `class_path` class, or the class of the first base category, or the top-level Item."}),
     // pages        : new CATALOG({values: new CODE(), info: "Source code of React class components that render HTML response pages for particular URL endpoints of this category's items. Each entry in `pages` is a name of the endpoint + the body of a class component inheriting from the `Page` base class. NO class header or surrounding braces {...}, they are added automatically. Static attributes/methods are allowed."}),
     pages        : new CATALOG({values: new CODE(), info: "Source code of functions that generate static HTML response for particular access methods of this category's items."}),
     handlers     : new CATALOG({values: new CODE(), info: "Body of Handler subclasses that generate HTML response for particular access methods of this category's items."}),
@@ -121,7 +121,7 @@ async function create_categories(Category) {
         fields      : C({
             URL             : new STRING({info: "Base URL at which the website is served: protocol + domain + root path (if any); no trailing '/'."}),
             path_internal   : new PATH({info: "URL route of an internal application for default/admin web access to items. The application should handle all items."}),
-            routes          : new CATALOG({values: new ITEM(), unique: false, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
+            routes          : new CATALOG({values: new ITEM(), repeated: true, info: "URL prefixes (as keys) mapped to items that shall perform routing of requests whose URLs start with a given prefix. NO leading/trailing slashes."}),
             //path_local    : new PATH({info: "URL route of a FolderLocal that maps to the root folder of the Schemat's local installation."}),
             //route_default: new ITEM({info: "URL route anchored at the site root, i.e., having empty URL prefix. If there are multiple `route_default` entries, they are being tried in the order of listing in the site's configuration, until a route is found that does NOT raise the Request.NotFound."}),
             //router      : new ITEM({info: "Router that performs top-level URL routing to downstream applications and file folders."}),
@@ -134,7 +134,7 @@ async function create_categories(Category) {
         info        : "A set of sub-applications or sub-folders, each bound to a different URL prefix.",
         fields      : C({
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
-            routes      : new CATALOG({values: new ITEM(), unique: false}),
+            routes      : new CATALOG({values: new ITEM(), repeated: true}),
         }),
         class_path  : '/system/local/site.js:Router',
         // _boot_class : 'schemat.item.Router',
