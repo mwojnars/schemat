@@ -265,7 +265,7 @@ export class AppSpaces extends Application {
     where SPACE is a text identifier assigned to a category in `spaces` property.
     */
 
-    cached_methods = 'spacesRev'
+    // cached_methods = 'spacesRev'
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
@@ -283,6 +283,8 @@ export class AppSpaces extends Application {
         return [item, request.pushApp(this).move(step), true]
     }
 }
+
+AppSpaces.setCaching('spacesRev')
 
 
 /**********************************************************************************************************************

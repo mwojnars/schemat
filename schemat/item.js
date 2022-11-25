@@ -1177,33 +1177,6 @@ Item.createAPI(
 
 /**********************************************************************************************************************/
 
-// class EditableItem extends Item {
-//     /* A set of methods appended through monkey-patching to an item object to make it editable (see Item.editable()).
-//        Edit methods should be synchronous. They can assume this.data is already loaded, no need for awaiting.
-//      */
-//
-//     actions         // list of edit actions executed on this item so far; submitted to DB on commit for DB-side replay
-//
-//     edit(action, args) {
-//         let method = this[`_edit_${action}`]
-//         if (!method) throw new Error(`edit action "${action}" not found in ${this}`)
-//         let result = method.bind(this)(args)
-//         this.edits.push([action, args])
-//         return result
-//     }
-//
-//     push(key, value, {label, comment} = {}) {
-//         /* Shortcut for edit('push', ...) */
-//         return this.edit('push', {key, value, label, comment})
-//     }
-//     set(path, value, props) { this.data.set(path, value, props) }
-//
-//     _edit_push(entry) { return this.data.pushEntry(entry) }
-//     _edit_set (entry) { return this.data.setEntry (entry) }
-// }
-
-/**********************************************************************************************************************/
-
 export class Category extends Item {
     /*
     A category is an item that describes other items: their schema and functionality;

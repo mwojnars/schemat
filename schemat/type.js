@@ -33,10 +33,8 @@ export class Schema {
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        // // NOT USED currently
-        // impute: undefined,      // function to be called to compute a field value if imputation is needed (during item modification in DB)
-        // imputeIf: "always",     // when to perform imputation: if the value is "missing" (no updates after first imputation), or "dirty" (deps changed), or "always"
-        // imputeFlag: false,      // if true, a boolean flag is attached to the encoded value to indicate if it originates from automatic imputation; the decoded value is wrapped up in an Imputable wrapper to allow reading the flag
+        // TODO: to be added in the future...
+        // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
     }
 
     static getDefaultProps() {
