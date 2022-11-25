@@ -221,7 +221,7 @@ export class ActionsProtocol extends JsonProtocol {
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(protocol)
-        if (c1 !== c2) throw new Error(`overriding a JsonProtocol with a different protocol type (${c2}) is not allowed`)
+        if (c1 !== c2) throw new Error(`overriding ActionsProtocol instance with a different protocol (${c2}) is not allowed`)
         // if (c1 !== c2) return protocol          // `protocol` can be null
         assert(this.address === protocol.address, this.address, protocol.address)
 

@@ -1164,7 +1164,7 @@ Item.createAPI(
     {
         // actions...
         // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
-        'get_json':         ['GET/json'],
+        //'get_json':         ['GET/json'],
         'delete_self':      ['POST/action', 'delete_self'],
         'insert_field':     ['POST/action', 'insert_field'],
         'delete_field':     ['POST/action', 'delete_field'],
@@ -1500,20 +1500,33 @@ Category.createAPI(
             res.sendItems(items)
         }),
 
-        'POST/create':  new JsonProtocol(async function (ctx, dataState)
-        {
-            /* Create a new item in this category based on request data. */
-            let data = await (new Data).__setstate__(dataState)
-            let item = await this.new(data)
-            await this.registry.insert(item)
-            // await category.registry.commit()
-            return item.encodeSelf()
-            // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        // 'POST/create':  new JsonProtocol(async function (ctx, dataState)
+        // {
+        //     /* Create a new item in this category based on request data. */
+        //     let data = await (new Data).__setstate__(dataState)
+        //     let item = await this.new(data)
+        //     await this.registry.insert(item)
+        //     // await category.registry.commit()
+        //     return item.encodeSelf()
+        //     // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+        // }),
+
+        'POST/action':  new ActionsProtocol({
+            async create_item(ctx, dataState) {
+                /* Create a new item in this category based on request data. */
+                let data = await (new Data).__setstate__(dataState)
+                let item = await this.new(data)
+                await this.registry.insert(item)
+                // await category.registry.commit()
+                return item.encodeSelf()
+                // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
+            },
         }),
     },
     {
         // actions...
-        'create_item':      ['POST/create'],
+        // 'create_item':      ['POST/create'],
+        'create_item':      ['POST/action', 'create_item'],
     }
 )
 
