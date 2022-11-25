@@ -68,7 +68,7 @@ export class Protocol {
     setAddress(address) { this.address = address }
 
     _splitAddress() {
-        assert(this.address)
+        assert(this.address, this.address)
         let parts = this.address.split('/')
         if (parts.length !== 2) throw new Error(`incorrect address format for a protocol: ${this.address}`)
         return parts
@@ -221,11 +221,15 @@ export class ActionsProtocol extends JsonProtocol {
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(protocol)
-        if (c1 !== c2) return protocol          // `protocol` can be null
+        if (c1 !== c2) throw new Error(`overriding a JsonProtocol with a different protocol type (${c2}) is not allowed`)
+        // if (c1 !== c2) return protocol          // `protocol` can be null
+        assert(this.address === protocol.address, this.address, protocol.address)
 
         // create a new protocol instance with `actions` combined
         let actions = {...this.actions, ...protocol.actions}
-        return new c1(actions)
+        let merged = new c1(actions)
+        merged.setAddress(this.address)
+        return merged
     }
 
     execute(agent, ctx, action, ...args) {
