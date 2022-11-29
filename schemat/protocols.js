@@ -1,47 +1,6 @@
 import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
 
 
-// export class Agent {
-//     /* Base class for objects that implement client-server communication (API) for external and internal calls.
-//
-//        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
-//        programming interface (action.*) in each of these environments, but always executing the actions on the server:
-//        actions triggered on a client get redirected to the server, execute there, and the result is communicated
-//        back to the client.
-//
-//        In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
-//        sent directly to the server. A client-side instance of the agent is not needed then.
-//
-//        The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
-//      */
-//
-//     api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
-//     action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
-//
-//     constructor(api = null) {
-//         if (api) this.setAgentAPI(api)
-//     }
-//
-//     _getAgentEnvironment() {
-//         /* Override in subclasses to return the name of the current environment: "client" or "server". */
-//         throw new Error("not implemented")
-//     }
-//     _getAgentParents() {
-//         /* Override in subclasses to return a list of agents this one directly inherits from. */
-//         throw new Error("not implemented")
-//     }
-//
-//     setAgentAPI(api) {
-//         /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
-//         if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
-//         this.api = api
-//         this.action = this.api.getTriggers(this)
-//     }
-//
-//     url(endpoint) {}
-// }
-
-
 export class Protocol {
     /* Client/server communication protocol for a web client or an RPC_Agent object.
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
@@ -284,3 +243,48 @@ export class API {
 /* action protocols:
    ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
 */
+
+/**********************************************************************************************************************/
+
+// export class Agent {
+//     /* Base class for objects that implement client-server communication (API) for external and internal calls.
+//
+//        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
+//        programming interface (action.*) in each of these environments, but always executing the actions on the server:
+//        actions triggered on a client get redirected to the server, execute there, and the result is communicated
+//        back to the client.
+//
+//        In an "external call" scenario, a request is initiated by a third party (typically, a user browser) and is
+//        sent directly to the server. A client-side instance of the agent is not needed then.
+//
+//        The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
+//      */
+//
+//     api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
+//     action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
+//
+//     constructor(api = null) {
+//         if (api) this.setAgentAPI(api)
+//     }
+//
+//     _getAgentEnvironment() {
+//         /* Override in subclasses to return the name of the current environment: "client" or "server". */
+//         throw new Error("not implemented")
+//     }
+//     _getAgentParents() {
+//         /* Override in subclasses to return a list of agents this one directly inherits from. */
+//         throw new Error("not implemented")
+//     }
+//
+//     setAgentAPI(api) {
+//         /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
+//         if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
+//         this.api = api
+//         this.action = this.api.getTriggers(this)
+//     }
+//
+//     url(endpoint) {}
+// }
+
+// item = ItemClass.client()
+// item = ItemClass.server()
