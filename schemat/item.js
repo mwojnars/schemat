@@ -522,7 +522,7 @@ export class Item {
             let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
                 ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => handler.client(this, ...fixed, ...args)          // may return a Promise
+                : (...args) => handler.submit(this, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
     }
@@ -934,7 +934,7 @@ export class Item {
             if (handler2) return handler2.run({...context, handler: handler2})
 
             let handler = api.findHandler(endpoint, httpMethod)
-            if (handler) return handler.server(this, context)
+            if (handler) return handler.serve(this, context)
         }
 
         // for (let endpoint of methods) {
