@@ -112,7 +112,7 @@ export class JsonProtocol extends HttpProtocol {
         return fetch(url, params)
     }
 
-    _sendResponse({res}, output, error, defaultCode = 500) {
+    _sendResponse(res, output, error, defaultCode = 500) {
         /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
@@ -143,9 +143,11 @@ export class JsonProtocol extends HttpProtocol {
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
+        let {req, res} = ctx        // req: RequestContext
         let out, ex
         try {
-            let {req: {body}}  = ctx        // RequestContext
+            let body = req.body
+            // let {req: {body}}  = ctx
             // print(body)
 
             // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
@@ -156,7 +158,7 @@ export class JsonProtocol extends HttpProtocol {
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}
-        return this._sendResponse(ctx, out, ex)
+        return this._sendResponse(res, out, ex)
     }
 }
 
@@ -246,7 +248,7 @@ export class API {
 
 /**********************************************************************************************************************/
 
-// export class Agent {
+// export class Agent {   // RemoteObject NetObject
 //     /* Base class for objects that implement client-server communication (API) for external and internal calls.
 //
 //        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
@@ -260,11 +262,22 @@ export class API {
 //        The API of an agent may handle user requests (HTML) and machine requests (REST) alike.
 //      */
 //
-//     api         // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
-//     action      // action triggers, {name: trigger()}, created from the `api` for this agent instance
+//     static _api     // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
+//     _side           // 'client' or 'server'
 //
-//     constructor(api = null) {
-//         if (api) this.setAgentAPI(api)
+//     constructor(side = 'client') {
+//         this._side = side
+//     }
+//
+//     /* Instantiate a client-side variant of this agent. Remote methods will make RPC calls to the server() object. */
+//     static client(...args) { return new this('client', ...args) }
+//     static server(...args) { return new this('server', ...args) }
+//
+//     _rpc(endpoint, ...args) {
+//         let protocol = this.constructor._api.get(endpoint)
+//         if (this._side === 'client')
+//             return protocol.submit(this, ...args)
+//         return protocol.execute(this, {}, ...args)
 //     }
 //
 //     _getAgentEnvironment() {
@@ -276,14 +289,26 @@ export class API {
 //         throw new Error("not implemented")
 //     }
 //
-//     setAgentAPI(api) {
-//         /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
-//         if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
-//         this.api = api
-//         this.action = this.api.getTriggers(this)
-//     }
+//     // setAgentAPI(api) {
+//     //     /* `api` can be an API instance, or a collection {...} of endpoints to be passed to the new API(). */
+//     //     if (!(api instanceof API)) api = new API(api, this._getAgentEnvironment())
+//     //     this.api = api
+//     //     this.action = this.api.getTriggers(this)
+//     // }
 //
 //     url(endpoint) {}
+//
+// }
+//
+// class XYZ extends Agent {
+//
+//     _exec_default() { return this }
+//
+//     static _endpoints =
+//     {
+//         'CALL/default': new InternalProtocol(XYZ.prototype._exec_default),
+//     }
+//     // static _api = new API([], XYZ._endpoints)
 // }
 
 // item = ItemClass.client()
