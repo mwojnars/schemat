@@ -36,14 +36,14 @@ class Schemat {
     }
 
     async boot() {
-        let databases = [
+        let rings = [
             {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readonly: true},
             {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readonly: false},
             {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},  // update: true/false, insert: true/false
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
             {item: [51,100]},
         ]
-        this.db = await this.stack(...databases)
+        this.db = await this.stack(...rings)
     }
 
     async stack(...databases) {
@@ -118,13 +118,13 @@ class Schemat {
         // identify the source DB
         let db = await this.db.find(id)
         if (db === undefined) throw new Error(`item not found: [${id}]`)
-        if (db.readonly) throw new Error(`the DB '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+        if (db.readonly) throw new Error(`the ring '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target DB
         if (dbInsert) dbInsert = this.db.getDB(dbInsert)
         else dbInsert = bottom ? this.db.bottom : db
 
-        if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same DB (${db.name}) without change of ID`)
+        if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same ring (${db.name}) without change of ID`)
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 

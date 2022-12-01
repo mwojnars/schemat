@@ -21,7 +21,7 @@
 - __id:
     - 0
     - 50
-  name: YAML Database
+  name: YAML
   info: Data stored in a YAML file.
   prototype:
     - 0

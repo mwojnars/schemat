@@ -307,8 +307,9 @@
 - __id:
     - 0
     - 11
-  name: Database
-  info: Base category for items that represent an abstract database layer.
+  name: Ring
+  info: Base category for items that represent data rings (stackable database
+    layers).
 - __id:
     - 6
     - 1

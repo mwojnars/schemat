@@ -87,8 +87,8 @@ export class DB extends Item {
 
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
     
-    nextDB                  // higher-priority DB put on top of this one in a DB stack; fallback for save/mutate/update()
-    prevDB                  // lower-priority DB placed beneath this one in a DB stack; fallback for read/drop/insert()
+    nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
+    prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
 
     get top()       { return this.nextDB ? this.nextDB.top : this }
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }
@@ -104,7 +104,7 @@ export class DB extends Item {
 
     static Error = class extends BaseError {}
     static NotFound = class extends DB.Error {
-        static message = "item ID not found in DB"
+        static message = "item ID not found"
     }
     static ReadOnly = class extends DB.Error {
         static message = "the database is for read-only access"
@@ -113,7 +113,7 @@ export class DB extends Item {
         static message = "IID is out of range"
     }
     static NotWritable = class extends DB.Error {
-        static message = "record cannot be written, the DB is either read-only or the key (iid) is outside the range"
+        static message = "record cannot be written, the data ring is either read-only or the key (iid) is outside the range"
     }
 
     throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
@@ -126,10 +126,10 @@ export class DB extends Item {
     checkReadOnly(key)          { if (this.prop('readonly')) this.throwReadOnly({key}) }
     async checkNew(id, msg)     { if (await this._read(id)) throw new Error(msg + ` [${id}]`) }
 
-    /***  DB stacking & administration  ***/
+    /***  stacking & administration  ***/
 
     stack(next) {
-        /* Stack `next` DB on top of this one. */
+        /* Stack `next` ring on top of this one. */
         this.nextDB = next
         next.prevDB = this
         return next
@@ -438,52 +438,53 @@ export class YamlDB extends FileDB {
 
 /**********************************************************************************************************************/
 
-// export class RingsDB extends DB {
-//     /* Several databases used together like rings. Each read/write operation is executed
-//        on the outermost ring possible. If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
-//        In this way, all inserts go to the outermost writable database only (warning: the items may receive IDs
-//        that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
-//        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
-//        -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
-//        is expected; while the reversed relationship is a sign of undesired convolution between the databases.
-//      */
-//
-//     static RingNotFound = class extends DB.Error {
-//         static message = "no suitable ring database found for the operation"
-//     }
-//
-//     constructor(...databases) {
-//         /* `databases` are ordered by increasing level: from innermost to outermost. */
-//         super()
-//         this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
-//
-//         this.get    = this.outermost('get')
-//         this.del    = this.outermost('del')
-//         this.insert = this.outermost('insert')
-//         this.update = this.outermost('update')
-//         // this.select = this.outermost('select')
-//     }
-//     load()  { return Promise.all(this.databases.map(d => d.load())) }
-//
-//     outermost = (method) => async function (...args) {
-//         let exLast
-//         for (const db of this.databases)
-//             try {
-//                 let result = db[method](...args)
-//                 return result instanceof Promise ? await result : result
-//             }
-//             catch (ex) {
-//                 if (ex instanceof DB.NotFound) { exLast = ex; continue }
-//                 // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
-//                 throw ex
-//             }
-//         throw exLast || new DB.NotFound()
-//         // throw new RingsDB.RingNotFound()
-//     }
-//
-//     async *scanCategory(cid) {
-//         for (const db of this.databases)
-//             yield* db.scanCategory(cid)
-//     }
-// }
+export class Database extends DB {
+    /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
+       ring possible; while each insert - on the innermost ring starting at the category's own ring.
+       If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
+       In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
+       that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
+       NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
+       -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
+       is expected; while the reversed relationship is a sign of undesired convolution between the databases.
+     */
+
+    static RingNotFound = class extends DB.Error {
+        static message = "no suitable ring database found for the operation"
+    }
+
+    constructor(...databases) {
+        /* `databases` are ordered by increasing level: from innermost to outermost. */
+        super()
+        this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
+
+        this.get    = this.outermost('get')
+        this.del    = this.outermost('del')
+        this.insert = this.outermost('insert')
+        this.update = this.outermost('update')
+        // this.select = this.outermost('select')
+    }
+    load()  { return Promise.all(this.databases.map(d => d.load())) }
+
+    outermost = (method) => async function (...args) {
+        let exLast
+        for (const db of this.databases)
+            try {
+                let result = db[method](...args)
+                return result instanceof Promise ? await result : result
+            }
+            catch (ex) {
+                if (ex instanceof DB.NotFound) { exLast = ex; continue }
+                // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
+                throw ex
+            }
+        throw exLast || new DB.NotFound()
+        // throw new RingsDB.RingNotFound()
+    }
+
+    async *scanCategory(cid) {
+        for (const db of this.databases)
+            yield* db.scanCategory(cid)
+    }
+}
 

@@ -27,11 +27,15 @@ class Sequence extends AbstractSequence {
 
 class Data extends Sequence {}
 class Index extends Sequence {}
+
 class Aggregate extends Sequence {}
+    /* Aggregates can only implement *reversible* operations, like counting or integer sum.
+       Min/max must be handled through a full index over the min/max-ed field.
+     */
 
 class Store {
     /* A Data sequence coupled with any number of Indexes and Aggregates.
-       Like a database with custom query API (no SQL) and the ability to overlay multiple independent
-       stores (rings) on top of each other (multi-ring architecture).
+       Like a database, but with custom query API (no SQL) and the ability to fall back on another store (ring)
+       wheh a particular read or write cannot be performed here (multi-ring architecture).
      */
 }
