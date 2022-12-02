@@ -2,10 +2,11 @@ import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
 
 
 export class Protocol {
-    /* Client/server communication protocol for a web client or an RPC_Agent object.
+    /* Client/server communication protocol for "network objects", i.e., objects that pass data over a network
+       and hence must behave differently when instantiated server-side vs client-side.
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
        through the serve() method when a web request arrives. The protocol may also consist
-       of submit() implemention that performs internal RPC calls to the remote serve() method.
+       of remote() implemention that performs RPC calls from a client to the remote serve() method.
        Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
@@ -40,9 +41,9 @@ export class Protocol {
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
-    submit(agent, action, ...args) {
-        /* Subclasses should override submit() method to encode `args` in a protocol-specific way. */
-        throw new Error(`client-side internal call not allowed for this protocol`)
+    remote(agent, action, ...args) {
+        /* Subclasses should override remote() method to encode `args` in a protocol-specific way. */
+        throw new Error(`client-side call not allowed for this protocol`)
     }
 
     serve(agent, ctx) {
@@ -69,11 +70,11 @@ export class InternalProtocol extends Protocol {
 export class HttpProtocol extends Protocol {
     /* General-purpose HTTP protocol. Does not interpret input/output data in any way; the action function
        uses `req` and `res` objects directly, and it is also responsible for error handling.
-       The submit() returns response body as a raw string. This protocol only accepts one action per endpoint.
+       remote() returns response body as a raw string. This protocol only accepts one action per endpoint.
      */
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
-    async submit(agent, action, ...args) {
+    async remote(agent, action, ...args) {
         let url = agent.url(this.endpoint)
         let res = await fetch(url)                  // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
@@ -86,7 +87,7 @@ export class HttpProtocol extends Protocol {
 /**********************************************************************************************************************/
 
 export class HtmlPage extends HttpProtocol {
-    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via submit().
+    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via remote().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
 }
@@ -129,7 +130,7 @@ export class JsonProtocol extends HttpProtocol {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async submit(agent, ...args) {
+    async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
@@ -276,7 +277,7 @@ export class API {
 //     _rpc(endpoint, ...args) {
 //         let protocol = this.constructor._api.get(endpoint)
 //         if (this._side === 'client')
-//             return protocol.submit(this, ...args)
+//             return protocol.remote(this, ...args)
 //         return protocol.execute(this, {}, ...args)
 //     }
 //

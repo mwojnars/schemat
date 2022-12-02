@@ -519,7 +519,7 @@ export class Item {
             let handler  = api.get(endpoint)
             this.action[name] = this.registry.onServer
                 ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => handler.submit(this, ...fixed, ...args)          // may return a Promise
+                : (...args) => handler.remote(this, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
     }
