@@ -22,17 +22,17 @@ export class JSONx {
         this.registry = globalThis.registry
     }
 
-    // stringify(obj, type = null) {
-    //     let state = this.encode(obj, type)
-    //     return JSON.stringify(state)
-    // }
-    // parse(dump, type = null) {
-    //     let state = JSON.parse(dump)
-    //     return this.decode(state, type)
-    // }
+    static stringify(obj, type = null) {
+        let flat = this.encode(obj, type)
+        return JSON.stringify(flat)
+    }
+    static parse(dump, type = null) {
+        let flat = JSON.parse(dump)
+        return this.decode(flat, type)
+    }
 
     static encode(obj, type = null)     { return new JSONx().encode(obj, type) }
-    static decode(state, type = null)   { return new JSONx().decode(state, type) }
+    static decode(flat, type = null)    { return new JSONx().decode(flat, type) }
 
     encode(obj, type = null) {
         /*

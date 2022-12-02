@@ -1,4 +1,6 @@
 import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
+import { JSONx } from "./serialize.js";
+import { generic_schema } from "./type.js";
 
 
 export class Protocol {
@@ -18,6 +20,8 @@ export class Protocol {
                     // like a method of the agent; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
+
+    schema = generic_schema     // schema to be used for serialization of arguments and results of remote calls
 
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
@@ -108,7 +112,7 @@ export class JsonProtocol extends HttpProtocol {
         let params = {method, headers: {}}
         if (data !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            params.body = JSON.stringify(data)
+            params.body = JSONx.stringify(data)
         }
         return fetch(url, params)
     }
@@ -136,7 +140,7 @@ export class JsonProtocol extends HttpProtocol {
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         let out = await res.text()                              // json string or empty
-        if (out) return JSON.parse(out)
+        if (out) return JSONx.parse(out)
     }
 
     async serve(agent, ctx) {
@@ -152,7 +156,7 @@ export class JsonProtocol extends HttpProtocol {
             // print(body)
 
             // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
-            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
+            let args = (typeof body === 'string' ? JSONx.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
             out = this.execute(agent, ctx, ...args)

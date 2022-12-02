@@ -116,12 +116,13 @@ export class Schema {
         return JSONx.decode(state)
     }
 
-    encodeJson(value, replacer, space) {
+    stringify(value, replacer, space) {
         /* Encode and JSON-stringify a `value` with configurable JSON format. */
         return JSON.stringify(this.encode(value), replacer, space)
     }
-    decodeJson(dump)    { return this.decode(JSON.parse(dump)) }
-    toString()          { return this.constructor.name }     //JSON.stringify(this._fields).slice(0, 60)
+    parse(dump)     { return this.decode(JSON.parse(dump)) }
+
+    toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
     combine(streamsOfEntries) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
@@ -206,8 +207,8 @@ Schema.Widget = class extends Widget {
     empty(v)    { return T.isMissing(v) && I('missing') }       // view of an empty value, for display() and viewer()
     view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
     display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
-    encode(v)   { return this.props.schema.encodeJson(v) }      // convert a value to its editable representation
-    decode(v)   { return this.props.schema.decodeJson(v) }      // ...and back
+    encode(v)   { return this.props.schema.stringify(v) }       // convert a value to its editable representation
+    decode(v)   { return this.props.schema.parse(v) }           // ...and back
 
     viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
@@ -582,9 +583,9 @@ export class GENERIC extends Schema {
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
         empty(value)    { return Schema.Widget.prototype.empty.call(this, value) }
-        view(value)     { return this.props.schema.encodeJson(value) }              // JSON string is pretty-printed for edit
-        encode(value)   { return this.props.schema.encodeJson(value, null, 2) }     // JSON string is pretty-printed for edit
-        decode(value)   { return this.props.schema.decodeJson(value) }
+        view(value)     { return this.props.schema.stringify(value) }            // JSON string is pretty-printed for edit
+        encode(value)   { return this.props.schema.stringify(value, null, 2) }   // JSON string is pretty-printed for edit
+        decode(value)   { return this.props.schema.parse(value) }
     }
 }
 
