@@ -1,5 +1,5 @@
 import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
-import { generic_schema } from "./type.js";
+import { generic_schema } from "./type.js"
 
 
 export class Protocol {

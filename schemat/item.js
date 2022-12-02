@@ -7,8 +7,8 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
+import { DATA, generic_schema } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
-// import { Schema } from './type.js'
 
 export const ROOT_CID = 0
 export const SITE_CID = 1
@@ -439,9 +439,9 @@ export class Item {
            Boot options (opts): {use_schema, jsonData, data}
          */
 
-        // import type.js to allow synchronous access to DATA and generic_schema in other methods;
-        // type.js DEPENDS on item.js, so it can't be imported at the top level!
-        this._mod_type = await import('./type.js')
+        // // import type.js to allow synchronous access to DATA and generic_schema in other methods;
+        // // type.js DEPENDS on item.js, so it can't be imported at the top level!
+        // this._mod_type = await import('./type.js')
 
         if (!this.category) {                               // initialize this.category
             assert(!T.isMissing(this.cid))
@@ -470,7 +470,7 @@ export class Item {
 
     async _loadData({use_schema = true, jsonData} = {}) {
         if (jsonData === undefined) jsonData = await this._loadDataJson()
-        let schema = use_schema ? this.category.getItemSchema() : this._mod_type.generic_schema
+        let schema = use_schema ? this.category.getItemSchema() : generic_schema
         let state = JSON.parse(this.jsonData = jsonData)
         return schema.decode(state)
     }
@@ -776,7 +776,7 @@ export class Item {
     encodeData(use_schema = true) {
         /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
         this.assertLoaded()
-        let schema = use_schema ? this.getSchema() : this._mod_type.generic_schema
+        let schema = use_schema ? this.getSchema() : generic_schema
         return schema.encode(this.data)
     }
     dumpData(use_schema = true, compact = true) {
@@ -1361,7 +1361,7 @@ export class Category extends Item {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         if (field !== undefined) return this.getItemSchema().get(field)
         let fields = this.prop('fields')
-        return new this._mod_type.DATA({fields: fields.flat()})
+        return new DATA({fields: fields.flat()})
     }
     getItemAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
@@ -1558,7 +1558,7 @@ export class RootCategory extends Category {
         let root_fields = this.data.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
-        return new this._mod_type.DATA({fields: fields.flat()})
+        return new DATA({fields: fields.flat()})
     }
 }
 
