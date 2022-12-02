@@ -34,6 +34,7 @@ export class Schema {
 
         // TODO: to be added in the future...
         // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
+        // compress: undefined,     // whether to compress JSON output in stringify/parse()
     }
 
     static getDefaultProps() {

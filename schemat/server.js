@@ -17,11 +17,11 @@ import {Request} from "./item.js";
 let RES = express.response          // standard Express' prototype of all response objects;
                                     // we're extending it with higher-level methods for handling items
 
-RES.sendItem = function(item) {
-    /* Send JSON response with a single item: its data (encoded) and metadata. */
-    // print('sendItem():', item.id)
-    this.json(item.encodeSelf())
-}
+// RES.sendItem = function(item) {
+//     /* Send JSON response with a single item: its data (encoded) and metadata. */
+//     // print('sendItem():', item.id)
+//     this.json(item.encodeSelf())
+// }
 RES.sendItems = function(items) {
     /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
     if (!(items instanceof Array)) items = Array.from(items)

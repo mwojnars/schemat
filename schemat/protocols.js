@@ -20,7 +20,10 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
-    schema = generic_schema     // schema to be used for serialization of arguments and results of remote calls
+    schema = generic_schema     // schema to be used for serialization of arguments and results of remote calls;
+                                // a narrower, more specific schema might encode data more efficiently;
+                                // in the future, a special ProtocolSchema class may be created containing separate
+                                // forArgs/Body/Result/Error sub-schemas
 
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
@@ -121,14 +124,25 @@ export class JsonProtocol extends HttpProtocol {
         res.type('json')
         if (error) {
             res.status(error.code || defaultCode)
+            // res.send(this.schema.stringify(error))
             res.send({error})
             throw error
         }
         if (output === undefined) res.end()             // missing output --> empty response body
-        res.json(output)
+
+        // let out1 = this.schema.stringify(output)
+        // print('out1:\n', out1)
+        // let out2 = JSON.stringify(output)
+        // print('out2:\n', out2, '\n')
+
+        // res.send(this.schema.stringify(output))
+        res.send(JSON.stringify(output))
+        // res.json(output)
     }
+
     async _decodeError(res) {
         let error = await res.json()
+        // let error = this.schema.parse(await res.text())
         throw new RequestFailed({...error, code: res.status})
     }
 
@@ -137,8 +151,8 @@ export class JsonProtocol extends HttpProtocol {
         let url = agent.url(this.endpoint)
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
-        let out = await res.text()                              // json string or empty
-        if (out) return this.schema.parse(out)
+        let txt = await res.text()                              // json string or empty
+        if (txt) return this.schema.parse(txt)
     }
 
     async serve(agent, ctx) {
