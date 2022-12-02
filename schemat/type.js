@@ -4,10 +4,9 @@ import { React, MaterialUI } from './resources.js'
 import { e, cl, st, createRef, useState, useItemLoading, delayed_render } from './react-utils.js'
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 import { ItemLoadingHOC } from './react-utils.js'
-import { T, assert, print, trycatch, truncate, DataError, ValueError, splitLast, concat } from './utils.js'
+import { T, assert, print, trycatch, truncate, DataError, ValueError, concat } from './utils.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
-import { Item } from './item.js'
 import { Assets, Component, Widget } from './widget.js'
 
 // print('Temporal:', Temporal)
@@ -1442,6 +1441,7 @@ export class SchemaWrapper extends Schema {
         if (this.schema) return
         let {prototype, properties} = this.props
         await prototype.load()
+        let {SchemaPrototype} = await import('./type_schema.js')
         assert(prototype instanceof SchemaPrototype)
         this.schema = prototype.createSchema(properties)
     }
@@ -1460,24 +1460,4 @@ export class SchemaWrapper extends Schema {
     //     return this
     // }
 }
-
-export class SchemaPrototype extends Item {
-    /* Schema implemented as an item that's stored in DB. May point back to a plain schema class or provide its own
-       encode/decode through dynamic code.
-     */
-    async init() {
-        let [path, name] = splitClasspath(this.prop('class_path'))
-        this.schemaClass = await this.registry.import(path, name || 'default')
-        assert(T.isClass(this.schemaClass))
-    }
-    createSchema(props) {
-        let schema = new this.schemaClass()
-        return Object.assign(schema, props)
-    }
-}
-
-function splitClasspath(path) { return splitLast(path || '', ':') }   // [path, name]
-
-
-/**********************************************************************************************************************/
 

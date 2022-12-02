@@ -219,7 +219,7 @@ async function create_categories(Category) {
     cat.Schema = await Category.new(10, {
         name        : "Schema",
         info        : "Category of items that represent schema types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new schema types by themselves using dynamic code.",
-        class_path  : '/system/local/type.js:SchemaPrototype',
+        class_path  : '/system/local/type_schema.js:SchemaPrototype',
         fields      : C({
             class_path  : new STRING(),
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),

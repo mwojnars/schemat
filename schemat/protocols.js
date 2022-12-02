@@ -1,5 +1,4 @@
 import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
-import { JSONx } from "./serialize.js";
 import { generic_schema } from "./type.js";
 
 
@@ -25,7 +24,6 @@ export class Protocol {
 
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
-
 
     constructor(action = null) { this.action = action }
 
@@ -112,7 +110,7 @@ export class JsonProtocol extends HttpProtocol {
         let params = {method, headers: {}}
         if (data !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            params.body = JSONx.stringify(data)
+            params.body = this.schema.stringify(data)
         }
         return fetch(url, params)
     }
@@ -140,7 +138,7 @@ export class JsonProtocol extends HttpProtocol {
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         let out = await res.text()                              // json string or empty
-        if (out) return JSONx.parse(out)
+        if (out) return this.schema.parse(out)
     }
 
     async serve(agent, ctx) {
@@ -156,7 +154,7 @@ export class JsonProtocol extends HttpProtocol {
             // print(body)
 
             // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
-            let args = (typeof body === 'string' ? JSONx.parse(body) : T.notEmpty(body) ? body : [])
+            let args = (typeof body === 'string' ? this.schema.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
             out = this.execute(agent, ctx, ...args)
