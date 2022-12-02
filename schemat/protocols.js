@@ -106,6 +106,15 @@ export class ReactPage extends HtmlPage {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
+    async remote(agent, ...args) {
+        /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
+        let url = agent.url(this.endpoint)
+        let res = await this._fetch(url, args, this.method)     // client-side JS Response object
+        if (!res.ok) return this._decodeError(res)
+        let txt = await res.text()                              // json string or empty
+        if (txt) return this.schema.parse(txt)
+    }
+
     async _fetch(url, data, method = 'POST') {
         /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
            For GET requests, `data` must be missing (undefined), as we don't allow body in GET.
@@ -118,41 +127,10 @@ export class JsonProtocol extends HttpProtocol {
         return fetch(url, params)
     }
 
-    _sendResponse(res, output, error, defaultCode = 500) {
-        /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
-           HTTP status code if an exception was caught. */
-        res.type('json')
-        if (error) {
-            res.status(error.code || defaultCode)
-            // res.send(this.schema.stringify(error))
-            res.send({error})
-            throw error
-        }
-        if (output === undefined) res.end()             // missing output --> empty response body
-
-        // let out1 = this.schema.stringify(output)
-        // print('out1:\n', out1)
-        // let out2 = JSON.stringify(output)
-        // print('out2:\n', out2, '\n')
-
-        // res.send(this.schema.stringify(output))
-        res.send(JSON.stringify(output))
-        // res.json(output)
-    }
-
     async _decodeError(res) {
         let error = await res.json()
         // let error = this.schema.parse(await res.text())
         throw new RequestFailed({...error, code: res.status})
-    }
-
-    async remote(agent, ...args) {
-        /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url = agent.url(this.endpoint)
-        let res = await this._fetch(url, args, this.method)     // client-side JS Response object
-        if (!res.ok) return this._decodeError(res)
-        let txt = await res.text()                              // json string or empty
-        if (txt) return this.schema.parse(txt)
     }
 
     async serve(agent, ctx) {
@@ -176,6 +154,28 @@ export class JsonProtocol extends HttpProtocol {
         }
         catch (e) {ex = e}
         return this._sendResponse(res, out, ex)
+    }
+
+    _sendResponse(res, output, error, defaultCode = 500) {
+        /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
+           HTTP status code if an exception was caught. */
+        res.type('json')
+        if (error) {
+            res.status(error.code || defaultCode)
+            // res.send(this.schema.stringify(error))
+            res.send({error})
+            throw error
+        }
+        if (output === undefined) res.end()             // missing output --> empty response body
+
+        // let out1 = this.schema.stringify(output)
+        // print('out1:\n', out1)
+        // let out2 = JSON.stringify(output)
+        // print('out2:\n', out2, '\n')
+
+        // res.send(this.schema.stringify(output))
+        res.send(JSON.stringify(output))
+        // res.json(output)
     }
 }
 
