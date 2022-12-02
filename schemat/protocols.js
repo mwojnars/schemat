@@ -20,11 +20,6 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
-    schema = generic_schema     // schema to be used for serialization of arguments and results of remote calls;
-                                // a narrower, more specific schema might encode data more efficiently;
-                                // in the future, a special ProtocolSchema class may be created containing separate
-                                // forArgs/Body/Result/Error sub-schemas
-
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
 
@@ -106,6 +101,10 @@ export class ReactPage extends HtmlPage {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
+    schema = generic_schema     // schema of arguments and results of remote calls, for serialization;
+                                // a narrower, more specific schema might encode data more efficiently;
+                                // in the future, this attr may be split into separate forArgs/Body/Result/Error schemas
+
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
@@ -168,14 +167,8 @@ export class JsonProtocol extends HttpProtocol {
         }
         if (output === undefined) res.end()             // missing output --> empty response body
 
-        // let out1 = this.schema.stringify(output)
-        // print('out1:\n', out1)
-        // let out2 = JSON.stringify(output)
-        // print('out2:\n', out2, '\n')
-
         // res.send(this.schema.stringify(output))
         res.send(JSON.stringify(output))
-        // res.json(output)
     }
 }
 

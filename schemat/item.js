@@ -469,15 +469,19 @@ export class Item {
     }
 
     async _loadData({use_schema = true, jsonData} = {}) {
-        if (jsonData === undefined) jsonData = await this._loadDataJson()
+        if (jsonData === undefined) {
+            if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
+            jsonData = await this.registry.loadData(this.id)
+            // jsonData = await this._loadDataJson()
+        }
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
         let state = JSON.parse(this.jsonData = jsonData)
         return schema.decode(state)
     }
-    async _loadDataJson() {
-        if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-        return this.registry.loadData(this.id)
-    }
+    // async _loadDataJson() {
+    //     if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
+    //     return this.registry.loadData(this.id)
+    // }
 
     setExpiry(ttl) {
         /* Time To Live (ttl) is expressed in seconds. */
@@ -1129,7 +1133,7 @@ Item.createAPI(
 
         'CALL/default': new InternalProtocol(function() { return this }),
         'CALL/item':    new InternalProtocol(function() { return this }),
-        'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),
+        'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),  // this.record()
 
         // internal actions called by UI
         'POST/action':  new ActionsProtocol({
