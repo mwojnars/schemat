@@ -7,7 +7,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
-import { DATA, generic_schema } from "./type.js"
+import { DATA, ITEM_RECORD, generic_schema } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_CID = 0
@@ -779,16 +779,18 @@ export class Item {
         let schema = use_schema ? this.getSchema() : generic_schema
         return schema.encode(this.data)
     }
-    dumpData(use_schema = true, compact = true) {
+    dumpData() {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
-        let state = this.encodeData(use_schema)
+        let state = this.encodeData()
         return JSON.stringify(state)
     }
-    encodeSelf(use_schema = true) {
-        /* Encode this item's data & metadata into a JSON-serializable dict; `registry` and `category` excluded. */
+    encodeSelf() {
+        /* Encode this item's record (data & metadata) into a JSON-serializable object. */
         assert(this.has_id())
-        return {id: this.id, data: this.encodeData(use_schema)}
+        return {id: this.id, data: this.encodeData()}
+        // return new ITEM_RECORD().encode(this.record())
     }
+    record() { return {id: this.id, data: this.data} }      // serializable representation of the item's contents
 
 
     /***  Routing & handling of requests (server-side)  ***/
