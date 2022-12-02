@@ -214,7 +214,7 @@ export class Types {
     static isPrimitiveCls = (cls) => [Number, String, Boolean, null].includes(cls)
     static isNumber       = (obj) => (typeof obj === 'number' && !isNaN(obj))                 // test if obj is a valid number, not NaN
     static isArray        = (obj) => (obj && Object.getPrototypeOf(obj) === Array.prototype)
-    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a pure object (dict), no class assigned
+    static isDict         = (obj) => (obj && Object.getPrototypeOf(obj) === Object.prototype) // test if obj is a plain object (POJO), no class assigned
     static ofType         = (x, T) => (x && T && Object.getPrototypeOf(x) === T.prototype)    // test if x is an object of class T exactly (NOT of a subclass)
     static isFunction     = (f) => (f instanceof Function)                                    // test if f is a function; accepts class constructors, too (!)
     static isClass        = (C) => (typeof C === "function" && C.prototype !== undefined)     // test if C is a class (a constructor function with .prototype); false for arrays
@@ -229,7 +229,7 @@ export class Types {
         return (i > -1)
     }  // find and delete the 1st occur. of x in array
 
-    // create a new object (dict) by mapping items of `obj` to new [key,value] pairs;
+    // create a new plain object by mapping items of `obj` to new [key,value] pairs;
     // does NOT detect if two entries are mapped to the same key (!)
     static mapDict = (obj, fun) => Object.fromEntries(Object.entries(obj).map(([k, v]) => fun(k, v)))
 

@@ -13,7 +13,7 @@ export class JSONx {
     */
     static FLAG_ITEM  = "(item)"       // special value of ATTR_CLASS that denotes a reference to an Item
     static FLAG_TYPE  = "(type)"       // special value of ATTR_CLASS that informs the value is a class rather than an instance
-    static FLAG_DICT  = "(dict)"       // special value of ATTR_CLASS that denotes a dict wrapper for another dict containing the reserved "@" key
+    static FLAG_DICT  = "(pojo)"       // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
     static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
     static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
