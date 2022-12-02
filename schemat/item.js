@@ -8,6 +8,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
+// import { Schema } from './type.js'
 
 export const ROOT_CID = 0
 export const SITE_CID = 1
@@ -302,7 +303,6 @@ export class Item {
     static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
-
 
     cid             // CID (Category ID) of this item; can be undefined, null not allowed
     iid             // IID (Item ID within a category) of this item; can be undefined, null not allowed

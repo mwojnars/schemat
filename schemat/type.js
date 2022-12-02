@@ -682,6 +682,49 @@ export class CLASS extends Schema {
 
 /**********************************************************************************************************************/
 
+// export class ITEM_DATA extends Schema {
+//     /* Encode item's data through its fields' schema (if generic=false), or generic_schema (otherwise). */
+//
+//     static defaultProps = {
+//         generic: false,         // if true, the data is encoded through generic_schema instead of item's own schema
+//     }
+//
+//     encode(item) {
+//         if (!(item instanceof globalThis.Item)) throw new DataError(`not an Item: ${item}`)
+//         item.assertLoaded()
+//         return this._getDataSchema(item).encode(item.data)
+//     }
+//     decode(state) { return this._getDataSchema(item).decode(state) }
+//
+//     _getDataSchema(item)    { return this.props.generic ? generic_schema : item.getSchema() }
+// }
+
+export class ITEM_RECORD extends Schema {
+    /*
+    Encode item's record, {id, data} object; `data` is encoded through the item's fields schema (if generic=false),
+    or through generic_schema (otherwise).
+    */
+    static defaultProps = {
+        generic: false,         // if true, item's data is encoded through generic_schema instead of its own schema
+    }
+
+    encode(item) {
+        if (!(item instanceof globalThis.Item)) throw new DataError(`not an Item: ${item}`)
+        if (!item.has_id()) throw new DataError(`item has missing or incomplete ID: [${item.id}]`)
+        if (!item.isLoaded) throw new DataError(`item not loaded: ${item}`)
+
+        let schema = this.props.generic ? generic_schema : item.getSchema()
+        return {id: item.id, data: schema.encode(item.data)}
+    }
+    decode(state) {
+        let {id, data} = state
+        if (!(id instanceof Array && id.length === 2)) throw new DataError(`expected item id to be a 2-element array, got ${id}`)
+
+        let schema = this.props.generic ? generic_schema : globalThis.registry.getCategory(id[0]).getItemSchema()
+        return {id, data: schema.decode(data)}
+    }
+}
+
 export class ITEM extends Schema {
     /*
     Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
@@ -694,6 +737,7 @@ export class ITEM extends Schema {
     }
 
     encode(item) {
+        if (!(item instanceof globalThis.Item)) throw new DataError(`not an Item: ${item}`)
         if (!item.has_id()) throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
 
         let {category, exact} = this.props      // verify inheritance from a base category - only for LOADED items !!
