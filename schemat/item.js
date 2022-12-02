@@ -301,9 +301,6 @@ export class Item {
 
     static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
-    // static Client                       // each Item subclass may have its own Client/Server agents with their own set of actions
-    // static Server
-
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
 
@@ -315,8 +312,8 @@ export class Item {
 
     jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
-    // db           // database, element of a DB stack, where this item was read from; undefined in newborn items;
-    //              // updates are first sent to this DB, and only propagated to a higher-level DB if necessary
+    // _db          // the origin (database & ring) of this item; undefined in newborn items;
+    // _ring        // updates are first sent to this ring and only moved to an outer ring if this one is read-only
 
     //metadata      // system properties: current version, category's version, status etc.
 
