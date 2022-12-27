@@ -472,16 +472,11 @@ export class Item {
         if (jsonData === undefined) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
-            // jsonData = await this._loadDataJson()
         }
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
         let state = JSON.parse(this.jsonData = jsonData)
         return schema.decode(state)
     }
-    // async _loadDataJson() {
-    //     if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-    //     return this.registry.loadData(this.id)
-    // }
 
     setExpiry(ttl) {
         /* Time To Live (ttl) is expressed in seconds. */
@@ -789,7 +784,7 @@ export class Item {
         return JSON.stringify(state)
     }
     encodeSelf() {
-        /* Encode this item's record (data & metadata) into a JSON-serializable object. */
+        /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
         assert(this.has_id())
         return {id: this.id, data: this.encodeData()}
         // return new ITEM_RECORD().encode(this.record())
