@@ -786,8 +786,9 @@ export class Item {
     encodeSelf() {
         /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
         assert(this.has_id())
-        return {id: this.id, data: this.encodeData()}
-        // return new ITEM_RECORD().encode(this.record())
+        let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
+        return schema.encode(this.record())
+        // return {id: this.id, data: this.encodeData()}
     }
     record() { return {id: this.id, data: this.data} }      // serializable representation of the item's contents
 
@@ -1544,6 +1545,11 @@ export class RootCategory extends Category {
     encodeData(use_schema = false) {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
+    }
+    encodeSelf() {
+        /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
+        assert(this.has_id())
+        return new ITEM_RECORD().encode(this.record())
     }
     async reload(opts) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */

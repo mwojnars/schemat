@@ -688,23 +688,26 @@ export class ITEM_RECORD extends Schema {
     (if generic=false), or through generic_schema (otherwise).
     */
     static defaultProps = {
-        generic: false,         // if true, item's data is encoded through generic_schema instead of its own schema
+        dataSchema: generic_schema,      // schema for encoding/decoding of item's data
+        // generic: false,         // if true, item's data is encoded through generic_schema instead of its own schema
     }
 
     encode(record) {
         let {id, data} = record
-        return {id, data: this._getDataSchema(id).encode(data)}
+        return {id, data: this.props.dataSchema.encode(data)}
+        // return {id, data: this._getDataSchema(id).encode(data)}
     }
     decode(state) {
         let {id, data} = state
-        return {id, data: this._getDataSchema(id).decode(data)}
+        return {id, data: this.props.dataSchema.decode(data)}
+        // return {id, data: this._getDataSchema(id).decode(data)}
     }
-    _getDataSchema(id) {
-        if (!id) throw new DataError(`missing record.id: [${id}]`)
-        if (!(id instanceof Array && id.length === 2)) throw new DataError(`expected record.id to be a 2-element array, got ${id}`)
-        if (this.props.generic) return generic_schema
-        return globalThis.registry.getCategory(id[0]).getItemSchema()   // ERROR: missing "await" for getCategory()
-    }
+    // _getDataSchema(id) {
+    //     if (!id) throw new DataError(`missing record.id: [${id}]`)
+    //     if (!(id instanceof Array && id.length === 2)) throw new DataError(`expected record.id to be a 2-element array, got ${id}`)
+    //     if (this.props.generic) return generic_schema
+    //     return globalThis.registry.getCategory(id[0]).getItemSchema()   // ERROR: missing "await" for getCategory()
+    // }
 }
 
 export class ITEM extends Schema {
