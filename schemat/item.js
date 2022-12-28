@@ -786,8 +786,8 @@ export class Item {
     encodeSelf() {
         /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
         // NOTE: the use of ITEM_RECORD here is experimental (!), the goal is to replace encodeSelf() calls
-        //       with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires that a custom
-        //       dataSchema is provided each time...
+        //       with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
+        //       to be provided each time...
         assert(this.has_id())
         let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
         return schema.encode(this.record())
