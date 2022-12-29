@@ -29,7 +29,7 @@ const IID_SPLIT = 100       // all system items have iid below this value; all c
 
 /**********************************************************************************************************************/
 
-class Schemat {
+class Node {
 
     constructor(opts) {
         this.opts = opts
@@ -170,7 +170,7 @@ async function main() {
 
     let argv = yargs(hideBin(process.argv))
         .command(
-            'run', 'start a Schemat web server', {
+            'run', 'start a Schemat node', {
                 host:       {default: HOST},
                 port:       {default: PORT},
                 workers:    {default: WORKERS},
@@ -211,10 +211,10 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let schemat = new Schemat(argv)
-    if (cmd !== '_build_') await schemat.boot()         // _build_ command performs boot (creates registry) on its own
+    let node = new Node(argv)
+    if (cmd !== '_build_') await node.boot()        // _build_ command performs boot (creates registry) on its own
 
-    return schemat[cmd](argv)
+    return node[cmd](argv)
 }
 
 await main()

@@ -40,22 +40,29 @@ RES.error = function(...args) {
     else this.sendStatus(code)
 }
 
+
+/**********************************************************************************************************************/
+
+export class Server {
+
+}
+
 /**********************************************************************************************************************
  **
- **  APP SERVER
+ **  WEB SERVER
  **
  */
 
-export class WebServer {
+export class WebServer extends Server {
     /* Edge HTTP server based on express. Can spawn multiple worker processes.
        For sending & receiving multi-part data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor(schemat, {host, port, workers}) {
-        this.schemat  = schemat
-        this.registry = schemat.registry
+    constructor(node, {host, port, workers}) {
+        super()
+        this.registry = node.registry
         this.host = host
         this.port = port
         this.workers = workers          // no. of worker processes to spawn
@@ -179,4 +186,20 @@ export class WebServer {
 //     }
 //     await serve_express()
 // }
+
+
+/**********************************************************************************************************************
+ **
+ **  DATA SERVER
+ **
+ */
+
+export class DataServer extends Server {
+
+    constructor(node, opts = {}) {
+        super()
+    }
+}
+
+
 
