@@ -1,15 +1,12 @@
-// Run:
-// $ node server.js
-
 import os from 'os'
 import cluster from 'cluster'
 import express from 'express'
 import bodyParser from 'body-parser'
 // import http from 'http'
 
-import {assert, print, sleep} from './utils.js'
-import {Session} from './registry.js'
-import {Request} from "./item.js";
+import {assert, print, sleep} from '../utils.js'
+import {Session} from '../registry.js'
+import {Request} from "../item.js";
 
 
 /**********************************************************************************************************************/

@@ -10,10 +10,10 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
-import {DB, YamlDB} from "../server/db.js";
-import {ServerRegistry} from "../server/registry-s.js";
-import {ROOT_CID} from "../item.js";
-import {WebServer} from "../server.js";
+import {DB, YamlDB} from "../server/db.js"
+import {ServerRegistry} from "../server/registry-s.js"
+import {ROOT_CID} from "../item.js"
+import {WebServer} from "./servers.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
