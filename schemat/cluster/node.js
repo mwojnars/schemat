@@ -1,5 +1,6 @@
 /*
-    Schemat CLI: the main entry point to run and manage a Schemat installation.
+    Node class and a Schemat CLI: the main entry point to run and manage a Schemat node or installation.
+    TODO: move out static CLI functionality to another class & file.
 */
 
 import path from 'path'
@@ -8,15 +9,15 @@ import {fileURLToPath} from 'url'
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {assert, print} from './utils.js'
-import {DB, YamlDB} from "./server/db.js";
-import {ServerRegistry} from "./server/registry-s.js";
-import {ROOT_CID} from "./item.js";
-import {WebServer} from "./server.js";
+import {assert, print} from '../utils.js'
+import {DB, YamlDB} from "../server/db.js";
+import {ServerRegistry} from "../server/registry-s.js";
+import {ROOT_CID} from "../item.js";
+import {WebServer} from "../server.js";
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
-const __dirname  = path.dirname(__filename)
+const __dirname  = path.dirname(__filename) + '/..'
 
 
 const DB_ROOT   = __dirname + '/database'
@@ -92,7 +93,7 @@ class Node {
 
     async _build_({path_db_boot}) {
         /* Generate the core "db-boot" database file anew. */
-        let {bootstrap} = await import('./server/bootstrap.js')
+        let {bootstrap} = await import('../server/bootstrap.js')
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
         await db.open()
         await db.erase()
