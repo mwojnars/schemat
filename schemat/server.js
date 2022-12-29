@@ -46,17 +46,19 @@ RES.error = function(...args) {
  **
  */
 
-export class Server {
-    /* For sending & receiving multi-part data (HTML+JSON) in http response, see:
+export class WebServer {
+    /* Edge HTTP server based on express. Can spawn multiple worker processes.
+       For sending & receiving multi-part data (HTML+JSON) in http response, see:
        - https://stackoverflow.com/a/50883981/1202674
        - https://stackoverflow.com/a/47067787/1202674
      */
 
-    constructor(schemat, {host, port}) {
+    constructor(schemat, {host, port, workers}) {
         this.schemat  = schemat
         this.registry = schemat.registry
         this.host = host
         this.port = port
+        this.workers = workers          // no. of worker processes to spawn
     }
 
     async handle(req, res) {
@@ -109,11 +111,11 @@ export class Server {
         app.listen(this.port, this.host, () => print(`worker ${process.pid} listening at http://${this.host}:${this.port}`))
     }
 
-    async serve_cluster(workers) {
+    async start() {
         /* Docs for node.js cluster: https://nodejs.org/api/cluster.html */
-        if (workers && workers > 1 && cluster.isMaster) {
-            print(`primary ${process.pid} is starting ${workers} workers...`)
-            for (let i = 0; i < workers; i++) cluster.fork()
+        if (this.workers && this.workers > 1 && cluster.isMaster) {
+            print(`primary ${process.pid} is starting ${this.workers} workers...`)
+            for (let i = 0; i < this.workers; i++) cluster.fork()
             cluster.on('exit', (worker) => print(`Worker ${worker.process.pid} terminated`))
             return
         }

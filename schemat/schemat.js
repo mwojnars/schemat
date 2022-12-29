@@ -12,7 +12,7 @@ import {assert, print} from './utils.js'
 import {DB, YamlDB} from "./server/db.js";
 import {ServerRegistry} from "./server/registry-s.js";
 import {ROOT_CID} from "./item.js";
-import {Server} from "./server.js";
+import {WebServer} from "./server.js";
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -83,7 +83,9 @@ class Schemat {
 
     /*****  Core functionality  *****/
 
-    async run({host, port, workers})        { return new Server(this, {host, port}).serve_cluster(workers) }
+    async run({host, port, workers}) {
+        return new WebServer(this, {host, port, workers}).start()
+    }
 
 
     /*****  Admin interface  *****/
