@@ -196,6 +196,8 @@ export class DataServer extends Server {
     constructor(node, opts = {}) {
         super()
     }
+
+    async start() {}
 }
 
 

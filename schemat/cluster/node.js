@@ -13,7 +13,7 @@ import {assert, print} from '../utils.js'
 import {DB, YamlDB} from "../server/db.js"
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
-import {WebServer} from "./servers.js"
+import {WebServer, DataServer} from "./servers.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -31,6 +31,10 @@ const IID_SPLIT = 100       // all system items have iid below this value; all c
 /**********************************************************************************************************************/
 
 class Node {
+    /* A computation node running processes for:
+       - processing external web requests
+       - internal data handling (storage & access)
+     */
 
     constructor(opts) {
         this.opts = opts
@@ -47,19 +51,19 @@ class Node {
         this.db = await this.stack(...rings)
     }
 
-    async stack(...databases) {
-        /* Incrementally create, open, and connect into a stack, a number of databases according to the `databases` specifications.
-           The databases[0] is the bottom of the stack, and databases[-1] is the top.
-           The databases get connected into a double-linked list through their .prevDB & .nextDB attributes.
+    async stack(...rings) {
+        /* Incrementally create, open, and connect into a stack, a number of databases according to the `rings` specifications.
+           The rings[0] is the bottom of the stack, and rings[-1] is the top.
+           The rings get connected into a double-linked list through their .prevDB & .nextDB attributes.
            The registry is created and initialized at the end, or just before the first item-database
            (a database that's stored as an item in a previous database layer) is to be loaded.
-           Return the top database.
+           Return the top ring.
          */
         let prev, db, registry
-        for (let spec of databases) {
+        for (let spec of rings) {
             let {file, item, ...opts} = spec
             if (file) db = new YamlDB(file, opts)               // db is a local file
-            else {                                              // db is an item that must be loaded from a lower DB
+            else {                                              // db is an item that must be loaded from a lower ring
                 if (!registry) registry = await this.createRegistry(db)
                 db = await registry.getLoaded(item)
                 db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
@@ -85,7 +89,9 @@ class Node {
     /*****  Core functionality  *****/
 
     async run({host, port, workers}) {
-        return new WebServer(this, {host, port, workers}).start()
+        let web = new WebServer(this, {host, port, workers}).start()
+        let data = new DataServer(this).start()
+        return Promise.all([web, data])
     }
 
 

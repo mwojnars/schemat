@@ -438,7 +438,7 @@ export class YamlDB extends FileDB {
 
 /**********************************************************************************************************************/
 
-export class Database extends DB {
+export class Database {
     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
        ring possible; while each insert - on the innermost ring starting at the category's own ring.
        If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
@@ -450,13 +450,12 @@ export class Database extends DB {
      */
 
     static RingNotFound = class extends DB.Error {
-        static message = "no suitable ring database found for the operation"
+        static message = "data ring not found for the operation"
     }
 
-    constructor(...databases) {
-        /* `databases` are ordered by increasing level: from innermost to outermost. */
-        super()
-        this.databases = databases.reverse()        // in `this`, databases are ordered by DECREASING level for easier looping
+    constructor(...rings) {
+        /* `rings` are ordered by increasing level: from innermost to outermost. */
+        this.rings = rings.reverse()        // in `this`, rings are ordered by DECREASING level for easier looping
 
         this.get    = this.outermost('get')
         this.del    = this.outermost('del')
@@ -464,13 +463,13 @@ export class Database extends DB {
         this.update = this.outermost('update')
         // this.select = this.outermost('select')
     }
-    load()  { return Promise.all(this.databases.map(d => d.load())) }
+    load()  { return Promise.all(this.rings.map(d => d.load())) }
 
     outermost = (method) => async function (...args) {
         let exLast
-        for (const db of this.databases)
+        for (const ring of this.rings)
             try {
-                let result = db[method](...args)
+                let result = ring[method](...args)
                 return result instanceof Promise ? await result : result
             }
             catch (ex) {
@@ -483,7 +482,7 @@ export class Database extends DB {
     }
 
     async *scanCategory(cid) {
-        for (const db of this.databases)
+        for (const db of this.rings)
             yield* db.scanCategory(cid)
     }
 }
