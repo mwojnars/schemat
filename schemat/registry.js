@@ -1,6 +1,7 @@
 "use strict";
 
-import {print, assert, splitLast, NotImplemented} from './utils.js'
+import {print, assert, splitLast } from './utils.js'
+import { NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'

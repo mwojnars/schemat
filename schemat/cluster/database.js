@@ -1,5 +1,5 @@
 import {Item} from "../item.js"
-import {BaseError} from "../utils.js"
+import {BaseError} from "../errors.js"
 
 
 export class Database extends Item {

@@ -1,4 +1,5 @@
-import { assert, print, tryimport, T, ItemNotLoaded } from './utils.js'
+import { assert, print, tryimport, T } from './utils.js'
+import { ItemNotLoaded } from './errors.js'
 import { React, ReactDOM } from './resources.js'
 export { React, ReactDOM }
 

@@ -1,4 +1,5 @@
-import {assert, BaseError, NotImplemented, print, T, merge} from '../utils.js'
+import { assert, print, T, merge } from '../utils.js'
+import { BaseError, NotImplemented } from '../errors.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 

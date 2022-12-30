@@ -1,4 +1,5 @@
-import { print, assert, T, NotFound, RequestFailed } from "./utils.js"
+import { print, assert, T } from "./utils.js"
+import { NotFound, RequestFailed } from './errors.js'
 import { generic_schema } from "./type.js"
 
 
