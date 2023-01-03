@@ -45,8 +45,5 @@ nosetests.xml
 .idea/workspace.xml
 .idea/ocr.iml
 
-config_local.py
 
-nifty
-/hypertag
-
+demo/kafka/data/
