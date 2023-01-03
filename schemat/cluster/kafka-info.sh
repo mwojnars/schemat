@@ -34,6 +34,14 @@ cd ~/.../demo/kafka
 cd ~/.../demo/kafka
 /opt/kafka/bin/kafka-server-start.sh server.properties
 
+# create a topic
+/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic test-topic
+/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic test-topic
+
+# produce & consume
+/opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic test-topic
+/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test-topic --from-beginning
+
 
 ###################################################
 #
