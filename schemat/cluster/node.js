@@ -77,7 +77,7 @@ class Node {
     }
 
     async createRegistry(db, boot = true) {
-        if (!db) throw new Error(`at least one DB layer is needed for Registry initialization`)
+        if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
         let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
         await registry.initClasspath()
         registry.setDB(db)
@@ -89,6 +89,9 @@ class Node {
     /*****  Core functionality  *****/
 
     async run({host, port, workers}) {
+        // node = this.registry.getLoaded(this_node_ID)
+        // return node.activate()     // start the lifeloop and all worker processes (servers)
+
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
         return Promise.all([web, data])

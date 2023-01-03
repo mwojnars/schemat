@@ -5,15 +5,12 @@ import {BaseError} from "../errors.js"
 export class Database extends Item {
     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
        ring possible; while each insert - on the innermost ring starting at the category's own ring.
-       If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
+       If NotFound/ReadOnly is caught, the next ring is tried.
        In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
        that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
        -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
        is expected; while the reversed relationship is a sign of undesired convolution between the databases.
-
-       Item properties:
-       - rings
      */
 
     static DBError = class extends BaseError {}
