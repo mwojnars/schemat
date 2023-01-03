@@ -1,0 +1,31 @@
+###################################################
+#
+# INSTALL
+
+# download most recent binary distribution from: https://kafka.apache.org/downloads
+cd ~/Apps
+wget https://downloads.apache.org/kafka/3.3.1/kafka_2.13-3.3.1.tgz
+tar -xzf kafka_2.13-3.3.1.tgz
+rm kafka_2.13-3.3.1.tgz
+
+# place Kafka binaries and data inside /opt with a symlink from ~/kafka
+sudo mv ~/Apps/kafka_2.13-3.3.1/ /opt/
+sudo ln -s /opt/kafka_2.13-3.3.1/ /opt/kafka
+sudo ln -s /opt/kafka ~/kafka
+mkdir /opt/kafka/data
+
+
+###################################################
+#
+# NODE.JS
+
+# Kafka Node.js packages:
+# * https://github.com/tulios/kafkajs         - reimplementation of librdkafka in native Javascript, 3k stars 300k installs (growing)
+# - https://github.com/Blizzard/node-rdkafka  - binding to a C/C++ library, super-fast, 1.9k stars 25k installs
+# - https://github.com/SOHU-Co/kafka-node     - plain Javascript, 2.6k stars 240k installs (decreasing), last git change 3 years ago!
+# - https://github.com/nodefluent/node-sinek  - based on node-rdkafka & kafka-node, possibly provides higher-level functionality (??), 290 starts
+# Comparison on NPM:
+# - https://npmtrends.com/kafka-node-vs-kafkajs-vs-node-rdkafka
+
+# Kafka tooling:
+# - https://github.com/edenhill/kcat (kcat)
