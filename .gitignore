@@ -47,3 +47,4 @@ nosetests.xml
 
 
 demo/kafka/data/
+demo/kafka/cluster.id

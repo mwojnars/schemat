@@ -18,6 +18,25 @@ mkdir /opt/kafka/data/catalog-demo
 
 ###################################################
 #
+# INIT
+
+# create a cluster ID & initialize data folder; the cluster ID is copied to the data folder, so the server (below) only
+# needs to know the folder path, and it reads the cluster ID from the folder
+cd ~/.../demo/kafka
+/opt/kafka/bin/kafka-storage.sh random-uuid > cluster.id
+/opt/kafka/bin/kafka-storage.sh format -t `cat cluster.id` -c server.properties
+
+
+###################################################
+#
+# RUN
+
+cd ~/.../demo/kafka
+/opt/kafka/bin/kafka-server-start.sh server.properties
+
+
+###################################################
+#
 # NODE.JS
 
 # Kafka Node.js packages:
