@@ -13,6 +13,7 @@ sudo mv ~/Apps/kafka_2.13-3.3.1/ /opt/
 sudo ln -s /opt/kafka_2.13-3.3.1/ /opt/kafka
 sudo ln -s /opt/kafka ~/kafka
 mkdir /opt/kafka/data
+mkdir /opt/kafka/data/catalog-demo
 
 
 ###################################################
