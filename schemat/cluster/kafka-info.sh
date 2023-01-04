@@ -15,6 +15,9 @@ sudo ln -s /opt/kafka ~/kafka
 mkdir /opt/kafka/data
 mkdir /opt/kafka/data/catalog-demo
 
+# tools
+sudo apt install kafkacat
+
 
 ###################################################
 #
@@ -37,6 +40,7 @@ cd ~/.../demo/kafka
 # create a topic
 /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic test-topic
 /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic test-topic
+/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 
 # produce & consume
 /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic test-topic

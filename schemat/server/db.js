@@ -3,6 +3,9 @@ import { BaseError, NotImplemented } from '../errors.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
+import { Kafka } from 'kafkajs'
+
+
 /**********************************************************************************************************************
  **
  **  Physical DB implementation. (Draft)
@@ -406,11 +409,12 @@ export class YamlDB extends FileDB {
         this._mod_YAML = (await import('yaml')).default
 
         let file = await this._mod_fs.promises.readFile(this.filename, 'utf8')
-        let db = this._mod_YAML.parse(file) || []
+        let records = this._mod_YAML.parse(file) || []
+
         this.records.clear()
         this.curr_iid.clear()
 
-        for (let record of db) {
+        for (let record of records) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
             this.checkIID(id)
