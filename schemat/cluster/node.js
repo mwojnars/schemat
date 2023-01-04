@@ -11,6 +11,7 @@ import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
 import {DB, YamlDB} from "../db/storage.js"
+import {Ring} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
@@ -69,18 +70,22 @@ class Node {
         // }
 
         for (let spec of rings) {
-            let {file, item, ...opts} = spec
-            if (file) db = new YamlDB(file, opts)               // db is a local file
-            else {                                              // db is an item that must be loaded from a lower ring
-                if (!registry) registry = await this.createRegistry(db)
-                db = await registry.getLoaded(item)
-                db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
-            }
-            await db.open()
-            if (registry) registry.setDB(db)
+            db = new Ring(spec)
+            await db.open(() => this.createRegistry(prev))
+
+            // let {file, item, ...opts} = spec
+            // if (file) db = new YamlDB(file, opts)               // db is a local file
+            // else {                                              // db is an item that must be loaded from a lower ring
+            //     if (!registry) registry = await this.createRegistry(db)
+            //     db = await registry.getLoaded(item)
+            //     db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
+            // }
+            // await db.open()
+            // if (registry) registry.setDB(db)
+
             prev = prev ? prev.stack(db) : db
         }
-        if (!registry) await this.createRegistry(db)
+        if (!this.registry) await this.createRegistry(db)
         return db
     }
 
@@ -139,12 +144,12 @@ class Node {
 
         if (!sameID && await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
-        // identify the source DB
+        // identify the source ring
         let db = await this.db.find(id)
         if (db === undefined) throw new Error(`item not found: [${id}]`)
         if (db.readonly) throw new Error(`the ring '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
-        // identify the target DB
+        // identify the target ring
         if (dbInsert) dbInsert = this.db.getDB(dbInsert)
         else dbInsert = bottom ? this.db.bottom : db
 

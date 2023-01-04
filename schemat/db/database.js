@@ -1,10 +1,40 @@
 import {Item} from "../item.js"
 import {BaseError} from "../errors.js"
+import {YamlDB} from "./storage.js";
 
 
 
 export class Ring {
 
+    block
+
+    constructor({file, item, ...opts}) {
+        this.file = file
+        this.item = item
+        this.opts = opts
+
+    }
+
+    async open(createRegistry) {
+        let block
+        if (this.file) block = new YamlDB(this.file, this.opts)         // block is a local file
+        else {                                                  // block is an item that must be loaded from a lower ring
+            let registry = globalThis.registry || await createRegistry()
+            block = await registry.getLoaded(this.item)
+            block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
+        }
+        await block.open()
+        this.block = block
+    }
+
+    stack(next)     { this.block.stack(next.block); return next }
+
+    async select(id)    { return this.block.select(id) }
+    async delete(item)  { return this.block.delete(item) }
+    async insert(item, opts = {})   { return this.block.insert(item, opts) }
+    async update(item, opts = {})   { return this.block.update(item, opts) }
+
+    async *scan(cid)    { yield* this.block.scan(cid) }
 }
 
 

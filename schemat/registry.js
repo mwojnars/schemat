@@ -151,7 +151,9 @@ export class Registry {
     setDB(db)   { this.db = db }
 
     async boot(site_id = null) {
-        /* Initialize this Registry with existing items, server-side or client-side. NOT for DB bootstraping. */
+        /* Initialize this Registry with existing items, server-side or client-side: load the `root` and `site` items.
+           NOT for DB bootstraping.
+         */
         // await this.initClasspath()
         await this.createRoot()
         if (!site_id) site_id = await this._findSite()
@@ -163,7 +165,7 @@ export class Registry {
         let Site = await this.getCategory(SITE_CID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
-        if (!ret) throw new Error(`no Site item found in the DB`)
+        if (!ret || ret.done) throw new Error(`no Site item found in the DB`)
         return ret.value.id
     }
 
