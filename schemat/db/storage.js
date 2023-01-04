@@ -83,6 +83,10 @@ import { Kafka } from 'kafkajs'
  */
 
 export class DB extends Item {
+    /* TODO: physical block of storage inside a Sequence of blocks, inside the `data` or `index` of a Ring, inside a Database:
+                Database > Sequence > Ring > Block > Storage
+     */
+
     name                    // name of this DB for display and CLI options
     readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
@@ -250,6 +254,8 @@ export class DB extends Item {
         if (rec === undefined) this.throwNotFound({id})
         return rec
     }
+
+    async delete(item) { return this.drop(item.id) }
 
     async update(item, opts = {}) {
         assert(item.has_id())
@@ -443,52 +449,52 @@ export class YamlDB extends FileDB {
 
 /**********************************************************************************************************************/
 
-export class Database {
-    /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
-       ring possible; while each insert - on the innermost ring starting at the category's own ring.
-       If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
-       In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
-       that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
-       NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
-       -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
-       is expected; while the reversed relationship is a sign of undesired convolution between the databases.
-     */
-
-    static RingNotFound = class extends DB.Error {
-        static message = "data ring not found for the operation"
-    }
-
-    constructor(...rings) {
-        /* `rings` are ordered by increasing level: from innermost to outermost. */
-        this.rings = rings.reverse()        // in `this`, rings are ordered by DECREASING level for easier looping
-
-        this.get    = this.outermost('get')
-        this.del    = this.outermost('del')
-        this.insert = this.outermost('insert')
-        this.update = this.outermost('update')
-        // this.select = this.outermost('select')
-    }
-    load()  { return Promise.all(this.rings.map(d => d.load())) }
-
-    outermost = (method) => async function (...args) {
-        let exLast
-        for (const ring of this.rings)
-            try {
-                let result = ring[method](...args)
-                return result instanceof Promise ? await result : result
-            }
-            catch (ex) {
-                if (ex instanceof DB.NotFound) { exLast = ex; continue }
-                // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
-                throw ex
-            }
-        throw exLast || new DB.NotFound()
-        // throw new RingsDB.RingNotFound()
-    }
-
-    async *scanCategory(cid) {
-        for (const db of this.rings)
-            yield* db.scanCategory(cid)
-    }
-}
+// export class Database {
+//     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
+//        ring possible; while each insert - on the innermost ring starting at the category's own ring.
+//        If NotFound/ReadOnly is caught, a deeper (lower) ring is tried.
+//        In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
+//        that already exist in a lower DB!), but selects/updates/deletes may go to any lower DB.
+//        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another DB
+//        -- this is neither checked nor prevented. Typically, an outer DB referring to lower-ID items in an inner DB
+//        is expected; while the reversed relationship is a sign of undesired convolution between the databases.
+//      */
+//
+//     static RingNotFound = class extends DB.Error {
+//         static message = "data ring not found for the operation"
+//     }
+//
+//     constructor(...rings) {
+//         /* `rings` are ordered by increasing level: from innermost to outermost. */
+//         this.rings = rings.reverse()        // in `this`, rings are ordered by DECREASING level for easier looping
+//
+//         this.get    = this.outermost('get')
+//         this.del    = this.outermost('del')
+//         this.insert = this.outermost('insert')
+//         this.update = this.outermost('update')
+//         // this.select = this.outermost('select')
+//     }
+//     load()  { return Promise.all(this.rings.map(d => d.load())) }
+//
+//     outermost = (method) => async function (...args) {
+//         let exLast
+//         for (const ring of this.rings)
+//             try {
+//                 let result = ring[method](...args)
+//                 return result instanceof Promise ? await result : result
+//             }
+//             catch (ex) {
+//                 if (ex instanceof DB.NotFound) { exLast = ex; continue }
+//                 // if (ex instanceof DB.NotFound || ex instanceof DB.ReadOnly) continue
+//                 throw ex
+//             }
+//         throw exLast || new DB.NotFound()
+//         // throw new RingsDB.RingNotFound()
+//     }
+//
+//     async *scanCategory(cid) {
+//         for (const db of this.rings)
+//             yield* db.scanCategory(cid)
+//     }
+// }
 

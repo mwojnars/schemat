@@ -2,6 +2,12 @@ import {Item} from "../item.js"
 import {BaseError} from "../errors.js"
 
 
+
+export class Ring {
+
+}
+
+
 export class Database extends Item {
     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
        ring possible; while each insert - on the innermost ring starting at the category's own ring.
@@ -45,9 +51,9 @@ export class Database extends Item {
         // throw new RingsDB.RingNotFound()
     }
 
-    async *scanCategory(cid) {
-        for (const db of this.rings)
-            yield* db.scanCategory(cid)
-    }
+    // async *scanCategory(cid) {
+    //     for (const db of this.rings)
+    //         yield* db.scanCategory(cid)
+    // }
 }
 

@@ -363,10 +363,10 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(registry) {
+export async function bootstrap(registry, db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    let db = registry.db
+    // let db = registry.db
     print(`Starting full RESET of DB, core items will be created anew in: ${db.filename}`)
 
     let Category = await registry.createRoot(root_data)             // create root category

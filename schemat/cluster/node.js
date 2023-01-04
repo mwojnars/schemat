@@ -10,7 +10,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
-import {DB, YamlDB} from "../server/db.js"
+import {DB, YamlDB} from "../db/storage.js"
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
@@ -60,6 +60,14 @@ class Node {
            Return the top ring.
          */
         let prev, db, registry
+
+        // let db = new Database()
+        // await this.createRegistry(db)
+        //
+        // for (let spec of rings) {
+        //     db.append(new Ring(spec))
+        // }
+
         for (let spec of rings) {
             let {file, item, ...opts} = spec
             if (file) db = new YamlDB(file, opts)               // db is a local file
@@ -77,10 +85,10 @@ class Node {
     }
 
     async createRegistry(db, boot = true) {
-        if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
+        // if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
         let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
         await registry.initClasspath()
-        registry.setDB(db)
+        if (db) registry.setDB(db)
         if (boot) await this.registry.boot()
         return registry
     }
@@ -101,13 +109,17 @@ class Node {
     /*****  Admin interface  *****/
 
     async _build_({path_db_boot}) {
-        /* Generate the core "db-boot" database file anew. */
+        /* Generate the core system items anew and save. */
         let {bootstrap} = await import('../server/bootstrap.js')
+
+        // let db = new KafkaDB({cluster_id: "", topic: "schemat.data.boot"})
         let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+
         await db.open()
         await db.erase()
-        let registry = await this.createRegistry(db, false)
-        return bootstrap(registry)
+
+        let registry = await this.createRegistry(null, false)
+        return bootstrap(registry, db)
     }
 
     async move({id, newid, bottom, db: dbInsert}) {

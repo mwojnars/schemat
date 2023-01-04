@@ -310,8 +310,8 @@ export class Item {
 
     jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
-    // _db          // the origin (database & ring) of this item; undefined in newborn items;
-    // _ring        // updates are first sent to this ring and only moved to an outer ring if this one is read-only
+    // _db          // the origin database of this item; undefined in newborn items
+    // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
     //metadata      // system properties: current version, category's version, status etc.
 

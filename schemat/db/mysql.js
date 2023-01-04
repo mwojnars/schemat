@@ -1,6 +1,6 @@
 // import mysql from 'mysql2'
-import {assert, print} from './utils.js'
-import {DB} from './server/db.js'
+import {assert, print} from '../utils.js'
+import {DB} from './storage.js'
 
 //let db = mysql.createConnection(srv)
 //db.connect()

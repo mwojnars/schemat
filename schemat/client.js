@@ -41,6 +41,7 @@ class AjaxDB {
     }
 
     keep(...records) {
+        /* Save `records` in internal cache for future reference. */
         for (let rec of records) {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
