@@ -367,7 +367,7 @@ export async function bootstrap(registry, db) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
     // let db = registry.db
-    print(`Starting full RESET of DB, core items will be created anew in: ${db.filename}`)
+    print(`Starting full RESET of DB, core items will be created anew in: ${db.block.filename}`)
 
     let Category = await registry.createRoot(root_data)             // create root category
     let cats  = await create_categories(Category)                   // create non-root categories & leaf items
@@ -378,6 +378,6 @@ export async function bootstrap(registry, db) {
     // in the output file - insertMany() outputs no-IID items first
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
         await db.insert(item, {flush: false})
-    await db.flush()
+    await db.block.flush()
 }
 

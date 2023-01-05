@@ -118,10 +118,11 @@ class Node {
         let {bootstrap} = await import('../server/bootstrap.js')
 
         // let db = new KafkaDB({cluster_id: "", topic: "schemat.data.boot"})
-        let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
+        let db = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
+        // let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
 
         await db.open()
-        await db.erase()
+        await db.block.erase()
 
         let registry = await this.createRegistry(null, false)
         return bootstrap(registry, db)
