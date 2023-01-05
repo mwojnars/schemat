@@ -1,3 +1,5 @@
+import path from 'path'
+
 import {Item} from "../item.js"
 import {BaseError} from "../errors.js"
 import {YamlDB} from "./storage.js";
@@ -8,11 +10,14 @@ export class Ring {
 
     block
 
-    constructor({file, item, ...opts}) {
+    nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
+    prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
+
+    constructor({file, item, name, ...opts}) {
         this.file = file
         this.item = item
         this.opts = opts
-
+        this.name = name || (file && path.basename(file, path.extname(file)))
     }
 
     async open(createRegistry) {
@@ -27,7 +32,13 @@ export class Ring {
         this.block = block
     }
 
-    stack(next)     { this.block.stack(next.block); return next }
+    stack(next) {
+        this.block.stack(next.block)
+        this.nextDB = next
+        next.prevDB = this
+        return next
+    }
+    findRing(name) { return this.name === name ? this : this.prevDB?.findRing(name) }   // find a ring in the stack (up to this level) by its name, or return undefined
 
     async select(id)    { return this.block.select(id) }
     async delete(item)  { return this.block.delete(item) }

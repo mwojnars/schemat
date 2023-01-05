@@ -87,7 +87,7 @@ export class DB extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
-    name                    // name of this DB for display and CLI options
+    // name                    // name of this DB for display and CLI options
     readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
@@ -143,10 +143,10 @@ export class DB extends Item {
         return next
     }
 
-    getDB(name) {
-        /* Find a DB in the stack (up to this level) by its name. Return undefined if not found. */
-        return this.name === name ? this : this.prevDB?.getDB(name)
-    }
+    // getDB(name) {
+    //     /* Find a DB in the stack (up to this level) by its name. Return undefined if not found. */
+    //     return this.name === name ? this : this.prevDB?.getDB(name)
+    // }
 
     async erase() {
         /* Remove all records from this database; open() should be called first.
@@ -384,8 +384,8 @@ class FileDB extends DB {
     async open() {
         await super.open()
         let fs = this._mod_fs = await import('fs')
-        let path = this._mod_path = await import('path')
-        this.name = path.basename(this.filename, path.extname(this.filename))
+        // let path = this._mod_path = await import('path')
+        // this.name = path.basename(this.filename, path.extname(this.filename))
         try {await fs.promises.writeFile(this.filename, '', {flag: 'wx'})}      // create an empty file if it doesn't exist yet
         catch(ex) {}
     }

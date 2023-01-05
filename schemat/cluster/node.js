@@ -10,7 +10,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
-import {DB, YamlDB} from "../db/storage.js"
+import {DB} from "../db/storage.js"
 import {Ring} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
@@ -151,7 +151,7 @@ class Node {
         if (db.readonly) throw new Error(`the ring '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        if (dbInsert) dbInsert = this.db.getDB(dbInsert)
+        if (dbInsert) dbInsert = this.db.findRing(dbInsert)
         else dbInsert = bottom ? this.db.bottom : db
 
         if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same ring (${db.name}) without change of ID`)
