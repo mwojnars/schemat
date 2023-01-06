@@ -5,7 +5,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
-import { DATA, ITEM_RECORD, generic_schema } from "./type.js"
+import { DATA, generic_schema } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_CID = 0
@@ -787,9 +787,9 @@ export class Item {
         //       with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
         //       to be provided each time...
         assert(this.has_id())
-        let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
-        return schema.encode(this.record())
-        // return {id: this.id, data: this.encodeData()}
+        return {id: this.id, data: this.encodeData()}
+        // let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
+        // return schema.encode(this.record())
     }
     record() { return {id: this.id, data: this.data} }      // serializable representation of the item's contents
 
@@ -1547,11 +1547,11 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    encodeSelf() {
-        /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
-        assert(this.has_id())
-        return new ITEM_RECORD().encode(this.record())
-    }
+    // encodeSelf() {
+    //     /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
+    //     assert(this.has_id())
+    //     return new ITEM_RECORD().encode(this.record())
+    // }
     async reload(opts) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload({...opts, use_schema: false})
