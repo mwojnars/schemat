@@ -93,7 +93,12 @@ export class Ring {
     }
 
     async insert(item, opts = {})   { return this.block.insert(item, opts) }
-    async update(item, opts = {})   { return this.block.update(item, opts) }
+
+    async update(item, opts = {}) {
+        // return this.block.update(item, opts)
+        assert(item.has_id())
+        return this.block.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
+    }
 
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).

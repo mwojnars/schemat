@@ -217,18 +217,10 @@ export class DB extends Item {
 
     /***  high-level API (on items)  ***/
 
-    // async select(id) {
-    //     /* Similar to read(), but throws an exception when `id` not found. */
-    //     let rec = this.read(id)
-    //     if (rec instanceof Promise) rec = await rec
-    //     if (rec === undefined) this.throwNotFound({id})
-    //     return rec
+    // async update(item, opts = {}) {
+    //     assert(item.has_id())
+    //     return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
     // }
-
-    async update(item, opts = {}) {
-        assert(item.has_id())
-        return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
-    }
 
     async mutate(id, edits, opts = {}) {
         /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
