@@ -193,8 +193,8 @@ export class Catalog {
     *entries()          { yield* this._entries }                            // Map's interface
     *[Symbol.iterator](){ yield* this._entries }            // iterator over entries, same as this.entries()
 
-    flat(first = true) {
-        /* Return a flat object containing all the entries converted to {key: value} attributes.
+    object(first = true) {
+        /* Return a flat object containing the entries converted to {key: value} pairs.
            For repeated keys, only one value is included: the first one if first=true (default), or the last one, otherwise.
          */
         let entries = first ? [...this._entries].reverse() : this._entries

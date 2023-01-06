@@ -684,12 +684,12 @@ export class Item {
         yield* this.data.readEntries(prop)
     }
 
-    flat(first = true) {
-        /* Return this.data converted to a flat object. For repeated keys, only one value is included:
+    object(first = true) {
+        /* Return this.data converted to a plain object. For repeated keys, only one value is included:
            the first one if first=true (default), or the last one, otherwise.
           */
         this.assertLoaded()
-        return this.data.flat(first)
+        return this.data.object(first)
     }
 
     // async getLoaded(path) {
@@ -782,7 +782,7 @@ export class Item {
         return JSON.stringify(state)
     }
     encodeSelf() {
-        /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
+        /* Encode this item's data & metadata into a JSON-serializable flat object {id, data: encoded}. */
         // NOTE: the use of ITEM_RECORD here is experimental (!), the goal is to replace encodeSelf() calls
         //       with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
         //       to be provided each time...
@@ -1364,7 +1364,7 @@ export class Category extends Item {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         if (field !== undefined) return this.getItemSchema().get(field)
         let fields = this.prop('fields')
-        return new DATA({fields: fields.flat()})
+        return new DATA({fields: fields.object()})
     }
     getItemAssets() {
         /* Dependencies: css styles, libraries, ... required by HTML pages of items of this category. Instance of Assets. */
@@ -1547,11 +1547,6 @@ export class RootCategory extends Category {
         /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.encodeData(false)
     }
-    // encodeSelf() {
-    //     /* Encode this item's record (data & metadata) into a JSON-serializable flat object. */
-    //     assert(this.has_id())
-    //     return new ITEM_RECORD().encode(this.record())
-    // }
     async reload(opts) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload({...opts, use_schema: false})
@@ -1566,7 +1561,7 @@ export class RootCategory extends Category {
         let root_fields = this.data.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
-        return new DATA({fields: fields.flat()})
+        return new DATA({fields: fields.object()})
     }
 }
 

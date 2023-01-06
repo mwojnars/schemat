@@ -22,8 +22,8 @@ let RES = express.response          // standard Express' prototype of all respon
 RES.sendItems = function(items) {
     /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
     if (!(items instanceof Array)) items = Array.from(items)
-    let states = items.map(item => item.encodeSelf())
-    this.json(states)
+    let records = items.map(item => item.encodeSelf())
+    this.json(records)
 }
 RES.error = function(...args) {
     /* `args` contain a text message and/or a numeric status code. */

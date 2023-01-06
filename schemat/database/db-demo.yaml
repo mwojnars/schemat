@@ -375,7 +375,7 @@
   handlers:
     view: >+
       view() {
-          let paper = this.flat()
+          let paper = this.object()
           return (
               DIV({className: "container"}, 
               DIV({className: "row"},
@@ -405,7 +405,7 @@
 
     view__draft: >-
       view() {
-          let paper = this.flat()
+          let paper = this.object()
           return P({dangerouslySetInnerHTML: {__html: `
       <div class="panel panel-body panel-content bg-white" style="height: auto !important;">
           <h1>${paper.title}</h1>
