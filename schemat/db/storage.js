@@ -156,6 +156,8 @@ export class DB extends Item {
     _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 
+    async flush()           { throw new NotImplemented() }
+
 
     /***  low-level API (on encoded data)  ***/
 
@@ -164,92 +166,86 @@ export class DB extends Item {
         return !this.prop('readonly') && (key === undefined || this.validIID(key))
     }
 
-    async find(key) {
-        /* Return the top-most DB that contains the `key`, or undefined if `key` not found at any level in the database stack.
-           Can be called to check if the key exists.
-         */
-        let data = await this._select(key)
-        if (data !== undefined) return this
-        if (this.prevDB) return this.prevDB.find(key)
-    }
-
-    async read(key) {
-        /* Find the top-most occurrence of `key` in this DB or any lower DB in the stack (through .prevDB).
-           If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
-         */
-        if (this.validIID(key)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
-            let data = this._select(key)
-            if (data instanceof Promise) data = await data      // must await here to check for "not found" result
-            if (data !== undefined) return data
-        }
-        if (this.prevDB) return this.prevDB.read(key)
-    }
-
-    save(key, data, opts = {}) {
-        /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
-           If this db is readonly or the `key` is out of allowed range, the operation is forwarded
-           to a higher-level DB (nextDB), or an exception is raised.
-           If the db already contains the `id` but is readonly, this method will duplicate the same `id`
-           into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
-           may remove this new instance of `id`, while keeping the old one in this db, which will become
-           accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
-           in this id being still accessible in its older version.
-         */
-        if (this.writable(key)) {
-            let {flush = true} = opts
-            let ret = this._save(key, data, opts)
-            if (ret instanceof Promise && flush) return ret.then(() => this.flush())
-            return flush ? this.flush() : ret
-        }
-        if (this.nextDB) return this.nextDB.save(key, data, opts)
-        if (!this.writable()) this.throwReadOnly({key})
-        assert(!this.validIID(key))
-        this.throwInvalidIID(key)
-    }
-
-    // async *scan(cid) {
-    //     /* Iterate over all records in this DB stack (if no `cid`), or over all records of a given category,
-    //        and yield them as {id, data} objects sorted by ascending ID, `data` being a JSON string.
+    // async find(key) {
+    //     /* Return the top-most ring that contains the `key`, or undefined if `key` not found at any level in the database stack.
+    //        Can be called to check if the key exists.
     //      */
-    //     if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
-    //     else yield* this._scan(cid)
+    //     let data = await this._select(key)
+    //     if (data !== undefined) return this
+    //     if (this.prevDB) return this.prevDB.find(key)
+    // }
+    //
+    // async read(key) {
+    //     /* Find the top-most occurrence of `key` in this DB or any lower DB in the stack (through .prevDB).
+    //        If found, return a JSON-encoded data stored under the `key`; otherwise return undefined.
+    //      */
+    //     if (this.validIID(key)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
+    //         let data = this._select(key)
+    //         if (data instanceof Promise) data = await data      // must await here to check for "not found" result
+    //         if (data !== undefined) return data
+    //     }
+    //     if (this.prevDB) return this.prevDB.read(key)
+    // }
+    //
+    // save(key, data, opts = {}) {
+    //     /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
+    //        If this db is readonly or the `key` is out of allowed range, the operation is forwarded
+    //        to a higher-level DB (nextDB), or an exception is raised.
+    //        If the db already contains the `id` but is readonly, this method will duplicate the same `id`
+    //        into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
+    //        may remove this new instance of `id`, while keeping the old one in this db, which will become
+    //        accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
+    //        in this id being still accessible in its older version.
+    //      */
+    //     if (this.writable(key)) {
+    //         let {flush = true} = opts
+    //         let ret = this._save(key, data, opts)
+    //         if (ret instanceof Promise && flush) return ret.then(() => this.flush())
+    //         return flush ? this.flush() : ret
+    //     }
+    //     if (this.nextDB) return this.nextDB.save(key, data, opts)
+    //     if (!this.writable()) this.throwReadOnly({key})
+    //     assert(!this.validIID(key))
+    //     this.throwInvalidIID(key)
+    // }
+    //
+    // async mutate(id, edits, opts = {}) {
+    //     /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
+    //        that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
+    //        in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
+    //        on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
+    //        FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
+    //      */
+    //     assert(edits, 'missing array of edits')
+    //     if (!(edits instanceof Array)) edits = [edits]
+    //
+    //     let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
+    //
+    //     // (1) find the record and its current database (this one or below) if `data` is missing
+    //     if (search) {
+    //         let db = await this.find(id)
+    //         if (db === undefined) this.throwNotFound({id})
+    //         return db.mutate(id, edits, {...opts, search: false})
+    //     }
+    //
+    //     let data = await this.read(id)                  // update `data` with the most recent version from db
+    //
+    //     // (2) propagate to a higher-level db if the mutated record can't be saved here
+    //     if (!this.writable(id))
+    //         if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
+    //         else this.throwNotWritable(id)
+    //
+    //     // mutate `data` and save
+    //     data = this.applyEdits(data, edits)
+    //     return this.save(id, data)
     // }
 
-    /***  high-level API (on items)  ***/
-
-    async mutate(id, edits, opts = {}) {
-        /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
-           that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
-           in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
-           on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
-           FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
-         */
-        assert(edits, 'missing array of edits')
-        if (!(edits instanceof Array)) edits = [edits]
-
-        let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
-
-        // (1) find the record and its current database (this one or below) if `data` is missing
-        if (search) {
-            let db = await this.find(id)
-            if (db === undefined) this.throwNotFound({id})
-            return db.mutate(id, edits, {...opts, search: false})
-        }
-
-        let data = await this.read(id)                  // update `data` with the most recent version from db
-
-        // (2) propagate to a higher-level db if the mutated record can't be saved here
-        if (!this.writable(id))
-            if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
-            else this.throwNotWritable(id)
-
-        for (const edit of edits)                       // mutate `data` and save
-            data = this._apply(data, edit)
-
-        return this.save(id, data)
+    applyEdits(data, edits) {
+        for (const edit of edits)
+            data = this.applyEdit(data, edit)
+        return data
     }
-
-    _apply(dataSrc, edit) {
+    applyEdit(dataSrc, edit) {
         let {type, data} = edit
         assert(type === 'data' && data)
         return data
@@ -295,16 +291,6 @@ export class DB extends Item {
         let {flush = true} = opts
         if (flush) await this.flush()
     }
-    // async _assignIID(id) {
-    //     /* Check if the `iid` can be assigned to a new record (doesn't exist yet) within a given category `cid`.
-    //        Update this.curr_iid accordingly.
-    //      */
-    //     let [cid, iid] = id
-    //     await this.checkNew(id, "the item already exists")
-    //     this.checkIID(id)
-    //     this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
-    // }
-
 }
 
 
@@ -329,8 +315,6 @@ class FileDB extends DB {
         await super.erase()
         await this._mod_fs.promises.writeFile(this.filename, '', {flag: 'w'})   // truncate the file
     }
-
-    async flush()   { throw new NotImplemented() }
 
     _select(id)     { return this.records.get(id) }
     _save(id, data) { this.records.set(id, data) }
