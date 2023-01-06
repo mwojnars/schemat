@@ -781,17 +781,17 @@ export class Item {
         let state = this.encodeData()
         return JSON.stringify(state)
     }
-    encodeSelf() {
-        /* Encode this item's data & metadata into a JSON-serializable flat object {id, data: encoded}. */
-        // NOTE: the use of ITEM_RECORD here is experimental (!), the goal is to replace encodeSelf() calls
-        //       with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
-        //       to be provided each time...
+    record() {
+        /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
         return {id: this.id, data: this.encodeData()}
+
+        // // Below, the use of ITEM_RECORD here is experimental (!), the goal is to replace record() calls
+        // // with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
+        // // to be provided each time (cannot be loaded automatically bcs that would be async and encoding must be synchronous!)
         // let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
-        // return schema.encode(this.record())
+        // return schema.encode({id: this.id, data: this.data})
     }
-    record() { return {id: this.id, data: this.data} }      // serializable representation of the item's contents
 
 
     /***  Routing & handling of requests (server-side)  ***/
@@ -1130,7 +1130,7 @@ Item.createAPI(
 
         'CALL/default': new InternalProtocol(function() { return this }),
         'CALL/item':    new InternalProtocol(function() { return this }),
-        'GET/json':     new JsonProtocol(function() { return this.encodeSelf() }),  // this.record()
+        'GET/json':     new JsonProtocol(function() { return this.record() }),
 
         // internal actions called by UI
         'POST/action':  new ActionsProtocol({
@@ -1507,7 +1507,7 @@ Category.createAPI(
         //     let item = await this.new(data)
         //     await this.registry.insert(item)
         //     // await category.registry.commit()
-        //     return item.encodeSelf()
+        //     return item.record()
         //     // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
         // }),
 
@@ -1518,7 +1518,7 @@ Category.createAPI(
                 let item = await this.new(data)
                 await this.registry.insert(item)
                 // await category.registry.commit()
-                return item.encodeSelf()
+                return item.record()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
         }),

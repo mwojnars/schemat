@@ -344,7 +344,7 @@ export class Session {
         let site  = this.registry.site
         let items = [this.item, this.item.category, this.registry.root, site, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-        items = items.map(i => i.encodeSelf())
+        items = items.map(i => i.record())
 
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session

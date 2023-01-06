@@ -17,12 +17,12 @@ let RES = express.response          // standard Express' prototype of all respon
 // RES.sendItem = function(item) {
 //     /* Send JSON response with a single item: its data (encoded) and metadata. */
 //     // print('sendItem():', item.id)
-//     this.json(item.encodeSelf())
+//     this.json(item.record())
 // }
 RES.sendItems = function(items) {
     /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
     if (!(items instanceof Array)) items = Array.from(items)
-    let records = items.map(item => item.encodeSelf())
+    let records = items.map(item => item.record())
     this.json(records)
 }
 RES.error = function(...args) {
