@@ -85,7 +85,13 @@ export class Ring {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)    { return this.block.select(id) }
+    async select(id)    {
+        let rec = this.block.read(id)
+        if (rec instanceof Promise) rec = await rec
+        if (rec === undefined) this.throwNotFound({id})
+        return rec
+    }
+
     async insert(item, opts = {})   { return this.block.insert(item, opts) }
     async update(item, opts = {})   { return this.block.update(item, opts) }
 

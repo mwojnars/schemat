@@ -217,27 +217,12 @@ export class DB extends Item {
 
     /***  high-level API (on items)  ***/
 
-    async select(id) {
-        /* Similar to read(), but throws an exception when `id` not found. */
-        let rec = this.read(id)
-        if (rec instanceof Promise) rec = await rec
-        if (rec === undefined) this.throwNotFound({id})
-        return rec
-    }
-
-    // async delete(id) {
-    //     /* Find and delete the top-most occurrence of the item's ID in this DB or a lower DB in the stack (through .prevDB).
-    //        Return true on success, or false if the `key` was not found (no modifications done then).
-    //      */
-    //     if (this.writable(id)) {
-    //         let ret = this._delete(id)
-    //         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-    //         if (ret) return ret
-    //     }
-    //     else if (!this.writable() && this.validIID(id) && await this._select(id))
-    //         this.throwReadOnly({key: id})
-    //
-    //     return this.prevDB ? this.prevDB.delete(id) : false
+    // async select(id) {
+    //     /* Similar to read(), but throws an exception when `id` not found. */
+    //     let rec = this.read(id)
+    //     if (rec instanceof Promise) rec = await rec
+    //     if (rec === undefined) this.throwNotFound({id})
+    //     return rec
     // }
 
     async update(item, opts = {}) {
