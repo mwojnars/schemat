@@ -13,11 +13,21 @@ export class Ring {
     nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
     prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
 
+    name                    // human-readable name of this ring for findRing()
+    readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
+
+    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    stop_iid                // (optional) maximum IID of all items
+
     constructor({file, item, name, ...opts}) {
         this.file = file
         this.item = item
         this.opts = opts
         this.name = name || (file && path.basename(file, path.extname(file)))
+
+        let {readonly = false, start_iid = 0} = opts
+        this.readonly = readonly
+        this.start_iid = start_iid
     }
 
     async open(createRegistry) {
@@ -38,7 +48,11 @@ export class Ring {
         next.prevDB = this
         return next
     }
-    findRing(name) { return this.name === name ? this : this.prevDB?.findRing(name) }   // find a ring in the stack (up to this level) by its name, or return undefined
+
+    get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
+    get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
+
+    findRing(name)  { return this.name === name ? this : this.prevDB?.findRing(name) }   // find a ring in the stack (up to this level) by its name, or return undefined
 
     async select(id)    { return this.block.select(id) }
     async delete(item)  { return this.block.delete(item) }

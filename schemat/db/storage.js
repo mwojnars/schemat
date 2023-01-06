@@ -87,19 +87,15 @@ export class DB extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
-    // name                    // name of this DB for display and CLI options
     readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
     stop_iid                // (optional) maximum IID of all items
 
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
-    
-    nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
-    prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
 
-    get top()       { return this.nextDB ? this.nextDB.top : this }
-    get bottom()    { return this.prevDB ? this.prevDB.bottom : this }
+    prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
+    nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
 
     constructor(params = {}) {
         super()
@@ -142,11 +138,6 @@ export class DB extends Item {
         next.prevDB = this
         return next
     }
-
-    // getDB(name) {
-    //     /* Find a DB in the stack (up to this level) by its name. Return undefined if not found. */
-    //     return this.name === name ? this : this.prevDB?.getDB(name)
-    // }
 
     async erase() {
         /* Remove all records from this database; open() should be called first.
@@ -384,8 +375,6 @@ class FileDB extends DB {
     async open() {
         await super.open()
         let fs = this._mod_fs = await import('fs')
-        // let path = this._mod_path = await import('path')
-        // this.name = path.basename(this.filename, path.extname(this.filename))
         try {await fs.promises.writeFile(this.filename, '', {flag: 'wx'})}      // create an empty file if it doesn't exist yet
         catch(ex) {}
     }
