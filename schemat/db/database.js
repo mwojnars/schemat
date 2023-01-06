@@ -55,7 +55,10 @@ export class Ring {
     findRing(name)  { return this.name === name ? this : this.prevDB?.findRing(name) }   // find a ring in the stack (up to this level) by its name, or return undefined
 
     async select(id)    { return this.block.select(id) }
-    async delete(item)  { return this.block.delete(item) }
+    async delete(item_or_id) {
+        let id = typeof item_or_id === 'object' ? item_or_id.id : item_or_id
+        return this.block.delete(id)
+    }
     async insert(item, opts = {})   { return this.block.insert(item, opts) }
     async update(item, opts = {})   { return this.block.update(item, opts) }
 

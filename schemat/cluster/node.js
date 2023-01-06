@@ -182,7 +182,7 @@ class Node {
         }
 
         // remove the old item from DB
-        try { await db.drop(id) }
+        try { await db.delete(id) }
         catch (ex) {
             if (ex instanceof DB.ReadOnly) print('WARNING: could not delete the old item as the database is read-only')
         }

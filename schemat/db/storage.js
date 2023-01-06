@@ -155,9 +155,10 @@ export class DB extends Item {
 
     /***  override in subclasses  ***/
 
+    // these methods can be ASYNC in subclasses (!)
     _read(key, opts)        { throw new NotImplemented() }      // return undefined if `key` not found
-    _drop(key, opts)        { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _save(key, data, opts)  { throw new NotImplemented() }      // no return value
+    _drop(key, opts)        { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 
 
@@ -188,24 +189,24 @@ export class DB extends Item {
         }
         if (this.prevDB) return this.prevDB.read(key, opts)
     }
-    async drop(key, opts = {}) {
-        /* Find and delete the top-most occurrence of `key` in this DB or a lower DB in the stack (through .prevDB).
-           Return true on success, or false if the `key` was not found (no modifications done then).
-         */
-        if (this.writable(key)) {
-            let {flush = true} = opts
-            let ret = this._drop(key, opts)
-            if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-            if (ret) {
-                if (flush) await this.flush()
-                return ret
-            }
-        }
-        else if (!this.writable() && this.validIID(key) && await this._read(key))
-            this.throwReadOnly({key})
-
-        return this.prevDB ? this.prevDB.drop(key, opts) : false
-    }
+    // async drop(key, opts = {}) {
+    //     /* Find and delete the top-most occurrence of `key` in this DB or a lower DB in the stack (through .prevDB).
+    //        Return true on success, or false if the `key` was not found (no modifications done then).
+    //      */
+    //     if (this.writable(key)) {
+    //         let {flush = true} = opts
+    //         let ret = this._drop(key, opts)
+    //         if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+    //         if (ret) {
+    //             if (flush) await this.flush()
+    //             return ret
+    //         }
+    //     }
+    //     else if (!this.writable() && this.validIID(key) && await this._read(key))
+    //         this.throwReadOnly({key})
+    //
+    //     return this.prevDB ? this.prevDB.drop(key, opts) : false
+    // }
     save(key, data, opts = {}) {
         /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
            If this db is readonly or the `key` is out of allowed range, the operation is forwarded
@@ -246,7 +247,21 @@ export class DB extends Item {
         return rec
     }
 
-    async delete(item) { return this.drop(item.id) }
+    async delete(id) {
+        /* Find and delete the top-most occurrence of the item's ID in this DB or a lower DB in the stack (through .prevDB).
+           Return true on success, or false if the `key` was not found (no modifications done then).
+         */
+        // return this.drop(item.id)
+        if (this.writable(id)) {
+            let ret = this._drop(id)
+            if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+            if (ret) return ret
+        }
+        else if (!this.writable() && this.validIID(id) && await this._read(id))
+            this.throwReadOnly({key: id})
+
+        return this.prevDB ? this.prevDB.delete(id) : false
+    }
 
     async update(item, opts = {}) {
         assert(item.has_id())
@@ -386,8 +401,8 @@ class FileDB extends DB {
     async flush()   { throw new NotImplemented() }
 
     _read(id, opts)  { return this.records.get(id) }
-    _drop(id, opts)  { return this.records.delete(id) }
     _save(id, data)  { this.records.set(id, data) }
+    _drop(id, opts)  { let found = this.records.delete(id); return found ? this.flush().then(() => found) : found }
 
     async *_scan(cid) {
         let all = (cid === undefined)
