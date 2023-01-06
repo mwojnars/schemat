@@ -29,8 +29,8 @@ export class MySQL extends DB {
         return this._mod_mysql.createConnection({...opts, ...conn, ...args})      // individual parameters, if defined, override the 'connection' object
     }
 
-    async _read([cid, iid], opts) {
-        let select = this._select(cid)
+    async _select([cid, iid], opts) {
+        let select = this._select_sql(cid)
         if (!select) return
         let query = `${select} WHERE id = ? LIMIT 1`
         let category = await this.registry.getCategory(cid)
@@ -39,7 +39,7 @@ export class MySQL extends DB {
     }
 
     async *_scan(cid, {offset = 0, limit = 100} = {}) {
-        let query = this._select(cid)
+        let query = this._select_sql(cid)
         if (!query) return
         if (limit) {
             query += ` LIMIT ${limit}`
@@ -74,7 +74,7 @@ export class MySQL extends DB {
         return sqlTables
     }
 
-    _select(cid) {
+    _select_sql(cid) {
         /* Build the SELECT... FROM... part of a query for a given CID. Return undefined if this particular CID is unsupported. */
         let table = this._sqlTables.get(cid)
         if (!table) return
@@ -90,7 +90,7 @@ export class MySQL extends DB {
         return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
     }
 
-    _drop(key, opts) { return false }
+    _delete(id) { return false }
 
 }
 
