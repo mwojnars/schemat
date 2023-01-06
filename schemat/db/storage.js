@@ -207,13 +207,13 @@ export class DB extends Item {
         this.throwInvalidIID(key)
     }
 
-    async *scan(cid) {
-        /* Iterate over all records in this DB stack (if no `cid`), or over all records of a given category,
-           and yield them as {id, data} objects sorted by ascending ID, `data` being a JSON string.
-         */
-        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
-        else yield* this._scan(cid)
-    }
+    // async *scan(cid) {
+    //     /* Iterate over all records in this DB stack (if no `cid`), or over all records of a given category,
+    //        and yield them as {id, data} objects sorted by ascending ID, `data` being a JSON string.
+    //      */
+    //     if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this._scan(cid))
+    //     else yield* this._scan(cid)
+    // }
 
     /***  high-level API (on items)  ***/
 
@@ -254,22 +254,6 @@ export class DB extends Item {
         assert(type === 'data' && data)
         return data
     }
-
-    // async insert(item, opts = {}) {
-    //     /* High-level insert. The `item` can have an IID already assigned (then it's checked that
-    //        this IID is not yet present in the DB), or not.
-    //        If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
-    //      */
-    //     assert(item.cid || item.cid === 0)
-    //     let json = item.dumpData()
-    //     let cid  = item.cid
-    //
-    //     // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
-    //     if (item.iid === undefined)
-    //         item.iid = await this.insertWithCID(cid, json, opts)
-    //     else
-    //         return this.insertWithIID(item.id, json, opts)
-    // }
 
     async insertWithCID(cid, data, opts) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.

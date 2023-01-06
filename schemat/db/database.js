@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { T, assert, print } from '../utils.js'
+import {T, assert, print, merge} from '../utils.js'
 
 import {Item} from "../item.js"
 import {BaseError} from "../errors.js"
@@ -106,8 +106,6 @@ export class Ring {
             item.iid = await this.block.insertWithCID(cid, json, opts)
         else
             return this.block.insertWithIID(item.id, json, opts)
-
-        // return this.block.insert(item.dumpData(), item.cid, item.iid, opts)
     }
 
     async update(item, opts = {}) {
@@ -133,7 +131,11 @@ export class Ring {
         return this.prevDB ? this.prevDB.delete(id) : false
     }
 
-    async *scan(cid)    { yield* this.block.scan(cid) }
+    async *scan(cid) {
+        // yield* this.block.scan(cid)
+        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this.block._scan(cid))
+        else yield* this.block._scan(cid)
+    }
 }
 
 
