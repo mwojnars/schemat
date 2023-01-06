@@ -60,7 +60,7 @@ class Node {
            (a database that's stored as an item in a previous database layer) is to be loaded.
            Return the top ring.
          */
-        let prev, db, registry
+        let prev, db
 
         // let db = new Database()
         // await this.createRegistry(db)
@@ -81,8 +81,8 @@ class Node {
             //     db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
             // }
             // await db.open()
-            // if (registry) registry.setDB(db)
 
+            if (this.registry) this.registry.setDB(db)
             prev = prev ? prev.stack(db) : db
         }
         if (!this.registry) await this.createRegistry(db)
