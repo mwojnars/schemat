@@ -217,11 +217,6 @@ export class DB extends Item {
 
     /***  high-level API (on items)  ***/
 
-    // async update(item, opts = {}) {
-    //     assert(item.has_id())
-    //     return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
-    // }
-
     async mutate(id, edits, opts = {}) {
         /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
            that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
@@ -260,21 +255,21 @@ export class DB extends Item {
         return data
     }
 
-    async insert(item, opts = {}) {
-        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
-           this IID is not yet present in the DB), or not.
-           If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
-         */
-        assert(item.cid || item.cid === 0)
-        let data = item.dumpData()
-        let cid  = item.cid
-
-        // create IID for the item if missing or use the provided IID; in any case, store `data` under the resulting ID
-        if (item.iid === undefined)
-            item.iid = await this.insertWithCID(cid, data, opts)
-        else
-            return this.insertWithIID(item.id, data, opts)
-    }
+    // async insert(item, opts = {}) {
+    //     /* High-level insert. The `item` can have an IID already assigned (then it's checked that
+    //        this IID is not yet present in the DB), or not.
+    //        If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
+    //      */
+    //     assert(item.cid || item.cid === 0)
+    //     let json = item.dumpData()
+    //     let cid  = item.cid
+    //
+    //     // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
+    //     if (item.iid === undefined)
+    //         item.iid = await this.insertWithCID(cid, json, opts)
+    //     else
+    //         return this.insertWithIID(item.id, json, opts)
+    // }
 
     async insertWithCID(cid, data, opts) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.

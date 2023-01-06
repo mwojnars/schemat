@@ -92,10 +92,25 @@ export class Ring {
         return rec
     }
 
-    async insert(item, opts = {})   { return this.block.insert(item, opts) }
+    async insert(item, opts = {}) {
+        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
+           this IID is not yet present in the DB), or not.
+           If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
+         */
+        let json = item.dumpData()
+        let cid  = item.cid
+        assert(item.cid || item.cid === 0)
+
+        // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
+        if (item.iid === undefined)
+            item.iid = await this.block.insertWithCID(cid, json, opts)
+        else
+            return this.block.insertWithIID(item.id, json, opts)
+
+        // return this.block.insert(item.dumpData(), item.cid, item.iid, opts)
+    }
 
     async update(item, opts = {}) {
-        // return this.block.update(item, opts)
         assert(item.has_id())
         return this.block.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
     }

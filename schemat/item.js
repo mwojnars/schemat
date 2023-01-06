@@ -1500,24 +1500,14 @@ Category.createAPI(
             res.sendItems(items)
         }),
 
-        // 'POST/create':  new JsonProtocol(async function (ctx, dataState)
-        // {
-        //     /* Create a new item in this category based on request data. */
-        //     let data = await (new Data).__setstate__(dataState)
-        //     let item = await this.new(data)
-        //     await this.registry.insert(item)
-        //     // await category.registry.commit()
-        //     return item.record()
-        //     // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
-        // }),
-
         'POST/action':  new ActionsProtocol({
             async create_item(ctx, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
                 await this.registry.insert(item)
-                // await category.registry.commit()
+                // let record = await this.registry.insert(data, this.cid, /* iid = null */)
+                // return record
                 return item.record()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
