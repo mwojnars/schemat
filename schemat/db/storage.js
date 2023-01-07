@@ -122,9 +122,7 @@ export class Block extends Item {
     }
 
     async erase() {
-        /* Remove all records from this block; open() should be called first.
-           Subclasses should override this method but always call super.erase().
-         */
+        /* Remove all records from this block; open() should be called first. */
         this.curr_iid.clear()
         await this._erase()
         return this.flush()
@@ -169,23 +167,34 @@ export class Block extends Item {
 
     async insertWithCID(cid, data) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record. Return the `iid`. */
-        let iid = this._createIID(cid)
-        await this.save([cid, iid], data)
-        this.flush(1)
-        return iid
-    }
-    _createIID(cid) {
-        /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
-           Update this.curr_iid accordingly.
-         */
+
+        // choose the next available IID in a given category (`cid`) as taken from this.curr_iid
         let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
         let iid = Math.max(max + 1, this.start_iid)
         let id  = [cid, iid]
         if (!this.validIID(id))                             // check against the upper IID bound if present
             throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
+
+        // let iid = this._createIID(cid)
+
+        // update this.curr_iid, save the item
         this.curr_iid.set(cid, iid)
+        await this.save([cid, iid], data)
+        this.flush(1)
         return iid
     }
+    // _createIID(cid) {
+    //     /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
+    //        Update this.curr_iid accordingly.
+    //      */
+    //     let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
+    //     let iid = Math.max(max + 1, this.start_iid)
+    //     let id  = [cid, iid]
+    //     if (!this.validIID(id))                             // check against the upper IID bound if present
+    //         throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
+    //     this.curr_iid.set(cid, iid)
+    //     return iid
+    // }
 
     async insertWithIID(id, data) {
         /* Register the `id` as a new item ID in the database and store `data` under this ID. */
