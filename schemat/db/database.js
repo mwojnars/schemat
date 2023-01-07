@@ -69,7 +69,7 @@ export class Ring {
 
     static Error = class extends BaseError        {}
     static NotFound = class extends Ring.Error    { static message = "item ID not found" }
-    static ReadOnly = class extends Ring.Error    { static message = "the database is for read-only access" }
+    static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is out of range" }
     static NotWritable = class extends Ring.Error {
         static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
@@ -145,44 +145,46 @@ export class Ring {
         else yield* this.block._scan(cid)
     }
 
-    async update(item) {
-        assert(item.has_id())
-        return this.mutate(item.id, {type: 'data', data: item.dumpData()})
+    async update(id, ...edits) {
+        return this.block.update(this, id, ...edits)
+        // assert(item.has_id())
+        // let edit = {type: 'data', data: item.dumpData()}
+        // return this.mutate(item.id, edit)
     }
 
 
     /***  Lower-level implementations of CRUD  ***/
 
-    async mutate(id, edits, opts = {}) {
-        /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
-           that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
-           in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
-           on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
-           FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
-         */
-        assert(edits, 'missing array of edits')
-        if (!(edits instanceof Array)) edits = [edits]
-
-        let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
-
-        // (1) find the record and its current database (this one or below) if `data` is missing
-        if (search) {
-            let ring = await this.find(id)
-            if (ring === undefined) this.throwNotFound({id})
-            return ring.mutate(id, edits, {...opts, search: false})
-        }
-
-        let data = await this.read(id)                  // update `data` with the most recent version from db
-
-        // (2) propagate to a higher-level db if the mutated record can't be saved here
-        if (!this.writable(id))
-            if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
-            else this.throwNotWritable(id)
-
-        // mutate `data` and save the modified item either in this ring or in a higher one
-        data = this.block.applyEdits(data, edits)
-        return this.save(id, data)
-    }
+    // async mutate(id, edits, opts = {}) {
+    //     /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
+    //        that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
+    //        in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
+    //        on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
+    //        FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
+    //      */
+    //     assert(edits, 'missing array of edits')
+    //     if (!(edits instanceof Array)) edits = [edits]
+    //
+    //     let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
+    //
+    //     // (1) find the record and its current database (this one or below) if `data` is missing
+    //     if (search) {
+    //         let ring = await this.find(id)
+    //         if (ring === undefined) this.throwNotFound({id})
+    //         return ring.mutate(id, edits, {...opts, search: false})
+    //     }
+    //
+    //     let data = await this.read(id)                  // update `data` with the most recent version from db
+    //
+    //     // (2) propagate to a higher-level db if the mutated record can't be saved here
+    //     if (!this.writable(id))
+    //         if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
+    //         else this.throwNotWritable(id)
+    //
+    //     // mutate `data` and save the modified item either in this ring or in a higher one
+    //     data = this.block.applyEdits(data, edits)
+    //     return this.save(id, data)
+    // }
 
     async find(id) {
         /* Return the top-most ring that contains the `id`, or undefined if `id` not found at any level in the database stack.
@@ -215,20 +217,27 @@ export class Ring {
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
            in this id being still accessible in its older version.
          */
-        if (this.writable(id)) return this.block.save(id, data)
+        return this.writable(id) ? this.block.save(id, data) : this.forward_save(id, data)
+        // if (this.nextDB) return this.nextDB.save(id, data)
+        // if (!this.writable()) this.throwReadOnly({id})
+        // assert(!this.validIID(id))
+        // this.throwInvalidIID(id)
+    }
+
+
+    forward_update(id, ...edits) {
+        /* Forward an update(id, edits) operation to a lower ring - called when the current ring doesn't contain the id. */
+        if (this.prevDB) return this.prevDB.update(id, ...edits)
+        this.throwNotFound({id})
+    }
+
+    forward_save(id, data) {
+        /* Forward a save(id, data) operation to a higher ring - called when the current ring is not allowed to save. */
         if (this.nextDB) return this.nextDB.save(id, data)
         if (!this.writable()) this.throwReadOnly({id})
         assert(!this.validIID(id))
         this.throwInvalidIID(id)
     }
-
-    // forward_save(id, data) {
-    //     /* Forward a save(id, data) operation to the next higher ring; called when the current ring is not allowed to save. */
-    //     if (this.nextDB) return this.nextDB.save(id, data)
-    //     if (!this.writable()) this.throwReadOnly({id})
-    //     assert(!this.validIID(id))
-    //     this.throwInvalidIID(id)
-    // }
 }
 
 

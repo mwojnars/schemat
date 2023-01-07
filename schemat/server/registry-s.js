@@ -53,6 +53,7 @@ export class ServerRegistry extends Registry {
     /***  DB modifications  ***/
 
     insert(item) { return this.db.insert(item) }
-    update(item) { return this.db.update(item) }   /* Overwrite item's data in DB with the current item.data. Executed instantly without commit. */
     delete(item) { return this.db.delete(item) }
+    update(item) { return this.db.update(item.id, {type: 'data', data: item.dumpData()}) }
+    // update(item) { return this.db.update(item) }
 }

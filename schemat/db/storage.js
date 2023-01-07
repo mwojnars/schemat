@@ -156,19 +156,18 @@ export class Block extends Item {
         return iid
     }
 
-    // async update(ring, id, edits) {
-    //     /* Check if `id` is present in this block. If not, pass the request to a lower ring.
-    //        Otherwise, load `data` associated with `id`, apply `edits` to it, and save a modified item
-    //        in this block (if the ring permits), or forward the write request to a higher ring.
-    //      */
-    //     let data = await this._select(id)
-    //     if (data === undefined) return ring.forward_update(id, edits)
-    //
-    //     data = this.applyEdits(data, edits)
-    //
-    //     if (ring.writable(id)) return this.save(id, data)
-    //     ring.forward_save(id, data)
-    // }
+    async update(ring, id, ...edits) {
+        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
+           Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
+           in this block (if the ring permits), or forward the write request to a higher ring.
+         */
+        let data = await this._select(id)
+        if (data === undefined) return ring.forward_update(id, ...edits)
+
+        data = this.applyEdits(data, edits)
+
+        return ring.writable(id) ? this.save(id, data) : ring.forward_save(id, data)
+    }
 
     applyEdits(data, edits) {
         for (const edit of edits)
@@ -219,9 +218,15 @@ class FileDB extends Block {
     _save(id, data) { this.records.set(id, data) }
 
     async *_scan(cid) {
-        let all = (cid === undefined)
-        for (const [id, data] of this.records.entries())
-            if (all || id[0] === cid) yield {id, data}
+        let entries = [...this.records.entries()]
+        if (cid !== undefined) entries = entries.filter(([id, data]) => id[0] === cid)
+        entries = entries.map(([id, data]) => ({id, data}))
+        entries.sort(Item.orderAscID)
+        yield* entries
+
+        // let all = (cid === undefined)
+        // for (const [id, data] of this.records.entries())
+        //     if (all || id[0] === cid) yield {id, data}
     }
 }
 
