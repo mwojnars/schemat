@@ -45,6 +45,11 @@ export class Ring {
         this.block = block
     }
 
+    async erase() {
+        /* Remove all records from this ring; open() should be called first. */
+        this.checkReadOnly()
+        return this.block.erase()
+    }
 
     /***  Ring manipulation  ***/
     
@@ -68,19 +73,19 @@ export class Ring {
     static ReadOnly = class extends Ring.Error    { static message = "the database is for read-only access" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is out of range" }
     static NotWritable = class extends Ring.Error {
-        static message = "record cannot be written, the data ring is either read-only or the key (iid) is outside the range"
+        static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
     }
 
     throwNotFound(msg, args)    { throw new Ring.NotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
-    throwNotWritable(key)       { throw new Ring.NotWritable({key, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
     throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
-    checkReadOnly(key)          { if (this.readonly) this.throwReadOnly({key}) }
-    async checkNew(id, msg)     { if (await this._select(id)) throw new Error(msg + ` [${id}]`) }
+    checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
+    async checkNew(id, msg)     { if (await this.block._select(id)) throw new Error(msg + ` [${id}]`) }
 
 
     /***  Data access & modification (CRUD operations)  ***/
@@ -115,15 +120,18 @@ export class Ring {
 
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
-           Return true on success, or false if the `key` was not found (no modifications done then).
+           Return true on success, or false if the `id` was not found (no modifications done then).
          */
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
 
         if (this.writable(id)) {
             print('id', id)
-            let ret = this.block._delete(id)
+            let ret = this.block.delete(id)
             if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
-            if (ret) return ret
+            if (ret) {
+                this.block.flush(1)
+                return ret
+            }
         }
         else if (!this.writable() && this.validIID(id) && await this.block._select(id))
             this.throwReadOnly({id})
@@ -191,9 +199,9 @@ export class Ring {
         if (this.prevDB) return this.prevDB.read(id)
     }
 
-    save(key, data, opts = {}) {
-        /* Save `data` under a `key`, regardless if `key` is already present or not. May return a Promise. No return value.
-           If this db is readonly or the `key` is out of allowed range, the operation is forwarded
+    async save(id, data, opts = {}) {
+        /* Save `data` under a `id`, regardless if `id` is already present or not. May return a Promise. No return value.
+           If this db is readonly or the `id` is out of allowed range, the operation is forwarded
            to a higher-level DB (nextDB), or an exception is raised.
            If the db already contains the `id` but is readonly, this method will duplicate the same `id`
            into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
@@ -201,16 +209,19 @@ export class Ring {
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
            in this id being still accessible in its older version.
          */
-        if (this.writable(key)) {
-            let {flush = true} = opts
-            let ret = this.block._save(key, data, opts)
-            if (ret instanceof Promise && flush) return ret.then(() => this.block.flush())
-            return flush ? this.block.flush() : ret
+        if (this.writable(id)) {
+            // let {flush = true} = opts
+            let ret = this.block.save(id, data, opts)
+            if (ret instanceof Promise) ret = await ret
+            this.block.flush(1)         // TODO: make timeout configurable and equal 0 by default
+            return ret
+            // if (ret instanceof Promise && flush) return ret.then(() => this.block.flush())
+            // return flush ? this.block.flush() : ret
         }
-        if (this.nextDB) return this.nextDB.save(key, data, opts)
-        if (!this.writable()) this.throwReadOnly({key})
-        assert(!this.validIID(key))
-        this.throwInvalidIID(key)
+        if (this.nextDB) return this.nextDB.save(id, data, opts)
+        if (!this.writable()) this.throwReadOnly({id})
+        assert(!this.validIID(id))
+        this.throwInvalidIID(id)
     }
 }
 

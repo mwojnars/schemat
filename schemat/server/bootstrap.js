@@ -50,6 +50,7 @@ let root_fields = C({
 
     html_assets  : new CODE({info: "HTML code to be inserted in the html/head section of every page that is rendered from a view function of this category."}),
 
+    // todo: rename cache_ttl > refresh-cache (in the future, add refresh-lifeloop etc)
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
     fields       : new CATALOG({values: new SCHEMA(), info: "Fields must have unique names.", default: default_fields}),

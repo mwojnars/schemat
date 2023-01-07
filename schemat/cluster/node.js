@@ -122,7 +122,7 @@ class Node {
         // let db = new YamlDB(path_db_boot || (DB_ROOT + '/db-boot.yaml'))
 
         await db.open()
-        await db.block.erase()
+        await db.erase()
 
         let registry = await this.createRegistry(null, false)
         return bootstrap(registry, db)
