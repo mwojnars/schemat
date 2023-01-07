@@ -97,8 +97,6 @@ export class Block extends Item {
     async checkNew(id, msg)     { if (await this._select(id)) throw new Block.ItemExists(msg, {id}) }
 
 
-    /***  stacking & administration  ***/
-
     open(ring) {
         this.curr_iid  = new Map()
         this.dirty = false
@@ -122,30 +120,20 @@ export class Block extends Item {
         setTimeout(() => this.flush(), timeout_sec * 1000)
     }
 
-    save(id, data) { this.dirty = true; return this._save(id, data) }
-    delete(id)     { let done = this._delete(id); if (done) this.dirty = true; return done }
 
-    /***  override in subclasses  ***/
+    /***  CRUD operations  ***/
 
-    // these methods can be ASYNC in subclasses (!)
-    _select(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
-    _save(id, data, opts)   { throw new NotImplemented() }      // no return value
-    _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
-    *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
-    _erase()                { throw new NotImplemented() }
-    _flush()                { throw new NotImplemented() }
-
-    /***  low-level API (on encoded data)  ***/
-
-    applyEdits(data, edits) {
-        for (const edit of edits)
-            data = this.applyEdit(data, edit)
-        return data
+    async save(id, data) {
+        await this._save(id, data)
+        this.dirty = true
+        this.flush(1)               // todo: make the timeout configurable and 0 by default
     }
-    applyEdit(dataSrc, edit) {
-        let {type, data} = edit
-        assert(type === 'data' && data)
-        return data
+
+    async delete(id) {
+        let done = this._delete(id)
+        if (done instanceof Promise) done = await done
+        if (done) this.dirty = true
+        return done
     }
 
     async insert(id, data, ring) {
@@ -165,9 +153,45 @@ export class Block extends Item {
         let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
         this.curr_iid.set(cid, max_iid)
         await this.save([cid, iid], data)
-        this.flush(1)               // todo: make the timeout configurable and 0 by default
         return iid
     }
+
+    // async update(ring, id, edits) {
+    //     /* Check if `id` is present in this block. If not, pass the request to a lower ring.
+    //        Otherwise, load `data` associated with `id`, apply `edits` to it, and save a modified item
+    //        in this block (if the ring permits), or forward the write request to a higher ring.
+    //      */
+    //     let data = await this._select(id)
+    //     if (data === undefined) return ring.forward_update(id, edits)
+    //
+    //     data = this.applyEdits(data, edits)
+    //
+    //     if (ring.writable(id)) return this.save(id, data)
+    //     ring.forward_save(id, data)
+    // }
+
+    applyEdits(data, edits) {
+        for (const edit of edits)
+            data = this.applyEdit(data, edit)
+        return data
+    }
+    applyEdit(dataSrc, edit) {
+        let {type, data} = edit
+        assert(type === 'data' && data)
+        return data
+    }
+
+
+    /***  override in subclasses  ***/
+
+    // these methods can be ASYNC in subclasses (!)
+    _select(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
+    _save(id, data)         { throw new NotImplemented() }      // no return value
+    _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
+    _erase()                { throw new NotImplemented() }
+    _flush()                { throw new NotImplemented() }
+    *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
+
 }
 
 

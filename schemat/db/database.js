@@ -120,11 +120,6 @@ export class Ring {
             else this.throwNotWritable(id)
     }
 
-    async update(item) {
-        assert(item.has_id())
-        return this.mutate(item.id, {type: 'data', data: item.dumpData()})
-    }
-
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
@@ -133,8 +128,7 @@ export class Ring {
 
         if (this.writable(id)) {
             print('id', id)
-            let ret = this.block.delete(id)
-            if (ret instanceof Promise) ret = await ret                 // must await here to check for "not found" result
+            let ret = await this.block.delete(id)
             if (ret) {
                 this.block.flush(1)
                 return ret
@@ -149,6 +143,11 @@ export class Ring {
     async *scan(cid) {
         if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this.block._scan(cid))
         else yield* this.block._scan(cid)
+    }
+
+    async update(item) {
+        assert(item.has_id())
+        return this.mutate(item.id, {type: 'data', data: item.dumpData()})
     }
 
 
@@ -168,9 +167,9 @@ export class Ring {
 
         // (1) find the record and its current database (this one or below) if `data` is missing
         if (search) {
-            let db = await this.find(id)
-            if (db === undefined) this.throwNotFound({id})
-            return db.mutate(id, edits, {...opts, search: false})
+            let ring = await this.find(id)
+            if (ring === undefined) this.throwNotFound({id})
+            return ring.mutate(id, edits, {...opts, search: false})
         }
 
         let data = await this.read(id)                  // update `data` with the most recent version from db
@@ -180,7 +179,7 @@ export class Ring {
             if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
             else this.throwNotWritable(id)
 
-        // mutate `data` and save
+        // mutate `data` and save the modified item either in this ring or in a higher one
         data = this.block.applyEdits(data, edits)
         return this.save(id, data)
     }
@@ -207,7 +206,7 @@ export class Ring {
     }
 
     async save(id, data) {
-        /* Save `data` under a `id`, regardless if `id` is already present or not. May return a Promise. No return value.
+        /* Save `data` under a `id`, regardless if `id` is already present or not.
            If this db is readonly or the `id` is out of allowed range, the operation is forwarded
            to a higher-level DB (nextDB), or an exception is raised.
            If the db already contains the `id` but is readonly, this method will duplicate the same `id`
@@ -216,17 +215,20 @@ export class Ring {
            accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
            in this id being still accessible in its older version.
          */
-        if (this.writable(id)) {
-            let ret = this.block.save(id, data)
-            if (ret instanceof Promise) ret = await ret
-            this.block.flush(1)         // TODO: make timeout configurable and equal 0 by default
-            return ret
-        }
+        if (this.writable(id)) return this.block.save(id, data)
         if (this.nextDB) return this.nextDB.save(id, data)
         if (!this.writable()) this.throwReadOnly({id})
         assert(!this.validIID(id))
         this.throwInvalidIID(id)
     }
+
+    // forward_save(id, data) {
+    //     /* Forward a save(id, data) operation to the next higher ring; called when the current ring is not allowed to save. */
+    //     if (this.nextDB) return this.nextDB.save(id, data)
+    //     if (!this.writable()) this.throwReadOnly({id})
+    //     assert(!this.validIID(id))
+    //     this.throwInvalidIID(id)
+    // }
 }
 
 
