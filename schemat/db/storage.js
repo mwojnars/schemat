@@ -164,17 +164,13 @@ export class Block extends Item {
         let data = await this._select(id)
         if (data === undefined) return ring.forward_update(id, ...edits)
 
-        data = this.applyEdits(data, edits)
+        for (const edit of edits)
+            data = this.edit(data, edit)
 
         return ring.writable(id) ? this.save(id, data) : ring.forward_save(id, data)
     }
 
-    applyEdits(data, edits) {
-        for (const edit of edits)
-            data = this.applyEdit(data, edit)
-        return data
-    }
-    applyEdit(dataSrc, edit) {
+    edit(dataSrc, edit) {
         let {type, data} = edit
         assert(type === 'data' && data)
         return data

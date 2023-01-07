@@ -123,6 +123,8 @@ export class Ring {
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
+           TODO: delete all delete-able copies of `id` across different rings, or insert a tombstone if one or more
+                 of the copies remain - to ensure that subsequent select(id) will fail, as normally expected.
          */
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
 
@@ -146,45 +148,16 @@ export class Ring {
     }
 
     async update(id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
+           writing this particular `id`. The `id` is searched for in the current ring and below.
+           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
+         */
+        assert(edits.length, 'missing edits')
         return this.block.update(this, id, ...edits)
-        // assert(item.has_id())
-        // let edit = {type: 'data', data: item.dumpData()}
-        // return this.mutate(item.id, edit)
     }
 
 
     /***  Lower-level implementations of CRUD  ***/
-
-    // async mutate(id, edits, opts = {}) {
-    //     /* Apply `edits` (an array or a single edit) to an item's data and store under the `id` in this database or any higher db
-    //        that allows writing this particular `id`. if `opts.data` is missing, the record is searched for
-    //        in the current database and below - the record's data is then used as `opts.data`, and mutate() is called
-    //        on the containing database instead of this one (the mutation may propagate upwards back to this database, though).
-    //        FUTURE: `edits` may contain a test for a specific item's version to apply edits to.
-    //      */
-    //     assert(edits, 'missing array of edits')
-    //     if (!(edits instanceof Array)) edits = [edits]
-    //
-    //     let {search = true} = opts      // if search=true, the containing database is searched for before writing edits; turned off during propagation phase
-    //
-    //     // (1) find the record and its current database (this one or below) if `data` is missing
-    //     if (search) {
-    //         let ring = await this.find(id)
-    //         if (ring === undefined) this.throwNotFound({id})
-    //         return ring.mutate(id, edits, {...opts, search: false})
-    //     }
-    //
-    //     let data = await this.read(id)                  // update `data` with the most recent version from db
-    //
-    //     // (2) propagate to a higher-level db if the mutated record can't be saved here
-    //     if (!this.writable(id))
-    //         if (this.nextDB) return this.nextDB.mutate(id, edits, {...opts, data, search: false})
-    //         else this.throwNotWritable(id)
-    //
-    //     // mutate `data` and save the modified item either in this ring or in a higher one
-    //     data = this.block.applyEdits(data, edits)
-    //     return this.save(id, data)
-    // }
 
     async find(id) {
         /* Return the top-most ring that contains the `id`, or undefined if `id` not found at any level in the database stack.
@@ -208,22 +181,9 @@ export class Ring {
     }
 
     async save(id, data) {
-        /* Save `data` under a `id`, regardless if `id` is already present or not.
-           If this db is readonly or the `id` is out of allowed range, the operation is forwarded
-           to a higher-level DB (nextDB), or an exception is raised.
-           If the db already contains the `id` but is readonly, this method will duplicate the same `id`
-           into a higher-level db, with new `data` stored as its payload. A subsequent del() to the higher-level db
-           may remove this new instance of `id`, while keeping the old one in this db, which will become
-           accessible once again to subsequent get() operations (!). In this way, deleting an `id` may result
-           in this id being still accessible in its older version.
-         */
+        /* Save `data` under `id`, regardless if `id` is already present or not. Forward to a higher ring if needed. */
         return this.writable(id) ? this.block.save(id, data) : this.forward_save(id, data)
-        // if (this.nextDB) return this.nextDB.save(id, data)
-        // if (!this.writable()) this.throwReadOnly({id})
-        // assert(!this.validIID(id))
-        // this.throwInvalidIID(id)
     }
-
 
     forward_update(id, ...edits) {
         /* Forward an update(id, edits) operation to a lower ring - called when the current ring doesn't contain the id. */
