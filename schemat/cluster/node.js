@@ -10,7 +10,6 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
-import {DB} from "../db/storage.js"
 import {Ring} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
@@ -184,7 +183,7 @@ class Node {
         // remove the old item from DB
         try { await db.delete(id) }
         catch (ex) {
-            if (ex instanceof DB.ReadOnly) print('WARNING: could not delete the old item as the database is read-only')
+            if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }
 
         print('move: done')

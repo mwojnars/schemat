@@ -78,11 +78,11 @@ import { Kafka } from 'kafkajs'
 
 /**********************************************************************************************************************
  **
- **  Server-side DB
+ **  BLOCKS
  **
  */
 
-export class DB extends Item {
+export class Block extends Item {
     /* TODO: physical block of storage inside a Sequence of blocks, inside the `data` or `index` of a Ring, inside a Database:
                 Database > Sequence > Ring > Block > Storage
      */
@@ -103,9 +103,9 @@ export class DB extends Item {
     /***  internal API: errors & checks  ***/
 
     static Error = class extends BaseError      {}
-    static InvalidIID = class extends DB.Error  { static message = "IID is out of range" }
+    static InvalidIID = class extends Block.Error  { static message = "IID is out of range" }
 
-    throwInvalidIID(id)         { throw new DB.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    throwInvalidIID(id)         { throw new Block.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
@@ -178,11 +178,11 @@ export class DB extends Item {
         /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
            Update this.curr_iid accordingly.
          */
-        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the DB
+        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
         let iid = Math.max(max + 1, this.start_iid)
         let id  = [cid, iid]
         if (!this.validIID(id))                             // check against the upper IID bound if present
-            throw new DB.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
+            throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
         this.curr_iid.set(cid, iid)
         return iid
     }
@@ -198,7 +198,7 @@ export class DB extends Item {
 }
 
 
-class FileDB extends DB {
+class FileDB extends Block {
     /* Items stored in a file. For use during development only. */
 
     filename = null

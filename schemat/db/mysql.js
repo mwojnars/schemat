@@ -1,6 +1,6 @@
 // import mysql from 'mysql2'
 import {assert, print} from '../utils.js'
-import {DB} from './storage.js'
+import {Block} from './storage.js'
 
 //let db = mysql.createConnection(srv)
 //db.connect()
@@ -11,7 +11,7 @@ import {DB} from './storage.js'
 // let [rows, fields] = await db.execute('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050')
 
 
-export class MySQL extends DB {
+export class MySQL extends Block {
 
     async open() {
         await super.open()
