@@ -107,11 +107,11 @@ export class Ring {
 
         // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
         if (item.iid === undefined)
-            if (this.writable()) item.iid = await this.block.insertWithCID(cid, json)
+            if (this.writable()) item.iid = await this.block.insert(id, json)
             else if (this.prevDB) return this.prevDB.insert(item)
             else this.throwReadOnly()
         else
-            if (this.writable(id)) return this.block.insertWithIID(id, json)
+            if (this.writable(id)) return this.block.insert(id, json)
             else if (this.prevDB) return this.prevDB.insert(item)
             else this.throwNotWritable(id)
     }

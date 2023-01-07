@@ -103,16 +103,16 @@ export class Block extends Item {
     /***  internal API: errors & checks  ***/
 
     static Error = class extends BaseError      {}
+    static ItemExists = class extends Block.Error  { static message = "item with this ID already exists" }
     static InvalidIID = class extends Block.Error  { static message = "IID is out of range" }
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
-    // throwInvalidIID(id, msg)    { throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     checkValidID(id, msg) {
         if (!this.validIID(id)) throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
     }
 
-    async checkNew(id, msg)     { if (await this._select(id)) throw new Error(msg + ` [${id}]`) }
+    async checkNew(id, msg)     { if (await this._select(id)) throw new Block.ItemExists(msg, {id}) }
 
 
     /***  stacking & administration  ***/
@@ -167,25 +167,33 @@ export class Block extends Item {
         return data
     }
 
-    async insertWithCID(cid, data) {
-        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record. Return the `iid`. */
+    // async insertWithCID(cid, data) {
+    //     /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record. Return the `iid`. */
+    //     let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
+    //     let iid = Math.max(max + 1, this.start_iid)         // next available IID in this category
+    //     let id  = [cid, iid]
+    //     return this._saveInserted(id, data)
+    // }
 
-        // choose the next available IID in a given category (`cid`) as taken from this.curr_iid
-        let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
-        let iid = Math.max(max + 1, this.start_iid)
-        let id  = [cid, iid]
-        this.checkValidID(id, `no more IIDs to assign to new records, the candidate ID is outside bounds`)  // check against the upper IID bound if present
-        return this._saveInserted(id, data)
-    }
+    // async insertWithIID(id, data) {
+    //     /* Register the `id` as a new item ID in the database and store `data` under this ID. */
+    //     return this._saveInserted(id, data)
+    // }
 
-    async insertWithIID(id, data) {
-        /* Register the `id` as a new item ID in the database and store `data` under this ID. */
-        await this.checkNew(id, "the item already exists")
-        return this._saveInserted(id, data)
-    }
+    async insert(id, data) {
+        /* Save a newly inserted item and update this.curr_iid accordingly. Assign a new IID if missing. Return the IID. */
 
-    async _saveInserted([cid, iid], data) {
-        /* Update this.curr_iid and save a newly inserted item. */
+        let [cid, iid] = id
+
+        if (iid !== undefined) await this.checkNew(id)          // the check is only needed when the IID came from the caller
+        else {
+            let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
+            iid = Math.max(max + 1, this.start_iid)             // next available IID in this category
+            id  = [cid, iid]
+        }
+
+        this.checkValidID(id, `the candidate ID for a new item is outside bounds for this ring`)
+
         let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
         this.curr_iid.set(cid, max_iid)
         await this.save([cid, iid], data)
@@ -242,7 +250,7 @@ export class YamlDB extends FileDB {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
             this.checkValidID(id, `item ID loaded from YAML is outside the valid bounds for this ring`)
-            await this.checkNew(id, "duplicate item ID")
+            await this.checkNew(id, `duplicate item ID loaded from ${this.filename}`)
 
             let curr_max = this.curr_iid.get(cid) || 0
             this.curr_iid.set(cid, Math.max(curr_max, iid))
