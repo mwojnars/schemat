@@ -105,10 +105,12 @@ export class Block extends Item {
     static Error = class extends BaseError      {}
     static InvalidIID = class extends Block.Error  { static message = "IID is out of range" }
 
-    throwInvalidIID(id)         { throw new Block.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
-
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
-    checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
+    // throwInvalidIID(id, msg)    { throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+
+    checkValidID(id, msg) {
+        if (!this.validIID(id)) throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
+    }
 
     async checkNew(id, msg)     { if (await this._select(id)) throw new Error(msg + ` [${id}]`) }
 
@@ -172,8 +174,7 @@ export class Block extends Item {
         let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
         let iid = Math.max(max + 1, this.start_iid)
         let id  = [cid, iid]
-        if (!this.validIID(id))                             // check against the upper IID bound if present
-            throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
+        this.checkValidID(id, `no more IIDs to assign to new records, the candidate ID is outside bounds`)  // check against the upper IID bound if present
         return this._saveInserted(id, data)
     }
 
@@ -181,11 +182,6 @@ export class Block extends Item {
         /* Register the `id` as a new item ID in the database and store `data` under this ID. */
         await this.checkNew(id, "the item already exists")
         return this._saveInserted(id, data)
-        // let [cid, iid] = id
-        // let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
-        // this.curr_iid.set(cid, max_iid)
-        // await this.save(id, data)
-        // this.flush(1)
     }
 
     async _saveInserted([cid, iid], data) {
@@ -245,7 +241,7 @@ export class YamlDB extends FileDB {
         for (let record of records) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
-            this.checkIID(id)
+            this.checkValidID(id, `item ID loaded from YAML is outside the valid bounds for this ring`)
             await this.checkNew(id, "duplicate item ID")
 
             let curr_max = this.curr_iid.get(cid) || 0

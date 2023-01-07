@@ -82,7 +82,6 @@ export class Ring {
 
     writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
-    checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
     checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
 
 
