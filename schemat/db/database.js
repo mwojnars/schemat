@@ -104,13 +104,18 @@ export class Ring {
          */
         let json = item.dumpData()
         let cid  = item.cid
-        assert(item.cid || item.cid === 0)
+        let id   = item.id
+        assert(cid || cid === 0)
 
         // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
         if (item.iid === undefined)
-            item.iid = await this.block.insertWithCID(cid, json)
+            if (this.writable()) item.iid = await this.block.insertWithCID(cid, json)
+            else if (this.prevDB) return this.prevDB.insert(item)
+            else this.throwReadOnly()
         else
-            return this.block.insertWithIID(item.id, json)
+            if (this.writable(id)) return this.block.insertWithIID(id, json)
+            else if (this.prevDB) return this.prevDB.insert(item)
+            else this.throwNotWritable(id)
     }
 
     async update(item) {
