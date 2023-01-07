@@ -87,38 +87,19 @@ export class Block extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
-    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
-    stop_iid                // (optional) maximum IID of all items
-
     curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
+    dirty                   // true when the block contains unsaved modifications
 
-    dirty                   // true means the block contains unsaved modifications
 
-    constructor(params = {}) {
-        super()
-        let {start_iid = 0} = params
-        this.start_iid = start_iid
-    }
-
-    /***  internal API: errors & checks  ***/
-
-    static Error = class extends BaseError      {}
-    static ItemExists = class extends Block.Error  { static message = "item with this ID already exists" }
-    static InvalidIID = class extends Block.Error  { static message = "IID is out of range" }
-
-    validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
-
-    checkValidID(id, msg) {
-        if (!this.validIID(id)) throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
-    }
+    static Error = class extends BaseError          {}
+    static ItemExists = class extends Block.Error   { static message = "item with this ID already exists" }
 
     async checkNew(id, msg)     { if (await this._select(id)) throw new Block.ItemExists(msg, {id}) }
 
 
     /***  stacking & administration  ***/
 
-    open() {
-        this.start_iid = this.start_iid || 0
+    open(ring) {
         this.curr_iid  = new Map()
         this.dirty = false
     }
@@ -167,32 +148,19 @@ export class Block extends Item {
         return data
     }
 
-    // async insertWithCID(cid, data) {
-    //     /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record. Return the `iid`. */
-    //     let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
-    //     let iid = Math.max(max + 1, this.start_iid)         // next available IID in this category
-    //     let id  = [cid, iid]
-    //     return this._saveInserted(id, data)
-    // }
-
-    // async insertWithIID(id, data) {
-    //     /* Register the `id` as a new item ID in the database and store `data` under this ID. */
-    //     return this._saveInserted(id, data)
-    // }
-
-    async insert(id, data) {
-        /* Save a newly inserted item and update this.curr_iid accordingly. Assign a new IID if missing. Return the IID. */
+    async insert(id, data, ring) {
+        /* Save a new item and update this.curr_iid accordingly. Assign an IID if missing. Return the IID. */
 
         let [cid, iid] = id
 
         if (iid !== undefined) await this.checkNew(id)          // the check is only needed when the IID came from the caller
         else {
             let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
-            iid = Math.max(max + 1, this.start_iid)             // next available IID in this category
+            iid = Math.max(max + 1, ring.start_iid)             // next available IID in this category
             id  = [cid, iid]
         }
 
-        this.checkValidID(id, `the candidate ID for a new item is outside bounds for this ring`)
+        ring.checkValidID(id, `candidate ID for a new item is outside the valid bounds for this ring`)
 
         let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
         this.curr_iid.set(cid, max_iid)
@@ -214,8 +182,8 @@ class FileDB extends Block {
         super(params)
         this.filename = filename
     }
-    async open() {
-        super.open()
+    async open(ring) {
+        super.open(ring)
         let fs = this._mod_fs = await import('fs')
         try {await fs.promises.writeFile(this.filename, '', {flag: 'wx'})}      // create an empty file if it doesn't exist yet
         catch(ex) {}
@@ -223,8 +191,8 @@ class FileDB extends Block {
     async _erase()  { this.records.clear() }
 
     _select(id)     { return this.records.get(id) }
+    _delete(id)     { return this.records.delete(id) }
     _save(id, data) { this.records.set(id, data) }
-    _delete(id)     { let done = this.records.delete(id); return done ? this.flush().then(() => done) : done }
 
     async *_scan(cid) {
         let all = (cid === undefined)
@@ -236,7 +204,7 @@ class FileDB extends Block {
 export class YamlDB extends FileDB {
     /* Items stored in a YAML file. For use during development only. */
 
-    async open() {
+    async open(ring) {
         await super.open()
         this._mod_YAML = (await import('yaml')).default
 
@@ -249,7 +217,7 @@ export class YamlDB extends FileDB {
         for (let record of records) {
             let id = T.pop(record, '__id')
             let [cid, iid] = id
-            this.checkValidID(id, `item ID loaded from YAML is outside the valid bounds for this ring`)
+            ring.checkValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.checkNew(id, `duplicate item ID loaded from ${this.filename}`)
 
             let curr_max = this.curr_iid.get(cid) || 0

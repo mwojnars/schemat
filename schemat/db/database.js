@@ -41,7 +41,7 @@ export class Ring {
             block = await registry.getLoaded(this.item)
             block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
         }
-        await block.open()
+        await block.open(this)
         this.block = block
     }
 
@@ -84,6 +84,10 @@ export class Ring {
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
 
+    checkValidID(id, msg) {
+        if (!this.validIID(id)) throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
+    }
+
 
     /***  Data access & modification (CRUD operations)  ***/
 
@@ -107,11 +111,11 @@ export class Ring {
 
         // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
         if (item.iid === undefined)
-            if (this.writable()) item.iid = await this.block.insert(id, json)
+            if (this.writable()) item.iid = await this.block.insert(id, json, this)
             else if (this.prevDB) return this.prevDB.insert(item)
             else this.throwReadOnly()
         else
-            if (this.writable(id)) return this.block.insert(id, json)
+            if (this.writable(id)) return this.block.insert(id, json, this)
             else if (this.prevDB) return this.prevDB.insert(item)
             else this.throwNotWritable(id)
     }
