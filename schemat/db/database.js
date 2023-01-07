@@ -141,7 +141,7 @@ export class Ring {
     }
 
     async *scan(cid) {
-        if (this.prevDB) yield* merge(Item.orderAscID, this.prevDB.scan(cid), this.block._scan(cid))
+        if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
         else yield* this.block._scan(cid)
     }
 

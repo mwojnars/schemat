@@ -288,6 +288,9 @@ export class Maths {
     /* Common math operations. */
 
     static argmin = (arr, order, direction = 1) => {
+        /* Index of the lowest element in `arr` according to the ordering function: order(a,b)*direction.
+           If there are two or more such elements, their lowest index is returned.
+         */
         if (!arr.length) return undefined
         if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
         let pos = -1         // current position of the minimum
@@ -320,33 +323,41 @@ export let M = Maths                    // M is an alias for Maths
 /**********************************************************************************************************************/
 
 export async function *merge(order, ...streams) {
-    /* Merge sorted streams according to the `order` function. The streams can be asynchronous. */
-
+    /* Merge sorted streams according to the `order` function. Each stream should contain unique (non-equal) entries
+       according to the `order`. If equal entries occur in different streams, only the "youngest" one
+       (i.e., originating from a stream with the lowest index in `streams`) is included in the output.
+       The streams can be asynchronous.
+     */
     if (!order) order = (a,b) => (a < b) ? -1 : (a > b) ? +1 : 0
 
     // heads[i] is the next available element from the i'th stream; `undefined` if the stream is empty
     let heads = await T.amap(streams, async s => (await s.next()).value)
-    let last
+    let last, relation
 
     // drop empty streams
     streams = streams.filter((v,i) => (heads[i] !== undefined))
     heads   = heads.filter((v,i) => (v !== undefined))
 
-    while (heads.length > 1) {
+    while (heads.length > 1 || (heads.length && relation === 0))
+    {
         let pos = M.argmin(heads, order)        // index of the stream with the lowest next value
         assert(pos !== undefined)
-        if (last !== undefined && order(last, heads[pos]) > 0)
-            throw new Error('ordering of an input stream is incompatible with the `order()` function')
-        yield (last = heads[pos])
-        // last = heads[pos]
-        // yield heads[pos]
 
-        heads[pos] = (await streams[pos].next()).value
+        if (last !== undefined) {
+            relation = order(last, heads[pos])
+            if (relation > 0) throw new Error('ordering of an input stream is incompatible with the `order()` function')
+        }
+
+        if (last === undefined || relation < 0)
+            yield (last = heads[pos])           // don't yield if relation==0 (a duplicate)
+
+        heads[pos] = (await streams[pos].next()).value      // TODO (performance): drop await or pull batches of entries
         if (heads[pos] === undefined) {         // drop the stream if no more elements
             streams.splice(pos, 1)
             heads.splice(pos, 1)
         }
     }
+
     if (heads.length) {                         // when a single source remains forward all of its contents without intermediate heads[] and argmin()
         yield heads[0]
         yield* streams[0]

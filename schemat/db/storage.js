@@ -221,12 +221,8 @@ class FileDB extends Block {
         let entries = [...this.records.entries()]
         if (cid !== undefined) entries = entries.filter(([id, data]) => id[0] === cid)
         entries = entries.map(([id, data]) => ({id, data}))
-        entries.sort(Item.orderAscID)
+        entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
-
-        // let all = (cid === undefined)
-        // for (const [id, data] of this.records.entries())
-        //     if (all || id[0] === cid) yield {id, data}
     }
 }
 
