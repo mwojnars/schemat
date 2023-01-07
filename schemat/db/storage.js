@@ -193,16 +193,16 @@ export class DB extends Item {
         return !this.prop('readonly') && (key === undefined || this.validIID(key))
     }
 
-    async insertWithCID(cid, data, opts) {
+    async insertWithCID(cid, data) {
         /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
            If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
            Return the `iid`.
          */
         if (!this.writable())
-            if (this.prevDB) return this.prevDB.insertWithCID(cid, data, opts)
+            if (this.prevDB) return this.prevDB.insertWithCID(cid, data)
             else this.throwReadOnly()
         let iid = this._createIID(cid)
-        await this.save([cid, iid], data, opts)
+        await this.save([cid, iid], data)
         this.flush(1)
         // let {flush = true} = opts
         // if (flush) await this.flush()
@@ -221,16 +221,16 @@ export class DB extends Item {
         return iid
     }
 
-    async insertWithIID(id, data, opts) {
+    async insertWithIID(id, data) {
         /* Register the `id` as a new item ID in the database and store `data` under this ID. */
         if (!this.writable(id))
-            if (this.prevDB) return this.prevDB.insertWithIID(id, data, opts)
+            if (this.prevDB) return this.prevDB.insertWithIID(id, data)
             else this.throwNotWritable(id)
 
         await this.checkNew(id, "the item already exists")
         let [cid, iid] = id
         this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
-        await this.save(id, data, opts)
+        await this.save(id, data)
         this.flush(1)
         // let {flush = true} = opts
         // if (flush) await this.flush()

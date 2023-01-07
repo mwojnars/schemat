@@ -378,7 +378,7 @@ export async function bootstrap(registry, db) {
     // plain db.insert() is used instead of insertMany() for better control over the order of items
     // in the output file - insertMany() outputs no-IID items first
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
-        await db.insert(item, {flush: false})
+        await db.insert(item)
     await db.block.flush()
 }
 

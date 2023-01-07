@@ -97,7 +97,7 @@ export class Ring {
         return rec
     }
 
-    async insert(item, opts = {}) {
+    async insert(item) {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
            If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
@@ -108,14 +108,14 @@ export class Ring {
 
         // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
         if (item.iid === undefined)
-            item.iid = await this.block.insertWithCID(cid, json, opts)
+            item.iid = await this.block.insertWithCID(cid, json)
         else
-            return this.block.insertWithIID(item.id, json, opts)
+            return this.block.insertWithIID(item.id, json)
     }
 
-    async update(item, opts = {}) {
+    async update(item) {
         assert(item.has_id())
-        return this.mutate(item.id, {type: 'data', data: item.dumpData()}, opts)
+        return this.mutate(item.id, {type: 'data', data: item.dumpData()})
     }
 
     async delete(item_or_id) {
@@ -199,7 +199,7 @@ export class Ring {
         if (this.prevDB) return this.prevDB.read(id)
     }
 
-    async save(id, data, opts = {}) {
+    async save(id, data) {
         /* Save `data` under a `id`, regardless if `id` is already present or not. May return a Promise. No return value.
            If this db is readonly or the `id` is out of allowed range, the operation is forwarded
            to a higher-level DB (nextDB), or an exception is raised.
@@ -210,15 +210,12 @@ export class Ring {
            in this id being still accessible in its older version.
          */
         if (this.writable(id)) {
-            // let {flush = true} = opts
-            let ret = this.block.save(id, data, opts)
+            let ret = this.block.save(id, data)
             if (ret instanceof Promise) ret = await ret
             this.block.flush(1)         // TODO: make timeout configurable and equal 0 by default
             return ret
-            // if (ret instanceof Promise && flush) return ret.then(() => this.block.flush())
-            // return flush ? this.block.flush() : ret
         }
-        if (this.nextDB) return this.nextDB.save(id, data, opts)
+        if (this.nextDB) return this.nextDB.save(id, data)
         if (!this.writable()) this.throwReadOnly({id})
         assert(!this.validIID(id))
         this.throwInvalidIID(id)
