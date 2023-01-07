@@ -54,7 +54,6 @@ export class Ring {
     /***  Ring manipulation  ***/
     
     stack(next) {
-        this.block.stack(next.block)
         this.nextDB = next
         next.prevDB = this
         return next
