@@ -84,7 +84,6 @@ export class Ring {
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
     checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
-    async checkNew(id, msg)     { if (await this.block._select(id)) throw new Error(msg + ` [${id}]`) }
 
 
     /***  Data access & modification (CRUD operations)  ***/
@@ -100,6 +99,7 @@ export class Ring {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
            If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
+           If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
          */
         let json = item.dumpData()
         let cid  = item.cid

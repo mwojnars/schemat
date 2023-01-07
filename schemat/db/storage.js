@@ -87,8 +87,6 @@ export class DB extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
-    readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
-
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
     stop_iid                // (optional) maximum IID of all items
 
@@ -98,32 +96,26 @@ export class DB extends Item {
 
     constructor(params = {}) {
         super()
-        let {readonly = false, start_iid = 0} = params
-        this.readonly = readonly
+        let {start_iid = 0} = params
         this.start_iid = start_iid
     }
 
     /***  internal API: errors & checks  ***/
 
     static Error = class extends BaseError      {}
-    static NotFound = class extends DB.Error    { static message = "item ID not found" }
-    static ReadOnly = class extends DB.Error    { static message = "the database is for read-only access" }
     static InvalidIID = class extends DB.Error  { static message = "IID is out of range" }
-    static NotWritable = class extends DB.Error {
-        static message = "record cannot be written, the data ring is either read-only or the key (iid) is outside the range"
-    }
 
-    throwNotFound(msg, args)    { throw new DB.NotFound(msg, args) }
     throwInvalidIID(id)         { throw new DB.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkIID(id)                { if (this.validIID(id)) return true; this.throwInvalidIID(id) }
+
     async checkNew(id, msg)     { if (await this._select(id)) throw new Error(msg + ` [${id}]`) }
 
 
     /***  stacking & administration  ***/
 
-    open(opts) {
+    open() {
         this.start_iid = this.start_iid || 0
         this.curr_iid  = new Map()
         this.dirty = false
@@ -176,10 +168,7 @@ export class DB extends Item {
     }
 
     async insertWithCID(cid, data) {
-        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record.
-           If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
-           Return the `iid`.
-         */
+        /* Create a new `iid` under a given `cid` and store `data` in this newly created id=[cid,iid] record. Return the `iid`. */
         let iid = this._createIID(cid)
         await this.save([cid, iid], data)
         this.flush(1)
@@ -226,10 +215,7 @@ class FileDB extends DB {
         try {await fs.promises.writeFile(this.filename, '', {flag: 'wx'})}      // create an empty file if it doesn't exist yet
         catch(ex) {}
     }
-    async _erase() {
-        this.records.clear()
-        // await this._mod_fs.promises.writeFile(this.filename, '', {flag: 'w'})   // truncate the file
-    }
+    async _erase()  { this.records.clear() }
 
     _select(id)     { return this.records.get(id) }
     _save(id, data) { this.records.set(id, data) }
