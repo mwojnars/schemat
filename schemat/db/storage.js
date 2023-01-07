@@ -174,35 +174,27 @@ export class Block extends Item {
         let id  = [cid, iid]
         if (!this.validIID(id))                             // check against the upper IID bound if present
             throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
-
-        // let iid = this._createIID(cid)
-
-        // update this.curr_iid, save the item
-        this.curr_iid.set(cid, iid)
-        await this.save([cid, iid], data)
-        this.flush(1)
-        return iid
+        return this._saveInserted(id, data)
     }
-    // _createIID(cid) {
-    //     /* Choose and return the next available IID in a given category (`cid`) as taken from this.curr_iid.
-    //        Update this.curr_iid accordingly.
-    //      */
-    //     let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
-    //     let iid = Math.max(max + 1, this.start_iid)
-    //     let id  = [cid, iid]
-    //     if (!this.validIID(id))                             // check against the upper IID bound if present
-    //         throw new Block.InvalidIID(`no more IIDs to assign to new records, the ID=[${id}] is outside bounds`)
-    //     this.curr_iid.set(cid, iid)
-    //     return iid
-    // }
 
     async insertWithIID(id, data) {
         /* Register the `id` as a new item ID in the database and store `data` under this ID. */
         await this.checkNew(id, "the item already exists")
-        let [cid, iid] = id
-        this.curr_iid.set(cid, Math.max(iid, this.curr_iid.get(cid) || 0))
-        await this.save(id, data)
-        this.flush(1)
+        return this._saveInserted(id, data)
+        // let [cid, iid] = id
+        // let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
+        // this.curr_iid.set(cid, max_iid)
+        // await this.save(id, data)
+        // this.flush(1)
+    }
+
+    async _saveInserted([cid, iid], data) {
+        /* Update this.curr_iid and save a newly inserted item. */
+        let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
+        this.curr_iid.set(cid, max_iid)
+        await this.save([cid, iid], data)
+        this.flush(1)               // todo: make the timeout configurable and 0 by default
+        return iid
     }
 }
 
