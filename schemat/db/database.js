@@ -12,8 +12,8 @@ export class Ring {
 
     block
 
-    nextDB                  // younger (higher-priority) ring on top of this one; fallback for save/mutate/update()
-    prevDB                  // older (lower-priority) ring beneath this one; fallback for read/drop/insert()
+    nextDB                  // younger (higher-priority) ring on top of this one; fallback for insert/save()
+    prevDB                  // older (lower-priority) ring beneath this one; fallback for select/update/delete()
 
     name                    // human-readable name of this ring for findRing()
     readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
@@ -70,7 +70,7 @@ export class Ring {
     static Error = class extends BaseError        {}
     static NotFound = class extends Ring.Error    { static message = "item ID not found" }
     static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
-    static InvalidIID = class extends Ring.Error  { static message = "IID is out of range" }
+    static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
     static NotWritable = class extends Ring.Error {
         static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
     }
@@ -80,7 +80,7 @@ export class Ring {
     throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
     throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
-    writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
+    writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
     checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
 
@@ -98,6 +98,15 @@ export class Ring {
         return rec
     }
 
+    async update(id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
+           writing this particular `id`. The `id` is searched for in the current ring and below.
+           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
+         */
+        assert(edits.length, 'missing edits')
+        return this.block.update(this, id, ...edits)
+    }
+
     async insert(item) {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
@@ -110,14 +119,19 @@ export class Ring {
         assert(cid || cid === 0)
 
         // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
-        if (item.iid === undefined)
-            if (this.writable()) item.iid = await this.block.insert(id, json, this)
-            else if (this.prevDB) return this.prevDB.insert(item)
-            else this.throwReadOnly()
-        else
-            if (this.writable(id)) return this.block.insert(id, json, this)
-            else if (this.prevDB) return this.prevDB.insert(item)
-            else this.throwNotWritable(id)
+        if (this.writable(id)) item.iid = await this.block.insert(id, json, this)
+        else if (this.prevDB) return this.prevDB.insert(item)
+        else if (this.readonly) this.throwReadOnly()
+        else this.throwNotWritable(id)
+        
+        // if (item.iid === undefined)
+        //     if (this.writable()) item.iid = await this.block.insert(id, json, this)
+        //     else if (this.prevDB) return this.prevDB.insert(item)
+        //     else this.throwReadOnly()
+        // else
+        //     if (this.writable(id)) return this.block.insert(id, json, this)
+        //     else if (this.prevDB) return this.prevDB.insert(item)
+        //     else this.throwNotWritable(id)
     }
 
     async delete(item_or_id) {
@@ -145,15 +159,6 @@ export class Ring {
     async *scan(cid) {
         if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
         else yield* this.block._scan(cid)
-    }
-
-    async update(id, ...edits) {
-        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
-           writing this particular `id`. The `id` is searched for in the current ring and below.
-           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
-         */
-        assert(edits.length, 'missing edits')
-        return this.block.update(this, id, ...edits)
     }
 
 
@@ -186,7 +191,7 @@ export class Ring {
     }
 
     forward_update(id, ...edits) {
-        /* Forward an update(id, edits) operation to a lower ring - called when the current ring doesn't contain the id. */
+        /* Forward an update(id, edits) operation to a lower ring - called during search phase if the current ring doesn't contain the id. */
         if (this.prevDB) return this.prevDB.update(id, ...edits)
         this.throwNotFound({id})
     }
