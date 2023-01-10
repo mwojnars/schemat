@@ -46,7 +46,7 @@ class Node {
             {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readonly: false},
             {file: DB_ROOT + '/db-conf.yaml', stop_iid:  IID_SPLIT},  // update: true/false, insert: true/false
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
-            {item: [51,100], readonly: true},
+            {item: [51,100], name: 'mysql', readonly: true},
         ]
         this.db = await this.stack(...rings)
     }

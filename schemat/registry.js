@@ -155,7 +155,7 @@ export class Registry {
            NOT for DB bootstraping.
          */
         // await this.initClasspath()
-        await this.createRoot()
+        await this.createRoot(this.db)
         if (!site_id) site_id = await this._findSite()
         this.site = await this.getLoaded(site_id)
     }
@@ -169,13 +169,15 @@ export class Registry {
         return ret.value.id
     }
 
-    async createRoot(data) {
+    async createRoot(db, data = null) {
         /*
         Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
         are initialized from there, otherwise they are loaded from DB.
         */
         let root = this.root = new RootCategory(this)
         root.constructor.category = root
+        root._db = db
+        assert(db)
         return root.reload({data})
     }
 
