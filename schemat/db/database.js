@@ -123,15 +123,6 @@ export class Ring {
         else if (this.prevDB) return this.prevDB.insert(item)
         else if (this.readonly) this.throwReadOnly()
         else this.throwNotWritable(id)
-        
-        // if (item.iid === undefined)
-        //     if (this.writable()) item.iid = await this.block.insert(id, json, this)
-        //     else if (this.prevDB) return this.prevDB.insert(item)
-        //     else this.throwReadOnly()
-        // else
-        //     if (this.writable(id)) return this.block.insert(id, json, this)
-        //     else if (this.prevDB) return this.prevDB.insert(item)
-        //     else this.throwNotWritable(id)
     }
 
     async delete(item_or_id) {
