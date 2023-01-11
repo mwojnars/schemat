@@ -56,7 +56,7 @@ export class Request {
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
 
-    static NotFound = class extends NotFound {
+    static PathNotFound = class extends NotFound {
         static message = "URL path not found"
     }
 
@@ -142,7 +142,7 @@ export class Request {
         return this
     }
 
-    throwNotFound(msg, args)  { throw new Request.NotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+    throwNotFound(msg, args)  { throw new Request.PathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
 }
 
 
@@ -262,7 +262,7 @@ export class Handler {
            Here, `this` is bound to the item being rendered. */
         let method = `VIEW_${endpoint}`
         if (method in this) return e(this[method].bind(this))
-        throw new Request.NotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
+        throw new Request.PathNotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
         // throw new Request.NotFound('view() function is missing in a handler')
         // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
     }
@@ -855,7 +855,7 @@ export class Item {
             return node.routeNode(req, strategy)
         }
         catch (ex) {
-            if (ex instanceof Request.NotFound && strategy === 'last')
+            if (ex instanceof Request.PathNotFound && strategy === 'last')
                 return [this, request]      // assumption: findRoute() above must NOT modify the `request` before throwing a NotFound!
             throw ex
         }

@@ -79,7 +79,7 @@ export class WebServer extends Server {
         }
         catch (ex) {
             print(ex)
-            if (ex instanceof Request.NotFound)
+            if (ex instanceof Request.PathNotFound)
                 try { res.sendStatus(404) } catch(e){}
             else
                 try { res.sendStatus(500) } catch(e){}
