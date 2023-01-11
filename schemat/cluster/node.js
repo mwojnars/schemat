@@ -84,9 +84,11 @@ class Node {
     }
 
     async createEmptyRegistry() {
-        let registry = this.registry = globalThis.registry = new ServerRegistry(null, __dirname)
-        await registry.initClasspath()
-        return registry
+        this.registry = await ServerRegistry.createGlobal(null, __dirname)
+        return this.registry
+        // let registry = this.registry = globalThis.registry = new ServerRegistry(null, __dirname)
+        // await registry.initClasspath()
+        // return registry
     }
     async bootRegistry(db) {
         // if (!this.registry) await this.createEmptyRegistry()

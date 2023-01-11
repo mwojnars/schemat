@@ -118,8 +118,9 @@ export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
     let db       = new AjaxDB(data.system_url, data.items)
-    let registry = globalThis.registry = new ClientRegistry(db)
-    await registry.initClasspath()
+    let registry = await ClientRegistry.createGlobal(db)
+    // let registry = globalThis.registry = new ClientRegistry(db)
+    // await registry.initClasspath()
     await registry.boot(data)
 
     // print('root:', await registry.getItem([0,0], {load: true}))

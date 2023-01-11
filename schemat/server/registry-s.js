@@ -19,9 +19,9 @@ export class ServerRegistry extends Registry {
     PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
 
     constructor(db, path) {
-        super()
+        super(db)
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
-        if (db) this.setDB(db)
+        // if (db) this.setDB(db)
     }
 
     directImportPath(path) {

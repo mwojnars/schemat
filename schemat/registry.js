@@ -142,11 +142,11 @@ export class Registry {
 
     static async createGlobal(db, ...args) {
         let registry = globalThis.registry = new this(db, ...args)
-        await registry.initClasspath()
+        await registry._initClasspath()
         return registry
     }
 
-    async initClasspath() {
+    async _initClasspath() {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
