@@ -1,9 +1,7 @@
 import path from 'path'
-
+import {BaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
-
 import {Item} from "../item.js"
-import {BaseError} from "../errors.js"
 import {YamlDB} from "./storage.js";
 
 
@@ -69,14 +67,14 @@ export class Ring {
     /***  errors & internal checks  ***/
 
     static Error = class extends BaseError        {}
-    static NotFound = class extends Ring.Error    { static message = "item ID not found" }
+    // static ItemNotFound = class extends Ring.Error    { static message = "item ID not found in the database" }
     static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
     static NotWritable = class extends Ring.Error {
         static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
     }
 
-    throwNotFound(msg, args)    { throw new Ring.NotFound(msg, args) }
+    throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
     throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
     throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
@@ -202,7 +200,7 @@ export class Ring {
 // export class Database {
 //     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
 //        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
-//        If NotFound/ReadOnly is caught, the next ring is tried.
+//        If ItemNotFound/ReadOnly is caught, the next ring is tried.
 //      */
 //
 //     constructor(...specs) {
@@ -235,7 +233,7 @@ export class Ring {
 export class Database extends Item {
     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
        ring possible; while each insert - on the innermost ring starting at the category's own ring.
-       If NotFound/ReadOnly is caught, the next ring is tried.
+       If ItemNotFound/ReadOnly is caught, the next ring is tried.
        In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
        that already exist in a lower Ring!), but selects/updates/deletes may go to any lower Ring.
        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another Ring
@@ -268,7 +266,7 @@ export class Database extends Item {
             }
             catch (ex) {
                 if (ex instanceof Database.ItemNotFound) { exLast = ex; continue }
-                // if (ex instanceof Ring.NotFound || ex instanceof Ring.ReadOnly) continue
+                // if (ex instanceof Ring.ItemNotFound || ex instanceof Ring.ReadOnly) continue
                 throw ex
             }
         throw exLast || new Database.ItemNotFound()

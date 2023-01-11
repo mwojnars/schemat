@@ -39,6 +39,10 @@ export class BaseError extends Error {
     }
 }
 
+export class ItemNotFound extends BaseError {
+    static message = "item ID not found in the database"
+}
+
 export class NotFound extends BaseError {
     static message = "URL not found"
     static code    = 404

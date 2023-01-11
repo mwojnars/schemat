@@ -1,7 +1,7 @@
 "use strict";
 
-import {print, assert, splitLast } from './utils.js'
-import { NotImplemented } from './errors.js'
+import { print, assert, splitLast } from './utils.js'
+import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
@@ -172,20 +172,41 @@ export class Registry {
         return ret.value.id
     }
 
-    // async createRoot() {
-    async createRoot(data = null) {
-        /*
-        Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
-        are initialized from there, otherwise they are loaded from DB.
-        */
+    async createRoot() {
+        /* Create the RootCategory object, ID=(0,0), and load its contents either from the DB (if present there)
+           or from the predefined `root_data`.
+         */
         let root = this.root = new RootCategory(this)
         root.constructor.category = root
 
-        // try loading `root` from DB first ...
-        // ...ony if that fails, load from predefined `root_data`
+        // try loading `root` from the DB first...
+        if (this.db)
+            try {
+                await root.reload()
+                assert(root.isLoaded)
+                print("root category loaded from DB")
+            } catch (ex) {
+                if (!(ex instanceof ItemNotFound)) throw ex
+            }
 
-        return root.reload({data})
+        // ...only when the above fails due to missing data, load from the predefined `root_data`
+        if (!root.isLoaded) {
+            await root.reload({data: root_data})
+            print("root category loaded from root_data")
+        }
+
+        return root
     }
+
+    // async createRoot(data = null) {
+    //     /*
+    //     Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
+    //     are initialized from there, otherwise they are loaded from DB.
+    //     */
+    //     let root = this.root = new RootCategory(this)
+    //     root.constructor.category = root
+    //     return root.reload({data})
+    // }
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
