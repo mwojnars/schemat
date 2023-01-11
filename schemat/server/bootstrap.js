@@ -370,7 +370,7 @@ export async function bootstrap(registry, db) {
     // let db = registry.db
     print(`Starting full RESET of DB, core items will be created anew in: ${db.block.filename}`)
 
-    let Category = await registry.createRoot(db, root_data)         // create root category
+    let Category = await registry.createRoot(root_data)             // create root category
     let cats  = await create_categories(Category)                   // create non-root categories & leaf items
     let items = await create_items(cats, Category)
 

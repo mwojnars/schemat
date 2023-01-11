@@ -467,11 +467,11 @@ export class Item {
     }
 
     async _loadData({use_schema = true, jsonData} = {}) {
-        if (this._db === undefined) this._db = this.category._db        // database is derived from the item's category
+        // if (this._db === undefined) this._db = this.category._db        // database is derived from the item's category
         if (jsonData === undefined) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            // jsonData = await this._db.top.select(this.id)  -- OK on server, missing .top() on client
             jsonData = await this.registry.loadData(this.id)
+            // jsonData = await this._db.top.select(this.id)  -- OK on server, missing .top() on client
         }
         // print('this._db:', this._db.name)
         let schema = use_schema ? this.category.getItemSchema() : generic_schema
