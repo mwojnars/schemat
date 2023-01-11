@@ -137,12 +137,12 @@ class Node {
         if (!sameID && await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
         // identify the source ring
-        let db = await this.db.find(id)
+        let db = await this.db.findRing({item: id})
         if (db === undefined) throw new Error(`item not found: [${id}]`)
         if (db.readonly) throw new Error(`the ring '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        if (dbInsert) dbInsert = this.db.findRing(dbInsert)
+        if (dbInsert) dbInsert = await this.db.findRing({name: dbInsert})
         else dbInsert = bottom ? this.db.bottom : db
 
         if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same ring (${db.name}) without change of ID`)

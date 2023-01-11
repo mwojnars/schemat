@@ -61,7 +61,29 @@ export class Ring {
     get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
-    findRing(name)  { return this.name === name ? this : this.prevDB?.findRing(name) }      // find a ring in the stack (up to this level) by its name, or return undefined
+    // findRing(name)  { return this.name === name ? this : this.prevDB?.findRing(name) }      // find a ring in the stack (up to this level) by its name, or return undefined
+
+    async findRing(query) {
+        /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
+           Return undefined if not found. Can be called to check if the item ID or ring name exists.
+         */
+        let {item, name} = query
+        if (this.name === name) return this
+        if (item) {
+            let data = await this.block._select(item)
+            if (data !== undefined) return this
+        }
+        return this.prevDB?.findRing(query)
+    }
+
+    // async find(id) {
+    //     /* Return the top-most ring that contains the `id`, or undefined if `id` not found at any level in the database stack.
+    //        Can be called to check if the id exists.
+    //      */
+    //     let data = await this.block._select(id)
+    //     if (data !== undefined) return this
+    //     if (this.prevDB) return this.prevDB.find(id)
+    // }
 
 
     /***  errors & internal checks  ***/
@@ -153,15 +175,6 @@ export class Ring {
 
 
     /***  Lower-level implementations of CRUD  ***/
-
-    async find(id) {
-        /* Return the top-most ring that contains the `id`, or undefined if `id` not found at any level in the database stack.
-           Can be called to check if the id exists.
-         */
-        let data = await this.block._select(id)
-        if (data !== undefined) return this
-        if (this.prevDB) return this.prevDB.find(id)
-    }
 
     async read(id) {
         /* Find the top-most occurrence of `id` in this DB or any lower DB in the stack (through .prevDB).
