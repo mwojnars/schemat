@@ -74,15 +74,6 @@ export class Ring {
         return this.prevDB?.findRing(query)
     }
 
-    // async find(id) {
-    //     /* Return the top-most ring that contains the `id`, or undefined if `id` not found at any level in the database stack.
-    //        Can be called to check if the id exists.
-    //      */
-    //     let data = await this.block._select(id)
-    //     if (data !== undefined) return this
-    //     if (this.prevDB) return this.prevDB.find(id)
-    // }
-
 
     /***  errors & internal checks  ***/
 
