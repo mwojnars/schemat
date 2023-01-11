@@ -210,11 +210,10 @@ export class Ring {
 export class Database {
     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
-       The rings[0] is the bottom of the stack, and rings[-1] is the top.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */
 
-    rings = []
+    rings = []          // rings[0] is the innermost ring (bottom of the stack), rings[-1] is the outermost (top)
 
     get top()       { return this.rings.at(-1) }
     get bottom()    { return this.rings[0] }

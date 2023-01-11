@@ -276,21 +276,18 @@ async function create_items(cat, Category) {
  **
  */
 
-export async function bootstrap(registry, db) {
+export async function bootstrap(registry, ring) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    // let db = registry.db
-    print(`Starting full RESET of DB, core items will be created anew in: ${db.block.filename}`)
+    print(`Starting full RESET of DB, core items will be created anew in: ${ring.block.filename}`)
 
     let Category = registry.root
     let cats  = await create_categories(Category)               // create non-root categories & leaf items
     let items = await create_items(cats, Category)
 
-    // insert to DB and assign IIDs if missing;
-    // plain db.insert() is used instead of insertMany() for better control over the order of items
-    // in the output file - insertMany() outputs no-IID items first
+    // insert to DB and assign IIDs if missing
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
-        await db.insert(item)
-    await db.block.flush()
+        await ring.insert(item)
+    await ring.block.flush()
 }
 

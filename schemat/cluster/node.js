@@ -80,13 +80,13 @@ class Node {
         /* Generate the core system items anew and save. */
         let {bootstrap} = await import('../server/bootstrap.js')
 
-        let db = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
+        let ring = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
 
-        await db.open()
-        await db.erase()
+        await ring.open()
+        await ring.erase()
 
         let registry = await this.createRegistry()
-        return bootstrap(registry, db)
+        return bootstrap(registry, ring)
     }
 
     async move({id, newid, bottom, db: dbInsert}) {
