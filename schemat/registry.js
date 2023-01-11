@@ -132,8 +132,6 @@ export class Registry {
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
-    get isBooted() { return this.root !== undefined }
-
     cache = new ItemsCache()
 
 
@@ -164,8 +162,6 @@ export class Registry {
         this.classpath = classpath
         // print('initClasspath() done')
     }
-
-    setDB(db)   { this.db = db }
 
     async boot(site_id = null) {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
