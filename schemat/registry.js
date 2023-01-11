@@ -136,6 +136,16 @@ export class Registry {
 
     cache = new ItemsCache()
 
+    constructor(db) {
+        if(db) this.db = db
+    }
+
+    static async createGlobal(db, ...args) {
+        let registry = globalThis.registry = new this(db, ...args)
+        await registry.initClasspath()
+        return registry
+    }
+
     async initClasspath() {
         // print('initClasspath() started...')
         let classpath = new Classpath

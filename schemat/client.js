@@ -84,11 +84,11 @@ class ClientRegistry extends Registry {
 
     onServer = false
 
-    constructor(data) {
-        super()
-        this.db = new AjaxDB(data.system_url, data.items)
-        // this.cache = new ClientCache()
-    }
+    // constructor(db) {
+    //     super()
+    //     this.db = db
+    //     // this.cache = new ClientCache()
+    // }
     async boot(data) {
         await super.boot(data.site_id)
         this.session = Session.load(this, data.session)
@@ -117,7 +117,8 @@ class ClientRegistry extends Registry {
 export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
-    let registry = globalThis.registry = new ClientRegistry(data)
+    let db       = new AjaxDB(data.system_url, data.items)
+    let registry = globalThis.registry = new ClientRegistry(db)
     await registry.initClasspath()
     await registry.boot(data)
 
