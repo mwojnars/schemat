@@ -172,6 +172,7 @@ export class Registry {
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return an undefined
         if (!this.site) print('Registry.boot(): site is undefined')
+        else print('Registry.boot(): site defined')
     }
 
     async _init_root() {

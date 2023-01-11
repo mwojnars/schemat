@@ -48,17 +48,17 @@ class Node {
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
             {item: [51,100], name: 'mysql', readonly: true},
         ]
-        this.db = await this.stack(...rings)
+        // this.db = await this.stack(...rings)
 
-        // let db = this.db = new Database()
-        // let registry = this.createRegistry(db)
-        //
-        // for (const spec of rings) {
-        //     let ring = new Ring(spec)
-        //     await ring.open()
-        //     db.add(ring)
-        //     await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
-        // }
+        let db = this.db = new Database()
+        let registry = await this.createRegistry(db)
+
+        for (const spec of rings) {
+            let ring = new Ring(spec)
+            await ring.open()
+            db.append(ring)
+            await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
+        }
     }
 
     async stack(...rings) {

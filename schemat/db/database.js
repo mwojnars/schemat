@@ -61,7 +61,7 @@ export class Ring {
 
     async findRing(query) {
         /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
-           Return undefined if not found. Can be called to check if the item ID or ring name exists.
+           Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
         let {item, name} = query
         if (name && this.name === name) return this
@@ -99,7 +99,7 @@ export class Ring {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)    {
+    async select(id) {
         let rec = this.read(id)
         if (rec instanceof Promise) rec = await rec
         if (rec === undefined) this.throwNotFound({id})
@@ -197,85 +197,78 @@ export class Ring {
 
 
 
-// export class Database {
-//     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
-//        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
-//        If ItemNotFound/ReadOnly is caught, the next ring is tried.
-//      */
-//
-//     constructor(...specs) {
-//         this.specs = specs
-//     }
-//     async open(createRegistry) {
-//         /* Incrementally create, open, and connect into a stack, a number of databases according to the `rings` specifications.
-//            The rings[0] is the bottom of the stack, and rings[-1] is the top.
-//            The rings get connected into a double-linked list through their .prevDB & .nextDB attributes.
-//            The registry is created and initialized at the end, or just before the first item-database
-//            (a database that's stored as an item in a previous database layer) is to be loaded.
-//            Return the top ring.
-//          */
-//         let prev, db
-//
-//         this.registry.setDB(this)
-//
-//         for (let spec of this.rings) {
-//             db = new Ring(spec)
-//             await db.open(() => createRegistry(prev))
-//
-//             prev = prev ? prev.stack(db) : db
-//         }
-//         if (!this.registry) await createRegistry(db)
-//         return this
-//     }
-//
-// }
-
-export class Database extends Item {
-    /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
-       ring possible; while each insert - on the innermost ring starting at the category's own ring.
+export class Database {
+    /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
+       ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
+       The rings[0] is the bottom of the stack, and rings[-1] is the top.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
-       In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
-       that already exist in a lower Ring!), but selects/updates/deletes may go to any lower Ring.
-       NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another Ring
-       -- this is neither checked nor prevented. Typically, an outer Ring referring to lower-ID items in an inner Ring
-       is expected; while the reversed relationship is a sign of undesired convolution between the databases.
      */
 
-    static DBError = class extends BaseError {}
-    static ItemNotFound = class extends Database.DBError { static message = "item not found in the database" }
+    rings = []
 
-    constructor(...rings) {
-        /* `rings` are ordered by increasing level: from innermost to outermost. */
-        super()
-        this.rings = rings.reverse()        // in `this`, rings are ordered by DECREASING level for easier looping
+    get top()       { return this.rings.at(-1) }
+    get bottom()    { return this.rings[0] }
 
-        this.get    = this.outermost('get')
-        this.del    = this.outermost('del')
-        this.insert = this.outermost('insert')
-        this.update = this.outermost('update')
-        // this.select = this.outermost('select')
-    }
-    load()  { return Promise.all(this.rings.map(d => d.load())) }
-
-    outermost = (method) => async function (...args) {
-        let exLast
-        for (const ring of this.rings)
-            try {
-                let result = ring[method](...args)
-                return result instanceof Promise ? await result : result
-            }
-            catch (ex) {
-                if (ex instanceof Database.ItemNotFound) { exLast = ex; continue }
-                // if (ex instanceof Ring.ItemNotFound || ex instanceof Ring.ReadOnly) continue
-                throw ex
-            }
-        throw exLast || new Database.ItemNotFound()
-        // throw new RingsDB.RingNotFound()
+    append(ring) {
+        /* The ring must be already open. */
+        if (this.top) this.top.stack(ring)
+        this.rings.push(ring)
     }
 
-    // async *scanCategory(cid) {
-    //     for (const db of this.rings)
-    //         yield* db.scanCategory(cid)
-    // }
+    async select(id)                { if (this.top) return this.top.select(id); else throw new ItemNotFound() }
+    async update(id, ...edits)      { assert(this.top); return this.top.update(id, ...edits) }
+    async insert(item)              { assert(this.top); return this.top.insert(item) }
+    async delete(item_or_id)        { assert(this.top); return this.top.delete(item_or_id) }
+    async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
 }
+
+
+// export class Database extends Item {
+//     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
+//        ring possible; while each insert - on the innermost ring starting at the category's own ring.
+//        If ItemNotFound/ReadOnly is caught, the next ring is tried.
+//        In this way, all inserts go to the outermost writable ring only (warning: the items may receive IDs
+//        that already exist in a lower Ring!), but selects/updates/deletes may go to any lower Ring.
+//        NOTE: the underlying DBs may become interrelated, i.e., refer to item IDs that only exist in another Ring
+//        -- this is neither checked nor prevented. Typically, an outer Ring referring to lower-ID items in an inner Ring
+//        is expected; while the reversed relationship is a sign of undesired convolution between the databases.
+//      */
+//
+//     static DBError = class extends BaseError {}
+//     static ItemNotFound = class extends Database.DBError { static message = "item not found in the database" }
+//
+//     constructor(...rings) {
+//         /* `rings` are ordered by increasing level: from innermost to outermost. */
+//         super()
+//         this.rings = rings.reverse()        // in `this`, rings are ordered by DECREASING level for easier looping
+//
+//         this.get    = this.outermost('get')
+//         this.del    = this.outermost('del')
+//         this.insert = this.outermost('insert')
+//         this.update = this.outermost('update')
+//         // this.select = this.outermost('select')
+//     }
+//     load()  { return Promise.all(this.rings.map(d => d.load())) }
+//
+//     outermost = (method) => async function (...args) {
+//         let exLast
+//         for (const ring of this.rings)
+//             try {
+//                 let result = ring[method](...args)
+//                 return result instanceof Promise ? await result : result
+//             }
+//             catch (ex) {
+//                 if (ex instanceof Database.ItemNotFound) { exLast = ex; continue }
+//                 // if (ex instanceof Ring.ItemNotFound || ex instanceof Ring.ReadOnly) continue
+//                 throw ex
+//             }
+//         throw exLast || new Database.ItemNotFound()
+//         // throw new RingsDB.RingNotFound()
+//     }
+//
+//     // async *scanCategory(cid) {
+//     //     for (const db of this.rings)
+//     //         yield* db.scanCategory(cid)
+//     // }
+// }
 

@@ -1,5 +1,5 @@
 import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique } from './utils.js'
-import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
+import {NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound} from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
@@ -436,34 +436,38 @@ export class Item {
            Set up the class and prototypes. Call init().
            Boot options (opts): {use_schema, jsonData, data}
          */
+        try {
+            // // import type.js to allow synchronous access to DATA and generic_schema in other methods;
+            // // type.js DEPENDS on item.js, so it can't be imported at the top level!
+            // this._mod_type = await import('./type.js')
 
-        // // import type.js to allow synchronous access to DATA and generic_schema in other methods;
-        // // type.js DEPENDS on item.js, so it can't be imported at the top level!
-        // this._mod_type = await import('./type.js')
+            if (!this.category) {                               // initialize this.category
+                assert(!T.isMissing(this.cid))
+                this.category = await this.registry.getCategory(this.cid)
+            }
+            else if (!this.category.isLoaded && this.category !== this)
+                await this.category.load()
 
-        if (!this.category) {                               // initialize this.category
-            assert(!T.isMissing(this.cid))
-            this.category = await this.registry.getCategory(this.cid)
+            this.data = opts.data || await this._loadData(opts)
+
+            if (!(this.data instanceof Data)) this.data = new Data(this.data)
+
+            let proto = this.initPrototypes()                   // load prototypes
+            if (proto instanceof Promise) await proto
+
+            this.setExpiry(this.category.prop('cache_ttl'))
+
+            await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
+            this._initActions()
+
+            let init = this.init()                              // optional custom initialization after the data is loaded
+            if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
+
+            return this
+
+        } finally {
+            this.isLoading = false                              // cleanup to allow another load attempt, even after an error
         }
-        else if (!this.category.isLoaded && this.category !== this)
-            await this.category.load()
-
-        this.data = opts.data || await this._loadData(opts)
-        if (!(this.data instanceof Data)) this.data = new Data(this.data)
-
-        let proto = this.initPrototypes()                   // load prototypes
-        if (proto instanceof Promise) await proto
-
-        this.setExpiry(this.category.prop('cache_ttl'))
-
-        await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-        this._initActions()
-
-        let init = this.init()                              // optional custom initialization after the data is loaded
-        if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
-
-        this.isLoading = false
-        return this
     }
 
     async _loadData({use_schema = true, jsonData} = {}) {
