@@ -54,7 +54,9 @@ class Node {
         // let registry = this.createRegistry(db)
         //
         // for (const spec of rings) {
-        //     db.add(new Ring(spec))
+        //     let ring = new Ring(spec)
+        //     await ring.open()
+        //     db.add(ring)
         //     await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
         // }
     }
@@ -72,8 +74,9 @@ class Node {
 
         for (let spec of rings) {
             db = new Ring(spec)
-            await db.open(() => this.bootRegistry(prev))
-            if (this.registry) this.registry.setDB(db)
+            await db.open()  //() => this.bootRegistry(prev))
+            this.registry.setDB(db)
+            await this.registry.boot()
             prev = prev ? prev.stack(db) : db
         }
         await this.bootRegistry(db)
