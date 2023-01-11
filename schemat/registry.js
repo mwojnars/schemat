@@ -5,7 +5,7 @@ import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
-import { root_data } from './server/bootstrap.js'
+import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -197,16 +197,6 @@ export class Registry {
 
         return root
     }
-
-    // async createRoot(data = null) {
-    //     /*
-    //     Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
-    //     are initialized from there, otherwise they are loaded from DB.
-    //     */
-    //     let root = this.root = new RootCategory(this)
-    //     root.constructor.category = root
-    //     return root.reload({data})
-    // }
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
