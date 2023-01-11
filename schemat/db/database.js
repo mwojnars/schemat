@@ -61,14 +61,12 @@ export class Ring {
     get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
-    // findRing(name)  { return this.name === name ? this : this.prevDB?.findRing(name) }      // find a ring in the stack (up to this level) by its name, or return undefined
-
     async findRing(query) {
         /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
            Return undefined if not found. Can be called to check if the item ID or ring name exists.
          */
         let {item, name} = query
-        if (this.name === name) return this
+        if (name && this.name === name) return this
         if (item) {
             let data = await this.block._select(item)
             if (data !== undefined) return this
