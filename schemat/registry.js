@@ -143,6 +143,7 @@ export class Registry {
     static async createGlobal(db, ...args) {
         let registry = globalThis.registry = new this(db, ...args)
         await registry._initClasspath()
+        await registry.reset()
         return registry
     }
 
@@ -167,7 +168,7 @@ export class Registry {
         /* (Re)create/load `this.root` and `this.site`. The latter can be left undefined if not present in the DB. */
         this.root = await this.init_root()          // always returns a valid object, possibly created from `root_data`
         this.site = await this.init_site(site_id)   // may return an undefined
-        if (!this.site) print('Registry.reset(): site not found!')
+        if (!this.site) print('Registry.reset(): site is undefined')
     }
 
     async init_root() {
@@ -178,21 +179,23 @@ export class Registry {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
         if (!this.db) return
         try {
-            if (!site_id) site_id = await this._findSite()
+            if (!site_id)
+                if (this.onClient) return
+                else site_id = await this._findSite()
             return await this.getLoaded(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
     }
 
-    async boot(site_id = null) {
-        /* Initialize this Registry with existing items, server-side or client-side: load the `root` and `site` items.
-           NOT for DB bootstraping.
-         */
-        await this.createRoot()
-        if (!site_id) site_id = await this._findSite()
-        this.site = await this.getLoaded(site_id)
-    }
+    // async boot(site_id = null) {
+    //     /* Initialize this Registry with existing items, server-side or client-side: load the `root` and `site` items.
+    //        NOT for DB bootstraping.
+    //      */
+    //     await this.createRoot()
+    //     if (!site_id) site_id = await this._findSite()
+    //     this.site = await this.getLoaded(site_id)
+    // }
     async _findSite() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
@@ -223,7 +226,7 @@ export class Registry {
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.isLoaded) {
             await root.reload({data: root_data})
-            print("Registry.createRoot(): root category loaded from root_data!")
+            print("Registry.createRoot(): root category loaded from root_data")
         }
 
         return root
