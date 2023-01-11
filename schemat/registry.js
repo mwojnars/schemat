@@ -5,6 +5,7 @@ import { NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
+import { root_data } from './server/bootstrap.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -131,6 +132,8 @@ export class Registry {
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
+    get isBooted() { return this.root !== undefined }
+
     cache = new ItemsCache()
 
     async initClasspath() {
@@ -169,6 +172,7 @@ export class Registry {
         return ret.value.id
     }
 
+    // async createRoot() {
     async createRoot(data = null) {
         /*
         Create the RootCategory object, ID=(0,0). If `data` is provided, the properties
@@ -176,8 +180,10 @@ export class Registry {
         */
         let root = this.root = new RootCategory(this)
         root.constructor.category = root
-        // root._db = db
-        // assert(db)
+
+        // try loading `root` from DB first ...
+        // ...ony if that fails, load from predefined `root_data`
+
         return root.reload({data})
     }
 

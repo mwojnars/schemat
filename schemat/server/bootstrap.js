@@ -4,14 +4,14 @@ Creating core items from scratch and storing them as initial items in DB.
 
 import {print, assert, dedentCommon as dedent} from '../utils.js'
 import {ROOT_CID, SITE_CID} from '../item.js'
-import {ServerRegistry} from './registry-s.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog, Data} from '../data.js'
-import {fileURLToPath} from 'url'
-import path from "path";
 
-const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
-const __dirname  = path.dirname(__filename)
+// import {fileURLToPath} from 'url'
+// import path from "path"
+
+// const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
+// const __dirname  = path.dirname(__filename)
 
 
 /**********************************************************************************************************************
@@ -93,7 +93,7 @@ let root_fields = C({
                                         // leaving this upgrade-write for a background process; typically ~0.01
 })
 
-let root_data = new Data({
+export let root_data = new Data({
     name        : "Category",
     info        : "Category of items that represent categories",
     class_path  : '/system/local/item.js:Category',

@@ -60,43 +60,40 @@ class Node {
            Return the top ring.
          */
         let prev, db
-
-        // let db = new Database()
-        // await this.createRegistry(db)
-        //
-        // for (let spec of rings) {
-        //     db.append(new Ring(spec))
-        // }
+        await this.createEmptyRegistry()
 
         for (let spec of rings) {
             db = new Ring(spec)
-            await db.open(() => this.createRegistry(prev))
-
-            // let {file, item, ...opts} = spec
-            // if (file) db = new YamlDB(file, opts)               // db is a local file
-            // else {                                              // db is an item that must be loaded from a lower ring
-            //     if (!registry) registry = await this.createRegistry(db)
-            //     db = await registry.getLoaded(item)
-            //     db.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
-            // }
-            // await db.open()
-
+            await db.open(() => this.bootRegistry(prev))
             if (this.registry) this.registry.setDB(db)
+            // this.registry.setDB(db)
             prev = prev ? prev.stack(db) : db
         }
-        if (!this.registry) await this.createRegistry(db)
+        await this.bootRegistry(db)
+        // if (!this.registry) await this.bootRegistry(db)
         return db
     }
 
-    async createRegistry(db, boot = true) {
-        // if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
+    // async createRegistry(db, boot = true) {
+    //     // if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
+    //     let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
+    //     await registry.initClasspath()
+    //     if (db) registry.setDB(db)
+    //     if (boot) await this.registry.boot()
+    //     return registry
+    // }
+
+    async createEmptyRegistry() {
         let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
         await registry.initClasspath()
-        if (db) registry.setDB(db)
-        if (boot) await this.registry.boot()
         return registry
     }
-
+    async bootRegistry(db) {
+        if (!this.registry) await this.createEmptyRegistry()
+        this.registry.setDB(db)
+        if (!this.registry.isBooted) await this.registry.boot()
+        return this.registry
+    }
 
     /*****  Core functionality  *****/
 
@@ -123,7 +120,8 @@ class Node {
         await db.open()
         await db.erase()
 
-        let registry = await this.createRegistry(null, false)
+        // let registry = await this.createRegistry(null, false)
+        let registry = await this.createEmptyRegistry()
         return bootstrap(registry, db)
     }
 

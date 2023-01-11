@@ -33,12 +33,13 @@ export class Ring {
         this.stop_iid = stop_iid
     }
 
-    async open(createRegistry) {
+    async open(bootRegistry) {
         let block
         if (this.file) block = new YamlDB(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
-            let registry = globalThis.registry || await createRegistry()
-            block = await registry.getLoaded(this.item)
+            // let registry = globalThis.registry || await bootRegistry()
+            await bootRegistry()
+            block = await globalThis.registry.getLoaded(this.item)
             block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
         }
         await block.open(this)
@@ -197,6 +198,39 @@ export class Ring {
 }
 
 
+
+// export class Database {
+//     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
+//        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
+//        If NotFound/ReadOnly is caught, the next ring is tried.
+//      */
+//
+//     constructor(...specs) {
+//         this.specs = specs
+//     }
+//     async open(createRegistry) {
+//         /* Incrementally create, open, and connect into a stack, a number of databases according to the `rings` specifications.
+//            The rings[0] is the bottom of the stack, and rings[-1] is the top.
+//            The rings get connected into a double-linked list through their .prevDB & .nextDB attributes.
+//            The registry is created and initialized at the end, or just before the first item-database
+//            (a database that's stored as an item in a previous database layer) is to be loaded.
+//            Return the top ring.
+//          */
+//         let prev, db
+//
+//         this.registry.setDB(this)
+//
+//         for (let spec of this.rings) {
+//             db = new Ring(spec)
+//             await db.open(() => createRegistry(prev))
+//
+//             prev = prev ? prev.stack(db) : db
+//         }
+//         if (!this.registry) await createRegistry(db)
+//         return this
+//     }
+//
+// }
 
 export class Database extends Item {
     /* A number of Rings stacked on top of each other. Each select/update/delete is executed on the outermost
