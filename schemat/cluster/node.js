@@ -74,12 +74,10 @@ class Node {
 
         for (let spec of rings) {
             db = new Ring(spec)
-            await db.open()  //() => this.bootRegistry(prev))
-            this.registry.setDB(db)
-            await this.registry.boot()
+            await db.open()
             prev = prev ? prev.stack(db) : db
+            await this.bootRegistry(db)
         }
-        await this.bootRegistry(db)
         return db
     }
 

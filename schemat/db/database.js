@@ -35,8 +35,6 @@ export class Ring {
         let block
         if (this.file) block = new YamlDB(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
-            // let registry = globalThis.registry || await bootRegistry()
-            // await bootRegistry()
             block = await globalThis.registry.getLoaded(this.item)
             block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
         }
