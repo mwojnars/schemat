@@ -21,7 +21,6 @@ export class ServerRegistry extends Registry {
     constructor(db, path) {
         super(db)
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
-        // if (db) this.setDB(db)
     }
 
     directImportPath(path) {

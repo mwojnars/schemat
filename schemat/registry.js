@@ -163,11 +163,32 @@ export class Registry {
 
     setDB(db)   { this.db = db }
 
+    async reset(site_id = null) {
+        /* (Re)create/load `this.root` and `this.site`. The latter can be left undefined if not present in the DB. */
+        this.root = await this.init_root()          // always returns a valid object, possibly created from `root_data`
+        this.site = await this.init_site(site_id)   // may return an undefined
+        if (!this.site) print('Registry.reset(): site not found!')
+    }
+
+    async init_root() {
+        return this.createRoot()
+    }
+
+    async init_site(site_id = null) {
+        /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
+        if (!this.db) return
+        try {
+            if (!site_id) site_id = await this._findSite()
+            return await this.getLoaded(site_id)
+        } catch (ex) {
+            if (!(ex instanceof ItemNotFound)) throw ex
+        }
+    }
+
     async boot(site_id = null) {
         /* Initialize this Registry with existing items, server-side or client-side: load the `root` and `site` items.
            NOT for DB bootstraping.
          */
-        // await this.initClasspath()
         await this.createRoot()
         if (!site_id) site_id = await this._findSite()
         this.site = await this.getLoaded(site_id)
@@ -178,7 +199,7 @@ export class Registry {
         let Site = await this.getCategory(SITE_CID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
-        if (!ret || ret.done) throw new Error(`no Site item found in the DB`)
+        if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
         return ret.value.id
     }
 
@@ -194,7 +215,7 @@ export class Registry {
             try {
                 await root.reload()
                 assert(root.isLoaded)
-                print("root category loaded from DB")
+                // print("root category loaded from DB")
             } catch (ex) {
                 if (!(ex instanceof ItemNotFound)) throw ex
             }
@@ -202,7 +223,7 @@ export class Registry {
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.isLoaded) {
             await root.reload({data: root_data})
-            print("root category loaded from root_data")
+            print("Registry.createRoot(): root category loaded from root_data!")
         }
 
         return root

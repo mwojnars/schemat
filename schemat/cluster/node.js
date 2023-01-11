@@ -51,14 +51,13 @@ class Node {
         this.db = await this.stack(...rings)
 
         // this.db = new Database()
-        // this.registry = globalThis.registry = new ServerRegistry(__dirname)
-        // this.registry.setDB(this.db)
+        // let registry = this.createRegistry()
         //
         // for (const spec of rings) {
         //     this.db.add(new Ring(spec))
         //
         //     // reload `root` and `site`, if possible, to have the most relevant object after each next ring is added
-        //     await this.registry.boot()
+        //     await registry.boot()
         // }
     }
 
@@ -71,7 +70,7 @@ class Node {
            Return the top ring.
          */
         let prev, db
-        await this.createEmptyRegistry()
+        await this.createRegistry()
 
         for (let spec of rings) {
             db = new Ring(spec)
@@ -83,18 +82,14 @@ class Node {
         return db
     }
 
-    async createEmptyRegistry() {
-        this.registry = await ServerRegistry.createGlobal(null, __dirname)
-        return this.registry
-        // let registry = this.registry = globalThis.registry = new ServerRegistry(null, __dirname)
-        // await registry.initClasspath()
-        // return registry
+    async createRegistry(db = null) {
+        return this.registry = await ServerRegistry.createGlobal(db, __dirname)
     }
     async bootRegistry(db) {
-        // if (!this.registry) await this.createEmptyRegistry()
         assert(this.registry)
         this.registry.setDB(db)
-        if (!this.registry.isBooted) await this.registry.boot()
+        await this.registry.reset()
+        // if (!this.registry.isBooted) await this.registry.boot()
         return this.registry
     }
 
@@ -123,7 +118,7 @@ class Node {
         await db.open()
         await db.erase()
 
-        let registry = await this.createEmptyRegistry()
+        let registry = await this.createRegistry()
         return bootstrap(registry, db)
     }
 
