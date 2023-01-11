@@ -61,35 +61,35 @@ class Node {
         }
     }
 
-    async stack(...rings) {
-        /* Incrementally create, open, and connect into a stack, a number of databases according to the `rings` specifications.
-           The rings[0] is the bottom of the stack, and rings[-1] is the top.
-           The rings get connected into a double-linked list through their .prevDB & .nextDB attributes.
-           The registry is created and initialized at the end, or just before the first item-database
-           (a database that's stored as an item in a previous database layer) is to be loaded.
-           Return the top ring.
-         */
-        let prev, db
-        await this.createRegistry()
-
-        for (let spec of rings) {
-            db = new Ring(spec)
-            await db.open()
-            prev = prev ? prev.stack(db) : db
-            await this.bootRegistry(db)
-        }
-        return db
-    }
+    // async stack(...rings) {
+    //     /* Incrementally create, open, and connect into a stack, a number of databases according to the `rings` specifications.
+    //        The rings[0] is the bottom of the stack, and rings[-1] is the top.
+    //        The rings get connected into a double-linked list through their .prevDB & .nextDB attributes.
+    //        The registry is created and initialized at the end, or just before the first item-database
+    //        (a database that's stored as an item in a previous database layer) is to be loaded.
+    //        Return the top ring.
+    //      */
+    //     let prev, db
+    //     await this.createRegistry()
+    //
+    //     for (let spec of rings) {
+    //         db = new Ring(spec)
+    //         await db.open()
+    //         prev = prev ? prev.stack(db) : db
+    //         await this.bootRegistry(db)
+    //     }
+    //     return db
+    // }
 
     async createRegistry(db = null) {
         return this.registry = await ServerRegistry.createGlobal(db, __dirname)
     }
-    async bootRegistry(db) {
-        assert(this.registry)
-        this.registry.setDB(db)
-        await this.registry.boot()
-        return this.registry
-    }
+    // async bootRegistry(db) {
+    //     assert(this.registry)
+    //     this.registry.setDB(db)
+    //     await this.registry.boot()
+    //     return this.registry
+    // }
 
     /*****  Core functionality  *****/
 

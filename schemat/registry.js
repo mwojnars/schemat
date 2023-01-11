@@ -190,7 +190,6 @@ export class Registry {
                 // print("root category loaded from DB")
             } catch (ex) {
                 if (!(ex instanceof ItemNotFound)) throw ex
-                root.isLoading = undefined          // manual cleanup is needed after a failed reload()
             }
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
