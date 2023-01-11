@@ -88,7 +88,7 @@ class Node {
     async bootRegistry(db) {
         assert(this.registry)
         this.registry.setDB(db)
-        await this.registry.reset()
+        await this.registry.boot()
         return this.registry
     }
 

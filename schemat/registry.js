@@ -146,7 +146,7 @@ export class Registry {
     static async createGlobal(db, ...args) {
         let registry = globalThis.registry = new this(db, ...args)
         await registry._initClasspath()
-        await registry.reset()
+        await registry.boot()
         return registry
     }
 
@@ -167,7 +167,7 @@ export class Registry {
 
     setDB(db)   { this.db = db }
 
-    async reset(site_id = null) {
+    async boot(site_id = null) {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return an undefined

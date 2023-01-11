@@ -85,8 +85,7 @@ class ClientRegistry extends Registry {
     onServer = false
 
     async bootData(data) {
-        // await super.boot(data.site_id)
-        await super.reset(data.site_id)
+        await super.boot(data.site_id)
         assert(this.site)
 
         this.session = Session.load(this, data.session)
