@@ -10,7 +10,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {assert, print} from '../utils.js'
-import {Ring} from "../db/database.js";
+import {Ring, Database} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
@@ -49,6 +49,17 @@ class Node {
             {item: [51,100], name: 'mysql', readonly: true},
         ]
         this.db = await this.stack(...rings)
+
+        // this.db = new Database()
+        // this.registry = globalThis.registry = new ServerRegistry(__dirname)
+        // this.registry.setDB(this.db)
+        //
+        // for (const spec of rings) {
+        //     this.db.add(new Ring(spec))
+        //
+        //     // reload `root` and `site`, if possible, to have the most relevant object after each next ring is added
+        //     await this.registry.boot()
+        // }
     }
 
     async stack(...rings) {
@@ -66,22 +77,11 @@ class Node {
             db = new Ring(spec)
             await db.open(() => this.bootRegistry(prev))
             if (this.registry) this.registry.setDB(db)
-            // this.registry.setDB(db)
             prev = prev ? prev.stack(db) : db
         }
         await this.bootRegistry(db)
-        // if (!this.registry) await this.bootRegistry(db)
         return db
     }
-
-    // async createRegistry(db, boot = true) {
-    //     // if (!db) throw new Error(`at least one DB ring is needed for Registry initialization`)
-    //     let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
-    //     await registry.initClasspath()
-    //     if (db) registry.setDB(db)
-    //     if (boot) await this.registry.boot()
-    //     return registry
-    // }
 
     async createEmptyRegistry() {
         let registry = this.registry = globalThis.registry = new ServerRegistry(__dirname)
@@ -89,7 +89,8 @@ class Node {
         return registry
     }
     async bootRegistry(db) {
-        if (!this.registry) await this.createEmptyRegistry()
+        // if (!this.registry) await this.createEmptyRegistry()
+        assert(this.registry)
         this.registry.setDB(db)
         if (!this.registry.isBooted) await this.registry.boot()
         return this.registry
