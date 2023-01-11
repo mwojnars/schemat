@@ -50,14 +50,12 @@ class Node {
         ]
         this.db = await this.stack(...rings)
 
-        // this.db = new Database()
-        // let registry = this.createRegistry()
+        // let db = this.db = new Database()
+        // let registry = this.createRegistry(db)
         //
         // for (const spec of rings) {
-        //     this.db.add(new Ring(spec))
-        //
-        //     // reload `root` and `site`, if possible, to have the most relevant object after each next ring is added
-        //     await registry.boot()
+        //     db.add(new Ring(spec))
+        //     await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
         // }
     }
 

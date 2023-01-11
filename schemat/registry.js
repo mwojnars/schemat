@@ -137,7 +137,7 @@ export class Registry {
     cache = new ItemsCache()
 
 
-    /***  initialization  ***/
+    /***  Initialization  ***/
 
     constructor(db) {
         if(db) this.db = db
@@ -224,7 +224,7 @@ export class Registry {
     }
 
 
-    /***  item manipulation  ***/
+    /***  Items manipulation  ***/
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
@@ -286,6 +286,9 @@ export class Registry {
         }
     }
 
+
+    /***  Object <=> classpath mapping (for de/serialization)  ***/
+
     getPath(cls) {
         /* Return a dotted module path of a given class or function as stored in a global Classpath.
            `cls` should be either a constructor function, or a prototype with .constructor property.
@@ -303,7 +306,7 @@ export class Registry {
     }
 
 
-    /***  import  ***/
+    /***  Dynamic JS import over the SUN  ***/
 
     import(path, name) {
         /* High-level import of a module and (optionally) its element, `name`, from a SUN path.
