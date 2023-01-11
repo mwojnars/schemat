@@ -136,6 +136,9 @@ export class Registry {
 
     cache = new ItemsCache()
 
+
+    /***  initialization  ***/
+
     constructor(db) {
         if(db) this.db = db
     }
@@ -165,48 +168,13 @@ export class Registry {
     setDB(db)   { this.db = db }
 
     async reset(site_id = null) {
-        /* (Re)create/load `this.root` and `this.site`. The latter can be left undefined if not present in the DB. */
-        this.root = await this.init_root()          // always returns a valid object, possibly created from `root_data`
-        this.site = await this.init_site(site_id)   // may return an undefined
+        /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
+        this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
+        this.site = await this._init_site(site_id)      // may return an undefined
         if (!this.site) print('Registry.reset(): site is undefined')
     }
 
-    async init_root() {
-        return this.createRoot()
-    }
-
-    async init_site(site_id = null) {
-        /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
-        if (!this.db) return
-        try {
-            if (!site_id)
-                if (this.onClient) return
-                else site_id = await this._findSite()
-            return await this.getLoaded(site_id)
-        } catch (ex) {
-            if (!(ex instanceof ItemNotFound)) throw ex
-        }
-    }
-
-    // async boot(site_id = null) {
-    //     /* Initialize this Registry with existing items, server-side or client-side: load the `root` and `site` items.
-    //        NOT for DB bootstraping.
-    //      */
-    //     await this.createRoot()
-    //     if (!site_id) site_id = await this._findSite()
-    //     this.site = await this.getLoaded(site_id)
-    // }
-    async _findSite() {
-        /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
-        assert(this.onServer)
-        let Site = await this.getCategory(SITE_CID)
-        let scan = this.scan(Site, {limit: 1})
-        let ret  = await scan.next()
-        if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
-        return ret.value.id
-    }
-
-    async createRoot() {
+    async _init_root() {
         /* Create the RootCategory object, ID=(0,0), and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
@@ -231,6 +199,32 @@ export class Registry {
 
         return root
     }
+
+    async _init_site(site_id = null) {
+        /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
+        if (!this.db) return
+        try {
+            if (!site_id)
+                if (this.onClient) return
+                else site_id = await this._find_site()
+            return await this.getLoaded(site_id)
+        } catch (ex) {
+            if (!(ex instanceof ItemNotFound)) throw ex
+        }
+    }
+
+    async _find_site() {
+        /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
+        assert(this.onServer)
+        let Site = await this.getCategory(SITE_CID)
+        let scan = this.scan(Site, {limit: 1})
+        let ret  = await scan.next()
+        if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
+        return ret.value.id
+    }
+
+
+    /***  item manipulation  ***/
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,

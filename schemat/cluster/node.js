@@ -89,7 +89,6 @@ class Node {
         assert(this.registry)
         this.registry.setDB(db)
         await this.registry.reset()
-        // if (!this.registry.isBooted) await this.registry.boot()
         return this.registry
     }
 
