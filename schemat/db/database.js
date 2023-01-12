@@ -97,9 +97,6 @@ export class Ring {
          */
         // todo: find the right block (in Sequence)
         return this.block.select([db, this], id)
-        // let data = await this.block._select(id)
-        // if (data !== undefined) return data
-        // return db.forward_select([this], id)
     }
 
     async insert(item) {
@@ -159,7 +156,7 @@ export class Ring {
     /***  Lower-level implementations of CRUD  ***/
 
     async readHere(id) {
-        /* Read item's data from this ring. No forward. */
+        /* Read item's data from this ring. No forward. Undefined if item not found. */
         return this.block._select(id)
     }
 
