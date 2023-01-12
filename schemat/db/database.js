@@ -111,13 +111,11 @@ export class Ring {
         return rec
     }
 
-    async update(id, ...edits) {
+    async update([db], id, ...edits) {
         /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
            writing this particular `id`. The `id` is searched for in the current ring and below.
-           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        assert(edits.length, 'missing edits')
-        return this.block.update(this, id, ...edits)
+        return this.block.update([db, this], id, ...edits)
     }
 
     async insert(item) {
@@ -185,9 +183,9 @@ export class Ring {
         return this.writable(id) ? this.block.save(id, data) : this.forward_save(id, data)
     }
 
-    forward_update(id, ...edits) {
+    forward_update([db], id, ...edits) {
         /* Forward an update(id, edits) operation to a lower ring - called during search phase if the current ring doesn't contain the id. */
-        if (this.prevDB) return this.prevDB.update(id, ...edits)
+        if (this.prevDB) return this.prevDB.update([db], id, ...edits)
         this.throwNotFound({id})
     }
 
@@ -225,9 +223,18 @@ export class Database {
     }
 
     async select(id)                { if (this.top) return this.top.select(id); else throw new ItemNotFound() }
-    async update(id, ...edits)      { assert(this.top); return this.top.update(id, ...edits) }
     async insert(item)              { assert(this.top); return this.top.insert(item) }
     async delete(item_or_id)        { assert(this.top); return this.top.delete(item_or_id) }
     async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
+
+    async update(id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in the ring that contains the item,
+           or in the nearest higher ring from there that allows writing the particular `id`.
+           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
+         */
+        assert(edits.length, 'missing edits')
+        assert(this.top, 'no rings in the database')
+        return this.top.update([this], id, ...edits)
+    }
 }
 

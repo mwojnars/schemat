@@ -156,13 +156,13 @@ export class Block extends Item {
         return iid
     }
 
-    async update(ring, id, ...edits) {
+    async update([db, ring], id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let data = await this._select(id)
-        if (data === undefined) return ring.forward_update(id, ...edits)
+        if (data === undefined) return ring.forward_update([db], id, ...edits)
 
         for (const edit of edits)
             data = this.edit(data, edit)
