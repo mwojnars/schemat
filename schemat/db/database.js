@@ -64,19 +64,6 @@ export class Ring {
     get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
-    // async findRing(query) {
-    //     /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
-    //        Return undefined if not found. Can be called to check if an item ID or a ring name exists.
-    //      */
-    //     let {item, name} = query
-    //     if (name && this.name === name) return this
-    //     if (item) {
-    //         let data = await this.block._select(item)
-    //         if (data !== undefined) return this
-    //     }
-    //     return this.prevDB?.findRing(query)
-    // }
-
 
     /***  Errors & internal checks  ***/
 
@@ -105,7 +92,7 @@ export class Ring {
     /***  Data access & modification (CRUD operations)  ***/
 
     async select(id) {
-        /* Find the top-most occurrence of `id` in this ring or any lower one in the stack (through .prevDB).
+        /* Find the top-most occurrence of `id` in this database: in this ring or any lower one in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `id`; otherwise throw ItemNotFound.
          */
         let data = await this.read(id)
@@ -176,16 +163,11 @@ export class Ring {
     async read(id) {
         /* Find the top-most occurrence of `id` in this DB or any lower DB in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `id`; otherwise return undefined.
+           todo: move this method to Sequence
          */
         // if (!this.validIID(id)) return       // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
+        // todo: find the right block
         return this.block._select(id)
-
-        // if (this.validIID(id)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
-        //     let data = this.block._select(id)
-        //     if (data instanceof Promise) data = await data      // must await here to check for "not found" result
-        //     if (data !== undefined) return data
-        // }
-        // if (this.prevDB) return this.prevDB.read(id)
     }
 
     async save([db], block, id, data) {
