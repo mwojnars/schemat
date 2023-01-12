@@ -144,7 +144,7 @@ export class Registry {
     static async createGlobal(db, ...args) {
         let registry = globalThis.registry = new this(db, ...args)
         await registry._init_classpath()
-        await registry.boot()
+        await registry.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
         return registry
     }
 
@@ -152,8 +152,8 @@ export class Registry {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return an undefined
-        if (!this.site) print('Registry.boot(): site is undefined')
-        else print('Registry.boot(): site defined')
+        // if (!this.site) print('Registry.boot(): site is undefined')
+        // else print('Registry.boot(): site defined')
     }
 
     async _init_classpath() {
