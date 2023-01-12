@@ -102,13 +102,6 @@ export class Block extends Item {
         this.dirty = false
     }
 
-    async erase() {
-        /* Remove all records from this block; open() should be called first. */
-        this.curr_iid.clear()
-        await this._erase()
-        return this.flush()
-    }
-
     async flush(timeout_sec = 0) {
         /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
@@ -120,14 +113,21 @@ export class Block extends Item {
         setTimeout(() => this.flush(), timeout_sec * 1000)
     }
 
-
-    /***  CRUD operations  ***/
+    async erase() {
+        /* Remove all records from this block; open() should be called first. */
+        this.curr_iid.clear()
+        await this._erase()
+        return this.flush()
+    }
 
     async save(id, data) {
         await this._save(id, data)
         this.dirty = true
         this.flush(1)               // todo: make the timeout configurable and 0 by default
     }
+
+
+    /***  CRUD operations  ***/
 
     async delete(id) {
         let done = this._delete(id)
@@ -148,7 +148,7 @@ export class Block extends Item {
             id  = [cid, iid]
         }
 
-        ring.checkValidID(id, `candidate ID for a new item is outside the valid bounds for this ring`)
+        ring.checkValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
         this.curr_iid.set(cid, max_iid)
@@ -167,7 +167,8 @@ export class Block extends Item {
         for (const edit of edits)
             data = this.edit(data, edit)
 
-        return ring.writable(id) ? this.save(id, data) : ring.forward_save(id, data)
+        return ring.save([db], this, id, data)
+        // return ring.writable(id) ? this.save(id, data) : db.forward_save([ring], id, data)
     }
 
     edit(dataSrc, edit) {

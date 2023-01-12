@@ -178,24 +178,21 @@ export class Ring {
         if (this.prevDB) return this.prevDB.read(id)
     }
 
-    async save(id, data) {
-        /* Save `data` under `id`, regardless if `id` is already present or not. Forward to a higher ring if needed. */
-        return this.writable(id) ? this.block.save(id, data) : this.forward_save(id, data)
+    async save([db], block, id, data) {
+        /* Save updated item's `data` under the `id`. Forward to a higher ring if needed.
+           `block` is a hint of which block of this ring actually contains the `id` - can be null.
+         */
+        block = block || this.block
+        return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
 
-    // forward_update([db], id, ...edits) {
-    //     /* Forward an update(id, edits) operation to a lower ring - called during search phase if the current ring doesn't contain the id. */
-    //     if (this.prevDB) return this.prevDB.update([db], id, ...edits)
-    //     this.throwNotFound({id})
+    // forward_save(id, data) {
+    //     /* Forward a save(id, data) operation to a higher ring - called when the current ring is not allowed to save. */
+    //     if (this.nextDB) return this.nextDB.save(id, data)
+    //     if (!this.writable()) this.throwReadOnly({id})
+    //     assert(!this.validIID(id))
+    //     this.throwInvalidIID(id)
     // }
-
-    forward_save(id, data) {
-        /* Forward a save(id, data) operation to a higher ring - called when the current ring is not allowed to save. */
-        if (this.nextDB) return this.nextDB.save(id, data)
-        if (!this.writable()) this.throwReadOnly({id})
-        assert(!this.validIID(id))
-        this.throwInvalidIID(id)
-    }
 }
 
 
@@ -227,19 +224,19 @@ export class Database {
 
     _prev(ring) {
         /* Find a ring that directly preceeds `ring` in this.rings. Return undefined if `ring` has no predecessor,
-           or throw UnknownRing if `ring` cannot be found.
+           or throw RingUnknown if `ring` cannot be found.
          */
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new Database.UnknownRing()
+        if (pos < 0) throw new Database.RingUnknown()
         if (pos > 0) return this.rings[pos-1]
     }
 
     _next(ring) {
         /* Find a ring that directly succeeds `ring` in this.rings. Return undefined if `ring` has no successor,
-           or throw UnknownRing if `ring` cannot be found.
+           or throw RingUnknown if `ring` cannot be found.
          */
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new Database.UnknownRing()
+        if (pos < 0) throw new Database.RingUnknown()
         if (pos < this.rings.length-1) return this.rings[pos+1]
     }
 
@@ -247,7 +244,9 @@ export class Database {
     /***  Errors & internal checks  ***/
 
     static Error = class extends BaseError {}
-    static UnknownRing = class extends Database.Error { static message = "reference ring not found in this database" }
+    static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
+    static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
+    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid set for the ring(s)" }
 
 
     /***  Data access & modification (CRUD operations)  ***/
@@ -273,6 +272,15 @@ export class Database {
         let prev = this._prev(ring)
         if (prev) return prev.update([this], id, ...edits)
         throw new ItemNotFound({id})
+    }
+
+    forward_save([ring], id, data) {
+        /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save. */
+        let next = this._next(ring)
+        if (next) return next.save([this], null, id, data)
+        if (ring.readonly) throw new Database.RingReadOnly({id})
+        assert(!ring.validIID(id))
+        throw new Database.InvalidID({id})
     }
 }
 
