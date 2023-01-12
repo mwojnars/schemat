@@ -91,18 +91,15 @@ export class Ring {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id) {
-        /* Find the top-most occurrence of `id` in this database: in this ring or any lower one in the stack (through .prevDB).
-           If found, return a JSON-encoded data stored under the `id`; otherwise throw ItemNotFound.
+    async select([db], id) {
+        /* Find the top-most occurrence of an item in the database, `db`, starting at this ring.
+           If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
-        let data = await this.read(id)
-        if (data !== undefined) return data
-        return this.forward_select(id)
-    }
-
-    forward_select(id) {
-        if (this.prevDB) return this.prevDB.select(id)
-        this.throwNotFound({id})
+        // todo: find the right block (in Sequence)
+        return this.block.select([db, this], id)
+        // let data = await this.block._select(id)
+        // if (data !== undefined) return data
+        // return db.forward_select([this], id)
     }
 
     async insert(item) {
@@ -126,6 +123,7 @@ export class Ring {
     async update([db], id, ...edits) {
         /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
            writing this particular `id`. The `id` is searched for in the current ring and below.
+           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
         return this.block.update([db, this], id, ...edits)
     }
@@ -160,13 +158,8 @@ export class Ring {
 
     /***  Lower-level implementations of CRUD  ***/
 
-    async read(id) {
-        /* Find the top-most occurrence of `id` in this DB or any lower DB in the stack (through .prevDB).
-           If found, return a JSON-encoded data stored under the `id`; otherwise return undefined.
-           todo: move this method to Sequence
-         */
-        // if (!this.validIID(id)) return       // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
-        // todo: find the right block
+    async readHere(id) {
+        /* Read item's data from this ring. No forward. */
         return this.block._select(id)
     }
 
@@ -213,25 +206,27 @@ export class Database {
         for (const ring of this.rings.slice().reverse()) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.read(item)
+                let data = await ring.readHere(item)
                 if (data !== undefined) return ring
             }
         }
     }
 
     _prev(ring) {
-        /* Find a ring that directly preceeds `ring` in this.rings. Return undefined if `ring` has no predecessor,
-           or throw RingUnknown if `ring` cannot be found.
+        /* Find a ring that directly preceeds `ring` in this.rings. Return the top ring if `ring` if undefined,
+           or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
          */
+        if (ring === undefined) return this.top
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new Database.RingUnknown()
         if (pos > 0) return this.rings[pos-1]
     }
 
     _next(ring) {
-        /* Find a ring that directly succeeds `ring` in this.rings. Return undefined if `ring` has no successor,
-           or throw RingUnknown if `ring` cannot be found.
+        /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
+           or undefined if `ring` has no successor, or throw RingUnknown if `ring` cannot be found.
          */
+        if (ring === undefined) return this.bottom
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new Database.RingUnknown()
         if (pos < this.rings.length-1) return this.rings[pos+1]
@@ -248,24 +243,22 @@ export class Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)                { if (this.top) return this.top.select(id); else throw new ItemNotFound() }
+    async select(id)                { return this.forward_select([], id) }
     async insert(item)              { assert(this.top); return this.top.insert(item) }
+    async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
     async delete(item_or_id)        { assert(this.top); return this.top.delete(item_or_id) }
     async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
 
-    async update(id, ...edits) {
-        /* Apply `edits` to an item's data and store under the `id` in the ring that contains the item,
-           or in the nearest higher ring from there that allows writing the particular `id`.
-           FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
-         */
-        assert(edits.length, 'missing edits')
-        assert(this.top, 'no rings in the database')
-        return this.top.update([this], id, ...edits)
+    forward_select([ring], id) {
+        let prev = this._prev(ring)
+        if (prev) return prev.select([this], id)
+        throw new ItemNotFound({id})
     }
 
     forward_update([ring], id, ...edits) {
         /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
            if the current `ring` doesn't contain the requested `id`. */
+        assert(edits.length, 'missing edits')
         let prev = this._prev(ring)
         if (prev) return prev.update([this], id, ...edits)
         throw new ItemNotFound({id})

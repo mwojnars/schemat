@@ -136,6 +136,11 @@ export class Block extends Item {
 
     /***  CRUD operations  ***/
 
+    async select([db, ring], id) {
+        let data = await this._select(id)
+        return data === undefined ? db.forward_select([ring], id) : data
+    }
+
     async insert(id, data, ring) {
         /* Save a new item and update this.curr_iid accordingly. Assign an IID if missing. Return the IID. */
 
