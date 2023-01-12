@@ -111,13 +111,6 @@ export class Ring {
         return rec
     }
 
-    async update([db], id, ...edits) {
-        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
-           writing this particular `id`. The `id` is searched for in the current ring and below.
-         */
-        return this.block.update([db, this], id, ...edits)
-    }
-
     async insert(item) {
         /* High-level insert. The `item` can have an IID already assigned (then it's checked that
            this IID is not yet present in the DB), or not.
@@ -136,11 +129,18 @@ export class Ring {
         else this.throwNotWritable(id)
     }
 
+    async update([db], id, ...edits) {
+        /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
+           writing this particular `id`. The `id` is searched for in the current ring and below.
+         */
+        return this.block.update([db, this], id, ...edits)
+    }
+
     async delete(item_or_id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
            TODO: delete all delete-able copies of `id` across different rings, or insert a tombstone if one or more
-                 of the copies remain - to ensure that subsequent select(id) will fail, as normally expected.
+                 of the copies remain - to ensure that subsequent select(id) will fail, as would normally be expected.
          */
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
 
@@ -180,19 +180,11 @@ export class Ring {
 
     async save([db], block, id, data) {
         /* Save updated item's `data` under the `id`. Forward to a higher ring if needed.
-           `block` is a hint of which block of this ring actually contains the `id` - can be null.
+           `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
         return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
-
-    // forward_save(id, data) {
-    //     /* Forward a save(id, data) operation to a higher ring - called when the current ring is not allowed to save. */
-    //     if (this.nextDB) return this.nextDB.save(id, data)
-    //     if (!this.writable()) this.throwReadOnly({id})
-    //     assert(!this.validIID(id))
-    //     this.throwInvalidIID(id)
-    // }
 }
 
 
@@ -208,7 +200,7 @@ export class Database {
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */
 
-    rings = []          // rings[0] is the innermost ring (bottom of the stack), rings[-1] is the outermost (top)
+    rings = []          // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
     /***  Rings manipulation  ***/
@@ -275,7 +267,7 @@ export class Database {
     }
 
     forward_save([ring], id, data) {
-        /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save. */
+        /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
         let next = this._next(ring)
         if (next) return next.save([this], null, id, data)
         if (ring.readonly) throw new Database.RingReadOnly({id})

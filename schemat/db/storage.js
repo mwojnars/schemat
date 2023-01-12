@@ -121,20 +121,20 @@ export class Block extends Item {
     }
 
     async save(id, data) {
+        /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
         await this._save(id, data)
         this.dirty = true
         this.flush(1)               // todo: make the timeout configurable and 0 by default
     }
 
+    edit(dataSrc, edit) {
+        let {type, data} = edit
+        assert(type === 'data' && data)
+        return data
+    }
+
 
     /***  CRUD operations  ***/
-
-    async delete(id) {
-        let done = this._delete(id)
-        if (done instanceof Promise) done = await done
-        if (done) this.dirty = true
-        return done
-    }
 
     async insert(id, data, ring) {
         /* Save a new item and update this.curr_iid accordingly. Assign an IID if missing. Return the IID. */
@@ -168,13 +168,13 @@ export class Block extends Item {
             data = this.edit(data, edit)
 
         return ring.save([db], this, id, data)
-        // return ring.writable(id) ? this.save(id, data) : db.forward_save([ring], id, data)
     }
 
-    edit(dataSrc, edit) {
-        let {type, data} = edit
-        assert(type === 'data' && data)
-        return data
+    async delete(id) {
+        let done = this._delete(id)
+        if (done instanceof Promise) done = await done
+        if (done) this.dirty = true
+        return done
     }
 
 
