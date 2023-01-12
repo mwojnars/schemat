@@ -119,7 +119,7 @@ class Node {
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher-level DB if `id` can't be stored in `db`
-        let data = await db.read(id)
+        let data = await db.select(id)
         await dbInsert.save(newid, data)
 
         if (!sameID) {

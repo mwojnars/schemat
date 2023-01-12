@@ -64,18 +64,18 @@ export class Ring {
     get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
     get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
-    async findRing(query) {
-        /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
-           Return undefined if not found. Can be called to check if an item ID or a ring name exists.
-         */
-        let {item, name} = query
-        if (name && this.name === name) return this
-        if (item) {
-            let data = await this.block._select(item)
-            if (data !== undefined) return this
-        }
-        return this.prevDB?.findRing(query)
-    }
+    // async findRing(query) {
+    //     /* Return the top-most ring that contains a given item's ID (query.item), or has a given ring name (query.name).
+    //        Return undefined if not found. Can be called to check if an item ID or a ring name exists.
+    //      */
+    //     let {item, name} = query
+    //     if (name && this.name === name) return this
+    //     if (item) {
+    //         let data = await this.block._select(item)
+    //         if (data !== undefined) return this
+    //     }
+    //     return this.prevDB?.findRing(query)
+    // }
 
 
     /***  Errors & internal checks  ***/
@@ -105,10 +105,17 @@ export class Ring {
     /***  Data access & modification (CRUD operations)  ***/
 
     async select(id) {
-        let rec = this.read(id)
-        if (rec instanceof Promise) rec = await rec
-        if (rec === undefined) this.throwNotFound({id})
-        return rec
+        /* Find the top-most occurrence of `id` in this ring or any lower one in the stack (through .prevDB).
+           If found, return a JSON-encoded data stored under the `id`; otherwise throw ItemNotFound.
+         */
+        let data = await this.read(id)
+        if (data !== undefined) return data
+        return this.forward_select(id)
+    }
+
+    forward_select(id) {
+        if (this.prevDB) return this.prevDB.select(id)
+        this.throwNotFound({id})
     }
 
     async insert(item) {
@@ -170,12 +177,15 @@ export class Ring {
         /* Find the top-most occurrence of `id` in this DB or any lower DB in the stack (through .prevDB).
            If found, return a JSON-encoded data stored under the `id`; otherwise return undefined.
          */
-        if (this.validIID(id)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
-            let data = this.block._select(id)
-            if (data instanceof Promise) data = await data      // must await here to check for "not found" result
-            if (data !== undefined) return data
-        }
-        if (this.prevDB) return this.prevDB.read(id)
+        // if (!this.validIID(id)) return       // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
+        return this.block._select(id)
+
+        // if (this.validIID(id)) {                               // record that doesn't satisfy IID constraints, even if exists in DB, is ignored
+        //     let data = this.block._select(id)
+        //     if (data instanceof Promise) data = await data      // must await here to check for "not found" result
+        //     if (data !== undefined) return data
+        // }
+        // if (this.prevDB) return this.prevDB.read(id)
     }
 
     async save([db], block, id, data) {
@@ -212,6 +222,19 @@ export class Database {
         /* The ring must be already open. */
         if (this.top) this.top.stack(ring)
         this.rings.push(ring)
+    }
+
+    async findRing({item, name}) {
+        /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
+           Return undefined if not found. Can be called to check if an item ID or a ring name exists.
+         */
+        for (const ring of this.rings.slice().reverse()) {
+            if (name && ring.name === name) return ring
+            if (item) {
+                let data = await ring.read(item)
+                if (data !== undefined) return ring
+            }
+        }
     }
 
     _prev(ring) {
