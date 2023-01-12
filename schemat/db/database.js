@@ -53,7 +53,7 @@ export class Ring {
         return this.block.erase()
     }
 
-    /***  Ring manipulation  ***/
+    /***  Rings manipulation  ***/
     
     stack(next) {
         this.nextDB = next
@@ -78,7 +78,7 @@ export class Ring {
     }
 
 
-    /***  errors & internal checks  ***/
+    /***  Errors & internal checks  ***/
 
     static Error = class extends BaseError        {}
     // static ItemNotFound = class extends Ring.Error    { static message = "item ID not found in the database" }
@@ -183,11 +183,11 @@ export class Ring {
         return this.writable(id) ? this.block.save(id, data) : this.forward_save(id, data)
     }
 
-    forward_update([db], id, ...edits) {
-        /* Forward an update(id, edits) operation to a lower ring - called during search phase if the current ring doesn't contain the id. */
-        if (this.prevDB) return this.prevDB.update([db], id, ...edits)
-        this.throwNotFound({id})
-    }
+    // forward_update([db], id, ...edits) {
+    //     /* Forward an update(id, edits) operation to a lower ring - called during search phase if the current ring doesn't contain the id. */
+    //     if (this.prevDB) return this.prevDB.update([db], id, ...edits)
+    //     this.throwNotFound({id})
+    // }
 
     forward_save(id, data) {
         /* Forward a save(id, data) operation to a higher ring - called when the current ring is not allowed to save. */
@@ -213,6 +213,9 @@ export class Database {
 
     rings = []          // rings[0] is the innermost ring (bottom of the stack), rings[-1] is the outermost (top)
 
+
+    /***  Rings manipulation  ***/
+
     get top()       { return this.rings.at(-1) }
     get bottom()    { return this.rings[0] }
 
@@ -221,6 +224,33 @@ export class Database {
         if (this.top) this.top.stack(ring)
         this.rings.push(ring)
     }
+
+    _prev(ring) {
+        /* Find a ring that directly preceeds `ring` in this.rings. Return undefined if `ring` has no predecessor,
+           or throw UnknownRing if `ring` cannot be found.
+         */
+        let pos = this.rings.indexOf(ring)
+        if (pos < 0) throw new Database.UnknownRing()
+        if (pos > 0) return this.rings[pos-1]
+    }
+
+    _next(ring) {
+        /* Find a ring that directly succeeds `ring` in this.rings. Return undefined if `ring` has no successor,
+           or throw UnknownRing if `ring` cannot be found.
+         */
+        let pos = this.rings.indexOf(ring)
+        if (pos < 0) throw new Database.UnknownRing()
+        if (pos < this.rings.length-1) return this.rings[pos+1]
+    }
+
+
+    /***  Errors & internal checks  ***/
+
+    static Error = class extends BaseError {}
+    static UnknownRing = class extends Database.Error { static message = "reference ring not found in this database" }
+
+
+    /***  Data access & modification (CRUD operations)  ***/
 
     async select(id)                { if (this.top) return this.top.select(id); else throw new ItemNotFound() }
     async insert(item)              { assert(this.top); return this.top.insert(item) }
@@ -235,6 +265,14 @@ export class Database {
         assert(edits.length, 'missing edits')
         assert(this.top, 'no rings in the database')
         return this.top.update([this], id, ...edits)
+    }
+
+    forward_update([ring], id, ...edits) {
+        /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
+           if the current `ring` doesn't contain the requested `id`. */
+        let prev = this._prev(ring)
+        if (prev) return prev.update([this], id, ...edits)
+        throw new ItemNotFound({id})
     }
 }
 

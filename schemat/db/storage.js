@@ -162,7 +162,7 @@ export class Block extends Item {
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let data = await this._select(id)
-        if (data === undefined) return ring.forward_update([db], id, ...edits)
+        if (data === undefined) return db.forward_update([ring], id, ...edits)
 
         for (const edit of edits)
             data = this.edit(data, edit)
