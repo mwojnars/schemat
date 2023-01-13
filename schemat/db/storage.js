@@ -138,7 +138,7 @@ export class Block extends Item {
 
     async select([db, ring], id) {
         let data = await this._select(id)
-        return data === undefined ? db.forward_select([ring], id) : data
+        return data !== undefined ? data : db.forward_select([ring], id)
     }
 
     async insert([db, ring], id, data) {
@@ -175,13 +175,20 @@ export class Block extends Item {
         return ring.save([db], this, id, data)
     }
 
-    async delete(id) {
+    // async delete(id) {
+    //     let done = this._delete(id)
+    //     if (done instanceof Promise) done = await done
+    //     if (done) this.dirty = true
+    //     return done
+    // }
+
+    async delete([db, ring], id) {
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
-        return done
+        this.flush(1)               // todo: make the timeout configurable and 0 by default
+        return done ? done : db.forward_delete([ring], id)
     }
-
 
     /***  override in subclasses  ***/
 

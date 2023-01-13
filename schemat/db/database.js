@@ -112,26 +112,35 @@ export class Ring {
         return this.block.update([db, this], id, ...edits)
     }
 
-    async delete(item_or_id) {
+    async delete([db], id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
-           TODO: delete all delete-able copies of `id` across different rings, or insert a tombstone if one or more
-                 of the copies remain - to ensure that subsequent select(id) fails, as normally is expected after delete.
          */
-        let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
 
-        if (this.writable(id)) {
-            print('id', id)
-            let ret = await this.block.delete(id)
-            if (ret) {
-                this.block.flush(1)
-                return ret
-            }
-        }
-        else if (!this.writable() && this.validIID(id) && await this.block._select(id))
-            this.throwReadOnly({id})
+        // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
+        if (this.readonly)
+            if (await this.block._select(id))
+                this.throwReadOnly({id})
+            else
+                return db.forward_delete([this], id)
 
-        return this.prevDB ? this.prevDB.delete(id) : false
+        // make an attempt at deleting the `id`; forward to a deeper ring if the item was not found
+        return this.block.delete([db, this], id)
+
+        // let ret = await this.block.delete([db, this], id)
+        // return ret ? ret : db.forward_delete([this], id)
+
+        // if (this.writable(id)) {
+        //     let ret = await this.block.delete(id)
+        //     if (ret) {
+        //         this.block.flush(1)
+        //         return ret
+        //     }
+        // }
+        // else if (!this.writable() && this.validIID(id) && await this.block._select(id))
+        //     this.throwReadOnly({id})
+        //
+        // return this.prevDB ? this.prevDB.delete(id) : false
     }
 
     async *scan(cid) {
@@ -231,7 +240,6 @@ export class Database {
 
     async select(id)                { return this.forward_select([], id) }
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
-    async delete(item_or_id)        { assert(this.top); return this.top.delete(item_or_id) }
     async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
 
     async insert(item) {
@@ -243,6 +251,13 @@ export class Database {
             if (ring.writable(id)) return ring.insert([this], item)
 
         throw new Database.NotInsertable({id})
+    }
+
+    async delete(item_or_id) {
+        let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
+        return this.forward_delete([], id)
+        // assert(this.top)
+        // return this.top.delete([this], id)
     }
 
     forward_select([ring], id) {
@@ -267,6 +282,12 @@ export class Database {
         if (ring.readonly) throw new Database.RingReadOnly({id})
         assert(!ring.validIID(id))
         throw new Database.InvalidID({id})
+    }
+
+    forward_delete([ring], id) {
+        let prev = this._prev(ring)
+        if (prev) return prev.delete([this], id)
+        throw new ItemNotFound({id})
     }
 }
 
