@@ -124,13 +124,13 @@ export class Ring {
             else
                 return db.forward_delete([this], id)
 
-        // make an attempt at deleting the `id`; forward to a deeper ring if the id not present
         return this.block.delete([db, this], id)
     }
 
     async *scan(cid) {
-        if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
-        else yield* this.block._scan(cid)
+        yield* this.block._scan(cid)
+        // if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
+        // else yield* this.block._scan(cid)
     }
 
 
@@ -225,7 +225,7 @@ export class Database {
 
     async select(id)                { return this.forward_select([], id) }
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
-    async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
+    // async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
 
     async insert(item) {
         /* Find the top-most ring where the item's ID is writable and insert there.
@@ -241,6 +241,15 @@ export class Database {
     async delete(item_or_id) {
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
         return this.forward_delete([], id)
+    }
+
+    async *scan(cid) {
+        /* Scan each ring and merge the sorted streams of entries. */
+        let streams = this.rings.map(r => r.scan(cid))
+        yield* merge(Item.orderAscID, ...streams)
+
+        // if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
+        // else yield* this.block._scan(cid)
     }
 
     forward_select([ring], id) {

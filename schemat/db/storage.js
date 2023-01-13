@@ -183,6 +183,7 @@ export class Block extends Item {
     // }
 
     async delete([db, ring], id) {
+        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
