@@ -199,7 +199,7 @@ export class Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)                { return this.forward_select([], id) }
+    async select(id)                { return this.forward_select([], id) }      // returns a json string (`data`) or undefined
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
 
     async insert(item) {

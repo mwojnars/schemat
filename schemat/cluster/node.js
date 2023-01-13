@@ -88,7 +88,7 @@ class Node {
         return bootstrap(registry, ring)
     }
 
-    async move({id, newid, bottom, db: dbInsert}) {
+    async move({id, newid, bottom, ring: ringName}) {
         /* id, new_iid - strings of the form "CID:IID" */
 
         function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
@@ -96,6 +96,7 @@ class Node {
         id = convert(id)
         newid = convert(newid)
 
+        let db = this.db
         let [cid, iid] = id
         let [new_cid, new_iid] = newid
         let sameID = (cid === new_cid && iid === new_iid)
@@ -103,29 +104,28 @@ class Node {
         if ((cid === ROOT_CID || new_cid === ROOT_CID) && cid !== new_cid)
             throw new Error(`cannot change a category item (CID=${ROOT_CID}) to a non-category (CID=${cid || new_cid}) or back`)
 
-        if (!sameID && await this.db.has(newid)) throw new Error(`target ID already exists: [${newid}]`)
+        if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
         // identify the source ring
-        let db = await this.db.findRing({item: id})
-        if (db === undefined) throw new Error(`item not found: [${id}]`)
-        if (db.readonly) throw new Error(`the ring '${db.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+        let source = await db.findRing({item: id})
+        if (source === undefined) throw new Error(`item not found: [${id}]`)
+        if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        if (dbInsert) dbInsert = await this.db.findRing({name: dbInsert})
-        else dbInsert = bottom ? this.db.bottom : db
+        let target = ringName ? await db.findRing({name: ringName}) : bottom ? db.bottom : source
 
-        if (sameID && db === dbInsert) throw new Error(`trying to move a record [${id}] to the same ring (${db.name}) without change of ID`)
+        if (sameID && source === target) throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
-        // load the item from its current ID; save a copy under the new ID, this will propagate to a higher-level DB if `id` can't be stored in `db`
-        let data = await db.select(id)
-        await dbInsert.save(newid, data)
+        // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
+        let data = await source.select([db], id)
+        await target.save([db], null, newid, data)
 
         if (!sameID) {
             // update children of a category item: change their CID to `new_iid`
             if (cid === ROOT_CID && !sameID)
-                for await (let {id: child_id} of this.db.scan(iid))
+                for await (let {id: child_id} of db.scan(iid))
                     await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
             // update references
@@ -136,13 +136,13 @@ class Node {
                 let jsonData = ref.dumpData()
                 if (jsonData !== ref.jsonData) {
                     print(`move: updating reference(s) in item [${ref.id}]`)
-                    await this.db.update(ref)      //flush: false
+                    await db.update(ref)
                 }
             }
         }
 
         // remove the old item from DB
-        try { await db.delete(id) }
+        try { await source.delete([db], id) }
         catch (ex) {
             if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }
