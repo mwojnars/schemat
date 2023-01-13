@@ -68,17 +68,11 @@ export class Ring {
     /***  Errors & internal checks  ***/
 
     static Error = class extends BaseError        {}
-    // static ItemNotFound = class extends Ring.Error    { static message = "item ID not found in the database" }
     static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
-    // static NotWritable = class extends Ring.Error {
-    //     static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
-    // }
 
     throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
-    // throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
-    // throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
@@ -100,7 +94,7 @@ export class Ring {
     }
 
     async insert([db], item) {
-        /* `db` is unused for now. */
+        /* `db` is unused (for now). */
         item.iid = await this.block.insert([db, this], item.id, item.dumpData())
     }
 
@@ -127,11 +121,7 @@ export class Ring {
         return this.block.delete([db, this], id)
     }
 
-    async *scan(cid) {
-        yield* this.block._scan(cid)
-        // if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
-        // else yield* this.block._scan(cid)
-    }
+    async *scan(cid)    { yield* this.block._scan(cid) }
 
 
     /***  Lower-level implementations of CRUD  ***/
@@ -225,7 +215,6 @@ export class Database {
 
     async select(id)                { return this.forward_select([], id) }
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
-    // async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
 
     async insert(item) {
         /* Find the top-most ring where the item's ID is writable and insert there.
@@ -247,10 +236,10 @@ export class Database {
         /* Scan each ring and merge the sorted streams of entries. */
         let streams = this.rings.map(r => r.scan(cid))
         yield* merge(Item.orderAscID, ...streams)
-
-        // if (this.prevDB) yield* merge(Item.orderAscID, this.block._scan(cid), this.prevDB.scan(cid))
-        // else yield* this.block._scan(cid)
     }
+
+
+    /***  CRUD forwarding to other rings  ***/
 
     forward_select([ring], id) {
         let prev = this._prev(ring)
