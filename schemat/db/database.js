@@ -129,7 +129,7 @@ export class Ring {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
            TODO: delete all delete-able copies of `id` across different rings, or insert a tombstone if one or more
-                 of the copies remain - to ensure that subsequent select(id) will fail, as would normally be expected.
+                 of the copies remain - to ensure that subsequent select(id) fails, as normally is expected after delete.
          */
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
 
