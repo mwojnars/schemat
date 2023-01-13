@@ -15,13 +15,13 @@ export class Ring {
 
     block
 
-    nextDB                  // younger (higher-priority) ring on top of this one; fallback for insert/save()
-    prevDB                  // older (lower-priority) ring beneath this one; fallback for select/update/delete()
+    // nextDB                  // younger (higher-priority) ring on top of this one; fallback for insert/save()
+    // prevDB                  // older (lower-priority) ring beneath this one; fallback for select/update/delete()
 
     name                    // human-readable name of this ring for findRing()
-    readonly                // if true, the database does NOT accept modifications: inserts/updates/deletes
+    readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
-    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different databases stacked together
+    start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
     stop_iid                // (optional) maximum IID of all items
 
     constructor({file, item, name, ...opts}) {
@@ -55,14 +55,14 @@ export class Ring {
 
     /***  Rings manipulation  ***/
     
-    stack(next) {
-        this.nextDB = next
-        next.prevDB = this
-        return next
-    }
+    // stack(next) {
+    //     this.nextDB = next
+    //     next.prevDB = this
+    //     return next
+    // }
 
-    get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
-    get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
+    // get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
+    // get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
 
     /***  Errors & internal checks  ***/
@@ -164,7 +164,7 @@ export class Database {
 
     append(ring) {
         /* The ring must be already open. */
-        if (this.top) this.top.stack(ring)
+        // if (this.top) this.top.stack(ring)
         this.rings.push(ring)
     }
 
