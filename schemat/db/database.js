@@ -124,23 +124,8 @@ export class Ring {
             else
                 return db.forward_delete([this], id)
 
-        // make an attempt at deleting the `id`; forward to a deeper ring if the item was not found
+        // make an attempt at deleting the `id`; forward to a deeper ring if the id not present
         return this.block.delete([db, this], id)
-
-        // let ret = await this.block.delete([db, this], id)
-        // return ret ? ret : db.forward_delete([this], id)
-
-        // if (this.writable(id)) {
-        //     let ret = await this.block.delete(id)
-        //     if (ret) {
-        //         this.block.flush(1)
-        //         return ret
-        //     }
-        // }
-        // else if (!this.writable() && this.validIID(id) && await this.block._select(id))
-        //     this.throwReadOnly({id})
-        //
-        // return this.prevDB ? this.prevDB.delete(id) : false
     }
 
     async *scan(cid) {
@@ -256,8 +241,6 @@ export class Database {
     async delete(item_or_id) {
         let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
         return this.forward_delete([], id)
-        // assert(this.top)
-        // return this.top.delete([this], id)
     }
 
     forward_select([ring], id) {
