@@ -46,7 +46,7 @@ export class Ring {
 
     async erase() {
         /* Remove all records from this ring; open() should be called first. */
-        this.checkReadOnly()
+        if (this.readonly) this.throwReadOnly()
         return this.block.erase()
     }
 
@@ -62,10 +62,9 @@ export class Ring {
 
     writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
-    checkReadOnly(id)           { if (this.readonly) this.throwReadOnly({id}) }
 
-    checkValidID(id, msg) {
-        if (!this.validIID(id)) throw new Block.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
+    assertValidID(id, msg) {
+        if (!this.validIID(id)) throw new Ring.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
     }
 
 
