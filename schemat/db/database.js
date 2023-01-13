@@ -99,22 +99,27 @@ export class Ring {
         return this.block.select([db, this], id)
     }
 
-    async insert(item) {
-        /* High-level insert. The `item` can have an IID already assigned (then it's checked that
-           this IID is not yet present in the DB), or not.
-           If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
-           If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
-         */
-        let json = item.dumpData()
-        let cid  = item.cid
-        let id   = item.id
-        assert(cid || cid === 0)
+    // async insert([db], item) {
+    //     /* High-level insert. The `item` can have an IID already assigned (then it's checked that
+    //        this IID is not yet present in the DB), or not.
+    //        If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
+    //        If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
+    //      */
+    //     let json = item.dumpData()
+    //     let cid  = item.cid
+    //     let id   = item.id
+    //     assert(cid || cid === 0)
+    //
+    //     // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
+    //     if (this.writable(id)) item.iid = await this.block.insert([db, this], id, json)
+    //     else if (this.prevDB) return this.prevDB.insert([db], item)
+    //     else if (this.readonly) this.throwReadOnly()
+    //     else this.throwNotWritable(id)
+    // }
 
-        // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
-        if (this.writable(id)) item.iid = await this.block.insert(id, json, this)
-        else if (this.prevDB) return this.prevDB.insert(item)
-        else if (this.readonly) this.throwReadOnly()
-        else this.throwNotWritable(id)
+    async insert([db], item) {
+        /* `db` is unused for now. */
+        item.iid = await this.block.insert([db, this], item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {
@@ -189,6 +194,7 @@ export class Database {
 
     get top()       { return this.rings.at(-1) }
     get bottom()    { return this.rings[0] }
+    get reversed()  { return this.rings.slice().reverse() }
 
     append(ring) {
         /* The ring must be already open. */
@@ -200,7 +206,7 @@ export class Database {
         /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */
-        for (const ring of this.rings.slice().reverse()) {
+        for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
                 let data = await ring.readHere(item)
@@ -235,16 +241,29 @@ export class Database {
     static Error = class extends BaseError {}
     static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
     static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
-    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid set for the ring(s)" }
+    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
+    static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
 
 
     /***  Data access & modification (CRUD operations)  ***/
 
     async select(id)                { return this.forward_select([], id) }
-    async insert(item)              { assert(this.top); return this.top.insert(item) }
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
     async delete(item_or_id)        { assert(this.top); return this.top.delete(item_or_id) }
     async *scan(cid)                { if(this.top) yield* this.top.scan(cid) }
+
+    async insert(item) {
+        /* Find the top-most ring where the item's ID is writable and insert there.
+           The ID can be full or partial: [CID,IID] or [CID,undefined]; item.iid is filled with the inserted IID.
+         */
+        let id = item.id
+        for (const ring of this.reversed)
+            if (ring.writable(id)) return ring.insert([this], item)
+
+        throw new Database.NotInsertable({id})
+        // assert(this.top)
+        // return this.top.insert([this], item)
+    }
 
     forward_select([ring], id) {
         let prev = this._prev(ring)

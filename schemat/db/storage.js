@@ -141,7 +141,7 @@ export class Block extends Item {
         return data === undefined ? db.forward_select([ring], id) : data
     }
 
-    async insert(id, data, ring) {
+    async insert([db, ring], id, data) {
         /* Save a new item and update this.curr_iid accordingly. Assign an IID if missing. Return the IID. */
 
         let [cid, iid] = id
