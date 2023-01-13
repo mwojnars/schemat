@@ -71,6 +71,11 @@ export class Ring {
 
     /***  Data access & modification (CRUD operations)  ***/
 
+    async selectLocal(id) {
+        /* Read item's data from this ring. No forward. Return undefined if `id` not found. */
+        return this.block._select(id)
+    }
+
     async select([db], id) {
         /* Find the top-most occurrence of an item in the database, `db`, starting at this ring.
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
@@ -92,6 +97,14 @@ export class Ring {
         return this.block.update([db, this], id, ...edits)
     }
 
+    async save([db], block, id, data) {
+        /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
+           `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
+         */
+        block = block || this.block
+        return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
+    }
+
     async delete([db], id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
@@ -109,21 +122,6 @@ export class Ring {
 
     async *scan(cid)    { yield* this.block._scan(cid) }
 
-
-    /***  Lower-level implementations of CRUD  ***/
-
-    async readHere(id) {
-        /* Read item's data from this ring. No forward. Undefined if item not found. */
-        return this.block._select(id)
-    }
-
-    async save([db], block, id, data) {
-        /* Save updated item's `data` under the `id`. Forward to a higher ring if needed.
-           `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
-         */
-        block = block || this.block
-        return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
-    }
 }
 
 
@@ -161,7 +159,7 @@ export class Database {
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.readHere(item)
+                let data = await ring.selectLocal(item)
                 if (data !== undefined) return ring
             }
         }

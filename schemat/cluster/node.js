@@ -114,7 +114,8 @@ class Node {
         // identify the target ring
         let target = ringName ? await db.findRing({name: ringName}) : bottom ? db.bottom : source
 
-        if (sameID && source === target) throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
+        if (sameID && source === target)
+            throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
 
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
