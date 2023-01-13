@@ -15,9 +15,6 @@ export class Ring {
 
     block
 
-    // nextDB                  // younger (higher-priority) ring on top of this one; fallback for insert/save()
-    // prevDB                  // older (lower-priority) ring beneath this one; fallback for select/update/delete()
-
     name                    // human-readable name of this ring for findRing()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
@@ -52,17 +49,6 @@ export class Ring {
         this.checkReadOnly()
         return this.block.erase()
     }
-
-    /***  Rings manipulation  ***/
-    
-    // stack(next) {
-    //     this.nextDB = next
-    //     next.prevDB = this
-    //     return next
-    // }
-
-    // get top()       { return this.nextDB ? this.nextDB.top : this }         // top-most ring in the database
-    // get bottom()    { return this.prevDB ? this.prevDB.bottom : this }      // bottom-most ring in the database
 
 
     /***  Errors & internal checks  ***/
