@@ -71,14 +71,14 @@ export class Ring {
     // static ItemNotFound = class extends Ring.Error    { static message = "item ID not found in the database" }
     static ReadOnly = class extends Ring.Error    { static message = "the ring is read-only" }
     static InvalidIID = class extends Ring.Error  { static message = "IID is outside the range" }
-    static NotWritable = class extends Ring.Error {
-        static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
-    }
+    // static NotWritable = class extends Ring.Error {
+    //     static message = "record cannot be written, the data ring is either read-only or the id is outside the range"
+    // }
 
     throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
-    throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
-    throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    // throwNotWritable(id)        { throw new Ring.NotWritable({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
+    // throwInvalidIID(id)         { throw new Ring.InvalidIID({id, start_iid: this.start_iid, stop_iid: this.stop_iid}) }
 
     writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
     validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
@@ -98,24 +98,6 @@ export class Ring {
         // todo: find the right block (in Sequence)
         return this.block.select([db, this], id)
     }
-
-    // async insert([db], item) {
-    //     /* High-level insert. The `item` can have an IID already assigned (then it's checked that
-    //        this IID is not yet present in the DB), or not.
-    //        If item.iid is missing, a new IID is assigned and stored in `item.iid` for use by the caller.
-    //        If this db is readonly, forward the operation to a lower DB (prevDB), or raise an exception.
-    //      */
-    //     let json = item.dumpData()
-    //     let cid  = item.cid
-    //     let id   = item.id
-    //     assert(cid || cid === 0)
-    //
-    //     // create IID for the item if missing or use the provided IID; in any case, store `json` under the resulting ID
-    //     if (this.writable(id)) item.iid = await this.block.insert([db, this], id, json)
-    //     else if (this.prevDB) return this.prevDB.insert([db], item)
-    //     else if (this.readonly) this.throwReadOnly()
-    //     else this.throwNotWritable(id)
-    // }
 
     async insert([db], item) {
         /* `db` is unused for now. */
@@ -261,8 +243,6 @@ export class Database {
             if (ring.writable(id)) return ring.insert([this], item)
 
         throw new Database.NotInsertable({id})
-        // assert(this.top)
-        // return this.top.insert([this], item)
     }
 
     forward_select([ring], id) {
