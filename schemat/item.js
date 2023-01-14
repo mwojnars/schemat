@@ -1,8 +1,9 @@
 import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique } from './utils.js'
-import {NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound} from './errors.js'
+import { NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound } from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
+import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import { DATA, generic_schema } from "./type.js"
@@ -471,9 +472,13 @@ export class Item {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
         }
-        let schema = use_schema ? this.category.getItemSchema() : generic_schema
+
         let state = JSON.parse(this.jsonData = jsonData)
+        if ('@' in state) return JSONx.decode(state)            // support for JSONx-encoded structure (no schema)
+
+        let schema = use_schema ? this.category.getItemSchema() : generic_schema
         return schema.decode(state)
+
     }
 
     setExpiry(ttl) {
@@ -770,21 +775,23 @@ export class Item {
         return snippets.join('\n')
     }
 
-    encodeData(use_schema = true) {
-        /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
-        this.assertLoaded()
-        let schema = use_schema ? this.getSchema() : generic_schema
-        return schema.encode(this.data)
-    }
+    // encodeData(use_schema = true) {
+    //     /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
+    //     this.assertLoaded()
+    //     let schema = use_schema ? this.getSchema() : generic_schema
+    //     return schema.encode(this.data)
+    // }
     dumpData() {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
-        let state = this.encodeData()
-        return JSON.stringify(state)
+        // let state = this.encodeData()
+        // return JSON.stringify(state)
+        return JSONx.stringify(this.data)
     }
     record() {
         /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
-        return {id: this.id, data: this.encodeData()}
+        return {id: this.id, data: JSONx.encode(this.data)}
+        // return {id: this.id, data: this.encodeData()}
 
         // // Below, the use of ITEM_RECORD here is experimental (!), the goal is to replace record() calls
         // // with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
@@ -1533,10 +1540,10 @@ export class RootCategory extends Category {
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
-    encodeData(use_schema = false) {
-        /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.encodeData(false)
-    }
+    // encodeData(use_schema = false) {
+    //     /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
+    //     return super.encodeData(false)
+    // }
     async reload(opts) {
         /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
         return super.reload({...opts, use_schema: false})
