@@ -59,7 +59,8 @@ export class JSONx {
         if (obj instanceof Item && obj.has_id()) {
             // if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
-            return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
+            return {[JSONx.ATTR_CLASS]: obj.id}
+            // return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
         }
         if (T.isClass(obj)) {
             state = registry.getPath(obj)
@@ -124,7 +125,9 @@ export class JSONx {
                     throw `Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
                 state = state_attr
             }
-            if (classname === JSONx.FLAG_ITEM)
+            if (T.isArray(classname))                       // `classname` can be an item ID instead of a class
+                return registry.getItem(classname)
+            if (classname === JSONx.FLAG_ITEM)              // TODO: remove (deprecated)
                 return registry.getItem(state)
             cls = registry.getClass(classname)
         }
