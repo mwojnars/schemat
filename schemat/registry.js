@@ -263,7 +263,7 @@ export class Registry {
         return this.db.select(id)
     }
     async *scan(category = null, {limit} = {}) {
-        /* Load from DB all items of a given category ordered by IID. A generator. */
+        /* Load from DB all items of a given category ordered by IID. Each item's data is already loaded. A generator. */
         if (category) category.assertLoaded()
         let records = this.db.scan(category?.iid)
         let count = 0
