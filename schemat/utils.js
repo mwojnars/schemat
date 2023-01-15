@@ -258,7 +258,7 @@ export class Types {
 
     static getstate = (obj) => {
         /* obj's class may define __getstate__() method to have full control over state generation;
-           or __transient__ property to with a list of attribute names to be excluded from an auto-generated state. */
+           or __transient__ property to list attribute names to be excluded from an auto-generated state. */
         if (obj.__getstate__) return obj.__getstate__()
         if (obj.constructor?.__transient__) {
             let collect = []                            // combine __transient__ arrays from the prototype chain
@@ -275,7 +275,7 @@ export class Types {
     }
     static setstate = (cls, state) => {
         // create an object of class `cls` and call its __setstate__() if present, or assign `state` directly;
-        // __setstate__() can be async, in such case setstate() returns a promise;
+        // if __setstate__() is async, setstate() returns a promise;
         // __setstate__() must end with "return this" (!)
         let obj = new cls()
         if (obj['__setstate__']) return obj['__setstate__'](state)

@@ -46,7 +46,7 @@ export class JSONx {
         let of_type  = T.ofType(obj, type)
         let state
 
-        if (obj === undefined)      throw "Can't encode an `undefined` value"
+        if (obj === undefined)      throw new Error("Can't encode an undefined value")
         if (T.isPrimitiveObj(obj))  return obj
         if (T.isArray(obj))         return this.encode_list(obj)
 
@@ -57,7 +57,6 @@ export class JSONx {
         }
 
         if (obj instanceof Item && obj.has_id()) {
-            // if (!obj.has_id()) throw `Non-serializable Item instance with missing or incomplete ID: ${obj.id}`
             if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
             return {[JSONx.ATTR_CLASS]: obj.id}
             // return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
@@ -75,7 +74,7 @@ export class JSONx {
             state = obj !== state ? this.encode(state) : this.encode_dict(state)
             // state = this.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
-                throw `Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key in the state dictionary`;
+                throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
         }
 
         // if the exact class is known upfront, let's output compact state without adding "@" for class designation
@@ -111,7 +110,7 @@ export class JSONx {
         // determine the expected class (constructor function) for the output object
         if (type) {
             if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
-                throw `Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`
+                throw new Error(`Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`)
             cls = type
         }
         else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
@@ -122,7 +121,7 @@ export class JSONx {
             if (JSONx.ATTR_STATE in state) {
                 let state_attr = T.pop(state, JSONx.ATTR_STATE)
                 if (T.notEmpty(state))
-                    throw `Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`
+                    throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
             if (T.isArray(classname))                       // `classname` can be an item ID instead of a class
@@ -172,7 +171,7 @@ export class JSONx {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
         for (let [key, value] of Object.entries(obj)) {
             if (typeof key !== "string")
-                throw `Non-serializable object state, contains a non-string key: ${key}`
+                throw new Error(`Non-serializable object state, contains a non-string key: ${key}`)
             if (value === undefined)
                 delete obj[key]
         }
