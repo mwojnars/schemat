@@ -3,39 +3,47 @@
     - 1
   name: STRING
   class_path: /system/local/type.js:STRING
+  "@": schemat.data.Data
 - __id:
     - 10
     - 2
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
+  "@": schemat.data.Data
 - __id:
     - 10
     - 3
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
+  "@": schemat.data.Data
 - __id:
     - 10
     - 4
   name: URL
   class_path: /system/local/type.js:URL
+  "@": schemat.data.Data
 - __id:
     - 0
     - 50
   name: YAML
   info: Data stored in a YAML file.
   prototype:
-    - 0
-    - 11
+    "@":
+      - 0
+      - 11
   fields:
     filename:
       "@": schemat.type.STRING
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 51
   name: MysqlDB
   prototype:
-    - 0
-    - 11
+    "@":
+      - 0
+      - 11
   class_path: /system/local/db/mysql.js:MySQL
   fields:
     host:
@@ -58,3 +66,5 @@
       "@": schemat.type.CATALOG
     readonly:
       "@": schemat.type.BOOLEAN
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data

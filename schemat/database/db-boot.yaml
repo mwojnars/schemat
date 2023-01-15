@@ -1,137 +1,108 @@
 - __id:
     - 0
     - 0
-  entries:
-    - key: name
-      value: Category
-    - key: info
-      value: Category of items that represent categories
-    - key: class_path
-      value: /system/local/item.js:Category
-    - key: cache_ttl
-      value: 60
-    - key: fields
-      value:
-        entries:
-          - key: class_path
-            value:
-              info: SUN path to a Javascript file that contains a (base) class for this
-                category. May contain an optional class name appended after
-                colon ':'. If the class name is missing (no colon), default
-                import from the file is used.
-              "@": schemat.type.STRING
-          - key: class_name
-            value:
-              info: Custom internal name for the Class of this category, for debugging. Also
-                used as an alias when exporting the Class from the category's
-                module.
-              "@": schemat.type.STRING
-          - key: class_init
-            value:
-              repeated: true
-              info: Module-level initialization for this category's Javascript class.
-                Typically contains import statements and global variables.
-                Preceeds the Class definition (`class_body`, `views`) in the
-                category's module code.
-              "@": schemat.type.CODE
-          - key: class_body
-            value:
-              repeated: true
-              info: Source code of the class (a body without heading) that will be created for
-                this category. The class inherits from the `class_path` class,
-                or the class of the first base category, or the top-level Item.
-              "@": schemat.type.CODE
-          - key: pages
-            value:
-              values:
-                "@": schemat.type.CODE
-              info: Source code of functions that generate static HTML response for particular
-                access methods of this category's items.
-              "@": schemat.type.CATALOG
-          - key: handlers
-            value:
-              values:
-                "@": schemat.type.CODE
-              info: Body of Handler subclasses that generate HTML response for particular
-                access methods of this category's items.
-              "@": schemat.type.CATALOG
-          - key: views
-            value:
-              values:
-                "@": schemat.type.CODE
-              info: "Body of React functional components (no function header) to be added
-                dynamically to the category's Class body as VIEW_name(props)
-                methods for rendering item views. Inside the function body,
-                `this` refers the item to be rendered. Alternatively, the code
-                of each view may consist of a method header, view() {...}, and
-                be accompanied by supporting methods: title(), assets() - like
-                in a class body."
-              "@": schemat.type.CATALOG
-          - key: html_assets
-            value:
-              info: HTML code to be inserted in the html/head section of every page that is
-                rendered from a view function of this category.
-              "@": schemat.type.CODE
-          - key: cache_ttl
-            value:
-              default: 5
-              info: Time To Live (TTL). Determines for how long (in seconds) an item of this
-                category is kept in a server-side cache after being loaded from
-                DB, for reuse by subsequent requests. A real number. If zero,
-                the items are evicted immediately after each request.
-              "@": schemat.type.NUMBER
-          - key: cached_methods
-            value:
-              info: Space- and/or comma-separated list of method names of this category's
-                Class whose calls are to be cached via Item.setCaching(). Only
-                used when a custom subclass is created through the `class_body`
-                or `views` properties.
-              "@": schemat.type.STRING
-          - key: fields
-            value:
-              values:
-                "@": schemat.type.SCHEMA
-              info: Fields must have unique names.
-              default:
-                entries:
-                  - key: name
-                    value:
-                      info: Display name of the item. May contain spaces, punctuation, non-latin
-                        characters.
-                      "@": schemat.type.STRING
-                  - key: path
-                    value:
-                      info: "Canonical path of this item within the SUN, for: display, resolving
-                        relative code imports, resolving relative item
-                        references (REF type), etc. If `path` is configured,
-                        callers can only import this item's code through the
-                        `path`, so that the code is always interpreted the same
-                        and can be cached after parsing."
-                      "@": schemat.type.PATH
-                  - key: info
-                    value:
-                      info: Description of the item.
-                      "@": schemat.type.TEXT
-                  - key: prototype
-                    value:
-                      info: An item of the same category that serves as a prototype for this one, that
-                        is, provides default values for missing properties of
-                        this item. Multiple prototypes are allowed, the first
-                        one has priority over subsequent ones. Prototypes can be
-                        defined for regular items, as well as for categories -
-                        the latter case represents category inheritance.
-                        Items/categories may inherit individual entries from
-                        catalog-valued fields, see Item.getInherited(). In this
-                        way, subcategories inherit individual field schemas as
-                        defined in base categories.
-                      "@": schemat.type.ITEM
-                  - key: html_title
-                    value:
-                      info: HTML title to be used for when this item is rendered.
-                      "@": schemat.type.STRING
-                "@": schemat.data.Catalog
-              "@": schemat.type.CATALOG
+  name: Category
+  info: Category of items that represent categories
+  class_path: /system/local/item.js:Category
+  cache_ttl: 60
+  fields:
+    class_path:
+      info: SUN path to a Javascript file that contains a (base) class for this
+        category. May contain an optional class name appended after colon ':'.
+        If the class name is missing (no colon), default import from the file is
+        used.
+      "@": schemat.type.STRING
+    class_name:
+      info: Custom internal name for the Class of this category, for debugging. Also
+        used as an alias when exporting the Class from the category's module.
+      "@": schemat.type.STRING
+    class_init:
+      repeated: true
+      info: Module-level initialization for this category's Javascript class.
+        Typically contains import statements and global variables. Preceeds the
+        Class definition (`class_body`, `views`) in the category's module code.
+      "@": schemat.type.CODE
+    class_body:
+      repeated: true
+      info: Source code of the class (a body without heading) that will be created for
+        this category. The class inherits from the `class_path` class, or the
+        class of the first base category, or the top-level Item.
+      "@": schemat.type.CODE
+    pages:
+      values:
+        "@": schemat.type.CODE
+      info: Source code of functions that generate static HTML response for particular
+        access methods of this category's items.
+      "@": schemat.type.CATALOG
+    handlers:
+      values:
+        "@": schemat.type.CODE
+      info: Body of Handler subclasses that generate HTML response for particular
+        access methods of this category's items.
+      "@": schemat.type.CATALOG
+    views:
+      values:
+        "@": schemat.type.CODE
+      info: "Body of React functional components (no function header) to be added
+        dynamically to the category's Class body as VIEW_name(props) methods for
+        rendering item views. Inside the function body, `this` refers the item
+        to be rendered. Alternatively, the code of each view may consist of a
+        method header, view() {...}, and be accompanied by supporting methods:
+        title(), assets() - like in a class body."
+      "@": schemat.type.CATALOG
+    html_assets:
+      info: HTML code to be inserted in the html/head section of every page that is
+        rendered from a view function of this category.
+      "@": schemat.type.CODE
+    cache_ttl:
+      default: 5
+      info: Time To Live (TTL). Determines for how long (in seconds) an item of this
+        category is kept in a server-side cache after being loaded from DB, for
+        reuse by subsequent requests. A real number. If zero, the items are
+        evicted immediately after each request.
+      "@": schemat.type.NUMBER
+    cached_methods:
+      info: Space- and/or comma-separated list of method names of this category's
+        Class whose calls are to be cached via Item.setCaching(). Only used when
+        a custom subclass is created through the `class_body` or `views`
+        properties.
+      "@": schemat.type.STRING
+    fields:
+      values:
+        "@": schemat.type.SCHEMA
+      info: Fields must have unique names.
+      default:
+        name:
+          info: Display name of the item. May contain spaces, punctuation, non-latin
+            characters.
+          "@": schemat.type.STRING
+        path:
+          info: "Canonical path of this item within the SUN, for: display, resolving
+            relative code imports, resolving relative item references (REF
+            type), etc. If `path` is configured, callers can only import this
+            item's code through the `path`, so that the code is always
+            interpreted the same and can be cached after parsing."
+          "@": schemat.type.PATH
+        info:
+          info: Description of the item.
+          "@": schemat.type.TEXT
+        prototype:
+          info: An item of the same category that serves as a prototype for this one, that
+            is, provides default values for missing properties of this item.
+            Multiple prototypes are allowed, the first one has priority over
+            subsequent ones. Prototypes can be defined for regular items, as
+            well as for categories - the latter case represents category
+            inheritance. Items/categories may inherit individual entries from
+            catalog-valued fields, see Item.getInherited(). In this way,
+            subcategories inherit individual field schemas as defined in base
+            categories.
+          "@": schemat.type.ITEM
+        html_title:
+          info: HTML title to be used for when this item is rendered.
+          "@": schemat.type.STRING
         "@": schemat.data.Catalog
+      "@": schemat.type.CATALOG
+    "@": schemat.data.Catalog
   "@": schemat.data.Data
 - __id:
     - 0
@@ -157,6 +128,8 @@
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
       "@": schemat.type.CATALOG
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 2
@@ -169,7 +142,9 @@
         "@": schemat.type.ITEM
       repeated: true
       "@": schemat.type.CATALOG
+    "@": schemat.data.Catalog
   class_path: /system/local/site.js:Router
+  "@": schemat.data.Data
 - __id:
     - 0
     - 3
@@ -191,18 +166,23 @@
     _is_file:
       default: true
       "@": schemat.type.BOOLEAN
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   prototype:
-    - 0
-    - 3
+    "@":
+      - 0
+      - 3
   class_path: /system/local/site.js:FileLocal
   fields:
     path:
       "@": schemat.type.STRING
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 5
@@ -218,6 +198,8 @@
     _is_folder:
       default: true
       "@": schemat.type.BOOLEAN
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 6
@@ -226,12 +208,15 @@
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   prototype:
-    - 0
-    - 5
+    "@":
+      - 0
+      - 5
   class_path: /system/local/site.js:FolderLocal
   fields:
     path:
       "@": schemat.type.STRING
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 7
@@ -239,6 +224,7 @@
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_path: /system/local/site.js:Application
+  "@": schemat.data.Data
 - __id:
     - 0
     - 8
@@ -250,10 +236,9 @@
   fields:
     category:
       category:
-        =:
+        "@":
           - 0
           - 0
-        "@": (item)
       info: Optional category(ies) of items handled by this application.
       "@": schemat.type.ITEM
     drop_cid:
@@ -262,6 +247,8 @@
         instances (no inheritance) of this category are handled (otherwise,
         instances of subclasses are handled, too).
       "@": schemat.type.BOOLEAN
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 9
@@ -274,13 +261,14 @@
     spaces:
       values:
         category:
-          =:
+          "@":
             - 0
             - 0
-          "@": (item)
         "@": schemat.type.ITEM
       "@": schemat.type.CATALOG
+    "@": schemat.data.Catalog
   cached_methods: spacesRev
+  "@": schemat.data.Data
 - __id:
     - 0
     - 10
@@ -304,34 +292,45 @@
       values:
         "@": schemat.type.SCHEMA
       "@": schemat.type.CATALOG
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 11
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
+  "@": schemat.data.Data
 - __id:
     - 6
     - 1
   name: /local
   path: .
+  "@": schemat.data.Data
 - __id:
     - 5
     - 1
   name: /system
   files:
     local:
-      - 6
-      - 1
+      "@":
+        - 6
+        - 1
     Application:
-      - 0
-      - 7
+      "@":
+        - 0
+        - 7
     File:
-      - 0
-      - 3
+      "@":
+        - 0
+        - 3
     Folder:
-      - 0
-      - 5
+      "@":
+        - 0
+        - 5
     Site:
-      - 0
-      - 1
+      "@":
+        - 0
+        - 1
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data

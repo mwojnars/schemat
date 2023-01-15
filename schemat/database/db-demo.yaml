@@ -5,26 +5,38 @@
   URL: http://127.0.0.1:3000
   path_internal: /$
   routes:
-    - - - 8
-        - 101
-      - $
-    - - - 5
-        - 103
-      - apps
-    - - - 5
-        - 104
-      - site
-    - - - 5
-        - 1
-      - system
-    - - - 5
-        - 106
-    - - - 9
-        - 101
+    =:
+      - - $
+        - "@":
+            - 8
+            - 101
+      - - apps
+        - "@":
+            - 5
+            - 103
+      - - site
+        - "@":
+            - 5
+            - 104
+      - - system
+        - "@":
+            - 5
+            - 1
+      - - null
+        - "@":
+            - 5
+            - 106
+      - - null
+        - "@":
+            - 9
+            - 101
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 3
     - 101
   content: export let print = console.log
+  "@": schemat.data.Data
 - __id:
     - 3
     - 102
@@ -33,53 +45,70 @@
     export function check() { print('called widgets.js:check()') } 
     //let fs = await importLocal('fs')
     //print('fs:',fs)
+  "@": schemat.data.Data
 - __id:
     - 5
     - 102
   name: /demo
+  "@": schemat.data.Data
 - __id:
     - 5
     - 103
   name: /apps
   files:
     demo:
-      - 5
-      - 102
+      "@":
+        - 5
+        - 102
     paperity:
-      - 5
-      - 107
+      "@":
+        - 5
+        - 107
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 5
     - 104
   name: /site
   files:
     utils.js:
-      - 3
-      - 101
+      "@":
+        - 3
+        - 101
     widgets.js:
-      - 3
-      - 102
+      "@":
+        - 3
+        - 102
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 8
     - 101
   name: /$
+  "@": schemat.data.Data
 - __id:
     - 9
     - 101
   name: Catalog
   spaces:
     sys.category:
-      - 0
-      - 0
+      "@":
+        - 0
+        - 0
     sys.site:
-      - 0
-      - 1
+      "@":
+        - 0
+        - 1
     sys.dir:
-      - 0
-      - 5
+      "@":
+        - 0
+        - 5
     sys.file:
-      - 0
-      - 3
+      "@":
+        - 0
+        - 3
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 100
@@ -93,14 +122,18 @@
   fields:
     title:
       "@": schemat.type.STRING
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 100
     - 101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
+  "@": schemat.data.Data
 - __id:
     - 100
     - 102
   title: ąłęÓŁŻŹŚ
+  "@": schemat.data.Data
 - __id:
     - 5
     - 106
@@ -109,72 +142,66 @@
     root, like .../favicon.ico, /robots.txt etc.
   files:
     favicon.ico:
-      - 4
-      - 100
+      "@":
+        - 4
+        - 100
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 200
-  __data:
-    - - TwitterPost
-      - name
-    - - text:
-          - - 10
-            - 1
-          - {}
-      - fields
-    - - import { P, BR } from '/system/local/react-utils.js'
-      - class_init
-    - - view: |
-          let text = this.prop('text')
-          return P('Post:', BR(), text)
-      - views
-    - - |
-        // DRAFT...
-        // import {print} from '/site/utils.js'
-        // console.log('print:', print)
-        // console.log('TwitterPost/code executed')
+  name: TwitterPost
+  fields:
+    text:
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
+    "@": schemat.data.Catalog
+  class_init: |
+    // DRAFT...
+    // import {print} from '/site/utils.js'
+    // console.log('print:', print)
+    // console.log('TwitterPost/code executed')
 
-        // import {check} from '/site/widgets.js'
-        // import {Item} from '/system/local/item.js'
-        // import vm from 'vm'
-        // check()
-        // console.log('registry:', registry)
-        // console.log('Item:', Item)
-        // console.log('vm:', vm)
-      - class_init
-    - - |
-        VIEW_view_old() {
-            this.assertLoaded()
-            console.log('this.utils #2:', this.utils)
-            console.log('TwitterPost: imported print()')
-            let text = this.prop('text')
-            return P('Post', BR(), text)
-        }
-      - class_body
-    - - |-
-        // FOR RECORD ONLY...
-        // this method works OK (no await import)
-        init_OK() {
-            console.log('this.utils #1: started...')
-            return import('/site/utils.js').then(utils => {
-                this.utils = utils
-                console.log('this.utils #1:', this.utils)
-            })
-        }
-        // this method works WRONG: the web request is being completed while 
-        // the method waits on await import below (!?)
-        async init_ERR() {
-            console.log('this.utils #1: started...')
-            let utils = await import('/site/utils.js')
+    // import {check} from '/site/widgets.js'
+    // import {Item} from '/system/local/item.js'
+    // import vm from 'vm'
+    // check()
+    // console.log('registry:', registry)
+    // console.log('Item:', Item)
+    // console.log('vm:', vm)
+  views:
+    view: |
+      let text = this.prop('text')
+      return P('Post:', BR(), text)
+    "@": schemat.data.Catalog
+  class_body: |-
+    // FOR RECORD ONLY...
+    // this method works OK (no await import)
+    init_OK() {
+        console.log('this.utils #1: started...')
+        return import('/site/utils.js').then(utils => {
             this.utils = utils
             console.log('this.utils #1:', this.utils)
-        }
-      - class_body
+        })
+    }
+    // this method works WRONG: the web request is being completed while 
+    // the method waits on await import below (!?)
+    async init_ERR() {
+        console.log('this.utils #1: started...')
+        let utils = await import('/site/utils.js')
+        this.utils = utils
+        console.log('this.utils #1:', this.utils)
+    }
+  "@": schemat.data.Data
 - __id:
     - 4
     - 100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+  "@": schemat.data.Data
 - __id:
     - 51
     - 100
@@ -190,23 +217,30 @@
   tables:
     /apps/paperity/Journal: pap_journals
     /apps/paperity/Paper: pap_papers_view
+    "@": schemat.data.Catalog
   readonly: true
+  "@": schemat.data.Data
 - __id:
     - 200
     - 100
   name: Post A
   text: Ala ma kota
+  "@": schemat.data.Data
 - __id:
     - 5
     - 107
   name: /paperity
   files:
     Journal:
-      - 0
-      - 201
+      "@":
+        - 0
+        - 201
     Paper:
-      - 0
-      - 202
+      "@":
+        - 0
+        - 202
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 201
@@ -214,67 +248,99 @@
   info: Paperity's Journal object.
   fields:
     pid:
-      - - 10
-        - 3
-      - {}
+      =:
+        - - 10
+          - 3
+        - {}
+      "@": schemat.type.SchemaWrapper
     title:
       "@": schemat.type.STRING
     issn:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     publisher:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     url:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     homepage:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     xid:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     description:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     source_url:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     created_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     updated_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     indexed_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     indexed_full:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     published_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     papers_all:
-      - - 10
-        - 3
-      - {}
+      =:
+        - - 10
+          - 3
+        - {}
+      "@": schemat.type.SchemaWrapper
     papers_published:
-      - - 10
-        - 3
-      - {}
+      =:
+        - - 10
+          - 3
+        - {}
+      "@": schemat.type.SchemaWrapper
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
 - __id:
     - 0
     - 202
@@ -282,93 +348,138 @@
   info: Paperity's Paper object.
   fields:
     pid:
-      - - 10
-        - 3
-      - {}
+      =:
+        - - 10
+          - 3
+        - {}
+      "@": schemat.type.SchemaWrapper
     title:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     authors:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     url:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     homepage:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     abstract:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     journal_id:
-      - - 10
-        - 2
-      - {}
+      =:
+        - - 10
+          - 2
+        - {}
+      "@": schemat.type.SchemaWrapper
     date:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     birth:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     year:
-      - - 10
-        - 2
-      - {}
+      =:
+        - - 10
+          - 2
+        - {}
+      "@": schemat.type.SchemaWrapper
     languages:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     created_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     updated_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     harvested_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     extracted_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     published_at:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     doi:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     url_pdf:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     pdf_name:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     rawtext:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
     source_url:
-      - - 10
-        - 4
-      - {}
+      =:
+        - - 10
+          - 4
+        - {}
+      "@": schemat.type.SchemaWrapper
     pic_original_name:
-      - - 10
-        - 1
-      - {}
+      =:
+        - - 10
+          - 1
+        - {}
+      "@": schemat.type.SchemaWrapper
+    "@": schemat.data.Catalog
   class_init: |-
     import { H1, H4, DIV, A, P, BR, SPAN, FRAGMENT, BLOCKQUOTE } 
     from '/system/local/react-utils.js'
@@ -491,3 +602,5 @@
       </div>
           `}})
       }
+    "@": schemat.data.Catalog
+  "@": schemat.data.Data
