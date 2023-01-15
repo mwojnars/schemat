@@ -1482,13 +1482,13 @@ export class SchemaWrapper extends Schema {
     decode(obj)         { return this.schema.decode(obj) }
     display(props)      { return this.schema.display(props) }
 
-    // __getstate__()          { return [this.props.prototype.id, this.props.properties] }
-    // __setstate__(state)     {
-    //     let [id, props] = state
-    //     this.__props.prototype  = globalThis.registry.getItem(id)
-    //     this.__props.properties = props
-    //     this.initProps()
-    //     return this
-    // }
+    __getstate__()          { return [this.props.prototype.id, this.props.properties] }
+    __setstate__(state)     {
+        let [id, props] = state
+        this.__props.prototype  = globalThis.registry.getItem(id)
+        this.__props.properties = props
+        this.initProps()
+        return this
+    }
 }
 
