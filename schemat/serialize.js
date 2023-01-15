@@ -11,7 +11,7 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    static FLAG_ITEM  = "(item)"       // special value of ATTR_CLASS that denotes a reference to an Item
+    // static FLAG_ITEM  = "(item)"       // special value of ATTR_CLASS that denotes a reference to an Item
     static FLAG_TYPE  = "class"        // special value of ATTR_CLASS that informs the value is a class rather than an instance
     static FLAG_DICT  = "Object"       // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
     static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
@@ -126,8 +126,8 @@ export class JSONx {
             }
             if (T.isArray(classname))                       // `classname` can be an item ID instead of a class
                 return registry.getItem(classname)
-            if (classname === JSONx.FLAG_ITEM)              // TODO: remove (deprecated)
-                return registry.getItem(state)
+            // if (classname === JSONx.FLAG_ITEM)              // TODO: remove (deprecated)
+            //     return registry.getItem(state)
             cls = registry.getClass(classname)
         }
         else cls = Object

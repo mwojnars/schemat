@@ -618,7 +618,7 @@ export class Catalog {
         let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
         let entries = this._entries.map(e =>
         {
-            let entry = [defined(e.key), defined(e.value)]          // entry = [key, value, maybe-label, maybe-comment]
+            let entry = [defined(e.key), defined(e.value)]          // entry = [key, value, label-maybe, comment-maybe]
             if (e.label || e.comment) entry.push(defined(e.label))
             if (e.comment) entry.push(e.comment)
             return entry
