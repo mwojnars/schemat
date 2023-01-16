@@ -607,10 +607,6 @@ export class Catalog {
 
     /***  Serialization  ***/
 
-    // __setstate__(state)     { this.init(state.entries); return this }
-    // __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
-    //                         // value=undefined can't be serialized as it would get replaced with null after deserialization
-
     __getstate__() {
         /* Encode this Catalog's state either as an object (more compact but requires unique string keys and no annotations),
            or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
@@ -623,7 +619,7 @@ export class Catalog {
             if (e.comment) entry.push(e.comment)
             return entry
         })
-        
+
         if (!this.hasUniqueKeys()) return entries
 
         let irregular = entries.filter(e => e.length !== 2 || typeof e[0] !== 'string')

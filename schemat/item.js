@@ -435,7 +435,7 @@ export class Item {
     async boot(opts = {}) {
         /* (Re)initialize this item. Load this.data from a DB, or from a JSON-encoded string, opts.jsonData, or take from opts.data.
            Set up the class and prototypes. Call init().
-           Boot options (opts): {use_schema, jsonData, data}
+           Boot options (opts): {jsonData, data}
          */
         try {
             if (!this.category) {                               // initialize this.category
@@ -445,7 +445,7 @@ export class Item {
             else if (!this.category.isLoaded && this.category !== this)
                 await this.category.load()
 
-            this.data = opts.data || await this._loadData(opts)
+            this.data = opts.data || await this._loadData(opts.jsonData)
 
             if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
@@ -467,18 +467,16 @@ export class Item {
         }
     }
 
-    async _loadData({use_schema = true, jsonData} = {}) {
+    async _loadData(jsonData = undefined) {
         if (jsonData === undefined) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
         }
+        return JSONx.parse(this.jsonData = jsonData)
 
-        let state = JSON.parse(this.jsonData = jsonData)
-        if ('@' in state) return JSONx.decode(state)            // support for JSONx-encoded structure (no schema)
-        assert('@' in state, state)
-
-        // let schema = use_schema ? this.category.getItemSchema() : generic_schema
-        // return schema.decode(state)
+        // let state = JSON.parse(this.jsonData = jsonData)
+        // assert('@' in state, state)
+        // return JSONx.decode(state)
     }
 
     setExpiry(ttl) {
@@ -775,29 +773,14 @@ export class Item {
         return snippets.join('\n')
     }
 
-    // encodeData(use_schema = true) {
-    //     /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
-    //     this.assertLoaded()
-    //     let schema = use_schema ? this.getSchema() : generic_schema
-    //     return schema.encode(this.data)
-    // }
     dumpData() {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
-        // let state = this.encodeData()
-        // return JSON.stringify(state)
         return JSONx.stringify(this.data)
     }
     record() {
         /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
         return {id: this.id, data: JSONx.encode(this.data)}
-        // return {id: this.id, data: this.encodeData()}
-
-        // // Below, the use of ITEM_RECORD here is experimental (!), the goal is to replace record() calls
-        // // with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
-        // // to be provided each time (cannot be loaded automatically bcs that would be async and encoding must be synchronous!)
-        // let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
-        // return schema.encode({id: this.id, data: this.data})
     }
 
 
@@ -1540,14 +1523,7 @@ export class RootCategory extends Category {
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
-    // encodeData(use_schema = false) {
-    //     /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
-    //     return super.encodeData(false)
-    // }
-    async reload(opts) {
-        /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.reload({...opts, use_schema: false})
-    }
+
     getItemClass() { return Category }
 
     getItemSchema(field = undefined) {
