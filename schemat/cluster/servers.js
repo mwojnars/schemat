@@ -19,12 +19,12 @@ let RES = express.response          // standard Express' prototype of all respon
 //     // print('sendItem():', item.id)
 //     this.json(item.record())
 // }
-RES.sendItems = function(items) {
-    /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
-    if (!(items instanceof Array)) items = Array.from(items)
-    let records = items.map(item => item.record())
-    this.json(records)
-}
+// RES.sendItems = function(items) {
+//     /* Send JSON response with an array of items. `items` should be an array or a synchronous iterator. */
+//     if (!(items instanceof Array)) items = Array.from(items)
+//     let records = items.map(item => item.record())
+//     this.json(records)
+// }
 RES.error = function(...args) {
     /* `args` contain a text message and/or a numeric status code. */
     let msg, code = 500

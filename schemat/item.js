@@ -1487,7 +1487,8 @@ Category.createAPI(
                 await item.load()
                 items.push(item)
             }
-            res.sendItems(items)
+            let records = items.map(item => item.record())
+            res.json(records)
         }),
 
         'POST/action':  new ActionsProtocol({

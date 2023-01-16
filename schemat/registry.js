@@ -393,7 +393,7 @@ export class Session {
     sendFile(...args)       { this.res.sendFile(...args)   }
     sendStatus(...args)     { this.res.sendStatus(...args) }
     // sendItem(...args)       { this.res.sendItem(...args)   }
-    sendItems(...args)      { this.res.sendItems(...args)  }
+    // sendItems(...args)      { this.res.sendItems(...args)  }
 
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }
