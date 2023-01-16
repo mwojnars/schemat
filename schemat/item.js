@@ -780,7 +780,11 @@ export class Item {
     record() {
         /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
-        return {id: this.id, data: JSONx.encode(this.data)}
+        return {id: this.id, data: this.data}
+        // return {id: this.id, data: JSONx.encode(this.data)}
+    }
+    recordEncoded() {
+        return JSONx.encode(this.record())
     }
 
 
@@ -1412,7 +1416,7 @@ export class Category extends Item {
             let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
                 form.current.reset()            // clear input fields
-                this.registry.db.keep(record)
+                this.registry.db.keep(JSONx.encode(record))
                 let item = await this.registry.getItem(record.id)
                 itemAdded(item)
             }
@@ -1487,7 +1491,7 @@ Category.createAPI(
                 await item.load()
                 items.push(item)
             }
-            let records = items.map(item => item.record())
+            let records = items.map(item => item.recordEncoded())
             res.json(records)
         }),
 

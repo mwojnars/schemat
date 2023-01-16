@@ -1,5 +1,6 @@
 import { print, assert, T } from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
+import { JSONx } from './serialize.js'
 
 
 export class Protocol {
@@ -20,10 +21,16 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
+    opts = {}       // configuration options of this protocol instance
+
+
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
 
-    constructor(action = null) { this.action = action }
+    constructor(action = null, opts = {}) {
+        this.action = action
+        this.opts = {...this.opts, ...opts}
+    }
 
     setAddress(address) { this.address = address }
 
@@ -105,23 +112,32 @@ export class JsonProtocol extends HttpProtocol {
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
+    encodeArgs   = true         // if true, the arguments of RPC calls will be encoded via JSONx before sending
+    encodeResult = true
+
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
-        let txt = await res.text()                              // json string or empty
-        if (txt) return JSON.parse(txt)
+
+        let result = await res.text()                           // json string or empty
+        if (!result) return
+
+        result = JSON.parse(result)
+        if (this.encodeResult) result = JSONx.decode(result)
+        return result
     }
 
-    async _fetch(url, data, method = 'POST') {
-        /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
-           For GET requests, `data` must be missing (undefined), as we don't allow body in GET.
+    async _fetch(url, args, method = 'POST') {
+        /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
+           For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
          */
         let params = {method, headers: {}}
-        if (data !== undefined) {
+        if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            params.body = JSON.stringify(data)
+            if (this.encodeArgs) args = JSONx.encode(args)
+            params.body = JSON.stringify(args)
         }
         return fetch(url, params)
     }
@@ -143,9 +159,10 @@ export class JsonProtocol extends HttpProtocol {
             // let {req: {body}}  = ctx
             // print(body)
 
-            // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
+            // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
             let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
+            if (this.encodeArgs) args = JSONx.decode(args)
 
             out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
@@ -163,8 +180,8 @@ export class JsonProtocol extends HttpProtocol {
             res.send({error})
             throw error
         }
-        if (output === undefined) res.end()             // missing output --> empty response body
-
+        if (output === undefined) res.end()                             // missing output --> empty response body
+        if (this.encodeResult) output = JSONx.encode(output)
         res.send(JSON.stringify(output))
     }
 }
