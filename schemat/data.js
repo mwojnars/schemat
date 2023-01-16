@@ -623,6 +623,9 @@ export class Catalog {
             if (e.comment) entry.push(e.comment)
             return entry
         })
+        
+        if (!this.hasUniqueKeys()) return entries
+
         let irregular = entries.filter(e => e.length !== 2 || typeof e[0] !== 'string')
 
         return irregular.length > 0 ? entries : Object.fromEntries(entries)
