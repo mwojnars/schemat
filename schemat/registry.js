@@ -64,16 +64,21 @@ class Classpath {
         Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
         Override an existing object if already present.
         */
+        if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
         this.forward.set(path, obj)
-        if (typeof obj === "function")
+
+        if (typeof obj === "function") {
+            if (this.inverse.has(obj)) throw new Error(`a path for the object (${obj}) already exists: ${this.inverse.get(obj)}`)
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
+        }
     }
     set_many(path, ...objects) {
         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
+        let prefix = path ? `${path}.` : ''
         for (let obj of objects) {
             let name = obj.name
             if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
-            this.set(`${path}.${name}`, obj)
+            this.set(`${prefix}${name}`, obj)
         }
     }
 
@@ -86,6 +91,7 @@ class Classpath {
         */
     {
         let module = await import(module_url)
+        let prefix = path ? `${path}.` : ''
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
         else if (!symbols)                  symbols = Object.keys(module)
@@ -94,7 +100,7 @@ class Classpath {
         for (let name of symbols) {
             let obj = module[name]
             if (accept && !accept(obj)) continue
-            this.set(`${path}.${name}`, obj)
+            this.set(`${prefix}${name}`, obj)
         }
     }
 
