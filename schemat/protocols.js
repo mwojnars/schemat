@@ -99,7 +99,11 @@ export class ReactPage extends HtmlPage {
 /*************************************************************************************************/
 
 export class JsonProtocol extends HttpProtocol {
-    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
+       Both the arguments of an RPC call and its result are encoded through JSON.
+       The standard JSON object is used here, *not* JSONx, so if you expect to transfer more complex Schemat-native
+       objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
+     */
 
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
