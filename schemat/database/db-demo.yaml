@@ -30,13 +30,13 @@
         - "@":
             - 9
             - 101
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 3
     - 101
   content: export let print = console.log
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 3
     - 102
@@ -45,12 +45,12 @@
     export function check() { print('called widgets.js:check()') } 
     //let fs = await importLocal('fs')
     //print('fs:',fs)
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 5
     - 102
   name: /demo
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 5
     - 103
@@ -64,8 +64,8 @@
       "@":
         - 5
         - 107
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 5
     - 104
@@ -79,13 +79,13 @@
       "@":
         - 3
         - 102
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 8
     - 101
   name: /$
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 9
     - 101
@@ -107,8 +107,8 @@
       "@":
         - 0
         - 3
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 100
@@ -121,19 +121,19 @@
     static error() { throw new Error('Varia/code/error()') }
   fields:
     title:
-      "@": schemat.type.STRING
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": STRING
+    "@": Catalog
+  "@": Data
 - __id:
     - 100
     - 101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 100
     - 102
   title: ąłęÓŁŻŹŚ
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 5
     - 106
@@ -145,8 +145,8 @@
       "@":
         - 4
         - 100
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 200
@@ -157,8 +157,8 @@
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
-    "@": schemat.data.Catalog
+      "@": SchemaWrapper
+    "@": Catalog
   class_init: |
     // DRAFT...
     // import {print} from '/site/utils.js'
@@ -176,7 +176,7 @@
     view: |
       let text = this.prop('text')
       return P('Post:', BR(), text)
-    "@": schemat.data.Catalog
+    "@": Catalog
   class_body: |-
     // FOR RECORD ONLY...
     // this method works OK (no await import)
@@ -195,13 +195,13 @@
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 4
     - 100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 51
     - 100
@@ -217,15 +217,15 @@
   tables:
     /apps/paperity/Journal: pap_journals
     /apps/paperity/Paper: pap_papers_view
-    "@": schemat.data.Catalog
+    "@": Catalog
   readonly: true
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 200
     - 100
   name: Post A
   text: Ala ma kota
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 5
     - 107
@@ -239,8 +239,8 @@
       "@":
         - 0
         - 202
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 201
@@ -252,95 +252,95 @@
         - - 10
           - 3
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     title:
-      "@": schemat.type.STRING
+      "@": STRING
     issn:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     publisher:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     url:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     homepage:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     xid:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     description:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     source_url:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     created_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     updated_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     indexed_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     indexed_full:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     published_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     papers_all:
       =:
         - - 10
           - 3
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     papers_published:
       =:
         - - 10
           - 3
         - {}
-      "@": schemat.type.SchemaWrapper
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": SchemaWrapper
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 202
@@ -352,134 +352,134 @@
         - - 10
           - 3
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     title:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     authors:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     url:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     homepage:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     abstract:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     journal_id:
       =:
         - - 10
           - 2
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     date:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     birth:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     year:
       =:
         - - 10
           - 2
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     languages:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     created_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     updated_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     harvested_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     extracted_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     published_at:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     doi:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     url_pdf:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     pdf_name:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     rawtext:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     source_url:
       =:
         - - 10
           - 4
         - {}
-      "@": schemat.type.SchemaWrapper
+      "@": SchemaWrapper
     pic_original_name:
       =:
         - - 10
           - 1
         - {}
-      "@": schemat.type.SchemaWrapper
-    "@": schemat.data.Catalog
+      "@": SchemaWrapper
+    "@": Catalog
   class_init: |-
     import { H1, H4, DIV, A, P, BR, SPAN, FRAGMENT, BLOCKQUOTE } 
     from '/system/local/react-utils.js'
@@ -602,5 +602,5 @@
       </div>
           `}})
       }
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data
