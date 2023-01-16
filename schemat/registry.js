@@ -69,7 +69,7 @@ class Classpath {
         // print(`Classpath: ${path}`)
 
         if (typeof obj === "function") {
-            // if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
+            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
         }
     }
@@ -168,8 +168,8 @@ export class Registry {
         let classpath = new Classpath
 
         // classpath.setMany("schemat.data", Map)                             // schemat.data.Map
-        await classpath.setModule("schemat.data", "./data.js")
-        await classpath.setModule("schemat.type", "./type.js")
+        // await classpath.setModule("schemat.data", "./data.js")
+        // await classpath.setModule("schemat.type", "./type.js")
 
         // add Catalog & Data to the classpath
         classpath.setMany("", Catalog, Data)

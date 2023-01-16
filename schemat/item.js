@@ -6,7 +6,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
-import { DATA, generic_schema } from "./type.js"
+import { DATA } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_CID = 0
@@ -475,10 +475,10 @@ export class Item {
 
         let state = JSON.parse(this.jsonData = jsonData)
         if ('@' in state) return JSONx.decode(state)            // support for JSONx-encoded structure (no schema)
+        assert('@' in state, state)
 
-        let schema = use_schema ? this.category.getItemSchema() : generic_schema
-        return schema.decode(state)
-
+        // let schema = use_schema ? this.category.getItemSchema() : generic_schema
+        // return schema.decode(state)
     }
 
     setExpiry(ttl) {

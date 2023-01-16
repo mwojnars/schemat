@@ -1,6 +1,5 @@
 import { print, assert, T } from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
-import { generic_schema } from "./type.js"
 
 
 export class Protocol {
@@ -102,17 +101,13 @@ export class ReactPage extends HtmlPage {
 export class JsonProtocol extends HttpProtocol {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
 
-    schema = generic_schema     // schema of arguments and results of remote calls, for serialization;
-                                // a narrower, more specific schema might encode data more efficiently;
-                                // in the future, this attr may be split into separate forArgs/Body/Result/Error schemas
-
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         let txt = await res.text()                              // json string or empty
-        if (txt) return this.schema.parse(txt)
+        if (txt) return JSON.parse(txt)
     }
 
     async _fetch(url, data, method = 'POST') {
@@ -122,14 +117,13 @@ export class JsonProtocol extends HttpProtocol {
         let params = {method, headers: {}}
         if (data !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            params.body = this.schema.stringify(data)
+            params.body = JSON.stringify(data)
         }
         return fetch(url, params)
     }
 
     async _decodeError(res) {
         let error = await res.json()
-        // let error = this.schema.parse(await res.text())
         throw new RequestFailed({...error, code: res.status})
     }
 
@@ -146,7 +140,7 @@ export class JsonProtocol extends HttpProtocol {
             // print(body)
 
             // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
-            let args = (typeof body === 'string' ? this.schema.parse(body) : T.notEmpty(body) ? body : [])
+            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
 
             out = this.execute(agent, ctx, ...args)
@@ -162,13 +156,11 @@ export class JsonProtocol extends HttpProtocol {
         res.type('json')
         if (error) {
             res.status(error.code || defaultCode)
-            // res.send(this.schema.stringify(error))
             res.send({error})
             throw error
         }
         if (output === undefined) res.end()             // missing output --> empty response body
 
-        // res.send(this.schema.stringify(output))
         res.send(JSON.stringify(output))
     }
 }
