@@ -11,81 +11,81 @@
         category. May contain an optional class name appended after colon ':'.
         If the class name is missing (no colon), default import from the file is
         used.
-      "@": schemat.type.STRING
+      "@": STRING
     class_name:
       info: Custom internal name for the Class of this category, for debugging. Also
         used as an alias when exporting the Class from the category's module.
-      "@": schemat.type.STRING
+      "@": STRING
     class_init:
       repeated: true
       info: Module-level initialization for this category's Javascript class.
         Typically contains import statements and global variables. Preceeds the
         Class definition (`class_body`, `views`) in the category's module code.
-      "@": schemat.type.CODE
+      "@": CODE
     class_body:
       repeated: true
       info: Source code of the class (a body without heading) that will be created for
         this category. The class inherits from the `class_path` class, or the
         class of the first base category, or the top-level Item.
-      "@": schemat.type.CODE
+      "@": CODE
     pages:
       values:
-        "@": schemat.type.CODE
+        "@": CODE
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
-      "@": schemat.type.CATALOG
+      "@": CATALOG
     handlers:
       values:
-        "@": schemat.type.CODE
+        "@": CODE
       info: Body of Handler subclasses that generate HTML response for particular
         access methods of this category's items.
-      "@": schemat.type.CATALOG
+      "@": CATALOG
     views:
       values:
-        "@": schemat.type.CODE
+        "@": CODE
       info: "Body of React functional components (no function header) to be added
         dynamically to the category's Class body as VIEW_name(props) methods for
         rendering item views. Inside the function body, `this` refers the item
         to be rendered. Alternatively, the code of each view may consist of a
         method header, view() {...}, and be accompanied by supporting methods:
         title(), assets() - like in a class body."
-      "@": schemat.type.CATALOG
+      "@": CATALOG
     html_assets:
       info: HTML code to be inserted in the html/head section of every page that is
         rendered from a view function of this category.
-      "@": schemat.type.CODE
+      "@": CODE
     cache_ttl:
       default: 5
       info: Time To Live (TTL). Determines for how long (in seconds) an item of this
         category is kept in a server-side cache after being loaded from DB, for
         reuse by subsequent requests. A real number. If zero, the items are
         evicted immediately after each request.
-      "@": schemat.type.NUMBER
+      "@": NUMBER
     cached_methods:
       info: Space- and/or comma-separated list of method names of this category's
         Class whose calls are to be cached via Item.setCaching(). Only used when
         a custom subclass is created through the `class_body` or `views`
         properties.
-      "@": schemat.type.STRING
+      "@": STRING
     fields:
       values:
-        "@": schemat.type.SCHEMA
+        "@": SCHEMA
       info: Fields must have unique names.
       default:
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.
-          "@": schemat.type.STRING
+          "@": STRING
         path:
           info: "Canonical path of this item within the SUN, for: display, resolving
             relative code imports, resolving relative item references (REF
             type), etc. If `path` is configured, callers can only import this
             item's code through the `path`, so that the code is always
             interpreted the same and can be cached after parsing."
-          "@": schemat.type.PATH
+          "@": PATH
         info:
           info: Description of the item.
-          "@": schemat.type.TEXT
+          "@": TEXT
         prototype:
           info: An item of the same category that serves as a prototype for this one, that
             is, provides default values for missing properties of this item.
@@ -96,14 +96,14 @@
             catalog-valued fields, see Item.getInherited(). In this way,
             subcategories inherit individual field schemas as defined in base
             categories.
-          "@": schemat.type.ITEM
+          "@": ITEM
         html_title:
           info: HTML title to be used for when this item is rendered.
-          "@": schemat.type.STRING
-        "@": schemat.data.Catalog
-      "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+          "@": STRING
+        "@": Catalog
+      "@": CATALOG
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 1
@@ -115,21 +115,21 @@
     URL:
       info: "Base URL at which the website is served: protocol + domain + root path
         (if any); no trailing '/'."
-      "@": schemat.type.STRING
+      "@": STRING
     path_internal:
       info: URL route of an internal application for default/admin web access to
         items. The application should handle all items.
-      "@": schemat.type.PATH
+      "@": PATH
     routes:
       values:
-        "@": schemat.type.ITEM
+        "@": ITEM
       repeated: true
       info: URL prefixes (as keys) mapped to items that shall perform routing of
         requests whose URLs start with a given prefix. NO leading/trailing
         slashes.
-      "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": CATALOG
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 2
@@ -139,12 +139,12 @@
   fields:
     routes:
       values:
-        "@": schemat.type.ITEM
+        "@": ITEM
       repeated: true
-      "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
+      "@": CATALOG
+    "@": Catalog
   class_path: /system/local/site.js:Router
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 0
     - 3
@@ -154,20 +154,20 @@
   cached_methods: read
   fields:
     content:
-      "@": schemat.type.CODE
+      "@": CODE
     mimetype:
       info: MIME type string (must include '/') to be set as Content-Type when serving
         file download; or an extension ('js', 'jpg', ...) to be converted to an
         appropriate type. If missing, response mimetype is inferred from the URL
         path extension, if present.
-      "@": schemat.type.STRING
+      "@": STRING
     format:
-      "@": schemat.type.STRING
+      "@": STRING
     _is_file:
       default: true
-      "@": schemat.type.BOOLEAN
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": BOOLEAN
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 4
@@ -180,9 +180,9 @@
   class_path: /system/local/site.js:FileLocal
   fields:
     path:
-      "@": schemat.type.STRING
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": STRING
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 5
@@ -193,13 +193,13 @@
   fields:
     files:
       values:
-        "@": schemat.type.ITEM
-      "@": schemat.type.CATALOG
+        "@": ITEM
+      "@": CATALOG
     _is_folder:
       default: true
-      "@": schemat.type.BOOLEAN
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": BOOLEAN
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 6
@@ -214,9 +214,9 @@
   class_path: /system/local/site.js:FolderLocal
   fields:
     path:
-      "@": schemat.type.STRING
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": STRING
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 7
@@ -224,7 +224,7 @@
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_path: /system/local/site.js:Application
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 0
     - 8
@@ -240,15 +240,15 @@
           - 0
           - 0
       info: Optional category(ies) of items handled by this application.
-      "@": schemat.type.ITEM
+      "@": ITEM
     drop_cid:
       info: If true, CID is excluded from URL paths. Requires that a single `category`
         is declared for the application; and implies that only the exact
         instances (no inheritance) of this category are handled (otherwise,
         instances of subclasses are handled, too).
-      "@": schemat.type.BOOLEAN
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+      "@": BOOLEAN
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 9
@@ -264,11 +264,11 @@
           "@":
             - 0
             - 0
-        "@": schemat.type.ITEM
-      "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
+        "@": ITEM
+      "@": CATALOG
+    "@": Catalog
   cached_methods: spacesRev
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 0
     - 10
@@ -279,34 +279,34 @@
   class_path: /system/local/type_schema.js:SchemaPrototype
   fields:
     class_path:
-      "@": schemat.type.STRING
+      "@": STRING
     encode:
       info: Body of a function with the signature `encode(obj,props={})`. Should
         return a state that encodes the input object/value, `obj`.
-      "@": schemat.type.CODE
+      "@": CODE
     decode:
-      "@": schemat.type.CODE
+      "@": CODE
     initial:
-      "@": schemat.type.GENERIC
+      "@": GENERIC
     properties:
       values:
-        "@": schemat.type.SCHEMA
-      "@": schemat.type.CATALOG
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+        "@": SCHEMA
+      "@": CATALOG
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 11
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 6
     - 1
   name: /local
   path: .
-  "@": schemat.data.Data
+  "@": Data
 - __id:
     - 5
     - 1
@@ -332,5 +332,5 @@
       "@":
         - 0
         - 1
-    "@": schemat.data.Catalog
-  "@": schemat.data.Data
+    "@": Catalog
+  "@": Data

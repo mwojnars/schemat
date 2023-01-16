@@ -3,7 +3,7 @@
 import { print, assert, splitLast } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
-import { ItemsCache, ItemsCount } from './data.js'
+import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
 import { root_data } from './server/root.js'
 
@@ -66,13 +66,14 @@ class Classpath {
         */
         if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
         this.forward.set(path, obj)
+        // print(`Classpath: ${path}`)
 
         if (typeof obj === "function") {
-            if (this.inverse.has(obj)) throw new Error(`a path for the object (${obj}) already exists: ${this.inverse.get(obj)}`)
+            // if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
         }
     }
-    set_many(path, ...objects) {
+    setMany(path, ...objects) {
         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
         let prefix = path ? `${path}.` : ''
         for (let obj of objects) {
@@ -82,12 +83,12 @@ class Classpath {
         }
     }
 
-    async add_module(path, module_url, {symbols, accept, exclude_variables = true} = {})
+    async setModule(path, module_url, {symbols, accept, exclude_variables = true} = {})
         /*
         Add symbols from `module` to a given package `path`.
         If `symbols` is missing, all symbols found in the module are added, excluding:
         1) variables (i.e., not classes, not functions), if exclude_variables=true;
-        2) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
+        2) symbols that point to objects whose accept(name, obj) is false, if `accept` function is defined.
         */
     {
         let module = await import(module_url)
@@ -99,7 +100,7 @@ class Classpath {
 
         for (let name of symbols) {
             let obj = module[name]
-            if (accept && !accept(obj)) continue
+            if (accept && !accept(name, obj)) continue
             this.set(`${prefix}${name}`, obj)
         }
     }
@@ -166,12 +167,17 @@ export class Registry {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
-        classpath.set_many("schemat.data", Map)                             // schemat.data.Map
-        await classpath.add_module("schemat.data", "./data.js")
-        await classpath.add_module("schemat.type", "./type.js")
-        // await classpath.add_module("schemat.item", "./item.js")
-        // await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
-        // await classpath.add_module("schemat.base", "./base.js")
+        // classpath.setMany("schemat.data", Map)                             // schemat.data.Map
+        await classpath.setModule("schemat.data", "./data.js")
+        await classpath.setModule("schemat.type", "./type.js")
+
+        // add Catalog & Data to the classpath
+        classpath.setMany("", Catalog, Data)
+
+        // add all schema subtypes (all-caps class names) + SchemaWrapper
+        await classpath.setModule("", "./type.js", {accept: (name) =>
+                name.toUpperCase() === name || name === 'SchemaWrapper'
+        })
 
         this.classpath = classpath
         // print('initClasspath() done')
