@@ -112,8 +112,10 @@ export class JsonProtocol extends HttpProtocol {
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
-    encodeArgs   = true         // if true, the arguments of RPC calls will be encoded via JSONx before sending
-    encodeResult = true
+    opts = {
+        encodeArgs:   true,         // if true, the arguments of RPC calls are auto-encoded via JSONx before sending
+        encodeResult: true,         // if true, the results of RPC calls are auto-encoded via JSONx before sending
+    }
 
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
@@ -125,7 +127,7 @@ export class JsonProtocol extends HttpProtocol {
         if (!result) return
 
         result = JSON.parse(result)
-        if (this.encodeResult) result = JSONx.decode(result)
+        if (this.opts.encodeResult) result = JSONx.decode(result)
         return result
     }
 
@@ -136,7 +138,7 @@ export class JsonProtocol extends HttpProtocol {
         let params = {method, headers: {}}
         if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            if (this.encodeArgs) args = JSONx.encode(args)
+            if (this.opts.encodeArgs) args = JSONx.encode(args)
             params.body = JSON.stringify(args)
         }
         return fetch(url, params)
@@ -162,7 +164,7 @@ export class JsonProtocol extends HttpProtocol {
             // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
             let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
-            if (this.encodeArgs) args = JSONx.decode(args)
+            if (this.opts.encodeArgs) args = JSONx.decode(args)
 
             out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
@@ -181,7 +183,7 @@ export class JsonProtocol extends HttpProtocol {
             throw error
         }
         if (output === undefined) res.end()                             // missing output --> empty response body
-        if (this.encodeResult) output = JSONx.encode(output)
+        if (this.opts.encodeResult) output = JSONx.encode(output)
         res.send(JSON.stringify(output))
     }
 }
@@ -196,8 +198,8 @@ export class ActionsProtocol extends JsonProtocol {
 
     actions                 // {name: action_function}, specification of actions handled by this protocol
 
-    constructor(actions = {}) {
-        super()
+    constructor(actions = {}, opts = {}) {
+        super(null, opts)
         this.actions = actions
     }
 
