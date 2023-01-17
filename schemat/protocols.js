@@ -21,7 +21,8 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
-    opts = {}       // configuration options of this protocol instance
+    opts = {}           // configuration options of this protocol instance
+    static opts = {}    // default values of configuration options
 
 
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
@@ -29,7 +30,7 @@ export class Protocol {
 
     constructor(action = null, opts = {}) {
         this.action = action
-        this.opts = {...this.opts, ...opts}
+        this.opts = {...this.constructor.opts, ...opts}
     }
 
     setAddress(address) { this.address = address }
@@ -42,7 +43,9 @@ export class Protocol {
     }
 
     merge(protocol) {
-        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
+        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged,
+           so that redefining a protocol in a subclass means *overriding* the previous protocol with a new one (no merging).
+         */
         return protocol
     }
 
@@ -112,9 +115,9 @@ export class JsonProtocol extends HttpProtocol {
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
-    opts = {
+    static opts = {
         encodeArgs:   true,         // if true, the arguments of RPC calls are auto-encoded via JSONx before sending
-        encodeResult: true,         // if true, the results of RPC calls are auto-encoded via JSONx before sending
+        encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
     async remote(agent, ...args) {
@@ -204,7 +207,10 @@ export class ActionsProtocol extends JsonProtocol {
     }
 
     merge(protocol) {
-        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
+        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`.
+           The `opts` in both protocols must be exactly THE SAME, otherwise the actions from one protocol could not
+           work properly with the options from another one.
+         */
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(protocol)
@@ -212,10 +218,18 @@ export class ActionsProtocol extends JsonProtocol {
         // if (c1 !== c2) return protocol          // `protocol` can be null
         assert(this.address === protocol.address, this.address, protocol.address)
 
-        // create a new protocol instance with `actions` combined
+        // check that the options are the same
+        let opts1 = JSON.stringify(this.opts)
+        let opts2 = JSON.stringify(protocol.opts)
+        if (opts1 !== opts2)
+            throw new Error(`cannot merge protocols that have different options: ${opts1} != ${opts2}`)
+
+        // create a new protocol instance with `actions` combined; copy the address
         let actions = {...this.actions, ...protocol.actions}
-        let merged = new c1(actions)
+        let opts = {...this.opts, ...protocol.opts}
+        let merged = new c1(actions, opts)
         merged.setAddress(this.address)
+
         return merged
     }
 

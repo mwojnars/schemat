@@ -1124,7 +1124,7 @@ Item.createAPI(
 
         'CALL/default': new InternalProtocol(function() { return this }),
         'CALL/item':    new InternalProtocol(function() { return this }),
-        'GET/json':     new JsonProtocol(function() { return this.record() }),
+        'GET/json':     new JsonProtocol(function() { return this.recordEncoded() }),
 
         // internal actions called by UI
         'POST/action':  new ActionsProtocol({
@@ -1415,8 +1415,9 @@ export class Category extends Item {
 
             let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
+                // `record` is encoded: {id: id, data: data-encoded}
                 form.current.reset()            // clear input fields
-                this.registry.db.keep(JSONx.encode(record))
+                this.registry.db.keep(record)
                 let item = await this.registry.getItem(record.id)
                 itemAdded(item)
             }
@@ -1503,10 +1504,11 @@ Category.createAPI(
                 await this.registry.insert(item)
                 // let record = await this.registry.insert(data, this.cid, /* iid = null */)
                 // return record
-                return item.record()
+                return item.recordEncoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
-        }),
+        }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+        ),
     },
     {
         // actions...
