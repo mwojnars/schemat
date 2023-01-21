@@ -1327,9 +1327,9 @@ CATALOG.Table = class extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: schema.encode(value) })
+                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
                 else prev[pos].saveNew = (value) =>
-                    item.action.insert_field(path, pos, {key, value: schema.encode(value)}).then(() => unnew())
+                    item.action.insert_field(path, pos, {key, value: JSONx.encode(value)}).then(() => unnew())
 
                 return [...prev]
             })
@@ -1343,7 +1343,7 @@ CATALOG.Table = class extends Component {
             // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, schema) => {
-            return item.action.update_field([...path, pos], {value: schema.encode(newValue)})
+            return item.action.update_field([...path, pos], {value: JSONx.encode(newValue)})
         }
     }}
 

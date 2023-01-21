@@ -1132,7 +1132,8 @@ Item.createAPI(
             delete_self(ctx)   { return this.registry.delete(this) },
 
             insert_field(ctx, path, pos, entry) {
-                if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.insert(path, pos, entry)
                 return this.registry.update(this)
             },
@@ -1143,7 +1144,8 @@ Item.createAPI(
             },
 
             update_field(ctx, path, entry) {
-                if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
                 return this.registry.update(this)
             },
