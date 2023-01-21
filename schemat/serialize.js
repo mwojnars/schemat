@@ -22,13 +22,13 @@ export class JSONx {
         this.registry = globalThis.registry
     }
 
-    static stringify(obj, type = null) {
-        let flat = this.encode(obj, type)
-        return JSON.stringify(flat)
+    static stringify(obj, ...opts) {
+        let flat = this.encode(obj)
+        return JSON.stringify(flat, ...opts)
     }
-    static parse(dump, type = null) {
+    static parse(dump) {
         let flat = JSON.parse(dump)
-        return this.decode(flat, type)
+        return this.decode(flat)
     }
 
     static encode(obj, type = null)     { return new JSONx().encode(obj, type) }
