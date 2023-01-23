@@ -185,8 +185,9 @@ export class Catalog {
     has(key)            { return this._keys.has(key)  }                     // Map's interface
     hasKeys()           { return this._keys.size > 0  }
     hasUniqueKeys()     { return this._keys.size === this.length }
+    hasStringKeys()     { return this._entries.filter(e => typeof e.key !== 'string').length === 0 }
     hasAnnot()          { return this._entries.filter(e => e && (e.label || e.comment)).length > 0 }     // at least one label or comment is present?
-    isDict()            { return this.hasUniqueKeys() && !this.hasAnnot() }
+    isDict()            { return this.hasUniqueKeys() && this.hasStringKeys() && !this.hasAnnot() }
     map(fun)            { return Array.from(this._entries, fun) }           // Array's interface
     *keys()             { yield* this._keys.keys() }                        // Map's interface
     *values()           { yield* this._entries.map(e => e.value) }          // Map's interface
@@ -210,12 +211,8 @@ export class Catalog {
         this.init(concat(entries), true)
     }
 
-    __setstate__(state)     { this.init(state.entries); return this }
-    __getstate__()          { this._entries.map(e => assert(e.value !== undefined)); return {entries: this._entries} }
-                            // value=undefined can't be serialized as it would get replaced with null after deserialization
-
     init(entries, clean = false) {
-        /* (Re)build this._entries and this._keys from an array of `entries`. */
+        /* (Re)build this._entries and this._keys from an array of `entries`, each entry is an object {key, value, ...}. */
         this._keys = new Map()
         this._entries = clean ? entries.map(e => this._clean(e)) : [...entries]
 
@@ -226,6 +223,7 @@ export class Catalog {
             if (ids.push(pos) === 1) this._keys.set(key, ids)
         }
     }
+
 
     /***  Read access  ***/
 
@@ -606,6 +604,39 @@ export class Catalog {
         // return new this.constructor(entries)
     }
 
+
+    /***  Serialization  ***/
+
+    __getstate__() {
+        /* Encode this Catalog's state either as an object (more compact but requires unique string keys and no annotations),
+           or as an array of [key, value] tuples - some tuples may additionally contain a label and a comment.
+         */
+        let defined = (x) => x === undefined ? null : x             // function to replace "undefined" with null
+        let entries = this._entries.map(e =>
+        {
+            let entry = [defined(e.key), defined(e.value)]          // entry = [key, value, label-maybe, comment-maybe]
+            if (e.label || e.comment) entry.push(defined(e.label))
+            if (e.comment) entry.push(e.comment)
+            return entry
+        })
+
+        if (!this.hasUniqueKeys()) return entries
+
+        let irregular = entries.filter(e => e.length !== 2 || typeof e[0] !== 'string')
+
+        return irregular.length > 0 ? entries : Object.fromEntries(entries)
+    }
+
+    __setstate__(state) {
+        // if state is an object (compact representation) convert it to an array
+        if (!T.isArray(state)) state = Object.entries(state)
+
+        // convert each entry [key,value,...] in the array to an object {key, value, ...}
+        state = state.map(([key, value, label, comment]) => ({key, value, label, comment}))
+
+        this.init(state)
+        return this
+    }
 }
 
 

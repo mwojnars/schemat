@@ -102,27 +102,6 @@ export class Schema {
     //     // throw new ValueError(value)
     // }
 
-    encode(value) {
-        /*
-        Convert `value` - a possibly composite object matching the current schema (this) -
-        to a JSON-serializable "state" that does not contain non-standard nested objects anymore.
-        By default, generic object encoding (JSON.encode()) is performed.
-        Subclasses may override this method to perform more compact, schema-aware encoding.
-        */
-        return JSONx.encode(value)
-    }
-
-    decode(state) {
-        /* Convert a serializable "state" as returned by encode() back to an original custom object. */
-        return JSONx.decode(state)
-    }
-
-    stringify(value, replacer, space) {
-        /* Encode and JSON-stringify a `value` with configurable JSON format. */
-        return JSON.stringify(this.encode(value), replacer, space)
-    }
-    parse(dump)     { return this.decode(JSON.parse(dump)) }
-
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
     combine(streamsOfEntries) {
@@ -208,8 +187,8 @@ Schema.Widget = class extends Widget {
     empty(v)    { return T.isMissing(v) && I('missing') }       // view of an empty value, for display() and viewer()
     view(v)     { return this.encode(v) }                       // view of a non-empty value, for display() and viewer()
     display(v)  { return this.empty(v) || this.view(v) }        // convert a value to a UI element for display in viewer()
-    encode(v)   { return this.props.schema.stringify(v) }       // convert a value to its editable representation
-    decode(v)   { return this.props.schema.parse(v) }           // ...and back
+    encode(v)   { return JSONx.stringify(v) }                   // convert a value to its editable representation
+    decode(v)   { return JSONx.parse(v) }                       // ...and back
 
     viewer()    { return DIV({onDoubleClick: e => this.open(e)}, this.display(this.props.value)) }
     editor()    { return INPUT({
@@ -289,11 +268,6 @@ export class Primitive extends Schema {
         if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return
         throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
     }
-    encode(value) {
-        if (value === undefined) return null
-        return value
-    }
-    decode(value) { return value }
 }
 
 export class BOOLEAN extends Primitive {
@@ -547,9 +521,6 @@ export class DATE extends STRING {
     check(value) {
         if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
     }
-    encode(value) {
-
-    }
 }
 
 export class DATETIME extends STRING {
@@ -578,15 +549,13 @@ export class GENERIC extends Schema {
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
-    encode(obj)   { return JSONx.encode(obj) }
-    decode(state) { return JSONx.decode(state) }
 
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
         empty(value)    { return Schema.Widget.prototype.empty.call(this, value) }
-        view(value)     { return this.props.schema.stringify(value) }            // JSON string is pretty-printed for edit
-        encode(value)   { return this.props.schema.stringify(value, null, 2) }   // JSON string is pretty-printed for edit
-        decode(value)   { return this.props.schema.parse(value) }
+        view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
+        encode(value)   { return JSONx.stringify(value, null, 2) }      // JSON string is pretty-printed for edit
+        decode(value)   { return JSONx.parse(value) }
     }
 }
 
@@ -599,20 +568,6 @@ export let generic_string = new STRING()
 
 export class SCHEMA extends GENERIC {
     static defaultProps = {class: Schema}
-
-    encode(schema) {
-        // special more concise array-form encoding for SchemaWrapper, which is going to be the most common schema object
-        if (schema instanceof SchemaWrapper) return [schema.props.prototype.id, schema.props.properties]
-        return super.encode(schema)
-    }
-    decode(state) {
-        if (state instanceof Array) {
-            let [id, properties] = state
-            let prototype = globalThis.registry.getItem(id)
-            return new SchemaWrapper({prototype, properties})
-        }
-        return super.decode(state)
-    }
 
     static Widget = class extends GENERIC.Widget {
         scope = 'Schema-SCHEMA'
@@ -669,48 +624,6 @@ export class SCHEMA extends GENERIC {
 
 /**********************************************************************************************************************/
 
-export class CLASS extends Schema {
-    /* Accepts any global python type and encodes as a string containing its full package-module name. */
-    encode(value) {
-        if (value === null) return null
-        return globalThis.registry.getPath(value)
-    }
-    decode(value) {
-        if (typeof value !== "string") throw new DataError(`expected a string after decoding, got ${value} instead`)
-        return globalThis.registry.getClass(value)
-    }
-}
-
-/**********************************************************************************************************************/
-
-// export class ITEM_RECORD extends Schema {
-//     /*
-//     Schema of an item's record object: {id, data}. The `data` attribute is encoded through the item's schema
-//     (if generic=false), or through generic_schema (otherwise).
-//     */
-//     static defaultProps = {
-//         dataSchema: generic_schema,      // schema for encoding/decoding of item's data
-//         // generic: false,         // if true, item's data is encoded through generic_schema instead of its own schema
-//     }
-//
-//     encode(record) {
-//         let {id, data} = record
-//         return {id, data: this.props.dataSchema.encode(data)}
-//         // return {id, data: this._getDataSchema(id).encode(data)}
-//     }
-//     decode(state) {
-//         let {id, data} = state
-//         return {id, data: this.props.dataSchema.decode(data)}
-//         // return {id, data: this._getDataSchema(id).decode(data)}
-//     }
-//     // _getDataSchema(id) {
-//     //     if (!id) throw new DataError(`missing record.id: [${id}]`)
-//     //     if (!(id instanceof Array && id.length === 2)) throw new DataError(`expected record.id to be a 2-element array, got ${id}`)
-//     //     if (this.props.generic) return generic_schema
-//     //     return globalThis.registry.getCategory(id[0]).getItemSchema()   // ERROR: missing "await" for getCategory()
-//     // }
-// }
-
 export class ITEM extends Schema {
     /*
     Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
@@ -720,40 +633,6 @@ export class ITEM extends Schema {
     static defaultProps = {
         category:  undefined,       // base category for all the items to be encoded
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
-    }
-
-    encode(item) {
-        if (!(item instanceof globalThis.Item)) throw new DataError(`not an Item: ${item}`)
-        if (!item.has_id()) throw new DataError(`item to be encoded has missing or incomplete ID: [${item.id}]`)
-
-        let {category, exact} = this.props      // verify inheritance from a base category - only for LOADED items !!
-        if (category) {
-            if (item.isLoaded && !item.instanceof(category)) throw new Error(`expected an item of category ${category}, got ${item}`)
-            if (exact) {
-                let cid = category.iid          // output IID alone if an exact category is known
-                if (item.cid !== cid) throw new DataError(`incorrect CID=${item.cid} of an item ${item}, expected CID=${cid}`)
-                return item.iid
-            }
-        }
-        return item.id
-    }
-
-    decode(value) {
-        let cid, iid, {category, exact} = this.props
-        if (typeof value === "number") {                                // decoding an IID alone
-            let ref_cid = exact && category ? category.iid : undefined
-            if (ref_cid === undefined) throw new DataError(`expected a [CID,IID] pair, but only got IID=${iid}`)
-            cid = ref_cid
-            iid = value
-        } else if (value instanceof Array && value.length === 2)        // decoding a full ID = [CID,IID]
-            [cid, iid] = value
-        else
-            throw new DataError(`expected a (CID,IID) tuple, got ${value} instead during decoding`)
-
-        if (!Number.isInteger(cid)) throw new DataError(`expected CID to be an integer, got ${cid} instead during decoding`)
-        if (!Number.isInteger(iid)) throw new DataError(`expected IID to be an integer, got ${iid} instead during decoding`)
-
-        return globalThis.registry.getItem([cid, iid])
     }
 
     static Widget = ItemLoadingHOC(class extends Schema.Widget {
@@ -818,33 +697,6 @@ export class MAP extends Schema {
         values:     generic_schema,             // schema of values of app-layer dicts
     }
 
-    encode(d) {
-        let {class: type, keys: schema_keys, values: schema_values} = this.props
-        if (!(d instanceof type)) throw new DataError(`expected an object of type ${type}, got ${d} instead`)
-
-        let state = {}                                      // encode keys & values through predefined field types
-        for (let [key, value] of Object.entries(d)) {
-            let k = schema_keys.encode(key)
-            if (k in state) throw new DataError(`two different keys encoded to the same state (${k}) in MAP, one of them: ${key}`)
-            state[k] = schema_values.encode(value)
-        }
-        return state
-    }
-    decode(state) {
-
-        if (typeof state != "object") throw new DataError(`expected an object as state for decoding, got ${state} instead`)
-
-        let {class: type, keys: schema_keys, values: schema_values} = this.props
-        let d = new type()
-
-        // decode keys & values through predefined field types
-        for (let [key, value] of Object.entries(state)) {
-            let k = schema_keys.decode(key)
-            if (k in d) throw new DataError(`two different keys of state decoded to the same key (${key}) of output object, one of them: ${k}`)
-            d[k] = schema_values.decode(value)
-        }
-        return d
-    }
     collect(assets) {
         this.props.keys.collect(assets)
         this.props.values.collect(assets)
@@ -868,32 +720,6 @@ export class RECORD extends Schema {
         fields: {},                     // object containing field names and their schemas
     }
 
-    encode(data) {
-        /* Encode & compactify values of fields through per-field schema definitions. */
-        let {class: type} = this.props
-        if (type) {
-            if (!T.ofType(data, type)) throw new DataError(`expected an instance of ${type}, got ${data}`)
-            data = T.getstate(data)
-        }
-        else if (!T.isDict(data))
-            throw new DataError(`expected a plain Object for encoding, got ${T.getClassName(data)}`)
-
-        return T.mapDict(data, (name, value) => [name, this._schema(name).encode(value)])
-    }
-    decode(state) {
-        if (!T.isDict(state)) throw new DataError(`expected a plain Object for decoding, got ${T.getClassName(state)}`)
-        let data = T.mapDict(state, (name, value) => [name, this._schema(name).decode(value)])
-        // let data = await T.amapDict(state, async (name, value) => [name, await this._schema(name).decode(value)])
-        let {class: type} = this.props
-        if (type) return T.setstate(type, data)
-        return data
-    }
-    _schema(name) {
-        let {fields} = this.props
-        if (!fields.hasOwnProperty(name))
-            throw new DataError(`unknown field "${name}", expected one of ${Object.getOwnPropertyNames(fields)}`)
-        return fields[name] || generic_schema
-    }
     collect(assets) {
         for (let schema of Object.values(this.props.fields))
             schema.collect(assets)
@@ -942,59 +768,6 @@ export class CATALOG extends Schema {
         super(props)
         let {keys} = props
         if (keys && !(keys.instanceof(STRING))) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
-    }
-    encode(cat) {
-        /* Encode & compactify values of fields through per-field schema definitions. */
-        if (T.isDict(cat)) throw new DataError(`plain object no longer supported by CATALOG.encode(), wrap it up in "new Catalog(...)": ${cat}`)
-        if (!(cat instanceof Catalog)) throw new DataError(`expected a Catalog, got ${cat}`)
-        return cat.isDict() ? this._to_dict(cat) : this._to_list(cat)
-    }
-    _to_dict(cat) {
-        /* Encode a catalog as a plain object (dictionary) with {key: value} pairs. Keys are assumed to be unique. */
-        let state = {}
-        let encode_key = (k) => this.props.keys.encode(k)
-        for (const e of cat.entries())
-            state[encode_key(e.key)] = this.subschema(e.key).encode(e.value)
-        return state
-    }
-    _to_list(cat) {
-        /* Encode a catalog as a list of tuples [value,key,label,comment], possibly truncated if label/comment
-           is missing, and with `value` being schema-encoded.
-         */
-        let encode_key = (k) => this.props.keys.encode(k)
-        return cat.getEntries().map(e =>
-        {
-            let value = this.subschema(e.key).encode(e.value)
-            let tuple = [value, encode_key(e.key), e.label, e.comment]
-            tuple.slice(2).forEach(s => {if(!(T.isMissing(s) || typeof s === 'string')) throw new DataError(`expected a string, got ${s}`)})
-            while (tuple.length >= 2 && !tuple[tuple.length-1])
-                tuple.pop()                         // truncate the last element(s) if a label or comment are missing
-            return tuple
-        })
-    }
-
-    decode(state) {
-        if (T.isDict(state))  return this._from_dict(state)
-        if (T.isArray(state)) return this._from_list(state)
-        throw new DataError(`expected a plain Object or Array for decoding, got ${state}`)
-    }
-    _from_dict(state) {
-        let schema_keys = this.props.keys
-        let entries = Object.entries(state).map(([key, value]) => ({
-            key:   schema_keys.decode(key),
-            value: this.subschema(key).decode(value),
-        }))
-        return new Catalog(entries)
-    }
-    _from_list(state) {
-        let cat = new Catalog()
-        let schema_keys = this.props.keys
-        for (let [value, key, label, comment] of state) {
-            key = schema_keys.decode(key)
-            value = this.subschema(key).decode(value)
-            cat.pushEntry({key, value, label, comment})
-        }
-        return cat
     }
 
     collect(assets) {
@@ -1350,9 +1123,9 @@ CATALOG.Table = class extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: schema.encode(value) })
+                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
                 else prev[pos].saveNew = (value) =>
-                    item.action.insert_field(path, pos, {key, value: schema.encode(value)}).then(() => unnew())
+                    item.action.insert_field(path, pos, {key, value: JSONx.encode(value)}).then(() => unnew())
 
                 return [...prev]
             })
@@ -1366,7 +1139,7 @@ CATALOG.Table = class extends Component {
             // return item.server.update({field: ...})
         },
         updateValue: (pos, newValue, schema) => {
-            return item.action.update_field([...path, pos], {value: schema.encode(newValue)})
+            return item.action.update_field([...path, pos], {value: JSONx.encode(newValue)})
         }
     }}
 
@@ -1478,17 +1251,15 @@ export class SchemaWrapper extends Schema {
     }
     instanceof(cls)     { return this.schema instanceof cls }
     validate(obj)       { return this.schema.validate(obj) }
-    encode(obj)         { return this.schema.encode(obj) }
-    decode(obj)         { return this.schema.decode(obj) }
     display(props)      { return this.schema.display(props) }
 
-    // __getstate__()          { return [this.props.prototype.id, this.props.properties] }
-    // __setstate__(state)     {
-    //     let [id, props] = state
-    //     this.__props.prototype  = globalThis.registry.getItem(id)
-    //     this.__props.properties = props
-    //     this.initProps()
-    //     return this
-    // }
+    __getstate__()          { return [this.props.prototype.id, this.props.properties] }
+    __setstate__(state)     {
+        let [id, props] = state
+        this.__props.prototype  = globalThis.registry.getItem(id)
+        this.__props.properties = props
+        this.initProps()
+        return this
+    }
 }
 

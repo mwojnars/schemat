@@ -67,6 +67,10 @@ class Node {
         // node = this.registry.getLoaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
+        // // convert all the items in the database to a new format; all rings must be set as writable (!)
+        // for await (let item of this.registry.scan())
+        //     this.registry.update(item)
+
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
         return Promise.all([web, data])

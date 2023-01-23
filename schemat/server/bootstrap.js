@@ -2,7 +2,7 @@
 Creating core items from scratch and storing them as initial items in DB.
  */
 
-import {print, assert, dedentCommon as dedent} from '../utils.js'
+import {print, assert} from '../utils.js'
 import {ROOT_CID, SITE_CID} from '../item.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {C} from './root.js'

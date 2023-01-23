@@ -1,6 +1,6 @@
 import { print, assert, T } from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
-import { generic_schema } from "./type.js"
+import { JSONx } from './serialize.js'
 
 
 export class Protocol {
@@ -21,10 +21,17 @@ export class Protocol {
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
+    opts = {}           // configuration options of this protocol instance
+    static opts = {}    // default values of configuration options
+
+
     get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
     get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
 
-    constructor(action = null) { this.action = action }
+    constructor(action = null, opts = {}) {
+        this.action = action
+        this.opts = {...this.constructor.opts, ...opts}
+    }
 
     setAddress(address) { this.address = address }
 
@@ -36,7 +43,9 @@ export class Protocol {
     }
 
     merge(protocol) {
-        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged. */
+        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged,
+           so that redefining a protocol in a subclass means *overriding* the previous protocol with a new one (no merging).
+         */
         return protocol
     }
 
@@ -100,36 +109,46 @@ export class ReactPage extends HtmlPage {
 /*************************************************************************************************/
 
 export class JsonProtocol extends HttpProtocol {
-    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint. */
+    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
+       Both the arguments of an RPC call and its result are encoded through JSON.
+       The standard JSON object is used here, *not* JSONx, so if you expect to transfer more complex Schemat-native
+       objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
+     */
 
-    schema = generic_schema     // schema of arguments and results of remote calls, for serialization;
-                                // a narrower, more specific schema might encode data more efficiently;
-                                // in the future, this attr may be split into separate forArgs/Body/Result/Error schemas
+    static opts = {
+        encodeArgs:   true,         // if true, the arguments of RPC calls are auto-encoded via JSONx before sending
+        encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
+    }
 
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
         let url = agent.url(this.endpoint)
         let res = await this._fetch(url, args, this.method)     // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
-        let txt = await res.text()                              // json string or empty
-        if (txt) return this.schema.parse(txt)
+
+        let result = await res.text()                           // json string or empty
+        if (!result) return
+
+        result = JSON.parse(result)
+        if (this.opts.encodeResult) result = JSONx.decode(result)
+        return result
     }
 
-    async _fetch(url, data, method = 'POST') {
-        /* Fetch the `url` while including the `data` (if any) in the request body, json-encoded.
-           For GET requests, `data` must be missing (undefined), as we don't allow body in GET.
+    async _fetch(url, args, method = 'POST') {
+        /* Fetch the `url` while including the `args` (if any) in the request body, json-encoded.
+           For GET requests, `args` must be missing (undefined), as we don't allow body in GET.
          */
         let params = {method, headers: {}}
-        if (data !== undefined) {
+        if (args !== undefined) {
             if (method === 'GET') throw new Error(`HTTP GET not allowed with non-empty body, url=${url}`)
-            params.body = this.schema.stringify(data)
+            if (this.opts.encodeArgs) args = JSONx.encode(args)
+            params.body = JSON.stringify(args)
         }
         return fetch(url, params)
     }
 
     async _decodeError(res) {
         let error = await res.json()
-        // let error = this.schema.parse(await res.text())
         throw new RequestFailed({...error, code: res.status})
     }
 
@@ -145,9 +164,10 @@ export class JsonProtocol extends HttpProtocol {
             // let {req: {body}}  = ctx
             // print(body)
 
-            // `body` may have been already decoded by middleware if mimetype=json was set in the request; it can also be {}
-            let args = (typeof body === 'string' ? this.schema.parse(body) : T.notEmpty(body) ? body : [])
+            // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
+            let args = (typeof body === 'string' ? JSON.parse(body) : T.notEmpty(body) ? body : [])
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
+            if (this.opts.encodeArgs) args = JSONx.decode(args)
 
             out = this.execute(agent, ctx, ...args)
             if (out instanceof Promise) out = await out
@@ -162,13 +182,11 @@ export class JsonProtocol extends HttpProtocol {
         res.type('json')
         if (error) {
             res.status(error.code || defaultCode)
-            // res.send(this.schema.stringify(error))
             res.send({error})
             throw error
         }
-        if (output === undefined) res.end()             // missing output --> empty response body
-
-        // res.send(this.schema.stringify(output))
+        if (output === undefined) res.end()                             // missing output --> empty response body
+        if (this.opts.encodeResult) output = JSONx.encode(output)
         res.send(JSON.stringify(output))
     }
 }
@@ -183,13 +201,16 @@ export class ActionsProtocol extends JsonProtocol {
 
     actions                 // {name: action_function}, specification of actions handled by this protocol
 
-    constructor(actions = {}) {
-        super()
+    constructor(actions = {}, opts = {}) {
+        super(null, opts)
         this.actions = actions
     }
 
     merge(protocol) {
-        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`. */
+        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`.
+           The `opts` in both protocols must be exactly THE SAME, otherwise the actions from one protocol could not
+           work properly with the options from another one.
+         */
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(protocol)
@@ -197,10 +218,18 @@ export class ActionsProtocol extends JsonProtocol {
         // if (c1 !== c2) return protocol          // `protocol` can be null
         assert(this.address === protocol.address, this.address, protocol.address)
 
-        // create a new protocol instance with `actions` combined
+        // check that the options are the same
+        let opts1 = JSON.stringify(this.opts)
+        let opts2 = JSON.stringify(protocol.opts)
+        if (opts1 !== opts2)
+            throw new Error(`cannot merge protocols that have different options: ${opts1} != ${opts2}`)
+
+        // create a new protocol instance with `actions` combined; copy the address
         let actions = {...this.actions, ...protocol.actions}
-        let merged = new c1(actions)
+        let opts = {...this.opts, ...protocol.opts}
+        let merged = new c1(actions, opts)
         merged.setAddress(this.address)
+
         return merged
     }
 

@@ -3,7 +3,7 @@
 import { print, assert, splitLast } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
-import { ItemsCache, ItemsCount } from './data.js'
+import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
 import { root_data } from './server/root.js'
 
@@ -64,28 +64,35 @@ class Classpath {
         Assign `obj` to a given path. Create an inverse mapping if `obj` is a class or function.
         Override an existing object if already present.
         */
+        if (this.forward.has(path)) throw new Error(`the path already exists: ${path}`)
         this.forward.set(path, obj)
-        if (typeof obj === "function")
+        // print(`Classpath: ${path}`)
+
+        if (typeof obj === "function") {
+            if (this.inverse.has(obj)) throw new Error(`a path for the object already exists (${this.inverse.get(obj)}), cannot add another one (${path})`)
             this.inverse.set(obj, path)             // create inverse mapping for classes and functions
+        }
     }
-    set_many(path, ...objects) {
+    setMany(path, ...objects) {
         /* Add multiple objects to a given `path`, under names taken from their `obj.name` properties. */
+        let prefix = path ? `${path}.` : ''
         for (let obj of objects) {
             let name = obj.name
             if (!name) throw new Error(`Missing .name of an unnamed object being added to Classpath at path '${path}': ${obj}`)
-            this.set(`${path}.${name}`, obj)
+            this.set(`${prefix}${name}`, obj)
         }
     }
 
-    async add_module(path, module_url, {symbols, accept, exclude_variables = true} = {})
+    async setModule(path, module_url, {symbols, accept, exclude_variables = true} = {})
         /*
         Add symbols from `module` to a given package `path`.
         If `symbols` is missing, all symbols found in the module are added, excluding:
         1) variables (i.e., not classes, not functions), if exclude_variables=true;
-        2) symbols that point to objects whose accept(obj) is false, if `accept` function is defined.
+        2) symbols that point to objects whose accept(name, obj) is false, if `accept` function is defined.
         */
     {
         let module = await import(module_url)
+        let prefix = path ? `${path}.` : ''
 
         if (typeof symbols === "string")    symbols = symbols.split(' ')
         else if (!symbols)                  symbols = Object.keys(module)
@@ -93,8 +100,8 @@ class Classpath {
 
         for (let name of symbols) {
             let obj = module[name]
-            if (accept && !accept(obj)) continue
-            this.set(`${path}.${name}`, obj)
+            if (accept && !accept(name, obj)) continue
+            this.set(`${prefix}${name}`, obj)
         }
     }
 
@@ -160,12 +167,17 @@ export class Registry {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
-        classpath.set_many("schemat.data", Map)                             // schemat.data.Map
-        await classpath.add_module("schemat.data", "./data.js")
-        await classpath.add_module("schemat.type", "./type.js")
-        // await classpath.add_module("schemat.item", "./item.js")
-        // await classpath.add_module("schemat.item", "./site.js")             // item.js & site.js are merged into one package
-        // await classpath.add_module("schemat.base", "./base.js")
+        // classpath.setMany("schemat.data", Map)                             // schemat.data.Map
+        // await classpath.setModule("schemat.data", "./data.js")
+        // await classpath.setModule("schemat.type", "./type.js")
+
+        // add Catalog & Data to the classpath
+        classpath.setMany("", Catalog, Data)
+
+        // add all schema subtypes (all-caps class names) + SchemaWrapper
+        await classpath.setModule("", "./type.js", {accept: (name) =>
+                name.toUpperCase() === name || name === 'SchemaWrapper'
+        })
 
         this.classpath = classpath
         // print('initClasspath() done')
@@ -263,7 +275,7 @@ export class Registry {
         return this.db.select(id)
     }
     async *scan(category = null, {limit} = {}) {
-        /* Load from DB all items of a given category ordered by IID. A generator. */
+        /* Load from DB all items of a given category ordered by IID. Each item's data is already loaded. A generator. */
         if (category) category.assertLoaded()
         let records = this.db.scan(category?.iid)
         let count = 0
@@ -381,7 +393,7 @@ export class Session {
     sendFile(...args)       { this.res.sendFile(...args)   }
     sendStatus(...args)     { this.res.sendStatus(...args) }
     // sendItem(...args)       { this.res.sendItem(...args)   }
-    sendItems(...args)      { this.res.sendItems(...args)  }
+    // sendItems(...args)      { this.res.sendItems(...args)  }
 
     countRequested(id)      { this.itemsRequested.add(id) }
     countLoaded(id)         { this.itemsLoaded.add(id)    }
@@ -391,7 +403,7 @@ export class Session {
         let site  = this.registry.site
         let items = [this.item, this.item.category, this.registry.root, site, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
-        let records = items.map(i => i.record())
+        let records = items.map(i => i.recordEncoded())
 
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session

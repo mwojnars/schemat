@@ -3,58 +3,68 @@
     - 1
   name: STRING
   class_path: /system/local/type.js:STRING
+  "@": Data
 - __id:
     - 10
     - 2
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
+  "@": Data
 - __id:
     - 10
     - 3
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
+  "@": Data
 - __id:
     - 10
     - 4
   name: URL
   class_path: /system/local/type.js:URL
+  "@": Data
 - __id:
     - 0
     - 50
   name: YAML
   info: Data stored in a YAML file.
   prototype:
-    - 0
-    - 11
+    "@":
+      - 0
+      - 11
   fields:
     filename:
-      "@": schemat.type.STRING
+      "@": STRING
+    "@": Catalog
+  "@": Data
 - __id:
     - 0
     - 51
   name: MysqlDB
   prototype:
-    - 0
-    - 11
+    "@":
+      - 0
+      - 11
   class_path: /system/local/db/mysql.js:MySQL
   fields:
     host:
-      "@": schemat.type.STRING
+      "@": STRING
     port:
-      "@": schemat.type.STRING
+      "@": STRING
     user:
-      "@": schemat.type.STRING
+      "@": STRING
     database:
-      "@": schemat.type.STRING
+      "@": STRING
     password:
-      "@": schemat.type.STRING
+      "@": STRING
     connection:
       info: Javascript object containing connection parameters.
-      "@": schemat.type.GENERIC
+      "@": GENERIC
     tables:
       info: Mapping of categories (their paths) to names of sql tables.
       values:
-        "@": schemat.type.STRING
-      "@": schemat.type.CATALOG
+        "@": STRING
+      "@": CATALOG
     readonly:
-      "@": schemat.type.BOOLEAN
+      "@": BOOLEAN
+    "@": Catalog
+  "@": Data

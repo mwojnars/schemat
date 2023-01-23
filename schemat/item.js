@@ -1,11 +1,12 @@
 import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique } from './utils.js'
-import {NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound} from './errors.js'
+import { NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound } from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
+import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
-import { DATA, generic_schema } from "./type.js"
+import { DATA } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_CID = 0
@@ -434,7 +435,7 @@ export class Item {
     async boot(opts = {}) {
         /* (Re)initialize this item. Load this.data from a DB, or from a JSON-encoded string, opts.jsonData, or take from opts.data.
            Set up the class and prototypes. Call init().
-           Boot options (opts): {use_schema, jsonData, data}
+           Boot options (opts): {jsonData, data}
          */
         try {
             if (!this.category) {                               // initialize this.category
@@ -444,7 +445,7 @@ export class Item {
             else if (!this.category.isLoaded && this.category !== this)
                 await this.category.load()
 
-            this.data = opts.data || await this._loadData(opts)
+            this.data = opts.data || await this._loadData(opts.jsonData)
 
             if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
@@ -466,14 +467,16 @@ export class Item {
         }
     }
 
-    async _loadData({use_schema = true, jsonData} = {}) {
+    async _loadData(jsonData = undefined) {
         if (jsonData === undefined) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             jsonData = await this.registry.loadData(this.id)
         }
-        let schema = use_schema ? this.category.getItemSchema() : generic_schema
-        let state = JSON.parse(this.jsonData = jsonData)
-        return schema.decode(state)
+        return JSONx.parse(this.jsonData = jsonData)
+
+        // let state = JSON.parse(this.jsonData = jsonData)
+        // assert('@' in state, state)
+        // return JSONx.decode(state)
     }
 
     setExpiry(ttl) {
@@ -770,27 +773,18 @@ export class Item {
         return snippets.join('\n')
     }
 
-    encodeData(use_schema = true) {
-        /* Encode this.data into a JSON-serializable dict composed of plain JSON objects only, compacted. */
-        this.assertLoaded()
-        let schema = use_schema ? this.getSchema() : generic_schema
-        return schema.encode(this.data)
-    }
     dumpData() {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
-        let state = this.encodeData()
-        return JSON.stringify(state)
+        return JSONx.stringify(this.data)
     }
     record() {
         /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
-        return {id: this.id, data: this.encodeData()}
-
-        // // Below, the use of ITEM_RECORD here is experimental (!), the goal is to replace record() calls
-        // // with ITEM_RECORD elsewhere - which can be tricky given that ITEM_RECORD requires a custom dataSchema
-        // // to be provided each time (cannot be loaded automatically bcs that would be async and encoding must be synchronous!)
-        // let schema = new ITEM_RECORD({dataSchema: this.getSchema()})
-        // return schema.encode({id: this.id, data: this.data})
+        return {id: this.id, data: this.data}
+        // return {id: this.id, data: JSONx.encode(this.data)}
+    }
+    recordEncoded() {
+        return JSONx.encode(this.record())
     }
 
 
@@ -1130,7 +1124,7 @@ Item.createAPI(
 
         'CALL/default': new InternalProtocol(function() { return this }),
         'CALL/item':    new InternalProtocol(function() { return this }),
-        'GET/json':     new JsonProtocol(function() { return this.record() }),
+        'GET/json':     new JsonProtocol(function() { return this.recordEncoded() }),
 
         // internal actions called by UI
         'POST/action':  new ActionsProtocol({
@@ -1138,7 +1132,8 @@ Item.createAPI(
             delete_self(ctx)   { return this.registry.delete(this) },
 
             insert_field(ctx, path, pos, entry) {
-                if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
+                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.insert(path, pos, entry)
                 return this.registry.update(this)
             },
@@ -1149,7 +1144,8 @@ Item.createAPI(
             },
 
             update_field(ctx, path, entry) {
-                if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
+                if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
                 return this.registry.update(this)
             },
@@ -1421,6 +1417,7 @@ export class Category extends Item {
 
             let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
             if (record) {
+                // `record` is encoded: {id: id, data: data-encoded}
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
                 let item = await this.registry.getItem(record.id)
@@ -1497,7 +1494,8 @@ Category.createAPI(
                 await item.load()
                 items.push(item)
             }
-            res.sendItems(items)
+            let records = items.map(item => item.recordEncoded())
+            res.json(records)
         }),
 
         'POST/action':  new ActionsProtocol({
@@ -1508,10 +1506,11 @@ Category.createAPI(
                 await this.registry.insert(item)
                 // let record = await this.registry.insert(data, this.cid, /* iid = null */)
                 // return record
-                return item.record()
+                return item.recordEncoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
-        }),
+        }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
+        ),
     },
     {
         // actions...
@@ -1533,14 +1532,7 @@ export class RootCategory extends Category {
         this.registry = registry
         this.category = this                    // root category is a category for itself
     }
-    encodeData(use_schema = false) {
-        /* Same as Item.encodeData(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.encodeData(false)
-    }
-    async reload(opts) {
-        /* Same as Item.reload(), but use_schema is false to avoid circular dependency during deserialization. */
-        return super.reload({...opts, use_schema: false})
-    }
+
     getItemClass() { return Category }
 
     getItemSchema(field = undefined) {
