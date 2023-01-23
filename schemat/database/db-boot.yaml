@@ -133,6 +133,10 @@
         slashes.
       "@": CATALOG
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -148,6 +152,10 @@
       "@": CATALOG
     "@": Catalog
   class_path: /system/local/site.js:Router
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -171,6 +179,10 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -186,6 +198,10 @@
     path:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -203,6 +219,10 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -220,6 +240,10 @@
     path:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -228,6 +252,10 @@
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_path: /system/local/site.js:Application
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -252,6 +280,10 @@
         instances of subclasses are handled, too).
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -272,6 +304,10 @@
       "@": CATALOG
     "@": Catalog
   cached_methods: spacesRev
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -297,6 +333,10 @@
         "@": SCHEMA
       "@": CATALOG
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -304,12 +344,20 @@
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 6
     - 1
   name: /local
   path: .
+  __category__:
+    "@":
+      - 0
+      - 6
   "@": Data
 - __id:
     - 5
@@ -337,4 +385,8 @@
         - 0
         - 1
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data

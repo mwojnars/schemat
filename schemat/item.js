@@ -1202,6 +1202,7 @@ export class Category extends Item {
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
         assert(data)
+        data['__category__'] = this
         return Item.createNewborn(this, iid, data)
     }
 
