@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="schemat: build" type="NodeJSConfigurationType" application-parameters="_build_" node-parameters="--experimental-vm-modules" path-to-js-file="cluster/node.js" working-dir="$PROJECT_DIR$/../../priv/catalog/src/schemat">
+    <method v="2" />
+  </configuration>
+</component>

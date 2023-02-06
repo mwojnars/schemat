@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="schemat: run" type="NodeJSConfigurationType" application-parameters="run" node-parameters="--experimental-vm-modules" path-to-js-file="cluster/node.js" working-dir="$PROJECT_DIR$/../../priv/catalog/src/schemat">
+    <EXTENSION ID="com.jetbrains.nodejs.run.NodeJSStartBrowserRunConfigurationExtension">
+      <browser name="a7bb68e0-33c0-4d6f-a81a-aac1fdb870c8" url="http://127.0.0.1:3000/" />
+    </EXTENSION>
+    <method v="2" />
+  </configuration>
+</component>
