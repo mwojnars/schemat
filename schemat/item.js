@@ -316,7 +316,7 @@ export class Item {
 
     //metadata      // system properties: current version, category's version, status etc.
 
-    get category()  { return this.category_old || (this.isLoaded ? this.prop('__category__') : undefined) }
+    get category()  { return this.category_old || (this.data ? this.prop('__category__', {schemaless: true}) : undefined) }
 
     category_old    // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
@@ -442,7 +442,8 @@ export class Item {
         try {
             if (!this.category) {                               // initialize this.category
                 assert(!T.isMissing(this.cid))
-                this.category_old = await this.registry.getCategory(this.cid)
+                // this.category_old = await this.registry.getCategory(this.cid)
+                this.__category__ = await this.registry.getCategory(this.cid)
             }
             else if (!this.category.isLoaded && this.category !== this)
                 await this.category.load()
@@ -453,8 +454,6 @@ export class Item {
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
-
-            this.setExpiry(this.category.prop('cache_ttl'))
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initActions()
@@ -467,6 +466,8 @@ export class Item {
         } finally {
             this.isLoading = false                              // cleanup to allow another load attempt, even after an error
         }
+
+        this.setExpiry(this.category.prop('cache_ttl'))
     }
 
     async _loadData(jsonData = undefined) {
@@ -503,8 +504,9 @@ export class Item {
 
     async _initClass() {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
-        if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
-        T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
+        // if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
+        // T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
+        T.setClass(this, await this.getClass())    // change the actual class of this item from Item to the category's proper class
     }
 
     _initActions() {
@@ -550,6 +552,8 @@ export class Item {
     }
 
     /***  Dynamic loading of source code  ***/
+
+    async getClass()    { return this.category.getItemClass() }
 
     // getClass() {
     //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
@@ -610,29 +614,33 @@ export class Item {
     // props(path)   -- stream of values matching a given path
     // entries(prop) -- stream of entries for a given property
 
-    prop(path, _default = undefined) {
+    prop(path, opts = {}) {
         /* Read the item's property either from this.data using get(), or (if missing) from this POJO's regular attribute
-           - this allows defining attributes through DB or through item's class constructor.
-           If there are mutliple values for 'path', the first one is returned.
+           - this allows defining attributes either through DB or item's class constructor.
+           If there are multiple values for 'path', the first one is returned.
+           `opts` are {default, schemaless}.
          */
-        if (!this.isShadow) {
+        if (this.data && !this.isShadow) {
+            // this.data: a property can be read before the loading completes (!), e.g., for use inside init();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
-            let value = this.props(path).next().value
+            let value = this.props(path, opts).next().value
             if (value !== undefined) return value
 
             // before falling back to a default value stored in a POJO attribute,
             // check that 'path' is valid according to schema, to block access to system fields like .data etc
             // - this is done for non-shadow items only, because shadow ones don't have a schema
-            let schema = this.getSchema()
-            let [prop] = Path.split(path)
-            if (!schema.has(prop)) throw new Error(`not in schema: ${prop}`)
+            if (!opts.schemaless) {
+                let schema = this.getSchema()
+                let [prop] = Path.split(path)
+                if (!schema.has(prop)) throw new Error(`not in schema: ${prop}`)
+            }
         }
 
         // POJO attribute value as a default
         let value = this[path]
         if (value !== undefined) return value
 
-        return _default
+        return opts.default
     }
 
     propObject(...paths) {
@@ -647,33 +655,38 @@ export class Item {
         return subset
     }
 
-    *props(path) {
+    *props(path, opts) {
         /* Generate a stream of all (sub)property values that match a given `path`. The path should start with
            a top-level property name, followed by subproperties separated by '/'. Alternatively, the path
            can be an array of subsequent property names, or positions (in a nested array or Catalog).
          */
         let [prop, tail] = Path.splitAll(path)
-        for (const entry of this.entries(prop))         // find all the entries for a given `prop`
-            yield* Path.walk(entry.value, tail)         // walk down the `tail` path of nested objects
+        for (const entry of this.entries(prop, opts))       // find all the entries for a given `prop`
+            yield* Path.walk(entry.value, tail)             // walk down the `tail` path of nested objects
     }
 
     propsList(path)         { return [...this.props(path)] }
     propsReversed(path)     { return [...this.props(path)].reverse() }
 
-    *entries(prop) {
+    *entries(prop, {schemaless= false} = {}) {
         /* Generate a stream of valid entries for a given property: own and inherited.
-           If the schema doesn't allow multiple entries for `prop`, only the first one is yielded (for simple types),
-           or all the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
+           If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
+           or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached in this._dataAll for future use.
+           If schemaless=true, a concatenated stream of all matching entries is returned without caching -
+           for system properties, like __category__, which are processed when the schema is not yet available.
          */
         let entries = this._dataAll.get(prop)                              // array of entries, or undefined
         if (entries) yield* entries
 
-        let schema = this.category.getItemSchema(prop)
-        if (!schema) throw new Error(`not in schema: '${prop}'`)
-
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
         let streams = ancestors.map(proto => proto.entriesRaw(prop))
+
+        if (schemaless) return concat(streams.map(stream => [...stream]))
+
+        // let schema = this.category.getItemSchema(prop)
+        let schema = this.getSchema(prop)
+        if (!schema) throw new Error(`not in schema: '${prop}'`)
 
         entries = schema.combine(streams)
         this._dataAll.set(prop, entries)
@@ -743,24 +756,32 @@ export class Item {
         if (!brackets) return stamp
         return `[${stamp}]`
     }
-    getSchema(path = null) {
-        /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
-           as defined in this item's category's `fields` property. */
-        let schema = this.category.getItemSchema()
-        if (!path?.length) return schema
 
-        this.assertLoaded()
-        let keys = [], data = this.data
-
-        // convert numeric indices in `path` to keys
-        for (let step of path) {
-            assert(data instanceof Catalog)
-            let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
-            keys.push(typeof step === 'number' ? entry.key : step)
-            data = entry?.value
-        }
-        return schema.find(keys)
+    getSchema(field = undefined) {
+        /* Return schema of this item (instance of DATA), or of a particular `field`. */
+        return this.category.getItemSchema(field)
     }
+
+    // getSchema(path = null) {
+    //     /* Return schema of this item (instance of DATA), or of a given `path` inside nested catalogs,
+    //        as defined in this item's category's `fields` property. */
+    //     let schema = this.category.getItemSchema()
+    //     if (!path?.length) return schema
+    //
+    //     assert(false, 'getSchema() is never used with an argument')
+    //
+    //     this.assertLoaded()
+    //     let keys = [], data = this.data
+    //
+    //     // convert numeric indices in `path` to keys
+    //     for (let step of path) {
+    //         assert(data instanceof Catalog)
+    //         let entry = data.getEntry(step)                     // can be undefined for the last step of `path`
+    //         keys.push(typeof step === 'number' ? entry.key : step)
+    //         data = entry?.value
+    //     }
+    //     return schema.find(keys)
+    // }
 
     getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
 
@@ -1533,8 +1554,19 @@ export class RootCategory extends Category {
     constructor(registry) {
         super(null)
         this.registry = registry
+        // this.__category__ = this                    // root category is a category for itself
         this.category_old = this                    // root category is a category for itself
     }
+
+    // get category() { return this }
+
+    _initClass() {}     // RootCategory's class is already set up, no need to do anything more
+
+    getSchema(field = undefined) {
+        return this.getItemSchema(field)
+    }
+
+    async getClass() { return Category }
 
     getItemClass() { return Category }
 
