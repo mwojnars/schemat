@@ -316,9 +316,8 @@ export class Item {
 
     //metadata      // system properties: current version, category's version, status etc.
 
-    get category()  { return this.category_old || (this.data ? this.prop('__category__', {schemaless: true}) : undefined) }
+    get category()  { if (this.data) return this.prop('__category__', {schemaless: true}) }
 
-    category_old    // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
