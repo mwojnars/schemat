@@ -440,13 +440,13 @@ export class Item {
            Boot options (opts): {jsonData, data}
          */
         try {
-            if (!this.category) {                               // initialize this.category
-                assert(!T.isMissing(this.cid))
-                // this.category_old = await this.registry.getCategory(this.cid)
-                this.__category__ = await this.registry.getCategory(this.cid)
-            }
-            else if (!this.category.isLoaded && this.category !== this)
-                await this.category.load()
+            // if (!this.category) {                               // initialize this.category
+            //     assert(!T.isMissing(this.cid))
+            //     // this.category_old = await this.registry.getCategory(this.cid)
+            //     this.__category__ = await this.registry.getCategory(this.cid)
+            // }
+            // else if (!this.category.isLoaded && this.category !== this)
+            //     await this.category.load()
 
             this.data = opts.data || await this._loadData(opts.jsonData)
 
@@ -455,19 +455,30 @@ export class Item {
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
 
+            if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
+                this.data.set('__category__', await this.registry.getCategory(this.cid))
+
+            let category = this.category
+
+            if (!category.isLoaded && category !== this)
+                await category.load()
+
+            // if (!category || !category.getItemClass)
+            //     assert(false)
+
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initActions()
 
             let init = this.init()                              // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
 
+            this.setExpiry(category.prop('cache_ttl'))
+
             return this
 
         } finally {
             this.isLoading = false                              // cleanup to allow another load attempt, even after an error
         }
-
-        this.setExpiry(this.category.prop('cache_ttl'))
     }
 
     async _loadData(jsonData = undefined) {
@@ -495,8 +506,8 @@ export class Item {
            otherwise the schema of some fields may be incompatible or missing.
          */
         let prototypes = this.data.getValues('prototype')
-        for (const p of prototypes)
-            if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
+        // for (const p of prototypes)
+        //     if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.isLoaded)
         if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))
@@ -682,14 +693,15 @@ export class Item {
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
         let streams = ancestors.map(proto => proto.entriesRaw(prop))
 
-        if (schemaless) return concat(streams.map(stream => [...stream]))
+        if (schemaless) entries = concat(streams.map(stream => [...stream]))
+        else {
+            // let schema = this.category.getItemSchema(prop)
+            let schema = this.getSchema(prop)
+            if (!schema) throw new Error(`not in schema: '${prop}'`)
 
-        // let schema = this.category.getItemSchema(prop)
-        let schema = this.getSchema(prop)
-        if (!schema) throw new Error(`not in schema: '${prop}'`)
-
-        entries = schema.combine(streams)
-        this._dataAll.set(prop, entries)
+            entries = schema.combine(streams)
+            this._dataAll.set(prop, entries)
+        }
         yield* entries
     }
 
