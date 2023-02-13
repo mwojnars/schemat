@@ -413,7 +413,7 @@ export class Item {
     constructor(category, iid) {
         /* To set this.data, load() or reload() must be called after this constructor. */
         if (category) {
-            this.category_old = category
+            this.__category__ = category
             this.registry = category.registry
             this.cid      = category.iid
         }
@@ -458,13 +458,10 @@ export class Item {
             if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
                 this.data.set('__category__', await this.registry.getCategory(this.cid))
 
-            let category = this.category
+            let category = this.category                        // this.data was loaded already, so __category__ should be available
 
             if (!category.isLoaded && category !== this)
                 await category.load()
-
-            // if (!category || !category.getItemClass)
-            //     assert(false)
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
             this._initActions()
@@ -1252,9 +1249,7 @@ export class Category extends Item {
         let _category = T.getOwnProperty(cls, 'category')
         assert(_category === undefined || _category === this, this, _category)
 
-        // if (_category !== undefined && _category !== this)
-        //     assert(false)
-        cls.category_old = this
+        // cls.category_old = this
 
         // print('base:', base)
         // print('cls:', cls)
@@ -1566,11 +1561,9 @@ export class RootCategory extends Category {
     constructor(registry) {
         super(null)
         this.registry = registry
-        // this.__category__ = this                    // root category is a category for itself
-        this.category_old = this                    // root category is a category for itself
     }
 
-    // get category() { return this }
+    get category() { return this }              // root category is a category for itself
 
     _initClass() {}     // RootCategory's class is already set up, no need to do anything more
 
