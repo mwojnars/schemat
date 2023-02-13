@@ -316,8 +316,6 @@ export class Item {
 
     //metadata      // system properties: current version, category's version, status etc.
 
-    get category()  { if (this.data) return this.prop('__category__', {schemaless: true}) }
-
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
@@ -342,6 +340,7 @@ export class Item {
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
+    get category()  { return this.prop('__category__', {schemaless: true}) }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
@@ -691,10 +690,8 @@ export class Item {
 
         if (schemaless) entries = concat(streams.map(stream => [...stream]))
         else {
-            // let schema = this.category.getItemSchema(prop)
             let schema = this.getSchema(prop)
             if (!schema) throw new Error(`not in schema: '${prop}'`)
-
             entries = schema.combine(streams)
             this._dataAll.set(prop, entries)
         }
@@ -1564,15 +1561,7 @@ export class RootCategory extends Category {
 
     get category() { return this }              // root category is a category for itself
 
-    _initClass() {}     // RootCategory's class is already set up, no need to do anything more
-
-    getSchema(field = undefined) {
-        return this.getItemSchema(field)
-    }
-
-    async getClass() { return Category }
-
-    getItemClass() { return Category }
+    _initClass() {}                             // RootCategory's class is already set up, no need to do anything more
 
     getItemSchema(field = undefined) {
         /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
