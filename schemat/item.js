@@ -438,14 +438,6 @@ export class Item {
            Boot options (opts): {jsonData, data}
          */
         try {
-            // if (!this.category) {                               // initialize this.category
-            //     assert(!T.isMissing(this.cid))
-            //     // this.category_old = await this.registry.getCategory(this.cid)
-            //     this.__category__ = await this.registry.getCategory(this.cid)
-            // }
-            // else if (!this.category.isLoaded && this.category !== this)
-            //     await this.category.load()
-
             this.data = opts.data || await this._loadData(opts.jsonData)
 
             if (!(this.data instanceof Data)) this.data = new Data(this.data)
@@ -456,7 +448,7 @@ export class Item {
             if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
                 this.data.set('__category__', await this.registry.getCategory(this.cid))
 
-            let category = this.category                        // this.data was loaded already, so __category__ should be available
+            let category = this.category                        // this.data is already loaded, so __category__ should be available
 
             if (!category.isLoaded && category !== this)
                 await category.load()
