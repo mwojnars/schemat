@@ -316,7 +316,9 @@ export class Item {
 
     //metadata      // system properties: current version, category's version, status etc.
 
-    category        // parent category of this item, as an instance of Category
+    get category()  { return this.category_old || (this.isLoaded ? this.prop('__category__') : undefined) }
+
+    category_old    // parent category of this item, as an instance of Category
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
@@ -411,7 +413,7 @@ export class Item {
     constructor(category, iid) {
         /* To set this.data, load() or reload() must be called after this constructor. */
         if (category) {
-            this.category = category
+            this.category_old = category
             this.registry = category.registry
             this.cid      = category.iid
         }
@@ -440,7 +442,7 @@ export class Item {
         try {
             if (!this.category) {                               // initialize this.category
                 assert(!T.isMissing(this.cid))
-                this.category = await this.registry.getCategory(this.cid)
+                this.category_old = await this.registry.getCategory(this.cid)
             }
             else if (!this.category.isLoaded && this.category !== this)
                 await this.category.load()
@@ -1219,7 +1221,7 @@ export class Category extends Item {
 
         // if (_category !== undefined && _category !== this)
         //     assert(false)
-        cls.category = this
+        cls.category_old = this
 
         // print('base:', base)
         // print('cls:', cls)
@@ -1531,7 +1533,7 @@ export class RootCategory extends Category {
     constructor(registry) {
         super(null)
         this.registry = registry
-        this.category = this                    // root category is a category for itself
+        this.category_old = this                    // root category is a category for itself
     }
 
     getItemClass() { return Category }

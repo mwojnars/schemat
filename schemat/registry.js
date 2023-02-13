@@ -188,7 +188,7 @@ export class Registry {
            or from the predefined `root_data`.
          */
         let root = this.root = new RootCategory(this)
-        root.constructor.category = root
+        root.constructor.category_old = root
 
         // try loading `root` from the DB first...
         if (this.db)
