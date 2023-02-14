@@ -282,17 +282,7 @@ export class Registry {
 
         for await (const {id, data: jsonData} of records) {
             if (limit !== undefined && count >= limit) break
-            let [cid, iid] = id
-            assert(!category || cid === category.iid)
-
-            // if (cid === ROOT_CID && iid === ROOT_CID)
-            if (isRoot(id))
-                yield this.root
-            else {
-                // let cat = category || await this.getCategory(cid)
-                yield Item.createLoaded(this, id, jsonData)
-                // yield Item.createLoaded(cat, iid, jsonData)
-            }
+            yield isRoot(id) ? this.root : Item.createLoaded(this, id, jsonData)
             count++
         }
     }
