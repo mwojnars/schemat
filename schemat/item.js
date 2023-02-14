@@ -359,7 +359,6 @@ export class Item {
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
-    get isShadow()      { return this.cid === undefined }
     get isCategory()    { return this.cid === ROOT_CID }
 
     has_id(id = null) {
@@ -451,8 +450,6 @@ export class Item {
 
             let category = this.category                        // this.data is already loaded, so __category__ should be available
             assert(category)
-
-            // this.cid = category.iid
 
             if (!category.isLoaded && category !== this)
                 await category.load()
@@ -622,7 +619,7 @@ export class Item {
            If there are multiple values for 'path', the first one is returned.
            `opts` are {default, schemaless}.
          */
-        if (this.data && !this.isShadow) {
+        if (this.data) {
             // this.data: a property can be read before the loading completes (!), e.g., for use inside init();
             // a "shadow" item doesn't map to a DB record, so its props can't be read with this.props() below
             let value = this.props(path, opts).next().value
@@ -698,7 +695,6 @@ export class Item {
         /* Generate a stream of own entries (from this.data) for a given property(s). No inherited/imputed entries.
            `prop` can be a string, or an array of strings, or undefined. The entries preserve their original order.
          */
-        assert(!this.isShadow)
         this.assertData()
         yield* this.data.readEntries(prop)
     }
