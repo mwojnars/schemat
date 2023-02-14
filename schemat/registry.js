@@ -4,7 +4,7 @@ import { print, assert, splitLast } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
+import { Item, RootCategory, ROOT_CID, SITE_CID, isRoot } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
@@ -238,13 +238,14 @@ export class Registry {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
-        let [cid, iid] = id
-        if (!cid && cid !== 0) throw new Error('missing CID')
-        if (!iid && iid !== 0) throw new Error('missing IID')
-        assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
+        // let [cid, iid] = id
+        // if (!cid && cid !== 0) throw new Error('missing CID')
+        // if (!iid && iid !== 0) throw new Error('missing IID')
+        // assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
 
         this.session?.countRequested(id)
-        if (cid === ROOT_CID && iid === ROOT_CID) return this.root
+        if (isRoot(id)) return this.root
+        // if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested was already loaded/created? return the existing instance
         let item = this.cache.get(id)
@@ -284,7 +285,8 @@ export class Registry {
             let [cid, iid] = id
             assert(!category || cid === category.iid)
 
-            if (cid === ROOT_CID && iid === ROOT_CID)
+            // if (cid === ROOT_CID && iid === ROOT_CID)
+            if (isRoot(id))
                 yield this.root
             else {
                 let cat = category || await this.getCategory(cid)

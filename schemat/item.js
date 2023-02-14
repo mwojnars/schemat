@@ -9,6 +9,8 @@ import { Path, Catalog, Data } from './data.js'
 import { DATA } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
+export const ROOT_XIID = 0
+
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
@@ -18,6 +20,11 @@ export function xiid(cid, iid) {
     return cid * 1000 + iid
 }
 
+export function isRoot(cid_or_id, iid) {
+    let cid = cid_or_id
+    if (T.isArray(cid)) [cid, iid] = cid_or_id
+    return xiid(cid, iid) === ROOT_XIID
+}
 
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
@@ -401,10 +408,14 @@ export class Item {
         /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
          */
-        return new Item(category, iid).reload({data})
+        let item = new Item(category.registry, [category.iid, iid])
+        // item._initFrom(category, iid)
+        return item.reload({data})
     }
     static async createLoaded(category, iid, jsonData) {
-        return new Item(category, iid).reload({jsonData})
+        let item = new Item(category.registry, [category.iid, iid])
+        // item._initFrom(category, iid)
+        return item.reload({jsonData})
     }
 
     static createAPI(endpoints, actions = {}) {
@@ -415,16 +426,19 @@ export class Item {
         this.actions = base ? {...base.actions, ...actions} : actions
     }
 
-
-    constructor(category, iid) {
-        /* To set this.data, load() or reload() must be called after this constructor. */
-        if (category) {
-            // this.__category__ = category
-            this.registry = category.registry
-            this.cid      = category.iid
-        }
-        if (iid !== undefined) this.iid = iid
+    constructor(registry, id = null) {
+        this.registry = registry
+        if (id) [this.cid, this.iid] = id
     }
+
+    // constructor(category, iid) {
+    //     /* To set this.data, load() or reload() must be called after this constructor. */
+    //     if (category) {
+    //         this.registry = category.registry
+    //         this.cid      = category.iid
+    //     }
+    //     if (iid !== undefined) this.iid = iid
+    // }
 
     async load(opts = {}) {
         /* Load full data of this item (this.data) if not loaded yet. Return this object. */
@@ -458,6 +472,8 @@ export class Item {
 
             let category = this.category                        // this.data is already loaded, so __category__ should be available
             assert(category)
+
+            // this.cid = category.iid
 
             if (!category.isLoaded && category !== this)
                 await category.load()
@@ -1555,11 +1571,6 @@ export class RootCategory extends Category {
     cid = ROOT_CID
     iid = ROOT_CID
     expiry = 0                                  // never evict from Registry
-
-    constructor(registry) {
-        super(null)
-        this.registry = registry
-    }
 
     get category() { return this }              // root category is a category for itself
 
