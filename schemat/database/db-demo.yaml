@@ -31,11 +31,19 @@
             - 9
             - 101
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 1
   "@": Data
 - __id:
     - 3
     - 101
   content: export let print = console.log
+  __category__:
+    "@":
+      - 0
+      - 3
   "@": Data
 - __id:
     - 3
@@ -45,11 +53,19 @@
     export function check() { print('called widgets.js:check()') } 
     //let fs = await importLocal('fs')
     //print('fs:',fs)
+  __category__:
+    "@":
+      - 0
+      - 3
   "@": Data
 - __id:
     - 5
     - 102
   name: /demo
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data
 - __id:
     - 5
@@ -65,6 +81,10 @@
         - 5
         - 107
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data
 - __id:
     - 5
@@ -80,11 +100,19 @@
         - 3
         - 102
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data
 - __id:
     - 8
     - 101
   name: /$
+  __category__:
+    "@":
+      - 0
+      - 8
   "@": Data
 - __id:
     - 9
@@ -108,6 +136,10 @@
         - 0
         - 3
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 9
   "@": Data
 - __id:
     - 0
@@ -132,11 +164,19 @@
     - 100
     - 101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
+  __category__:
+    "@":
+      - 0
+      - 100
   "@": Data
 - __id:
     - 100
     - 102
   title: ąłęÓŁŻŹŚ
+  __category__:
+    "@":
+      - 0
+      - 100
   "@": Data
 - __id:
     - 5
@@ -150,6 +190,10 @@
         - 4
         - 100
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data
 - __id:
     - 0
@@ -199,12 +243,20 @@
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 4
     - 100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+  __category__:
+    "@":
+      - 0
+      - 4
   "@": Data
 - __id:
     - 51
@@ -223,12 +275,20 @@
     /apps/paperity/Paper: pap_papers_view
     "@": Catalog
   readonly: true
+  __category__:
+    "@":
+      - 0
+      - 51
   "@": Data
 - __id:
     - 200
     - 100
   name: Post A
   text: Ala ma kota
+  __category__:
+    "@":
+      - 0
+      - 200
   "@": Data
 - __id:
     - 5
@@ -244,6 +304,10 @@
         - 0
         - 202
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 5
   "@": Data
 - __id:
     - 0
@@ -344,6 +408,10 @@
         - {}
       "@": SchemaWrapper
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -607,4 +675,8 @@
           `}})
       }
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data

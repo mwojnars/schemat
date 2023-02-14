@@ -3,24 +3,40 @@
     - 1
   name: STRING
   class_path: /system/local/type.js:STRING
+  __category__:
+    "@":
+      - 0
+      - 10
   "@": Data
 - __id:
     - 10
     - 2
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
+  __category__:
+    "@":
+      - 0
+      - 10
   "@": Data
 - __id:
     - 10
     - 3
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
+  __category__:
+    "@":
+      - 0
+      - 10
   "@": Data
 - __id:
     - 10
     - 4
   name: URL
   class_path: /system/local/type.js:URL
+  __category__:
+    "@":
+      - 0
+      - 10
   "@": Data
 - __id:
     - 0
@@ -35,6 +51,10 @@
     filename:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
 - __id:
     - 0
@@ -67,4 +87,8 @@
     readonly:
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@":
+      - 0
+      - 0
   "@": Data
