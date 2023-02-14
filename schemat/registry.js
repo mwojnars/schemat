@@ -289,8 +289,9 @@ export class Registry {
             if (isRoot(id))
                 yield this.root
             else {
-                let cat = category || await this.getCategory(cid)
-                yield Item.createLoaded(cat, iid, jsonData)
+                // let cat = category || await this.getCategory(cid)
+                yield Item.createLoaded(this, id, jsonData)
+                // yield Item.createLoaded(cat, iid, jsonData)
             }
             count++
         }

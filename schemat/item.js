@@ -406,8 +406,9 @@ export class Item {
         let item = new Item(category.registry, [category.iid, iid])
         return item.reload({data})
     }
-    static async createLoaded(category, iid, jsonData) {
-        let item = new Item(category.registry, [category.iid, iid])
+    static async createLoaded(registry, id, jsonData) {
+        // let item = new Item(category.registry, [category.iid, iid])
+        let item = new Item(registry, id)
         return item.reload({jsonData})
     }
 
