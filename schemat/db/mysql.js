@@ -33,9 +33,8 @@ export class MySQL extends Block {
         let select = this._select_sql(cid)
         if (!select) return
         let query = `${select} WHERE id = ? LIMIT 1`
-        let category = await this.registry.getCategory(cid)
         let [rows, cols] = await this.db.execute(query, [iid])
-        if (rows.length) return this._convert(rows[0], category)
+        if (rows.length) return this._convert(rows[0], cid)
     }
 
     async *_scan(cid, {offset = 0, limit = 100} = {}) {
@@ -45,10 +44,9 @@ export class MySQL extends Block {
             query += ` LIMIT ${limit}`
             if (offset) query += ` OFFSET ${offset}`        // offset is only allowed together with limit in MySQL
         }
-        let category = await this.registry.getCategory(cid)
         let [rows, cols] = await this.db.execute(query)
         for (let row of rows)
-            yield {id: [cid, row.id], data: this._convert(row, category)}
+            yield {id: [cid, row.id], data: await this._convert(row, cid)}
     }
 
     _table(cid) {
@@ -82,11 +80,13 @@ export class MySQL extends Block {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
         return spaces ? table : `SELECT * FROM ${table}`
     }
-    _convert(row, category) {
+    async _convert(row, cid) {
         /* Clean and convert a `row` of data to JSON string compatible with the category's schema. */
+        let category = await this.registry.getCategory(cid)
         let schema = category.getItemSchema()
         let keys   = Object.keys(row)
         for (let key of keys) if (!schema.has(key)) delete row[key]     // drop DB fields with no corresponding category field
+        row['__category__'] = {'@': category.id}
         return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
     }
 

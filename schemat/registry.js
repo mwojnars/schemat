@@ -245,7 +245,6 @@ export class Registry {
 
         this.session?.countRequested(id)
         if (isRoot(id)) return this.root
-        // if (cid === ROOT_CID && iid === ROOT_CID) return this.root
 
         // ID requested was already loaded/created? return the existing instance
         let item = this.cache.get(id)
