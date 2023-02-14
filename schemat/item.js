@@ -330,7 +330,6 @@ export class Item {
 
     _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
-    static category             // like instance-level `category`, but accessible from the class
     static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
     static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
@@ -411,7 +410,7 @@ export class Item {
     constructor(category, iid) {
         /* To set this.data, load() or reload() must be called after this constructor. */
         if (category) {
-            this.__category__ = category
+            // this.__category__ = category
             this.registry = category.registry
             this.cid      = category.iid
         }
