@@ -385,17 +385,12 @@ export class Item {
         return 1
     }
 
-    static createStub(id, registry) {
-        /* Create a "stub" item of a given ID whose content can be loaded later on from DB with load().
-           The item is unloaded and usually NO specific class is attached yet.
-         */
-        let item = new this()
-        let [cid, iid] = id
-        item.cid = cid
-        item.iid = iid
-        item.registry = registry
-        return item
+    constructor(registry, id = null) {
+        /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
+        this.registry = registry
+        if (id) [this.cid, this.iid] = id
     }
+
     // static async createShadow(data) {
     //     /* Create an "unlinked" item that has `data` but no ID. The item has limited functionality: no load/save/transfer,
     //        no category, registry etc. The item returned is always *booted* (this.data is present, can be empty).
@@ -409,12 +404,10 @@ export class Item {
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
          */
         let item = new Item(category.registry, [category.iid, iid])
-        // item._initFrom(category, iid)
         return item.reload({data})
     }
     static async createLoaded(category, iid, jsonData) {
         let item = new Item(category.registry, [category.iid, iid])
-        // item._initFrom(category, iid)
         return item.reload({jsonData})
     }
 
@@ -425,20 +418,6 @@ export class Item {
         this.api = new API(base ? [base.api] : [], endpoints)
         this.actions = base ? {...base.actions, ...actions} : actions
     }
-
-    constructor(registry, id = null) {
-        this.registry = registry
-        if (id) [this.cid, this.iid] = id
-    }
-
-    // constructor(category, iid) {
-    //     /* To set this.data, load() or reload() must be called after this constructor. */
-    //     if (category) {
-    //         this.registry = category.registry
-    //         this.cid      = category.iid
-    //     }
-    //     if (iid !== undefined) this.iid = iid
-    // }
 
     async load(opts = {}) {
         /* Load full data of this item (this.data) if not loaded yet. Return this object. */

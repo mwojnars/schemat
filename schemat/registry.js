@@ -251,7 +251,7 @@ export class Registry {
         let item = this.cache.get(id)
         if (item) return item
 
-        let stub = Item.createStub(id, this)
+        let stub = new Item(this, id)
         this.cache.set(id, stub)            // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
