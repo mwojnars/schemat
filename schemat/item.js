@@ -12,6 +12,13 @@ import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } fr
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
+export function xiid(cid, iid) {
+    // flat item ID to replace [cid, iid] pairs
+    assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
+    return cid * 1000 + iid
+}
+
+
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
@@ -336,6 +343,8 @@ export class Item {
     static api        = null    // API instance that defines this item's endpoints and protocols
 
     static __transient__ = ['_methodCache']
+
+    get xiid()      { return xiid(this.cid, this.iid) }                 // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
