@@ -1223,6 +1223,7 @@ export class Category extends Item {
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
         assert(data)
+        if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
         return Item.createNewborn(this, iid, data)
     }
