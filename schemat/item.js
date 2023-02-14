@@ -445,10 +445,11 @@ export class Item {
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
 
-            if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
-                this.data.set('__category__', await this.registry.getCategory(this.cid))
+            // if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
+            //     this.data.set('__category__', await this.registry.getCategory(this.cid))
 
             let category = this.category                        // this.data is already loaded, so __category__ should be available
+            assert(category)
 
             if (!category.isLoaded && category !== this)
                 await category.load()
@@ -1222,7 +1223,7 @@ export class Category extends Item {
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
         assert(data)
-        data['__category__'] = this
+        data.set('__category__', this)
         return Item.createNewborn(this, iid, data)
     }
 
