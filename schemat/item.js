@@ -359,7 +359,7 @@ export class Item {
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
-    get isCategory()    { return this.cid === ROOT_CID }
+    get isCategory()    { return this.instanceof(this.registry.root) }
 
     has_id(id = null) {
         if (id) return this.cid === id[0] && this.iid === id[1]
