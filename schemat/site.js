@@ -1,6 +1,6 @@
 import { print, assert, splitLast, T } from './utils.js'
 import { ItemsMap } from './data.js'
-import { Category, Handler, Item, Request } from './item.js'
+import { Category, Handler, Item, Request, xiid_unpack } from './item.js'
 import { API, HttpProtocol, InternalProtocol } from "./protocols.js";
 
 /**********************************************************************************************************************/
@@ -243,15 +243,23 @@ export class AppBasic extends Application {
 
     urlPath(item) {
         assert(item.has_id())
-        let [cid, iid] = item.id
-        return `${cid}:${iid}`
+        return `${item.xiid}`
+        // let [cid, iid] = item.id
+        // return `${cid}:${iid}`
     }
     findRoute(request) {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), id
         try {
-            id = step.split(':').map(Number)
-            assert(id[0] !== undefined && id[1] !== undefined)
+            if (step.includes(':')) {
+                id = step.split(':').map(Number)
+                assert(id[0] !== undefined && id[1] !== undefined)
+            }
+            else {
+                let xiid = Number(step)
+                assert(!isNaN(xiid))
+                id = xiid_unpack(xiid)
+            }
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')

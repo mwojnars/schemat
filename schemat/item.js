@@ -20,6 +20,13 @@ export function xiid(cid, iid) {
     return cid * 1000 + iid
 }
 
+export function xiid_unpack(xiid) {
+    // convert xiid back to [cid, iid] pair
+    let iid = xiid % 1000
+    let cid = Math.floor((xiid - iid) / 1000)
+    return [cid, iid]
+}
+
 export function isRoot(cid_or_id, iid) {
     let cid = cid_or_id
     if (T.isArray(cid)) [cid, iid] = cid_or_id
@@ -390,14 +397,6 @@ export class Item {
         if (id) [this.cid, this.iid] = id
     }
 
-    // static async createShadow(data) {
-    //     /* Create an "unlinked" item that has `data` but no ID. The item has limited functionality: no load/save/transfer,
-    //        no category, registry etc. The item returned is always *booted* (this.data is present, can be empty).
-    //      */
-    //     let item = new this()
-    //     await item.boot(data)
-    //     return item
-    // }
     static async createNewborn(category, iid, data) {
         /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
            Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
@@ -405,6 +404,7 @@ export class Item {
         let item = new Item(category.registry, [category.iid, iid])
         return item.reload({data})
     }
+
     static async createLoaded(registry, id, jsonData) {
         let item = new Item(registry, id)
         return item.reload({jsonData})
