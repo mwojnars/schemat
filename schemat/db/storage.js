@@ -3,7 +3,7 @@ import { BaseError, NotImplemented } from '../errors.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
-import { Kafka } from 'kafkajs'
+// import { Kafka } from 'kafkajs'
 
 
 /**********************************************************************************************************************

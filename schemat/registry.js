@@ -263,7 +263,7 @@ export class Registry {
         return item
     }
 
-    async findItem(path) { return this.site.findItem(path) }
+    // async findItem(path) { return this.site.findItem(path) }
 
     async loadData(id) {
         /* Load item's full data record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).

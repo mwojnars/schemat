@@ -6,7 +6,7 @@ import {Block} from './storage.js'
 //db.connect()
 //db.query('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050', (e,r,f) => console.log(r))
 
-// let srv = {host: '127.0.0.1', port: '3307', user: 'paperity', database: 'paperity', password: 'pe45n1bc'}
+// let srv = {host: '127.0.0.1', port: '3307', user: 'paperity', database: 'paperity', password: '......'}
 // let db = await mysql.createConnection(srv)
 // let [rows, fields] = await db.execute('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050')
 
@@ -49,24 +49,24 @@ export class MySQL extends Block {
             yield {id: [cid, row.id], data: await this._convert(row, cid)}
     }
 
-    _table(cid) {
-        /* Map CID to the name of a sql table */
-        return this._sqlTables.get(cid)
-    }
+    // _table(cid) {
+    //     /* Map CID to the name of a sql table */
+    //     return this._sqlTables.get(cid)
+    // }
+
     async _initTables() {
         /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */
         let tables = this.prop('tables')
         let sqlTables = new Map()
         for (let {key: path, value: sqlTable} of tables.entries()) {
             assert(path)
-            let cid = Number(path)
-            if (!Number.isInteger(cid)) {
-                let catg = await this.registry.findItem(path)
-                assert(catg.isCategory)
-                cid = catg.iid
-            }
-            assert(cid)
-            sqlTables.set(cid, sqlTable)
+            // let cid = Number(path)
+            // if (!Number.isInteger(cid)) {
+            let cat = await this.registry.site.findItem(path)
+            assert(cat.isCategory)
+            // cid = cat.iid
+            // assert(cid)
+            sqlTables.set(cat.iid, sqlTable)
         }
         // print('MySQL._sqlTables:', sqlTables)
         return sqlTables
