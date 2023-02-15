@@ -1,4 +1,4 @@
-import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique } from './utils.js'
+import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique, xiid } from './utils.js'
 import { NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound } from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
@@ -13,19 +13,6 @@ export const ROOT_XIID = 0
 
 export const ROOT_CID = 0
 export const SITE_CID = 1
-
-export function xiid(cid, iid) {
-    // flat item ID to replace [cid, iid] pairs
-    assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
-    return cid * 1000 + iid
-}
-
-export function xiid_unpack(xiid) {
-    // convert xiid back to [cid, iid] pair
-    let iid = xiid % 1000
-    let cid = Math.floor((xiid - iid) / 1000)
-    return [cid, iid]
-}
 
 export function isRoot(cid_or_id, iid) {
     let cid = cid_or_id

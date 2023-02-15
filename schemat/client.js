@@ -1,4 +1,4 @@
-import { print, assert } from './utils.js'
+import { print, assert, xiid } from './utils.js'
 import { ItemsMap } from './data.js'
 import { Registry, Session } from './registry.js'
 
@@ -54,16 +54,15 @@ class AjaxDB {
 
     async get(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        let [cid, iid] = id
-        if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
+        if (!this.has(id)) this.keep(await this._from_ajax(xiid(...id)))
         return this.records.get(id)
     }
     async select(id) { return this.get(id) }
 
-    async _from_ajax(cid, iid) {
+    async _from_ajax(xid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
-        print(`ajax download [${cid},${iid}]...`)
-        return $.get(`${this.url}/${cid}:${iid}@json`)
+        print(`ajax download [${xid}]...`)
+        return $.get(`${this.url}/${xid}@json`)
     }
     async *scan(cid) {
         assert(cid || cid === 0)

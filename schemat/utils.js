@@ -363,3 +363,20 @@ export async function *merge(order, ...streams) {
         yield* streams[0]
     }
 }
+
+
+/**********************************************************************************************************************/
+
+export function xiid(cid, iid) {
+    // flat item ID to replace [cid, iid] pairs
+    assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
+    return cid * 1000 + iid
+}
+
+export function xiid_unpack(xiid) {
+    // convert xiid back to [cid, iid] pair
+    let iid = xiid % 1000
+    let cid = Math.floor((xiid - iid) / 1000)
+    return [cid, iid]
+}
+

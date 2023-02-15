@@ -1,5 +1,5 @@
 // import BTree from 'sorted-btree'
-import { T, print, assert, concat, splitFirst } from './utils.js'
+import { T, print, assert, concat, splitFirst, xiid, xiid_unpack } from './utils.js'
 
 
 /**********************************************************************************************************************
@@ -101,16 +101,16 @@ export class ItemsMap extends Map {
         assert(id)
         let [cid, iid] = id
         assert((cid || cid === 0) && (iid || iid === 0))
-        return `${cid}:${iid}`
+        return xiid(cid, iid)
     }
-    set(id, obj) { super.set(this._key(id), obj) }
+    set(id, obj)   { super.set(this._key(id), obj) }
     get(id)        { return super.get(this._key(id)) }
     has(id)        { return super.has(this._key(id)) }
     delete(id)     { return super.delete(this._key(id)) }
 
     *entries() {
         for (const [key, obj] of super.entries())
-            yield [key.split(':').map(Number), obj]
+            yield [xiid_unpack(key), obj]
     }
 }
 
