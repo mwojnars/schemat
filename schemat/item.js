@@ -1297,7 +1297,7 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.prop('class_name') || `Class_${this.cid}_${this.iid}`
+        let name = this.prop('class_name') || `Class_${this.xiid}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
@@ -1349,8 +1349,7 @@ export class Category extends Item {
     _codeHandlers() {
         let entries = this.prop('handlers')
         if (!entries?.length) return
-        let catg = `${this.cid}_${this.iid}`
-        let className = (name) => `Handler_${catg}_${name}`
+        let className = (name) => `Handler_${this.xiid}_${name}`
         let handlers = entries.map(({key: name, value: code}) =>
             `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
         )
