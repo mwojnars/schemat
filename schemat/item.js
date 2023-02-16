@@ -384,20 +384,6 @@ export class Item {
         if (id) [this.cid, this.iid] = id
     }
 
-    // static async createNewborn(registry, id, data) {
-    //     /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
-    //        Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
-    //      */
-    //     let item = new Item(registry, id)
-    //     return item.reload(data)
-    // }
-    //
-    // static async createLoaded(registry, id, jsonData) {
-    //     let item = new Item(registry, id)
-    //     let data = await item._loadData(jsonData)
-    //     return item.reload(data)
-    // }
-
     static async createBooted(registry, id = null, {data, jsonData} = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
            or an instance loaded from DB and filled out with `data` (object) or `jsonData` (encoded json string).
@@ -431,7 +417,7 @@ export class Item {
     }
 
     async boot(data = null) {
-        /* (Re)initialize this item. Load this.data from a DB if data=null, or from a given `data` object (POJO or Data).
+        /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
            Set up the class and prototypes. Call init().
          */
         try {
@@ -468,16 +454,12 @@ export class Item {
         }
     }
 
-    async _loadData(jsonData = undefined) {
-        if (jsonData === undefined) {
+    async _loadData(json = undefined) {
+        if (json === undefined) {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            jsonData = await this.registry.loadData(this.id)
+            json = await this.registry.loadData(this.id)
         }
-        return JSONx.parse(this.jsonData = jsonData)
-
-        // let state = JSON.parse(this.jsonData = jsonData)
-        // assert('@' in state, state)
-        // return JSONx.decode(state)
+        return JSONx.parse(this.jsonData = json)
     }
 
     setExpiry(ttl) {
