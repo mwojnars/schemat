@@ -390,7 +390,8 @@ export class Item {
            The item returned is *booted* (this.data is initialized).
          */
         let item = new Item(registry, id)
-        data = data || await item._loadData(dataJson)
+        assert(data || dataJson)
+        data = data || item._decodeData(dataJson)
         return item.reload(data)
     }
 
@@ -421,9 +422,6 @@ export class Item {
            Set up the class and prototypes. Call init().
          */
         try {
-            //this.data = opts.data || await this._loadData(opts.dataJson)
-            // if (!(this.data instanceof Data)) this.data = new Data(this.data)
-
             data = data || await this._loadData()
             this.data = data instanceof Data ? data : new Data(data)
 
@@ -454,11 +452,13 @@ export class Item {
         }
     }
 
-    async _loadData(json = undefined) {
-        if (json === undefined) {
-            if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
-            json = await this.registry.loadData(this.id)
-        }
+    async _loadData() {
+        if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
+        let json = await this.registry.loadData(this.id)
+        return this._decodeData(json)
+    }
+    _decodeData(json) {
+        /* Decode a JSON-encoded data string into an object and save the original string in this.dataJson. */
         return JSONx.parse(this.dataJson = json)
     }
 
