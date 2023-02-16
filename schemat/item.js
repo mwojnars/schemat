@@ -384,17 +384,28 @@ export class Item {
         if (id) [this.cid, this.iid] = id
     }
 
-    static async createNewborn(category, iid, data) {
-        /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
-           Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
-         */
-        let item = new Item(category.registry, [category.iid, iid])
-        return item.reload({data})
-    }
+    // static async createNewborn(registry, id, data) {
+    //     /* A "newborn" item has a category & CID assigned, and is intended for insertion to DB.
+    //        Arguments `data` and `iid` are optional. The item returned is *booted* (this.data initialized).
+    //      */
+    //     let item = new Item(registry, id)
+    //     return item.reload(data)
+    // }
+    //
+    // static async createLoaded(registry, id, jsonData) {
+    //     let item = new Item(registry, id)
+    //     let data = await item._loadData(jsonData)
+    //     return item.reload(data)
+    // }
 
-    static async createLoaded(registry, id, jsonData) {
+    static async createBooted(registry, id = null, {data, jsonData} = {}) {
+        /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
+           or an instance loaded from DB and filled out with `data` (object) or `jsonData` (encoded json string).
+           The item returned is *booted* (this.data is initialized).
+         */
         let item = new Item(registry, id)
-        return item.reload({jsonData})
+        data = data || await item._loadData(jsonData)
+        return item.reload(data)
     }
 
     static createAPI(endpoints, actions = {}) {
@@ -405,29 +416,30 @@ export class Item {
         this.actions = base ? {...base.actions, ...actions} : actions
     }
 
-    async load(opts = {}) {
+    async load() {
         /* Load full data of this item (this.data) if not loaded yet. Return this object. */
         // if field !== null && field in this.isLoaded: return      // this will be needed when partial loading from indexes is available
         // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
         if (this.isLoaded) return this
         if (this.isLoading) return this.isLoading       // loading has already started, should wait rather than load again
-        return this.reload(opts)                        // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.reload()                            // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async reload(opts = {}) {
+    async reload(data = null) {
         if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
-        return this.isLoading = this.boot(opts)         // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.isLoading = this.boot(data)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async boot(opts = {}) {
-        /* (Re)initialize this item. Load this.data from a DB, or from a JSON-encoded string, opts.jsonData, or take from opts.data.
+    async boot(data = null) {
+        /* (Re)initialize this item. Load this.data from a DB if data=null, or from a given `data` object (POJO or Data).
            Set up the class and prototypes. Call init().
-           Boot options (opts): {jsonData, data}
          */
         try {
-            this.data = opts.data || await this._loadData(opts.jsonData)
+            //this.data = opts.data || await this._loadData(opts.jsonData)
+            // if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
-            if (!(this.data instanceof Data)) this.data = new Data(this.data)
+            data = data || await this._loadData()
+            this.data = data instanceof Data ? data : new Data(data)
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
@@ -1208,10 +1220,11 @@ export class Category extends Item {
         set its IID if given. The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
+        let id = [this.iid, iid]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createNewborn(this, iid, data)
+        return Item.createBooted(this.registry, id, {data})
     }
 
     async getItemClass() {

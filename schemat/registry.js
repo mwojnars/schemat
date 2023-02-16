@@ -201,7 +201,7 @@ export class Registry {
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.isLoaded) {
-            await root.reload({data: root_data})
+            await root.reload(root_data)
             print("Registry._init_root(): root category loaded from root_data")
         }
 
@@ -281,7 +281,7 @@ export class Registry {
 
         for await (const {id, data: jsonData} of records) {
             if (limit !== undefined && count >= limit) break
-            yield isRoot(id) ? this.root : Item.createLoaded(this, id, jsonData)
+            yield isRoot(id) ? this.root : Item.createBooted(this, id, {jsonData})
             count++
         }
     }
