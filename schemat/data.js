@@ -98,7 +98,8 @@ export class ItemsMap extends Map {
     }
 
     _key(id) {
-        assert(id)
+        assert(id !== undefined)
+        if (T.isNumber(id)) return id
         let [cid, iid] = id
         assert((cid || cid === 0) && (iid || iid === 0))
         return xiid(cid, iid)
@@ -144,10 +145,11 @@ export class ItemsCache extends ItemsMap {
         let ends = []
         for (let [id, item] of this.entries())
             if (item.expiry === undefined || (0 < item.expiry && item.expiry <= now)) {
-                this.delete(id)
+                let deleted = this.delete(id)
+                if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
+                else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
                 let end = item.end()
                 if (end instanceof Promise) ends.push(end)
-                print('item evicted:', id, item.isLoaded ? '' : '(stub)' )
             }
         if (ends.length) return Promise.all(ends)
     }

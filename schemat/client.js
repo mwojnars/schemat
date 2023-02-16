@@ -50,14 +50,16 @@ class AjaxDB {
         }
     }
 
-    has(id)     { return this.records.has(id) }
+    // has(id)     { return this.records.has(id) }
 
-    async get(id) {
+    // async get(id) {
+    async select(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        if (!this.has(id)) this.keep(await this._from_ajax(xiid(...id)))
-        return this.records.get(id)
+        let xid = xiid(...id)
+        if (!this.records.has(xid)) this.keep(await this._from_ajax(xid))
+        return this.records.get(xid)
     }
-    async select(id) { return this.get(id) }
+    // async select(id) { return this.get(id) }
 
     async _from_ajax(xid) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
