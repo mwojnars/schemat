@@ -279,9 +279,9 @@ export class Registry {
         let records = this.db.scan(category?.iid)
         let count = 0
 
-        for await (const {id, data: jsonData} of records) {
+        for await (const {id, data: dataJson} of records) {
             if (limit !== undefined && count >= limit) break
-            yield isRoot(id) ? this.root : Item.createBooted(this, id, {jsonData})
+            yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
             count++
         }
     }

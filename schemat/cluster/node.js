@@ -138,8 +138,8 @@ class Node {
             for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
                 await ref.load()
                 ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
-                let jsonData = ref.dumpData()
-                if (jsonData !== ref.jsonData) {
+                let dataJson = ref.dumpData()
+                if (dataJson !== ref.dataJson) {
                     print(`move: updating reference(s) in item [${ref.id}]`)
                     await db.update(ref)
                 }

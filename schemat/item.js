@@ -317,7 +317,7 @@ export class Item {
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
-    jsonData        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
+    dataJson        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -384,13 +384,13 @@ export class Item {
         if (id) [this.cid, this.iid] = id
     }
 
-    static async createBooted(registry, id = null, {data, jsonData} = {}) {
+    static async createBooted(registry, id = null, {data, dataJson} = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
-           or an instance loaded from DB and filled out with `data` (object) or `jsonData` (encoded json string).
+           or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
            The item returned is *booted* (this.data is initialized).
          */
         let item = new Item(registry, id)
-        data = data || await item._loadData(jsonData)
+        data = data || await item._loadData(dataJson)
         return item.reload(data)
     }
 
@@ -421,7 +421,7 @@ export class Item {
            Set up the class and prototypes. Call init().
          */
         try {
-            //this.data = opts.data || await this._loadData(opts.jsonData)
+            //this.data = opts.data || await this._loadData(opts.dataJson)
             // if (!(this.data instanceof Data)) this.data = new Data(this.data)
 
             data = data || await this._loadData()
@@ -459,7 +459,7 @@ export class Item {
             if (!this.has_id()) throw new Error(`trying to reload an item with missing or incomplete ID: ${this.id_str}`)
             json = await this.registry.loadData(this.id)
         }
-        return JSONx.parse(this.jsonData = json)
+        return JSONx.parse(this.dataJson = json)
     }
 
     setExpiry(ttl) {
