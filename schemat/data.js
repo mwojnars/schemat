@@ -90,13 +90,6 @@ export class ItemsMap extends Map {
             for (const [id, obj] of pairs) this.set(id, obj)
     }
 
-    static reversed(catalog) {
-        /* Given a catalog of entries where values are items, create a reversed ItemsMap: item.id -> key.
-           If there are multiple entries with the same item, the last entry's key will be assigned to the item's id.
-         */
-        return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
-    }
-
     _key(id) {
         assert(id !== undefined)
         if (T.isNumber(id)) return id

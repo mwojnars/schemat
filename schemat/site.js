@@ -283,7 +283,6 @@ export class AppSpaces extends Application {
     spacesRev() {
         let catalog = this.prop('spaces')
         return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
-        // return ItemsMap.reversed(this.prop('spaces'))
     }
 
     findRoute(request) {
@@ -293,7 +292,6 @@ export class AppSpaces extends Application {
         if (!category) request.throwNotFound()
         let id = [category.iid, Number(iid)]
         let item = this.registry.getItem(id)
-        // let item = category.load().then(c => c.registry.getItem(id))
         return [item, request.pushApp(this).move(step), true]
     }
 }
