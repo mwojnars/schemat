@@ -1349,13 +1349,13 @@ export class Category extends Item {
         return `Class.setCaching(${methods.join(',')})`
     }
 
-    getItem(iid) {
-        /*
-        Instantiate a stub of an Item and seed it with IID (the IID being present in DB, presumably, not checked),
-        but do NOT load remaining contents from DB (lazy loading).
-        */
-        return this.registry.getItem([this.iid, iid])
-    }
+    // getItem(iid) {
+    //     /*
+    //     Instantiate a stub of an Item and seed it with IID (the IID being present in DB, presumably, not checked),
+    //     but do NOT load remaining contents from DB (lazy loading).
+    //     */
+    //     return this.registry.getItem([this.iid, iid])
+    // }
 
     getItemSchema(field = undefined) {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */

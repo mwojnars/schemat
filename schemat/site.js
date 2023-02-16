@@ -280,14 +280,20 @@ export class AppSpaces extends Application {
         let space = spaces_rev.get(item.category.id)
         if (space) return `${space}:${item.iid}`
     }
-    spacesRev() { return ItemsMap.reversed(this.prop('spaces')) }
+    spacesRev() {
+        let catalog = this.prop('spaces')
+        return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
+        // return ItemsMap.reversed(this.prop('spaces'))
+    }
 
     findRoute(request) {
         let step = request.step()
-        let [space, item_id] = step.split(':')
+        let [space, iid] = step.split(':')
         let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        let item = category.load().then(c => c.getItem(Number(item_id)))
+        let id = [category.iid, Number(iid)]
+        let item = this.registry.getItem(id)
+        // let item = category.load().then(c => c.registry.getItem(id))
         return [item, request.pushApp(this).move(step), true]
     }
 }
