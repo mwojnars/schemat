@@ -1,4 +1,4 @@
-import { assert, print, T, xiid, get_iid } from '../utils.js'
+import { assert, print, T, xiid, get_iid, xiid_unpack } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
@@ -199,7 +199,7 @@ class FileDB extends Block {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    records  = new ItemsMap()   // preloaded item records, {id: data_json}; data is JSON-ified for mem usage & safety,
+    records  = new Map()        // preloaded item records, {id: data_json}; data is JSON-ified for mem usage & safety,
                                 // so that clients are forced to create a new deep copy of a data object on every access
 
     constructor(filename, params = {}) {
@@ -215,13 +215,13 @@ class FileDB extends Block {
     async _erase()  { this.records.clear() }
 
     _select(id)     { return this.records.get(xiid(id)) }
-    _delete(id)     { return this.records.delete(id) }
+    _delete(id)     { return this.records.delete(xiid(id)) }
     _save(id, data) { this.records.set(xiid(id), data) }
 
     async *_scan(cid) {
         let entries = [...this.records.entries()]
-        if (cid !== undefined) entries = entries.filter(([id, data]) => id[0] === cid)
-        entries = entries.map(([id, data]) => ({id, data}))
+        if (cid !== undefined) entries = entries.filter(([xid, data]) => xiid_unpack(xid)[0] === cid)
+        entries = entries.map(([xid, data]) => ({id: xiid_unpack(xid), data}))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
     }
@@ -256,7 +256,8 @@ export class YamlDB extends FileDB {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
-        let recs = flat.map(([__id, data_json]) => {
+        let recs = flat.map(([xid, data_json]) => {
+                let __id = xiid_unpack(xid)
                 let data = JSON.parse(data_json)
                 return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
             })
