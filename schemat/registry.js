@@ -11,11 +11,6 @@ import { root_data } from './server/root.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
 
-// export function isRoot(cid_or_id, iid) {
-//     let cid = cid_or_id
-//     if (T.isArray(cid)) [cid, iid] = cid_or_id
-//     return xiid(cid, iid) === ROOT_XIID
-// }
 export function isRoot(id) { return xiid(id) === ROOT_XIID }
 
 

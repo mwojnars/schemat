@@ -89,7 +89,6 @@ export class Block extends Item {
 
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
-    // curr_iid  = new Map()   // current maximum IID per category, as {cid: maximum_iid}
     dirty                   // true when the block contains unsaved modifications
 
 
@@ -100,7 +99,6 @@ export class Block extends Item {
 
 
     open(ring) {
-        // this.curr_iid  = new Map()
         this.dirty = false
     }
 
@@ -118,7 +116,6 @@ export class Block extends Item {
     async erase() {
         /* Remove all records from this block; open() should be called first. */
         this.autoincrement = 0
-        // this.curr_iid.clear()
         await this._erase()
         return this.flush()
     }
@@ -151,16 +148,12 @@ export class Block extends Item {
 
         if (iid !== undefined) await this.assertUniqueID(id)    // the uniqueness check is only needed when the IID came from the caller
         else {
-            // let max = this.curr_iid.get(cid) || 0               // current maximum IID for this category in the Block
-            // iid = Math.max(max + 1, ring.start_iid)             // next available IID in this category
             iid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
             id  = [cid, iid]
         }
 
         ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
-        // let max_iid = Math.max(iid, this.curr_iid.get(cid) || 0)
-        // this.curr_iid.set(cid, max_iid)
         this.autoincrement = Math.max(iid, this.autoincrement)
         await this.save(id, data)
         return iid
@@ -246,15 +239,12 @@ export class YamlDB extends FileDB {
 
         this.autoincrement = 0
         this.records.clear()
-        // this.curr_iid.clear()
 
         for (let record of records) {
             let id = T.pop(record, '__id')
             ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
-            // let curr_max = this.curr_iid.get(cid) || 0
-            // this.curr_iid.set(cid, Math.max(curr_max, iid))
             this.autoincrement = Math.max(this.autoincrement, get_iid(id))
 
             let data = '__data' in record ? record.__data : record
