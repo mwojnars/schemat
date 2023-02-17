@@ -380,3 +380,7 @@ export function xiid_unpack(xiid) {
     return [cid, iid]
 }
 
+export function get_iid(id) {
+    let [cid, iid] = T.isArray(id) ? id : xiid_unpack(id)
+    return iid
+}
