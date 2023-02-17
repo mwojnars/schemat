@@ -14,12 +14,6 @@ export const ROOT_XIID = 0
 export const ROOT_CID = 0
 export const SITE_CID = 1
 
-export function isRoot(cid_or_id, iid) {
-    let cid = cid_or_id
-    if (T.isArray(cid)) [cid, iid] = cid_or_id
-    return xiid(cid, iid) === ROOT_XIID
-}
-
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
 // print("imported utils from localhost:", utils)

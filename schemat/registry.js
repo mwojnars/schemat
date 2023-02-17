@@ -1,14 +1,22 @@
 "use strict";
 
-import { print, assert, splitLast } from './utils.js'
+import { print, assert, splitLast, T, xiid } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID, SITE_CID, isRoot } from './item.js'
+import { Item, RootCategory, ROOT_CID, SITE_CID, ROOT_XIID } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
+
+
+// export function isRoot(cid_or_id, iid) {
+//     let cid = cid_or_id
+//     if (T.isArray(cid)) [cid, iid] = cid_or_id
+//     return xiid(cid, iid) === ROOT_XIID
+// }
+export function isRoot(id) { return xiid(id) === ROOT_XIID }
 
 
 /**********************************************************************************************************************

@@ -1,4 +1,4 @@
-import { assert, print, T, get_iid } from '../utils.js'
+import { assert, print, T, xiid, get_iid } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
@@ -221,9 +221,9 @@ class FileDB extends Block {
     }
     async _erase()  { this.records.clear() }
 
-    _select(id)     { return this.records.get(id) }
+    _select(id)     { return this.records.get(xiid(id)) }
     _delete(id)     { return this.records.delete(id) }
-    _save(id, data) { this.records.set(id, data) }
+    _save(id, data) { this.records.set(xiid(id), data) }
 
     async *_scan(cid) {
         let entries = [...this.records.entries()]
@@ -258,7 +258,7 @@ export class YamlDB extends FileDB {
             this.autoincrement = Math.max(this.autoincrement, get_iid(id))
 
             let data = '__data' in record ? record.__data : record
-            this.records.set(id, JSON.stringify(data))
+            this.records.set(xiid(id), JSON.stringify(data))
         }
     }
 

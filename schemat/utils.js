@@ -367,8 +367,11 @@ export async function *merge(order, ...streams) {
 
 /**********************************************************************************************************************/
 
-export function xiid(cid, iid) {
+export function xiid(cid_or_id, iid) {
     // flat item ID to replace [cid, iid] pairs
+    let cid = cid_or_id
+    if (T.isArray(cid)) [cid, iid] = cid_or_id
+
     assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
     return cid * 1000 + iid
 }
