@@ -1,5 +1,4 @@
 import { print, assert, splitLast, T, xiid_unpack } from './utils.js'
-import { ItemsMap } from './data.js'
 import { Category, Handler, Item, Request } from './item.js'
 import { API, HttpProtocol, InternalProtocol } from "./protocols.js";
 
@@ -277,12 +276,12 @@ export class AppSpaces extends Application {
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
-        let space = spaces_rev.get(item.category.id)
+        let space = spaces_rev.get(item.category.xid)
         if (space) return `${space}:${item.iid}`
     }
     spacesRev() {
         let catalog = this.prop('spaces')
-        return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
+        return new Map(catalog.map(({key, value:item}) => [item.xid, key]))
     }
 
     findRoute(request) {
