@@ -111,11 +111,10 @@ export class ItemsMap extends Map {
 export class ItemsCount extends Map {
     /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
     add(id, increment = 1) {
-        let proto = Map.prototype           // accessing get/set() of a super-super class must be done manually through a prototype
         let key   = xiid(id)
-        let count = proto.get.call(this, key) || 0
+        let count = this.get(key) || 0
         count += increment
-        proto.set.call(this, key, count)
+        this.set(key, count)
         return count
     }
     total()     { let t = 0; this.forEach(v => t += v); return t }
