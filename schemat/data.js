@@ -1,5 +1,5 @@
 // import BTree from 'sorted-btree'
-import { T, print, assert, concat, splitFirst, xiid, xiid_unpack } from './utils.js'
+import { T, print, assert, concat, splitFirst, xiid } from './utils.js'
 
 
 /**********************************************************************************************************************
@@ -75,7 +75,7 @@ export class Path {
 
 /**********************************************************************************************************************
  **
- **  ITEMS MAP
+ **  CONTAINERS of ITEMS
  **
  */
 
@@ -103,6 +103,7 @@ export class ItemsCache extends Map {
     //     item.setExpiry(ttl)
     //     super.set(id, item)
     // }
+
     evict() {
         let now  = Date.now()
         let ends = []
