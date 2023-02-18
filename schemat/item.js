@@ -1,4 +1,4 @@
-import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique, xiid } from './utils.js'
+import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique, xiid, xiid_unpack } from './utils.js'
 import { NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound } from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
@@ -375,6 +375,7 @@ export class Item {
     constructor(registry, id = null) {
         /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
+        id = xiid_unpack(id)
         if (id) [this.cid, this.iid] = id
     }
 

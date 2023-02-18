@@ -49,9 +49,7 @@
 - __id: 51
   name: MysqlDB
   prototype:
-    "@":
-      - 0
-      - 11
+    "@": 11
   class_path: /system/local/db/mysql.js:MySQL
   fields:
     host:
@@ -76,7 +74,5 @@
       "@": BOOLEAN
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data

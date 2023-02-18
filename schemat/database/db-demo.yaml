@@ -138,9 +138,7 @@
       "@": STRING
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 100101
   title: Ala ma kota Sierściucha i psa Kłapoucha.

@@ -130,9 +130,7 @@
       "@": CATALOG
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 2
   name: Router
@@ -147,9 +145,7 @@
     "@": Catalog
   class_path: /system/local/site.js:Router
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 3
   name: File
@@ -172,26 +168,20 @@
       "@": BOOLEAN
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   prototype:
-    "@":
-      - 0
-      - 3
+    "@": 3
   class_path: /system/local/site.js:FileLocal
   fields:
     path:
       "@": STRING
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 5
   name: Folder
@@ -208,9 +198,7 @@
       "@": BOOLEAN
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 6
   name: FolderLocal
@@ -218,18 +206,14 @@
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   prototype:
-    "@":
-      - 0
-      - 5
+    "@": 5
   class_path: /system/local/site.js:FolderLocal
   fields:
     path:
       "@": STRING
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 7
   name: Application
@@ -237,9 +221,7 @@
     categories available in the system and provides system-level configuration.
   class_path: /system/local/site.js:Application
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 8
   name: AppBasic
@@ -250,9 +232,7 @@
   fields:
     category:
       category:
-        "@":
-          - 0
-          - 0
+        "@": 0
       info: Optional category(ies) of items handled by this application.
       "@": ITEM
     drop_cid:
@@ -263,9 +243,7 @@
       "@": BOOLEAN
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 9
   name: AppSpaces
@@ -277,17 +255,13 @@
     spaces:
       values:
         category:
-          "@":
-            - 0
-            - 0
+          "@": 0
         "@": ITEM
       "@": CATALOG
     "@": Catalog
   cached_methods: spacesRev
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 10
   name: Schema
@@ -312,53 +286,35 @@
       "@": CATALOG
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 11
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 6012
   name: /local
   path: .
   __category__:
-    "@":
-      - 0
-      - 6
+    "@": 6
   "@": Data
 - __id: 5013
   name: /system
   files:
     local:
-      "@":
-        - 6
-        - 12
+      "@": 6012
     Application:
-      "@":
-        - 0
-        - 7
+      "@": 7
     File:
-      "@":
-        - 0
-        - 3
+      "@": 3
     Folder:
-      "@":
-        - 0
-        - 5
+      "@": 5
     Site:
-      "@":
-        - 0
-        - 1
+      "@": 1
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
