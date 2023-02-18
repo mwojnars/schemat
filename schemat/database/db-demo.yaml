@@ -5,41 +5,25 @@
   routes:
     =:
       - - $
-        - "@":
-            - 8
-            - 101
+        - "@": 8101
       - - apps
-        - "@":
-            - 5
-            - 103
+        - "@": 5103
       - - site
-        - "@":
-            - 5
-            - 104
+        - "@": 5104
       - - system
-        - "@":
-            - 5
-            - 13
+        - "@": 5013
       - - null
-        - "@":
-            - 5
-            - 106
+        - "@": 5106
       - - null
-        - "@":
-            - 9
-            - 101
+        - "@": 9101
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 1
+    "@": 1
   "@": Data
 - __id: 3101
   content: export let print = console.log
   __category__:
-    "@":
-      - 0
-      - 3
+    "@": 3
   "@": Data
 - __id: 3102
   content: |-
@@ -48,82 +32,54 @@
     //let fs = await importLocal('fs')
     //print('fs:',fs)
   __category__:
-    "@":
-      - 0
-      - 3
+    "@": 3
   "@": Data
 - __id: 5102
   name: /demo
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
 - __id: 5103
   name: /apps
   files:
     demo:
-      "@":
-        - 5
-        - 102
+      "@": 5102
     paperity:
-      "@":
-        - 5
-        - 107
+      "@": 5107
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
 - __id: 5104
   name: /site
   files:
     utils.js:
-      "@":
-        - 3
-        - 101
+      "@": 3101
     widgets.js:
-      "@":
-        - 3
-        - 102
+      "@": 3102
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
 - __id: 8101
   name: /$
   __category__:
-    "@":
-      - 0
-      - 8
+    "@": 8
   "@": Data
 - __id: 9101
   name: Catalog
   spaces:
     sys.category:
-      "@":
-        - 0
-        - 0
+      "@": 0
     sys.site:
-      "@":
-        - 0
-        - 1
+      "@": 1
     sys.dir:
-      "@":
-        - 0
-        - 5
+      "@": 5
     sys.file:
-      "@":
-        - 0
-        - 3
+      "@": 3
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 9
+    "@": 9
   "@": Data
 - __id: 100
   name: Varia
@@ -143,16 +99,12 @@
 - __id: 100101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   __category__:
-    "@":
-      - 0
-      - 100
+    "@": 100
   "@": Data
 - __id: 100102
   title: ąłęÓŁŻŹŚ
   __category__:
-    "@":
-      - 0
-      - 100
+    "@": 100
   "@": Data
 - __id: 5106
   name: domain
@@ -160,14 +112,10 @@
     root, like .../favicon.ico, /robots.txt etc.
   files:
     favicon.ico:
-      "@":
-        - 4
-        - 100
+      "@": 4100
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
 - __id: 200
   name: TwitterPost
@@ -216,17 +164,13 @@
         console.log('this.utils #1:', this.utils)
     }
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 4100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
   __category__:
-    "@":
-      - 0
-      - 4
+    "@": 4
   "@": Data
 - __id: 51100
   name: mysql-paperity
@@ -244,34 +188,24 @@
     "@": Catalog
   readonly: true
   __category__:
-    "@":
-      - 0
-      - 51
+    "@": 51
   "@": Data
 - __id: 200100
   name: Post A
   text: Ala ma kota
   __category__:
-    "@":
-      - 0
-      - 200
+    "@": 200
   "@": Data
 - __id: 5107
   name: /paperity
   files:
     Journal:
-      "@":
-        - 0
-        - 201
+      "@": 201
     Paper:
-      "@":
-        - 0
-        - 202
+      "@": 202
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 5
+    "@": 5
   "@": Data
 - __id: 201
   name: Journal
@@ -371,9 +305,7 @@
       "@": SchemaWrapper
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 202
   name: Paper
@@ -636,7 +568,5 @@
       }
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data

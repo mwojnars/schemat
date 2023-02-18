@@ -2,49 +2,37 @@
   name: STRING
   class_path: /system/local/type.js:STRING
   __category__:
-    "@":
-      - 0
-      - 10
+    "@": 10
   "@": Data
 - __id: 10002
   name: NUMBER
   class_path: /system/local/type.js:NUMBER
   __category__:
-    "@":
-      - 0
-      - 10
+    "@": 10
   "@": Data
 - __id: 10003
   name: INTEGER
   class_path: /system/local/type.js:INTEGER
   __category__:
-    "@":
-      - 0
-      - 10
+    "@": 10
   "@": Data
 - __id: 10004
   name: URL
   class_path: /system/local/type.js:URL
   __category__:
-    "@":
-      - 0
-      - 10
+    "@": 10
   "@": Data
 - __id: 50
   name: YAML
   info: Data stored in a YAML file.
   prototype:
-    "@":
-      - 0
-      - 11
+    "@": 11
   fields:
     filename:
       "@": STRING
     "@": Catalog
   __category__:
-    "@":
-      - 0
-      - 0
+    "@": 0
   "@": Data
 - __id: 51
   name: MysqlDB
