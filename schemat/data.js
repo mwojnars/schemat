@@ -108,11 +108,11 @@ export class ItemsMap extends Map {
     }
 }
 
-export class ItemsCount extends ItemsMap {
+export class ItemsCount extends Map {
     /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
     add(id, increment = 1) {
         let proto = Map.prototype           // accessing get/set() of a super-super class must be done manually through a prototype
-        let key   = this._key(id)
+        let key   = xiid(id)
         let count = proto.get.call(this, key) || 0
         count += increment
         proto.set.call(this, key, count)
@@ -122,7 +122,7 @@ export class ItemsCount extends ItemsMap {
 }
 
 export class ItemsCache extends Map {
-    /* An ItemsMap that keeps Item instances and additionally provides manually-invoked eviction by LRU and per-item TTL.
+    /* A cache of Item instances; provides manually-invoked eviction by LRU and per-item TTL.
        Eviction timestamps are stored in items (item.evict) and can be modified externally by the Item or Registry.
        Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
        For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
