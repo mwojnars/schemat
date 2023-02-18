@@ -1,10 +1,10 @@
 "use strict";
 
-import { print, assert, splitLast, T, xiid } from './utils.js'
+import { print, assert, T, xiid } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID, SITE_CID, ROOT_XIID } from './item.js'
+import { Item, RootCategory, ROOT_CID, SITE_CID, ROOT_XIID, SITE_XIID } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
@@ -227,7 +227,8 @@ export class Registry {
     async _find_site() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
-        let Site = await this.getCategory(SITE_CID)
+        // let Site = await this.getCategory(SITE_CID)
+        let Site = await this.getLoaded(SITE_XIID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)

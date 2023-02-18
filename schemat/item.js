@@ -10,6 +10,7 @@ import { DATA } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_XIID = 0
+export const SITE_XIID = 1
 
 export const ROOT_CID = 0
 export const SITE_CID = 1

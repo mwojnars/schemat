@@ -219,7 +219,6 @@ class FileDB extends Block {
 
     async *_scan() {
         let entries = [...this.records.entries()]
-        // if (cid !== undefined) entries = entries.filter(([xid, data]) => xiid_unpack(xid)[0] === cid)
         entries = entries.map(([xid, data]) => ({id: xiid_unpack(xid), data}))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
