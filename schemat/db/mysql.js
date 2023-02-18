@@ -37,22 +37,19 @@ export class MySQL extends Block {
         if (rows.length) return this._convert(rows[0], cid)
     }
 
-    async *_scan(cid, {offset = 0, limit = 100} = {}) {
-        let query = this._select_sql(cid)
-        if (!query) return
-        if (limit) {
-            query += ` LIMIT ${limit}`
-            if (offset) query += ` OFFSET ${offset}`        // offset is only allowed together with limit in MySQL
+    async *_scan({offset = 0, limit = 100} = {}) {
+        for (let cid of this._sqlTables.keys()) {
+            let query = this._select_sql(cid)
+            if (!query) continue  //return
+            if (limit) {
+                query += ` LIMIT ${limit}`
+                if (offset) query += ` OFFSET ${offset}`        // offset is only allowed together with limit in MySQL
+            }
+            let [rows, cols] = await this.db.execute(query)
+            for (let row of rows)
+                yield {id: [cid, row.id], data: await this._convert(row, cid)}
         }
-        let [rows, cols] = await this.db.execute(query)
-        for (let row of rows)
-            yield {id: [cid, row.id], data: await this._convert(row, cid)}
     }
-
-    // _table(cid) {
-    //     /* Map CID to the name of a sql table */
-    //     return this._sqlTables.get(cid)
-    // }
 
     async _initTables() {
         /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */

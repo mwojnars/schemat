@@ -339,7 +339,7 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    get xiid()      { return xiid(this.cid, this.iid) }                 // flat item ID to replace [cid, iid] pairs
+    get xid()       { return xiid(this.cid, this.iid) }                 // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -1273,7 +1273,7 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.prop('class_name') || `Class_${this.xiid}`
+        let name = this.prop('class_name') || `Class_${this.xid}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
@@ -1325,7 +1325,7 @@ export class Category extends Item {
     _codeHandlers() {
         let entries = this.prop('handlers')
         if (!entries?.length) return
-        let className = (name) => `Handler_${this.xiid}_${name}`
+        let className = (name) => `Handler_${this.xid}_${name}`
         let handlers = entries.map(({key: name, value: code}) =>
             `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
         )
@@ -1363,7 +1363,7 @@ export class Category extends Item {
     }
 
     Items({items, itemRemoved}) {
-        /* A list (table) of items. */
+        /* A list (table) of items that belong to this category. */
         if (!items || items.length === 0) return null
         const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
 

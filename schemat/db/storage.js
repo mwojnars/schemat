@@ -190,7 +190,7 @@ export class Block extends Item {
     _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
     _erase()                { throw new NotImplemented() }
     _flush()                { throw new NotImplemented() }
-    *_scan(cid, opts)       { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
+    *_scan(opts)            { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 
 }
 
@@ -218,9 +218,9 @@ class FileDB extends Block {
     _delete(id)     { return this.records.delete(xiid(id)) }
     _save(id, data) { this.records.set(xiid(id), data) }
 
-    async *_scan(cid) {
+    async *_scan() {
         let entries = [...this.records.entries()]
-        if (cid !== undefined) entries = entries.filter(([xid, data]) => xiid_unpack(xid)[0] === cid)
+        // if (cid !== undefined) entries = entries.filter(([xid, data]) => xiid_unpack(xid)[0] === cid)
         entries = entries.map(([xid, data]) => ({id: xiid_unpack(xid), data}))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries

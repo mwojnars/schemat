@@ -243,7 +243,7 @@ export class AppBasic extends Application {
 
     urlPath(item) {
         assert(item.has_id())
-        return `${item.xiid}`
+        return `${item.xid}`
         // let [cid, iid] = item.id
         // return `${cid}:${iid}`
     }

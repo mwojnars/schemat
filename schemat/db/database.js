@@ -119,7 +119,7 @@ export class Ring {
         return this.block.delete([db, this], id)
     }
 
-    async *scan(cid)    { yield* this.block._scan(cid) }
+    async *scan()   { yield* this.block._scan() }
 
 }
 
@@ -215,9 +215,9 @@ export class Database {
         return this.forward_delete([], id)
     }
 
-    async *scan(cid) {
+    async *scan() {
         /* Scan each ring and merge the sorted streams of entries. */
-        let streams = this.rings.map(r => r.scan(cid))
+        let streams = this.rings.map(r => r.scan())
         yield* merge(Item.orderAscID, ...streams)
     }
 
