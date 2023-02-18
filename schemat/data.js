@@ -121,7 +121,7 @@ export class ItemsCount extends ItemsMap {
     total()     { let t = 0; this.forEach(v => t += v); return t }
 }
 
-export class ItemsCache extends ItemsMap {
+export class ItemsCache extends Map {
     /* An ItemsMap that keeps Item instances and additionally provides manually-invoked eviction by LRU and per-item TTL.
        Eviction timestamps are stored in items (item.evict) and can be modified externally by the Item or Registry.
        Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.

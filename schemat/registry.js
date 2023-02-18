@@ -250,11 +250,11 @@ export class Registry {
         if (isRoot(id)) return this.root
 
         // ID requested was already loaded/created? return the existing instance
-        let item = this.cache.get(id)
+        let item = this.cache.get(xiid(id))
         if (item) return item
 
         let stub = new Item(this, id)
-        this.cache.set(id, stub)            // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        this.cache.set(xiid(id), stub)      // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 
