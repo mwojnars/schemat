@@ -377,10 +377,11 @@ export function xiid(cid_or_id, iid = null) {
     return cid * 1000 + iid
 }
 
-export function xiid_unpack(xiid) {
-    // convert xiid back to [cid, iid] pair
-    let iid = xiid % 1000
-    let cid = Math.floor((xiid - iid) / 1000)
+export function xiid_unpack(xid) {
+    // convert xid back to [cid, iid] pair
+    if (T.isArray(xid)) return xid
+    let iid = xid % 1000
+    let cid = Math.floor((xid - iid) / 1000)
     return [cid, iid]
 }
 

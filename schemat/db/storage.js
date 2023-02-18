@@ -240,7 +240,7 @@ export class YamlDB extends FileDB {
         this.records.clear()
 
         for (let record of records) {
-            let id = T.pop(record, '__id')
+            let id = xiid_unpack(T.pop(record, '__id'))
             ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
@@ -256,7 +256,7 @@ export class YamlDB extends FileDB {
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
         let recs = flat.map(([xid, data_json]) => {
-                let __id = xiid_unpack(xid)
+                let __id = xid
                 let data = JSON.parse(data_json)
                 return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
             })

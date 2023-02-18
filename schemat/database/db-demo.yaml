@@ -1,6 +1,4 @@
-- __id:
-    - 1
-    - 100
+- __id: 1100
   name: catalog.wiki
   URL: http://127.0.0.1:3000
   path_internal: /$
@@ -36,18 +34,14 @@
       - 0
       - 1
   "@": Data
-- __id:
-    - 3
-    - 101
+- __id: 3101
   content: export let print = console.log
   __category__:
     "@":
       - 0
       - 3
   "@": Data
-- __id:
-    - 3
-    - 102
+- __id: 3102
   content: |-
     import {print} from '../site/utils.js'
     export function check() { print('called widgets.js:check()') } 
@@ -58,18 +52,14 @@
       - 0
       - 3
   "@": Data
-- __id:
-    - 5
-    - 102
+- __id: 5102
   name: /demo
   __category__:
     "@":
       - 0
       - 5
   "@": Data
-- __id:
-    - 5
-    - 103
+- __id: 5103
   name: /apps
   files:
     demo:
@@ -86,9 +76,7 @@
       - 0
       - 5
   "@": Data
-- __id:
-    - 5
-    - 104
+- __id: 5104
   name: /site
   files:
     utils.js:
@@ -105,18 +93,14 @@
       - 0
       - 5
   "@": Data
-- __id:
-    - 8
-    - 101
+- __id: 8101
   name: /$
   __category__:
     "@":
       - 0
       - 8
   "@": Data
-- __id:
-    - 9
-    - 101
+- __id: 9101
   name: Catalog
   spaces:
     sys.category:
@@ -141,9 +125,7 @@
       - 0
       - 9
   "@": Data
-- __id:
-    - 0
-    - 100
+- __id: 100
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
@@ -160,27 +142,21 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 100
-    - 101
+- __id: 100101
   title: Ala ma kota Sierściucha i psa Kłapoucha.
   __category__:
     "@":
       - 0
       - 100
   "@": Data
-- __id:
-    - 100
-    - 102
+- __id: 100102
   title: ąłęÓŁŻŹŚ
   __category__:
     "@":
       - 0
       - 100
   "@": Data
-- __id:
-    - 5
-    - 106
+- __id: 5106
   name: domain
   info: Folder with public static files that must be accessible at the domain
     root, like .../favicon.ico, /robots.txt etc.
@@ -195,9 +171,7 @@
       - 0
       - 5
   "@": Data
-- __id:
-    - 0
-    - 200
+- __id: 200
   name: TwitterPost
   fields:
     text:
@@ -248,9 +222,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 4
-    - 100
+- __id: 4100
   name: favicon.ico
   path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
   __category__:
@@ -258,9 +230,7 @@
       - 0
       - 4
   "@": Data
-- __id:
-    - 51
-    - 100
+- __id: 51100
   name: mysql-paperity
   info: |
     Connects through ssh tunneling. Must launch this in console beforehand:
@@ -280,9 +250,7 @@
       - 0
       - 51
   "@": Data
-- __id:
-    - 200
-    - 100
+- __id: 200100
   name: Post A
   text: Ala ma kota
   __category__:
@@ -290,9 +258,7 @@
       - 0
       - 200
   "@": Data
-- __id:
-    - 5
-    - 107
+- __id: 5107
   name: /paperity
   files:
     Journal:
@@ -309,9 +275,7 @@
       - 0
       - 5
   "@": Data
-- __id:
-    - 0
-    - 201
+- __id: 201
   name: Journal
   info: Paperity's Journal object.
   fields:
@@ -413,9 +377,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 202
+- __id: 202
   name: Paper
   info: Paperity's Paper object.
   fields:

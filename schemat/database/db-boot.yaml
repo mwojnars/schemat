@@ -1,6 +1,4 @@
-- __id:
-    - 0
-    - 0
+- __id: 0
   name: Category
   info: Category of items that represent categories
   class_path: /system/local/item.js:Category
@@ -108,9 +106,7 @@
       "@": CATALOG
     "@": Catalog
   "@": Data
-- __id:
-    - 0
-    - 1
+- __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
@@ -138,9 +134,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 2
+- __id: 2
   name: Router
   info: A set of sub-applications or sub-folders, each bound to a different URL
     prefix.
@@ -157,9 +151,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 3
+- __id: 3
   name: File
   info: File with a text content.
   class_path: /system/local/site.js:File
@@ -184,9 +176,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 4
+- __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   prototype:
@@ -203,9 +193,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 5
+- __id: 5
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
@@ -224,9 +212,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 6
+- __id: 6
   name: FolderLocal
   info: |-
     File folder located on a local disk, identified by its local file path.
@@ -245,9 +231,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 7
+- __id: 7
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
@@ -257,9 +241,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 8
+- __id: 8
   name: AppBasic
   info: Application that serves items on simple URLs of the form /CID:IID. Mainly
     used for system & admin purposes, or as a last-resort default for URL
@@ -285,9 +267,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 9
+- __id: 9
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -309,9 +289,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 10
+- __id: 10
   name: Schema
   info: Category of items that represent schema types. Some of the items are
     wrappers around system types (STRING, INTEGER etc.), while some others
@@ -338,9 +316,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 0
-    - 11
+- __id: 11
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
@@ -349,9 +325,7 @@
       - 0
       - 0
   "@": Data
-- __id:
-    - 6
-    - 12
+- __id: 6012
   name: /local
   path: .
   __category__:
@@ -359,9 +333,7 @@
       - 0
       - 6
   "@": Data
-- __id:
-    - 5
-    - 13
+- __id: 5013
   name: /system
   files:
     local:
