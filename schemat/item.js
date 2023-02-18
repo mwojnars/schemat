@@ -682,13 +682,6 @@ export class Item {
         return this.data.object(first)
     }
 
-    // async getLoaded(path) {
-    //     /* Retrieve a related item identified by `path` and load its data, then return this item. Shortcut for load+get. */
-    //     let item = this.get(path)
-    //     if (item !== undefined) await item.load()
-    //     return item
-    // }
-
     getAncestors() {
         /* Linearized list of all ancestors, with `this` at the first position.
            TODO: use C3 algorithm to preserve correct order (MRO, Method Resolution Order) as used in Python:
@@ -717,7 +710,7 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this.category.getName(this.cid.toString())
+        let cat = this.category.getName()
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
