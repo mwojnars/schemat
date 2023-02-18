@@ -1,6 +1,5 @@
 import { assert, print, T, xiid, get_iid, xiid_unpack } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
-import { ItemsMap } from '../data.js'
 import { Item } from '../item.js'
 
 // import { Kafka } from 'kafkajs'

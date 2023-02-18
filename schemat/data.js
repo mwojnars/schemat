@@ -79,35 +79,6 @@ export class Path {
  **
  */
 
-export class ItemsMap extends Map {
-    /* A Map that keeps objects of arbitrary type (items, records, promises) indexed by item ID converted to a string.
-       Item ID is an array that must be converted to a string for equality comparisons inside Map.
-     */
-
-    constructor(pairs = null) {
-        super()
-        if (pairs)
-            for (const [id, obj] of pairs) this.set(id, obj)
-    }
-
-    _key(id) {
-        assert(id !== undefined)
-        if (T.isNumber(id)) return id
-        let [cid, iid] = id
-        assert((cid || cid === 0) && (iid || iid === 0))
-        return xiid(cid, iid)
-    }
-    set(id, obj)   { super.set(this._key(id), obj) }
-    get(id)        { return super.get(this._key(id)) }
-    has(id)        { return super.has(this._key(id)) }
-    delete(id)     { return super.delete(this._key(id)) }
-
-    *entries() {
-        for (const [key, obj] of super.entries())
-            yield [xiid_unpack(key), obj]
-    }
-}
-
 export class ItemsCount extends Map {
     /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
     add(id, increment = 1) {
