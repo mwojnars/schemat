@@ -1253,7 +1253,7 @@ export class SchemaWrapper extends Schema {
     validate(obj)       { return this.schema.validate(obj) }
     display(props)      { return this.schema.display(props) }
 
-    __getstate__()          { return [this.props.prototype.id, this.props.properties] }
+    __getstate__()          { return [this.props.prototype.xid, this.props.properties] }
     __setstate__(state)     {
         let [id, props] = state
         this.__props.prototype  = globalThis.registry.getItem(id)

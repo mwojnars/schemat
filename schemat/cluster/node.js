@@ -42,10 +42,10 @@ class Node {
 
     async boot() {
         let rings = [
-            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readonly: true},
+            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readonly: false},
             {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readonly: false},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
-            {item: [51,100], name: 'mysql', readonly: true},
+            // {item: [51,100], name: 'mysql', readonly: true},
         ]
 
         let db = this.db = new Database()
@@ -67,9 +67,9 @@ class Node {
         // node = this.registry.getLoaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
-        // // convert all the items in the database to a new format; all rings must be set as writable (!)
-        // for await (let item of this.registry.scan())
-        //     this.registry.update(item)
+        // convert all the items in the database to a new format; all rings must be set as writable (!)
+        for await (let item of this.registry.scan())
+            this.registry.update(item)
 
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
