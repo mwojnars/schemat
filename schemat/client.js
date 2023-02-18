@@ -1,5 +1,4 @@
 import { print, assert, xiid } from './utils.js'
-import { ItemsMap } from './data.js'
 import { Registry, Session } from './registry.js'
 
 
@@ -30,9 +29,9 @@ class AjaxDB {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    url     = null                  // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
-    records = new ItemsMap()        // cached `data` of the items received on initial or subsequent web requests;
-                                    // each `data` is JSON-encoded for safety
+    url     = null              // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
+    records = new Map()         // cached `data` of the items received on initial or subsequent web requests;
+                                // each `data` is JSON-encoded for safety
 
     constructor(url, records = []) {
         this.url = url
@@ -46,13 +45,13 @@ class AjaxDB {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            this.records.set(rec.id, rec.data)
+            this.records.set(xiid(rec.id), rec.data)
         }
     }
 
     async select(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        let xid = xiid(...id)
+        let xid = xiid(id)
         if (!this.records.has(xid)) this.keep(await this._from_ajax(xid))
         return this.records.get(xid)
     }
