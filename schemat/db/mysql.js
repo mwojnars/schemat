@@ -24,6 +24,8 @@ export class MySQL extends Block {
         this._mod_mysql = await import('mysql2/promise')
         await this._initTables()
         this.db = await this._connect()
+
+        this.SHIFT = 2000            // TODO: temporary...
     }
     async close() { return this.db?.end() }                 // deallocate mysql connection
     async end()   { return this.close()   }
@@ -40,10 +42,13 @@ export class MySQL extends Block {
         if (iid < this._offset) return []
         let row_id = Math.floor((iid - this._offset) / this._size)
         let table_id = (iid - this._offset) % this._size
-        return [table_id, row_id]
+        return [table_id, row_id + this.SHIFT]
     }
     iidFromSQL(table_id, row_id) {
         /* Mapping SQL table and row ID to Schemat IID. */
+        // assert(row_id > this.SHIFT, row_id, this.SHIFT)
+        if (row_id < this.SHIFT) return
+        row_id = row_id - this.SHIFT
         return this._offset + row_id * this._size + table_id
     }
 
@@ -109,6 +114,7 @@ export class MySQL extends Block {
 
             for (let row of rows) {
                 let iid = this.iidFromSQL(table_id, row.id)
+                if (iid === undefined || iid <= 0) continue
                 let item = {id: [cid, iid], data: this._convert(row, category)}
                 items.push(item)
             }

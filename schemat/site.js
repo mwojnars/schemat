@@ -1,4 +1,4 @@
-import { print, assert, splitLast, T, xiid_unpack } from './utils.js'
+import { print, assert, splitLast, T, xiid, xiid_unpack } from './utils.js'
 import { Category, Handler, Item, Request } from './item.js'
 import { API, HttpProtocol, InternalProtocol } from "./protocols.js";
 
@@ -188,7 +188,8 @@ export class Site extends Router {
         /* Default absolute URL path ("system path") of the item. No domain. */
         assert(item.has_id())
         let [cid, iid] = item.id
-        return this.prop('path_internal') + `/${cid}:${iid}`
+        return this.prop('path_internal') + `/${xiid(cid,iid)}`
+        // return this.prop('path_internal') + `/${cid}:${iid}`
     }
 
     urlRaw(item) {
