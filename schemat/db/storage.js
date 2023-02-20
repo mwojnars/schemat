@@ -119,9 +119,9 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async save(id, data) {
+    async save(xid, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
-        await this._save(id, data)
+        await this._save(xid, data)
         this.dirty = true
         this.flush(1)               // todo: make the timeout configurable and 0 by default
     }
@@ -154,7 +154,7 @@ export class Block extends Item {
         ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(iid, this.autoincrement)
-        await this.save(id, data)
+        await this.save(xiid(id), data)
         return iid
     }
 
@@ -215,7 +215,7 @@ class FileDB extends Block {
 
     _select(id)     { return this.records.get(xiid(id)) }
     _delete(id)     { return this.records.delete(xiid(id)) }
-    _save(id, data) { this.records.set(xiid(id), data) }
+    _save(xid, data) { this.records.set(xid, data) }
 
     async *_scan() {
         let entries = [...this.records.entries()]
