@@ -47,8 +47,6 @@ export class MySQL extends Block {
         return this._offset + row_id * this._size + table_id
     }
 
-    ////////////////////////////////////////////////////////////////////
-
     async _initTables() {
         /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */
         let tables = this.prop('tables')
@@ -95,7 +93,7 @@ export class MySQL extends Block {
     }
 
     async *_scan({offset = 0, limit = 100} = {}) {
-        let items = []      // the result list is materialized here to allow ID sorting at the end
+        let items = []      // the result list is materialized here to allow IID sorting at the end
 
         for (let table_id = 0; table_id < this._size; table_id++) {
             let query = this._query_select(table_id)
@@ -119,62 +117,6 @@ export class MySQL extends Block {
         items.sort((a, b) => a.id[1] - b.id[1])
         yield* items
     }
-
-    ////////////////////////////////////////////////////////////////////
-
-    // async _select([cid, iid], opts) {
-    //     let select = this._select_sql(cid)
-    //     if (!select) return
-    //     let query = `${select} WHERE id = ? LIMIT 1`
-    //     let [rows, cols] = await this.db.execute(query, [iid])
-    //     if (rows.length) return this._convert(rows[0], cid)
-    // }
-    //
-    // async *_scan({offset = 0, limit = 100} = {}) {
-    //     for (let cid of this._sqlTables.keys()) {
-    //         let query = this._select_sql(cid)
-    //         if (!query) continue  //return
-    //         if (limit) {
-    //             query += ` LIMIT ${limit}`
-    //             if (offset) query += ` OFFSET ${offset}`        // offset is only allowed together with limit in MySQL
-    //         }
-    //         let [rows, cols] = await this.db.execute(query)
-    //         for (let row of rows)
-    //             yield {id: [cid, row.id], data: await this._convert(row, cid)}
-    //     }
-    // }
-    //
-    // async _initTables() {
-    //     /* Compute the mapping of CID numbers to SQL table names and return as a Map object. */
-    //     let tables = this.prop('tables')
-    //     let sqlTables = new Map()
-    //     for (let {key: path, value: sqlTable} of tables.entries()) {
-    //         assert(path)
-    //         let cat = await this.registry.site.findItem(path)
-    //         assert(cat.isCategory)
-    //         sqlTables.set(cat.iid, sqlTable)
-    //     }
-    //     // print('MySQL._sqlTables:', sqlTables)
-    //     this._sqlTables = sqlTables
-    // }
-    //
-    // _select_sql(cid) {
-    //     /* Build the SELECT... FROM... part of a query for a given CID. Return undefined if this particular CID is unsupported. */
-    //     let table = this._sqlTables.get(cid)
-    //     if (!table) return
-    //     table = table.trim()
-    //     let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
-    //     return spaces ? table : `SELECT * FROM ${table}`
-    // }
-    // async _convert(row, cid) {
-    //     /* Clean and convert a `row` of data to JSON string compatible with the category's schema. */
-    //     let category = await this.registry.getCategory(cid)
-    //     let schema = category.getItemSchema()
-    //     let keys   = Object.keys(row)
-    //     for (let key of keys) if (!schema.has(key)) delete row[key]     // drop DB fields with no corresponding category field
-    //     row['__category__'] = {'@': category.id}
-    //     return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
-    // }
 
     _delete(id) { return false }
 

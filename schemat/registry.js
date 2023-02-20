@@ -255,14 +255,8 @@ export class Registry {
         return stub
     }
 
-    async getCategory(cid) { return this.getLoaded([ROOT_CID, cid]) }
-
-    async getLoaded(id) {
-        return this.getItem(id).load()
-        // let item = this.getItem(id)
-        // await item.load()
-        // return item
-    }
+    async getCategory(cid)  { return this.getLoaded([ROOT_CID, cid]) }
+    async getLoaded(id)     { return this.getItem(id).load() }
 
     // async findItem(path) { return this.site.findItem(path) }
 
