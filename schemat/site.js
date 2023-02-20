@@ -251,15 +251,14 @@ export class AppBasic extends Application {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), id
         try {
-            if (step.includes(':')) {
-                id = step.split(':').map(Number)
-                assert(id[0] !== undefined && id[1] !== undefined)
-            }
-            else {
-                let xiid = Number(step)
-                assert(!isNaN(xiid))
-                id = xiid_unpack(xiid)
-            }
+            // if (step.includes(':')) {
+            //     id = step.split(':').map(Number)
+            //     assert(id[0] !== undefined && id[1] !== undefined)
+            // }
+            // else {
+            let xiid = Number(step)
+            assert(!isNaN(xiid))
+            id = xiid_unpack(xiid)
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
@@ -278,7 +277,7 @@ export class AppSpaces extends Application {
     urlPath(item) {
         let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item.category.xid)
-        if (space) return `${space}:${item.iid}`
+        if (space) return `${space}:${item.xid}`
     }
     spacesRev() {
         let catalog = this.prop('spaces')
@@ -290,8 +289,9 @@ export class AppSpaces extends Application {
         let [space, iid] = step.split(':')
         let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        let id = [category.iid, Number(iid)]
-        let item = this.registry.getItem(id)
+        // let id = [category.iid, Number(iid)]
+        let xid = Number(iid)
+        let item = this.registry.getItem(xid)
         return [item, request.pushApp(this).move(step), true]
     }
 }
