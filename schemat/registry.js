@@ -227,7 +227,6 @@ export class Registry {
     async _find_site() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
-        // let Site = await this.getCategory(SITE_CID)
         let Site = await this.getLoaded(SITE_XIID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
@@ -259,9 +258,10 @@ export class Registry {
     async getCategory(cid) { return this.getLoaded([ROOT_CID, cid]) }
 
     async getLoaded(id) {
-        let item = this.getItem(id)
-        await item.load()
-        return item
+        return this.getItem(id).load()
+        // let item = this.getItem(id)
+        // await item.load()
+        // return item
     }
 
     // async findItem(path) { return this.site.findItem(path) }

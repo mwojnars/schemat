@@ -413,6 +413,11 @@ export class Item {
         return this.isLoading = this.boot(data)         // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
+    async refresh() {
+        /* Get the most current instance of this item from the registry - can be different from `this` (!) - and make sure it's loaded. */
+        return this.registry.getItem(this.id).load()
+    }
+
     async boot(data = null) {
         /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
            Set up the class and prototypes. Call init().

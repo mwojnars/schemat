@@ -58,6 +58,8 @@
       values:
         "@": STRING
       "@": CATALOG
+    offset:
+      "@": INTEGER
     readonly:
       "@": BOOLEAN
     "@": Catalog
