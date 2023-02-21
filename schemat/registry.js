@@ -255,7 +255,6 @@ export class Registry {
         return stub
     }
 
-    // async getCategory(cid)  { return this.getLoaded([ROOT_CID, cid]) }
     async getLoaded(id)     { return this.getItem(id).load() }
 
     // async findItem(path) { return this.site.findItem(path) }
@@ -274,7 +273,7 @@ export class Registry {
 
         let count = 0
         let xid = category?.xid
-        let records = this.db.scan(xid)         // the argument is only used (and needed!) on the client where this.db is AjaxDB
+        let records = this.db.scan(xid)         // the argument is only used (and needed!) on the client side where this.db is AjaxDB
 
         for await (const {id, data: dataJson} of records) {
             if (limit !== undefined && count >= limit) break

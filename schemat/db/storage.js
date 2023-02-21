@@ -239,15 +239,16 @@ export class YamlDB extends FileDB {
         this.records.clear()
 
         for (let record of records) {
-            let id = xiid_unpack(T.pop(record, '__id'))
+            let xid = T.pop(record, '__id')
+
             // TODO: uncomment the line below after refactoring...
             // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            await this.assertUniqueID(xid, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, get_iid(id))
+            this.autoincrement = Math.max(this.autoincrement, get_iid(xid))
 
             let data = '__data' in record ? record.__data : record
-            this.records.set(xiid(id), JSON.stringify(data))
+            this.records.set(xid, JSON.stringify(data))
         }
     }
 
