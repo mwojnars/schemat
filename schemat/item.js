@@ -463,7 +463,7 @@ export class Item {
 
     async _loadData() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
-        let json = await this.registry.loadData(this.id)
+        let json = await this.registry.loadData(this.xid)
         return this._decodeData(json)
     }
     _decodeData(json) {

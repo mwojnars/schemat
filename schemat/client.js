@@ -1,4 +1,4 @@
-import { print, assert, xiid } from './utils.js'
+import { print, assert } from './utils.js'
 import { Registry, Session } from './registry.js'
 
 
@@ -45,15 +45,14 @@ class AjaxDB {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            this.records.set(xiid(rec.id), rec.data)
+            this.records.set(rec.id, rec.data)
         }
     }
 
     async select(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        let xid = xiid(id)
-        if (!this.records.has(xid)) this.keep(await this._from_ajax(xid))
-        return this.records.get(xid)
+        if (!this.records.has(id)) this.keep(await this._from_ajax(id))
+        return this.records.get(id)
     }
 
     async _from_ajax(xid) {
