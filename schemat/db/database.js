@@ -206,7 +206,7 @@ export class Database {
         /* Find the top-most ring where the item's ID is writable and insert there.
            The ID can be full or partial: [CID,IID] or [CID,undefined]; item.iid is filled with the inserted IID.
          */
-        let id = item.id
+        let id = item.xid
         for (const ring of this.reversed)
             if (ring.writable(id)) return ring.insert([this], item)
 
@@ -214,7 +214,8 @@ export class Database {
     }
 
     async delete(item_or_id) {
-        let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
+        // let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
+        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.xid
         return this.forward_delete([], id)
     }
 

@@ -247,7 +247,7 @@ export class AppBasic extends Application {
         return `${item.xid}`
     }
     findRoute(request) {
-        /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
+        /* Extract item ID from a raw URL path. */
         let step = request.step(), xid
         try {
             xid = Number(step)
