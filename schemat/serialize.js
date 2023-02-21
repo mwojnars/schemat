@@ -122,7 +122,7 @@ export class JSONx {
                     throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
-            if (T.isNumber(classname) || T.isArray(classname))                      // `classname` can be an item ID instead of a class
+            if (T.isNumber(classname)) // || T.isArray(classname))                      // `classname` can be an item ID instead of a class
                 return registry.getItem(classname)
             cls = registry.getClass(classname)
         }
