@@ -364,10 +364,14 @@ export class Item {
 
     static orderAscID(item1, item2) {
         /* Ordering function that orders items by ascending ID. Can be passed to array.sort() to sort items, stubs,
-           OR {id, ...} records, OR {cid, iid, ...} records. */
-        let id1 = xiid(item1.id)
-        let id2 = xiid(item2.id)
-        return id1 - id2
+           OR {id, ...} records. */
+        return item1.id - item2.id
+
+        // assert(T.isNumber(item1.id))
+        // assert(T.isNumber(item2.id))
+        // let id1 = xiid(item1.id)
+        // let id2 = xiid(item2.id)
+        // return id1 - id2
 
         // let {id: id1, cid: cid1, iid: iid1} = item1
         // let {id: id2, cid: cid2, iid: iid2} = item2
