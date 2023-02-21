@@ -344,7 +344,7 @@ export class Item {
     get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
-    get id_str()    { return `[${this.cid},${this.iid}]` }
+    get id_str()    { return `[${this.xid}]` }   //`[${this.cid},${this.iid}]`
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
@@ -377,7 +377,7 @@ export class Item {
     constructor(registry, xid = undefined) {
         /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
-        // assert(!T.isArray(xid))
+        assert(!T.isArray(xid))
         if (xid !== undefined) {
             [this.cid, this.iid] = xiid_unpack(xid)
             this.xid2 = xid

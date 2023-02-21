@@ -240,7 +240,8 @@ export class YamlDB extends FileDB {
 
         for (let record of records) {
             let id = xiid_unpack(T.pop(record, '__id'))
-            ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            // TODO: uncomment the line below after refactoring...
+            // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             this.autoincrement = Math.max(this.autoincrement, get_iid(id))

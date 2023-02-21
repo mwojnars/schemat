@@ -140,7 +140,7 @@ class Node {
                 ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
                 let dataJson = ref.dumpData()
                 if (dataJson !== ref.dataJson) {
-                    print(`move: updating reference(s) in item [${ref.id}]`)
+                    print(`move: updating reference(s) in item ${ref.id_str}`)
                     await db.update(ref)
                 }
             }
