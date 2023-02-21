@@ -4,7 +4,7 @@ import { print, assert, T, xiid } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID, SITE_CID, ROOT_XIID, SITE_XIID } from './item.js'
+import { Item, RootCategory, ROOT_XIID, SITE_XIID } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
@@ -231,7 +231,7 @@ export class Registry {
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
-        return ret.value.id
+        return ret.value.xid
     }
 
 
@@ -255,7 +255,7 @@ export class Registry {
         return stub
     }
 
-    async getCategory(cid)  { return this.getLoaded([ROOT_CID, cid]) }
+    // async getCategory(cid)  { return this.getLoaded([ROOT_CID, cid]) }
     async getLoaded(id)     { return this.getItem(id).load() }
 
     // async findItem(path) { return this.site.findItem(path) }
@@ -286,7 +286,7 @@ export class Registry {
                 let data = JSONx.parse(dataJson)
                 if (!(data instanceof Data)) data = new Data(data)
                 if (xid !== undefined && xid !== data.get('__category__').xid) continue
-                yield Item.createBooted(this, id, {dataJson})
+                yield Item.createBooted(this, xiid(id), {dataJson})
             }
             count++
         }
@@ -406,7 +406,7 @@ export class Session {
         let session = {app, item}                               // truncated representation of the current session
         let system_url = site.systemURL()
 
-        return {site_id: site.id, system_url, session: JSONx.encode(session), items: records}
+        return {site_id: site.xid, system_url, session: JSONx.encode(session), items: records}
     }
 
     static load(registry, sessionData) {

@@ -187,8 +187,9 @@ export class Site extends Router {
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         assert(item.has_id())
-        let [cid, iid] = item.id
-        return this.prop('path_internal') + `/${xiid(cid,iid)}`
+        return this.prop('path_internal') + `/${item.xid}`
+        // let [cid, iid] = item.id
+        // return this.prop('path_internal') + `/${xiid(cid,iid)}`
         // return this.prop('path_internal') + `/${cid}:${iid}`
     }
 

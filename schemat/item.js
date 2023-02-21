@@ -13,7 +13,7 @@ export const ROOT_XIID = 0
 export const SITE_XIID = 1
 
 export const ROOT_CID = 0
-export const SITE_CID = 1
+// export const SITE_CID = 1
 
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
@@ -376,6 +376,7 @@ export class Item {
     constructor(registry, id = null) {
         /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
+        // assert(!T.isArray(id))
         id = xiid_unpack(id)
         if (id) [this.cid, this.iid] = id
     }
@@ -388,6 +389,7 @@ export class Item {
         let item = new Item(registry, id)
         assert(data || dataJson)
         data = data || item._decodeData(dataJson)
+        // if (!id) item.cid = data['__category__'].iid
         return item.reload(data)
     }
 
@@ -1510,8 +1512,8 @@ Category.createAPI(
 /**********************************************************************************************************************/
 
 export class RootCategory extends Category {
-    cid = ROOT_CID
-    iid = ROOT_CID
+    cid = ROOT_XIID
+    iid = ROOT_XIID
     expiry = 0                                  // never evict from Registry
 
     get category() { return this }              // root category is a category for itself
