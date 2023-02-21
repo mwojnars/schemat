@@ -116,12 +116,12 @@ export class MySQL extends Block {
             for (let row of rows) {
                 let iid = this.iidFromSQL(table_id, row.id)
                 if (iid === undefined || iid <= 0) continue
-                let item = {id: [cid, iid], data: this._convert(row, category)}
+                let item = {id: xiid(cid, iid), data: this._convert(row, category)}
                 items.push(item)
             }
         }
 
-        items.sort((a, b) => a.id[1] - b.id[1])
+        items.sort((a, b) => a.id - b.id)
         yield* items
     }
 
