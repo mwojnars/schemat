@@ -241,17 +241,17 @@ export class Registry {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
-        // id = xiid(id)
+        id = xiid(id)
 
         this.session?.countRequested(id)
         if (isRoot(id)) return this.root
 
         // ID requested was already loaded/created? return the existing instance
-        let item = this.cache.get(xiid(id))
+        let item = this.cache.get(id)
         if (item) return item
 
         let stub = new Item(this, id)
-        this.cache.set(xiid(id), stub)        // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        this.cache.set(id, stub)        // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 
