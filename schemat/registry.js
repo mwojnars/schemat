@@ -271,9 +271,10 @@ export class Registry {
     async *scan(category = null, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. Each item's data is already loaded. A generator. */
         if (category) category.assertLoaded()
-        let records = this.db.scan(category?.iid)       // the argument is only used (and needed!) on the client where this.db is AjaxDB
+
         let count = 0
         let xid = category?.xid
+        let records = this.db.scan(xid)         // the argument is only used (and needed!) on the client where this.db is AjaxDB
 
         for await (const {id, data: dataJson} of records) {
             if (limit !== undefined && count >= limit) break

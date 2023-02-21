@@ -1189,7 +1189,6 @@ export class Category extends Item {
         set its IID if given. The order of `data` and `iid` arguments can be swapped.
         */
         if (typeof data === 'number') [data, iid] = [iid, data]
-        let id = [this.iid, iid]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
@@ -1400,7 +1399,7 @@ export class Category extends Item {
                 // `record` is encoded: {id: id, data: data-encoded}
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
-                let item = await this.registry.getItem(xiid(record.id))
+                let item = await this.registry.getItem(record.id)
                 itemAdded(item)
             }
             setFormDisabled(false)
