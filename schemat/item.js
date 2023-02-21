@@ -352,10 +352,7 @@ export class Item {
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     has_id(id = null) {
-        if (id === null) return (this.xid2 !== undefined) || ((this.cid || this.cid === 0) && (this.iid || this.iid === 0))
-        if (T.isNumber(id)) return id === this.xid
-        assert(false)
-        return this.cid === id[0] && this.iid === id[1]
+        return id !== null ? id === this.xid : this.xid !== undefined
     }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
