@@ -306,7 +306,7 @@ export class Item {
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    // xid2            // item's ID (temporary name)
+    xid2            // item's ID (temporary name)
     cid             // CID (Category ID) of this item; can be undefined, null not allowed
     iid             // IID (Item ID within a category) of this item; can be undefined, null not allowed
 
@@ -341,8 +341,7 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    // get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
-    get xid()       { return xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
+    get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -380,8 +379,8 @@ export class Item {
         this.registry = registry
         // assert(!T.isArray(xid))
         if (xid !== undefined) {
-            [this.cid, this.iid] = xiid_unpack(xid);
-            // this.xid2 = xid
+            [this.cid, this.iid] = xiid_unpack(xid)
+            this.xid2 = xid
         }
     }
 
