@@ -1,5 +1,5 @@
 // import mysql from 'mysql2'
-import { assert, print } from '../utils.js'
+import { assert, print, xiid_unpack } from '../utils.js'
 import { Block } from './storage.js'
 
 //let db = mysql.createConnection(srv)
@@ -87,7 +87,8 @@ export class MySQL extends Block {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
         return spaces ? table : `SELECT * FROM ${table}`
     }
-    async _select([cid, iid], opts) {
+    async _select(id, opts) {
+        let [cid, iid] = xiid_unpack(id)
         let [table_id, row_id] = this.iidToSQL(iid)
         if (table_id === undefined) return
         let select = this._query_select(table_id)

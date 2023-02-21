@@ -53,6 +53,6 @@ export class ServerRegistry extends Registry {
 
     insert(item) { return this.db.insert(item) }
     delete(item) { return this.db.delete(item) }
-    update(item) { return this.db.update(item.id, {type: 'data', data: item.dumpData()}) }
+    update(item) { return this.db.update(item.xid, {type: 'data', data: item.dumpData()}) }
     // update(item) { return this.db.update(item) }
 }
