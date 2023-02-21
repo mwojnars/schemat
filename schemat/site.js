@@ -245,21 +245,13 @@ export class AppBasic extends Application {
     urlPath(item) {
         assert(item.has_id())
         return `${item.xid}`
-        // let [cid, iid] = item.id
-        // return `${cid}:${iid}`
     }
     findRoute(request) {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
         let step = request.step(), xid
         try {
-            // if (step.includes(':')) {
-            //     id = step.split(':').map(Number)
-            //     assert(id[0] !== undefined && id[1] !== undefined)
-            // }
-            // else {
             xid = Number(step)
             assert(!isNaN(xid))
-            // id = xiid_unpack(xid)
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
@@ -287,12 +279,10 @@ export class AppSpaces extends Application {
 
     findRoute(request) {
         let step = request.step()
-        let [space, iid] = step.split(':')
+        let [space, xid] = step.split(':')
         let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        // let id = [category.iid, Number(iid)]
-        let xid = Number(iid)
-        let item = this.registry.getItem(xid)
+        let item = this.registry.getItem(Number(xid))
         return [item, request.pushApp(this).move(step), true]
     }
 }
