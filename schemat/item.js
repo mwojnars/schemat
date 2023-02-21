@@ -306,6 +306,7 @@ export class Item {
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
+    // xid2            // item's ID (temporary name)
     cid             // CID (Category ID) of this item; can be undefined, null not allowed
     iid             // IID (Item ID within a category) of this item; can be undefined, null not allowed
 
@@ -340,7 +341,8 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    get xid()       { return xiid(this.cid, this.iid) }                 // flat item ID to replace [cid, iid] pairs
+    // get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
+    get xid()       { return xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.cid},${this.iid}]` }
@@ -373,15 +375,17 @@ export class Item {
         return 1
     }
 
-    constructor(registry, id = null) {
+    constructor(registry, xid = undefined) {
         /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
-        // assert(!T.isArray(id))
-        id = xiid_unpack(id)
-        if (id) [this.cid, this.iid] = id
+        // assert(!T.isArray(xid))
+        if (xid !== undefined) {
+            [this.cid, this.iid] = xiid_unpack(xid);
+            // this.xid2 = xid
+        }
     }
 
-    static async createBooted(registry, id = null, {data, dataJson} = {}) {
+    static async createBooted(registry, id = undefined, {data, dataJson} = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
            or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
            The item returned is *booted* (this.data is initialized).
@@ -389,7 +393,7 @@ export class Item {
         let item = new Item(registry, id)
         assert(data || dataJson)
         data = data || item._decodeData(dataJson)
-        // if (!id) item.cid = data['__category__'].iid
+        if (id === undefined) item.cid = data.get('__category__').iid
         return item.reload(data)
     }
 
@@ -417,7 +421,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return this.registry.getItem(this.id).load()
+        return this.registry.getItem(this.xid).load()
     }
 
     async boot(data = null) {
@@ -430,9 +434,6 @@ export class Item {
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
-
-            // if (!this.data.has('__category__'))                 // TODO: drop this when all __category__ props in yaml files are filled out
-            //     this.data.set('__category__', await this.registry.getCategory(this.cid))
 
             let category = this.category                        // this.data is already loaded, so __category__ should be available
             assert(category)
@@ -1202,7 +1203,7 @@ export class Category extends Item {
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createBooted(this.registry, id, {data})
+        return Item.createBooted(this.registry, iid, {data})
     }
 
     async getItemClass() {
@@ -1409,7 +1410,7 @@ export class Category extends Item {
                 // `record` is encoded: {id: id, data: data-encoded}
                 form.current.reset()            // clear input fields
                 this.registry.db.keep(record)
-                let item = await this.registry.getItem(record.id)
+                let item = await this.registry.getItem(xiid(record.id))
                 itemAdded(item)
             }
             setFormDisabled(false)

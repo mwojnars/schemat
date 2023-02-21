@@ -110,8 +110,8 @@ export class ItemsCache extends Map {
         for (let [id, item] of this.entries())
             if (item.expiry === undefined || (0 < item.expiry && item.expiry <= now)) {
                 let deleted = this.delete(id)
-                if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
-                else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
+                // if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
+                // else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
                 let end = item.end()
                 if (end instanceof Promise) ends.push(end)
             }

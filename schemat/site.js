@@ -250,20 +250,20 @@ export class AppBasic extends Application {
     }
     findRoute(request) {
         /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
-        let step = request.step(), id
+        let step = request.step(), xid
         try {
             // if (step.includes(':')) {
             //     id = step.split(':').map(Number)
             //     assert(id[0] !== undefined && id[1] !== undefined)
             // }
             // else {
-            let xiid = Number(step)
-            assert(!isNaN(xiid))
-            id = xiid_unpack(xiid)
+            xid = Number(step)
+            assert(!isNaN(xid))
+            // id = xiid_unpack(xid)
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
-        return [this.registry.getItem(id), request.move(step), true]
+        return [this.registry.getItem(xid), request.move(step), true]
     }
 }
 
