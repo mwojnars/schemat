@@ -363,25 +363,8 @@ export class Item {
     // has_data()      { return !!this.data }
 
     static orderAscID(item1, item2) {
-        /* Ordering function that orders items by ascending ID. Can be passed to array.sort() to sort items, stubs,
-           OR {id, ...} records. */
+        /* Ordering function that can be passed to array.sort() to sort items, stubs, or {id, ...} records by ascending ID. */
         return item1.id - item2.id
-
-        // assert(T.isNumber(item1.id))
-        // assert(T.isNumber(item2.id))
-        // let id1 = xiid(item1.id)
-        // let id2 = xiid(item2.id)
-        // return id1 - id2
-
-        // let {id: id1, cid: cid1, iid: iid1} = item1
-        // let {id: id2, cid: cid2, iid: iid2} = item2
-        // assert(cid1 === undefined && iid1 === undefined, cid1, iid1)
-        // assert(cid2 === undefined && iid2 === undefined, cid2, iid2)
-        // if (id1) [cid1, iid1] = id1
-        // if (id2) [cid2, iid2] = id2
-        // if ((cid1 < cid2) || (cid1 === cid2 && iid1 < iid2)) return -1
-        // if (cid1 === cid2 && iid1 === iid2) return 0
-        // return 1
     }
 
     constructor(registry, xid = undefined) {

@@ -219,7 +219,7 @@ class FileDB extends Block {
 
     async *_scan() {
         let entries = [...this.records.entries()]
-        entries = entries.map(([xid, data]) => ({id: xid, data}))
+        entries = entries.map(([id, data]) => ({id, data}))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
     }
