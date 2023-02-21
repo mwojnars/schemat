@@ -352,8 +352,10 @@ export class Item {
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     has_id(id = null) {
-        if (id) return this.cid === id[0] && this.iid === id[1]
-        return (this.cid || this.cid === 0) && (this.iid || this.iid === 0)
+        if (id === null) return (this.xid2 !== undefined) || ((this.cid || this.cid === 0) && (this.iid || this.iid === 0))
+        if (T.isNumber(id)) return id === this.xid
+        assert(false)
+        return this.cid === id[0] && this.iid === id[1]
     }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
@@ -521,7 +523,7 @@ export class Item {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (this.has_id(parent.id)) return true
+        if (this.has_id(parent.xid)) return true
         for (const proto of this.getPrototypes())
             if (proto.inherits(parent)) return true
         return false
