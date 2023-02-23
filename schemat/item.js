@@ -718,7 +718,7 @@ export class Item {
             let url = this.category.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
-        let stamp = `${cat}:${this.iid}`
+        let stamp = `${cat}:${this.xid}`
         if (!brackets) return stamp
         return `[${stamp}]`
     }
@@ -1366,7 +1366,7 @@ export class Category extends Item {
                 let name = item.getName() || item.getStamp({html:false})
                 let url  = item.url()
                 rows.push(TR(
-                    TD(`${item.iid} ${NBSP}`),
+                    TD(`${item.xid} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                     TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
                 ))
