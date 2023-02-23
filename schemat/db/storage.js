@@ -1,4 +1,4 @@
-import { assert, print, T, xiid, get_iid, xiid_unpack } from '../utils.js'
+import { assert, print, T, xiid } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
 
@@ -256,7 +256,7 @@ export class YamlDB extends FileDB {
             // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(xid, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, xid)  //get_iid(xid))
+            this.autoincrement = Math.max(this.autoincrement, xid)
 
             let data = '__data' in record ? record.__data : record
             this.records.set(xid, JSON.stringify(data))
