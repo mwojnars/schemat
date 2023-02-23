@@ -342,8 +342,7 @@ export class Item {
     static __transient__ = ['_methodCache']
 
     get xid()       { return this.xid2 }
-    get id()        { return xiid_unpack(this.xid) }
-    // get id()        { return [this.cid, this.iid] }
+    get id()        { return this.xid2 }
     get id_str()    { return `[${this.xid}]` }   //`[${this.cid},${this.iid}]`
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
