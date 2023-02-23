@@ -306,9 +306,7 @@ export class Item {
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    xid2            // item's ID (temporary name)
-    cid             // CID (Category ID) of this item; can be undefined, null not allowed
-    iid             // IID (Item ID within a category) of this item; can be undefined, null not allowed
+    xid2            // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -343,7 +341,7 @@ export class Item {
 
     get xid()       { return this.xid2 }
     get id()        { return this.xid2 }
-    get id_str()    { return `[${this.xid}]` }   //`[${this.cid},${this.iid}]`
+    get id_str()    { return `[${this.xid}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
