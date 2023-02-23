@@ -1,6 +1,6 @@
 import path from 'path'
 import {BaseError, ItemNotFound} from "../errors.js"
-import {T, assert, print, merge, xiid} from '../utils.js'
+import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {YamlDB} from "./storage.js";
 

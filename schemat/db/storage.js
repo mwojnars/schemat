@@ -1,4 +1,4 @@
-import { assert, print, T, xiid } from '../utils.js'
+import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
 
@@ -206,8 +206,8 @@ class FileDB extends Block {
     }
     async _erase()  { this.records.clear() }
 
-    _select(id)     { return this.records.get(xiid(id)) }
-    _delete(id)     { return this.records.delete(xiid(id)) }
+    _select(id)     { return this.records.get(id) }
+    _delete(id)     { return this.records.delete(id) }
     _save(xid, data) { this.records.set(xid, data) }
 
     async *_scan() {

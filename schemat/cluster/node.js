@@ -9,7 +9,7 @@ import {fileURLToPath} from 'url'
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {assert, print, xiid} from '../utils.js'
+import {assert, print} from '../utils.js'
 import {Ring, Database} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {ROOT_CID} from "../item.js"
@@ -147,7 +147,7 @@ class Node {
         }
 
         // remove the old item from DB
-        try { await source.delete([db], xiid(id)) }
+        try { await source.delete([db], id) }
         catch (ex) {
             if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }

@@ -1,5 +1,5 @@
 // import BTree from 'sorted-btree'
-import { T, print, assert, concat, splitFirst, xiid } from './utils.js'
+import { T, print, assert, concat, splitFirst } from './utils.js'
 
 
 /**********************************************************************************************************************

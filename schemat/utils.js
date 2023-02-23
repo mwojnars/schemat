@@ -364,23 +364,3 @@ export async function *merge(order, ...streams) {
     }
 }
 
-
-/**********************************************************************************************************************/
-
-export function xiid(cid_or_id, iid = null) {
-    /* Flat item ID to replace [cid, iid] pairs. */
-
-    assert(cid_or_id === undefined || T.isNumber(cid_or_id))
-
-    if (cid_or_id === undefined) return undefined
-
-    let cid = cid_or_id
-    if (T.isArray(cid)) {
-        [cid, iid] = cid_or_id
-        if (iid === undefined) return undefined
-    }
-    if (iid === null) return cid                    // the argument is xiid already
-
-    assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
-    return cid * 1000 + iid
-}
