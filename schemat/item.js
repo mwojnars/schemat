@@ -342,9 +342,8 @@ export class Item {
     static __transient__ = ['_methodCache']
 
     get xid()       { return this.xid2 }
-    // get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
-
-    get id()        { return [this.cid, this.iid] }
+    get id()        { return xiid_unpack(this.xid) }
+    // get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.xid}]` }   //`[${this.cid},${this.iid}]`
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
@@ -1487,7 +1486,7 @@ Category.createAPI(
                 item.cid = 999
                 await this.registry.insert(item)
 
-                item.xid2 = xiid(999, item.iid)
+                // item.xid2 = xiid(999, item.iid)
 
                 // let record = await this.registry.insert(data, this.cid, /* iid = null */)
                 // return record

@@ -140,23 +140,34 @@ export class Block extends Item {
         return data !== undefined ? data : db.forward_select([ring], id)
     }
 
-    async insert([db, ring], id, data) {
-        /* Save a new item and update the autoincrement accordingly. Assign an IID if missing. Return the IID. */
+    async insert([db, ring], xid, data) {
+        if (xid !== undefined) await this.assertUniqueID(xid)    // the uniqueness check is only needed when the IID came from the caller
+        else xid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
 
-        let [cid, iid] = id
+        ring.assertValidID(xid, `candidate ID for a new item is outside of the valid set for this ring`)
 
-        if (iid !== undefined) await this.assertUniqueID(id)    // the uniqueness check is only needed when the IID came from the caller
-        else {
-            iid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
-            id  = [cid, iid]
-        }
-
-        ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
-
-        this.autoincrement = Math.max(iid, this.autoincrement)
-        await this.save(xiid(id), data)
-        return iid
+        this.autoincrement = Math.max(xid, this.autoincrement)
+        await this.save(xid, data)
+        return xid
     }
+
+    // async insert([db, ring], id, data) {
+    //     /* Save a new item and update the autoincrement accordingly. Assign an IID if missing. Return the IID. */
+    //
+    //     let [cid, iid] = id
+    //
+    //     if (iid !== undefined) await this.assertUniqueID(id)    // the uniqueness check is only needed when the IID came from the caller
+    //     else {
+    //         iid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
+    //         id  = [cid, iid]
+    //     }
+    //
+    //     ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+    //
+    //     this.autoincrement = Math.max(iid, this.autoincrement)
+    //     await this.save(xiid(id), data)
+    //     return iid
+    // }
 
     async update([db, ring], id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
@@ -245,7 +256,7 @@ export class YamlDB extends FileDB {
             // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(xid, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, get_iid(xid))
+            this.autoincrement = Math.max(this.autoincrement, xid)  //get_iid(xid))
 
             let data = '__data' in record ? record.__data : record
             this.records.set(xid, JSON.stringify(data))
