@@ -384,7 +384,7 @@ export class Item {
         let item = new Item(registry, id)
         assert(data || dataJson)
         data = data || item._decodeData(dataJson)
-        if (id === undefined) item.cid = data.get('__category__').iid
+        // if (id === undefined) item.cid = data.get('__category__').iid
         return item.reload(data)
     }
 
@@ -1482,6 +1482,7 @@ Category.createAPI(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
+                item.cid = 999
                 await this.registry.insert(item)
                 // let record = await this.registry.insert(data, this.cid, /* iid = null */)
                 // return record
