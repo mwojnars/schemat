@@ -668,9 +668,12 @@ export class Item {
     object(first = true) {
         /* Return this.data converted to a plain object. For repeated keys, only one value is included:
            the first one if first=true (default), or the last one, otherwise.
+           TODO: for repeated keys, return a sub-object: {first, last, list/all/array}
           */
         this.assertLoaded()
-        return this.data.object(first)
+        let obj = this.data.object(first)
+        obj.__item__ = this
+        return obj
     }
 
     getAncestors() {
