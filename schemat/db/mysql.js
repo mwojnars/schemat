@@ -82,9 +82,8 @@ export class MySQL extends Block {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
         return spaces ? table : `SELECT * FROM ${table}`
     }
-    async _select(iid, opts) {
-        // let [cid, iid] = xiid_unpack(id)
-        let [table_id, row_id] = this.iidToSQL(iid)
+    async _select(id, opts) {
+        let [table_id, row_id] = this.iidToSQL(id)
         if (table_id === undefined) return
         let select = this._query_select(table_id)
         let query = `${select} WHERE id = ? LIMIT 1`
@@ -106,7 +105,6 @@ export class MySQL extends Block {
 
             let [rows, cols] = await this.db.execute(query)
             let category = await this._categories[table_id].refresh()
-            // let cid = category.iid
 
             for (let row of rows) {
                 let iid = this.iidFromSQL(table_id, row.id)

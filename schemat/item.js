@@ -369,11 +369,7 @@ export class Item {
     constructor(registry, xid = undefined) {
         /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
-        assert(!T.isArray(xid))
-        if (xid !== undefined) {
-            // [this.cid, this.iid] = xiid_unpack(xid)
-            this.xid2 = xid
-        }
+        this.xid2 = xid
     }
 
     static async createBooted(registry, id = undefined, {data, dataJson} = {}) {
@@ -384,7 +380,6 @@ export class Item {
         let item = new Item(registry, id)
         assert(data || dataJson)
         data = data || item._decodeData(dataJson)
-        // if (id === undefined) item.cid = data.get('__category__').iid
         return item.reload(data)
     }
 
@@ -1482,10 +1477,7 @@ Category.createAPI(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
-
-                // item.cid = 999
                 await this.registry.insert(item)
-
                 return item.recordEncoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
