@@ -341,7 +341,8 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
+    get xid()       { return this.xid2 }
+    // get xid()       { return (this.xid2 !== undefined) ? this.xid2 : xiid(this.cid, this.iid) }     // flat item ID to replace [cid, iid] pairs
 
     get id()        { return [this.cid, this.iid] }
     get id_str()    { return `[${this.xid}]` }   //`[${this.cid},${this.iid}]`
@@ -1482,8 +1483,12 @@ Category.createAPI(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
+
                 item.cid = 999
                 await this.registry.insert(item)
+
+                item.xid2 = xiid(999, item.iid)
+
                 // let record = await this.registry.insert(data, this.cid, /* iid = null */)
                 // return record
                 return item.recordEncoded()
@@ -1505,6 +1510,8 @@ Category.createAPI(
 export class RootCategory extends Category {
     cid = ROOT_XIID
     iid = ROOT_XIID
+    xid2 = ROOT_XIID
+
     expiry = 0                                  // never evict from Registry
 
     get category() { return this }              // root category is a category for itself
