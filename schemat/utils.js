@@ -381,12 +381,3 @@ export function xiid(cid_or_id, iid = null) {
     assert((cid || cid === 0) && (iid || iid === 0), `missing cid or iid: [${cid},${iid}]`)
     return cid * 1000 + iid
 }
-
-export function xiid_unpack(xid) {
-    // convert xid back to [cid, iid] pair
-    assert(xid !== undefined && xid !== null)
-    if (T.isArray(xid)) return xid
-    let iid = xid % 1000
-    let cid = Math.floor((xid - iid) / 1000)
-    return [cid, iid]
-}

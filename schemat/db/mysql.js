@@ -1,5 +1,5 @@
 // import mysql from 'mysql2'
-import { assert, print, xiid, xiid_unpack } from '../utils.js'
+import { assert, print } from '../utils.js'
 import { Block } from './storage.js'
 
 //let db = mysql.createConnection(srv)
