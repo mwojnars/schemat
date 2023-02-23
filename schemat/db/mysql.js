@@ -25,7 +25,7 @@ export class MySQL extends Block {
         await this._initTables()
         this.db = await this._connect()
 
-        this.SHIFT = 2000            // TODO: temporary...
+        this.SHIFT = 0  //2000            // TODO: temporary...
     }
     async close() { return this.db?.end() }                 // deallocate mysql connection
     async end()   { return this.close()   }
@@ -87,8 +87,8 @@ export class MySQL extends Block {
         let spaces = /\s/g.test(table)                  // `table` is either a table name or a "SELECT ... FROM ..." statement that contains spaces
         return spaces ? table : `SELECT * FROM ${table}`
     }
-    async _select(id, opts) {
-        let [cid, iid] = xiid_unpack(id)
+    async _select(iid, opts) {
+        // let [cid, iid] = xiid_unpack(id)
         let [table_id, row_id] = this.iidToSQL(iid)
         if (table_id === undefined) return
         let select = this._query_select(table_id)
@@ -111,12 +111,12 @@ export class MySQL extends Block {
 
             let [rows, cols] = await this.db.execute(query)
             let category = await this._categories[table_id].refresh()
-            let cid = category.iid
+            // let cid = category.iid
 
             for (let row of rows) {
                 let iid = this.iidFromSQL(table_id, row.id)
                 if (iid === undefined || iid <= 0) continue
-                let item = {id: xiid(cid, iid), data: this._convert(row, category)}
+                let item = {id: iid, data: this._convert(row, category)}
                 items.push(item)
             }
         }

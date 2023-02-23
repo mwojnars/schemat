@@ -371,7 +371,7 @@ export class Item {
         this.registry = registry
         assert(!T.isArray(xid))
         if (xid !== undefined) {
-            [this.cid, this.iid] = xiid_unpack(xid)
+            // [this.cid, this.iid] = xiid_unpack(xid)
             this.xid2 = xid
         }
     }
@@ -1483,7 +1483,7 @@ Category.createAPI(
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
 
-                item.cid = 999
+                // item.cid = 999
                 await this.registry.insert(item)
 
                 return item.recordEncoded()
