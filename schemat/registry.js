@@ -4,14 +4,14 @@ import { print, assert, T } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_XIID, SITE_XIID } from './item.js'
+import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
 
-export function isRoot(id) { return id === ROOT_XIID }
+export function isRoot(id) { return id === ROOT_ID }
 
 
 /**********************************************************************************************************************
@@ -227,7 +227,7 @@ export class Registry {
     async _find_site() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
-        let Site = await this.getLoaded(SITE_XIID)
+        let Site = await this.getLoaded(SITE_ID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
@@ -277,7 +277,7 @@ export class Registry {
             if (limit !== undefined && count >= limit) break
             // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
             if (isRoot(id)) {
-                if (cid !== undefined && cid !== ROOT_XIID) continue
+                if (cid !== undefined && cid !== ROOT_ID) continue
                 yield this.root
             }
             else {

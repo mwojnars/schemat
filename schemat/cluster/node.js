@@ -12,7 +12,7 @@ import {hideBin} from 'yargs/helpers'
 import {assert, print} from '../utils.js'
 import {Ring, Database} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
-import {ROOT_CID} from "../item.js"
+import {ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
 
 
@@ -105,8 +105,8 @@ class Node {
         let [new_cid, new_iid] = newid
         let sameID = (cid === new_cid && iid === new_iid)
 
-        if ((cid === ROOT_CID || new_cid === ROOT_CID) && cid !== new_cid)
-            throw new Error(`cannot change a category item (CID=${ROOT_CID}) to a non-category (CID=${cid || new_cid}) or back`)
+        if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
+            throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
 
         if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
@@ -129,7 +129,7 @@ class Node {
 
         if (!sameID) {
             // update children of a category item: change their CID to `new_iid`
-            if (cid === ROOT_CID && !sameID)
+            if (cid === ROOT_ID && !sameID)
                 for await (let {id: child_id} of db.scan(iid))
                     await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 

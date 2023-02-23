@@ -3,7 +3,7 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print, assert} from '../utils.js'
-import {SITE_XIID} from '../item.js'
+import {SITE_ID} from '../item.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {C} from './root.js'
 
@@ -23,9 +23,9 @@ import {C} from './root.js'
 async function create_categories(Category) {
 
     let cat = {}
-    assert(SITE_XIID === 1)
+    assert(SITE_ID === 1)
 
-    cat.Site = await Category.new(SITE_XIID, {
+    cat.Site = await Category.new(SITE_ID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class_path  : '/system/local/site.js:Site',

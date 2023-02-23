@@ -1,5 +1,5 @@
 import { print, assert, T, escape_html, indent, dedentFull, splitLast, concat, unique } from './utils.js'
-import { NotFound, ItemDataNotLoaded, ItemNotLoaded, ItemNotFound } from './errors.js'
+import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 
@@ -9,11 +9,9 @@ import { Path, Catalog, Data } from './data.js'
 import { DATA } from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
-export const ROOT_XIID = 0
-export const SITE_XIID = 1
+export const ROOT_ID = 0
+export const SITE_ID = 1
 
-export const ROOT_CID = 0
-// export const SITE_CID = 1
 
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
 // import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
@@ -1492,10 +1490,8 @@ Category.createAPI(
 /**********************************************************************************************************************/
 
 export class RootCategory extends Category {
-    cid = ROOT_XIID
-    iid = ROOT_XIID
-    xid2 = ROOT_XIID
 
+    xid2   = ROOT_ID
     expiry = 0                                  // never evict from Registry
 
     get category() { return this }              // root category is a category for itself
