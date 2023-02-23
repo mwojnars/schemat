@@ -60,10 +60,8 @@ export class Ring {
     throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
 
-    writable(id)                { id=xiid(id); return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
-    validIID(id)                { id=xiid(id); return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
-    // writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
-    // validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
+    writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
+    validIID(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
     assertValidID(id, msg) {
         if (!this.validIID(id)) throw new Ring.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
@@ -103,7 +101,7 @@ export class Ring {
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
-        id = xiid(id)
+        id = id
         return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
 

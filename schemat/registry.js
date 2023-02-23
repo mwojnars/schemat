@@ -1,6 +1,6 @@
 "use strict";
 
-import { print, assert, T, xiid } from './utils.js'
+import { print, assert, T } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
@@ -11,7 +11,7 @@ import { root_data } from './server/root.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
 
-export function isRoot(id) { return xiid(id) === ROOT_XIID }
+export function isRoot(id) { return id === ROOT_XIID }
 
 
 /**********************************************************************************************************************
@@ -241,8 +241,6 @@ export class Registry {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
-        id = xiid(id)
-
         this.session?.countRequested(id)
         if (isRoot(id)) return this.root
 
@@ -272,21 +270,21 @@ export class Registry {
         if (category) category.assertLoaded()
 
         let count = 0
-        let xid = category?.xid
-        let records = this.db.scan(xid)         // the argument is only used (and needed!) on the client side where this.db is AjaxDB
+        let cid = category?.id
+        let records = this.db.scan(cid)         // the argument is only used (and needed!) on the client side where this.db is AjaxDB
 
         for await (const {id, data: dataJson} of records) {
             if (limit !== undefined && count >= limit) break
             // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
             if (isRoot(id)) {
-                if (xid !== undefined && xid !== ROOT_XIID) continue
+                if (cid !== undefined && cid !== ROOT_XIID) continue
                 yield this.root
             }
             else {
                 let data = JSONx.parse(dataJson)
                 if (!(data instanceof Data)) data = new Data(data)
-                if (xid !== undefined && xid !== data.get('__category__').xid) continue
-                yield Item.createBooted(this, xiid(id), {dataJson})
+                if (cid !== undefined && cid !== data.get('__category__').id) continue
+                yield Item.createBooted(this, id, {dataJson})
             }
             count++
         }

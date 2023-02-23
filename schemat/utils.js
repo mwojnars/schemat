@@ -369,6 +369,9 @@ export async function *merge(order, ...streams) {
 
 export function xiid(cid_or_id, iid = null) {
     /* Flat item ID to replace [cid, iid] pairs. */
+
+    assert(cid_or_id === undefined || T.isNumber(cid_or_id))
+
     if (cid_or_id === undefined) return undefined
 
     let cid = cid_or_id

@@ -82,10 +82,8 @@ export class Path {
 export class ItemsCount extends Map {
     /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
     add(id, increment = 1) {
-        let key   = xiid(id)
-        let count = this.get(key) || 0
-        count += increment
-        this.set(key, count)
+        let count = (this.get(id) || 0) + increment
+        this.set(id, count)
         return count
     }
     total()     { let t = 0; this.forEach(v => t += v); return t }
