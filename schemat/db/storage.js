@@ -140,34 +140,16 @@ export class Block extends Item {
         return data !== undefined ? data : db.forward_select([ring], id)
     }
 
-    async insert([db, ring], xid, data) {
-        if (xid !== undefined) await this.assertUniqueID(xid)    // the uniqueness check is only needed when the IID came from the caller
-        else xid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
+    async insert([db, ring], id, data) {
+        if (id !== undefined) await this.assertUniqueID(id)             // the uniqueness check is only needed when the ID came from the caller;
+        else id = Math.max(this.autoincrement + 1, ring.start_iid)      // use the next available ID
 
-        ring.assertValidID(xid, `candidate ID for a new item is outside of the valid set for this ring`)
+        ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
-        this.autoincrement = Math.max(xid, this.autoincrement)
-        await this.save(xid, data)
-        return xid
+        this.autoincrement = Math.max(id, this.autoincrement)
+        await this.save(id, data)
+        return id
     }
-
-    // async insert([db, ring], id, data) {
-    //     /* Save a new item and update the autoincrement accordingly. Assign an IID if missing. Return the IID. */
-    //
-    //     let [cid, iid] = id
-    //
-    //     if (iid !== undefined) await this.assertUniqueID(id)    // the uniqueness check is only needed when the IID came from the caller
-    //     else {
-    //         iid = Math.max(this.autoincrement + 1, ring.start_iid)      // next available IID in this category
-    //         id  = [cid, iid]
-    //     }
-    //
-    //     ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
-    //
-    //     this.autoincrement = Math.max(iid, this.autoincrement)
-    //     await this.save(xiid(id), data)
-    //     return iid
-    // }
 
     async update([db, ring], id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.

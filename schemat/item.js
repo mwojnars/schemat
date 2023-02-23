@@ -1486,10 +1486,6 @@ Category.createAPI(
                 item.cid = 999
                 await this.registry.insert(item)
 
-                // item.xid2 = xiid(999, item.iid)
-
-                // let record = await this.registry.insert(data, this.cid, /* iid = null */)
-                // return record
                 return item.recordEncoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
