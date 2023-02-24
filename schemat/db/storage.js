@@ -129,10 +129,10 @@ export class Block extends Item {
         this.flush()
     }
 
-    edit(dataSrc, edit) {
-        assert(edit instanceof TotalEdit && edit.data)
-        return edit.data
-    }
+    // edit(dataSrc, edit) {
+    //     assert(edit instanceof TotalEdit && edit.data)
+    //     return edit.data
+    // }
 
 
     /***  CRUD operations  ***/
@@ -162,7 +162,8 @@ export class Block extends Item {
         if (data === undefined) return db.forward_update([ring], id, ...edits)
 
         for (const edit of edits)
-            data = this.edit(data, edit)
+            data = edit.process(data)
+            // data = this.edit(data, edit)
 
         return ring.writable() ? this.save(id, data) : db.forward_save([ring], id, data)
     }
