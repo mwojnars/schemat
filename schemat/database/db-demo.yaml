@@ -122,7 +122,7 @@
   fields:
     text:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     "@": Catalog
@@ -213,79 +213,79 @@
   fields:
     pid:
       =:
-        - 10003
+        - "@": 10003
         - {}
       "@": SchemaWrapper
     title:
       "@": STRING
     issn:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     publisher:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     url:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     homepage:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     xid:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     description:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     source_url:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     created_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     updated_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     indexed_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     indexed_full:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     published_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     papers_all:
       =:
-        - 10003
+        - "@": 10003
         - {}
       "@": SchemaWrapper
     papers_published:
       =:
-        - 10003
+        - "@": 10003
         - {}
       "@": SchemaWrapper
     "@": Catalog
@@ -298,112 +298,112 @@
   fields:
     pid:
       =:
-        - 10003
+        - "@": 10003
         - {}
       "@": SchemaWrapper
     title:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     authors:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     url:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     homepage:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     abstract:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     journal_id:
       =:
-        - 10002
+        - "@": 10002
         - {}
       "@": SchemaWrapper
     date:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     birth:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     year:
       =:
-        - 10002
+        - "@": 10002
         - {}
       "@": SchemaWrapper
     languages:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     created_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     updated_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     harvested_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     extracted_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     published_at:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     doi:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     url_pdf:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     pdf_name:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     rawtext:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     source_url:
       =:
-        - 10004
+        - "@": 10004
         - {}
       "@": SchemaWrapper
     pic_original_name:
       =:
-        - 10001
+        - "@": 10001
         - {}
       "@": SchemaWrapper
     "@": Catalog
