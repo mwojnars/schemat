@@ -14,6 +14,7 @@ import {Ring, Database} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
+import {JSONx} from "../serialize.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -43,7 +44,7 @@ class Node {
     async boot() {
         let rings = [
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
-            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: null, readonly: false},
+            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
             // {item: 51100, name: 'mysql', readonly: true},
         ]
@@ -68,7 +69,7 @@ class Node {
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
         // await this._update_all()
-        await this._reinsert_all()
+        // await this._reinsert_all()
 
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
@@ -106,17 +107,22 @@ class Node {
     async _update_references(old_id, item) {
         /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
         let db = this.db
+
+        // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
+        let transform = (it => it instanceof Item && it.id === old_id ? item : it)
+
         for (let ring of db.rings) {
             for await (const record of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
-                let ref = await this.registry.itemFromRecord(record)
-                ref.data.transform({value: it => it instanceof Item && it.id === old_id ? item : it})
-                let data = ref.dumpData()
+
+                let id = record.id
+                let data = JSONx.transform(record.data, transform)
                 if (data === record.data) continue          // no changes? don't update the `ref` item
+
                 if (ring.readonly)
-                    print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${ref.id}], the ring is read-only`)
+                    print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${id}], the ring is read-only`)
                 else {
-                    print(`...updating reference(s) in item [${ref.id}]`)
-                    await this.registry.update(ref)
+                    print(`...updating reference(s) in item [${id}]`)
+                    await db.update(id, {type: 'data', data})
                     await ring.block._flush()
                 }
             }
