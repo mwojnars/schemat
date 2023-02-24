@@ -85,7 +85,7 @@ export class Ring {
 
     async insert([db], item) {
         /* `db` is unused (for now). */
-        item.xid2 = await this.block.insert([db, this], item.xid, item.dumpData())
+        item.xid2 = await this.block.insert([db, this], item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {
@@ -204,7 +204,7 @@ export class Database {
         /* Find the top-most ring where the item's ID is writable and insert there.
            The ID can be full or partial: [CID,IID] or [CID,undefined]; item.iid is filled with the inserted IID.
          */
-        let id = item.xid
+        let id = item.id
         for (const ring of this.reversed)
             if (ring.writable(id)) return ring.insert([this], item)
 
@@ -212,8 +212,7 @@ export class Database {
     }
 
     async delete(item_or_id) {
-        // let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
-        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.xid
+        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
         return this.forward_delete([], id)
     }
 

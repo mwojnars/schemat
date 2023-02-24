@@ -668,7 +668,7 @@ export class Item {
     object(first = true) {
         /* Return this.data converted to a plain object. For repeated keys, only one value is included:
            the first one if first=true (default), or the last one, otherwise.
-           TODO: for repeated keys, return a sub-object: {first, last, list/all/array}
+           TODO: for repeated keys, return a sub-object: {first, last, all} - configurable in schema settings
           */
         this.assertLoaded()
         let obj = this.data.object(first)

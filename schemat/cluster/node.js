@@ -25,7 +25,7 @@ const HOST      = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 
-const IID_SPLIT = 100       // all system items have iid below this value; all custom items have iid >= this value
+// const IID_SPLIT = 100       // all system items have iid below this value; all custom items have iid >= this value
 
 
 /**********************************************************************************************************************/
@@ -42,9 +42,9 @@ class Node {
 
     async boot() {
         let rings = [
-            {file: DB_ROOT + '/db-boot.yaml', stop_iid:  IID_SPLIT, readonly: true},
-            {file: DB_ROOT + '/db-base.yaml', stop_iid:  IID_SPLIT, readonly: false},
-            {file: DB_ROOT + '/db-demo.yaml', start_iid: IID_SPLIT},
+            {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
+            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid:  200, readonly: false},
+            {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: 2000, readonly: false},
             {item: 51100, name: 'mysql', readonly: true},
         ]
 
@@ -67,13 +67,52 @@ class Node {
         // node = this.registry.getLoaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
-        // // convert all the items in the database to a new format; all rings must be set as writable (!)
-        // for await (let item of this.registry.scan())
-        //     this.registry.update(item)
+        // await this._update_all()
+        // await this._reinsert_all()
 
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
         return Promise.all([web, data])
+    }
+
+    async _update_all() {
+        /* Convert all the items in the database to a new format; all rings must be set as writable (!) */
+        for await (let item of this.registry.scan())
+            await this.registry.update(item)
+    }
+
+    async _reinsert_all() {
+        /* Re-insert every item so that it receives a new ID. Update references in other items. */
+        let db = this.db
+        for (let ring of db.rings) {
+            if (ring.readonly) continue
+            for await (let item of ring.scan()) {
+                let old_id = item.id
+                await ring.delete([db], old_id)
+                item.id = undefined
+                await ring.insert([db], item)
+                if (item.id !== old_id) await this._update_references(old_id, item)
+            }
+        }
+    }
+
+    async _update_references(old_id, item) {
+        /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
+        let db = this.db
+        for (let ring of db.rings) {
+            for await (let ref of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
+                await ref.load()
+                ref.data.transform({value: it => it instanceof Item && it.id === old_id ? item : it})
+                let dataJson = ref.dumpData()
+                if (dataJson === ref.dataJson) continue
+                if (ring.readonly)
+                    print(`WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${ref.id}], the ring is read-only`)
+                else {
+                    print(`move: updating reference(s) in item [${ref.id}]`)
+                    await this.registry.update(ref)
+                }
+            }
+        }
     }
 
 
