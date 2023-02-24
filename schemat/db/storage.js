@@ -121,9 +121,9 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async save(xid, data) {
+    async save(id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
-        await this._save(xid, data)
+        await this._save(id, data)
         this.dirty = true
         this.flush()
     }
@@ -164,7 +164,7 @@ export class Block extends Item {
         for (const edit of edits)
             data = this.edit(data, edit)
 
-        return ring.save([db], this, id, data)
+        return ring.writable() ? this.save(id, data) : db.forward_save([ring], id, data)
     }
 
     async delete([db, ring], id) {
