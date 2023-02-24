@@ -277,7 +277,11 @@ export class Registry {
             if (limit !== undefined && count >= limit) break
             let item = this.itemFromRecord(record, cid)
             if (item instanceof Promise) item = await item
-            if (item) { yield item; count++ }
+            if (item) {
+                this.cache.set(item.id, item)
+                yield item
+                count++
+            }
         }
     }
 
