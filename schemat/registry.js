@@ -228,7 +228,7 @@ export class Registry {
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
-        return ret.value.xid
+        return ret.value.id
     }
 
 
@@ -408,7 +408,7 @@ export class Session {
         let session = {app, item}                               // truncated representation of the current session
         let system_url = site.systemURL()
 
-        return {site_id: site.xid, system_url, session: JSONx.encode(session), items: records}
+        return {site_id: site.id, system_url, session: JSONx.encode(session), items: records}
     }
 
     static load(registry, sessionData) {

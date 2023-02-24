@@ -187,10 +187,7 @@ export class Site extends Router {
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         assert(item.has_id())
-        return this.prop('path_internal') + `/${item.xid}`
-        // let [cid, iid] = item.id
-        // return this.prop('path_internal') + `/${xiid(cid,iid)}`
-        // return this.prop('path_internal') + `/${cid}:${iid}`
+        return this.prop('path_internal') + `/${item.id}`
     }
 
     urlRaw(item) {
@@ -244,18 +241,18 @@ export class AppBasic extends Application {
 
     urlPath(item) {
         assert(item.has_id())
-        return `${item.xid}`
+        return `${item.id}`
     }
     findRoute(request) {
         /* Extract item ID from a raw URL path. */
-        let step = request.step(), xid
+        let step = request.step(), id
         try {
-            xid = Number(step)
-            assert(!isNaN(xid))
+            id = Number(step)
+            assert(!isNaN(id))
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
-        return [this.registry.getItem(xid), request.move(step), true]
+        return [this.registry.getItem(id), request.move(step), true]
     }
 }
 
@@ -269,20 +266,20 @@ export class AppSpaces extends Application {
 
     urlPath(item) {
         let spaces_rev = this.spacesRev()
-        let space = spaces_rev.get(item.category.xid)
-        if (space) return `${space}:${item.xid}`
+        let space = spaces_rev.get(item.category.id)
+        if (space) return `${space}:${item.id}`
     }
     spacesRev() {
         let catalog = this.prop('spaces')
-        return new Map(catalog.map(({key, value:item}) => [item.xid, key]))
+        return new Map(catalog.map(({key, value:item}) => [item.id, key]))
     }
 
     findRoute(request) {
         let step = request.step()
-        let [space, xid] = step.split(':')
+        let [space, id] = step.split(':')
         let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        let item = this.registry.getItem(Number(xid))
+        let item = this.registry.getItem(Number(id))
         return [item, request.pushApp(this).move(step), true]
     }
 }
