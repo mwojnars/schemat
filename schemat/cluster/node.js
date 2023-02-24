@@ -46,7 +46,7 @@ class Node {
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
             {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
-            // {item: 51100, name: 'mysql', readonly: true},
+            {item: 1015, name: 'mysql', readonly: true},
         ]
 
         let db = this.db = new Database()
