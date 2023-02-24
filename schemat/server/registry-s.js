@@ -2,6 +2,7 @@ import { Mutex } from 'async-mutex'
 
 import { assert, print, T } from '../utils.js'
 import { Registry } from '../registry.js'
+import { TotalEdit } from '../db/edits.js'
 
 
 /**********************************************************************************************************************
@@ -53,6 +54,5 @@ export class ServerRegistry extends Registry {
 
     insert(item) { return this.db.insert(item) }
     delete(item) { return this.db.delete(item) }
-    update(item) { return this.db.update(item.id, {type: 'data', data: item.dumpData()}) }
-    // update(item) { return this.db.update(item) }
+    update(item) { return this.db.update(item.id, new TotalEdit(item.dumpData())) }
 }

@@ -15,6 +15,7 @@ import {ServerRegistry} from "../server/registry-s.js"
 import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
 import {JSONx} from "../serialize.js"
+import {TotalEdit} from "../db/edits.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -25,8 +26,6 @@ const DB_ROOT   = __dirname + '/database'
 const HOST      = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
-
-// const IID_SPLIT = 100       // all system items have iid below this value; all custom items have iid >= this value
 
 
 /**********************************************************************************************************************/
@@ -122,7 +121,7 @@ class Node {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in item [${id}]`)
-                    await db.update(id, {type: 'data', data})
+                    await db.update(id, new TotalEdit(data))
                     await ring.block._flush()
                 }
             }

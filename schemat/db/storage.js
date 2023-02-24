@@ -1,6 +1,7 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
+import { TotalEdit } from './edits.js'
 
 // import { Kafka } from 'kafkajs'
 
@@ -129,9 +130,8 @@ export class Block extends Item {
     }
 
     edit(dataSrc, edit) {
-        let {type, data} = edit
-        assert(type === 'data' && data)
-        return data
+        assert(edit instanceof TotalEdit && edit.data)
+        return edit.data
     }
 
 
