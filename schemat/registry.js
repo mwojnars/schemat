@@ -273,21 +273,38 @@ export class Registry {
         let cid = category?.id
         let records = this.db.scan(cid)         // the argument is only used (and needed!) on the client side where this.db is AjaxDB
 
-        for await (const {id, data: dataJson} of records) {
+        // for await (const {id, data: dataJson} of records) {
+        //     if (limit !== undefined && count >= limit) break
+        //     // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
+        //     if (isRoot(id)) {
+        //         if (cid !== undefined && cid !== ROOT_ID) continue
+        //         yield this.root
+        //     }
+        //     else {
+        //         let data = JSONx.parse(dataJson)
+        //         if (!(data instanceof Data)) data = new Data(data)
+        //         if (cid !== undefined && cid !== data.get('__category__').id) continue
+        //         yield Item.createBooted(this, id, {dataJson})
+        //     }
+        //     count++
+        // }
+        for await (const record of records) {
             if (limit !== undefined && count >= limit) break
-            // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
-            if (isRoot(id)) {
-                if (cid !== undefined && cid !== ROOT_ID) continue
-                yield this.root
-            }
-            else {
-                let data = JSONx.parse(dataJson)
-                if (!(data instanceof Data)) data = new Data(data)
-                if (cid !== undefined && cid !== data.get('__category__').id) continue
-                yield Item.createBooted(this, id, {dataJson})
-            }
-            count++
+            let item = this.itemFromRecord(record, cid)
+            if (item) { yield item; count++ }
         }
+    }
+
+    itemFromRecord(record, cid) {
+        /* Convert a record from DB into a booted item. If category's id is provided (`cid`), return the item only when
+           the category's id matches, otherwise return undefined. */
+        // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
+        const {id, data: dataJson} = record
+        if (isRoot(id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
+        let data = JSONx.parse(dataJson)
+        if (!(data instanceof Data)) data = new Data(data)
+        if (cid === undefined || cid === data.get('__category__').id)
+            return Item.createBooted(this, id, {dataJson})
     }
 
 
