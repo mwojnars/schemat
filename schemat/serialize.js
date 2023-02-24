@@ -23,17 +23,26 @@ export class JSONx {
     }
 
     static stringify(obj, ...opts) {
-        let flat = this.encode(obj)
-        return JSON.stringify(flat, ...opts)
+        let state = this.encode(obj)
+        return JSON.stringify(state, ...opts)
     }
-    static parse(dump) {
-        let flat = JSON.parse(dump)
-        return this.decode(flat)
+    static parse(json) {
+        let state = JSON.parse(json)
+        return this.decode(state)
     }
 
     static encode(obj, transform)           { return new JSONx(transform).encode(obj) }
     static decode(state)                    { return new JSONx().decode(state) }
-    static transform(state, transform)      { let j = new JSONx(transform); return j.encode(j.decode(state)) }
+
+    static transform(json, transform) {
+        /* Parse and decode a JSONx-encoded object, then encode and stringify is again while applying
+           the `transform` function to all its (sub)objects. */
+        let jsonx  = new JSONx(transform)
+        let state1 = JSON.parse(json)
+        let object = jsonx.decode(state1)
+        let state2 = jsonx.encode(object)           // `transform` is applied here to `object` and nested sub-objects
+        return JSON.stringify(state2)
+    }
 
     encode(obj) {
         /*
