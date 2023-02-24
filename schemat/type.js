@@ -1255,9 +1255,6 @@ export class SchemaWrapper extends Schema {
 
     __getstate__()          { return [this.props.prototype, this.props.properties] }
     __setstate__(state)     {
-        // let [id, props] = state
-        // this.__props.prototype  = globalThis.registry.getItem(id)
-        // this.__props.properties = props
         [this.__props.prototype, this.__props.properties] = state
         this.initProps()
         return this
