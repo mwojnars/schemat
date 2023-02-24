@@ -339,7 +339,7 @@ export class Item {
 
     get xid()       { return this.xid2 }
     get id()        { return this.xid2 }
-    get id_str()    { return `[${this.xid}]` }
+    get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
     isLoading           // the Promise created at the start of reload() and fulfilled when load() completes; indicates that the item is currently loading
@@ -347,7 +347,7 @@ export class Item {
     get isCategory()    { return this.instanceof(this.registry.root) }
 
     has_id(id = null) {
-        return id !== null ? id === this.xid : this.xid !== undefined
+        return id !== null ? id === this.id : this.id !== undefined
     }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
@@ -510,7 +510,7 @@ export class Item {
         /* Return true if `this` inherits from a `parent` item through the item prototype chain (NOT javascript prototypes).
            True if parent==this. All comparisons by item ID.
          */
-        if (this.has_id(parent.xid)) return true
+        if (this.has_id(parent.id)) return true
         for (const proto of this.getPrototypes())
             if (proto.inherits(parent)) return true
         return false
@@ -711,7 +711,7 @@ export class Item {
             let url = this.category.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
-        let stamp = `${cat}:${this.xid}`
+        let stamp = `${cat}:${this.id}`
         if (!brackets) return stamp
         return `[${stamp}]`
     }
@@ -762,7 +762,7 @@ export class Item {
     record() {
         /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
         assert(this.has_id())
-        return {id: this.xid, data: this.data}
+        return {id: this.id, data: this.data}
     }
     recordEncoded() {
         return JSONx.encode(this.record())
@@ -1258,7 +1258,7 @@ export class Category extends Item {
         /* Combine all code snippets of this category, including inherited ones, into a module source code.
            Import the base class, create a Class definition from `class_body`, append view methods, export the new Class.
          */
-        let name = this.prop('class_name') || `Class_${this.xid}`
+        let name = this.prop('class_name') || `Class_${this.id}`
         let base = this._codeBaseClass()
         let init = this._codeInit()
         let code = this._codeClass(name)
@@ -1310,7 +1310,7 @@ export class Category extends Item {
     _codeHandlers() {
         let entries = this.prop('handlers')
         if (!entries?.length) return
-        let className = (name) => `Handler_${this.xid}_${name}`
+        let className = (name) => `Handler_${this.id}_${name}`
         let handlers = entries.map(({key: name, value: code}) =>
             `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
         )
@@ -1359,7 +1359,7 @@ export class Category extends Item {
                 let name = item.getName() || item.getStamp({html:false})
                 let url  = item.url()
                 rows.push(TR(
-                    TD(`${item.xid} ${NBSP}`),
+                    TD(`${item.id} ${NBSP}`),
                     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
                     TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
                 ))
