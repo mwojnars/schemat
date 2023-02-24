@@ -337,7 +337,6 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    get xid()       { return this.xid2 }
     get id()        { return this.xid2 }
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
