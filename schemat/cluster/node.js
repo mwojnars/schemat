@@ -9,10 +9,10 @@ import {fileURLToPath} from 'url'
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {assert, print} from '../utils.js'
+import {T, assert, print} from '../utils.js'
 import {Ring, Database} from "../db/database.js";
 import {ServerRegistry} from "../server/registry-s.js"
-import {ROOT_ID} from "../item.js"
+import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
 
 
@@ -43,8 +43,8 @@ class Node {
     async boot() {
         let rings = [
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
-            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid:  200, readonly: false},
-            {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: 2000, readonly: false},
+            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: null, readonly: false},
+            {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
             {item: 51100, name: 'mysql', readonly: true},
         ]
 
@@ -86,12 +86,16 @@ class Node {
         let db = this.db
         for (let ring of db.rings) {
             if (ring.readonly) continue
-            for await (let item of ring.scan()) {
+            let records = await T.arrayFromAsync(ring.scan())
+            for (const record of records) {
+                let item = await this.registry.itemFromRecord(record)
                 let old_id = item.id
-                await ring.delete([db], old_id)
-                item.id = undefined
+                print(`reinserting item [${old_id}]...`)
+                item.xid2 = undefined
                 await ring.insert([db], item)
-                if (item.id !== old_id) await this._update_references(old_id, item)
+                print(`...new id=[${item.id}]`)
+                await this._update_references(old_id, item)
+                await ring.delete([db], old_id)
             }
         }
     }
@@ -100,15 +104,15 @@ class Node {
         /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
         let db = this.db
         for (let ring of db.rings) {
-            for await (let ref of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
-                await ref.load()
+            for await (const record of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
+                let ref = await this.registry.itemFromRecord(record)
                 ref.data.transform({value: it => it instanceof Item && it.id === old_id ? item : it})
-                let dataJson = ref.dumpData()
-                if (dataJson === ref.dataJson) continue
+                let data = ref.dumpData()
+                if (data === record.data) continue          // no changes? don't update the `ref` item
                 if (ring.readonly)
-                    print(`WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${ref.id}], the ring is read-only`)
+                    print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${ref.id}], the ring is read-only`)
                 else {
-                    print(`move: updating reference(s) in item [${ref.id}]`)
+                    print(`...updating reference(s) in item [${ref.id}]`)
                     await this.registry.update(ref)
                 }
             }

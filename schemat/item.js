@@ -361,13 +361,13 @@ export class Item {
         return item1.id - item2.id
     }
 
-    constructor(registry, xid = undefined) {
-        /* Creates an item stub. To set this.data, load() or reload() must be called afterwards. */
+    constructor(registry, id) {
+        /* Creates an item stub, `id` can be undefined. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
-        this.xid2 = xid
+        this.xid2 = id
     }
 
-    static async createBooted(registry, id = undefined, {data, dataJson} = {}) {
+    static async createBooted(registry, id, {data, dataJson} = {}) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
            or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
            The item returned is *booted* (this.data is initialized).
@@ -439,7 +439,7 @@ export class Item {
 
     async _loadData() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
-        let json = await this.registry.loadData(this.xid)
+        let json = await this.registry.loadData(this.id)
         return this._decodeData(json)
     }
     _decodeData(json) {
