@@ -86,6 +86,8 @@ export class Block extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
+    FLUSH_TIMEOUT = 1
+
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
     dirty                   // true when the block contains unsaved modifications
@@ -123,7 +125,7 @@ export class Block extends Item {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
         await this._save(xid, data)
         this.dirty = true
-        this.flush(1)               // todo: make the timeout configurable and 0 by default
+        this.flush(this.FLUSH_TIMEOUT)              // todo: make the timeout configurable and 0 by default
     }
 
     edit(dataSrc, edit) {
@@ -170,7 +172,7 @@ export class Block extends Item {
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
-        this.flush(1)               // todo: make the timeout configurable and 0 by default
+        this.flush(this.FLUSH_TIMEOUT)               // todo: make the timeout configurable and 0 by default
         return done ? done : db.forward_delete([ring], id)
     }
 
