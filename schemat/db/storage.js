@@ -205,7 +205,7 @@ class FileDB extends Block {
 
     _select(id)     { return this.records.get(id) }
     _delete(id)     { return this.records.delete(id) }
-    _save(xid, data) { this.records.set(xid, data) }
+    _save(id, data) { this.records.set(id, data) }
 
     async *_scan() {
         let entries = [...this.records.entries()]
@@ -229,16 +229,15 @@ export class YamlDB extends FileDB {
         this.records.clear()
 
         for (let record of records) {
-            let xid = T.pop(record, '__id')
+            let id = T.pop(record, '__id')
 
-            // TODO: uncomment the line below after refactoring...
-            // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await this.assertUniqueID(xid, `duplicate item ID loaded from ${this.filename}`)
+            ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, xid)
+            this.autoincrement = Math.max(this.autoincrement, id)
 
             let data = '__data' in record ? record.__data : record
-            this.records.set(xid, JSON.stringify(data))
+            this.records.set(id, JSON.stringify(data))
         }
     }
 
@@ -246,8 +245,7 @@ export class YamlDB extends FileDB {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
-        let recs = flat.map(([xid, data_json]) => {
-                let __id = xid
+        let recs = flat.map(([__id, data_json]) => {
                 let data = JSON.parse(data_json)
                 return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
             })

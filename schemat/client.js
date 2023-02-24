@@ -55,21 +55,21 @@ class AjaxDB {
         return this.records.get(id)
     }
 
-    async _from_ajax(xid) {
+    async _from_ajax(id) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
-        print(`ajax download [${xid}]...`)
-        return $.get(`${this.url}/${xid}@json`)
+        print(`ajax download [${id}]...`)
+        return $.get(`${this.url}/${id}@json`)
     }
-    async *scan(xid) {
-        assert(xid || xid === 0)
-        print(`ajax category scan [${xid}]...`)
-        let records = await $.get(`${this.url}/${xid}@scan`)
+    async *scan(id) {
+        assert(id || id === 0)
+        print(`ajax category scan [${id}]...`)
+        let records = await $.get(`${this.url}/${id}@scan`)
         for (const rec of records) {            // rec's shape: {id, data}
             if (rec.data) {
                 rec.data = JSON.stringify(rec.data)
                 this.keep(rec)
             }
-            yield rec  //[rec.id, rec.data]
+            yield rec
         }
     }
 }

@@ -71,7 +71,7 @@ export class MySQL extends Block {
         let schema = category.getItemSchema()
         let keys   = Object.keys(row)
         for (let key of keys) if (!schema.has(key)) delete row[key]     // drop DB fields with no corresponding category field
-        row['__category__'] = {'@': category.xid}
+        row['__category__'] = {'@': category.id}
         return JSON.stringify(row)                                      // flat object (encoded) from DB is converted to a JSON string
     }
 
