@@ -86,7 +86,7 @@ export class Block extends Item {
                 Database > Sequence > Ring > Block > Storage
      */
 
-    FLUSH_TIMEOUT = 1
+    FLUSH_TIMEOUT = 0       // todo: make the timeout configurable and 0 by default
 
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
@@ -103,7 +103,7 @@ export class Block extends Item {
         this.dirty = false
     }
 
-    async flush(timeout_sec = 0) {
+    async flush(timeout_sec = this.FLUSH_TIMEOUT) {
         /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
         if (!this.dirty) return
@@ -125,7 +125,7 @@ export class Block extends Item {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
         await this._save(xid, data)
         this.dirty = true
-        this.flush(this.FLUSH_TIMEOUT)              // todo: make the timeout configurable and 0 by default
+        this.flush()
     }
 
     edit(dataSrc, edit) {
@@ -172,7 +172,7 @@ export class Block extends Item {
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
-        this.flush(this.FLUSH_TIMEOUT)               // todo: make the timeout configurable and 0 by default
+        this.flush()
         return done ? done : db.forward_delete([ring], id)
     }
 
@@ -240,7 +240,7 @@ export class YamlDB extends FileDB {
             // ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(xid, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, xid)
+            // this.autoincrement = Math.max(this.autoincrement, xid)
 
             let data = '__data' in record ? record.__data : record
             this.records.set(xid, JSON.stringify(data))
