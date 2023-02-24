@@ -111,7 +111,7 @@ export class Block extends Item {
             this.dirty = false
             return this._flush()
         }
-        setTimeout(() => this.flush(), timeout_sec * 1000)
+        setTimeout(() => this.flush(0), timeout_sec * 1000)
     }
 
     async erase() {
