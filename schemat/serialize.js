@@ -42,7 +42,6 @@ export class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = this.registry
-        let of_type  = false //T.ofType(obj, type)
         let state
 
         if (obj === undefined)      throw new Error("Can't encode an undefined value")
@@ -55,10 +54,9 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        if (obj instanceof Item && obj.has_id()) {
-            if (of_type) return obj.xid                     // `obj` is of `type_` exactly? no need to encode type info
-            return {[JSONx.ATTR_CLASS]: obj.xid}
-        }
+        if (obj instanceof Item && obj.has_id())
+            return {[JSONx.ATTR_CLASS]: obj.id}
+
         if (T.isClass(obj)) {
             state = registry.getPath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
@@ -74,9 +72,6 @@ export class JSONx {
             if (JSONx.ATTR_CLASS in state)
                 throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
         }
-
-        // if the exact class is known upfront, let's output compact state without adding "@" for class designation
-        if (of_type) return state
 
         // wrap up the state in a dict, if needed, and append class designator
         if (!T.isDict(state))
@@ -106,13 +101,7 @@ export class JSONx {
         }
 
         // determine the expected class (constructor function) for the output object
-
-        // if (type) {
-        //     if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
-        //         throw new Error(`Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`)
-        //     cls = type
-        // }
-        else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
+        if (!isdict)                                // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
@@ -123,7 +112,7 @@ export class JSONx {
                     throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
-            if (T.isNumber(classname)) // || T.isArray(classname))                      // `classname` can be an item ID instead of a class
+            if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
                 return registry.getItem(classname)
             cls = registry.getClass(classname)
         }
@@ -143,11 +132,6 @@ export class JSONx {
             return registry.getItem(state)
 
         state = this.decode(state)
-        // state = this.decode_dict(state)
-
-        // let obj = this.decode_dict(state)
-        // Object.setPrototypeOf(obj, cls)
-        // // let obj = Object.create(cls, obj)
 
         return T.setstate(cls, state)
     }
