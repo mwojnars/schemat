@@ -44,8 +44,8 @@ class Node {
         let rings = [
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
             {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: null, readonly: false},
-            {file: DB_ROOT + '/db-demo.yaml', start_iid: 100, stop_iid: null, readonly: false},
-            {item: 51100, name: 'mysql', readonly: true},
+            {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
+            // {item: 51100, name: 'mysql', readonly: true},
         ]
 
         let db = this.db = new Database()
@@ -68,7 +68,7 @@ class Node {
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
         // await this._update_all()
-        // await this._reinsert_all()
+        await this._reinsert_all()
 
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
@@ -87,15 +87,18 @@ class Node {
         for (let ring of db.rings) {
             if (ring.readonly) continue
             let records = await T.arrayFromAsync(ring.scan())
-            for (const record of records) {
-                let item = await this.registry.itemFromRecord(record)
-                let old_id = item.id
-                print(`reinserting item [${old_id}]...`)
+            let ids = records.map(rec => rec.id)
+
+            for (const id of ids) {
+                let data = await ring.select([db], id)          // the record might have been modified during this loop - must re-read
+                let item = await this.registry.itemFromRecord({id: id, data})
+                print(`reinserting item [${id}]...`)
                 item.xid2 = undefined
                 await ring.insert([db], item)
                 print(`...new id=[${item.id}]`)
-                await this._update_references(old_id, item)
-                await ring.delete([db], old_id)
+                await this._update_references(id, item)
+                await ring.delete([db], id)
+                await ring.block._flush()
             }
         }
     }
@@ -114,6 +117,7 @@ class Node {
                 else {
                     print(`...updating reference(s) in item [${ref.id}]`)
                     await this.registry.update(ref)
+                    await ring.block._flush()
                 }
             }
         }
