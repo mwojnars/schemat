@@ -30,10 +30,10 @@ export class JSONx {
         return this.decode(flat)
     }
 
-    static encode(obj, type = null)     { return new JSONx().encode(obj, type) }
-    static decode(flat, type = null)    { return new JSONx().decode(flat, type) }
+    static encode(obj)      { return new JSONx().encode(obj) }
+    static decode(flat)     { return new JSONx().decode(flat) }
 
-    encode(obj, type = null) {
+    encode(obj) {
         /*
         Return a `state` that carries all the information needed for reconstruction of `obj` with decode(),
         yet it contains only JSON-compatible values and collections (possibly nested).
@@ -42,7 +42,7 @@ export class JSONx {
         Optional `type` constraint is a class (constructor function).
         */
         let registry = this.registry
-        let of_type  = T.ofType(obj, type)
+        let of_type  = false //T.ofType(obj, type)
         let state
 
         if (obj === undefined)      throw new Error("Can't encode an undefined value")
@@ -88,7 +88,7 @@ export class JSONx {
         return state
     }
 
-    decode(state, type = null) {
+    decode(state) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         Optional `type` constraint is a class (constructor function).
@@ -106,11 +106,12 @@ export class JSONx {
         }
 
         // determine the expected class (constructor function) for the output object
-        if (type) {
-            if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
-                throw new Error(`Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`)
-            cls = type
-        }
+
+        // if (type) {
+        //     if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
+        //         throw new Error(`Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`)
+        //     cls = type
+        // }
         else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
@@ -128,7 +129,7 @@ export class JSONx {
         }
         else cls = Object
 
-        console.assert(cls !== undefined, {msg: "`cls` is undefined", state, type})
+        console.assert(cls !== undefined, {msg: "`cls` is undefined", state})
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
