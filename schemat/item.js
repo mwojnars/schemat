@@ -402,7 +402,7 @@ export class Item {
 
     async refresh() {
         /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return this.registry.getItem(this.xid).load()
+        return this.registry.getItem(this.id).load()
     }
 
     async boot(data = null) {
