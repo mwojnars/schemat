@@ -93,7 +93,7 @@ class Node {
                 let data = await ring.select([db], id)          // the record might have been modified during this loop - must re-read
                 let item = await this.registry.itemFromRecord({id: id, data})
                 print(`reinserting item [${id}]...`)
-                item.xid2 = undefined
+                item.id = undefined
                 await ring.insert([db], item)
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)

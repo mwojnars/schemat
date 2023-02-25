@@ -85,7 +85,7 @@ export class Ring {
 
     async insert([db], item) {
         /* `db` is unused (for now). */
-        item.xid2 = await this.block.insert([db, this], item.id, item.dumpData())
+        item.id = await this.block.insert([db, this], item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {

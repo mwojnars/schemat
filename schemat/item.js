@@ -304,7 +304,7 @@ export class Item {
 
     static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    xid2            // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
+    id              // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -337,7 +337,6 @@ export class Item {
 
     static __transient__ = ['_methodCache']
 
-    get id()        { return this.xid2 }
     get id_str()    { return `[${this.id}]` }
     get category()  { return this.prop('__category__', {schemaless: true}) }
 
@@ -363,7 +362,7 @@ export class Item {
     constructor(registry, id) {
         /* Creates an item stub, `id` can be undefined. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
-        this.xid2 = id
+        this.id = id
     }
 
     static async createBooted(registry, id, {data, dataJson} = {}) {
@@ -1493,7 +1492,7 @@ Category.createAPI(
 
 export class RootCategory extends Category {
 
-    xid2   = ROOT_ID
+    id = ROOT_ID
     expiry = 0                                  // never evict from Registry
 
     get category() { return this }              // root category is a category for itself
