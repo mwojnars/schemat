@@ -458,8 +458,8 @@ export class Item {
            otherwise the schema of some fields may be incompatible or missing.
          */
         let prototypes = this.data.getValues('prototype')
-        // for (const p of prototypes)
-        //     if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
+        // for (const p of prototypes)        // TODO: update the code below to verify .category instead of CIDs
+            // if (p.cid !== this.cid) throw new Error(`item ${this} belongs to a different category than its prototype (${p})`)
         prototypes = prototypes.filter(p => !p.isLoaded)
         if (prototypes.length === 1) return prototypes[0].load()            // performance: trying to avoid unnecessary awaits or Promise.all()
         if (prototypes.length   > 1) return Promise.all(prototypes.map(p => p.load()))

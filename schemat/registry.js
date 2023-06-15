@@ -255,10 +255,7 @@ export class Registry {
     // async findItem(path) { return this.site.findItem(path) }
 
     async loadData(id) {
-        /* Load item's full data record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
-           Note that `data` can either be a JSON-encoded string, or a schema-encoded object
-           - the caller must be prepared for both cases!
-         */
+        /* Load item's full data record from server-side DB and return as an object: {id, data}. */
         this.session?.countLoaded(id)
         return this.db.select(id)
     }

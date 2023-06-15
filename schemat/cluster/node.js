@@ -145,7 +145,7 @@ class Node {
     }
 
     async move({id, newid, bottom, ring: ringName}) {
-        /* id, new_iid - strings of the form "CID:IID" */
+        /* id, newid - strings of the form "CID:IID" */
 
         function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
 
@@ -180,10 +180,10 @@ class Node {
         await target.save([db], null, newid, data)
 
         if (!sameID) {
-            // update children of a category item: change their CID to `new_iid`
-            if (cid === ROOT_ID && !sameID)
-                for await (let {id: child_id} of db.scan(iid))
-                    await this.move({id: child_id, newid: [new_iid, child_id[1]]})
+            // // update children of a category item: change their CID to `new_iid`
+            // if (cid === ROOT_ID && !sameID)
+            //     for await (let {id: child_id} of db.scan(iid))
+            //         await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
             // update references
             let newItem = this.registry.getItem(newid)
@@ -223,12 +223,10 @@ async function main() {
         )
         .command(
             'move <id> <newid>',
-            // 'move <cid> <iid> <new_iid>',
-            'change IID of a given item; update references nested within standard data types; if the item is a category than CID of child items is updated, too',
+            'change IID of a given item; update references in other items (if occur inside standard data types)',
             // (yargs) => yargs
-            //     .positional('cid')
-            //     .positional('iid')
-            //     .positional('new_iid')
+            //     .positional('id')
+            //     .positional('newid')
         )
         .command(
             '_build_ [path_db_boot]', 'generate the core "db-boot" database anew',
