@@ -240,6 +240,12 @@ export class Types {
 
     static amap = async (arr, fun) => await Promise.all(arr.map(fun))
 
+    static async arrayFromAsync(iterator) {
+        let arr = []
+        for await (const v of iterator) arr.push(v)
+        return arr
+    }
+
     static inherited(cls, attr) {
         /* Return an array of all values of a static attribute, `attr`, found in `cls` and its prototype chain.
            Top base class'es value is placed at the beginning of the array, while the value found in `cls` is at the end. */
@@ -363,3 +369,4 @@ export async function *merge(order, ...streams) {
         yield* streams[0]
     }
 }
+

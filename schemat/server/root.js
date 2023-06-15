@@ -13,11 +13,12 @@ export let C = (...data) => new Catalog(...data)
 
 // global-default fields shared by all item types
 let default_fields = C({
+    __category__: new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0)."}),
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
     prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
-                                  "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, as well as for categories - the latter case represents category inheritance. " +
+                                  "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, or for categories - the latter represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
 })

@@ -1,117 +1,4 @@
-- __id:
-    - 1
-    - 100
-  name: catalog.wiki
-  URL: http://127.0.0.1:3000
-  path_internal: /$
-  routes:
-    =:
-      - - $
-        - "@":
-            - 8
-            - 101
-      - - apps
-        - "@":
-            - 5
-            - 103
-      - - site
-        - "@":
-            - 5
-            - 104
-      - - system
-        - "@":
-            - 5
-            - 1
-      - - null
-        - "@":
-            - 5
-            - 106
-      - - null
-        - "@":
-            - 9
-            - 101
-    "@": Catalog
-  "@": Data
-- __id:
-    - 3
-    - 101
-  content: export let print = console.log
-  "@": Data
-- __id:
-    - 3
-    - 102
-  content: |-
-    import {print} from '../site/utils.js'
-    export function check() { print('called widgets.js:check()') } 
-    //let fs = await importLocal('fs')
-    //print('fs:',fs)
-  "@": Data
-- __id:
-    - 5
-    - 102
-  name: /demo
-  "@": Data
-- __id:
-    - 5
-    - 103
-  name: /apps
-  files:
-    demo:
-      "@":
-        - 5
-        - 102
-    paperity:
-      "@":
-        - 5
-        - 107
-    "@": Catalog
-  "@": Data
-- __id:
-    - 5
-    - 104
-  name: /site
-  files:
-    utils.js:
-      "@":
-        - 3
-        - 101
-    widgets.js:
-      "@":
-        - 3
-        - 102
-    "@": Catalog
-  "@": Data
-- __id:
-    - 8
-    - 101
-  name: /$
-  "@": Data
-- __id:
-    - 9
-    - 101
-  name: Catalog
-  spaces:
-    sys.category:
-      "@":
-        - 0
-        - 0
-    sys.site:
-      "@":
-        - 0
-        - 1
-    sys.dir:
-      "@":
-        - 0
-        - 5
-    sys.file:
-      "@":
-        - 0
-        - 3
-    "@": Catalog
-  "@": Data
-- __id:
-    - 0
-    - 100
+- __id: 1000
   name: Varia
   info: Category of items that do not belong to any specific category.
   class_body: >-
@@ -123,39 +10,15 @@
     title:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 100
-    - 101
-  title: Ala ma kota Sierściucha i psa Kłapoucha.
-  "@": Data
-- __id:
-    - 100
-    - 102
-  title: ąłęÓŁŻŹŚ
-  "@": Data
-- __id:
-    - 5
-    - 106
-  name: domain
-  info: Folder with public static files that must be accessible at the domain
-    root, like .../favicon.ico, /robots.txt etc.
-  files:
-    favicon.ico:
-      "@":
-        - 4
-        - 100
-    "@": Catalog
-  "@": Data
-- __id:
-    - 0
-    - 200
+- __id: 1001
   name: TwitterPost
   fields:
     text:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     "@": Catalog
@@ -195,288 +58,206 @@
         this.utils = utils
         console.log('this.utils #1:', this.utils)
     }
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 4
-    - 100
-  name: favicon.ico
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
-  "@": Data
-- __id:
-    - 51
-    - 100
-  name: mysql-paperity
-  info: |
-    Connects through ssh tunneling. Must launch this in console beforehand:
-    autossh -p 55522 -f paperity@srv.paperity.org -L 3307:127.0.0.1:3306 -N
-  host: localhost
-  port: "3307"
-  user: paperity
-  database: paperity
-  password: pe45n1bc
-  tables:
-    /apps/paperity/Journal: pap_journals
-    /apps/paperity/Paper: pap_papers_view
-    "@": Catalog
-  readonly: true
-  "@": Data
-- __id:
-    - 200
-    - 100
-  name: Post A
-  text: Ala ma kota
-  "@": Data
-- __id:
-    - 5
-    - 107
-  name: /paperity
-  files:
-    Journal:
-      "@":
-        - 0
-        - 201
-    Paper:
-      "@":
-        - 0
-        - 202
-    "@": Catalog
-  "@": Data
-- __id:
-    - 0
-    - 201
+- __id: 1002
   name: Journal
   info: Paperity's Journal object.
   fields:
     pid:
       =:
-        - - 10
-          - 3
+        - "@": 104
         - {}
       "@": SchemaWrapper
     title:
       "@": STRING
     issn:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     publisher:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     url:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     homepage:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     xid:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     description:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     source_url:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     created_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     updated_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     indexed_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     indexed_full:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     published_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     papers_all:
       =:
-        - - 10
-          - 3
+        - "@": 104
         - {}
       "@": SchemaWrapper
     papers_published:
       =:
-        - - 10
-          - 3
+        - "@": 104
         - {}
       "@": SchemaWrapper
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 202
+- __id: 1003
   name: Paper
   info: Paperity's Paper object.
   fields:
     pid:
       =:
-        - - 10
-          - 3
+        - "@": 104
         - {}
       "@": SchemaWrapper
     title:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     authors:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     url:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     homepage:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     abstract:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     journal_id:
       =:
-        - - 10
-          - 2
+        - "@": 103
         - {}
       "@": SchemaWrapper
     date:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     birth:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     year:
       =:
-        - - 10
-          - 2
+        - "@": 103
         - {}
       "@": SchemaWrapper
     languages:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     created_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     updated_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     harvested_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     extracted_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     published_at:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     doi:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     url_pdf:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     pdf_name:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     rawtext:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     source_url:
       =:
-        - - 10
-          - 4
+        - "@": 105
         - {}
       "@": SchemaWrapper
     pic_original_name:
       =:
-        - - 10
-          - 1
+        - "@": 102
         - {}
       "@": SchemaWrapper
     "@": Catalog
@@ -603,4 +384,152 @@
           `}})
       }
     "@": Catalog
+  __category__:
+    "@": 0
+  "@": Data
+- __id: 1004
+  name: catalog.wiki
+  URL: http://127.0.0.1:3000
+  path_internal: /$
+  routes:
+    =:
+      - - $
+        - "@": 1013
+      - - apps
+        - "@": 1009
+      - - site
+        - "@": 1010
+      - - system
+        - "@": 13
+      - - null
+        - "@": 1011
+      - - null
+        - "@": 1014
+    "@": Catalog
+  __category__:
+    "@": 1
+  "@": Data
+- __id: 1005
+  content: export let print = console.log
+  __category__:
+    "@": 3
+  "@": Data
+- __id: 1006
+  content: |-
+    import {print} from '../site/utils.js'
+    export function check() { print('called widgets.js:check()') } 
+    //let fs = await importLocal('fs')
+    //print('fs:',fs)
+  __category__:
+    "@": 3
+  "@": Data
+- __id: 1007
+  name: favicon.ico
+  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+  __category__:
+    "@": 4
+  "@": Data
+- __id: 1008
+  name: /demo
+  __category__:
+    "@": 5
+  "@": Data
+- __id: 1009
+  name: /apps
+  files:
+    demo:
+      "@": 1008
+    paperity:
+      "@": 1012
+    "@": Catalog
+  __category__:
+    "@": 5
+  "@": Data
+- __id: 1010
+  name: /site
+  files:
+    utils.js:
+      "@": 1005
+    widgets.js:
+      "@": 1006
+    "@": Catalog
+  __category__:
+    "@": 5
+  "@": Data
+- __id: 1011
+  name: domain
+  info: Folder with public static files that must be accessible at the domain
+    root, like .../favicon.ico, /robots.txt etc.
+  files:
+    favicon.ico:
+      "@": 1007
+    "@": Catalog
+  __category__:
+    "@": 5
+  "@": Data
+- __id: 1012
+  name: /paperity
+  files:
+    Journal:
+      "@": 1002
+    Paper:
+      "@": 1003
+    "@": Catalog
+  __category__:
+    "@": 5
+  "@": Data
+- __id: 1013
+  name: /$
+  __category__:
+    "@": 8
+  "@": Data
+- __id: 1014
+  name: Catalog
+  spaces:
+    sys.category:
+      "@": 0
+    sys.site:
+      "@": 1
+    sys.dir:
+      "@": 5
+    sys.file:
+      "@": 3
+    "@": Catalog
+  __category__:
+    "@": 9
+  "@": Data
+- __id: 1015
+  name: mysql-paperity
+  info: |
+    Connects through ssh tunneling. Must launch this in console beforehand:
+    autossh -p 55522 -f paperity@srv.paperity.org -L 3307:127.0.0.1:3306 -N
+  host: localhost
+  port: "3307"
+  user: paperity
+  database: paperity
+  password: pe45n1bc
+  tables:
+    /apps/paperity/Journal: pap_journals
+    /apps/paperity/Paper: pap_papers_view
+    "@": Catalog
+  offset: 10000
+  readonly: true
+  __category__:
+    "@": 101
+  "@": Data
+- __id: 1016
+  title: Ala ma kota Sierściucha i psa Kłapoucha.
+  __category__:
+    "@": 1000
+  "@": Data
+- __id: 1017
+  title: ąłęÓŁŻŹŚ
+  __category__:
+    "@": 1000
+  "@": Data
+- __id: 1018
+  name: Post A
+  text: Ala ma kota
+  __category__:
+    "@": 1001
   "@": Data

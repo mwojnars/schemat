@@ -1,5 +1,4 @@
-import { print, assert, splitLast, T } from './utils.js'
-import { ItemsMap } from './data.js'
+import { print, assert, T } from './utils.js'
 import { Category, Handler, Item, Request } from './item.js'
 import { API, HttpProtocol, InternalProtocol } from "./protocols.js";
 
@@ -188,8 +187,7 @@ export class Site extends Router {
     systemPath(item) {
         /* Default absolute URL path ("system path") of the item. No domain. */
         assert(item.has_id())
-        let [cid, iid] = item.id
-        return this.prop('path_internal') + `/${cid}:${iid}`
+        return this.prop('path_internal') + `/${item.id}`
     }
 
     urlRaw(item) {
@@ -243,15 +241,14 @@ export class AppBasic extends Application {
 
     urlPath(item) {
         assert(item.has_id())
-        let [cid, iid] = item.id
-        return `${cid}:${iid}`
+        return `${item.id}`
     }
     findRoute(request) {
-        /* Extract (CID, IID) from a raw URL path of the form CID:IID. */
+        /* Extract item ID from a raw URL path. */
         let step = request.step(), id
         try {
-            id = step.split(':').map(Number)
-            assert(id[0] !== undefined && id[1] !== undefined)
+            id = Number(step)
+            assert(!isNaN(id))
         }
         catch (ex) { request.throwNotFound() }
         // request.pushMethod('@full')
@@ -270,16 +267,19 @@ export class AppSpaces extends Application {
     urlPath(item) {
         let spaces_rev = this.spacesRev()
         let space = spaces_rev.get(item.category.id)
-        if (space) return `${space}:${item.iid}`
+        if (space) return `${space}:${item.id}`
     }
-    spacesRev() { return ItemsMap.reversed(this.prop('spaces')) }
+    spacesRev() {
+        let catalog = this.prop('spaces')
+        return new Map(catalog.map(({key, value:item}) => [item.id, key]))
+    }
 
     findRoute(request) {
         let step = request.step()
-        let [space, item_id] = step.split(':')
+        let [space, id] = step.split(':')
         let category = this.prop(`spaces/${space}`)          // decode space identifier and convert to a category object
         if (!category) request.throwNotFound()
-        let item = category.load().then(c => c.getItem(Number(item_id)))
+        let item = this.registry.getItem(Number(id))
         return [item, request.pushApp(this).move(step), true]
     }
 }

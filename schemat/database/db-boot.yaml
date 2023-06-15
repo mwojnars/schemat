@@ -1,6 +1,4 @@
-- __id:
-    - 0
-    - 0
+- __id: 0
   name: Category
   info: Category of items that represent categories
   class_path: /system/local/item.js:Category
@@ -72,6 +70,11 @@
         "@": SCHEMA
       info: Fields must have unique names.
       default:
+        __category__:
+          info: Category of this item. Determines item's behavior and the schema of its
+            attributes. Each category should be an item of the Root Category
+            (IID=0).
+          "@": ITEM
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.
@@ -90,12 +93,11 @@
           info: An item of the same category that serves as a prototype for this one, that
             is, provides default values for missing properties of this item.
             Multiple prototypes are allowed, the first one has priority over
-            subsequent ones. Prototypes can be defined for regular items, as
-            well as for categories - the latter case represents category
-            inheritance. Items/categories may inherit individual entries from
-            catalog-valued fields, see Item.getInherited(). In this way,
-            subcategories inherit individual field schemas as defined in base
-            categories.
+            subsequent ones. Prototypes can be defined for regular items, or for
+            categories - the latter represents category inheritance.
+            Items/categories may inherit individual entries from catalog-valued
+            fields, see Item.getInherited(). In this way, subcategories inherit
+            individual field schemas as defined in base categories.
           "@": ITEM
         html_title:
           info: HTML title to be used for when this item is rendered.
@@ -104,9 +106,7 @@
       "@": CATALOG
     "@": Catalog
   "@": Data
-- __id:
-    - 0
-    - 1
+- __id: 1
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
@@ -129,10 +129,10 @@
         slashes.
       "@": CATALOG
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 2
+- __id: 2
   name: Router
   info: A set of sub-applications or sub-folders, each bound to a different URL
     prefix.
@@ -144,10 +144,10 @@
       "@": CATALOG
     "@": Catalog
   class_path: /system/local/site.js:Router
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 3
+- __id: 3
   name: File
   info: File with a text content.
   class_path: /system/local/site.js:File
@@ -167,25 +167,23 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 4
+- __id: 4
   name: FileLocal
   info: File located on a local disk, identified by its local file path.
   prototype:
-    "@":
-      - 0
-      - 3
+    "@": 3
   class_path: /system/local/site.js:FileLocal
   fields:
     path:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 5
+- __id: 5
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
@@ -199,59 +197,48 @@
       default: true
       "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 6
+- __id: 6
   name: FolderLocal
   info: |-
     File folder located on a local disk, identified by its local file path.
     Gives access to all files and folders beneath the path.
   prototype:
-    "@":
-      - 0
-      - 5
+    "@": 5
   class_path: /system/local/site.js:FolderLocal
   fields:
     path:
       "@": STRING
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 7
+- __id: 7
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
   class_path: /system/local/site.js:Application
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 8
+- __id: 8
   name: AppBasic
-  info: Application that serves items on simple URLs of the form /CID:IID. Mainly
-    used for system & admin purposes, or as a last-resort default for URL
-    generation.
+  info: Application that serves items on simple URLs of the form /IID. Mainly used
+    for system & admin purposes, or as a last-resort default for URL generation.
   class_path: /system/local/site.js:AppBasic
   fields:
     category:
       category:
-        "@":
-          - 0
-          - 0
+        "@": 0
       info: Optional category(ies) of items handled by this application.
       "@": ITEM
-    drop_cid:
-      info: If true, CID is excluded from URL paths. Requires that a single `category`
-        is declared for the application; and implies that only the exact
-        instances (no inheritance) of this category are handled (otherwise,
-        instances of subclasses are handled, too).
-      "@": BOOLEAN
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 9
+- __id: 9
   name: AppSpaces
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
@@ -261,17 +248,15 @@
     spaces:
       values:
         category:
-          "@":
-            - 0
-            - 0
+          "@": 0
         "@": ITEM
       "@": CATALOG
     "@": Catalog
   cached_methods: spacesRev
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 10
+- __id: 10
   name: Schema
   info: Category of items that represent schema types. Some of the items are
     wrappers around system types (STRING, INTEGER etc.), while some others
@@ -293,44 +278,36 @@
         "@": SCHEMA
       "@": CATALOG
     "@": Catalog
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 0
-    - 11
+- __id: 11
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
+  __category__:
+    "@": 0
   "@": Data
-- __id:
-    - 6
-    - 1
+- __id: 12
   name: /local
   path: .
+  __category__:
+    "@": 6
   "@": Data
-- __id:
-    - 5
-    - 1
+- __id: 13
   name: /system
   files:
     local:
-      "@":
-        - 6
-        - 1
+      "@": 12
     Application:
-      "@":
-        - 0
-        - 7
+      "@": 7
     File:
-      "@":
-        - 0
-        - 3
+      "@": 3
     Folder:
-      "@":
-        - 0
-        - 5
+      "@": 5
     Site:
-      "@":
-        - 0
-        - 1
+      "@": 1
     "@": Catalog
+  __category__:
+    "@": 5
   "@": Data

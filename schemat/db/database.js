@@ -60,8 +60,8 @@ export class Ring {
     throwNotFound(msg, args)    { throw new ItemNotFound(msg, args) }
     throwReadOnly(msg, args)    { throw new Ring.ReadOnly(msg, args) }
 
-    writable(id)                { return !this.readonly && (id === undefined || id[1] === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
-    validIID(id)                { return this.start_iid <= id[1] && (!this.stop_iid || id[1] < this.stop_iid) }
+    writable(id)                { return !this.readonly && (id === undefined || this.validIID(id)) }    // true if `id` is allowed to be written here
+    validIID(id)                { return this.start_iid <= id && (!this.stop_iid || id < this.stop_iid) }
 
     assertValidID(id, msg) {
         if (!this.validIID(id)) throw new Ring.InvalidIID(msg, {id, start_iid: this.start_iid, stop_iid: this.stop_iid})
@@ -85,7 +85,7 @@ export class Ring {
 
     async insert([db], item) {
         /* `db` is unused (for now). */
-        item.iid = await this.block.insert([db, this], item.id, item.dumpData())
+        item.id = await this.block.insert([db, this], item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {
@@ -101,6 +101,7 @@ export class Ring {
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
+        id = id
         return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
 
@@ -119,7 +120,7 @@ export class Ring {
         return this.block.delete([db, this], id)
     }
 
-    async *scan(cid)    { yield* this.block._scan(cid) }
+    async *scan()   { yield* this.block._scan() }
 
 }
 
@@ -211,13 +212,13 @@ export class Database {
     }
 
     async delete(item_or_id) {
-        let id = T.isArray(item_or_id) ? item_or_id : item_or_id.id
+        let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
         return this.forward_delete([], id)
     }
 
-    async *scan(cid) {
+    async *scan() {
         /* Scan each ring and merge the sorted streams of entries. */
-        let streams = this.rings.map(r => r.scan(cid))
+        let streams = this.rings.map(r => r.scan())
         yield* merge(Item.orderAscID, ...streams)
     }
 

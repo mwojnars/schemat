@@ -11,40 +11,51 @@ export class JSONx {
     Dump & load arbitrary objects to/from JSON strings.
     Encode & decode arbitrary objects to/from JSON-compatible "state" composed of serializable types.
     */
-    // static FLAG_ITEM  = "(item)"       // special value of ATTR_CLASS that denotes a reference to an Item
-    static FLAG_TYPE  = "class"        // special value of ATTR_CLASS that informs the value is a class rather than an instance
-    static FLAG_DICT  = "Object"       // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
-    static ATTR_CLASS = "@"            // special attribute appended to object state to store a class name (with package) of the object being encoded
-    static ATTR_STATE = "="            // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
+    static FLAG_TYPE  = "class"         // special value of ATTR_CLASS that informs the value is a class rather than an instance
+    static FLAG_DICT  = "Object"        // special value of ATTR_CLASS that denotes a plain-object (POJO) wrapper for another object containing the reserved "@" key
+    static ATTR_CLASS = "@"             // special attribute appended to object state to store a class name (with package) of the object being encoded
+    static ATTR_STATE = "="             // special attribute to store a non-dict state of data types not handled by JSON: tuple, set, type ...
 
-    constructor() {
+    constructor(transform) {
         // for now, this constructor is only used internally in static encode() & static decode()
         this.registry = globalThis.registry
+        this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded
     }
 
     static stringify(obj, ...opts) {
-        let flat = this.encode(obj)
-        return JSON.stringify(flat, ...opts)
+        let state = this.encode(obj)
+        return JSON.stringify(state, ...opts)
     }
-    static parse(dump) {
-        let flat = JSON.parse(dump)
-        return this.decode(flat)
+    static parse(json) {
+        let state = JSON.parse(json)
+        return this.decode(state)
     }
 
-    static encode(obj, type = null)     { return new JSONx().encode(obj, type) }
-    static decode(flat, type = null)    { return new JSONx().decode(flat, type) }
+    static encode(obj, transform)           { return new JSONx(transform).encode(obj) }
+    static decode(state)                    { return new JSONx().decode(state) }
 
-    encode(obj, type = null) {
+    static transform(json, transform) {
+        /* Parse and decode a JSONx-encoded object, then encode and stringify is again while applying
+           the `transform` function to all its (sub)objects. */
+        let jsonx  = new JSONx(transform)
+        let state1 = JSON.parse(json)
+        let object = jsonx.decode(state1)
+        let state2 = jsonx.encode(object)           // `transform` is applied here to `object` and nested sub-objects
+        return JSON.stringify(state2)
+    }
+
+    encode(obj) {
         /*
         Return a `state` that carries all the information needed for reconstruction of `obj` with decode(),
         yet it contains only JSON-compatible values and collections (possibly nested).
         Objects of custom classes are converted to dicts that store object's attributes,
-        with a special attribute "@" added to hold the class name. Nested objects are encoded recursively.
-        Optional `type` constraint is a class (constructor function).
+        with a special attribute "@" to hold the class name or item ID. Nested objects are encoded recursively.
+        Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
         let registry = this.registry
-        let of_type  = T.ofType(obj, type)
         let state
+
+        if (this.transform) obj = this.transform(obj)
 
         if (obj === undefined)      throw new Error("Can't encode an undefined value")
         if (T.isPrimitiveObj(obj))  return obj
@@ -56,11 +67,9 @@ export class JSONx {
             return {[JSONx.ATTR_STATE]: obj, [JSONx.ATTR_CLASS]: JSONx.FLAG_DICT}
         }
 
-        if (obj instanceof Item && obj.has_id()) {
-            if (of_type) return obj.id                      // `obj` is of `type_` exactly? no need to encode type info
+        if (obj instanceof Item && obj.has_id())
             return {[JSONx.ATTR_CLASS]: obj.id}
-            // return {[JSONx.ATTR_STATE]: obj.id, [JSONx.ATTR_CLASS]: JSONx.FLAG_ITEM}
-        }
+
         if (T.isClass(obj)) {
             state = registry.getPath(obj)
             return {[JSONx.ATTR_STATE]: state, [JSONx.ATTR_CLASS]: JSONx.FLAG_TYPE}
@@ -72,13 +81,9 @@ export class JSONx {
         else {
             state = T.getstate(obj)
             state = obj !== state ? this.encode(state) : this.encode_dict(state)
-            // state = this.encode_dict(state)                // TODO: allow non-dict state from getstate()
             if (JSONx.ATTR_CLASS in state)
                 throw new Error(`Non-serializable object state, a reserved character "${JSONx.ATTR_CLASS}" occurs as a key`)
         }
-
-        // if the exact class is known upfront, let's output compact state without adding "@" for class designation
-        if (of_type) return state
 
         // wrap up the state in a dict, if needed, and append class designator
         if (!T.isDict(state))
@@ -90,10 +95,9 @@ export class JSONx {
         return state
     }
 
-    decode(state, type = null) {
+    decode(state) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
-        Optional `type` constraint is a class (constructor function).
         This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
         */
         let registry = this.registry
@@ -108,12 +112,7 @@ export class JSONx {
         }
 
         // determine the expected class (constructor function) for the output object
-        if (type) {
-            if (isdict && (JSONx.ATTR_CLASS in state) && !(JSONx.ATTR_STATE in state))
-                throw new Error(`Ambiguous object state during decoding, the special key "${JSONx.ATTR_CLASS}" is not needed but present: ${state}`)
-            cls = type
-        }
-        else if (!isdict)                           // `state` encodes a primitive value, or a list, or null;
+        if (!isdict)                                // `state` encodes a primitive value, or a list, or null;
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
@@ -124,15 +123,13 @@ export class JSONx {
                     throw new Error(`Invalid serialized state, expected only ${JSONx.ATTR_CLASS} and ${JSONx.ATTR_STATE} special keys but got others: ${state}`)
                 state = state_attr
             }
-            if (T.isArray(classname))                       // `classname` can be an item ID instead of a class
+            if (T.isNumber(classname))                      // `classname` can be an item ID instead of a class
                 return registry.getItem(classname)
-            // if (classname === JSONx.FLAG_ITEM)              // TODO: remove (deprecated)
-            //     return registry.getItem(state)
             cls = registry.getClass(classname)
         }
         else cls = Object
 
-        console.assert(cls !== undefined, {msg: "`cls` is undefined", state, type})
+        console.assert(cls !== undefined, {msg: "`cls` is undefined", state})
 
         // instantiate the output object; special handling for standard JSON types and Item
         if (T.isPrimitiveCls(cls))  return state
@@ -146,11 +143,6 @@ export class JSONx {
             return registry.getItem(state)
 
         state = this.decode(state)
-        // state = this.decode_dict(state)
-
-        // let obj = this.decode_dict(state)
-        // Object.setPrototypeOf(obj, cls)
-        // // let obj = Object.create(cls, obj)
 
         return T.setstate(cls, state)
     }
@@ -165,7 +157,6 @@ export class JSONx {
     decode_list(state) {
         /* Decode recursively all non-primitive objects inside a list. */
         return state.map(v => this.decode(v))
-        // return Promise.all(state.map(v => this.decode(v)))
     }
     encode_dict(obj) {
         /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
@@ -176,8 +167,6 @@ export class JSONx {
                 delete obj[key]
         }
         return T.mapDict(obj, (k, v) => [k, this.encode(v)])
-        // let entries = Object.entries(obj).map(([k, v]) => [k, this.encode(v)])
-        // return Object.fromEntries(entries)
     }
     decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */

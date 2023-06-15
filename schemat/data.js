@@ -75,60 +75,22 @@ export class Path {
 
 /**********************************************************************************************************************
  **
- **  ITEMS MAP
+ **  CONTAINERS of ITEMS
  **
  */
 
-export class ItemsMap extends Map {
-    /* A Map that keeps objects of arbitrary type (items, records, promises) indexed by item ID converted to a string.
-       Item ID is an array that must be converted to a string for equality comparisons inside Map.
-     */
-
-    constructor(pairs = null) {
-        super()
-        if (pairs)
-            for (const [id, obj] of pairs) this.set(id, obj)
-    }
-
-    static reversed(catalog) {
-        /* Given a catalog of entries where values are items, create a reversed ItemsMap: item.id -> key.
-           If there are multiple entries with the same item, the last entry's key will be assigned to the item's id.
-         */
-        return new ItemsMap(catalog.map(({key, value:item}) => [item.id, key]))
-    }
-
-    _key(id) {
-        assert(id)
-        let [cid, iid] = id
-        assert((cid || cid === 0) && (iid || iid === 0))
-        return `${cid}:${iid}`
-    }
-    set(id, obj) { super.set(this._key(id), obj) }
-    get(id)        { return super.get(this._key(id)) }
-    has(id)        { return super.has(this._key(id)) }
-    delete(id)     { return super.delete(this._key(id)) }
-
-    *entries() {
-        for (const [key, obj] of super.entries())
-            yield [key.split(':').map(Number), obj]
-    }
-}
-
-export class ItemsCount extends ItemsMap {
+export class ItemsCount extends Map {
     /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
     add(id, increment = 1) {
-        let proto = Map.prototype           // accessing get/set() of a super-super class must be done manually through a prototype
-        let key   = this._key(id)
-        let count = proto.get.call(this, key) || 0
-        count += increment
-        proto.set.call(this, key, count)
+        let count = (this.get(id) || 0) + increment
+        this.set(id, count)
         return count
     }
     total()     { let t = 0; this.forEach(v => t += v); return t }
 }
 
-export class ItemsCache extends ItemsMap {
-    /* An ItemsMap that keeps Item instances and additionally provides manually-invoked eviction by LRU and per-item TTL.
+export class ItemsCache extends Map {
+    /* A cache of Item instances; provides manually-invoked eviction by LRU and per-item TTL.
        Eviction timestamps are stored in items (item.evict) and can be modified externally by the Item or Registry.
        Currently, the implementation scans all items for TTL eviction, which should work well for up to ~1000 entries.
        For larger item sets, a BTree could possibly be used: import BTree from 'sorted-btree'
@@ -139,19 +101,18 @@ export class ItemsCache extends ItemsMap {
     //     item.setExpiry(ttl)
     //     super.set(id, item)
     // }
-    evict() {
-        let proto = Map.prototype           // accessing delete() of a super-super class must be done manually through a prototype
-        let now   = Date.now()
-        let ends  = []
 
-        for (let [key, item] of this.entries())
+    evict() {
+        let now  = Date.now()
+        let ends = []
+        for (let [id, item] of this.entries())
             if (item.expiry === undefined || (0 < item.expiry && item.expiry <= now)) {
-                proto.delete.call(this, key)            // since we pass a key, not an ID, we need to call a super-super method here
+                let deleted = this.delete(id)
+                // if (deleted) print('item evicted:', id, item.isLoaded ? '' : '(stub)' )     // TODO: comment out
+                // else print('item not found for eviction:', id, item.isLoaded ? '' : '(stub)' )
                 let end = item.end()
                 if (end instanceof Promise) ends.push(end)
-                // print('item evicted:', key, item.isLoaded ? '' : '(stub)' )
             }
-
         if (ends.length) return Promise.all(ends)
     }
 }

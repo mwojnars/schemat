@@ -1,5 +1,4 @@
 import { print, assert } from './utils.js'
-import { ItemsMap } from './data.js'
 import { Registry, Session } from './registry.js'
 
 
@@ -30,9 +29,9 @@ class AjaxDB {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    url     = null                  // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
-    records = new ItemsMap()        // cached `data` of the items received on initial or subsequent web requests;
-                                    // each `data` is JSON-encoded for safety
+    url     = null              // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
+    records = new Map()         // cached `data` of the items received on initial or subsequent web requests;
+                                // each `data` is JSON-encoded for safety
 
     constructor(url, records = []) {
         this.url = url
@@ -50,31 +49,27 @@ class AjaxDB {
         }
     }
 
-    has(id)     { return this.records.has(id) }
-
-    async get(id) {
+    async select(id) {
         /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        let [cid, iid] = id
-        if (!this.has(id)) this.keep(await this._from_ajax(cid, iid))
+        if (!this.records.has(id)) this.keep(await this._from_ajax(id))
         return this.records.get(id)
     }
-    async select(id) { return this.get(id) }
 
-    async _from_ajax(cid, iid) {
+    async _from_ajax(id) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
-        print(`ajax download [${cid},${iid}]...`)
-        return $.get(`${this.url}/${cid}:${iid}@json`)
+        print(`ajax download [${id}]...`)
+        return $.get(`${this.url}/${id}@json`)
     }
-    async *scan(cid) {
-        assert(cid || cid === 0)
-        print(`ajax category scan [0,${cid}]...`)
-        let records = await $.get(`${this.url}/0:${cid}@scan`)
+    async *scan(id) {
+        assert(id || id === 0)
+        print(`ajax category scan [${id}]...`)
+        let records = await $.get(`${this.url}/${id}@scan`)
         for (const rec of records) {            // rec's shape: {id, data}
             if (rec.data) {
                 rec.data = JSON.stringify(rec.data)
                 this.keep(rec)
             }
-            yield rec  //[rec.id, rec.data]
+            yield rec
         }
     }
 }

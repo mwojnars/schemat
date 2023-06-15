@@ -3,7 +3,7 @@ Creating core items from scratch and storing them as initial items in DB.
  */
 
 import {print, assert} from '../utils.js'
-import {ROOT_CID, SITE_CID} from '../item.js'
+import {SITE_ID} from '../item.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {C} from './root.js'
 
@@ -23,9 +23,9 @@ import {C} from './root.js'
 async function create_categories(Category) {
 
     let cat = {}
-    assert(SITE_CID === 1)
+    assert(SITE_ID === 1)
 
-    cat.Site = await Category.new(SITE_CID, {
+    cat.Site = await Category.new(SITE_ID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
         class_path  : '/system/local/site.js:Site',
@@ -114,11 +114,10 @@ async function create_categories(Category) {
     })
     cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
-        info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
+        info        : "Application that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
         class_path  : '/system/local/site.js:AppBasic',
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
-            drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
         }),
     })
     cat.AppSpaces = await Category.new(9, {

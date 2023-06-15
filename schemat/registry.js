@@ -1,14 +1,17 @@
 "use strict";
 
-import { print, assert, splitLast } from './utils.js'
+import { print, assert, T } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
-import { Item, RootCategory, ROOT_CID, SITE_CID } from './item.js'
+import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './server/root.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
+
+
+export function isRoot(id) { return id === ROOT_ID }
 
 
 /**********************************************************************************************************************
@@ -167,12 +170,9 @@ export class Registry {
         // print('initClasspath() started...')
         let classpath = new Classpath
 
-        // classpath.setMany("schemat.data", Map)                             // schemat.data.Map
-        // await classpath.setModule("schemat.data", "./data.js")
-        // await classpath.setModule("schemat.type", "./type.js")
-
-        // add Catalog & Data to the classpath
-        classpath.setMany("", Catalog, Data)
+        // classpath.setMany("schemat.data", Map)
+        classpath.setMany("", Catalog, Data)                    // add Catalog & Data to the classpath
+        await classpath.setModule("", "./db/edits.js")          // add all Edit (sub)types for intra-cluster communication
 
         // add all schema subtypes (all-caps class names) + SchemaWrapper
         await classpath.setModule("", "./type.js", {accept: (name) =>
@@ -188,7 +188,6 @@ export class Registry {
            or from the predefined `root_data`.
          */
         let root = this.root = new RootCategory(this)
-        root.constructor.category = root
 
         // try loading `root` from the DB first...
         if (this.db)
@@ -202,7 +201,7 @@ export class Registry {
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.isLoaded) {
-            await root.reload({data: root_data})
+            await root.reload(root_data)
             print("Registry._init_root(): root category loaded from root_data")
         }
 
@@ -225,7 +224,7 @@ export class Registry {
     async _find_site() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
-        let Site = await this.getCategory(SITE_CID)
+        let Site = await this.getLoaded(SITE_ID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
@@ -239,60 +238,57 @@ export class Registry {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
          */
-        let [cid, iid] = id
-        if (!cid && cid !== 0) throw new Error('missing CID')
-        if (!iid && iid !== 0) throw new Error('missing IID')
-        assert(Number.isInteger(cid) && Number.isInteger(iid))      // not undefined, not null, not NaN, ...
-
         this.session?.countRequested(id)
-        if (cid === ROOT_CID && iid === ROOT_CID) return this.root
+        if (isRoot(id)) return this.root
 
         // ID requested was already loaded/created? return the existing instance
         let item = this.cache.get(id)
         if (item) return item
 
-        let stub = Item.createStub(id, this)
-        this.cache.set(id, stub)            // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        let stub = new Item(this, id)
+        this.cache.set(id, stub)        // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 
-    async getCategory(cid) { return this.getLoaded([ROOT_CID, cid]) }
+    async getLoaded(id)     { return this.getItem(id).load() }
 
-    async getLoaded(id) {
-        let item = this.getItem(id)
-        await item.load()
-        return item
-    }
-
-    async findItem(path) { return this.site.findItem(path) }
+    // async findItem(path) { return this.site.findItem(path) }
 
     async loadData(id) {
-        /* Load item's full data record from server-side DB and return as a dict with keys: cid, iid, data, (meta?).
-           Note that `data` can either be a JSON-encoded string, or a schema-encoded object
-           - the caller must be prepared for both cases!
-         */
+        /* Load item's full data record from server-side DB and return as an object: {id, data}. */
         this.session?.countLoaded(id)
         return this.db.select(id)
     }
     async *scan(category = null, {limit} = {}) {
         /* Load from DB all items of a given category ordered by IID. Each item's data is already loaded. A generator. */
         if (category) category.assertLoaded()
-        let records = this.db.scan(category?.iid)
+
         let count = 0
+        let cid = category?.id
+        let records = this.db.scan(cid)         // the cid argument is only used (and needed!) on the client side where this.db is AjaxDB
 
-        for await (const {id, data: jsonData} of records) {
+        for await (const record of records) {
             if (limit !== undefined && count >= limit) break
-            let [cid, iid] = id
-            assert(!category || cid === category.iid)
-
-            if (cid === ROOT_CID && iid === ROOT_CID)
-                yield this.root
-            else {
-                let cat = category || await this.getCategory(cid)
-                yield Item.createLoaded(cat, iid, jsonData)
+            let item = this.itemFromRecord(record, cid)
+            if (item instanceof Promise) item = await item
+            if (item) {
+                this.cache.set(item.id, item)
+                yield item
+                count++
             }
-            count++
         }
+    }
+
+    itemFromRecord(record, cid) {
+        /* Convert a record from DB into a booted item. If category's id is provided (`cid`), return the item only when
+           the category's id matches, otherwise return undefined. May return a Promise. */
+        // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
+        const {id, data: dataJson} = record
+        if (isRoot(id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
+        let data = JSONx.parse(dataJson)
+        if (!(data instanceof Data)) data = new Data(data)
+        if (cid === undefined || cid === data.get('__category__').id)
+            return Item.createBooted(this, id, {dataJson})
     }
 
 
