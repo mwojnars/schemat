@@ -114,11 +114,10 @@ async function create_categories(Category) {
     })
     cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
-        info        : "Application that serves items on simple URLs of the form /CID:IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
+        info        : "Application that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
         class_path  : '/system/local/site.js:AppBasic',
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
-            drop_cid    : new BOOLEAN({info: "If true, CID is excluded from URL paths. Requires that a single `category` is declared for the application; and implies that only the exact instances (no inheritance) of this category are handled (otherwise, instances of subclasses are handled, too)."}),
         }),
     })
     cat.AppSpaces = await Category.new(9, {
