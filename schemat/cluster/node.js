@@ -147,18 +147,21 @@ class Node {
     async move({id, newid, bottom, ring: ringName}) {
         /* id, newid - strings of the form "CID:IID" */
 
-        function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
+        function convert(id_)   { return (typeof id_ === 'string') ? Number(id_) : id_ }
+        // function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
 
         id = convert(id)
         newid = convert(newid)
 
         let db = this.db
-        let [cid, iid] = id
-        let [new_cid, new_iid] = newid
-        let sameID = (cid === new_cid && iid === new_iid)
+        let sameID = (id === newid)
 
-        if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
-            throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
+        // let [cid, iid] = id
+        // let [new_cid, new_iid] = newid
+        // let sameID = (cid === new_cid && iid === new_iid)
+
+        // if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
+        //     throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
 
         if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
