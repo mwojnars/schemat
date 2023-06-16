@@ -46,5 +46,4 @@ nosetests.xml
 .idea/ocr.iml
 
 
-demo/kafka/data/
-demo/kafka/cluster.id
+app-demo
