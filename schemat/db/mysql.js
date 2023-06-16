@@ -6,7 +6,7 @@ import { Block } from './storage.js'
 //db.connect()
 //db.query('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050', (e,r,f) => console.log(r))
 
-// let srv = {host: '127.0.0.1', port: '3307', user: 'paperity', database: 'paperity', password: '......'}
+// let srv = {host: '127.0.0.1', port: '3307', user: '........', database: '.........', password: '......'}
 // let db = await mysql.createConnection(srv)
 // let [rows, fields] = await db.execute('SELECT id, pid, title FROM pap_papers_view WHERE id>=9035 AND id < 9050')
 
