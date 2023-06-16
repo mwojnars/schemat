@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
 
 
-const DB_ROOT   = __dirname + '/database'
+const DB_ROOT   = __dirname + '/data'
 const HOST      = '127.0.0.1'
 const PORT      =  3000
 const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
