@@ -94,12 +94,15 @@ export class Schema {
         return obj
     }
 
-    // valid(value) {
-    //     /* Validate and normalize an app-layer `value` before encoding.
-    //        Return a normalized value, or throw ValueError.
+    // binaryEncode(obj) {
+    //     /* Encode an object to a binary form for use as a key inside a DB index.
+    //        The encoding may or may NOT be reversible, depending on the schema.
     //      */
-    //     return value
-    //     // throw new ValueError(value)
+    //     throw new Error(`binaryEncode() is not implemented for ${this}`)
+    // }
+    // binaryDecode(bin) {
+    //     /* Decode a binary key to an object. If this schema's binaryEncode() is not reversible, throw IrreversibleError. */
+    //     throw new Error(`binaryDecode() is not implemented for ${this}`)
     // }
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
@@ -309,7 +312,8 @@ export class Textual extends Primitive {
     static stype = "string"
     static defaultProps = {
         initial: '',
-        // charcase: false,            // 'upper'/'lower' mean the string will be converted to upper/lower case for storage
+        // locale/collation: undefined,   // collation to use for (one-way!) encoding of strings for storage and indexing
+        // charcase: false,            // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
     static Widget = class extends Primitive.Widget {
