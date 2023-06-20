@@ -96,13 +96,16 @@ export class Schema {
 
     // binaryEncode(obj) {
     //     /* Encode an object to a binary form for use as a key inside a DB index.
-    //        The encoding may or may NOT be reversible, depending on the schema.
+    //        The encoding may or may NOT be reversible with binaryDecode(), depending on the schema.
     //      */
-    //     throw new Error(`binaryEncode() is not implemented for ${this}`)
+    //     throw new NotImplemented(`binaryEncode() is not implemented for ${this}`)
     // }
     // binaryDecode(bin) {
-    //     /* Decode a binary key to an object. If this schema's binaryEncode() is not reversible, throw IrreversibleError. */
-    //     throw new Error(`binaryDecode() is not implemented for ${this}`)
+    //     /* Decode a binary key to an object. If this schema's binary encoding is not reversible
+    //        (like for collated strings), throw IrreversibleError; such objects can still be used inside keys,
+    //        but typically their original value must be stored separately in the record's value field.
+    //      */
+    //     throw new NotImplemented(`binaryDecode() is not implemented for ${this}`)
     // }
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
