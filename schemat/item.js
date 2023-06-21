@@ -6,7 +6,7 @@ import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN,
 import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
-import { DATA } from "./type.js"
+import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
 import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
 
 export const ROOT_ID = 0
@@ -415,9 +415,9 @@ export class Item {
             if (proto instanceof Promise) await proto
 
             let category = this.category                        // this.data is already loaded, so __category__ should be available
-            assert(category)
+            // assert(category)
 
-            if (!category.isLoaded && category !== this)
+            if (category && !category.isLoaded && category !== this)
                 await category.load()
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
@@ -426,7 +426,7 @@ export class Item {
             let init = this.init()                              // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
 
-            this.setExpiry(category.prop('cache_ttl'))
+            this.setExpiry(category?.prop('cache_ttl'))
 
             return this
 
@@ -469,7 +469,7 @@ export class Item {
         /* Initialize this item's class, i.e., substitute the object's temporary Item class with an ultimate subclass. */
         // if (this.category === this) return                      // special case for RootCategory: its class is already set up, must prevent circular deps
         // T.setClass(this, await this.category.getItemClass())    // change the actual class of this item from Item to the category's proper class
-        T.setClass(this, await this.getClass())    // change the actual class of this item from Item to the category's proper class
+        T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
     }
 
     _initActions() {
@@ -516,7 +516,7 @@ export class Item {
 
     /***  Dynamic loading of source code  ***/
 
-    async getClass()    { return this.category.getItemClass() }
+    async getClass()    { return this.category?.getItemClass() }
 
     // getClass() {
     //     /* Create/parse/load a JS class for this item. If `custom_class` property is true, the item may receive
@@ -595,7 +595,7 @@ export class Item {
             if (!opts.schemaless) {
                 let schema = this.getSchema()
                 let [prop] = Path.split(path)
-                if (!schema.has(prop)) throw new Error(`not in schema: ${prop}`)
+                if (!schema.isValidKey(prop)) throw new Error(`not in schema: ${prop}`)
             }
         }
 
@@ -716,7 +716,11 @@ export class Item {
 
     getSchema(field = undefined) {
         /* Return schema of this item (instance of DATA), or of a particular `field`. */
-        return this.category.getItemSchema(field)
+        // if (this.category) return this.category.getItemSchema(field)
+        // if (field !== undefined) return this.getItemSchema().get(field)
+        let schema = this.category?.getItemSchema() || new DATA_GENERIC()
+        return field !== undefined ? schema.get(field) : schema
+        // return this.category.getItemSchema(field)
     }
 
     // getSchema(path = null) {
@@ -1326,9 +1330,9 @@ export class Category extends Item {
         return `Class.setCaching(${methods.join(',')})`
     }
 
-    getItemSchema(field = undefined) {
+    getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        if (field !== undefined) return this.getItemSchema().get(field)
+        // if (field !== undefined) return this.getItemSchema().get(field)
         let fields = this.prop('fields')
         return new DATA({fields: fields.object()})
     }
@@ -1499,11 +1503,11 @@ export class RootCategory extends Category {
 
     _initClass() {}                             // RootCategory's class is already set up, no need to do anything more
 
-    getItemSchema(field = undefined) {
+    getItemSchema() {
         /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
            schema inheritance manually (without this.prop()).
          */
-        if (field !== undefined) return this.getItemSchema().get(field)
+        // if (field !== undefined) return this.getItemSchema().get(field)
         let root_fields = this.data.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)

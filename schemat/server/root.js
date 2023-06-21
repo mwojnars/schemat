@@ -14,8 +14,8 @@ let default_fields = new Catalog({
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
-    prototype   : new ITEM({info: "An item of the same category that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
-                                  "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items, or for categories - the latter represents category inheritance. " +
+    prototype   : new ITEM({info: "An item that serves as a prototype for this one, that is, provides default values for missing properties of this item. " +
+                                  "Multiple prototypes are allowed, the first one has priority over subsequent ones. Prototypes can be defined for regular items or categories - the latter case represents category inheritance. " +
                                   "Items/categories may inherit individual entries from catalog-valued fields, see Item.getInherited(). In this way, subcategories inherit individual field schemas as defined in base categories."}),
     html_title  : new STRING({info: "HTML title to be used for when this item is rendered."}),
 })

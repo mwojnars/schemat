@@ -12,6 +12,11 @@ import { Assets, Component, Widget } from './widget.js'
 
 // print('Temporal:', Temporal)
 
+export function is_valid_field_name(name) {
+    /* Check if a string is a valid field name. Dash "-" is allowed except for the 1st character. */
+    return /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(name)
+}
+
 
 /**********************************************************************************************************************
  **
@@ -1208,10 +1213,14 @@ export class DATA extends CATALOG {
 
     static defaultProps = {
         fields: {},             // object with field names and their schemas; null means a default schema should be used for a given field
-        // keys_obligatory: true,
+        strict: true,           // if true, only fields listed in `fields` are allowed; generic_schema is assumed for other fields
     }
 
-    has(key) { return Object.hasOwn(this.props.fields, key) }
+    isValidKey(key) {
+        return is_valid_field_name(key) && (!this.props.strict || Object.hasOwn(this.props.fields, key))
+    }
+
+    // has(key) { Object.hasOwn(this.props.fields, key) }
     get(key) { return this.props.fields[key] }
 
     subschema(key) {
@@ -1227,6 +1236,14 @@ export class DATA extends CATALOG {
     }
     getValidKeys()          { return Object.getOwnPropertyNames(this.props.fields).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
+}
+
+export class DATA_GENERIC extends DATA {
+    /* Generic item's DATA schema, used when no fields are declared in a category, or there's no category for an item. */
+    static defaultProps = {
+        fields: {},
+        strict: false,
+    }
 }
 
 
