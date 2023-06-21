@@ -228,11 +228,12 @@ export class Handler {
 
     common(ctx) {
         /* Shared global HTML assets: scripts, styles. */
-        let globalAssets = Resources.clientAssets
-        let staticAssets = this.category.getItemAssets().renderAll()
-        let customAssets = this.category.prop('html_assets')
-        let assets = [globalAssets, staticAssets, customAssets]
-        return assets .filter(a => a && a.trim()) .join('\n')
+        throw new Error('should not be called?')
+        // let globalAssets = Resources.clientAssets
+        // let staticAssets = this.category.getItemAssets().renderAll()
+        // let customAssets = this.category.prop('html_assets')
+        // let assets = [globalAssets, staticAssets, customAssets]
+        // return assets .filter(a => a && a.trim()) .join('\n')
     }
 
     assets(ctx) {
@@ -702,11 +703,11 @@ export class Item {
         (unless URL failed to generate) and the CATEGORY-NAME is HTML-escaped. If max_len is not null,
         CATEGORY-NAME gets truncated and suffixed with '...' to make its length <= max_len.
         */
-        let cat = this.category.getName()
+        let cat = this.category?.getName() || "ITEM"
         if (max_len && cat.length > max_len) cat = cat.slice(max_len-3) + ellipsis
         if (html) {
             cat = escape_html(cat)
-            let url = this.category.url()
+            let url = this.category?.url()
             if (url) cat = `<a href="${url}">${cat}</a>`          // TODO: security; {url} should be URL-encoded or injected in a different way
         }
         let stamp = `${cat}:${this.id}`
@@ -716,11 +717,8 @@ export class Item {
 
     getSchema(field = undefined) {
         /* Return schema of this item (instance of DATA), or of a particular `field`. */
-        // if (this.category) return this.category.getItemSchema(field)
-        // if (field !== undefined) return this.getItemSchema().get(field)
         let schema = this.category?.getItemSchema() || new DATA_GENERIC()
         return field !== undefined ? schema.get(field) : schema
-        // return this.category.getItemSchema(field)
     }
 
     // getSchema(path = null) {
@@ -958,8 +956,9 @@ export class Item {
     }
     _htmlAssets() {
         let globalAssets = Resources.clientAssets
-        let staticAssets = this.category.getItemAssets().renderAll()
-        let customAssets = this.category.prop('html_assets')
+        let staticAssets = this.getSchema().getAssets().renderAll()
+        // let staticAssets = this.category?.getItemAssets().renderAll()
+        let customAssets = this.category?.prop('html_assets')
         let assets = [globalAssets, staticAssets, customAssets]
         return assets .filter(a => a && a.trim()) .join('\n')
     }
@@ -1332,7 +1331,6 @@ export class Category extends Item {
 
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        // if (field !== undefined) return this.getItemSchema().get(field)
         let fields = this.prop('fields')
         return new DATA({fields: fields.object()})
     }
@@ -1507,7 +1505,6 @@ export class RootCategory extends Category {
         /* In RootCategory, this == this.category, and to avoid infinite recursion we must perform
            schema inheritance manually (without this.prop()).
          */
-        // if (field !== undefined) return this.getItemSchema().get(field)
         let root_fields = this.data.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)

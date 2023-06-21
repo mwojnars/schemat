@@ -1221,7 +1221,7 @@ export class DATA extends CATALOG {
     }
 
     // has(key) { Object.hasOwn(this.props.fields, key) }
-    get(key) { return this.props.fields[key] }
+    get(key) { return this.props.fields[key] || (!this.props.strict && generic_schema) || undefined }
 
     subschema(key) {
         let {fields} = this.props
@@ -1230,20 +1230,25 @@ export class DATA extends CATALOG {
         return fields[key] || this.props.values
     }
     collect(assets) {
-        for (let schema of Object.values(this.props.fields))
+        for (let schema of this._all_schemas())  //Object.values(this.props.fields))
             schema.collect(assets)
         this.constructor.Table.collect(assets)
     }
+    _all_schemas() { return Object.values(this.props.fields) }
+
     getValidKeys()          { return Object.getOwnPropertyNames(this.props.fields).sort() }
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
 export class DATA_GENERIC extends DATA {
-    /* Generic item's DATA schema, used when no fields are declared in a category, or there's no category for an item. */
+    /* Generic item's DATA schema, used when there's no category for an item. */
     static defaultProps = {
         fields: {},
         strict: false,
     }
+    subschema(key)  { return this.props.fields[key] || generic_schema }
+    _all_schemas()  { return [...super._all_schemas(), generic_schema] }
+    // _all_schemas()  { return [generic_schema] }
 }
 
 

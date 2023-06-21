@@ -287,7 +287,7 @@ export class Registry {
         if (isRoot(id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
         let data = JSONx.parse(dataJson)
         if (!(data instanceof Data)) data = new Data(data)
-        if (cid === undefined || cid === data.get('__category__').id)
+        if (cid === undefined || cid === data.get('__category__')?.id)
             return Item.createBooted(this, id, {dataJson})
     }
 
