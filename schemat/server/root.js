@@ -1,9 +1,6 @@
 import {Catalog, Data} from "../data.js"
 import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT} from "../type.js"
 
-// conversion of a dict to a Catalog
-export let C = (...data) => new Catalog(...data)
-
 
 /**********************************************************************************************************************
  **
@@ -12,7 +9,7 @@ export let C = (...data) => new Catalog(...data)
  */
 
 // global-default fields shared by all item types
-let default_fields = C({
+let default_fields = new Catalog({
     __category__: new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0)."}),
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
@@ -24,7 +21,7 @@ let default_fields = C({
 })
 
 // fields inside a category instance, including the root category
-let root_fields = C({
+let root_fields = new Catalog({
     class_path   : new STRING({info: "SUN path to a Javascript file that contains a (base) class for this category. May contain an optional class name appended after colon ':'. If the class name is missing (no colon), default import from the file is used."}),
     class_name   : new STRING({info: "Custom internal name for the Class of this category, for debugging. Also used as an alias when exporting the Class from the category's module."}),
     class_init   : new CODE({repeated: true, info: "Module-level initialization for this category's Javascript class. Typically contains import statements and global variables. Preceeds the Class definition (`class_body`, `views`) in the category's module code."}),

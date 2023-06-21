@@ -5,13 +5,16 @@ Creating core items from scratch and storing them as initial items in DB.
 import {print, assert} from '../utils.js'
 import {SITE_ID} from '../item.js'
 import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
-import {C} from './root.js'
+import {Catalog} from "../data.js"
 
 // import {fileURLToPath} from 'url'
 // import path from "path"
 
 // const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 // const __dirname  = path.dirname(__filename)
+
+// conversion of a dict to a Catalog
+export let C = (...data) => new Catalog(...data)
 
 
 /**********************************************************************************************************************
