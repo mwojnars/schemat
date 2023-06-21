@@ -13,7 +13,7 @@ import {YamlDB} from "./storage.js";
 
 export class Ring {
 
-    block
+    block                   // physical storage of this ring's primary data (the items)
 
     name                    // human-readable name of this ring for findRing()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -70,7 +70,7 @@ export class Ring {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async selectLocal(id) {
+    async select_local(id) {
         /* Read item's data from this ring. No forward. Return undefined if `id` not found. */
         return this.block._select(id)
     }
@@ -159,7 +159,7 @@ export class Database {
         for (const ring of this.reversed) {
             if (name && ring.name === name) return ring
             if (item) {
-                let data = await ring.selectLocal(item)
+                let data = await ring.select_local(item)
                 if (data !== undefined) return ring
             }
         }
