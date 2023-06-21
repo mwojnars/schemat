@@ -1220,7 +1220,6 @@ export class DATA extends CATALOG {
         return is_valid_field_name(key) && (!this.props.strict || Object.hasOwn(this.props.fields, key))
     }
 
-    // has(key) { Object.hasOwn(this.props.fields, key) }
     get(key) { return this.props.fields[key] || (!this.props.strict && generic_schema) || undefined }
 
     subschema(key) {
@@ -1248,7 +1247,6 @@ export class DATA_GENERIC extends DATA {
     }
     subschema(key)  { return this.props.fields[key] || generic_schema }
     _all_schemas()  { return [...super._all_schemas(), generic_schema] }
-    // _all_schemas()  { return [generic_schema] }
 }
 
 
