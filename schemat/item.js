@@ -276,6 +276,10 @@ export class Handler {
 export class Item {
 
     /*
+    An item is an object that lives in a database, is potentially accessible by a URL and maps to
+    a Javascript object (can be loaded, used, modified, saved in JS code).
+    All items of a cluster form an "item space".
+
     >> meta fields are accessible through this.get('#FIELD') or '.FIELD' ?
     >> item.getName() uses a predefined data field (name/title...) but falls back to '#name' when the former is missing
     - ver      -- current version 1,2,3,...; increased +1 after each modification of the item; null if no versioning
