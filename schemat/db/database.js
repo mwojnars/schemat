@@ -71,7 +71,7 @@ export class Ring {
     /***  Data access & modification (CRUD operations)  ***/
 
     async select_local(id) {
-        /* Read item's data from this ring. No forward. Return undefined if `id` not found. */
+        /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
         return this.block._select(id)
     }
 

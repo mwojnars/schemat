@@ -1331,7 +1331,8 @@ export class Category extends Item {
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
         let fields = this.prop('fields')
-        return new DATA({fields: fields.object()})
+        let custom = this.prop('allow_custom_fields')
+        return new DATA({fields: fields.object(), strict: custom !== true})
     }
 
     _checkPath(request) {
@@ -1503,7 +1504,8 @@ export class RootCategory extends Category {
         let root_fields = this.data.get('fields')
         let default_fields = root_fields.get('fields').props.default
         let fields = new Catalog(root_fields, default_fields)
-        return new DATA({fields: fields.object()})
+        let custom = this.data.get('allow_custom_fields')
+        return new DATA({fields: fields.object(), strict: custom !== true})
     }
 }
 

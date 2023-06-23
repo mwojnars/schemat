@@ -147,6 +147,7 @@ async function create_categories(Category) {
     cat.Ring = await Category.new(11, {
         name        : "Ring",
         info        : "Base category for items that represent data rings (stackable database layers).",
+        allow_custom_fields: true,          // temporary
     })
 
     // cat.STRING = await Category.new(12, {

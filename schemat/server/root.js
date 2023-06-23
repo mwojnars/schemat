@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT, BOOLEAN} from "../type.js"
 
 
 /**********************************************************************************************************************
@@ -48,7 +48,7 @@ let root_fields = new Catalog({
 
     //indexes    : new CATALOG({values: new ITEM(Index)}),
 
-    //custom_fields : BOOLEAN(default : False, info : "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()")
+    allow_custom_fields : new BOOLEAN({default: false, info: "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()"})
 
     //summary_idx : STRING(),    // name of index that should be used for loading core props: name, title, ... of the item
                                 // - these props are needed to generate "simple links" to this item on "edit" tabs of other items,

@@ -104,6 +104,11 @@
           "@": STRING
         "@": Catalog
       "@": CATALOG
+    allow_custom_fields:
+      default: false
+      info: If true, it is allowed to use undefined (out-of-schema) fields in items -
+        their schema is GENERIC()
+      "@": BOOLEAN
     "@": Catalog
   "@": Data
 - __id: 1
@@ -285,6 +290,7 @@
   name: Ring
   info: Base category for items that represent data rings (stackable database
     layers).
+  allow_custom_fields: true
   __category__:
     "@": 0
   "@": Data
