@@ -253,7 +253,6 @@ export class ActionsProtocol extends JsonProtocol {
 export class API {
     /* Collection of web/network endpoints each one operating a particular Protocol. */
 
-    // environment      // 'client' or 'server'
     endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
 
     constructor(parents = [], endpoints = {}) {                 // environment = null) {
@@ -280,14 +279,14 @@ export class API {
             }
     }
 
-    get(endpoint) {
-        /* `endpoint` is a full endpoint string: mode/name. */
+    resolve(endpoint) {
+        /* `endpoint` must be a full endpoint string: method/name. Undefined is returned if not found. */
         return this.endpoints[endpoint]
     }
 
-    findHandler(endpoint, httpMethod) {
-        return this.endpoints[`${httpMethod}/${endpoint}`]
-    }
+    // findHandler(httpMethod, endpoint) {
+    //     return this.endpoints[`${httpMethod}/${endpoint}`]
+    // }
 }
 
 /* action protocols:
@@ -306,14 +305,22 @@ export class NetworkAgent {
                 // in this object or its remote counterpart
 
     role        // network role of the current instance of the target object; typically 'client' or 'server'
+    api         // network API to be used for the `target`
 
-    get api() {
+    get _api() {
         /* The `target` object's network API. Override in subclasses if needed. */
         return this.target.constructor.api
     }
 
-    constructor(target) {
+    constructor(target, role = null) {
         this.target = target
+        this.role = role
+        this.api = this._api
+    }
+
+    resolve(endpoint) {
+        /* Resolve `endpoint` to a protocol instance (a handler). */
+        return this.api.resolve(endpoint)
     }
 }
 

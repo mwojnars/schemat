@@ -7,7 +7,7 @@ import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import { HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol } from "./protocols.js"
+import {HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol, NetworkAgent} from "./protocols.js"
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -322,6 +322,8 @@ export class Item {
     action          // collection of triggers for RPC actions exposed by this item's API;
                     // present server-side and client-side, but with a different implementation of triggers
 
+    net             // NetworkAgent that implements network API for this item as defined in this.constructor.api
+
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
 
@@ -475,7 +477,8 @@ export class Item {
     _initActions() {
         /* Create action triggers (this.action.X()) from the class'es API. */
 
-        let api = this.constructor.api
+        let role = this.registry.onServer ? 'server' : 'client'
+        this.net = new NetworkAgent(this, role)
         this.action = {}
 
         // create a trigger for each action and store in `this.action`
@@ -483,7 +486,9 @@ export class Item {
             if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
             // if (typeof spec === 'string') spec = [spec]
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-            let handler  = api.get(endpoint)
+            let handler = this.net.resolve(endpoint)
+            if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
+
             this.action[name] = this.registry.onServer
                 ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
                 : (...args) => handler.remote(this, ...fixed, ...args)          // may return a Promise
@@ -897,14 +902,12 @@ export class Item {
             if (request.app) session.app = request.app
             ;[req, res] = session.channels
         }
-
-        let api = this.constructor.api
         let httpMethod = request.type
 
         for (let endpoint of endpoints) {
             let context = new RequestContext({request, req, res, endpoint, item: this})
 
-            let handler = api.findHandler(endpoint, httpMethod)
+            let handler = this.net.resolve(`${httpMethod}/${endpoint}`)
             if (handler) return handler.serve(this, context)
 
             let handler2 = this.getHandlers()[endpoint]             // TODO: legacy, use Protocols and API instead
