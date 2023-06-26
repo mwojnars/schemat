@@ -21,7 +21,8 @@ export class Protocol {
      */
 
     address         // protocol-specific string that identifies the connection; typically, for HTTP, has the form of
-                    // "METHOD/endpoint", where METHOD is one of GET/POST/CALL; for Kafka: a topic name
+                    // "METHOD/path...", where METHOD is one of GET/POST/CALL/KAFKA...; the path is typically
+                    // a command name, but may be a Kafka topic name, etc.
 
     action          // action(ctx, ...args) function to be called when the protocol is invoked;
                     // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
@@ -33,17 +34,17 @@ export class Protocol {
     static opts = {}    // default values of configuration options
 
 
-    get method()   { return this._splitAddress()[0] }       // access method of the endpoint: GET/POST/CALL
-    get endpoint() { return this._splitAddress()[1] }       // name of the endpoint without access method
+    get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
+    get endpoint_path()   { return this._splitEndpoint()[1] }       // name of the function/action to execute
 
     constructor(action = null, opts = {}) {
         this.action = action
         this.opts = {...this.constructor.opts, ...opts}
     }
 
-    setAddress(address) { this.address = address }
+    bindAt(address) { this.address = address }
 
-    _splitAddress() {
+    _splitEndpoint() {
         assert(this.address, this.address)
         let parts = this.address.split('/')
         if (parts.length !== 2) throw new Error(`incorrect address format for a protocol: ${this.address}`)
@@ -93,7 +94,7 @@ export class HttpProtocol extends Protocol {
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
     async remote(agent, action, ...args) {
-        let url = agent.url(this.endpoint)
+        let url = agent.url(this.endpoint_path)
         let res = await fetch(url)                  // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         return res.text()
@@ -130,8 +131,8 @@ export class JsonProtocol extends HttpProtocol {
 
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url = agent.url(this.endpoint)
-        let res = await this._fetch(url, args, this.method)     // client-side JS Response object
+        let url = agent.url(this.endpoint_path)
+        let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
 
         let result = await res.text()                           // json string or empty
@@ -236,7 +237,7 @@ export class ActionsProtocol extends JsonProtocol {
         let actions = {...this.actions, ...protocol.actions}
         let opts = {...this.opts, ...protocol.opts}
         let merged = new c1(actions, opts)
-        merged.setAddress(this.address)
+        merged.bindAt(this.address)
 
         return merged
     }
@@ -251,14 +252,17 @@ export class ActionsProtocol extends JsonProtocol {
 /**********************************************************************************************************************/
 
 export class API {
-    /* Collection of web/network endpoints each one operating a particular Protocol. */
+    /* Collection of web/network endpoints, each one operating a particular Protocol.
+       Some endpoints may be used to define "actions" (i.e., internal RPC calls), but this is configured separately
+       when creating a NetworkAgent.
+     */
 
     endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
 
-    constructor(parents = [], endpoints = {}) {                 // environment = null) {
+    constructor(parents = [], endpoints = {}) {
         // this.environment = environment
         for (let [endpoint, protocol] of Object.entries(endpoints))
-            protocol.setAddress(endpoint)
+            protocol.bindAt(endpoint)
         if (parents && !T.isArray(parents))
             parents = [parents]
 
@@ -283,10 +287,6 @@ export class API {
         /* `endpoint` must be a full endpoint string: method/name. Undefined is returned if not found. */
         return this.endpoints[endpoint]
     }
-
-    // findHandler(httpMethod, endpoint) {
-    //     return this.endpoints[`${httpMethod}/${endpoint}`]
-    // }
 }
 
 /* action protocols:
