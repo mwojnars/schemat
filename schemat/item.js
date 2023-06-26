@@ -888,8 +888,8 @@ export class Item {
         if (request.path) return this.handlePartial(request)
 
         let req, res
-        let {session, methods} = request
-        if (!methods.length) methods = ['default']
+        let {session, methods: endpoints} = request
+        if (!endpoints.length) endpoints = ['default']
         // print('methods:', methods)
 
         if (session) {
@@ -901,17 +901,17 @@ export class Item {
         let api = this.constructor.api
         let httpMethod = request.type
 
-        for (let endpoint of methods) {
+        for (let endpoint of endpoints) {
             let context = new RequestContext({request, req, res, endpoint, item: this})
-
-            let handler2 = this.getHandlers()[endpoint]
-            if (handler2) return handler2.run({...context, handler: handler2})
 
             let handler = api.findHandler(endpoint, httpMethod)
             if (handler) return handler.serve(this, context)
+
+            let handler2 = this.getHandlers()[endpoint]             // TODO: legacy, use Protocols and API instead
+            if (handler2) return handler2.run({...context, handler: handler2})
         }
 
-        // for (let endpoint of methods) {
+        // for (let endpoint of endpoints) {
         //     let hdl_name = `${request.type}_${endpoint}`
         //     let handler  = this[hdl_name]
         //     if (handler) return handler.call(this, {request, req, res})
@@ -920,7 +920,7 @@ export class Item {
         //         return this.page({request, view: endpoint})
         // }
 
-        request.throwNotFound(`no handler found for [${methods}] access method(s)`)
+        request.throwNotFound(`no handler found for [${endpoints}] access method(s)`)
     }
 
 

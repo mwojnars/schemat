@@ -251,7 +251,7 @@ export class ActionsProtocol extends JsonProtocol {
 /**********************************************************************************************************************/
 
 export class API {
-    /* Collection of remote actions exposed on particular web/RPC/API endpoints, each endpoint operating a particular protocol. */
+    /* Collection of web/network endpoints each one operating a particular Protocol. */
 
     // environment      // 'client' or 'server'
     endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
@@ -296,8 +296,29 @@ export class API {
 
 /**********************************************************************************************************************/
 
-// export class Agent {   // RemoteObject NetObject
-//     /* Base class for objects that implement client-server communication (API) for external and internal calls.
+export class NetworkAgent {
+    /* Helper object that performs network communication on behalf of another object (owner, `target`)
+       and its remote counterpart. Typically instantiated as a .net property of the owner object, so that the entire
+       network-related interface is accessible through a single property and doesn't clutter the owner's JS API.
+     */
+
+    target      // owner of this agent; all network operations as performed by the agent are reflected
+                // in this object or its remote counterpart
+
+    role        // network role of the current instance of the target object; typically 'client' or 'server'
+
+    get api() {
+        /* The `target` object's network API. Override in subclasses if needed. */
+        return this.target.constructor.api
+    }
+
+    constructor(target) {
+        this.target = target
+    }
+}
+
+// export class NetworkObject {   // RemoteObject NetObject Agent
+//     /* Base class for objects ("agents") that expose an API for external and/or internal calls.
 //
 //        In an "internal call" scenario, the agent is instantiated client-side and server-side, providing the same
 //        programming interface (action.*) in each of these environments, but always executing the actions on the server:
@@ -311,10 +332,10 @@ export class API {
 //      */
 //
 //     static _api     // API instance that defines this agent's endpoints, actions, and protocols (for each endpoint)
-//     _side           // 'client' or 'server'
+//     _role           // 'client' or 'server'
 //
-//     constructor(side = 'client') {
-//         this._side = side
+//     constructor(role = 'client') {
+//         this._role = role
 //     }
 //
 //     /* Instantiate a client-side variant of this agent. Remote methods will make RPC calls to the server() object. */
@@ -328,7 +349,7 @@ export class API {
 //         return protocol.execute(this, {}, ...args)
 //     }
 //
-//     _getAgentEnvironment() {
+//     _getAgentRole() {
 //         /* Override in subclasses to return the name of the current environment: "client" or "server". */
 //         throw new Error("not implemented")
 //     }
