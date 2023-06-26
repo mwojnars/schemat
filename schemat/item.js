@@ -423,7 +423,7 @@ export class Item {
                 await category.load()
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-            this._initActions()
+            this._initAPI()
 
             let init = this.init()                              // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
@@ -474,29 +474,11 @@ export class Item {
         T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
     }
 
-    _initActions() {
-        /* Create action triggers (this.action.X()) from the class'es API. */
-
+    _initAPI() {
+        /* Create a .net agent and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
         this.net = new NetworkAgent(this, role)
-
         this.action = this.net.createActions(this.constructor.actions)
-
-        // this.action = {}
-        //
-        // // create a trigger for each action and store in `this.action`
-        // for (let [name, spec] of Object.entries(this.constructor.actions)) {
-        //     if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
-        //     // if (typeof spec === 'string') spec = [spec]
-        //     let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-        //     let handler = this.net.resolve(endpoint)
-        //     if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
-        //
-        //     this.action[name] = this.registry.onServer
-        //         ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
-        //         : (...args) => handler.remote(this, ...fixed, ...args)          // may return a Promise
-        // }
-        // // print('this.action:', this.action)
     }
 
     init() {}
