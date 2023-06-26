@@ -1,6 +1,6 @@
 import {print, assert} from './utils.js'
 import {Registry, Session} from './registry.js'
-import {ClientDB} from "./db/client_db.js"
+import {ClientDB} from "./db/db.js"
 
 
 /**********************************************************************************************************************/

@@ -10,7 +10,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {T, assert, print} from '../utils.js'
-import {Ring, ServerDB} from "../db/server_db.js";
+import {Ring, ServerDB} from "../db/db_srv.js"
 import {ServerRegistry} from "../server/registry-s.js"
 import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
