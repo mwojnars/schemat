@@ -477,7 +477,7 @@ export class Item {
     _initAPI() {
         /* Create a .net agent and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
-        this.net = new NetworkAgent(this, role)
+        this.net = new NetworkAgent(this, role, this.constructor.api)
         this.action = this.net.createActions(this.constructor.actions)
     }
 

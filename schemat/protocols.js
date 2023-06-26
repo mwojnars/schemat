@@ -297,28 +297,27 @@ export class API {
 
 export class NetworkAgent {
     /* Helper object that performs network communication on behalf of another object (owner, `target`)
-       and its remote counterpart. Typically instantiated as a .net property of the owner object, so that the entire
+       and its remote counterpart. Typically, instantiated as a .net property of the owner, so that the entire
        network-related interface is accessible through a single property and doesn't clutter the owner's JS API.
      */
 
     static CLIENT = 'client'
     static SERVER = 'server'
 
-    target      // owner of this agent; all network operations as performed by the agent are reflected
-                // in this object or its remote counterpart
-
-    role        // network role of the current instance of the target object; typically 'client' or 'server'
+    target      // owner object; all the network operations performed by the agent are reflected
+                // in the `target` or its remote counterpart
+    role        // current network role of the `target`; typically 'client' or 'server'
     api         // network API to be used for the `target`
 
-    get _api() {
-        /* The `target` object's network API. Override in subclasses if needed. */
-        return this.target.constructor.api
-    }
+    // get _api() {
+    //     /* The `target` object's network API. Override in subclasses if needed. */
+    //     return this.target.constructor.api
+    // }
 
-    constructor(target, role = null) {
+    constructor(target, role, api) {
         this.target = target
         this.role = role
-        this.api = this._api
+        this.api = api
     }
 
     createActions(actions_endpoints) {
@@ -348,7 +347,7 @@ export class NetworkAgent {
     }
 
     resolve(endpoint) {
-        /* Resolve `endpoint` to a protocol instance (a handler). */
+        /* Resolve `endpoint` to a Protocol instance (a handler). Return undefined if `endpoint` not found. */
         return this.api.resolve(endpoint)
     }
 }
@@ -403,17 +402,6 @@ export class NetworkAgent {
 //
 //     url(endpoint) {}
 //
-// }
-//
-// class XYZ extends Agent {
-//
-//     _exec_default() { return this }
-//
-//     static _endpoints =
-//     {
-//         'CALL/default': new InternalProtocol(XYZ.prototype._exec_default),
-//     }
-//     // static _api = new API([], XYZ._endpoints)
 // }
 
 // item = ItemClass.client()
