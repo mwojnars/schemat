@@ -3,7 +3,7 @@ import {assert, print} from "../utils.js"
 /**********************************************************************************************************************/
 
 export class ClientDB {
-    /* Remote abstract DB layer that's accessed by this web client over AJAX calls.
+    /* Client-side DB layer that that connects to the server via AJAX calls.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 

@@ -4,11 +4,19 @@ import { JSONx } from './serialize.js'
 
 
 export class Protocol {
-    /* Client/server communication protocol for "network objects", i.e., objects that pass data over a network
-       and hence must behave differently when instantiated server-side vs client-side.
+    /* Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
+       side and on the client side - exposing THE SAME API (methods) in both environments - that need to communicate
+       transparently between their "client" and "server" copies while providing an appropriate (different) internal
+       implementation depending on whether they are called on the server or on the client.
+       A Protocol may also be used to define an object's EXTERNAL API that will be accessible to human users
+       or other remote objects over the network.
+
+       Typically, a Protocol is linked to an Item object, but it may also be used for
+       other JS objects that need to communicate with their own dual instances over the network.
+
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
-       through the serve() method when a web request arrives. The protocol may also consist
-       of remote() implemention that performs RPC calls from a client to the remote serve() method.
+       through the serve() method when a network request arrives. The protocol may also consist
+       of remote() implementation that performs RPC calls from a client to the server-side serve() method.
        Each action function is executed in the context of an agent (`this` is set to the agent object).
      */
 
