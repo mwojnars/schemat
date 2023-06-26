@@ -1,5 +1,6 @@
-import { print, assert } from './utils.js'
-import { Registry, Session } from './registry.js'
+import {print, assert} from './utils.js'
+import {Registry, Session} from './registry.js'
+import {ClientDB} from "./db/client_db.js"
 
 
 /**********************************************************************************************************************/
@@ -23,56 +24,6 @@ function read_data(node, type = "json") {
 }
 
 /**********************************************************************************************************************/
-
-class AjaxDB {
-    /* Remote abstract DB layer that's accessed by this web client over AJAX calls.
-       In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
-     */
-
-    url     = null              // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
-    records = new Map()         // cached `data` of the items received on initial or subsequent web requests;
-                                // each `data` is JSON-encoded for safety
-
-    constructor(url, records = []) {
-        this.url = url
-        this.keep(...records)
-        assert(!url.endsWith('/'))
-    }
-
-    keep(...records) {
-        /* Save `records` in internal cache for future reference. */
-        for (let rec of records) {
-            if (!rec.data) continue                         // don't keep stubs
-            if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
-                rec = {...rec, data: JSON.stringify(rec.data)}
-            this.records.set(rec.id, rec.data)
-        }
-    }
-
-    async select(id) {
-        /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        if (!this.records.has(id)) this.keep(await this._from_ajax(id))
-        return this.records.get(id)
-    }
-
-    async _from_ajax(id) {
-        /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
-        print(`ajax download [${id}]...`)
-        return $.get(`${this.url}/${id}@json`)
-    }
-    async *scan(id) {
-        assert(id || id === 0)
-        print(`ajax category scan [${id}]...`)
-        let records = await $.get(`${this.url}/${id}@scan`)
-        for (const rec of records) {            // rec's shape: {id, data}
-            if (rec.data) {
-                rec.data = JSON.stringify(rec.data)
-                this.keep(rec)
-            }
-            yield rec
-        }
-    }
-}
 
 class ClientRegistry extends Registry {
     /* Client-side registry: getItem() pulls items from server. */
@@ -109,7 +60,7 @@ class ClientRegistry extends Registry {
 export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
-    let db       = new AjaxDB(data.system_url, data.items)
+    let db       = new ClientDB(data.system_url, data.items)
     let registry = await ClientRegistry.createGlobal(db)
     await registry.bootData(data)
 

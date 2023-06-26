@@ -269,7 +269,7 @@ export class Registry {
 
         for await (const record of records) {
             if (limit !== undefined && count >= limit) break
-            let item = this.itemFromRecord(record, cid)
+            let item = this.itemFromRecord(record, cid)         // this returns undefined if the item is not of the requested category
             if (item instanceof Promise) item = await item
             if (item) {
                 this.cache.set(item.id, item)

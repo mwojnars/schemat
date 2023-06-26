@@ -2,7 +2,8 @@ import path from 'path'
 import {BaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
-import {YamlDB} from "./storage.js";
+import {YamlDB} from "./storage.js"
+import {Database} from "./db.js"
 
 
 /**********************************************************************************************************************
@@ -120,7 +121,12 @@ export class Ring {
         return this.block.delete([db, this], id)
     }
 
+
+    /***  Indexes and Transforms  ***/
+
     async *scan()   { yield* this.block._scan() }
+
+    // async *scan(index_name, start, stop, {limit: null, descending: false, batch_size: 100}) {}
 
 }
 
@@ -131,13 +137,21 @@ export class Ring {
  **
  */
 
-export class Database {
+export class ServerDB extends Database {
     /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */
 
     rings = []          // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+
+
+    /***  Errors & internal checks  ***/
+
+    static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
+    static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
+    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
+    static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
 
 
     /***  Rings manipulation  ***/
@@ -171,7 +185,7 @@ export class Database {
          */
         if (ring === undefined) return this.top
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new Database.RingUnknown()
+        if (pos < 0) throw new ServerDB.RingUnknown()
         if (pos > 0) return this.rings[pos-1]
     }
 
@@ -181,18 +195,9 @@ export class Database {
          */
         if (ring === undefined) return this.bottom
         let pos = this.rings.indexOf(ring)
-        if (pos < 0) throw new Database.RingUnknown()
+        if (pos < 0) throw new ServerDB.RingUnknown()
         if (pos < this.rings.length-1) return this.rings[pos+1]
     }
-
-
-    /***  Errors & internal checks  ***/
-
-    static Error = class extends BaseError {}
-    static RingUnknown = class extends Database.Error   { static message = "reference ring not found in this database" }
-    static RingReadOnly = class extends Database.Error  { static message = "the ring is read-only" }
-    static InvalidID = class extends Database.Error     { static message = "item ID is outside of the valid range for the ring(s)" }
-    static NotInsertable = class extends Ring.Error     { static message = "item cannot be inserted, the ring(s) is either read-only or the ID is outside of the valid range" }
 
 
     /***  Data access & modification (CRUD operations)  ***/
@@ -208,7 +213,7 @@ export class Database {
         for (const ring of this.reversed)
             if (ring.writable(id)) return ring.insert([this], item)
 
-        throw new Database.NotInsertable({id})
+        throw new ServerDB.NotInsertable({id})
     }
 
     async delete(item_or_id) {
@@ -244,9 +249,9 @@ export class Database {
         /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
         let next = this._next(ring)
         if (next) return next.save([this], null, id, data)
-        if (ring.readonly) throw new Database.RingReadOnly({id})
+        if (ring.readonly) throw new ServerDB.RingReadOnly({id})
         assert(!ring.validIID(id))
-        throw new Database.InvalidID({id})
+        throw new ServerDB.InvalidID({id})
     }
 
     forward_delete([ring], id) {

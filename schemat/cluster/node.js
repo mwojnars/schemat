@@ -10,7 +10,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {T, assert, print} from '../utils.js'
-import {Ring, Database} from "../db/database.js";
+import {Ring, ServerDB} from "../db/server_db.js";
 import {ServerRegistry} from "../server/registry-s.js"
 import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
@@ -49,7 +49,7 @@ class Node {
             {item: 1015, name: 'mysql', readonly: true},
         ]
 
-        let db = this.db = new Database()
+        let db = this.db = new ServerDB()
         let registry = await this.createRegistry(db)
 
         for (const spec of rings) {
