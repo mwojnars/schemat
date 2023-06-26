@@ -1386,18 +1386,8 @@ export class Category extends Item {
             let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
             let item = await this.registry.insert(draft)        // has IID now
             form.current.reset()                                // clear input fields
-            itemAdded(item)
-
-            // let record = await this.action.create_item(data.__getstate__())      // TODO: validate & encode `data` through category's schema
-            // if (record) {
-            //     // `record` is encoded: {id: id, data: data-encoded}
-            //     form.current.reset()            // clear input fields
-            //     let item = this.registry.clientInsert(record)
-            //     // this.registry.db._cache(record)
-            //     // let item = this.registry.getItem(record.id)
-            //     itemAdded(item)
-            // }
             setFormDisabled(false)
+            itemAdded(item)
         }
 
         return FORM({ref: form}, FIELDSET(

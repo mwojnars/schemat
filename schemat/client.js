@@ -60,13 +60,8 @@ class ClientRegistry extends Registry {
             this.db._cache(record)                      // record == {id: id, data: data-encoded}
             return this.getItem(record.id)
         }
+        throw new Error(`cannot create item ${item}`)
     }
-
-    // clientInsert(record) {
-    //     /* Client-side variant of `insert()`: the item is not inserted into the DB, only into the cache. */
-    //     this.db._cache(record)
-    //     return this.getItem(record.id)
-    // }
 }
 
 /**********************************************************************************************************************
