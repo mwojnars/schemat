@@ -301,6 +301,9 @@ export class NetworkAgent {
        network-related interface is accessible through a single property and doesn't clutter the owner's JS API.
      */
 
+    static CLIENT = 'client'
+    static SERVER = 'server'
+
     target      // owner of this agent; all network operations as performed by the agent are reflected
                 // in this object or its remote counterpart
 
@@ -316,6 +319,32 @@ export class NetworkAgent {
         this.target = target
         this.role = role
         this.api = this._api
+    }
+
+    createActions(actions_endpoints) {
+        /* Map selected endpoints of the API to "action" functions for the target object, {action: func}.
+           `actions_endpoints` is a dict of the form: {action: [endpoint, ...params]},
+           where `endpoint` is a full endpoint identifier (incl. access method).
+         */
+        let actions = {}
+        let target = this.target
+        let serverSide = (this.role === NetworkAgent.SERVER)
+
+        // create a trigger for each action and store in `this.action`
+        for (let [name, spec] of Object.entries(actions_endpoints)) {
+            if (name in actions) throw new Error(`duplicate action name: '${name}'`)
+            // if (typeof spec === 'string') spec = [spec]
+            let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
+            let handler = this.resolve(endpoint)
+            if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
+
+            actions[name] = serverSide
+                ? (...args) => handler.execute(target, {}, ...fixed, ...args)     // may return a Promise
+                : (...args) => handler.remote(target, ...fixed, ...args)          // may return a Promise
+        }
+        // print('this.action:', this.action)
+
+        return actions
     }
 
     resolve(endpoint) {

@@ -479,21 +479,24 @@ export class Item {
 
         let role = this.registry.onServer ? 'server' : 'client'
         this.net = new NetworkAgent(this, role)
-        this.action = {}
 
-        // create a trigger for each action and store in `this.action`
-        for (let [name, spec] of Object.entries(this.constructor.actions)) {
-            if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
-            // if (typeof spec === 'string') spec = [spec]
-            let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-            let handler = this.net.resolve(endpoint)
-            if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
+        this.action = this.net.createActions(this.constructor.actions)
 
-            this.action[name] = this.registry.onServer
-                ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => handler.remote(this, ...fixed, ...args)          // may return a Promise
-        }
-        // print('this.action:', this.action)
+        // this.action = {}
+        //
+        // // create a trigger for each action and store in `this.action`
+        // for (let [name, spec] of Object.entries(this.constructor.actions)) {
+        //     if (name in this.action) throw new Error(`duplicate action name: '${name}'`)
+        //     // if (typeof spec === 'string') spec = [spec]
+        //     let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
+        //     let handler = this.net.resolve(endpoint)
+        //     if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
+        //
+        //     this.action[name] = this.registry.onServer
+        //         ? (...args) => handler.execute(this, {}, ...fixed, ...args)     // may return a Promise
+        //         : (...args) => handler.remote(this, ...fixed, ...args)          // may return a Promise
+        // }
+        // // print('this.action:', this.action)
     }
 
     init() {}
