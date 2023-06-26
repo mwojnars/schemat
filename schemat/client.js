@@ -48,11 +48,25 @@ class ClientRegistry extends Registry {
         return name ? (await module)[name] : module
     }
 
-    clientInsert(record) {
-        /* Client-side variant of `insert()`: the item is not inserted into the DB, only into the cache. */
-        this.db._cache(record)
-        return this.getItem(record.id)
+    async insert(item) {
+        let data = item.data.__getstate__()
+        delete data['__category__']
+
+        let category = item.category
+        assert(category, 'cannot insert an item without a category')    // TODO: allow creation of no-category items
+
+        let record = await category.action.create_item(data)
+        if (record) {
+            this.db._cache(record)                      // record == {id: id, data: data-encoded}
+            return this.getItem(record.id)
+        }
     }
+
+    // clientInsert(record) {
+    //     /* Client-side variant of `insert()`: the item is not inserted into the DB, only into the cache. */
+    //     this.db._cache(record)
+    //     return this.getItem(record.id)
+    // }
 }
 
 /**********************************************************************************************************************
