@@ -1387,8 +1387,9 @@ export class Category extends Item {
             if (record) {
                 // `record` is encoded: {id: id, data: data-encoded}
                 form.current.reset()            // clear input fields
-                this.registry.db._cache(record)
-                let item = await this.registry.getItem(record.id)
+                let item = this.registry.clientInsert(record)
+                // this.registry.db._cache(record)
+                // let item = this.registry.getItem(record.id)
                 itemAdded(item)
             }
             setFormDisabled(false)

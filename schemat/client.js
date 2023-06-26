@@ -47,6 +47,12 @@ class ClientRegistry extends Registry {
         let module = import(this.remoteImportPath(path))
         return name ? (await module)[name] : module
     }
+
+    clientInsert(record) {
+        /* Client-side variant of `insert()`: the item is not inserted into the DB, only into the cache. */
+        this.db._cache(record)
+        return this.getItem(record.id)
+    }
 }
 
 /**********************************************************************************************************************
