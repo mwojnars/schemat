@@ -309,11 +309,6 @@ export class NetworkAgent {
     role        // current network role of the `target`; typically 'client' or 'server'
     api         // network API to be used for the `target`
 
-    // get _api() {
-    //     /* The `target` object's network API. Override in subclasses if needed. */
-    //     return this.target.constructor.api
-    // }
-
     constructor(target, role, api) {
         this.target = target
         this.role = role

@@ -319,10 +319,9 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
+    net             // NetworkAgent that implements network API for this item as defined in this.constructor.api
     action          // collection of triggers for RPC actions exposed by this item's API;
                     // present server-side and client-side, but with a different implementation of triggers
-
-    net             // NetworkAgent that implements network API for this item as defined in this.constructor.api
 
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
