@@ -285,40 +285,41 @@ export class ActionsProtocol extends JsonProtocol {
 /**********************************************************************************************************************/
 
 export class API {
-    /* Collection of web/network endpoints, each one operating a particular Protocol.
-       Some endpoints may be used to define "actions" (i.e., internal RPC calls), but this is configured separately
-       when creating a NetworkAgent.
+    /* A collection of network services exposed on particular endpoints.
+
+       Some endpoints may be used additionally to define "actions" (i.e., internal RPC calls),
+       but this is configured separately when creating a NetworkAgent.
      */
 
-    endpoints = {}      // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
+    services = {}       // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
 
-    constructor(parents = [], endpoints = {}) {
+    constructor(parents = [], services = {}) {
         // this.environment = environment
-        for (let [endpoint, protocol] of Object.entries(endpoints))
-            protocol.bindAt(endpoint)
+        for (let [endpoint, service] of Object.entries(services))
+            service.bindAt(endpoint)
         if (parents && !T.isArray(parents))
             parents = [parents]
 
-        for (let endpts of [...parents.reverse().map(p=>p.endpoints), endpoints])
-            this.add(endpts)
+        for (let _services of [...parents.reverse().map(p => p.services), services])
+            this.add(_services)
     }
 
-    add(endpoints) {
-        /* Add `endpoints` dict to `this.endpoints`. If an endpoint already exists its protocol gets merged with the new
+    add(services) {
+        /* Add `services` dict to `this.services`. If an endpoint already exists its protocol gets merged with the new
            protocol instance (e.g., actions of both protocols are combined), or replaced if a given protocol class
-           doesn't implement merge(). If protocol==null in `endpoints`, the endpoint is removed from `this`.
+           doesn't implement merge(). If protocol==null in `services`, the endpoint is removed from `this`.
          */
-        for (let [endpoint, protocol] of Object.entries(endpoints))
-            if (protocol == null) delete this.endpoints[endpoint]
+        for (let [endpoint, service] of Object.entries(services))
+            if (service == null) delete this.services[endpoint]
             else {
-                let previous = this.endpoints[endpoint]
-                this.endpoints[endpoint] = previous ? previous.merge(protocol) : protocol
+                let previous = this.services[endpoint]
+                this.services[endpoint] = previous ? previous.merge(service) : service
             }
     }
 
     resolve(endpoint) {
-        /* `endpoint` must be a full endpoint string: method/name. Undefined is returned if not found. */
-        return this.endpoints[endpoint]
+        /* `endpoint` must be a full endpoint string: "method/name". Return undefined if `endpoint` not found. */
+        return this.services[endpoint]
     }
 }
 
@@ -329,16 +330,16 @@ export class API {
 /**********************************************************************************************************************/
 
 export class NetworkAgent {
-    /* Helper object that performs network communication on behalf of another object (owner, `target`)
-       and its remote counterpart. Typically, instantiated as a .net property of the owner, so that the entire
-       network-related interface is accessible through a single property and doesn't clutter the owner object's interface.
+    /* Helper object that implements a network communication `api` on behalf of a particular `target` object
+       and its remote counterpart. Typically, instantiated as a .net property of the target, so that the entire
+       network-related interface is accessible through a single property and doesn't clutter the target's own interface.
      */
 
     static CLIENT = 'client'
     static SERVER = 'server'
 
-    target      // owner (target) object; all the network operations are reflected in the `target` or its remote counterpart
-    role        // current network role of the `target`; typically 'client' or 'server'
+    target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
+    role        // current network role of the `target`; typically, 'client' or 'server'
     api         // network API to be used for the `target`
 
     constructor(target, role, api) {
