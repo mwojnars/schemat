@@ -123,9 +123,9 @@ export class InternalProtocol extends Protocol {
 }
 
 export class HttpProtocol extends Protocol {
-    /* General-purpose HTTP protocol. Does not interpret input/output data in any way; the action function
-       uses `req` and `res` objects directly, and it is also responsible for error handling.
-       invoke() returns response body as a raw string. This protocol only accepts one action per endpoint.
+    /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
+       should use `req` and `res` objects directly, and it is also responsible for error handling.
+       invoke() returns response body as a raw string.
      */
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
@@ -236,41 +236,40 @@ export class JsonProtocol extends HttpProtocol {
 }
 
 export class ActionsProtocol extends JsonProtocol {
-    /* JSON-based communication over HTTP POST that handles multiple actions.
-       The server interprets req.body as a JSON string of the form {action, args}
-       and calls the action indicated by the `action` name. If the function completes correctly, its `result` is sent
-       as a JSON-serialized object ; otherwise, if an exception (`error`) was caught,
-       it's sent as a JSON-serialized object of the form: {error}.
+    /* JSON-based communication over HTTP POST that handles multiple actions on a single endpoint.
+       The server interprets req.body as a JSON string of the form {action, args} and calls the action indicated
+       by the `action` name. If the function completes correctly, its `result` is sent as a JSON-serialized object;
+       otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
      */
 
-    actions                 // {name: action_function}, specification of actions supported by this protocol
+    actions                 // {name: function}, specification of actions supported by this service
 
     constructor(actions = {}, opts = {}) {
         super(null, opts)
         this.actions = actions
     }
 
-    merge(protocol) {
-        /* If `protocol` is of the exact same class as self, merge actions of both protocols, otherwise return `protocol`.
-           The `opts` in both protocols must be exactly THE SAME, otherwise the actions from one protocol could not
+    merge(service) {
+        /* If `service` is of the exact same class as self, merge actions of both services, otherwise return `service`.
+           The `opts` in both services must be exactly THE SAME, otherwise the actions from one service could not
            work properly with the options from another one.
          */
 
         let c1 = T.getClass(this)
-        let c2 = T.getClass(protocol)
-        if (c1 !== c2) throw new Error(`overriding ActionsProtocol instance with a different protocol (${c2}) is not allowed`)
-        // if (c1 !== c2) return protocol          // `protocol` can be null
-        assert(this.endpoint === protocol.endpoint, this.endpoint, protocol.endpoint)
+        let c2 = T.getClass(service)
+        if (c1 !== c2) throw new Error(`overriding ActionsProtocol instance with a different service (${c2}) is not allowed`)
+        // if (c1 !== c2) return service          // `service` can be null
+        assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
 
         // check that the options are the same
         let opts1 = JSON.stringify(this.opts)
-        let opts2 = JSON.stringify(protocol.opts)
+        let opts2 = JSON.stringify(service.opts)
         if (opts1 !== opts2)
-            throw new Error(`cannot merge protocols that have different options: ${opts1} != ${opts2}`)
+            throw new Error(`cannot merge services that have different options: ${opts1} != ${opts2}`)
 
-        // create a new protocol instance with `actions` combined; copy the endpoint
-        let actions = {...this.actions, ...protocol.actions}
-        let opts = {...this.opts, ...protocol.opts}
+        // create a new service instance with `actions` combined; copy the endpoint
+        let actions = {...this.actions, ...service.actions}
+        let opts = {...this.opts, ...service.opts}
         let merged = new c1(actions, opts)
         merged.bindAt(this.endpoint)
 
@@ -282,6 +281,8 @@ export class ActionsProtocol extends JsonProtocol {
         if (!func) throw new NotFound(`unknown action: '${action}'`)
         return func.call(target, ctx, ...args)
     }
+
+    // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
 }
 
 /**********************************************************************************************************************/
@@ -307,9 +308,9 @@ export class API {
     }
 
     add(services) {
-        /* Add `services` dict to `this.services`. If an endpoint already exists its protocol gets merged with the new
-           protocol instance (e.g., actions of both protocols are combined), or replaced if a given protocol class
-           doesn't implement merge(). If protocol==null in `services`, the endpoint is removed from `this`.
+        /* Add `services` dict to `this.services`. If an endpoint already exists its service gets merged with the new
+           service instance (e.g., functionality of both services is combined), or replaced if a given service class
+           doesn't implement merge(). If service==null in `services`, the endpoint is removed from the API.
          */
         for (let [endpoint, service] of Object.entries(services))
             if (service == null) delete this.services[endpoint]
@@ -325,15 +326,11 @@ export class API {
     }
 }
 
-/* action protocols:
-   ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
-*/
-
 /**********************************************************************************************************************/
 
-export class NetworkAgent {
-    /* Helper object that implements a network communication `api` on behalf of a particular `target` object
-       and its remote counterpart. Typically, instantiated as a .net property of the target, so that the entire
+export class NetworkAgent {     // API_Adapter
+    /* Connector between a network API and a target object; it calls an `api` on behalf of the `target` object
+       and its remote counterpart. Typically, this class is instantiated as a .net property of the target, so the entire
        network-related interface is accessible through a single property and doesn't clutter the target's own interface.
      */
 
