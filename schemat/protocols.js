@@ -226,16 +226,16 @@ export class TaskService extends JsonService {
        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
      */
 
-    actions                 // {name: function}, specification of actions supported by this service
+    tasks                 // tasks supported by this service, as {name: function} pairs
 
-    constructor(actions = {}, opts = {}) {
+    constructor(tasks = {}, opts = {}) {
         super(null, opts)
-        this.actions = actions
+        this.tasks = tasks
     }
 
     merge(service) {
-        /* If `service` is of the exact same class as self, merge actions of both services, otherwise return `service`.
-           The `opts` in both services must be exactly THE SAME, otherwise the actions from one service could not
+        /* If `service` is of the exact same class as self, merge tasks of both services, otherwise return `service`.
+           The `opts` in both services must be exactly THE SAME, otherwise the tasks from one service could not
            work properly with the options from another one.
          */
 
@@ -251,18 +251,18 @@ export class TaskService extends JsonService {
         if (opts1 !== opts2)
             throw new Error(`cannot merge services that have different options: ${opts1} != ${opts2}`)
 
-        // create a new service instance with `actions` combined; copy the endpoint
-        let actions = {...this.actions, ...service.actions}
+        // create a new service instance with the tasks combined; copy the endpoint
+        let tasks = {...this.tasks, ...service.tasks}
         let opts = {...this.opts, ...service.opts}
-        let merged = new c1(actions, opts)
+        let merged = new c1(tasks, opts)
         merged.bindAt(this.endpoint)
 
         return merged
     }
 
-    execute(target, ctx, action, ...args) {
-        let func = this.actions[action]
-        if (!func) throw new NotFound(`unknown action: '${action}'`)
+    execute(target, ctx, task, ...args) {
+        let func = this.tasks[task]
+        if (!func) throw new NotFound(`unknown task name: '${task}'`)
         return func.call(target, ctx, ...args)
     }
 
