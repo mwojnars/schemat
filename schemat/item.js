@@ -1076,8 +1076,8 @@ Item.handlers = {
 }
 
 
-// When action functions (below) are called, `this` is always bound to the Item instance, so actions execute
-// in the context of their item, like if they were regular methods of the Item (sub)class.
+// When service functions (below) are called, `this` is always bound to the Item instance, so they execute
+// in the context of their item like if they were regular methods of the Item (sub)class.
 // The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
 // of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
 // `ctx` is {}, which can be a valid argument for some actions - supporting this type

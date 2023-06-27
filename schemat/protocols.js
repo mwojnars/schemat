@@ -2,9 +2,8 @@ import { print, assert, T } from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
 import { JSONx } from './serialize.js'
 
-
-export class Protocol {
-    /* Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
+/*
+       Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
        side and on the client side - exposing THE SAME API (methods) in both environments - that need to communicate
        transparently between their "client" and "server" copies while providing an appropriate (different) internal
        implementation depending on whether they are called on the server or on the client.
@@ -17,26 +16,50 @@ export class Protocol {
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
        through the serve() method when a network request arrives. The protocol may also consist
        of remote() implementation that performs RPC calls from a client to the server-side serve() method.
-       Each action function is executed in the context of an agent (`this` is set to the agent object).
+       Each action function is executed in the context of an target (`this` is set to the target object).
+ */
 
-       A function ("service") that gets called when a request arrives at a given network `endpoint`.
-       A protocol can be instantiated on the server side or client side, and it provides methods for
-       either executing this command server-side (execute()) or submitting a remote RPC request from a client.
+export class Service {
+    /* A Service is a server-side function that is exposed on a particular network `endpoint`
+       and can be called directly on the server (with execute()) or remotely from a client (remote()).
+       The function is always called in a context of a given "target" object (`this` is bound to this object),
+       so the function behaves like a method of this object. Typically, the target is an Item
+       that's instantiated both on the server and on the client side.
 
-       A Protocol is a function ("service") that is called when a request arrives at a given network `endpoint`.
-       The service can also be called directly on the server side, in which case the `ctx` argument is {}.
+       in a context of a given "target" object - so the function behaves like a "method" of the target object
+       (the object being instantiated either server-side or client-side).
 
-       plus a few methods to execute this command server-side or to submit a remote RPC request from a client.
-       Protocol classes can be instantiated on the server side or client side.
+       with the added benefit that this "method" can be called remotely from a client, and it will transparently
+       communicate with its server-side counterpart over the network when needed.
+
+       Typically, the target is an Item that's instantiated both on the server and on the client side.
+
+       Service class provides a common interface to call a service function in both contexts, and it also provides
+       a way to define a "remote method" on a target object that will transparently call the service function.
+     */
+}
+
+export class Protocol {
+    /* A `service` function that gets called within a specific network context, `ctx`, whenever a request arrives
+       at a given network `endpoint`. A Protocol class defines how the arguments for the function are extracted
+       from the request and how the result is encoded and returned.
+
+       A protocol can be instantiated on the server side or client side, and it provides methods for both:
+       submitting a remote RPC request from a client (remote()); handling the RPC request server-side (serve());
+       or directly invoking the service server-side (execute()).
+
+       When the service function is called, its `this` is bound to a supplied "target" object, so the function behaves
+       like a method of the "target", with the added benefit of being able to communicate transparently with its
+       server-side instance over the network when needed.
      */
 
-    endpoint        // the endpoint (string) where this protocol instance is bound to; typically has the form of
+    endpoint        // the endpoint (string) where this protocol instance is bound to; typically it has the form of
                     // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA...; the name may be a command name,
                     // a Kafka topic name, etc.
 
     service         // a function, f(ctx, ...args), to be called when the protocol is invoked;
-                    // inside the call, `this` is bound to the owner object of the protocol (!), so the function behaves
-                    // like a method of the owner; `ctx` is a RequestContext, or {} in the case when an action
+                    // inside the call, `this` is bound to a supplied "target" object, so the function behaves
+                    // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
@@ -70,22 +93,22 @@ export class Protocol {
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
-    remote(agent, action, ...args) {
+    remote(target, action, ...args) {
         /* Subclasses should override remote() method to encode `args` in a protocol-specific way. */
         throw new Error(`client-side call not allowed for this protocol`)
     }
 
-    serve(agent, ctx) {
+    serve(target, ctx) {
         /* Subclasses should override serve() method to decode arguments for execute() in a protocol-specific way. */
         throw new Error(`missing server-side implementation for the protocol, serve()`)
     }
 
-    execute(agent, ctx, ...args) {
+    execute(target, ctx, ...args) {
         /* The actual execution of the service function, server-side, without pre- & post-processing of web requests/responses.
            Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
            if only the service function supports this.
          */
-        return this.service.call(agent, ctx, ...args)
+        return this.service.call(target, ctx, ...args)
     }
 }
 
@@ -93,7 +116,7 @@ export class InternalProtocol extends Protocol {
     /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
        but executed server-side (exclusively).
      */
-    serve(agent, ctx)  { return this.execute(agent, ctx) }
+    serve(target, ctx)  { return this.execute(target, ctx) }
 }
 
 export class HttpProtocol extends Protocol {
@@ -103,13 +126,13 @@ export class HttpProtocol extends Protocol {
      */
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
-    async remote(agent, action, ...args) {
-        let url = agent.url(this.endpoint_name)
-        let res = await fetch(url)                  // client-side JS Response object
+    async remote(target, action, ...args) {
+        let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
+        let res = await fetch(url)                      // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    serve(agent, ctx)  { return this.execute(agent, ctx) }
+    serve(target, ctx)  { return this.execute(target, ctx) }
 }
 
 
@@ -139,9 +162,9 @@ export class JsonProtocol extends HttpProtocol {
         encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
-    async remote(agent, ...args) {
+    async remote(target, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url = agent.url(this.endpoint_name)
+        let url = target.url(this.endpoint_name)
         let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
 
@@ -171,7 +194,7 @@ export class JsonProtocol extends HttpProtocol {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async serve(agent, ctx) {
+    async serve(target, ctx) {
         /* Server-side request handler for execution of an RPC call or a regular web request from a browser.
            The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
@@ -188,7 +211,7 @@ export class JsonProtocol extends HttpProtocol {
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
             if (this.opts.encodeArgs) args = JSONx.decode(args)
 
-            out = this.execute(agent, ctx, ...args)
+            out = this.execute(target, ctx, ...args)
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}
@@ -218,7 +241,7 @@ export class ActionsProtocol extends JsonProtocol {
        it's sent as a JSON-serialized object of the form: {error}.
      */
 
-    actions                 // {name: action_function}, specification of actions handled by this protocol
+    actions                 // {name: action_function}, specification of actions supported by this protocol
 
     constructor(actions = {}, opts = {}) {
         super(null, opts)
@@ -252,10 +275,10 @@ export class ActionsProtocol extends JsonProtocol {
         return merged
     }
 
-    execute(agent, ctx, action, ...args) {
+    execute(target, ctx, action, ...args) {
         let func = this.actions[action]
         if (!func) throw new NotFound(`unknown action: '${action}'`)
-        return func.call(agent, ctx, ...args)
+        return func.call(target, ctx, ...args)
     }
 }
 
@@ -308,7 +331,7 @@ export class API {
 export class NetworkAgent {
     /* Helper object that performs network communication on behalf of another object (owner, `target`)
        and its remote counterpart. Typically, instantiated as a .net property of the owner, so that the entire
-       network-related interface is accessible through a single property and doesn't clutter the owner's JS API.
+       network-related interface is accessible through a single property and doesn't clutter the owner object's interface.
      */
 
     static CLIENT = 'client'
@@ -338,12 +361,12 @@ export class NetworkAgent {
             if (name in actions) throw new Error(`duplicate action name: '${name}'`)
             // if (typeof spec === 'string') spec = [spec]
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
-            let handler = this.resolve(endpoint)
-            if (!handler) throw new Error(`undeclared API endpoint: '${endpoint}'`)
+            let service = this.resolve(endpoint)
+            if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
 
             actions[name] = serverSide
-                ? (...args) => handler.execute(target, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => handler.remote(target, ...fixed, ...args)          // may return a Promise
+                ? (...args) => service.execute(target, {}, ...fixed, ...args)     // may return a Promise
+                : (...args) => service.remote(target, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
 
