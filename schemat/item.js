@@ -7,7 +7,7 @@ import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import {HttpProtocol, JsonProtocol, API, ActionsProtocol, InternalProtocol, NetworkAgent} from "./protocols.js"
+import {HttpService, JsonService, API, ActionsService, InternalService, NetworkAgent} from "./protocols.js"
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -1090,12 +1090,12 @@ Item.createAPI(
         // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
         // 'GET/item':  new HtmlPage({title: '', assets: '', body: ''}),
 
-        'CALL/default': new InternalProtocol(function() { return this }),
-        'CALL/item':    new InternalProtocol(function() { return this }),
-        'GET/json':     new JsonProtocol(function() { return this.recordEncoded() }),
+        'CALL/default': new InternalService(function() { return this }),
+        'CALL/item':    new InternalService(function() { return this }),
+        'GET/json':     new JsonService(function() { return this.recordEncoded() }),
 
         // internal actions called by UI
-        'POST/action':  new ActionsProtocol({
+        'POST/action':  new ActionsService({
 
             delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1426,7 +1426,7 @@ Category.createAPI(
     {
         // http endpoints...
 
-        'GET/import':   new HttpProtocol(function ({request, res})
+        'GET/import':   new HttpService(function ({request, res})
         {
             /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
             this._checkPath(request)
@@ -1434,7 +1434,7 @@ Category.createAPI(
             res.send(this.getSource())
         }),
 
-        'GET/scan':     new HttpProtocol(async function ({res})
+        'GET/scan':     new HttpService(async function ({res})
         {
             /* Retrieve all children of this category and send to client as a JSON array.
                TODO: set a size limit & offset (pagination).
@@ -1449,7 +1449,7 @@ Category.createAPI(
             res.json(records)
         }),
 
-        'POST/action':  new ActionsProtocol({
+        'POST/action':  new ActionsService({
             async create_item(ctx, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)

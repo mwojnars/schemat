@@ -1,6 +1,6 @@
 import { print, assert, T } from './utils.js'
 import { Category, Handler, Item, Request } from './item.js'
-import { API, HttpProtocol, InternalProtocol } from "./protocols.js";
+import { API, HttpService, InternalService } from "./protocols.js";
 
 /**********************************************************************************************************************/
 
@@ -338,7 +338,7 @@ export class File extends Item {
 
 File.createAPI({        // endpoints...
 
-    'CALL/text':    new InternalProtocol(function ({request})
+    'CALL/text':    new InternalService(function ({request})
     {
         /* Plain text of this File for Site.import() etc. */
         let txt = this.read()
@@ -346,7 +346,7 @@ File.createAPI({        // endpoints...
         return txt
     }),
 
-    'GET/file':     new HttpProtocol(function ({res, request})
+    'GET/file':     new HttpService(function ({res, request})
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(res, request.pathFull)

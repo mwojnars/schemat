@@ -103,14 +103,14 @@ export class Service {
     }
 }
 
-export class InternalProtocol extends Service {
+export class InternalService extends Service {
     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
        defined as SUN routing paths but executed server-side exclusively.
      */
     handle(target, ctx)  { return this.execute(target, ctx) }
 }
 
-export class HttpProtocol extends Service {
+export class HttpService extends Service {
     /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        invoke() returns response body as a raw string.
@@ -129,7 +129,7 @@ export class HttpProtocol extends Service {
 
 /**********************************************************************************************************************/
 
-export class HtmlPage extends HttpProtocol {
+export class HtmlPage extends HttpService {
     /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via invoke().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
@@ -141,7 +141,7 @@ export class ReactPage extends HtmlPage {
 
 /*************************************************************************************************/
 
-export class JsonProtocol extends HttpProtocol {
+export class JsonService extends HttpService {
     /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
        Both the arguments of an RPC call and its result are encoded through JSON.
        The standard JSON object is used here, *not* JSONx, so if you expect to transfer more complex Schemat-native
@@ -222,8 +222,8 @@ export class JsonProtocol extends HttpProtocol {
     }
 }
 
-export class ActionsProtocol extends JsonProtocol {
-    /* JSON-based communication over HTTP POST that handles multiple actions on a single endpoint.
+export class ActionsService extends JsonService {
+    /* JSON-based service over HTTP POST that handles multiple functions (actions) on a single endpoint.
        The server interprets req.body as a JSON string of the form {action, args} and calls the action indicated
        by the `action` name. If the function completes correctly, its `result` is sent as a JSON-serialized object;
        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
@@ -244,7 +244,7 @@ export class ActionsProtocol extends JsonProtocol {
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(service)
-        if (c1 !== c2) throw new Error(`overriding ActionsProtocol instance with a different service (${c2}) is not allowed`)
+        if (c1 !== c2) throw new Error(`overriding ActionsService instance with a different service (${c2}) is not allowed`)
         // if (c1 !== c2) return service          // `service` can be null
         assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
 
