@@ -19,8 +19,14 @@ export class Protocol {
        of remote() implementation that performs RPC calls from a client to the server-side serve() method.
        Each action function is executed in the context of an agent (`this` is set to the agent object).
 
-       A Protocol is a function (`command`) that is called when a request arrives at a given `endpoint`,
-       plus a few methods to execute this command server-side, or to submit a remote RPC request from a client.
+       A function ("service") that gets called when a request arrives at a given network `endpoint`.
+       A protocol can be instantiated on the server side or client side, and it provides methods for
+       either executing this command server-side (execute()) or submitting a remote RPC request from a client.
+
+       A Protocol is a function ("service") that is called when a request arrives at a given network `endpoint`.
+       The service can also be called directly on the server side, in which case the `ctx` argument is {}.
+
+       plus a few methods to execute this command server-side or to submit a remote RPC request from a client.
        Protocol classes can be instantiated on the server side or client side.
      */
 
@@ -28,10 +34,8 @@ export class Protocol {
                     // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA...; the name may be a command name,
                     // a Kafka topic name, etc.
 
-    function        // the function, f(ctx, ...args), to be called when the protocol is invoked
-
-    action          // action(ctx, ...args) function to be called when the protocol is invoked;
-                    // inside the call, `this` is bound to the owner object of the protocol, so the action behaves
+    service         // a function, f(ctx, ...args), to be called when the protocol is invoked;
+                    // inside the call, `this` is bound to the owner object of the protocol (!), so the function behaves
                     // like a method of the owner; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
@@ -43,8 +47,8 @@ export class Protocol {
     get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
-    constructor(action = null, opts = {}) {
-        this.action = action
+    constructor(service = null, opts = {}) {
+        this.service = service
         this.opts = {...this.constructor.opts, ...opts}
     }
 
@@ -77,11 +81,11 @@ export class Protocol {
     }
 
     execute(agent, ctx, ...args) {
-        /* The actual execution of an action server-side, without pre- & post-processing of web requests/responses.
+        /* The actual execution of the service function, server-side, without pre- & post-processing of web requests/responses.
            Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
-           if only the action function supports this.
+           if only the service function supports this.
          */
-        return this.action.call(agent, ctx, ...args)
+        return this.service.call(agent, ctx, ...args)
     }
 }
 
