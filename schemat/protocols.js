@@ -15,26 +15,30 @@ import { JSONx } from './serialize.js'
 
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
        through the serve() method when a network request arrives. The protocol may also consist
-       of remote() implementation that performs RPC calls from a client to the server-side serve() method.
+       of invoke() implementation that performs RPC calls from a client to the server-side serve() method.
        Each action function is executed in the context of an target (`this` is set to the target object).
  */
 
 export class Service {
     /*
-       A Service consists of any server-side functionality that is exposed on a particular network `endpoint`
-       and can be invoked directly on the server (with execute()), remotely through a web request
-       (that triggers serve()), or through an RPC call from a client (by calling remote() on the client).
+       A Service is any server-side functionality (like a `service` function) that's exposed on a particular (fixed)
+       `endpoint` of a group of "target objects" and can be invoked in a context of a selected `target` object:
+       directly on the server (with execute()), remotely through a web request (that triggers serve()),
+       or through an RPC call from a client (invoke()).
 
        The service's functionality - represented by a `service` function by default - is always called in a context
-       of a "target" object (`this` = target), usually an item, so the function behaves like a method of this object.
-       Typically, two copies of the same object are present: on the server and on the client, which communicate
-       with each other using the same type of Service instance.
-
+       of a `target` object (`this` is set to `target`), so the function behaves like a method of this object.
+       Typically, two copies of the target object are present: on the server and on the client,
+       which communicate with each other through their corresponding instances of the same Service.
        Instead of exposing a single function, `service`, subclasses may implement a more complex protocol and,
-       for instance, accept multiple different commands on the same endpoint.
+       for instance, accept multiple different commands (actions) on the same endpoint.
 
-       In some cases, 2+ services (usually of the same type) may be merged together (merge()) to create a new
-       service that combines the functionality of the original ones.
+       The target object is typically an Item (although this is not a strict requirement), and it may change between
+       invocations of the Service's methods. Multiple services are usually combined into an API (see the API class)
+       that can be linked through NetworkAgent wrappers to a number of different target objects.
+
+       In some cases, during building an API, 2+ services (usually of the same type) may be merged together (merge())
+       to create a new service that combines the functionality of the original services.
      */
 }
 
@@ -44,12 +48,8 @@ export class Protocol {
        from the request and how the result is encoded and returned.
 
        A protocol can be instantiated on the server side or client side, and it provides methods for both:
-       submitting a remote RPC request from a client (remote()); handling the RPC request server-side (serve());
+       submitting a remote RPC request from a client (invoke()); handling the RPC request server-side (serve());
        or directly invoking the service server-side (execute()).
-
-       When the service function is called, its `this` is bound to a supplied "target" object, so the function behaves
-       like a method of the "target", with the added benefit of being able to communicate transparently with its
-       server-side instance over the network when needed.
      */
 
     endpoint        // the endpoint (string) where this service is exposed; typically it has the form of
@@ -82,23 +82,28 @@ export class Protocol {
         return parts
     }
 
-    merge(protocol) {
-        /* Create a protocol that combines this one and `protocol`. By default, `protocol` is returned unchanged,
-           so that redefining a protocol in a subclass means *overriding* the previous protocol with a new one (no merging).
+    merge(service) {
+        /* Create a Service that combines this one and `service`. By default, the new `service` is returned,
+           so redefining a service in an API means *overriding* the previous one with a new one (no merging).
          */
-        return protocol
+        return service
     }
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
-    remote(target, action, ...args) {
-        /* Subclasses should override remote() method to encode `args` in a protocol-specific way. */
-        throw new Error(`client-side call not allowed for this protocol`)
+    invoke(target, ...args) {
+        /* Client-side explicit remote invocation (RPC) of the service through a network request
+           to be handled on the server by the serve() method (see below).
+           Subclasses should override this method to encode arguments in a service-specific way.
+         */
+        throw new Error(`client-side invocation not allowed for this service`)
     }
 
     serve(target, ctx) {
-        /* Subclasses should override serve() method to decode arguments for execute() in a protocol-specific way. */
-        throw new Error(`missing server-side implementation for the protocol, serve()`)
+        /* Server-side request handler for the execution of an RPC call (from invoke()) or a regular web request
+           (from a browser). Subclasses should override this method to decode arguments in a service-specific way. 
+         */
+        throw new Error(`missing server-side request handler, serve(), for the service`)
     }
 
     execute(target, ctx, ...args) {
@@ -120,11 +125,11 @@ export class InternalProtocol extends Protocol {
 export class HttpProtocol extends Protocol {
     /* General-purpose HTTP protocol. Does not interpret input/output data in any way; the action function
        uses `req` and `res` objects directly, and it is also responsible for error handling.
-       remote() returns response body as a raw string. This protocol only accepts one action per endpoint.
+       invoke() returns response body as a raw string. This protocol only accepts one action per endpoint.
      */
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
-    async remote(target, action, ...args) {
+    async invoke(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let res = await fetch(url)                      // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
@@ -137,7 +142,7 @@ export class HttpProtocol extends Protocol {
 /**********************************************************************************************************************/
 
 export class HtmlPage extends HttpProtocol {
-    /* Sends an HTML page in response to a browser-invoked web request. No internal calls via remote().
+    /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via invoke().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
 }
@@ -160,8 +165,7 @@ export class JsonProtocol extends HttpProtocol {
         encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
-    async remote(target, ...args) {
-        /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
+    async invoke(target, ...args) {
         let url = target.url(this.endpoint_name)
         let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
@@ -289,7 +293,7 @@ export class API {
        but this is configured separately when creating a NetworkAgent.
      */
 
-    services = {}       // {METHOD/name: protocol_instance}, where METHOD is an access method (GET/POST/CALL)
+    services = {}       // {METHOD/name: service}, where METHOD is an access method (GET/POST/CALL)
 
     constructor(parents = [], services = {}) {
         // this.environment = environment
@@ -365,7 +369,7 @@ export class NetworkAgent {
 
             actions[name] = serverSide
                 ? (...args) => service.execute(target, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => service.remote(target, ...fixed, ...args)          // may return a Promise
+                : (...args) => service.invoke(target, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
 
@@ -406,7 +410,7 @@ export class NetworkAgent {
 //     _rpc(endpoint, ...args) {
 //         let protocol = this.constructor._api.get(endpoint)
 //         if (this._side === 'client')
-//             return protocol.remote(this, ...args)
+//             return protocol.invoke(this, ...args)
 //         return protocol.execute(this, {}, ...args)
 //     }
 //
