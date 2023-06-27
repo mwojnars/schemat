@@ -18,15 +18,21 @@ export class Protocol {
        through the serve() method when a network request arrives. The protocol may also consist
        of remote() implementation that performs RPC calls from a client to the server-side serve() method.
        Each action function is executed in the context of an agent (`this` is set to the agent object).
+
+       A Protocol is a function (`command`) that is called when a request arrives at a given `endpoint`,
+       plus a few methods to execute this command server-side, or to submit a remote RPC request from a client.
+       Protocol classes can be instantiated on the server side or client side.
      */
 
-    address         // protocol-specific string that identifies the connection; typically, for HTTP, has the form of
-                    // "METHOD/path...", where METHOD is one of GET/POST/CALL/KAFKA...; the path is typically
-                    // a command name, but may be a Kafka topic name, etc.
+    endpoint        // the endpoint (string) where this protocol instance is bound to; typically has the form of
+                    // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA...; the name may be a command name,
+                    // a Kafka topic name, etc.
+
+    function        // the function, f(ctx, ...args), to be called when the protocol is invoked
 
     action          // action(ctx, ...args) function to be called when the protocol is invoked;
-                    // inside the call, `this` is bound to the owner agent of the protocol, so the action behaves
-                    // like a method of the agent; `ctx` is a RequestContext, or {} in the case when an action
+                    // inside the call, `this` is bound to the owner object of the protocol, so the action behaves
+                    // like a method of the owner; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes protocol.execute()
                     // instead of protocol.serve()
 
@@ -35,19 +41,19 @@ export class Protocol {
 
 
     get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
-    get endpoint_path()   { return this._splitEndpoint()[1] }       // name of the function/action to execute
+    get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
     constructor(action = null, opts = {}) {
         this.action = action
         this.opts = {...this.constructor.opts, ...opts}
     }
 
-    bindAt(address) { this.address = address }
+    bindAt(endpoint) { this.endpoint = endpoint }
 
     _splitEndpoint() {
-        assert(this.address, this.address)
-        let parts = this.address.split('/')
-        if (parts.length !== 2) throw new Error(`incorrect address format for a protocol: ${this.address}`)
+        assert(this.endpoint, this.endpoint)
+        let parts = this.endpoint.split('/')
+        if (parts.length !== 2) throw new Error(`incorrect endpoint format for a protocol: ${this.endpoint}`)
         return parts
     }
 
@@ -67,11 +73,11 @@ export class Protocol {
 
     serve(agent, ctx) {
         /* Subclasses should override serve() method to decode arguments for execute() in a protocol-specific way. */
-        throw new Error(`missing server-side implementation for the protocol`)
+        throw new Error(`missing server-side implementation for the protocol, serve()`)
     }
 
     execute(agent, ctx, ...args) {
-        /* The actual execution of an action, without pre- & post-processing of web requests/responses.
+        /* The actual execution of an action server-side, without pre- & post-processing of web requests/responses.
            Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
            if only the action function supports this.
          */
@@ -94,7 +100,7 @@ export class HttpProtocol extends Protocol {
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
     async remote(agent, action, ...args) {
-        let url = agent.url(this.endpoint_path)
+        let url = agent.url(this.endpoint_name)
         let res = await fetch(url)                  // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         return res.text()
@@ -131,7 +137,7 @@ export class JsonProtocol extends HttpProtocol {
 
     async remote(agent, ...args) {
         /* Client-side remote call (RPC) that sends a request to the server to execute an action server-side. */
-        let url = agent.url(this.endpoint_path)
+        let url = agent.url(this.endpoint_name)
         let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
 
@@ -225,7 +231,7 @@ export class ActionsProtocol extends JsonProtocol {
         let c2 = T.getClass(protocol)
         if (c1 !== c2) throw new Error(`overriding ActionsProtocol instance with a different protocol (${c2}) is not allowed`)
         // if (c1 !== c2) return protocol          // `protocol` can be null
-        assert(this.address === protocol.address, this.address, protocol.address)
+        assert(this.endpoint === protocol.endpoint, this.endpoint, protocol.endpoint)
 
         // check that the options are the same
         let opts1 = JSON.stringify(this.opts)
@@ -233,19 +239,19 @@ export class ActionsProtocol extends JsonProtocol {
         if (opts1 !== opts2)
             throw new Error(`cannot merge protocols that have different options: ${opts1} != ${opts2}`)
 
-        // create a new protocol instance with `actions` combined; copy the address
+        // create a new protocol instance with `actions` combined; copy the endpoint
         let actions = {...this.actions, ...protocol.actions}
         let opts = {...this.opts, ...protocol.opts}
         let merged = new c1(actions, opts)
-        merged.bindAt(this.address)
+        merged.bindAt(this.endpoint)
 
         return merged
     }
 
     execute(agent, ctx, action, ...args) {
-        let method = this.actions[action]
-        if (!method) throw new NotFound(`unknown action: '${action}'`)
-        return method.call(agent, ctx, ...args)
+        let func = this.actions[action]
+        if (!func) throw new NotFound(`unknown action: '${action}'`)
+        return func.call(agent, ctx, ...args)
     }
 }
 
@@ -304,8 +310,7 @@ export class NetworkAgent {
     static CLIENT = 'client'
     static SERVER = 'server'
 
-    target      // owner object; all the network operations performed by the agent are reflected
-                // in the `target` or its remote counterpart
+    target      // owner (target) object; all the network operations are reflected in the `target` or its remote counterpart
     role        // current network role of the `target`; typically 'client' or 'server'
     api         // network API to be used for the `target`
 
