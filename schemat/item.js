@@ -7,7 +7,7 @@ import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import {HttpService, JsonService, API, ActionsService, InternalService, NetworkAgent} from "./protocols.js"
+import {HttpService, JsonService, API, TaskService, InternalService, NetworkAgent} from "./protocols.js"
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -1095,7 +1095,7 @@ Item.createAPI(
         'GET/json':     new JsonService(function() { return this.recordEncoded() }),
 
         // internal actions called by UI
-        'POST/action':  new ActionsService({
+        'POST/action':  new TaskService({
 
             delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1449,7 +1449,7 @@ Category.createAPI(
             res.json(records)
         }),
 
-        'POST/action':  new ActionsService({
+        'POST/action':  new TaskService({
             async create_item(ctx, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)

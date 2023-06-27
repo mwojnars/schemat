@@ -142,9 +142,8 @@ export class ReactPage extends HtmlPage {
 /*************************************************************************************************/
 
 export class JsonService extends HttpService {
-    /* JSON-based communication over HTTP POST. A single action is linked to the endpoint.
-       Both the arguments of an RPC call and its result are encoded through JSON.
-       The standard JSON object is used here, *not* JSONx, so if you expect to transfer more complex Schemat-native
+    /* JSON-based communication over HTTP POST: the arguments of an RPC call and its result are encoded as JSON.
+       The standard JSON object is used here, *not* JSONx, so if you want to transfer more complex Schemat-native
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
 
@@ -185,9 +184,7 @@ export class JsonService extends HttpService {
     }
 
     async handle(target, ctx) {
-        /* The request JSON body should be an object {action, args}; `args` is an array (of arguments),
-           or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
-         */
+        /* The request body should be empty or contain a JSON array of arguments: [...args]. */
         let {req, res} = ctx        // req: RequestContext
         let out, ex
         try {
@@ -208,7 +205,7 @@ export class JsonService extends HttpService {
     }
 
     _sendResponse(res, output, error, defaultCode = 500) {
-        /* JSON-encode and send the {output} result of action execution, or an {error} details with a proper
+        /* JSON-encode and send the {output} result of the service execution, or an {error} details with a proper
            HTTP status code if an exception was caught. */
         res.type('json')
         if (error) {
@@ -222,10 +219,10 @@ export class JsonService extends HttpService {
     }
 }
 
-export class ActionsService extends JsonService {
-    /* JSON-based service over HTTP POST that handles multiple functions (actions) on a single endpoint.
-       The server interprets req.body as a JSON string of the form {action, args} and calls the action indicated
-       by the `action` name. If the function completes correctly, its `result` is sent as a JSON-serialized object;
+export class TaskService extends JsonService {
+    /* JSON-based service over HTTP POST that exposes multiple functions ("tasks") on a single endpoint.
+       The server interprets req.body as a JSON array of the form [task-name, ...args].
+       If the function completes correctly, its `result` is sent as a JSON-serialized object;
        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
      */
 
@@ -244,7 +241,7 @@ export class ActionsService extends JsonService {
 
         let c1 = T.getClass(this)
         let c2 = T.getClass(service)
-        if (c1 !== c2) throw new Error(`overriding ActionsService instance with a different service (${c2}) is not allowed`)
+        if (c1 !== c2) throw new Error(`overriding TaskService instance with a different service (${c2}) is not allowed`)
         // if (c1 !== c2) return service          // `service` can be null
         assert(this.endpoint === service.endpoint, this.endpoint, service.endpoint)
 
@@ -275,13 +272,14 @@ export class ActionsService extends JsonService {
 /**********************************************************************************************************************/
 
 export class API {
-    /* A collection of network services exposed on particular endpoints.
+    /* A collection of services exposed on particular endpoints.
+       An API can be linked to a particular target object via NetworkAgent.
 
        Some endpoints may be used additionally to define "actions" (i.e., internal RPC calls),
        but this is configured separately when creating a NetworkAgent.
      */
 
-    services = {}       // {METHOD/name: service}, where METHOD is an access method (GET/POST/CALL)
+    services = {}               // {endpoint: service}
 
     constructor(parents = [], services = {}) {
         // this.environment = environment
