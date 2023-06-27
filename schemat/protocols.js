@@ -20,22 +20,21 @@ import { JSONx } from './serialize.js'
  */
 
 export class Service {
-    /* A Service is a server-side function that is exposed on a particular network `endpoint`
-       and can be called directly on the server (with execute()) or remotely from a client (remote()).
-       The function is always called in a context of a given "target" object (`this` is bound to this object),
-       so the function behaves like a method of this object. Typically, the target is an Item
-       that's instantiated both on the server and on the client side.
+    /*
+       A Service consists of any server-side functionality that is exposed on a particular network `endpoint`
+       and can be invoked directly on the server (with execute()), remotely through a web request
+       (that triggers serve()), or through an RPC call from a client (by calling remote() on the client).
 
-       in a context of a given "target" object - so the function behaves like a "method" of the target object
-       (the object being instantiated either server-side or client-side).
+       The service's functionality - represented by a `service` function by default - is always called in a context
+       of a "target" object (`this` = target), usually an item, so the function behaves like a method of this object.
+       Typically, two copies of the same object are present: on the server and on the client, which communicate
+       with each other using the same type of Service instance.
 
-       with the added benefit that this "method" can be called remotely from a client, and it will transparently
-       communicate with its server-side counterpart over the network when needed.
+       Instead of exposing a single function, `service`, subclasses may implement a more complex protocol and,
+       for instance, accept multiple different commands on the same endpoint.
 
-       Typically, the target is an Item that's instantiated both on the server and on the client side.
-
-       Service class provides a common interface to call a service function in both contexts, and it also provides
-       a way to define a "remote method" on a target object that will transparently call the service function.
+       In some cases, 2+ services (usually of the same type) may be merged together (merge()) to create a new
+       service that combines the functionality of the original ones.
      */
 }
 
@@ -53,17 +52,16 @@ export class Protocol {
        server-side instance over the network when needed.
      */
 
-    endpoint        // the endpoint (string) where this protocol instance is bound to; typically it has the form of
+    endpoint        // the endpoint (string) where this service is exposed; typically it has the form of
                     // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA...; the name may be a command name,
                     // a Kafka topic name, etc.
 
     service         // a function, f(ctx, ...args), to be called when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                     // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
-                    // is called directly on the server through item.action.XXX() which invokes protocol.execute()
-                    // instead of protocol.serve()
+                    // is called directly on the server through item.action.XXX() which invokes execute() instead of serve()
 
-    opts = {}           // configuration options of this protocol instance
+    opts = {}           // configuration options
     static opts = {}    // default values of configuration options
 
 
@@ -80,7 +78,7 @@ export class Protocol {
     _splitEndpoint() {
         assert(this.endpoint, this.endpoint)
         let parts = this.endpoint.split('/')
-        if (parts.length !== 2) throw new Error(`incorrect endpoint format for a protocol: ${this.endpoint}`)
+        if (parts.length !== 2) throw new Error(`incorrect endpoint format: ${this.endpoint}`)
         return parts
     }
 

@@ -891,8 +891,8 @@ export class Item {
         for (let endpoint of endpoints) {
             let context = new RequestContext({request, req, res, endpoint, item: this})
 
-            let handler = this.net.resolve(`${httpMethod}/${endpoint}`)
-            if (handler) return handler.serve(this, context)
+            let service = this.net.resolve(`${httpMethod}/${endpoint}`)
+            if (service) return service.serve(this, context)
 
             let handler2 = this.getHandlers()[endpoint]             // TODO: legacy, use Protocols and API instead
             if (handler2) return handler2.run({...context, handler: handler2})
