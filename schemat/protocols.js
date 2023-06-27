@@ -14,22 +14,21 @@ import { JSONx } from './serialize.js'
        other JS objects that need to communicate with their own dual instances over the network.
 
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
-       through the serve() method when a network request arrives. The protocol may also consist
-       of invoke() implementation that performs RPC calls from a client to the server-side serve() method.
+       through the handle() method when a network request arrives. The protocol may also consist
+       of invoke() implementation that performs RPC calls from a client to the server-side handle() method.
        Each action function is executed in the context of an target (`this` is set to the target object).
  */
 
 export class Service {
     /*
-       A Service is any server-side functionality (like a `service` function) that's exposed on a particular (fixed)
-       `endpoint` of a group of "target objects" and can be invoked in a context of a selected `target` object:
-       directly on the server (with execute()), remotely through a web request (that triggers serve()),
-       or through an RPC call from a client (invoke()).
+       A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
+       of objects and can be invoked in a context of a `target` object: directly on the server (with execute()),
+       remotely through a web request (that triggers handle()), or through an RPC call from a client (invoke()).
 
-       The service's functionality - represented by a `service` function by default - is always called in a context
-       of a `target` object (`this` is set to `target`), so the function behaves like a method of this object.
-       Typically, two copies of the target object are present: on the server and on the client,
-       which communicate with each other through their corresponding instances of the same Service.
+       The service's functionality - represented by a `service` function by default - is called in a context
+       of a `target` object (this = target), so the function behaves like a method of this object.
+       Typically, two copies of the target object are present: one on the server and another one on the client,
+       and they communicate with each other through their corresponding instances of the Service.
        Instead of exposing a single function, `service`, subclasses may implement a more complex protocol and,
        for instance, accept multiple different commands (actions) on the same endpoint.
 
@@ -40,26 +39,15 @@ export class Service {
        In some cases, during building an API, 2+ services (usually of the same type) may be merged together (merge())
        to create a new service that combines the functionality of the original services.
      */
-}
 
-export class Protocol {
-    /* A `service` function that gets called within a specific network context, `ctx`, whenever a request arrives
-       at a given network `endpoint`. A Protocol class defines how the arguments for the function are extracted
-       from the request and how the result is encoded and returned.
-
-       A protocol can be instantiated on the server side or client side, and it provides methods for both:
-       submitting a remote RPC request from a client (invoke()); handling the RPC request server-side (serve());
-       or directly invoking the service server-side (execute()).
-     */
-
-    endpoint        // the endpoint (string) where this service is exposed; typically it has the form of
-                    // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA...; the name may be a command name,
+    endpoint        // the target object's endpoint where this service is exposed; typically, a string of the form
+                    // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA..., and the name is a command name,
                     // a Kafka topic name, etc.
 
-    service         // a function, f(ctx, ...args), to be called when the protocol is invoked;
+    service         // a function, f(ctx, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                     // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
-                    // is called directly on the server through item.action.XXX() which invokes execute() instead of serve()
+                    // is called directly on the server through item.action.XXX() which invokes execute() instead of handle()
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -92,18 +80,18 @@ export class Protocol {
     // the methods below may return a Promise or be declared as async in subclasses...
 
     invoke(target, ...args) {
-        /* Client-side explicit remote invocation (RPC) of the service through a network request
-           to be handled on the server by the serve() method (see below).
+        /* Client-side remote invocation (RPC) of the service through a network request
+           to be handled on the server by the handle() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
         throw new Error(`client-side invocation not allowed for this service`)
     }
 
-    serve(target, ctx) {
+    handle(target, ctx) {
         /* Server-side request handler for the execution of an RPC call (from invoke()) or a regular web request
            (from a browser). Subclasses should override this method to decode arguments in a service-specific way. 
          */
-        throw new Error(`missing server-side request handler, serve(), for the service`)
+        throw new Error(`no server-side request handler for the service`)
     }
 
     execute(target, ctx, ...args) {
@@ -115,14 +103,14 @@ export class Protocol {
     }
 }
 
-export class InternalProtocol extends Protocol {
-    /* Protocol for CALL endpoints that handle URL-requests defined as SUN routing paths,
-       but executed server-side (exclusively).
+export class InternalProtocol extends Service {
+    /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
+       defined as SUN routing paths but executed server-side exclusively.
      */
-    serve(target, ctx)  { return this.execute(target, ctx) }
+    handle(target, ctx)  { return this.execute(target, ctx) }
 }
 
-export class HttpProtocol extends Protocol {
+export class HttpProtocol extends Service {
     /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        invoke() returns response body as a raw string.
@@ -135,7 +123,7 @@ export class HttpProtocol extends Protocol {
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    serve(target, ctx)  { return this.execute(target, ctx) }
+    handle(target, ctx)  { return this.execute(target, ctx) }
 }
 
 
@@ -196,9 +184,8 @@ export class JsonProtocol extends HttpProtocol {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async serve(target, ctx) {
-        /* Server-side request handler for execution of an RPC call or a regular web request from a browser.
-           The request JSON body should be an object {action, args}; `args` is an array (of arguments),
+    async handle(target, ctx) {
+        /* The request JSON body should be an object {action, args}; `args` is an array (of arguments),
            or an object, or a primitive value (the single argument); `args` can be an empty array/object, or be missing.
          */
         let {req, res} = ctx        // req: RequestContext

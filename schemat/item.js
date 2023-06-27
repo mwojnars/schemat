@@ -892,7 +892,7 @@ export class Item {
             let context = new RequestContext({request, req, res, endpoint, item: this})
 
             let service = this.net.resolve(`${httpMethod}/${endpoint}`)
-            if (service) return service.serve(this, context)
+            if (service) return service.handle(this, context)
 
             let handler2 = this.getHandlers()[endpoint]             // TODO: legacy, use Protocols and API instead
             if (handler2) return handler2.run({...context, handler: handler2})
