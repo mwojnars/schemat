@@ -311,13 +311,12 @@ export class Network {
        `role` of the target object. ("Network polimorphism", similar to the "method polimorphism" of regular methods.)
 
        Note that, while actions are the only way to perform an outgoing (local or remote) communication through the Network
-       adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of another node),
-       but also from regular web requests initiated by the user's browser, so it still makes sense to declare endpoints
-       that are not used by any action.
+       adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of this or another node),
+       but also from regular web requests initiated by the user's browser, so it still makes sense to have endpoints
+       in the API that are not used by any action.
 
-       In the future, multiple APIs may be supported in a single Network adapter. In such case, the target object
-       may play different roles (client/server) in different APIs, at the same time. Actions will be defined
-       jointly for all APIs.
+       In the future, multiple APIs may be supported in a single Network adapter, with the target object playing
+       different roles (of a client/server) in different APIs, all at the same time. Actions will be defined jointly for all APIs.
      */
 
     static CLIENT = 'client'
@@ -327,20 +326,21 @@ export class Network {
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
 
-    action      // triggers for RPC actions; every action can be called from a server or a client via action.X()
+    action      // triggers for RPC actions; every action can be called from a server or a client via action.X() call
 
     constructor(target, role, api, actions) {
         this.target = target
         this.role = role
         this.api = api
-        this.action = this._createActionTriggers(actions)
+        this.action = this.createActionTriggers(actions)
     }
 
-    _createActionTriggers(actions) {
-        /* Map selected endpoints of the API to action triggers for the target object, {action: trigger}.
+    createActionTriggers(actions) {
+        /* Map selected endpoints of the API to action triggers for the target object and return as {action: trigger}.
            `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
-           where `fixed-args` is a list (possibly empty or incomplete) of the arguments that will be supplied
-           to the endpoint on each action call (dynamic arguments, if any, will be appended during the call).
+           where `fixed-args` is a list (possibly empty or partial) of the arguments that will be passed
+           to the endpoint on each action call; dynamic arguments, if any, will be appended later, during the call.
+           Multiple actions may share the same endpoint, typically with different `fixed-args`.
          */
         let triggers = {}
         let target = this.target
@@ -376,11 +376,6 @@ export class Network {
        implementation depending on whether they are called on the server or on the client.
        A Protocol may also be used to define an object's EXTERNAL API that will be accessible to human users
        or other remote objects over the network.
-
-       A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
-       through the handle() method when a network request arrives. The protocol may also consist
-       of invoke() implementation that performs RPC calls from a client to the server-side handle() method.
-       Each action function is executed in the context of a target (`this` is set to the target object).
  */
 
 
@@ -433,5 +428,4 @@ export class Network {
 //     // }
 //
 //     url(endpoint) {}
-//
 // }

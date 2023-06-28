@@ -421,7 +421,7 @@ export class Item {
                 await category.load()
 
             await this._initClass()                             // set the target JS class on this object; stubs only have Item as their class, which must be changed when the item is loaded and linked to its category
-            this._initAPI()
+            this._initNetwork()
 
             let init = this.init()                              // optional custom initialization after the data is loaded
             if (init instanceof Promise) await init             // must be called BEFORE this.data=data to avoid concurrent async code treat this item as initialized
@@ -472,12 +472,11 @@ export class Item {
         T.setClass(this, await this.getClass() || Item)    // change the actual class of this item from Item to the category's proper class
     }
 
-    _initAPI() {
+    _initNetwork() {
         /* Create a .net agent and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
         this.net = new Network(this, role, this.constructor.api, this.constructor.actions)
         this.action = this.net.action
-        // this.action = this.net._createActionTriggers(this.constructor.actions)
     }
 
     init() {}
@@ -1094,7 +1093,7 @@ Item.createAPI(
         'CALL/item':    new InternalService(function() { return this }),
         'GET/json':     new JsonService(function() { return this.recordEncoded() }),
 
-        // internal actions called by UI
+        // item edit actions for use in the admin interface...
         'POST/action':  new TaskService({
 
             delete_self(ctx)   { return this.registry.delete(this) },
