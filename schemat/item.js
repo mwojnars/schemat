@@ -7,7 +7,7 @@ import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import {HttpService, JsonService, API, TaskService, InternalService, NetworkAgent} from "./protocols.js"
+import {HttpService, JsonService, API, TaskService, InternalService, API_Adapter} from "./protocols.js"
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -319,7 +319,7 @@ export class Item {
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
-    net             // NetworkAgent that implements network API for this item as defined in this.constructor.api
+    net             // API_Adapter that connects this item to its network API as defined in this.constructor.api
     action          // collection of triggers for RPC actions exposed by this item's API;
                     // present server-side and client-side, but with a different implementation of triggers
 
@@ -476,7 +476,7 @@ export class Item {
     _initAPI() {
         /* Create a .net agent and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
-        this.net = new NetworkAgent(this, role, this.constructor.api)
+        this.net = new API_Adapter(this, role, this.constructor.api)
         this.action = this.net.createActions(this.constructor.actions)
     }
 

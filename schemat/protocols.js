@@ -16,7 +16,7 @@ import { JSONx } from './serialize.js'
        A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
        through the handle() method when a network request arrives. The protocol may also consist
        of invoke() implementation that performs RPC calls from a client to the server-side handle() method.
-       Each action function is executed in the context of an target (`this` is set to the target object).
+       Each action function is executed in the context of a target (`this` is set to the target object).
  */
 
 export class Service {
@@ -34,7 +34,7 @@ export class Service {
 
        The target object is typically an Item (although this is not a strict requirement), and it may change between
        invocations of the Service's methods. Multiple services are usually combined into an API (see the API class)
-       that can be linked through NetworkAgent wrappers to a number of different target objects.
+       that can be linked through API_Adapter to a number of different target objects.
 
        In some cases, during building an API, 2+ services (usually of the same type) may be merged together (merge())
        to create a new service that combines the functionality of the original services.
@@ -272,11 +272,10 @@ export class TaskService extends JsonService {
 /**********************************************************************************************************************/
 
 export class API {
-    /* A collection of services exposed on particular endpoints.
-       An API can be linked to a particular target object via NetworkAgent.
+    /* A collection of services exposed on particular endpoints. An API can be linked to target objects via API_Adapter.
 
        Some endpoints may be used additionally to define "actions" (i.e., internal RPC calls),
-       but this is configured separately when creating a NetworkAgent.
+       but this is configured separately when creating a API_Adapter.
      */
 
     services = {}               // {endpoint: service}
@@ -313,7 +312,7 @@ export class API {
 
 /**********************************************************************************************************************/
 
-export class NetworkAgent {     // API_Adapter
+export class API_Adapter {
     /* Connector between a network API and a target object; it calls an `api` on behalf of the `target` object
        and its remote counterpart. Typically, this class is instantiated as a .net property of the target, so the entire
        network-related interface is accessible through a single property and doesn't clutter the target's own interface.
@@ -339,7 +338,7 @@ export class NetworkAgent {     // API_Adapter
          */
         let actions = {}
         let target = this.target
-        let serverSide = (this.role === NetworkAgent.SERVER)
+        let serverSide = (this.role === API_Adapter.SERVER)
 
         // create a trigger for each action and store in `this.action`
         for (let [name, spec] of Object.entries(actions_endpoints)) {
@@ -363,6 +362,7 @@ export class NetworkAgent {     // API_Adapter
         return this.api.resolve(endpoint)
     }
 }
+
 
 // export class NetworkObject {   // RemoteObject NetObject Agent
 //     /* Base class for objects ("agents") that expose an API for external and/or internal calls.
@@ -415,6 +415,3 @@ export class NetworkAgent {     // API_Adapter
 //     url(endpoint) {}
 //
 // }
-
-// item = ItemClass.client()
-// item = ItemClass.server()
