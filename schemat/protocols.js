@@ -2,22 +2,8 @@ import { print, assert, T } from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
 import { JSONx } from './serialize.js'
 
-/*
-       Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
-       side and on the client side - exposing THE SAME API (methods) in both environments - that need to communicate
-       transparently between their "client" and "server" copies while providing an appropriate (different) internal
-       implementation depending on whether they are called on the server or on the client.
-       A Protocol may also be used to define an object's EXTERNAL API that will be accessible to human users
-       or other remote objects over the network.
 
-       Typically, a Protocol is linked to an Item object, but it may also be used for
-       other JS objects that need to communicate with their own dual instances over the network.
-
-       A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
-       through the handle() method when a network request arrives. The protocol may also consist
-       of invoke() implementation that performs RPC calls from a client to the server-side handle() method.
-       Each action function is executed in the context of a target (`this` is set to the target object).
- */
+/**********************************************************************************************************************/
 
 export class Service {
     /*
@@ -34,7 +20,7 @@ export class Service {
 
        The target object is typically an Item (although this is not a strict requirement), and it may change between
        invocations of the Service's methods. Multiple services are usually combined into an API (see the API class)
-       that can be linked through API_Adapter to a number of different target objects.
+       that can be linked through Network adapters to a number of different target objects.
 
        In some cases, during building an API, 2+ services (usually of the same type) may be merged together (merge())
        to create a new service that combines the functionality of the original services.
@@ -272,11 +258,7 @@ export class TaskService extends JsonService {
 /**********************************************************************************************************************/
 
 export class API {
-    /* A collection of services exposed on particular endpoints. An API can be linked to target objects via API_Adapter.
-
-       Some endpoints may be used additionally to define "actions" (i.e., internal RPC calls),
-       but this is configured separately when creating a API_Adapter.
-     */
+    /* A set of Services exposed on particular endpoints. API can be linked to target objects via the Network adapter. */
 
     services = {}               // {endpoint: service}
 
@@ -305,63 +287,101 @@ export class API {
     }
 
     resolve(endpoint) {
-        /* `endpoint` must be a full endpoint string: "method/name". Return undefined if `endpoint` not found. */
+        /* Return the Service instance that's exposed on a given `endpoint`, or undefined if `endpoint` not found. */
         return this.services[endpoint]
     }
 }
 
 /**********************************************************************************************************************/
 
-export class API_Adapter {
-    /* Connector between a network API and a target object; it calls an `api` on behalf of the `target` object
-       and its remote counterpart. Typically, this class is instantiated as a .net property of the target, so the entire
-       network-related interface is accessible through a single property and doesn't clutter the target's own interface.
+export class Network {
+    /*
+       Network interface of a `target` object. Handles incoming communication through resolve(), and outgoing
+       communication through action calls: action.*(). The API exposed on the interface is defined by `api`.
+       Typically, this class is instantiated as a .net property of the target, so the entire network-related
+       functionality is accessible through a single property and doesn't clutter the target's own interface.
+       Typically, a Network adapter is created for an Item object, but it may also be used for other JS objects.
+
+       Certain endpoints of the `api` may be used to define "actions", i.e., internal RPC calls, local or remote, that
+       can be invoked on a server or client alike using the exact same syntax: net.action.X() - the caller does NOT
+       have to check every time whether it plays a role of a client or a server in a given moment, because the action
+       automatically chooses the right way to execute itself (locally or remotely), and is properly performed in both cases.
+       As such, an action can be viewed as a "network method" of the target object: while a regular method always executes
+       locally, a "network method" is smart enough to execute itself remotely if needed, depending on the current
+       `role` of the target object. ("Network polimorphism", similar to the "method polimorphism" of regular methods.)
+
+       Note that, while actions are the only way to perform an outgoing (local or remote) communication through the Network
+       adapter, incoming communication may originate NOT ONLY from actions (of a Network adapter of another node),
+       but also from regular web requests initiated by the user's browser, so it still makes sense to declare endpoints
+       that are not used by any action.
+
+       In the future, multiple APIs may be supported in a single Network adapter. In such case, the target object
+       may play different roles (client/server) in different APIs, at the same time. Actions will be defined
+       jointly for all APIs.
      */
 
     static CLIENT = 'client'
     static SERVER = 'server'
 
     target      // target (owner) object; all the network operations are reflected in the `target` or its remote counterpart
-    role        // current network role of the `target`; typically, 'client' or 'server'
-    api         // network API to be used for the `target`
+    role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
+    api         // API to be exposed on this network interface
 
-    constructor(target, role, api) {
+    action      // triggers for RPC actions; every action can be called from a server or a client via action.X()
+
+    constructor(target, role, api, actions) {
         this.target = target
         this.role = role
         this.api = api
+        this.action = this._createActionTriggers(actions)
     }
 
-    createActions(actions_endpoints) {
-        /* Map selected endpoints of the API to "action" functions for the target object, {action: func}.
-           `actions_endpoints` is a dict of the form: {action: [endpoint, ...params]},
-           where `endpoint` is a full endpoint identifier (incl. access method).
+    _createActionTriggers(actions) {
+        /* Map selected endpoints of the API to action triggers for the target object, {action: trigger}.
+           `actions` is a specification of the form: {action-name: [endpoint, ...fixed-args]},
+           where `fixed-args` is a list (possibly empty or incomplete) of the arguments that will be supplied
+           to the endpoint on each action call (dynamic arguments, if any, will be appended during the call).
          */
-        let actions = {}
+        let triggers = {}
         let target = this.target
-        let serverSide = (this.role === API_Adapter.SERVER)
+        let serverSide = (this.role === Network.SERVER)
 
         // create a trigger for each action and store in `this.action`
-        for (let [name, spec] of Object.entries(actions_endpoints)) {
-            if (name in actions) throw new Error(`duplicate action name: '${name}'`)
+        for (let [name, spec] of Object.entries(actions)) {
+            if (name in triggers) throw new Error(`duplicate action name: '${name}'`)
             // if (typeof spec === 'string') spec = [spec]
             let [endpoint, ...fixed] = spec             // `fixed` are arguments to the call, typically an action name
             let service = this.resolve(endpoint)
             if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
 
-            actions[name] = serverSide
+            triggers[name] = serverSide
                 ? (...args) => service.execute(target, {}, ...fixed, ...args)     // may return a Promise
                 : (...args) => service.invoke(target, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
 
-        return actions
+        return triggers
     }
 
     resolve(endpoint) {
-        /* Resolve `endpoint` to a Protocol instance (a handler). Return undefined if `endpoint` not found. */
+        /* Resolve `endpoint` to a Service instance (a handler). Return undefined if `endpoint` not found. */
         return this.api.resolve(endpoint)
     }
 }
+
+/*
+       Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
+       side and on the client side - exposing THE SAME API (methods) in both environments - that need to communicate
+       transparently between their "client" and "server" copies while providing an appropriate (different) internal
+       implementation depending on whether they are called on the server or on the client.
+       A Protocol may also be used to define an object's EXTERNAL API that will be accessible to human users
+       or other remote objects over the network.
+
+       A protocol is linked to every web endpoint and performs one of the predefined 1+ actions
+       through the handle() method when a network request arrives. The protocol may also consist
+       of invoke() implementation that performs RPC calls from a client to the server-side handle() method.
+       Each action function is executed in the context of a target (`this` is set to the target object).
+ */
 
 
 // export class NetworkObject {   // RemoteObject NetObject Agent
