@@ -7,7 +7,7 @@ import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import {HttpService, JsonService, API, TaskService, InternalService, Network} from "./protocols.js"
+import {HttpService, JsonService, API, TaskService, InternalService, Network} from "./services.js"
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -1126,7 +1126,7 @@ Item.createAPI(
     },
     {
         // actions...
-        // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
+        // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the service
         //'get_json':         ['GET/json'],
         'delete_self':      ['POST/edit', 'delete_self'],
         'insert_field':     ['POST/edit', 'insert_field'],

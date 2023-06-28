@@ -369,15 +369,6 @@ export class Network {
     }
 }
 
-/*
-       Client/server communication protocol for "network objects", i.e., objects that are instantiated both on the server
-       side and on the client side - exposing THE SAME API (methods) in both environments - that need to communicate
-       transparently between their "client" and "server" copies while providing an appropriate (different) internal
-       implementation depending on whether they are called on the server or on the client.
-       A Protocol may also be used to define an object's EXTERNAL API that will be accessible to human users
-       or other remote objects over the network.
- */
-
 
 // export class NetworkObject {   // RemoteObject NetObject Agent
 //     /* Base class for objects ("agents") that expose an API for external and/or internal calls.
