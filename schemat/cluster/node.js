@@ -134,7 +134,7 @@ class Node {
 
     async _build_({path_db_boot}) {
         /* Generate the core system items anew and save. */
-        let {bootstrap} = await import('../server/bootstrap.js')
+        let {bootstrap} = await import('../boot/bootstrap.js')
 
         let ring = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
 

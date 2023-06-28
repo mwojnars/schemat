@@ -5,7 +5,7 @@ import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
-import { root_data } from './server/root.js'
+import { root_data } from './boot/root.js'
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
