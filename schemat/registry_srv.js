@@ -1,8 +1,8 @@
 import { Mutex } from 'async-mutex'
 
-import { assert, print, T } from '../utils.js'
-import { Registry } from '../registry.js'
-import { TotalEdit } from '../db/edits.js'
+import { assert, print, T } from './utils.js'
+import { Registry } from './registry.js'
+import { TotalEdit } from './db/edits.js'
 
 
 /**********************************************************************************************************************

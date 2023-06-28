@@ -11,7 +11,7 @@ import {hideBin} from 'yargs/helpers'
 
 import {T, assert, print} from '../utils.js'
 import {Ring, ServerDB} from "../db/db_srv.js"
-import {ServerRegistry} from "../server/registry-s.js"
+import {ServerRegistry} from "../registry_srv.js"
 import {Item, ROOT_ID} from "../item.js"
 import {WebServer, DataServer} from "./servers.js"
 import {JSONx} from "../serialize.js"
