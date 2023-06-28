@@ -1093,8 +1093,8 @@ Item.createAPI(
         'CALL/item':    new InternalService(function() { return this }),
         'GET/json':     new JsonService(function() { return this.recordEncoded() }),
 
-        // item edit actions for use in the admin interface...
-        'POST/action':  new TaskService({
+        // item's edit actions for use in the admin interface...
+        'POST/edit':  new TaskService({
 
             delete_self(ctx)   { return this.registry.delete(this) },
 
@@ -1128,11 +1128,11 @@ Item.createAPI(
         // actions...
         // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the protocol
         //'get_json':         ['GET/json'],
-        'delete_self':      ['POST/action', 'delete_self'],
-        'insert_field':     ['POST/action', 'insert_field'],
-        'delete_field':     ['POST/action', 'delete_field'],
-        'update_field':     ['POST/action', 'update_field'],
-        'move_field':       ['POST/action', 'move_field'],
+        'delete_self':      ['POST/edit', 'delete_self'],
+        'insert_field':     ['POST/edit', 'insert_field'],
+        'delete_field':     ['POST/edit', 'delete_field'],
+        'update_field':     ['POST/edit', 'update_field'],
+        'move_field':       ['POST/edit', 'move_field'],
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
@@ -1448,7 +1448,7 @@ Category.createAPI(
             res.json(records)
         }),
 
-        'POST/action':  new TaskService({
+        'POST/edit':  new TaskService({
             async create_item(ctx, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
@@ -1463,7 +1463,7 @@ Category.createAPI(
     {
         // actions...
         // 'create_item':      ['POST/create'],
-        'create_item':      ['POST/action', 'create_item'],
+        'create_item':      ['POST/edit', 'create_item'],
     }
 )
 
