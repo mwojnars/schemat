@@ -359,7 +359,7 @@ export class Item {
         return item1.id - item2.id
     }
 
-    constructor(registry, id) {
+    constructor(registry, id = undefined) {
         /* Creates an item stub, `id` can be undefined. To set this.data, load() or reload() must be called afterwards. */
         this.registry = registry
         this.id = id
