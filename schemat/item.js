@@ -302,7 +302,7 @@ export class Item {
 
     static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
-    static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
+    // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
     id              // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
 
@@ -480,7 +480,7 @@ export class Item {
     }
 
     init() {}
-        /* Optional category-specific initialization after this.data is loaded.
+        /* Optional item-specific initialization after this.data is loaded.
            Subclasses may override this method as either sync or async.
          */
     end() {}
@@ -1127,12 +1127,12 @@ Item.createAPI(
     {
         // actions...
         // the list of 0+ arguments after the endpoint should match the ...args arguments accepted by execute() of the service
-        //'get_json':         ['GET/json'],
-        'delete_self':      ['POST/edit', 'delete_self'],
-        'insert_field':     ['POST/edit', 'insert_field'],
-        'delete_field':     ['POST/edit', 'delete_field'],
-        'update_field':     ['POST/edit', 'update_field'],
-        'move_field':       ['POST/edit', 'move_field'],
+        //get_json:         ['GET/json'],
+        delete_self:        ['POST/edit', 'delete_self'],
+        insert_field:       ['POST/edit', 'insert_field'],
+        delete_field:       ['POST/edit', 'delete_field'],
+        update_field:       ['POST/edit', 'update_field'],
+        move_field:         ['POST/edit', 'move_field'],
     }
 )
 // print(`Item.api.endpoints:`, Item.api.endpoints)
@@ -1462,8 +1462,7 @@ Category.createAPI(
     },
     {
         // actions...
-        // 'create_item':      ['POST/create'],
-        'create_item':      ['POST/edit', 'create_item'],
+        create_item:    ['POST/edit', 'create_item'],
     }
 )
 

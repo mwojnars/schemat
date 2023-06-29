@@ -30,17 +30,13 @@ const WORKERS   =  1 //Math.floor(os.cpus().length / 2)
 
 /**********************************************************************************************************************/
 
-class Node {
+class Node extends Item {
     /* A computation node running processes for:
        - processing external web requests
        - internal data handling (storage & access)
      */
 
-    constructor(opts) {
-        this.opts = opts
-    }
-
-    async boot() {
+    async init() {
         let rings = [
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
             {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
@@ -258,8 +254,8 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let node = new Node(argv)
-    if (cmd !== '_build_') await node.boot()        // _build_ command performs boot (creates registry) on its own
+    let node = new Node()
+    if (cmd !== '_build_') await node.init()        // _build_ command performs boot (creates registry) on its own
 
     return node[cmd](argv)
 }
