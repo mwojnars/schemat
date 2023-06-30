@@ -49,10 +49,4 @@ export class ServerRegistry extends Registry {
         delete this.session
         releaseMutex()
     }
-
-    /***  DB modifications  ***/
-
-    // insert(item) { return this.db.insert(item) }
-    // delete(item) { return this.db.delete(item) }
-    // update(item) { return this.db.update(item.id, new EditData(item.dumpData())) }
 }
