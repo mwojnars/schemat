@@ -111,14 +111,14 @@ async function create_categories(Category) {
     cat.Application = await Category.new(7, {
         name        : "Application",
         info        : "Category of application records. An application groups all spaces & categories available in the system and provides system-level configuration.",
-        class_path  : '/system/local/site.js:Application',
+        class_path  : '/system/local/std/apps.js:Application',
         // fields      : C({findRoute: new CODE(), urlPath: new CODE(), _boot_class: new STRING()}),
         // custom_class: true,
     })
     cat.AppBasic = await Category.new(8, {
         name        : "AppBasic",
         info        : "Application that serves items on simple URLs of the form /IID. Mainly used for system & admin purposes, or as a last-resort default for URL generation.",
-        class_path  : '/system/local/site.js:AppBasic',
+        class_path  : '/system/local/std/apps.js:AppBasic',
         fields      : C({
             category    : new ITEM({category: Category, info: "Optional category(ies) of items handled by this application."}),
         }),
@@ -126,7 +126,7 @@ async function create_categories(Category) {
     cat.AppSpaces = await Category.new(9, {
         name        : "AppSpaces",
         info        : "Application for accessing public data through verbose paths of the form: .../SPACE:IID, where SPACE is a text identifier assigned to a category in `spaces` property.",
-        class_path  : '/system/local/site.js:AppSpaces',
+        class_path  : '/system/local/std/apps.js:AppSpaces',
         fields      : C({spaces: new CATALOG({values: new ITEM({category: Category})})}),
         cached_methods: "spacesRev",
     })

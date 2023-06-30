@@ -224,7 +224,7 @@
   name: Application
   info: Category of application records. An application groups all spaces &
     categories available in the system and provides system-level configuration.
-  class_path: /system/local/site.js:Application
+  class_path: /system/local/std/apps.js:Application
   __category__:
     "@": 0
   "@": Data
@@ -232,7 +232,7 @@
   name: AppBasic
   info: Application that serves items on simple URLs of the form /IID. Mainly used
     for system & admin purposes, or as a last-resort default for URL generation.
-  class_path: /system/local/site.js:AppBasic
+  class_path: /system/local/std/apps.js:AppBasic
   fields:
     category:
       category:
@@ -248,7 +248,7 @@
   info: "Application for accessing public data through verbose paths of the form:
     .../SPACE:IID, where SPACE is a text identifier assigned to a category in
     `spaces` property."
-  class_path: /system/local/site.js:AppSpaces
+  class_path: /system/local/std/apps.js:AppSpaces
   fields:
     spaces:
       values:
