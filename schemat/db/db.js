@@ -21,15 +21,17 @@ export class ClientDB extends Database {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    url     = null              // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
+    // url     = null              // base URL for AJAX calls, no trailing slash '/'; typically a "system URL" of the website
     records = new Map()         // cached `data` of the items received on initial or subsequent web requests;
                                 // each `data` is JSON-encoded for safety
 
-    constructor(url, records = []) {
+    get url() { return globalThis.registry.site.systemURL() }
+
+    constructor(records = []) {
         super()
-        this.url = url
         this._cache(...records)
-        assert(!url.endsWith('/'))
+        // this.url = url
+        // assert(!url.endsWith('/'))
     }
 
     _cache(...records) {

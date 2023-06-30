@@ -74,6 +74,7 @@ export class WebServer extends Server {
                 try { res.sendStatus(500) } catch(e){}
         }
 
+        // TODO: this check is placed here temporarily only to ensure that dynamic imports work fine; drop this in the future
         let {check} = await this.registry.site.importModule("/site/widgets.js")
         check()
 

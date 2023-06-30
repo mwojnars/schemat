@@ -23,10 +23,6 @@ export class Router extends Item {
         let routes = this.prop('routes')
         let node   = routes.get(step)
         if (step && node) return node.load().then(n => n.route(request.move(step)))
-        // if (step && node) {
-        //     await node.load()
-        //     return await node.route(request.move(step))
-        // }
 
         // check for empty '' route segment(s) in the routing table, there can be multiple ones;
         // try the first one, or proceed to the next one if NotFound is raised...

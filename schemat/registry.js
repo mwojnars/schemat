@@ -397,15 +397,15 @@ export class Session {
     dump() {
         /* Session data and a list of bootstrap items to be embedded in HTML response, state-encoded. */
         let site  = this.registry.site
-        let items = [this.item, this.item.category, this.registry.root, site, this.app]
+        let items = [this.item, this.item.category, this.registry.root, site, site.category, this.app]
         items = [...new Set(items)].filter(Boolean)             // remove duplicates and nulls
         let records = items.map(i => i.recordEncoded())
 
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session
-        let system_url = site.systemURL()
+        // let system_url = site.systemURL()
 
-        return {site_id: site.id, system_url, session: JSONx.encode(session), items: records}
+        return {site_id: site.id, /*system_url,*/ session: JSONx.encode(session), items: records}
     }
 
     static load(registry, sessionData) {

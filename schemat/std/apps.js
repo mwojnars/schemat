@@ -6,6 +6,17 @@ import {Item} from "../item.js"
 
 export class Application extends Item {
     /*
+        Application is a (possibly unbounded) collection of items available over the web that together serve the user's
+        particular need. Each item has a unique URL path within the application's URL space, and the application
+        allows to retrieve this path for an arbitrary item (urlPath()) and, vice versa, map a URL path to
+        a corresponding target item (findRoute()). All paths are relative to the application's base route.
+
+        Within the application, some paths may be fixed and link to a limited number of predefined system items;
+        while other paths may be dynamically generated and link to an arbitrary number of user-created items,
+        giving the user an ability to create new items. Applications can also be nested.
+     */
+
+    /*
     Application implements a bidirectional mapping of URL names to items and back.
     Typically, an application is placed as the leaf segment of a routing pattern,
     to provide naming & routing for an open set of dynamically created items ("item space")
@@ -22,11 +33,12 @@ export class Application extends Item {
     INFO what characters are allowed in URLs: https://stackoverflow.com/a/36667242/1202674
     */
 
-    address(item) {
-        /* If `item` belongs to the item space defined by this application, return its URL subpath
-           (no leading '/') to be appended to a route when building a URL. Otherwise, return undefined.
-         */
-    }
+    // address(item) {
+    //     /* If `item` belongs to the item space defined by this application, return its URL subpath
+    //        (no leading '/') to be appended to a route when building a URL. Otherwise, return undefined.
+    //      */
+    // }
+
     // urlPath(item) {
     //     /* Generate a URL name/path (fragment after the base route string) of `item`.
     //        The path does NOT have a leading separator, or it has a different (internal) meaning -
