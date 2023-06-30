@@ -68,7 +68,7 @@ async function create_categories(Category) {
     cat.File = await Category.new(3, {
         name        : "File",
         info        : "File with a text content.",
-        class_path  : '/system/local/site.js:File',
+        class_path  : '/system/local/std/files.js:File',
         // _boot_class : 'schemat.item.File',
         cached_methods: "read",
         fields      : C({
@@ -82,7 +82,7 @@ async function create_categories(Category) {
         name        : "FileLocal",
         info        : "File located on a local disk, identified by its local file path.",
         prototype   : cat.File,
-        class_path  : '/system/local/site.js:FileLocal',
+        class_path  : '/system/local/std/files.js:FileLocal',
         // _boot_class : 'schemat.item.FileLocal',
         fields      : C({
             path    : new STRING(),             // path to a local file on disk
@@ -92,7 +92,7 @@ async function create_categories(Category) {
     cat.Folder = await Category.new(5, {
         name        : "Folder",
         info        : "A directory of files, each file has a unique name (path). May contain nested directories.",
-        class_path  : '/system/local/site.js:Folder',
+        class_path  : '/system/local/std/files.js:Folder',
         // _boot_class : 'schemat.item.Folder',
         fields      : C({
             files       : new CATALOG({values: new ITEM()}),          // file & directory names mapped to item IDs
@@ -103,7 +103,7 @@ async function create_categories(Category) {
         name        : "FolderLocal",
         info        : "File folder located on a local disk, identified by its local file path.\nGives access to all files and folders beneath the path.",
         prototype   : cat.Folder,
-        class_path  : '/system/local/site.js:FolderLocal',
+        class_path  : '/system/local/std/files.js:FolderLocal',
         // _boot_class : 'schemat.item.FolderLocal',
         fields      : C({path: new STRING()}),
     })

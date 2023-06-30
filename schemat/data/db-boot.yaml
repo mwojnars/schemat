@@ -155,7 +155,7 @@
 - __id: 3
   name: File
   info: File with a text content.
-  class_path: /system/local/site.js:File
+  class_path: /system/local/std/files.js:File
   cached_methods: read
   fields:
     content:
@@ -180,7 +180,7 @@
   info: File located on a local disk, identified by its local file path.
   prototype:
     "@": 3
-  class_path: /system/local/site.js:FileLocal
+  class_path: /system/local/std/files.js:FileLocal
   fields:
     path:
       "@": STRING
@@ -192,7 +192,7 @@
   name: Folder
   info: A directory of files, each file has a unique name (path). May contain
     nested directories.
-  class_path: /system/local/site.js:Folder
+  class_path: /system/local/std/files.js:Folder
   fields:
     files:
       values:
@@ -212,7 +212,7 @@
     Gives access to all files and folders beneath the path.
   prototype:
     "@": 5
-  class_path: /system/local/site.js:FolderLocal
+  class_path: /system/local/std/files.js:FolderLocal
   fields:
     path:
       "@": STRING
