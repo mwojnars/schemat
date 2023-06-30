@@ -4,6 +4,7 @@ import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
 import {YamlDB} from "./storage.js"
 import {Database} from "./db.js"
+import {EditData} from "./edits.js";
 
 
 /**********************************************************************************************************************
@@ -204,6 +205,11 @@ export class ServerDB extends Database {
 
     async select(id)                { return this.forward_select([], id) }      // returns a json string (`data`) or undefined
     async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
+
+    async update_full(item) {
+        /* Replace all data inside the item's record in DB with item.data. */
+        return this.update(item.id, new EditData(item.dumpData()))
+    }
 
     async insert(item) {
         /* Find the top-most ring where the item's ID is writable and insert there.

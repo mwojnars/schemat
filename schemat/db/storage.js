@@ -1,7 +1,6 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
-import { TotalEdit } from './edits.js'
 
 // import { Kafka } from 'kafkajs'
 

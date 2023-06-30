@@ -1096,30 +1096,30 @@ Item.createAPI(
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
 
-            delete_self(ctx)   { return this.registry.delete(this) },
+            delete_self(ctx)   { return this.registry.db.delete(this) },
 
             insert_field(ctx, path, pos, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.insert(path, pos, entry)
-                return this.registry.update(this)
+                return this.registry.db.update_full(this)
             },
 
             delete_field(ctx, path) {
                 this.data.delete(path)
-                return this.registry.update(this)
+                return this.registry.db.update_full(this)
             },
 
             update_field(ctx, path, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
-                return this.registry.update(this)
+                return this.registry.db.update_full(this)
             },
 
             move_field(ctx, path, pos1, pos2) {
                 this.data.move(path, pos1, pos2)
-                return this.registry.update(this)
+                return this.registry.db.update_full(this)
             },
 
         }),
@@ -1453,7 +1453,7 @@ Category.createAPI(
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
-                await this.registry.insert(item)
+                await this.registry.db.insert(item)
                 return item.recordEncoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },

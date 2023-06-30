@@ -7,7 +7,7 @@ import {Ring, ServerDB} from "../db/db_srv.js"
 import {ServerRegistry} from "../registry_srv.js"
 import {DataServer, WebServer} from "./servers.js"
 import {JSONx} from "../serialize.js"
-import {TotalEdit} from "../db/edits.js"
+import {EditData} from "../db/edits.js"
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
@@ -29,9 +29,14 @@ export class Cluster extends Item {
         super(null /*registry*/)        // registry is set later, as its creation must be coupled with DB creation
     }
 
-    async init() {
+    async startup() {
+        /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
+           which should replace the db object with the ultimate one (TODO).
+         */
+
         let rings = [
             {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
+            // {file: DB_ROOT + '/db-cluster.yaml', start_iid:    0, stop_iid:  100, readonly: false},
             {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
             {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
@@ -47,6 +52,12 @@ export class Cluster extends Item {
             db.append(ring)
             await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
+
+        // // load the cluster's full and ultimate data from the bootstrap DB;
+        // // this may override the db property with the ultimate DB object
+        // this.id = CLUSTER_IID
+        // this.load()
+        // registry.setDB(this.prop('db'))
     }
 
     async createRegistry(db = null) {
@@ -68,7 +79,7 @@ export class Cluster extends Item {
     async _update_all() {
         /* Convert all the items in the database to a new format; all rings must be set as writable (!) */
         for await (let item of this.registry.scan())
-            await this.registry.update(item)
+            await this.registry.db.update_full(item)
     }
 
     async _reinsert_all() {
@@ -111,7 +122,7 @@ export class Cluster extends Item {
                     print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${id}], the ring is read-only`)
                 else {
                     print(`...updating reference(s) in item [${id}]`)
-                    await db.update(id, new TotalEdit(data))
+                    await db.update(id, new EditData(data))
                     await ring.block._flush()
                 }
             }

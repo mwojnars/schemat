@@ -6,7 +6,7 @@ export class Edit {
     process(data) {}
 }
 
-export class TotalEdit extends Edit {
+export class EditData extends Edit {
     /* Full item.data overwrite. */
 
     constructor(data) {

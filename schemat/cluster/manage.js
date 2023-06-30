@@ -61,7 +61,7 @@ async function main() {
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
     let cluster = new Cluster()
-    if (cmd !== '_build_') await cluster.init()         // _build_ command performs init (creates registry) on its own
+    if (cmd !== '_build_') await cluster.startup()      // _build_ command performs its own startup (creating registry)
 
     return cluster[cmd](argv)
 }
