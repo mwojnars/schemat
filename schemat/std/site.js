@@ -1,5 +1,5 @@
-import { print, assert, T } from './utils.js'
-import { Item, Request } from './item.js'
+import { print, assert, T } from '../utils.js'
+import { Item, Request } from '../item.js'
 
 
 // Currently, vm.Module (Site.importModule()) cannot import builtin modules, as they are not instances of vm.Module.

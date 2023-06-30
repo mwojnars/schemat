@@ -31,7 +31,7 @@ async function create_categories(Category) {
     cat.Site = await Category.new(SITE_ID, {
         name        : "Site",
         info        : "Top-level URL routing + global configuration of applications, servers, startup.",
-        class_path  : '/system/local/site.js:Site',
+        class_path  : '/system/local/std/site.js:Site',
         // _boot_class : 'schemat.item.Site',
         // prototype   : cat.Router,
         fields      : C({
@@ -52,7 +52,7 @@ async function create_categories(Category) {
             // empty_path  : new ITEM({info: "An item to handle the request if the URL path is empty."}),
             routes      : new CATALOG({values: new ITEM(), repeated: true}),
         }),
-        class_path  : '/system/local/site.js:Router',
+        class_path  : '/system/local/std/site.js:Router',
         // _boot_class : 'schemat.item.Router',
         // code        : dedent(`
         //                 findRoute(request) {

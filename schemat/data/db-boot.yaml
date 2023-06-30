@@ -115,7 +115,7 @@
   name: Site
   info: Top-level URL routing + global configuration of applications, servers,
     startup.
-  class_path: /system/local/site.js:Site
+  class_path: /system/local/std/site.js:Site
   fields:
     URL:
       info: "Base URL at which the website is served: protocol + domain + root path
@@ -148,7 +148,7 @@
       repeated: true
       "@": CATALOG
     "@": Catalog
-  class_path: /system/local/site.js:Router
+  class_path: /system/local/std/site.js:Router
   __category__:
     "@": 0
   "@": Data
