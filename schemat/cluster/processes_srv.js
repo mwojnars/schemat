@@ -83,7 +83,7 @@ export class AdminProcess extends BackendProcess {
         id = convert(id)
         newid = convert(newid)
 
-        let db = globalThis.registry.db
+        let db = this.db
         let sameID = (id === newid)
 
         // let [cid, iid] = id
@@ -146,12 +146,12 @@ export class AdminProcess extends BackendProcess {
            of an item in another ring instead of updating in place.
          */
         for await (let item of globalThis.registry.scan())
-            await globalThis.registry.db.update_full(item)
+            await this.db.update_full(item)
     }
 
     async _reinsert_all() {
         /* Re-insert every item so that it receives a new ID. Update references in other items. */
-        let db = globalThis.registry.db
+        let db = this.db
         for (let ring of db.rings) {
             if (ring.readonly) continue
             let records = await T.arrayFromAsync(ring.scan())
@@ -173,7 +173,7 @@ export class AdminProcess extends BackendProcess {
 
     async _update_references(old_id, item) {
         /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
-        let db = globalThis.registry.db
+        let db = this.db
 
         // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
         let transform = (it => it instanceof Item && it.id === old_id ? item : it)

@@ -18,7 +18,6 @@ export class JSONx {
 
     constructor(transform) {
         // for now, this constructor is only used internally in static encode() & static decode()
-        this.registry = globalThis.registry
         this.transform = transform      // optional preprocessing function applied to every nested object before it gets encoded
     }
 
@@ -52,7 +51,7 @@ export class JSONx {
         with a special attribute "@" to hold the class name or item ID. Nested objects are encoded recursively.
         Optional `transform` function preprocesses the `obj` and every nested object before they get encoded.
         */
-        let registry = this.registry
+        let registry = globalThis.schemat.registry
         let state
 
         if (this.transform) obj = this.transform(obj)
@@ -100,7 +99,7 @@ export class JSONx {
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
         This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
         */
-        let registry = this.registry
+        let registry = globalThis.schemat.registry
         let isdict = T.isDict(state)
         let cls
 
