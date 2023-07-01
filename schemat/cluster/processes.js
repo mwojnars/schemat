@@ -1,8 +1,10 @@
 import {print, assert, T} from "../utils.js";
-import {Cluster} from "./cluster.js";
+import {Cluster, DB_ROOT} from "./cluster.js";
 import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {EditData} from "../db/edits.js";
+import {DataServer, WebServer} from "./servers.js";
+import {Ring} from "../db/db_srv.js";
 
 
 /**********************************************************************************************************************
@@ -14,9 +16,9 @@ import {EditData} from "../db/edits.js";
 export class SchematProcess {
 
     start(cmd, opts = {}) {
-        // assert(this[cmd], `unknown command: ${cmd}`)
-        let cluster = new Cluster()
-        return cluster[cmd](opts)
+        assert(this[cmd], `unknown command: ${cmd}`)
+        this.cluster = new Cluster()
+        return this[cmd](opts)
     }
 }
 
@@ -29,10 +31,105 @@ export class WorkerProcess extends SchematProcess {
         await cluster.startup()
         return cluster
     }
+
+    async run({host, port, workers}) {
+        await this.cluster.startup()
+
+        // node = registry.getLoaded(this_node_ID)
+        // return node.activate()     // start the lifeloop and all worker processes (servers)
+
+        // await this._update_all()
+        // await this._reinsert_all()
+
+        let web = new WebServer(this.cluster, {host, port, workers}).start()
+        let data = new DataServer(this.cluster).start()
+        return Promise.all([web, data])
+    }
 }
 
 export class AdminProcess extends SchematProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from command line. */
+
+    async _build_({path_db_boot}) {
+        /* Generate the core system items anew and save. */
+        let {bootstrap} = await import('../boot/bootstrap.js')
+
+        let ring = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
+
+        await ring.open()
+        await ring.erase()
+
+        let registry = await this.cluster.createRegistry()
+        return bootstrap(registry, ring)
+    }
+
+    async move({id, newid, bottom, ring: ringName}) {
+        /* Move an item to a different ring, or change its IID. */
+
+        await this.cluster.startup()
+
+        function convert(id_)   { return (typeof id_ === 'string') ? Number(id_) : id_ }
+        // function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
+
+        id = convert(id)
+        newid = convert(newid)
+
+        let db = globalThis.registry.db
+        let sameID = (id === newid)
+
+        // let [cid, iid] = id
+        // let [new_cid, new_iid] = newid
+        // let sameID = (cid === new_cid && iid === new_iid)
+
+        // if ((cid === ROOT_ID || new_cid === ROOT_ID) && cid !== new_cid)
+        //     throw new Error(`cannot change a category item (CID=${ROOT_ID}) to a non-category (CID=${cid || new_cid}) or back`)
+
+        if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
+
+        // identify the source ring
+        let source = await db.findRing({item: id})
+        if (source === undefined) throw new Error(`item not found: [${id}]`)
+        if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
+
+        // identify the target ring
+        let target = ringName ? await db.findRing({name: ringName}) : bottom ? db.bottom : source
+
+        if (sameID && source === target)
+            throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)
+
+        print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
+
+        // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
+        let data = await source.select([db], id)
+        await target.save([db], null, newid, data)
+
+        if (!sameID) {
+            // // update children of a category item: change their CID to `new_iid`
+            // if (cid === ROOT_ID && !sameID)
+            //     for await (let {id: child_id} of db.scan(iid))
+            //         await this.move({id: child_id, newid: [new_iid, child_id[1]]})
+
+            // update references
+            let newItem = globalThis.registry.getItem(newid)
+            for await (let ref of globalThis.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
+                await ref.load()
+                ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
+                let dataJson = ref.dumpData()
+                if (dataJson !== ref.dataJson) {
+                    print(`move: updating reference(s) in item ${ref.id_str}`)
+                    await db.update(ref)
+                }
+            }
+        }
+
+        // remove the old item from DB
+        try { await source.delete([db], id) }
+        catch (ex) {
+            if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
+        }
+
+        print('move: done')
+    }
 
     async _update_all() {
         /* Perform "update in place" on every item in the database, for instance, to force conversion of the items
