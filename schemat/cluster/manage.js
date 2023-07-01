@@ -6,7 +6,7 @@
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
-import {print} from '../utils.js'
+import {print, T} from '../utils.js'
 import {Cluster} from './cluster.js'
 
 
@@ -61,7 +61,7 @@ async function main() {
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
     let cluster = new Cluster()
-    if (cmd !== '_build_') await cluster.startup()      // _build_ command performs its own startup (creating registry)
+    // if (cmd !== '_build_') await cluster.startup()      // _build_ command performs its own startup (creating registry)
 
     return cluster[cmd](argv)
 }

@@ -137,6 +137,8 @@ export class Registry {
     onServer = true
     get onClient() { return !this.onServer }
 
+    // get db() { return this.cluster.prop('db') }
+
     db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests

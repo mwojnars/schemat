@@ -6,8 +6,7 @@ import {Item} from "../item.js"
 import {Ring, ServerDB} from "../db/db_srv.js"
 import {ServerRegistry} from "../registry_srv.js"
 import {DataServer, WebServer} from "./servers.js"
-import {JSONx} from "../serialize.js"
-import {EditData} from "../db/edits.js"
+
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
@@ -65,7 +64,9 @@ export class Cluster extends Item {
     }
 
     async run({host, port, workers}) {
-        // node = this.registry.getLoaded(this_node_ID)
+        await this.startup()
+
+        // node = registry.getLoaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
 
         // await this._update_all()
@@ -74,59 +75,6 @@ export class Cluster extends Item {
         let web = new WebServer(this, {host, port, workers}).start()
         let data = new DataServer(this).start()
         return Promise.all([web, data])
-    }
-
-    async _update_all() {
-        /* Convert all the items in the database to a new format; all rings must be set as writable (!) */
-        for await (let item of this.registry.scan())
-            await this.registry.db.update_full(item)
-    }
-
-    async _reinsert_all() {
-        /* Re-insert every item so that it receives a new ID. Update references in other items. */
-        let db = this.db
-        for (let ring of db.rings) {
-            if (ring.readonly) continue
-            let records = await T.arrayFromAsync(ring.scan())
-            let ids = records.map(rec => rec.id)
-
-            for (const id of ids) {
-                let data = await ring.select([db], id)          // the record might have been modified during this loop - must re-read
-                let item = await this.registry.itemFromRecord({id: id, data})
-                print(`reinserting item [${id}]...`)
-                item.id = undefined
-                await ring.insert([db], item)
-                print(`...new id=[${item.id}]`)
-                await this._update_references(id, item)
-                await ring.delete([db], id)
-                await ring.block._flush()
-            }
-        }
-    }
-
-    async _update_references(old_id, item) {
-        /* Scan all items in the DB and replace references to `old_id` with references to `item`. */
-        let db = this.db
-
-        // transform function: checks if a sub-object is an item of ID=old_id and replaces it with `item` if so
-        let transform = (it => it instanceof Item && it.id === old_id ? item : it)
-
-        for (let ring of db.rings) {
-            for await (const record of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
-
-                let id = record.id
-                let data = JSONx.transform(record.data, transform)
-                if (data === record.data) continue          // no changes? don't update the `ref` item
-
-                if (ring.readonly)
-                    print(`...WARNING: cannot update a reference [${old_id}] > [${item.id}] in item [${id}], the ring is read-only`)
-                else {
-                    print(`...updating reference(s) in item [${id}]`)
-                    await db.update(id, new EditData(data))
-                    await ring.block._flush()
-                }
-            }
-        }
     }
 
 
@@ -146,7 +94,9 @@ export class Cluster extends Item {
     }
 
     async move({id, newid, bottom, ring: ringName}) {
-        /* id, newid - strings of the form "CID:IID" */
+        /* Move an item to a different ring, or change its IID. */
+
+        await this.startup()
 
         function convert(id_)   { return (typeof id_ === 'string') ? Number(id_) : id_ }
         // function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }
@@ -190,8 +140,8 @@ export class Cluster extends Item {
             //         await this.move({id: child_id, newid: [new_iid, child_id[1]]})
 
             // update references
-            let newItem = this.registry.getItem(newid)
-            for await (let ref of this.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
+            let newItem = globalThis.registry.getItem(newid)
+            for await (let ref of globalThis.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
                 await ref.load()
                 ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
                 let dataJson = ref.dumpData()
