@@ -38,7 +38,7 @@ export class Cluster extends Item {
             {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
             {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
             {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
-            {item: 1015, name: 'mysql', readonly: true},
+            // {item: 1015, name: 'mysql', readonly: true},
         ]
 
         let db = this.db = new ServerDB()

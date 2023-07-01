@@ -140,8 +140,6 @@ export class Registry {
     get db() { return this.schemat.db }
 
     schemat                 // SchematProcess that owns this registry
-
-    // db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
@@ -155,9 +153,6 @@ export class Registry {
         this.schemat = schemat
         schemat.registry = this
     }
-    // constructor(db) {
-    //     if(db) this.db = db
-    // }
 
     static async createGlobal(schemat, ...args) {
         let registry = globalThis.registry = new this(schemat, ...args)

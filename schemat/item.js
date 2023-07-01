@@ -236,22 +236,22 @@ export class Handler {
         return ''
     }
 
-    body(ctx) {
-        /* Here, `this` is bound to the item being rendered. */
-        let {request, endpoint} = ctx
-
-        // let {handler, item} = ctx
-        // let view = e(handler.view.bind(item), ctx)
-        // let html = targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
-
-        let html    = this.render(endpoint)
-        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
-        return `
-            <div id="react-root">${html}</div>
-            <p id="data-session" style="display:none">${session}</p>
-            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
-        `
-    }
+    // body(ctx) {
+    //     /* Here, `this` is bound to the item being rendered. */
+    //     let {request, endpoint} = ctx
+    //
+    //     // let {handler, item} = ctx
+    //     // let view = e(handler.view.bind(item), ctx)
+    //     // let html = targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+    //
+    //     let html    = this.render(endpoint)
+    //     let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
+    //     return `
+    //         <div id="react-root">${html}</div>
+    //         <p id="data-session" style="display:none">${session}</p>
+    //         <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
+    //     `
+    // }
 
     view({endpoint}) {
         /* React functional component that renders the actual (visible) content of the HTML response page.

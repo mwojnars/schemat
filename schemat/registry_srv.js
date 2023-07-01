@@ -19,8 +19,8 @@ export class ServerRegistry extends Registry {
     PATH_LOCAL_SUN = "/system/local"    // SUN folder that maps to the local filesystem folder, PATH_LOCAL_FS;
     PATH_LOCAL_FS                       // scripts from PATH_LOCAL_* can be imported by system items during startup
 
-    constructor(db, path) {
-        super(db)
+    constructor(schemat, path) {
+        super(schemat)
         this.PATH_LOCAL_FS = path       // no trailing '/' (!)
     }
 
