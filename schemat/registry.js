@@ -16,44 +16,6 @@ export function isRoot(id) { return id === ROOT_ID }
 
 /**********************************************************************************************************************
  **
- **  DATABASE & CACHE
- **
- */
-
-// export class Database {
-//     /*
-//     DB operations on an `item`.
-//
-//     Instant execution:
-//     - DELETE -- delete a DB record with a given ID=item.id
-//     - UPDATE <data> -- overwrite the entire item.data in DB with `data`
-//
-//     Delayed exection (on commit):
-//     - INSERT -- create a new item record in DB, store item.data in it, assign and return a new IID
-//     - EDIT <action> <args>
-//              -- inside a write lock, load the item's current data, create an Item instance, call item._edit_<action>(args),
-//                 save the resulting item.data; multiple EDIT/CHECK operations are executed together in a single transaction
-//     - CHECK <action> <args>
-//              -- like EDIT, but calls _check_<action>(args), which should NOT modify the data, but only return true/false;
-//                 if false is returned, or an exception raised, the transaction is stopped, changes not saved
-//
-//     Transactions work at a record level. NO transactions spanning multiple items.
-//     */
-//
-//     async insert(...items) {
-//         /* Insert items to a DB, possibly using a bulk insert. */
-//         throw new Error("not implemented")
-//     }
-//     async update(item) { throw new Error("not implemented") }
-//     async delete(id)   { throw new Error("not implemented") }
-//     async write(id, edits) {
-//         /* Load an item of a given `id`, execute a number of `edits` on it, and write the result back to DB. */
-//         throw new Error("not implemented")
-//     }
-// }
-
-/**********************************************************************************************************************
- **
  **  CLASSPATH
  **
  */
@@ -151,20 +113,6 @@ export class Registry {
 
     constructor(schemat) {
         this.schemat = schemat
-        schemat.registry = this
-    }
-
-    // async init() {
-    //     await this.init_classpath()
-    //     await this.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
-    // }
-
-    async boot(site_id = null) {
-        /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
-        this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
-        this.site = await this._init_site(site_id)      // may return an undefined
-        // if (!this.site) print('Registry.boot(): site is undefined')
-        // else print('Registry.boot(): site defined')
     }
 
     async init_classpath() {
@@ -182,6 +130,14 @@ export class Registry {
 
         this.classpath = classpath
         // print('initClasspath() done')
+    }
+
+    async boot(site_id = null) {
+        /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
+        this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
+        this.site = await this._init_site(site_id)      // may return an undefined
+        // if (!this.site) print('Registry.boot(): site is undefined')
+        // else print('Registry.boot(): site defined')
     }
 
     async _init_root() {
