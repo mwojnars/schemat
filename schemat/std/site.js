@@ -191,3 +191,4 @@ export class Site extends Router {
     }
 }
 
+Site.setCaching('systemURL')

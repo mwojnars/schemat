@@ -403,9 +403,8 @@ export class Session {
 
         let {app, item} = this
         let session = {app, item}                               // truncated representation of the current session
-        // let system_url = site.systemURL()
 
-        return {site_id: site.id, /*system_url,*/ session: JSONx.encode(session), items: records}
+        return {site_id: site.id, session: JSONx.encode(session), items: records}
     }
 
     static load(registry, sessionData) {

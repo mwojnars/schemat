@@ -57,7 +57,9 @@ export class Application extends Item {
 
 
 export class AppBasic extends Application {
-    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /CID:IID */
+    /* System space with admin interface. All items are accessible through the 'raw' routing pattern: /IID */
+
+    // view/action       -- what @view to use for rendering the items when a view is not specified in the URL
 
     urlPath(item) {
         assert(item.has_id())

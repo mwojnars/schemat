@@ -75,7 +75,7 @@ class ClientRegistry extends Registry {
 export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
-    let db       = new ClientDB(/*data.system_url,*/ data.items)
+    let db       = new ClientDB(data.items)
     let registry = await ClientRegistry.createGlobal(db)
     await registry.bootData(data)
 

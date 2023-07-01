@@ -677,7 +677,8 @@ export class Item {
 
     getName() { return this.prop('name') || '' }
     getPath() {
-        /* Default import path of this item. Starts with '/' (absolute path). */
+        /* Default URL import path of this item, for interpretation of relative imports in dynamic code inside this item.
+           Starts with '/' (absolute path). */
         return this.prop('path') || this.registry.site.systemPath(this)
     }
 
