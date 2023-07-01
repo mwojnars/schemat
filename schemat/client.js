@@ -37,8 +37,6 @@ export async function boot(view) {
     let data     = read_data('#data-session', 'json+base64')
     let db       = new ClientDB(data.items)
     let schemat  = await new ClientProcess(db).init()
-    // await schemat.init()
-    // let registry = await ClientRegistry.createGlobal(schemat)
     await schemat.registry.bootData(data)
 
     // print('root:', await registry.getItem([0,0], {load: true}))

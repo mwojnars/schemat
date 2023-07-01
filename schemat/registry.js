@@ -154,17 +154,10 @@ export class Registry {
         schemat.registry = this
     }
 
-    // static async createGlobal(schemat, ...args) {
-    //     let registry = globalThis.registry = new this(schemat, ...args)
-    //     await registry._init_classpath()
-    //     await registry.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
-    //     return registry
+    // async init() {
+    //     await this.init_classpath()
+    //     await this.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
     // }
-
-    async init() {
-        await this._init_classpath()
-        await this.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
-    }
 
     async boot(site_id = null) {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
@@ -174,7 +167,7 @@ export class Registry {
         // else print('Registry.boot(): site defined')
     }
 
-    async _init_classpath() {
+    async init_classpath() {
         // print('initClasspath() started...')
         let classpath = new Classpath
 

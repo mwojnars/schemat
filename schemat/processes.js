@@ -22,9 +22,11 @@ export class SchematProcess {
 
     async _create_registry(registry_class, ...args) {
         // this.registry = await registry_class.createGlobal(this, ...args)
-        this.registry = new registry_class(this, ...args)
-        globalThis.registry = this.registry
-        await this.registry.init()
+        let registry = new registry_class(this, ...args)
+        this.registry = registry
+        globalThis.registry = registry
+        await registry.init_classpath()
+        await registry.boot()
         return this
     }
 }
