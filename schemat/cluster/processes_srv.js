@@ -33,7 +33,7 @@ export class WorkerProcess extends BackendProcess {
     // }
 
     async CLI_run({host, port, workers}) {
-        await this.cluster.startup()
+        await this.cluster.startup(this)
 
         // node = registry.getLoaded(this_node_ID)
         // return node.activate()     // start the lifeloop and all worker processes (servers)
@@ -59,14 +59,14 @@ export class AdminProcess extends BackendProcess {
         await ring.open()
         await ring.erase()
 
-        let registry = await this.cluster.createRegistry()
+        let registry = await this.cluster.createRegistry(this)
         return bootstrap(registry, ring)
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {
         /* Move an item to a different ring, or change its IID. */
 
-        await this.cluster.startup()
+        await this.cluster.startup(this)
 
         function convert(id_)   { return (typeof id_ === 'string') ? Number(id_) : id_ }
         // function convert(id_)   { return (typeof id_ === 'string') ? id_.split(':').map(Number) : id_ }

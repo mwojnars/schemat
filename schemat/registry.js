@@ -137,11 +137,11 @@ export class Registry {
     onServer = true
     get onClient() { return !this.onServer }
 
-    // get db() { return this.schemat.db }
+    get db() { return this.schemat.db }
 
     schemat                 // SchematProcess that owns this registry
 
-    db                      // database for accessing items and other data from database servers
+    // db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
@@ -151,12 +151,16 @@ export class Registry {
 
     /***  Initialization  ***/
 
-    constructor(db) {
-        if(db) this.db = db
+    constructor(schemat) {
+        this.schemat = schemat
+        schemat.registry = this
     }
+    // constructor(db) {
+    //     if(db) this.db = db
+    // }
 
-    static async createGlobal(db, ...args) {
-        let registry = globalThis.registry = new this(db, ...args)
+    static async createGlobal(schemat, ...args) {
+        let registry = globalThis.registry = new this(schemat, ...args)
         await registry._init_classpath()
         await registry.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
         return registry

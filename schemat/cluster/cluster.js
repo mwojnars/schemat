@@ -27,7 +27,7 @@ export class Cluster extends Item {
         super(null /*registry*/)        // registry is set later, as its creation must be coupled with DB creation
     }
 
-    async startup() {
+    async startup(schemat) {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
@@ -42,7 +42,7 @@ export class Cluster extends Item {
         ]
 
         let db = this.db = new ServerDB()
-        let registry = await this.createRegistry(db)
+        let registry = await this.createRegistry(schemat)
 
         for (const spec of rings) {
             let ring = new Ring(spec)
@@ -59,8 +59,8 @@ export class Cluster extends Item {
         // await registry.boot()   // reload `root` and `site`
     }
 
-    async createRegistry(db = null) {
-        let registry = this.registry = await ServerRegistry.createGlobal(db, __dirname)
+    async createRegistry(schemat) {
+        let registry = this.registry = await ServerRegistry.createGlobal(schemat, __dirname)
         registry.cluster = this
         return registry
     }
