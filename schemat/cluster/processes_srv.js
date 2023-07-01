@@ -5,27 +5,24 @@ import {JSONx} from "../serialize.js";
 import {EditData} from "../db/edits.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Ring} from "../db/db_srv.js";
+import {SchematProcess} from "../processes.js";
 
 
-/**********************************************************************************************************************
- **
- **  PROCESSES
- **
- */
+/**********************************************************************************************************************/
 
-export class SchematProcess {
-
+export class BackendProcess extends SchematProcess {
     CLI_PREFIX = 'CLI_'
 
     start(cmd, opts = {}) {
         let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
+
         this.cluster = new Cluster()
         return this[method](opts)
     }
 }
 
-export class WorkerProcess extends SchematProcess {
+export class WorkerProcess extends BackendProcess {
 
     // async startCluster(boot_db, cluster_iid) {
     //     let cluster = new Cluster()
@@ -50,7 +47,7 @@ export class WorkerProcess extends SchematProcess {
     }
 }
 
-export class AdminProcess extends SchematProcess {
+export class AdminProcess extends BackendProcess {
     /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
 
     async CLI_build({path_db_boot}) {

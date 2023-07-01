@@ -1,6 +1,7 @@
 import {print, assert} from './utils.js'
 import {Registry, Session} from './registry.js'
 import {ClientDB} from "./db/db.js"
+import {ClientProcess} from "./processes.js"
 
 
 /**********************************************************************************************************************/
@@ -76,6 +77,7 @@ export async function boot(view) {
 
     let data     = read_data('#data-session', 'json+base64')
     let db       = new ClientDB(data.items)
+    let schemat  = new ClientProcess(db)
     let registry = await ClientRegistry.createGlobal(db)
     await registry.bootData(data)
 

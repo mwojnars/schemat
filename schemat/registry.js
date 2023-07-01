@@ -137,9 +137,9 @@ export class Registry {
     onServer = true
     get onClient() { return !this.onServer }
 
-    // get db() { return this.cluster.prop('db') }
+    // get db() { return this.schemat.db }
 
-    cluster                 // Cluster instance that manages the entire infrastructure
+    schemat                 // SchematProcess that owns this registry
 
     db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache

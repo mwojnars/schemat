@@ -7,7 +7,7 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../utils.js'
-import {AdminProcess, WorkerProcess} from "./processes.js"
+import {AdminProcess, WorkerProcess} from "./processes_srv.js"
 
 
 const HOST      = '127.0.0.1'
