@@ -68,7 +68,6 @@ export class AdminProcess extends BackendProcess {
         await ring.open()
         await ring.erase()
 
-        // let registry = await this.cluster.createRegistry(this)
         return bootstrap(this.registry, ring)
     }
 
