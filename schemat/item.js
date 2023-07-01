@@ -954,8 +954,13 @@ export class Item {
         return `
             <p id="data-session" style="display:none">${session}</p>
             <div id="react-root">${component}</div>
-            <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
+            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
         `
+        // return `
+        //     <p id="data-session" style="display:none">${session}</p>
+        //     <div id="react-root">${component}</div>
+        //     <script async type="module"> import {boot} from "/system/local/client.js"; boot('${view}'); </script>
+        // `
     }
 
     render(endpoint, targetElement = null) {
