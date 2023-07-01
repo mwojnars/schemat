@@ -154,11 +154,16 @@ export class Registry {
         schemat.registry = this
     }
 
-    static async createGlobal(schemat, ...args) {
-        let registry = globalThis.registry = new this(schemat, ...args)
-        await registry._init_classpath()
-        await registry.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
-        return registry
+    // static async createGlobal(schemat, ...args) {
+    //     let registry = globalThis.registry = new this(schemat, ...args)
+    //     await registry._init_classpath()
+    //     await registry.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
+    //     return registry
+    // }
+
+    async init() {
+        await this._init_classpath()
+        await this.boot()               // typically, `db` here is provisional or missing, so boot() will only create `root` not `site` - can be called again later
     }
 
     async boot(site_id = null) {

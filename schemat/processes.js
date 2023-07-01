@@ -21,9 +21,10 @@ export class SchematProcess {
     async init() { return this }         // creating the registry; override in subclasses
 
     async _create_registry(registry_class, ...args) {
-        let registry = await registry_class.createGlobal(this, ...args)
-        this.registry = registry
-        globalThis.registry = registry
+        // this.registry = await registry_class.createGlobal(this, ...args)
+        this.registry = new registry_class(this, ...args)
+        globalThis.registry = this.registry
+        await this.registry.init()
         return this
     }
 }

@@ -15,10 +15,7 @@ export const DB_ROOT   = __dirname + '/data'
 /**********************************************************************************************************************/
 
 export class Cluster extends Item {
-    /* A computation node running processes for:
-       - processing external web requests
-       - internal data handling (storage & access)
-     */
+    /* Managing the cluster's infrastructure. */
 
     db
 
