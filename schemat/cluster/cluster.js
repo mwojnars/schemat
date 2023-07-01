@@ -22,7 +22,7 @@ export class Cluster extends Item {
 
     db
 
-    async startup(schemat) {
+    async startup() {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
@@ -42,7 +42,7 @@ export class Cluster extends Item {
             let ring = new Ring(spec)
             await ring.open()
             db.append(ring)
-            await schemat.registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
+            await this.registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
@@ -50,7 +50,7 @@ export class Cluster extends Item {
         // this.id = CLUSTER_IID
         // this.load()
         // registry.setDB(this.prop('db'))
-        // await registry.boot()   // reload `root` and `site`
+        // await schemat.registry.boot()   // reload `root` and `site`
     }
 }
 
