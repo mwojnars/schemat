@@ -4,7 +4,6 @@ import {fileURLToPath} from "url"
 import {print, T} from "../utils.js"
 import {Item} from "../item.js"
 import {Ring, ServerDB} from "../db/db_srv.js"
-import {ServerRegistry} from "../registry_srv.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
@@ -23,10 +22,6 @@ export class Cluster extends Item {
 
     db
 
-    constructor() {
-        super(null /*registry*/)        // registry is set later, as its creation must be coupled with DB creation
-    }
-
     async startup(schemat) {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
@@ -41,15 +36,13 @@ export class Cluster extends Item {
             // {item: 1015, name: 'mysql', readonly: true},
         ]
 
-        // let registry = await this.createRegistry(schemat)
-        let registry = this.registry = schemat.registry
         let db = this.db = new ServerDB()
 
         for (const spec of rings) {
             let ring = new Ring(spec)
             await ring.open()
             db.append(ring)
-            await registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
+            await schemat.registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
@@ -59,9 +52,5 @@ export class Cluster extends Item {
         // registry.setDB(this.prop('db'))
         // await registry.boot()   // reload `root` and `site`
     }
-
-    // async createRegistry(schemat) {
-    //     return this.registry = await ServerRegistry.createGlobal(schemat, __dirname)
-    // }
 }
 
