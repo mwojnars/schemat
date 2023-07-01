@@ -8,6 +8,7 @@ import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../utils.js'
 import {Cluster} from './cluster.js'
+import {AdminProcess, WorkerProcess} from "./processes.js"
 
 
 const HOST      = '127.0.0.1'
@@ -60,10 +61,11 @@ async function main() {
     let cmd = argv._[0]
     if (!commands.includes(cmd)) return print("Unknown command:", cmd)
 
-    let cluster = new Cluster()
-    // if (cmd !== '_build_') await cluster.startup()      // _build_ command performs its own startup (creating registry)
+    let schemat = (cmd === 'run') ?
+        new WorkerProcess() :
+        new AdminProcess()
 
-    return cluster[cmd](argv)
+    return schemat.start(cmd, {...argv})
 }
 
 await main()

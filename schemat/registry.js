@@ -139,6 +139,8 @@ export class Registry {
 
     // get db() { return this.cluster.prop('db') }
 
+    cluster                 // Cluster instance that manages the entire infrastructure
+
     db                      // database for accessing items and other data from database servers
     root                    // permanent reference to a singleton root Category object, kept here instead of cache
     site                    // fully loaded Site instance that will handle all web requests

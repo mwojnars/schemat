@@ -1,5 +1,5 @@
+import {print, assert, T} from "../utils.js";
 import {Cluster} from "./cluster.js";
-import {print, T} from "../utils.js";
 import {Item} from "../item.js";
 import {JSONx} from "../serialize.js";
 import {EditData} from "../db/edits.js";
@@ -11,7 +11,14 @@ import {EditData} from "../db/edits.js";
  **
  */
 
-export class SchematProcess {}
+export class SchematProcess {
+
+    start(cmd, opts = {}) {
+        // assert(this[cmd], `unknown command: ${cmd}`)
+        let cluster = new Cluster()
+        return cluster[cmd](opts)
+    }
+}
 
 export class WorkerProcess extends SchematProcess {
 
@@ -25,7 +32,7 @@ export class WorkerProcess extends SchematProcess {
 }
 
 export class AdminProcess extends SchematProcess {
-    /* A CLI tool for managing a Schemat cluster or node. */
+    /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from command line. */
 
     async _update_all() {
         /* Perform "update in place" on every item in the database, for instance, to force conversion of the items

@@ -57,10 +57,13 @@ export class Cluster extends Item {
         // this.id = CLUSTER_IID
         // this.load()
         // registry.setDB(this.prop('db'))
+        // await registry.boot()   // reload `root` and `site`
     }
 
     async createRegistry(db = null) {
-        return this.registry = await ServerRegistry.createGlobal(db, __dirname)
+        let registry = this.registry = await ServerRegistry.createGlobal(db, __dirname)
+        registry.cluster = this
+        return registry
     }
 
     async run({host, port, workers}) {
@@ -77,8 +80,6 @@ export class Cluster extends Item {
         return Promise.all([web, data])
     }
 
-
-    /*****  Admin interface  *****/
 
     async _build_({path_db_boot}) {
         /* Generate the core system items anew and save. */
