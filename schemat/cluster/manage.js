@@ -36,7 +36,7 @@ async function main() {
             //     .positional('newid')
         )
         .command(
-            '_build_ [path_db_boot]', 'generate the core "db-boot" database anew',
+            'build [path_db_boot]', 'generate the core "db-boot" database anew',
         )
         .option('bottom', {
             alias: 'b',
@@ -55,7 +55,7 @@ async function main() {
     let commands = [
         'run',
         'move',
-        '_build_',
+        'build',
     ]
 
     let cmd = argv._[0]
