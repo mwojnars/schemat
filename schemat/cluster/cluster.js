@@ -5,7 +5,6 @@ import {print, T} from "../utils.js"
 import {Item} from "../item.js"
 import {Ring, ServerDB} from "../db/db_srv.js"
 import {ServerRegistry} from "../registry_srv.js"
-import {DataServer, WebServer} from "./servers.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]

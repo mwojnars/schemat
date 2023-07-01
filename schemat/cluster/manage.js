@@ -7,7 +7,6 @@ import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 
 import {print, T} from '../utils.js'
-import {Cluster} from './cluster.js'
 import {AdminProcess, WorkerProcess} from "./processes.js"
 
 

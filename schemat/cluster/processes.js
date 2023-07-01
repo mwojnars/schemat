@@ -15,10 +15,10 @@ import {Ring} from "../db/db_srv.js";
 
 export class SchematProcess {
 
-    static CLI_PREFIX = 'CLI_'
+    CLI_PREFIX = 'CLI_'
 
     start(cmd, opts = {}) {
-        let method = this.constructor.CLI_PREFIX + cmd
+        let method = this.CLI_PREFIX + cmd
         assert(this[method], `unknown command: ${cmd}`)
         this.cluster = new Cluster()
         return this[method](opts)
@@ -27,13 +27,13 @@ export class SchematProcess {
 
 export class WorkerProcess extends SchematProcess {
 
-    async startCluster(boot_db, cluster_iid) {
-        let cluster = new Cluster()
-        cluster.id = cluster_iid
-        cluster.db = boot_db
-        await cluster.startup()
-        return cluster
-    }
+    // async startCluster(boot_db, cluster_iid) {
+    //     let cluster = new Cluster()
+    //     cluster.id = cluster_iid
+    //     cluster.db = boot_db
+    //     await cluster.startup()
+    //     return cluster
+    // }
 
     async CLI_run({host, port, workers}) {
         await this.cluster.startup()
@@ -51,7 +51,7 @@ export class WorkerProcess extends SchematProcess {
 }
 
 export class AdminProcess extends SchematProcess {
-    /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from command line. */
+    /* Administrative tasks. A CLI tool for managing a Schemat cluster or node from the command line. */
 
     async CLI_build({path_db_boot}) {
         /* Generate the core system items anew and save. */
