@@ -64,6 +64,7 @@ async function main() {
         new WorkerProcess() :
         new AdminProcess()
 
+    await schemat.init()
     return schemat.start(cmd, {...argv})
 }
 

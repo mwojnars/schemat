@@ -41,8 +41,9 @@ export class Cluster extends Item {
             // {item: 1015, name: 'mysql', readonly: true},
         ]
 
+        // let registry = await this.createRegistry(schemat)
+        let registry = this.registry = schemat.registry
         let db = this.db = new ServerDB()
-        let registry = await this.createRegistry(schemat)
 
         for (const spec of rings) {
             let ring = new Ring(spec)
@@ -59,10 +60,8 @@ export class Cluster extends Item {
         // await registry.boot()   // reload `root` and `site`
     }
 
-    async createRegistry(schemat) {
-        let registry = this.registry = await ServerRegistry.createGlobal(schemat, __dirname)
-        registry.cluster = this
-        return registry
-    }
+    // async createRegistry(schemat) {
+    //     return this.registry = await ServerRegistry.createGlobal(schemat, __dirname)
+    // }
 }
 

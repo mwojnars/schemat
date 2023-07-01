@@ -1,8 +1,7 @@
-/**********************************************************************************************************************
- **
- **  PROCESSES
- **
- */
+import {ClientRegistry} from "./registry.js";
+
+
+/**********************************************************************************************************************/
 
 export class SchematProcess {
     /* A Schemat process running on a node or in a user browser. */
@@ -18,7 +17,17 @@ export class SchematProcess {
     constructor() {
         globalThis.schemat = this
     }
+
+    async init() { return this }         // creating the registry; override in subclasses
+
+    async _create_registry(registry_class, ...args) {
+        let registry = await registry_class.createGlobal(this, ...args)
+        this.registry = registry
+        globalThis.registry = registry
+        return this
+    }
 }
+
 
 export class ClientProcess extends SchematProcess {
 
@@ -26,5 +35,7 @@ export class ClientProcess extends SchematProcess {
         super()
         this.client_db = client_db
     }
+
+    async init() { return this._create_registry(ClientRegistry) }
 }
 

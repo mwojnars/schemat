@@ -1,3 +1,6 @@
+import path from "path";
+import {fileURLToPath} from "url";
+
 import {print, assert, T} from "../utils.js";
 import {Cluster, DB_ROOT} from "./cluster.js";
 import {Item} from "../item.js";
@@ -6,12 +9,18 @@ import {EditData} from "../db/edits.js";
 import {DataServer, WebServer} from "./servers.js";
 import {Ring} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
+import {ServerRegistry} from "../registry_srv.js";
+
+const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
+const __dirname  = path.dirname(__filename) + '/..'
 
 
 /**********************************************************************************************************************/
 
 export class BackendProcess extends SchematProcess {
     CLI_PREFIX = 'CLI_'
+
+    async init() { return this._create_registry(ServerRegistry, __dirname) }
 
     start(cmd, opts = {}) {
         let method = this.CLI_PREFIX + cmd
@@ -59,8 +68,8 @@ export class AdminProcess extends BackendProcess {
         await ring.open()
         await ring.erase()
 
-        let registry = await this.cluster.createRegistry(this)
-        return bootstrap(registry, ring)
+        // let registry = await this.cluster.createRegistry(this)
+        return bootstrap(this.registry, ring)
     }
 
     async CLI_move({id, newid, bottom, ring: ringName}) {
