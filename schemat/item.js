@@ -1325,9 +1325,10 @@ export class Category extends Item {
 
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        let fields = this.prop('fields')
-        let custom = this.prop('allow_custom_fields')
-        return new DATA({fields: fields.object(), strict: custom !== true})
+        return this.prop('schema')
+        // let fields = this.prop('fields')
+        // let custom = this.prop('allow_custom_fields')
+        // return new DATA({fields: fields.object(), strict: custom !== true})
     }
 
     _checkPath(request) {

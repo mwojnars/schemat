@@ -146,12 +146,14 @@ export class Schema {
          */
         assert(!this.isRepeated())
         for (let entries of streamsOfEntries) {
-            let arr = [...entries]          // convert an iterator to an array
+            let arr = [...entries]                          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
             if (arr.length < 1) continue
             return arr[0]
         }
-        return this.impute(item)
+
+        let value = this.impute(item)
+        if (value !== undefined) return {value}             // synthetic entry with imputed value
     }
 
     impute(item) {
