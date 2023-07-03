@@ -38,6 +38,11 @@ export class Schema {
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
+        impute   : undefined,   // function(context) to be used for imputation of missing values; only called for
+                                // non-repeated properties, when `default` is undefined and there are no inherited values;
+                                // the meaning of `context` is schema-specific, but typically it is a reference
+                                // to item's all data (including inherited and cached values), i.e., item._dataAll catalog
+
         // TODO: to be added in the future...
         // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
         // compress: undefined,     // whether to compress JSON output in stringify/parse()
@@ -115,27 +120,29 @@ export class Schema {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combine(streamsOfEntries) {
+    combineStreams(streamsOfEntries, context) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated, or the entries are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is included in the merge as the last entry.
+           `context` is an argument to downstream impute().
          */
         if (this.props.repeated) return concat(streamsOfEntries.map(stream => [...stream]))
-
-        // include the default value in the merge, if present
-        let default_ = this.props.default
-        let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
-
-        let entry = this.merge(streams)
+        let entry = this.mergeEntries(streamsOfEntries, context)
         return entry !== undefined ? [entry] : []
+
+        // // include the default value in the merge, if present
+        // let default_ = this.props.default
+        // let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
+        // let entry = this.mergeEntries(streams)
+        // return entry !== undefined ? [entry] : []
     }
-    merge(streamsOfEntries) {
-        /* For single-valued schemas (prop.repeated is false).
-           Merge the values of multiple streams of inherited entries whose .value matches this schema.
+    mergeEntries(streamsOfEntries, context) {
+        /* Only used for single-valued schemas (when prop.repeated == false).
+           Merge the values of multiple streams of inherited entries whose .value matches this schema (TODO: check against incompatible inheritance).
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
-           The merged value may include or consist of the schema's default (prop.default).
+           The merged value may include or consist of the schema's imputed value (props.impute()) or default (props.default).
            The entry returned can be synthetic and contain {value} attribute only.
-           Base class implementation returns the first entry of `streamsOfEntries`, or default.
+           Base class implementation returns the first entry of `streamsOfEntries`, or the default value, or imputed value.
            Subclasses may provide a different implementation.
          */
         assert(!this.props.repeated)
@@ -145,7 +152,23 @@ export class Schema {
             if (arr.length < 1) continue
             return arr[0]
         }
+        return this.impute(context)
     }
+
+    impute(context) {
+        /* Impute a value for this schema, given the context (a dict of values of other schemas).
+           This may return the default value (if present), or run the impute() property function.
+         */
+        let value = this.props.default
+        if (value !== undefined) return value
+
+        let impute = this.props.impute
+        // if (typeof impute === 'string') { ... compile `impute` to a function ... }
+
+        if (typeof impute === 'function')
+            return impute(context)
+    }
+
 
     /***  UI  ***/
 
@@ -806,13 +829,20 @@ export class CATALOG extends Schema {
         })
     }
 
-    merge(streams) {
+    mergeEntries(streams, context) {
         let entries = concat(streams.map(s => [...s]))      // input streams must be materialized before concat()
-        if (entries.length === 1) return entries[0]
+        if (entries.length === 0) return this.impute(context)
+        // if (entries.length === 1) return entries[0]
+
+        // include the default value in the merge, if present
         let catalogs = entries.map(e => e.value)
+        let default_ = this.props.default
+        if (default_ !== undefined) catalogs = [...catalogs, default_]
+
+        // merge entries
         // TODO: inside Catalog.merge(), if repeated=false, overlapping entries should be merged recursively
         //       through combine() of props.values schema
-        if (catalogs.length) return {value: Catalog.merge(catalogs, !this.props.repeated)}
+        return {value: Catalog.merge(catalogs, !this.props.repeated)}
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
@@ -1248,6 +1278,36 @@ export class DATA_GENERIC extends DATA {
     subschema(key)  { return this.props.fields[key] || generic_schema }
     _all_schemas()  { return [...super._all_schemas(), generic_schema] }
 }
+
+
+/**********************************************************************************************************************/
+
+// export class VIRTUAL_FIELD extends Schema {
+//     /* A virtual field is a field that is not stored in the database, but is computed on the fly from other fields.
+//        It is used to implement computed fields, such as "name" for a person (first_name + last_name).
+//        The value is computed lazily (upon request) by a function `compute` that takes the item as an argument.
+//        By default, the computed value is cached. To disable caching, set `cache` to false.
+//      */
+//
+//     static defaultProps = {
+//         compute:    undefined,          // function(item) that computes the value of the field
+//         cache:      true,               // if true, the computed value is cached
+//     }
+//
+//     cache = undefined                   // cached computed value of the field
+//
+//     compute(item) {
+//         if (this.cache !== undefined) return this.cache
+//         let {compute, cache} = this.props
+//         if (!compute) throw new DataError(`virtual field ${this.name} has no compute() function`)
+//         let value = compute(item)
+//         if (cache) this.cache = value
+//         return value
+//     }
+// }
+//
+// export class VIRTUAL_ITEM_SCHEMA extends VIRTUAL_FIELD {
+// }
 
 
 /**********************************************************************************************************************

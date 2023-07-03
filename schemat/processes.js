@@ -6,7 +6,7 @@ import {ClientDB} from "./db/db.js"
 /**********************************************************************************************************************/
 
 export class SchematProcess {
-    /* A Schemat process running on a node or in a user browser. */
+    /* The main Schemat process, on a worker node or in a user browser. */
 
     registry
     cluster         // the cluster this process belongs to; only defined in backend processes

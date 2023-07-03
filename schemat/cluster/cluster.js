@@ -19,6 +19,8 @@ export class Cluster extends Item {
 
     db
 
+    // get db() { return this.prop('db') }
+
     async startup() {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).

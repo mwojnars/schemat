@@ -579,7 +579,6 @@ export class Item {
 
             // before falling back to a default value stored in a POJO attribute,
             // check that 'path' is valid according to schema, to block access to system fields like .data etc
-            // - this is done for non-shadow items only, because shadow ones don't have a schema
             if (!opts.schemaless) {
                 let schema = this.getSchema()
                 let [prop] = Path.split(path)
@@ -620,14 +619,15 @@ export class Item {
     propsReversed(path)     { return [...this.props(path)].reverse() }
 
     *entries(prop, {schemaless= false} = {}) {
-        /* Generate a stream of valid entries for a given property: own and inherited.
+        /* Generate a stream of valid entries for a given property: own entries followed by inherited ones;
+           or the default entry (if own/inherited are missing), or an imputed entry.
            If the schema doesn't allow multiple entries for `prop`, the first one is yielded (for atomic types),
            or the objects (own, inherited & default) get merged into one (for "mergeable" types like CATALOG).
            Once computed, the list of entries is cached in this._dataAll for future use.
            If schemaless=true, a concatenated stream of all matching entries is returned without caching -
            for system properties, like __category__, which are processed when the schema is not yet available.
          */
-        let entries = this._dataAll.get(prop)                              // array of entries, or undefined
+        let entries = this._dataAll.get(prop)                               // array of entries, or undefined
         if (entries) yield* entries
 
         let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
@@ -637,7 +637,7 @@ export class Item {
         else {
             let schema = this.getSchema(prop)
             if (!schema) throw new Error(`not in schema: '${prop}'`)
-            entries = schema.combine(streams)
+            entries = schema.combineStreams(streams, this._dataAll)         // here, schema's `default` or `impute` may be used
             this._dataAll.set(prop, entries)
         }
         yield* entries
