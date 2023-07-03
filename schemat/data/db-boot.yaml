@@ -104,6 +104,9 @@
           "@": STRING
         "@": Catalog
       "@": CATALOG
+    schema:
+      info: A DATA schema automatically imputed from the `fields` property.
+      "@": ITEM_SCHEMA
     allow_custom_fields:
       default: false
       info: If true, it is allowed to use undefined (out-of-schema) fields in items -

@@ -40,9 +40,11 @@ export class Schema {
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
 
-        impute   : undefined,   // function(context) to be used for imputation of missing values; only called for
-                                // non-repeated properties, when `default` is undefined and there are no inherited values;
-                                // the meaning of `context` is schema-specific, but typically it is a reference the item
+        impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
+                                // only called for non-repeated properties, when `default`==undefined and there are no inherited values
+
+        editable : undefined,   // if true, the field described by this schema can be edited by the user;
+                                // typically set to false for imputed fields
 
         // TODO: to be added in the future...
         // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
@@ -121,18 +123,18 @@ export class Schema {
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
-    combineStreams(streamsOfEntries, context) {
+    combineStreams(streamsOfEntries, item) {
         /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
            The streams are either concatenated, or the entries are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is included in the merge as the last entry.
-           `context` is an argument to downstream impute().
+           `item` is an argument to downstream impute().
          */
         if (this.isRepeated()) return concat(streamsOfEntries.map(stream => [...stream]))
-        let entry = this.mergeEntries(streamsOfEntries, context)
+        let entry = this.mergeEntries(streamsOfEntries, item)
         return entry !== undefined ? [entry] : []
     }
 
-    mergeEntries(streamsOfEntries, context) {
+    mergeEntries(streamsOfEntries, item) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge the values of multiple streams of inherited entries whose .value matches this schema (TODO: check against incompatible inheritance).
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
@@ -149,12 +151,12 @@ export class Schema {
             if (arr.length < 1) continue
             return arr[0]
         }
-        return this.impute(context)
+        return this.impute(item)
     }
 
-    impute(context) {
-        /* Impute a value for this schema, given the schema-specific context.
-           This may return the default value (if present), or run the impute() property function.
+    impute(item) {
+        /* Impute a value for an `item`s field described by this schema.
+           This may return the default value (if present), or run the props.impute() property function.
          */
         let value = this.props.default
         if (value !== undefined) return value
@@ -163,7 +165,7 @@ export class Schema {
         // if (typeof impute === 'string') { ... compile `impute` to a function ... }
 
         if (typeof impute === 'function')
-            return impute.call(this, context)
+            return impute.call(item)
     }
 
 
@@ -826,9 +828,9 @@ export class CATALOG extends Schema {
         })
     }
 
-    mergeEntries(streams, context) {
+    mergeEntries(streams, item) {
         let entries = concat(streams.map(s => [...s]))              // input streams must be materialized before concat()
-        if (entries.length === 0) return this.impute(context)
+        if (entries.length === 0) return this.impute(item)
 
         // include the default value in the merge, if present
         let catalogs = entries.map(e => e.value)
@@ -1275,6 +1277,20 @@ export class DATA_GENERIC extends DATA {
     _all_schemas()  { return [...super._all_schemas(), generic_schema] }
 }
 
+
+export class ITEM_SCHEMA extends SCHEMA {
+    /* An (imputed) instance of DATA schema for items in a category (the category's `fields` combined into a DATA instance). */
+
+    static defaultProps = {
+        impute:
+            function() {
+                /* `this` should be bound to a Category object that defines items' schema through its `fields` property. */
+                let fields = this.prop('fields')
+                let custom = this.prop('allow_custom_fields')
+                return new DATA({fields: fields.object(), strict: custom !== true})
+            }
+    }
+}
 
 /**********************************************************************************************************************/
 
