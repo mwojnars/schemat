@@ -633,7 +633,7 @@ export class Item {
         if (entries) yield* entries
 
         // below, `this` is included at the 1st position among ancestors;
-        // `streams` is a function so that its evaluation can be omitted if the non-repeated value is readily available in this.data
+        // `streams` is a function so its evaluation can be omitted if a non-repeated value is already available in this.data
         let streams = () => this.getAncestors().map(proto => proto.entriesRaw(prop))
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
@@ -1325,10 +1325,7 @@ export class Category extends Item {
 
     getItemSchema() {
         /* Get schema of items in this category (not the schema of self, which is returned by getSchema()). */
-        return this.prop('schema')
-        // let fields = this.prop('fields')
-        // let custom = this.prop('allow_custom_fields')
-        // return new DATA({fields: fields.object(), strict: custom !== true})
+        return this.prop('item_schema')
     }
 
     _checkPath(request) {

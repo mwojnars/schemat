@@ -104,8 +104,9 @@
           "@": STRING
         "@": Catalog
       "@": CATALOG
-    schema:
-      info: A DATA schema automatically imputed from the `fields` property.
+    item_schema:
+      info: A DATA schema for this category's items. Automatically imputed from the
+        `fields` property.
       "@": ITEM_SCHEMA
     allow_custom_fields:
       default: false
