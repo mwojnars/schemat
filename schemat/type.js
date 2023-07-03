@@ -27,7 +27,7 @@ export function is_valid_field_name(name) {
 export class Schema {
 
     isCatalog()     { return false }
-    isCompound()    { return this.isCatalog() }     // "compound" schema is the one that implements a custom mergeEntries() method
+    isCompound()    { return this.isCatalog() }     // "compound" schema implements a custom mergeEntries(), which prevents some optimizations
     isRepeated()    { return this.props.repeated }
 
     // common properties of schemas; can be utilized by subclasses or callers:
@@ -139,7 +139,8 @@ export class Schema {
            The merged value may include or consist of the schema's imputed value (props.impute()) or default (props.default).
            The entry returned can be synthetic and contain {value} attribute only.
            Base class implementation returns the first entry of `streamsOfEntries`, or the default value, or imputed value.
-           Subclasses may provide a different implementation.
+           Subclasses may provide a different implementation - in such case the schema is considered "compound"
+           and should return isCompound() == true to prevent simplified merging in Item.entries().
          */
         assert(!this.isRepeated())
         for (let entries of streamsOfEntries) {

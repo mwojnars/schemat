@@ -644,7 +644,7 @@ export class Item {
             if (!schema.isRepeated() && !schema.isCompound() && this.data.has(prop))
                 entries = [this.data.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
             else
-                entries = schema.combineStreams(streams(), this)            // here, schema's `default` or `impute` may be used
+                entries = schema.combineStreams(streams(), this)            // here, `default` or `impute` of the schema may be applied internally
 
             this._dataAll.set(prop, entries)
         }
