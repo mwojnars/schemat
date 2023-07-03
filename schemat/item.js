@@ -325,8 +325,10 @@ export class Item {
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
 
-    _dataAll = new Map()        // {field: combined own data + inherited from ancestors + inherited from schema default + imputed}
-                                // each field is computed and cached separately, lazily upon request
+    _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
+                                // each array consists of own data (from item.data) + inherited from ancestors, or schema default / imputed;
+                                // for non-repeated fields, the arrays are singletons
+                                // each field is computed and cached separately, lazily upon request;
 
     _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
@@ -630,14 +632,20 @@ export class Item {
         let entries = this._dataAll.get(prop)                               // array of entries, or undefined
         if (entries) yield* entries
 
-        let ancestors = this.getAncestors()                                 // includes `this` at the 1st position
-        let streams = ancestors.map(proto => proto.entriesRaw(prop))
+        // below, `this` is included at the 1st position among ancestors;
+        // `streams` is a function so that its evaluation can be omitted if the non-repeated value is readily available in this.data
+        let streams = () => this.getAncestors().map(proto => proto.entriesRaw(prop))
 
-        if (schemaless) entries = concat(streams.map(stream => [...stream]))
+        if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
             let schema = this.getSchema(prop)
             if (!schema) throw new Error(`not in schema: '${prop}'`)
-            entries = schema.combineStreams(streams, this._dataAll)         // here, schema's `default` or `impute` may be used
+
+            if (!schema.isRepeated() && !schema.isCompound() && this.data.has(prop))
+                entries = [this.data.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
+            else
+                entries = schema.combineStreams(streams(), this)            // here, schema's `default` or `impute` may be used
+
             this._dataAll.set(prop, entries)
         }
         yield* entries

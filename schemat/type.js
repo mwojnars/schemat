@@ -26,7 +26,9 @@ export function is_valid_field_name(name) {
 
 export class Schema {
 
-    get isCatalog() { return false }
+    isCatalog()     { return false }
+    isCompound()    { return this.isCatalog() }     // "compound" schema is the one that implements a custom mergeEntries() method
+    isRepeated()    { return this.props.repeated }
 
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
@@ -40,8 +42,7 @@ export class Schema {
 
         impute   : undefined,   // function(context) to be used for imputation of missing values; only called for
                                 // non-repeated properties, when `default` is undefined and there are no inherited values;
-                                // the meaning of `context` is schema-specific, but typically it is a reference
-                                // to item's all data (including inherited and cached values), i.e., item._dataAll catalog
+                                // the meaning of `context` is schema-specific, but typically it is a reference the item
 
         // TODO: to be added in the future...
         // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
@@ -126,16 +127,11 @@ export class Schema {
            In the latter case, the default value (if present) is included in the merge as the last entry.
            `context` is an argument to downstream impute().
          */
-        if (this.props.repeated) return concat(streamsOfEntries.map(stream => [...stream]))
+        if (this.isRepeated()) return concat(streamsOfEntries.map(stream => [...stream]))
         let entry = this.mergeEntries(streamsOfEntries, context)
         return entry !== undefined ? [entry] : []
-
-        // // include the default value in the merge, if present
-        // let default_ = this.props.default
-        // let streams = (default_ !== undefined) ? [...streamsOfEntries, [{value: default_}]] : streamsOfEntries
-        // let entry = this.mergeEntries(streams)
-        // return entry !== undefined ? [entry] : []
     }
+
     mergeEntries(streamsOfEntries, context) {
         /* Only used for single-valued schemas (when prop.repeated == false).
            Merge the values of multiple streams of inherited entries whose .value matches this schema (TODO: check against incompatible inheritance).
@@ -145,7 +141,7 @@ export class Schema {
            Base class implementation returns the first entry of `streamsOfEntries`, or the default value, or imputed value.
            Subclasses may provide a different implementation.
          */
-        assert(!this.props.repeated)
+        assert(!this.isRepeated())
         for (let entries of streamsOfEntries) {
             let arr = [...entries]          // convert an iterator to an array
             if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
@@ -156,7 +152,7 @@ export class Schema {
     }
 
     impute(context) {
-        /* Impute a value for this schema, given the context (a dict of values of other schemas).
+        /* Impute a value for this schema, given the schema-specific context.
            This may return the default value (if present), or run the impute() property function.
          */
         let value = this.props.default
@@ -166,7 +162,7 @@ export class Schema {
         // if (typeof impute === 'string') { ... compile `impute` to a function ... }
 
         if (typeof impute === 'function')
-            return impute(context)
+            return impute.call(this, context)
     }
 
 
@@ -783,7 +779,7 @@ export class CATALOG extends Schema {
     - keys not allowed (what about labels then?)
      */
 
-    get isCatalog() { return true }
+    isCatalog() { return true }
 
     static defaultProps = {
         keys:       new STRING({blank: true}),      // schema of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
@@ -824,25 +820,24 @@ export class CATALOG extends Schema {
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
         return Path.find(this, path, (schema, key) => {
-            if (!schema.isCatalog) throw new Error(`schema path not found: ${path}`)
+            if (!schema.isCatalog()) throw new Error(`schema path not found: ${path}`)
             return [schema.subschema(key)]
         })
     }
 
     mergeEntries(streams, context) {
-        let entries = concat(streams.map(s => [...s]))      // input streams must be materialized before concat()
+        let entries = concat(streams.map(s => [...s]))              // input streams must be materialized before concat()
         if (entries.length === 0) return this.impute(context)
-        // if (entries.length === 1) return entries[0]
 
         // include the default value in the merge, if present
         let catalogs = entries.map(e => e.value)
         let default_ = this.props.default
         if (default_ !== undefined) catalogs = [...catalogs, default_]
 
-        // merge entries
+        return {value: Catalog.merge(catalogs, !this.isRepeated())}                   // merge entries
+
         // TODO: inside Catalog.merge(), if repeated=false, overlapping entries should be merged recursively
         //       through combine() of props.values schema
-        return {value: Catalog.merge(catalogs, !this.props.repeated)}
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
@@ -1165,7 +1160,7 @@ CATALOG.Table = class extends Component {
                 let id  = Math.max(...ids.filter(Number.isInteger)) + 1     // IDs are needed internally as keys in React subcomponents
                 prev[pos] = {id, key, value}
 
-                if (schema.isCatalog) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
+                if (schema.isCatalog()) item.action.insert_field(path, pos, {key, value: JSONx.encode(value) })
                 else prev[pos].saveNew = (value) =>
                     item.action.insert_field(path, pos, {key, value: JSONx.encode(value)}).then(() => unnew())
 
@@ -1218,7 +1213,7 @@ CATALOG.Table = class extends Component {
             ops.updateValue = val => run.updateValue(pos, val, vschema)
 
             let props   = {item, path: [...path, pos], entry, schema: vschema, color, ops}
-            let row     = e(vschema?.isCatalog ? this.EntrySubcat : this.EntryAtomic, props)
+            let row     = e(vschema?.isCatalog() ? this.EntrySubcat : this.EntryAtomic, props)
             return DIV(cl(`entry entry${color}`), {key: entry.id}, row)
         })
 
