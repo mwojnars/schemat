@@ -29,6 +29,7 @@ export class Schema {
     isCatalog()     { return false }
     isCompound()    { return this.isCatalog() }     // "compound" schema implements a custom mergeEntries(), which prevents some optimizations
     isRepeated()    { return this.props.repeated }
+    isEditable()    { return this.props.editable }
 
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
@@ -43,7 +44,7 @@ export class Schema {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 
-        editable : undefined,   // if true, the field described by this schema can be edited by the user;
+        editable : true,        // if true, the field described by this schema can be edited by the user;
                                 // typically set to false for imputed fields
 
         // TODO: to be added in the future...
@@ -1265,7 +1266,12 @@ export class DATA extends CATALOG {
     }
     _all_schemas() { return Object.values(this.props.fields) }
 
-    getValidKeys()          { return Object.getOwnPropertyNames(this.props.fields).sort() }
+    getValidKeys() {
+        let fields = Object.getOwnPropertyNames(this.props.fields)
+        fields = fields.filter(f => this.props.fields[f].isEditable())      // only keep user-editable fields
+        return fields.sort()
+    }
+
     displayTable(props)     { return super.displayTable({...props, value: props.item.data, start_color: 1}) }
 }
 
@@ -1284,8 +1290,9 @@ export class ITEM_SCHEMA extends SCHEMA {
     /* An (imputed) instance of DATA schema for items in a category (the category's `fields` combined into a DATA instance). */
 
     static defaultProps = {
+        editable: false,
         impute() {
-            /* `this` should be bound to a Category object that defines items' schema through its `fields` property. */
+            /* `this` is expected to be a Category object that defines items' schema through its `fields` property. */
             // assert(this instanceof Category)
             let fields = this.prop('fields')
             let custom = this.prop('allow_custom_fields')
@@ -1298,6 +1305,7 @@ export class OWN_SCHEMA extends SCHEMA {
     /* An (imputed) instance of DATA schema for the item (self), imputed from the category. */
 
     static defaultProps = {
+        editable: false,
         impute() {
             // assert(this instanceof Item)
             return this.category?.getItemSchema() || new DATA_GENERIC()
