@@ -638,7 +638,7 @@ export class Item {
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
-            let schema = this.getSchema(prop)
+            let schema = this.getSchema().get(prop)
             if (!schema) throw new Error(`not in schema: '${prop}'`)
 
             if (!schema.isRepeated() && !schema.isCompound() && this.data.has(prop))
@@ -711,10 +711,11 @@ export class Item {
         return `[${stamp}]`
     }
 
-    getSchema(field = undefined) {
+    getSchema() {
         /* Return schema of this item (instance of DATA), or of a particular `field`. */
-        let schema = this.category?.getItemSchema() || new DATA_GENERIC()
-        return field !== undefined ? schema.get(field) : schema
+        // return this.prop('schema')
+        return this.category?.getItemSchema() || new DATA_GENERIC()
+        // return field !== undefined ? schema.get(field) : schema
     }
 
     // getSchema(path = null) {

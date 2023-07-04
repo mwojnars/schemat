@@ -1,5 +1,5 @@
 import {Catalog, Data} from "../data.js"
-import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT, BOOLEAN, ITEM_SCHEMA} from "../type.js"
+import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT, BOOLEAN, ITEM_SCHEMA, OWN_SCHEMA} from "../type.js"
 
 
 /**********************************************************************************************************************
@@ -11,6 +11,7 @@ import {CATALOG, CODE, ITEM, NUMBER, PATH, SCHEMA, STRING, TEXT, BOOLEAN, ITEM_S
 // global-default fields shared by all item types
 let default_fields = new Catalog({
     __category__: new ITEM({info: "Category of this item. Determines item's behavior and the schema of its attributes. Each category should be an item of the Root Category (IID=0)."}),
+    schema      : new OWN_SCHEMA({info: "The DATA schema for this item. A virtual (non-editable) field automatically imputed from this item's category(ies)."}),
     name        : new STRING({info: "Display name of the item. May contain spaces, punctuation, non-latin characters."}),
     path        : new PATH({info: "Canonical path of this item within the SUN, for: display, resolving relative code imports, resolving relative item references (REF type), etc. If `path` is configured, callers can only import this item's code through the `path`, so that the code is always interpreted the same and can be cached after parsing."}),
     info        : new TEXT({info: "Description of the item."}),
@@ -40,7 +41,7 @@ let root_fields = new Catalog({
     cache_ttl    : new NUMBER({default: 5.0, info: "Time To Live (TTL). Determines for how long (in seconds) an item of this category is kept in a server-side cache after being loaded from DB, for reuse by subsequent requests. A real number. If zero, the items are evicted immediately after each request."}),
     cached_methods:new STRING({info: "Space- and/or comma-separated list of method names of this category's Class whose calls are to be cached via Item.setCaching(). Only used when a custom subclass is created through the `class_body` or `views` properties."}),
     fields       : new CATALOG({values: new SCHEMA(), info: "Fields must have unique names.", default: default_fields}),
-    item_schema  : new ITEM_SCHEMA({info: "A DATA schema for this category's items. Automatically imputed from the `fields` property."}),
+    item_schema  : new ITEM_SCHEMA({info: "The DATA schema for this category's items. A virtual (non-editable) field automatically imputed from the `fields` property."}),
 
     // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
 

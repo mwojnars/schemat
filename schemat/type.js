@@ -1284,15 +1284,27 @@ export class ITEM_SCHEMA extends SCHEMA {
     /* An (imputed) instance of DATA schema for items in a category (the category's `fields` combined into a DATA instance). */
 
     static defaultProps = {
-        impute:
-            function() {
-                /* `this` should be bound to a Category object that defines items' schema through its `fields` property. */
-                let fields = this.prop('fields')
-                let custom = this.prop('allow_custom_fields')
-                return new DATA({fields: fields.object(), strict: custom !== true})
-            }
+        impute() {
+            /* `this` should be bound to a Category object that defines items' schema through its `fields` property. */
+            // assert(this instanceof Category)
+            let fields = this.prop('fields')
+            let custom = this.prop('allow_custom_fields')
+            return new DATA({fields: fields.object(), strict: custom !== true})
+        }
     }
 }
+
+export class OWN_SCHEMA extends SCHEMA {
+    /* An (imputed) instance of DATA schema for the item (self), imputed from the category. */
+
+    static defaultProps = {
+        impute() {
+            // assert(this instanceof Item)
+            return this.category?.getItemSchema() || new DATA_GENERIC()
+        }
+    }
+}
+
 
 /**********************************************************************************************************************/
 

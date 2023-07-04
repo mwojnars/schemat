@@ -75,6 +75,10 @@
             attributes. Each category should be an item of the Root Category
             (IID=0).
           "@": ITEM
+        schema:
+          info: The DATA schema for this item. A virtual (non-editable) field
+            automatically imputed from this item's category(ies).
+          "@": OWN_SCHEMA
         name:
           info: Display name of the item. May contain spaces, punctuation, non-latin
             characters.
@@ -105,8 +109,8 @@
         "@": Catalog
       "@": CATALOG
     item_schema:
-      info: A DATA schema for this category's items. Automatically imputed from the
-        `fields` property.
+      info: The DATA schema for this category's items. A virtual (non-editable) field
+        automatically imputed from the `fields` property.
       "@": ITEM_SCHEMA
     allow_custom_fields:
       default: false
