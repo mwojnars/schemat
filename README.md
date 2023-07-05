@@ -1,68 +1,36 @@
-# Schemat / Hyperweb
+# Schemat
+
+**Schemat** is a novel, object-oriented software platform for scalable, data-centric web applications
+with complex and evolving data schemas.
+
+Schemat already provides, or will provide in the future:
+
+- built-in scalable, distributed data store of NoSQL type that keeps all primary data as JSON-serialized 
+  **data objects** and allows for creation of secondary indexes and aggregations through 
+  persistent, distributed **data transforms** (a la MapReduce)
+- **schema-awareness** of data objects through their optional assignment to **categories**, 
+  where each category specifies a rich, Javascript-based schema for the objects' properties, with support for: 
+  arbitrary type validations, custom value constraints, nested values, repetitions, arrays, defaults, imputations and more; 
+- **extended JSON serialization** that can serialize arbitrary data objects, for storage or transmission, 
+  while preserving their identity as expressed by their class and category;
+- **uniform object namespace** that provides a consistent network-wide naming scheme for all the application's 
+  objects and code, allowing the dependencies to be declared in the same way on the client and the server, 
+  and the same code to be executed on both sides;
+- **web-aware encapsulation** for objects that binds together their data, behavior, and appearance, 
+  and allows for their transparent execution on both the client and the server; 
+- **universality** of the data objects, which can be instantiated and executed on both the client and the server, 
+  and can be passed between them without any loss of information;
+- **network polimorphism** of data objects: .....
+- **multiple prototypical inheritance** for categories and objects, such that properties or schema definitions
+  of a given object can be derived - in part or in whole - from other category(ies) or object(s);
+- **schema evolution** that allows for schema changes to be applied to the categories and objects in a selective manner,
+  without the need to update the entire database;
+- **css-safe embedding** of widgets in the front-end;
+
+Schemat is written in Node.js and Javascript. It is designed to be simple, fast, and scalable.
+Currently, it is in the early stages of development (work in progress).
+
 
 ## Introduction
 
-- Similar to a desktop app, Schemat's web application is fully built of **objects** (**items**).
-  Unlike in desktop programming, however, all the application's objects are stored in a database using automatic
-  schema-driven **serialization**, and are accessible **server-side** and **client-side** alike in a way 
-  that is transparent to the programmer.
-- Thanks to the Schemat's Universal Namespace (**SUN**) which standardizes the way how application's objects 
-  and all functional parts are named, each object is accessible through the same import path on both the server
-  and the client, which greatly simplifies coding. 
-- 
-
-
-## Programming Guide
-
-### Boot Up
-
-- DB rings
-
-### Item
-
-- Properties (.data)
-- Prototypes (on items)
-- Inheritance (via prototypes on categories)
-- VIEW_*() methods CANNOT be "async". Any async initialization
-  must be done in the `async init(data) {...}` method.
-- Caching: `Item.setCaching(...)` with a list of method names.
-
-### Routing
-
-- **SUN** (Schemat's Universal Namespace)
-  - files
-  - items
-- **active routing**: itermediate items play active role in URL path interpretation; examples:
-  - ABTest
-- special routes: /$, /local, /system (?)
-
-### Code in DB
-
-- **code as data**: all application code may reside in DB, be shared autom. in a cluster...
-  abstracted from hardware (no per-node install, no OS config etc.)
-- **unification**: *same* code works server-side & client-side seamlessly 
-  with full *interoperability* (!), i.e. imports between different pieces of code
-- `import()` works over SUN, *both* server-side & client-side 
-- `vm` used to dynamically create modules (server-side)
-- `*_server`, `*_client` to restrict parts of code to server/client env only
-
-### Known issues
-
-- **import()** in dynamic code, when used inside a method and awaited,
-may cause the method be completed too late, after surrounding async code;
-this is probably caused by a bug in `vm` module execution (?).
-Workarounds:
-  - use top-level `import` in the category's initialization section (`code`);
-  - inside a method, use `return import().then(...)` instead of `await import()`.
-
-
----
-## DEVELOPMENT
-
-Adminer plugins:
-  
-    sudo apt install php-mbstring
-    sudo service apache2 restart
-
----
-
+......
