@@ -4,6 +4,7 @@
  **
  */
 
+import {print} from "../utils.js"
 import {Item} from "../item.js"
 import {HttpService, InternalService} from "../services.js"
 
@@ -75,11 +76,11 @@ File.createAPI({        // endpoints...
 
 
 export class FileLocal extends File {
-    async init()   { if (this.registry.onServer) this._fs = await import('fs') }
+    async init()   { if (this.registry.onServer) this._mod_fs = await import('fs') }
 
     content(encoding) {
         let path = this.prop('path')
-        if (path) return this._fs.readFileSync(path, {encoding})
+        if (path) return this._mod_fs.readFileSync(path, {encoding})
     }
 
     // GET_file({res}) {

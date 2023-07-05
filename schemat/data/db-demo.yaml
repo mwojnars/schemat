@@ -62,7 +62,7 @@
     "@": 0
   "@": Data
 - __id: 1004
-  name: catalog.wiki
+  name: catalog_site
   URL: http://127.0.0.1:3000
   path_internal: /$
   routes:
@@ -99,7 +99,7 @@
   "@": Data
 - __id: 1007
   name: favicon.ico
-  path: /home/marcin/Documents/priv/catalog/src/schemat/assets/favicon.ico
+  path: ./assets/favicon.ico
   __category__:
     "@": 4
   "@": Data

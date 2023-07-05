@@ -167,7 +167,6 @@ async function create_items(cat, Category) {
     // item.test_txt = await cat.File.new({content: "This is a test file."})
     // item.dir_tmp1 = await cat.Folder.new({files: C({'test.txt': item.test_txt})})
     // item.dir_tmp2 = await cat.Folder.new({files: C({'tmp1': item.dir_tmp1})})
-    // item.database = await cat.DatabaseYaml.new({filename: '/home/marcin/Documents/priv/catalog/src/schemat/server/db.yaml'})
 
     // item.app_system = await cat.Application.new({
     //     name: "AppBasic",
@@ -193,7 +192,6 @@ async function create_items(cat, Category) {
     //     // fields      : C({spaces: new CATALOG({values: new ITEM({type_exact: Category})})}),
     // })
 
-    // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
     item.dir_local  = await cat.FolderLocal.new({name: '/local', path: '.'})   //path.dirname(__dirname)
 
     item.dir_system = await cat.Folder.new({name: "/system",
@@ -230,7 +228,6 @@ async function create_items(cat, Category) {
     // })
     //
     // // path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    // let path_local = "/home/marcin/Documents/priv/catalog/src/schemat"
     // item.dir_local = await cat.FolderLocal.new({name: '/local', path: `${path_local}`})
     // item.dir_files = await cat.Folder.new({name: "/files",
     //     files: C({
@@ -260,7 +257,7 @@ async function create_items(cat, Category) {
     // })
     
     // item.catalog_wiki = await cat.Site.new({
-    //     name        : "catalog.wiki",
+    //     name        : "catalog_site",
     //     URL         : "http://127.0.0.1:3000",
     //     path_internal : "/$",
     //     router      : item.router,

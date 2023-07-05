@@ -14,7 +14,7 @@ export const SITE_ID = 1
 
 
 // import * as utils from 'http://127.0.0.1:3000/system/local/utils.js'
-// import * as utils from 'file:///home/marcin/Documents/priv/catalog/src/schemat/utils.js'
+// import * as utils from 'file:///home/..../src/schemat/utils.js'
 // print("imported utils from localhost:", utils)
 // print('import.meta:', import.meta)
 
