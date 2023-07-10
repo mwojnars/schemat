@@ -21,21 +21,22 @@ export class Cluster extends Item {
 
     // get db() { return this.prop('db') }
 
+    rings = [
+        {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
+        // {file: DB_ROOT + '/db-cluster.yaml', start_iid:    0, stop_iid:  100, readonly: false},
+        {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
+        {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
+        {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
+        // {item: 1015, name: 'mysql', readonly: true},
+    ]
+
     async startup() {
         /* Load the bootstrap database & create the registry, then load this cluster's complete data from DB,
            which should replace the db object with the ultimate one (TODO).
          */
 
-        let rings = [
-            {file: DB_ROOT + '/db-boot.yaml', start_iid:    0, stop_iid:  100, readonly: true},
-            // {file: DB_ROOT + '/db-cluster.yaml', start_iid:    0, stop_iid:  100, readonly: false},
-            {file: DB_ROOT + '/db-base.yaml', start_iid:  100, stop_iid: 1000, readonly: false},
-            {file: __dirname + '/../app-demo/data/db-paperity.yaml', start_iid: 1000, stop_iid: null, readonly: false},
-            {file: DB_ROOT + '/db-demo.yaml', start_iid: 1000, stop_iid: null, readonly: false},
-            // {item: 1015, name: 'mysql', readonly: true},
-        ]
-
         let db = this.db = new ServerDB()
+        let rings = this.prop('rings')
 
         for (const spec of rings) {
             let ring = new Ring(spec)

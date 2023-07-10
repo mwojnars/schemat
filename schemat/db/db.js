@@ -17,7 +17,7 @@ export class Database {
 /**********************************************************************************************************************/
 
 export class ClientDB extends Database {
-    /* Client-side DB layer that that connects to the server via AJAX calls.
+    /* Client-side DB that communicates with the server via AJAX calls.
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
@@ -25,7 +25,7 @@ export class ClientDB extends Database {
                                 // each `data` is JSON-encoded for safety
 
     // base URL for AJAX calls, should contain no trailing slash '/' (!)
-    get url() { return globalThis.registry.site.systemURL() }
+    get _url() { return globalThis.registry.site.systemURL() }
 
     constructor(records = []) {
         super()
@@ -51,12 +51,12 @@ export class ClientDB extends Database {
     async _from_ajax(id) {
         /* Retrieve an item by its ID = (CID,IID) from a server-side DB. */
         print(`ajax download [${id}]...`)
-        return $.get(`${this.url}/${id}@json`)
+        return $.get(`${this._url}/${id}@json`)
     }
     async *scan(cid) {
         assert(cid || cid === 0)
         print(`ajax category scan [${cid}]...`)
-        let records = await $.get(`${this.url}/${cid}@scan`)
+        let records = await $.get(`${this._url}/${cid}@scan`)
         for (const rec of records) {            // rec's shape: {id, data}
             if (rec.data) {
                 rec.data = JSON.stringify(rec.data)

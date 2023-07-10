@@ -9,8 +9,8 @@ It provides a uniform **object space** that can be interacted with across the ne
 be it a server-side storage (database) node, a compute (app server) node, or a client machine.
 In addition, Schemat makes application objects **network-aware** and unifies the client and server
 environments to the point where a single object can fully encapsulate a particular web functionality
--- its _data_, _behavior_, and _appearance_ -- contrary to traditional approaches like MVC, 
-where these three aspects of an atomic functionality are implemented separately and remain dispersed 
+-- the _data_, _behavior_, and _appearance_ -- contrary to traditional approaches like MVC, 
+where these three aspects of a functionality are implemented separately and remain dispersed 
 throughout the codebase, which prevents the true OOP to emerge.
 By creating an **extended object model** that spans the entire application stack -- from the database to the client -- 
 Schemat is the first application platform that genuinely brings the full expression of OOP paradigm to the web.
@@ -70,6 +70,8 @@ Schemat already provides, or _will_ provide in the future:
 
 <!---
 
+Front-end features:
+- Server-Side Rendering (SSR)
 - **CSS-safe embedding** of widgets in the front-end.
 
 A) Object-Oriented Data Model:

@@ -316,6 +316,8 @@ export class Item {
 
     //metadata      // system properties: current version, category's version, status etc.
 
+    get db() { return globalThis.schemat.db }
+
     registry        // Registry that manages access to this item
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
@@ -1392,6 +1394,7 @@ export class Category extends Item {
     }
 
     VIEW_admin() {
+        // const scan = () => this.db.scan_index('by_category', {category: this})
         const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
         const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
 
