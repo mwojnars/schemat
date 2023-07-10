@@ -7,7 +7,7 @@ with complex and evolving data schemas.
 
 It provides a uniform **object space** that can be interacted with across the network from any machine,
 be it a server-side storage (database) node, a compute (app server) node, or a client machine.
-In addition, Schemat makes application objects natively **network-aware** and unifies the client and server
+In addition, Schemat makes application objects **network-aware** and unifies the client and server
 environments to the point where a single object can fully encapsulate a particular web functionality
 -- its _data_, _behavior_, and _appearance_ -- contrary to traditional approaches like MVC, 
 where these three aspects of an atomic functionality are implemented separately and remain dispersed 
@@ -30,8 +30,8 @@ Schemat already provides, or _will_ provide in the future:
 
 - **Object-oriented JSON encoding** for transmission and storage that can serialize 
   application objects while preserving their behavior and identity as expressed by their class and category(ies).
-  Every object can be freely transmitted and shared between the server and the client,
-  which allows for seamless integration of the front-end and back-end code within a single object or category.
+  Objects can be freely transmitted and shared between the server and the client,
+  which facilitates seamless integration of the front-end and back-end code within a single object or category.
 
 - **Schema-awareness** of application objects through their (optional) assignment to **categories**, 
   where each category defines a Javascript-based object schema with support for: 
