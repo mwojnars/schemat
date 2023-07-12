@@ -180,7 +180,12 @@ export class Handler {
     // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
     // each of the functions may return a Promise (!)
 
-    GET(ctx)    { return ctx.handler.page.call(this, ctx) }
+    GET(ctx) {
+        let {request, endpoint, handler} = ctx
+        if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
+    }
+
+    // GET(ctx)    { return ctx.handler.page.call(this, ctx) }
     // POST(ctx)   {
     //     let method = `POST_${ctx.endpoint}`
     //     if (method in this) return this[method].call(this, ctx)
@@ -194,30 +199,30 @@ export class Handler {
 
     // lower-level functions for HTML page generation (GET requests) ...
 
-    page(ctx) {
-        /* page() defines an HTML frame for the entire page and fills it out with elements
-           computed by other, more specific, methods of the handler. */
-        let {request, endpoint, handler} = ctx
-        if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
-
-        let body   = handler.body.call(this, ctx)
-        let title  = handler.title.call(this, ctx)
-        let common = handler.common.call(this, ctx)
-        let assets = handler.assets.call(this, ctx)
-
-        return dedentFull
-        (`
-            <!DOCTYPE html><html>
-            <head>
-                <title>${title}</title>
-                ${common}
-                ${assets}
-            </head>
-            <body>\n${body}\n</body></html>
-        `)
-
-        // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
-    }
+    // page(ctx) {
+    //     /* page() defines an HTML frame for the entire page and fills it out with elements
+    //        computed by other, more specific, methods of the handler. */
+    //     let {request, endpoint, handler} = ctx
+    //     if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
+    //
+    //     let body   = handler.body.call(this, ctx)
+    //     let title  = handler.title.call(this, ctx)
+    //     let common = handler.common.call(this, ctx)
+    //     let assets = handler.assets.call(this, ctx)
+    //
+    //     return dedentFull
+    //     (`
+    //         <!DOCTYPE html><html>
+    //         <head>
+    //             <title>${title}</title>
+    //             ${common}
+    //             ${assets}
+    //         </head>
+    //         <body>\n${body}\n</body></html>
+    //     `)
+    //
+    //     // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
+    // }
 
     // title(ctx) {
     //     /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
