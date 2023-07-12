@@ -30,7 +30,7 @@ export class Service {
                     // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA..., and the name is a command name,
                     // a Kafka topic name, etc.
 
-    service         // a function, f(ctx, ...args), to be called on the server when the protocol is invoked;
+    target_service  // a function, f(ctx, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                     // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes execute() instead of server()
@@ -42,8 +42,8 @@ export class Service {
     get endpoint_method() { return this._splitEndpoint()[0] }       // access method of the endpoint: GET/POST/CALL/...
     get endpoint_name()   { return this._splitEndpoint()[1] }       // name of the endpoint (function/action to execute)
 
-    constructor(service = null, opts = {}) {
-        this.service = service
+    constructor(target_service = null, opts = {}) {
+        this.target_service = target_service
         this.opts = {...this.constructor.opts, ...opts}
     }
 
@@ -85,7 +85,7 @@ export class Service {
            Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
            if only the service function supports this.
          */
-        return this.service.call(target, ctx, ...args)
+        return this.target_service.call(target, ctx, ...args)
     }
 }
 
@@ -119,13 +119,24 @@ export class HtmlPage extends HttpService {
     /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via client().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
-    prepare(ctx) {
-        /* Add additional information to the context (e.g., the current user, etc.) before the page is rendered.
+    execute(target, ctx) {
+        let prepare = this.target_prepare.call(target, ctx)
+        if (prepare instanceof Promise) return prepare.then(() => this.target_page.call(target, ctx))
+        return this.target_page.call(target, ctx)
+    }
+
+    target_prepare(ctx) {
+        /* Add additional information to the target object (`this`) or elsewhere to the context, `ctx`, before the page is rendered.
            In subclasses, prepare() is typically asynchronous to allow loading of external data from DB.
            Here, it's kept synchronous for speed, in cases when no additional data is needed.
-           The item requested, ctx.item, can also undergo some additional processing here.
+           The target object, ctx.target, can also undergo some additional processing here.
          */
     }
+
+    target_page(ctx) {
+        /* Render the HTML page server-side. Can be async. */
+    }
+
     // target_XXX(ctx) { return ... }   // functions to build separate parts of the page; `this` is bound to target object
 }
 

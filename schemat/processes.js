@@ -55,7 +55,7 @@ export class ClientProcess extends SchematProcess {
         assert(item.isLoaded)
         // print('main item:', item)
 
-        item.render(view, root)
+        return item.render(view, root)          // render() could be async to perform any necessary data loading
         // check()
     }
 
