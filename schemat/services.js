@@ -1,4 +1,4 @@
-import { print, assert, T } from "./utils.js"
+import {print, assert, T, dedentFull, escape_html} from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
 import { JSONx } from './serialize.js'
 
@@ -120,6 +120,7 @@ export class HtmlPage extends HttpService {
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
     execute(target, ctx) {
+        ctx = {...ctx, page: this}              // add `this` as `page` to the context
         let prepare = this.target_prepare.call(target, ctx)
         if (prepare instanceof Promise) return prepare.then(() => this.target_page.call(target, ctx))
         return this.target_page.call(target, ctx)
@@ -134,14 +135,42 @@ export class HtmlPage extends HttpService {
     }
 
     target_page(ctx) {
-        /* Render the HTML page server-side. Can be async. */
+        /* Generate an HTML page server-side with `this` bound to the target object. Can be async.
+           By default, this function calls target_page_*() functions to build separate parts of the page.
+         */
+        let {page} = ctx
+        let title = page.target_page_title.call(this, ctx)
+        let assets = page.target_page_head.call(this, ctx)
+        let body = page.target_page_body.call(this, ctx)
+        return page._html_frame({title, assets, body})
     }
 
-    // target_XXX(ctx) { return ... }   // functions to build separate parts of the page; `this` is bound to target object
+    target_page_title(ctx)  {}      // override in subclasses; return a plain-text string or undefined
+    target_page_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
+    target_page_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
+
+    _html_frame({title, assets, body}) {
+        // the title string IS escaped, while the other elements are NOT
+        let title_html = (title !== undefined ? `<title>${escape_html(title)}</title>` : '')
+        return dedentFull(`
+            <!DOCTYPE html><html>
+            <head>
+                ${title_html}
+                ${assets || ''}
+            </head>`) +
+            `<body>\n${body || ''}\n</body></html>`
+    }
 }
 
 export class ReactPage extends HtmlPage {
     /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
+    target_page_body(ctx) {
+        /* Page is a server-side rendering of the React main component placed inside an HTML boiler-code wrapper:
+           <!DOCTYPE html>, <meta> data, <title>, scripts, assets etc.
+           The same component can be rendered on the client side by calling target_render() directly,
+           and in this case the HTML wrapper is omitted.
+         */
+    }
 }
 
 /*************************************************************************************************/

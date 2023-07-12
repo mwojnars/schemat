@@ -934,6 +934,10 @@ export class Item {
            fill the page with HTML contents rendered from a view function (React functional component).
            The `view` name should point to a method VIEW_{view} of the current Item's subclass.
          */
+        assert(title === undefined)
+        assert(assets === undefined)
+        assert(body === undefined)
+
         if (title  === undefined) title = this._htmlTitle({request, view})
         if (assets === undefined) assets = this._htmlAssets()
         body = (body || '') + this._htmlBody({request, view})
@@ -1104,7 +1108,7 @@ Item.createAPI(
         // http endpoints...
 
         // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
-        // 'GET/item':  new HtmlPage({title: '', assets: '', body: ''}),
+        // 'GET/item':  new ItemPropertiesPage(),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),

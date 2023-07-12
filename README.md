@@ -70,6 +70,9 @@ Schemat already provides, or _will_ provide in the future:
 
 <!---
 
+- caching of application objects and their properties including the derived ones
+  (very fine-grained caching, down to individual properties and their values)
+
 Front-end features:
 - Server-Side Rendering (SSR)
 - **CSS-safe embedding** of widgets in the front-end.
