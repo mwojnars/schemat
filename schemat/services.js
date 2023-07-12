@@ -9,7 +9,7 @@ export class Service {
     /*
        A Service is any server-side functionality that's exposed on a particular (fixed) `endpoint` of a group
        of objects and can be invoked in a context of a `target` object: directly on the server (with execute()),
-       remotely through a web request (that triggers handle()), or through an RPC call from a client (invoke()).
+       remotely through a web request (that triggers server()), or through an RPC call from a client (client()).
 
        The service's functionality - represented by a `service` function by default - is called in a context
        of a `target` object (this = target), so the function behaves like a method of this object.
@@ -33,7 +33,7 @@ export class Service {
     service         // a function, f(ctx, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
                     // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
-                    // is called directly on the server through item.action.XXX() which invokes execute() instead of handle()
+                    // is called directly on the server through item.action.XXX() which invokes execute() instead of server()
 
     opts = {}           // configuration options
     static opts = {}    // default values of configuration options
@@ -65,16 +65,16 @@ export class Service {
 
     // the methods below may return a Promise or be declared as async in subclasses...
 
-    invoke(target, ...args) {
+    client(target, ...args) {
         /* Client-side remote invocation (RPC) of the service through a network request
-           to be handled on the server by the handle() method (see below).
+           to be handled on the server by the server() method (see below).
            Subclasses should override this method to encode arguments in a service-specific way.
          */
         throw new Error(`client-side invocation not allowed for this service`)
     }
 
-    handle(target, ctx) {
-        /* Server-side request handler for the execution of an RPC call (from invoke()) or a regular web request
+    server(target, ctx) {
+        /* Server-side request handler for the execution of an RPC call (from client()) or a regular web request
            (from a browser). Subclasses should override this method to decode arguments in a service-specific way. 
          */
         throw new Error(`no server-side request handler for the service`)
@@ -93,30 +93,30 @@ export class InternalService extends Service {
     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
        defined as SUN routing paths but executed server-side exclusively.
      */
-    handle(target, ctx)  { return this.execute(target, ctx) }
+    server(target, ctx)  { return this.execute(target, ctx) }
 }
 
 export class HttpService extends Service {
     /* Base class for HTTP-based services. Does not interpret input/output data in any way; the service function
        should use `req` and `res` objects directly, and it is also responsible for error handling.
-       invoke() returns response body as a raw string.
+       client() returns response body as a raw string.
      */
     _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
 
-    async invoke(target, ...args) {
+    async client(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
         let res = await fetch(url)                      // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
         return res.text()
     }
-    handle(target, ctx)  { return this.execute(target, ctx) }
+    server(target, ctx)  { return this.execute(target, ctx) }
 }
 
 
 /**********************************************************************************************************************/
 
 export class HtmlPage extends HttpService {
-    /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via invoke().
+    /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via client().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
     prepare(ctx) {
@@ -145,7 +145,7 @@ export class JsonService extends HttpService {
         encodeResult: false,        // if true, the results of RPC calls are auto-encoded via JSONx before sending
     }
 
-    async invoke(target, ...args) {
+    async client(target, ...args) {
         let url = target.url(this.endpoint_name)
         let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
         if (!res.ok) return this._decodeError(res)
@@ -176,7 +176,7 @@ export class JsonService extends HttpService {
         throw new RequestFailed({...error, code: res.status})
     }
 
-    async handle(target, ctx) {
+    async server(target, ctx) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
         let {req, res} = ctx        // req: RequestContext
         let out, ex
@@ -363,7 +363,7 @@ export class Network {
 
             triggers[name] = serverSide
                 ? (...args) => service.execute(target, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => service.invoke(target, ...fixed, ...args)          // may return a Promise
+                : (...args) => service.client(target, ...fixed, ...args)          // may return a Promise
         }
         // print('this.action:', this.action)
 
@@ -405,7 +405,7 @@ export class Network {
 //     _rpc(endpoint, ...args) {
 //         let protocol = this.constructor._api.get(endpoint)
 //         if (this._side === 'client')
-//             return protocol.invoke(this, ...args)
+//             return protocol.client(this, ...args)
 //         return protocol.execute(this, {}, ...args)
 //     }
 //
