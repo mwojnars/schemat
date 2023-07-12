@@ -181,16 +181,16 @@ export class Handler {
     // each of the functions may return a Promise (!)
 
     GET(ctx)    { return ctx.handler.page.call(this, ctx) }
-    POST(ctx)   {
-        let method = `POST_${ctx.endpoint}`
-        if (method in this) return this[method].call(this, ctx)
-        ctx.request.throwNotFound(`POST handler not found for '@${ctx.endpoint}'`)
-    }
-    CALL(ctx)   {
-        let method = `CALL_${ctx.endpoint}`
-        if (method in this) return this[method].call(this, ctx)
-        ctx.request.throwNotFound(`CALL handler not found for '@${ctx.endpoint}'`)
-    }
+    // POST(ctx)   {
+    //     let method = `POST_${ctx.endpoint}`
+    //     if (method in this) return this[method].call(this, ctx)
+    //     ctx.request.throwNotFound(`POST handler not found for '@${ctx.endpoint}'`)
+    // }
+    // CALL(ctx)   {
+    //     let method = `CALL_${ctx.endpoint}`
+    //     if (method in this) return this[method].call(this, ctx)
+    //     ctx.request.throwNotFound(`CALL handler not found for '@${ctx.endpoint}'`)
+    // }
 
     // lower-level functions for HTML page generation (GET requests) ...
 

@@ -119,6 +119,13 @@ export class HtmlPage extends HttpService {
     /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via invoke().
        The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
      */
+    prepare(ctx) {
+        /* Add additional information to the context (e.g., the current user, etc.) before the page is rendered.
+           In subclasses, prepare() will typically be asynchronous, to allow loading of external data from DB.
+           Here, it's kept synchronous for speed, in cases when no additional data is needed.
+           The item requested, ctx.item, can also undergo some additional processing here.
+         */
+    }
 }
 
 export class ReactPage extends HtmlPage {
