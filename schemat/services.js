@@ -121,11 +121,12 @@ export class HtmlPage extends HttpService {
      */
     prepare(ctx) {
         /* Add additional information to the context (e.g., the current user, etc.) before the page is rendered.
-           In subclasses, prepare() will typically be asynchronous, to allow loading of external data from DB.
+           In subclasses, prepare() is typically asynchronous to allow loading of external data from DB.
            Here, it's kept synchronous for speed, in cases when no additional data is needed.
            The item requested, ctx.item, can also undergo some additional processing here.
          */
     }
+    // target_XXX(ctx) { return ... }   // functions to build separate parts of the page; `this` is bound to target object
 }
 
 export class ReactPage extends HtmlPage {

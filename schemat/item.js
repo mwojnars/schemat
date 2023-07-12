@@ -219,22 +219,22 @@ export class Handler {
         // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
     }
 
-    title(ctx) {
-        /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
-        let name = this.getName()
-        let ciid = this.getStamp({html: false})
-        return `${name} ${ciid}`
-    }
-
-    common(ctx) {
-        /* Shared global HTML assets: scripts, styles. */
-        throw new Error('unused method (todo: confirm)')
-    }
-
-    assets(ctx) {
-        /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
-        return ''
-    }
+    // title(ctx) {
+    //     /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
+    //     let name = this.getName()
+    //     let ciid = this.getStamp({html: false})
+    //     return `${name} ${ciid}`
+    // }
+    //
+    // common(ctx) {
+    //     /* Shared global HTML assets: scripts, styles. */
+    //     throw new Error('unused method (todo: confirm)')
+    // }
+    //
+    // assets(ctx) {
+    //     /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
+    //     return ''
+    // }
 
     // body(ctx) {
     //     /* Here, `this` is bound to the item being rendered. */
