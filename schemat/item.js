@@ -252,8 +252,8 @@ export class Handler {
     //     let html    = this.render(endpoint)
     //     let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
     //     return `
-    //         <div id="react-root">${html}</div>
-    //         <p id="data-session" style="display:none">${session}</p>
+    //         <div id="page-component">${html}</div>
+    //         <p id="page-data" style="display:none">${session}</p>
     //         <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
     //     `
     // }
@@ -972,8 +972,8 @@ export class Item {
         let component = this.render(view)
         let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
         return `
-            <p id="data-session" style="display:none">${session}</p>
-            <div id="react-root">${component}</div>
+            <p id="page-data" style="display:none">${session}</p>
+            <div id="page-component">${component}</div>
             <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
         `
     }
@@ -1108,7 +1108,7 @@ Item.createAPI(
         // http endpoints...
 
         // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
-        // 'GET/item':  new ItemPropertiesPage(),
+        // 'GET/item':  new ItemAdminPage(),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),

@@ -1,3 +1,4 @@
+import {NotImplemented} from "./errors.js";
 import {dedentFull, escape_html, print} from "./utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import {DIV, e, H2} from "./react-utils.js";
@@ -18,7 +19,7 @@ export class HtmlPage extends HttpService {
     }
 
     target_prepare(ctx) {
-        /* Adding additional information to the target object (`this`) or elsewhere to the context, `ctx`,
+        /* Adding extra information to the target object (`this`) or elsewhere to the context, `ctx`,
            before the page rendering starts.
            In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
            here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
@@ -56,31 +57,52 @@ export class HtmlPage extends HttpService {
 
 /**********************************************************************************************************************/
 
-export class ReactPage extends HtmlPage {
-    /* Generates a React-based HTML page whose main content is rendered as a React component. Performs server-side rendering (SSR).
-       By default, the component is written to the #react-root element in the page body, and any additional
-       (meta)data is written to the #data-session element. A <script> tag is added to the page to load
-       the client-side JS code that will render the same component on the client side.
+export class RenderedPage extends HtmlPage {
+    /* An HTML page that is rendered from a component (e.g., React).
+       The (re)rendering can take place on the server and/or the client.
      */
     target_html_body(ctx) {
         /* Page is a server-side rendering of the React main component placed inside an HTML boiler-code wrapper:
            <!DOCTYPE html>, <meta> data, <title>, scripts, assets etc.
-           The same component can be rendered on the client side by calling target_render() directly,
-           and in this case the HTML wrapper is omitted.
          */
         let {service} = ctx
         let component = service.render(this, ctx)
-        let session = btoa(encodeURIComponent(JSON.stringify(ctx.request.session.dump())))
+        let data = service._make_data(this, ctx)
+        let code = service._make_script(this, ctx)
+        return service._component_frame({component, data, code})
+    }
+
+}
+
+export class ReactPage extends RenderedPage {
+    /* Generates a React-based HTML page whose main content is rendered from a React component.
+       By default, the component is written to the #page-component element in the page body, and any additional
+       (meta)data is written to the #page-data element. A <script> tag is added to the page to load
+       the client-side JS code that will render the same component on the client side.
+       The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
+     */
+    _make_data(target, ctx) {
+        /* Prepare data to be embedded in HTML output for use by the client-side JS code. */
+        return btoa(encodeURIComponent(JSON.stringify(ctx.request.session.dump())))
+    }
+    _make_script(target, ctx) {
+        /* Prepare the Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
+           This code will launch the client-side rendering of the same React component.
+         */
+        return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
+    }
+    _component_frame({component, data, code}) {
+        /* The HTML wrapper for the React component. */
         return `
-            <p id="data-session" style="display:none">${session}</p>
-            <div id="react-root">${component}</div>
-            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
+            <p id="page-data" style="display:none">${data}</p>
+            <div id="page-component">${component}</div>
+            <script async type="module">${code}</script>
         `
     }
 
     render(target, ctx, html_element = null) {
         /* This method can be called on the server (html_element=null) or the client (html_element!=null).
-           It renders the main React component.
+           It renders the main React component. On the server, server-side rendering (SSR) is performed.
          */
         target.assertLoaded()
         if (!html_element) print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
@@ -89,6 +111,11 @@ export class ReactPage extends HtmlPage {
 
         return html_element ? ReactDOM.render(view, html_element) : ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    }
+
+    target_view(ctx) {
+        /* Return the main React component to be rendered. */
+        throw new NotImplemented('target_view() must be implemented in subclasses')
     }
 
 }
