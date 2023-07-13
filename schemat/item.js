@@ -8,7 +8,7 @@ import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
 import {HttpService, JsonService, API, TaskService, InternalService, Network} from "./services.js"
-import {ItemAdminPage} from "./pages.js";
+import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -1421,31 +1421,14 @@ export class Category extends Item {
             e(this.NewItem.bind(this), {itemAdded}),
         )})
     }
-
-    // VIEW_admin({extra = null}) {
-    //     const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
-    //     const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
-    //
-    //     const [newItems, setNewItems] = useState([])                // newly added items
-    //     const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
-    //     const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
-    //
-    //     return super.VIEW_admin({item: this, extra: FRAGMENT(
-    //         H2('Items'),
-    //         e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
-    //         H3('Add item'),
-    //         e(this.Items, {items: newItems, itemRemoved}),
-    //         e(this.NewItem.bind(this), {itemAdded}),
-    //         extra,
-    //     )})
-    // }
 }
 
 Category.setCaching('getModule', 'getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
 
 Category.createAPI(
     {
-        // http endpoints...
+        'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
+        'GET/item':     new CategoryAdminPage(),
 
         'GET/import':   new HttpService(function ({request, res})
         {

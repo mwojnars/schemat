@@ -1,8 +1,25 @@
 import {NotImplemented} from "./errors.js";
 import {dedentFull, escape_html, print} from "./utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import {DIV, e, FRAGMENT, H1, H2, HTML, SPAN} from "./react-utils.js";
+import {
+    A,
+    BUTTON,
+    delayed_render,
+    DIV,
+    e, FIELDSET, FORM,
+    FRAGMENT,
+    H1,
+    H2, H3,
+    HTML, INPUT,
+    NBSP,
+    SPAN,
+    TABLE,
+    TBODY,
+    TD,
+    TR, useRef, useState
+} from "./react-utils.js";
 import {HttpService} from "./services.js";
+import {Data} from "./data.js";
 
 
 /**********************************************************************************************************************/
@@ -208,3 +225,83 @@ export class ItemAdminPage extends ReactPage {
 //     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
 //     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
 // }
+
+
+/**********************************************************************************************************************/
+
+export class CategoryAdminPage extends ItemAdminPage {
+
+    target_component(props) {
+        // const scan = () => this.db.scan_index('by_category', {category: this})
+        const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+        const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
+
+        const [newItems, setNewItems] = useState([])                // newly added items
+        const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
+        const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
+        const {service} = props
+
+        return ItemAdminPage.prototype.target_component.call(this, {...props, extra: FRAGMENT(
+            H2('Items'),
+            e(service.Items.bind(this), {items: items, itemRemoved: () => setItems(scan())}),
+            H3('Add item'),
+            e(service.Items.bind(this), {items: newItems, itemRemoved}),
+            e(service.NewItem.bind(this), {itemAdded}),
+        )})
+    }
+
+    Items({items, itemRemoved}) {
+        /* A list (table) of items that belong to this category. */
+        if (!items || items.length === 0) return null
+        const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+
+        return delayed_render(async () => {
+            let rows = []
+            for await (const item of items) {
+                await item.load()
+                let name = item.getName() || item.getStamp({html:false})
+                let url  = item.url()
+                rows.push(TR(
+                    TD(`${item.id} ${NBSP}`),
+                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+                    TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+                ))
+            }
+            return TABLE(TBODY(...rows))
+        }, [items])
+    }
+
+    NewItem({itemAdded}) {
+
+        let form = useRef(null)
+
+        const setFormDisabled = (disabled) => {
+            let fieldset = form.current?.getElementsByTagName('fieldset')[0]
+            if (fieldset) fieldset.disabled = disabled
+        }
+
+        const submit = async (e) => {
+            e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
+            let fdata = new FormData(form.current)
+            setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+            // fdata.append('name', 'another name')
+            // let name = input.current.value
+            // let json = JSON.stringify(Array.from(fdata))
+
+            let data = new Data()
+            for (let [k, v] of fdata) data.push(k, v)
+
+            let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
+            let item = await this.registry.insert(draft)        // has IID now
+            form.current.reset()                                // clear input fields
+            setFormDisabled(false)
+            itemAdded(item)
+        }
+
+        return FORM({ref: form}, FIELDSET(
+            // LABEL('Name: ', INPUT({name: 'name'}), ' '),
+            INPUT({name: 'name', placeholder: 'name'}),
+            BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+        ))
+    }
+}
