@@ -2,6 +2,7 @@ import {print, assert, T, dedentFull, escape_html} from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Resources, ReactDOM } from './resources.js'
+import {DIV, e, H2} from "./react-utils.js"
 
 
 /**********************************************************************************************************************/
@@ -121,10 +122,10 @@ export class HtmlPage extends HttpService {
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
      */
     execute(target, ctx) {
-        ctx = {...ctx, page: this}              // add `this` as `page` to the context
+        ctx = {...ctx, service: this}              // add `this` service to the context
         let prepare = this.target_prepare.call(target, ctx)
-        if (prepare instanceof Promise) return prepare.then(() => this.target_page.call(target, ctx))
-        return this.target_page.call(target, ctx)
+        if (prepare instanceof Promise) return prepare.then(() => this.target_html.call(target, ctx))
+        return this.target_html.call(target, ctx)
     }
 
     target_prepare(ctx) {
@@ -136,20 +137,20 @@ export class HtmlPage extends HttpService {
          */
     }
 
-    target_page(ctx) {
+    target_html(ctx) {
         /* Generate an HTML page server-side with `this` bound to the target object. Can be async.
-           By default, this function calls target_page_*() functions to build separate parts of the page.
+           By default, this function calls target_html_*() functions to build separate parts of the page.
          */
-        let {page} = ctx
-        let title = page.target_page_title.call(this, ctx)
-        let assets = page.target_page_head.call(this, ctx)
-        let body = page.target_page_body.call(this, ctx)
-        return page._html_frame({title, assets, body})
+        let {service} = ctx
+        let title = service.target_html_title.call(this, ctx)
+        let assets = service.target_html_head.call(this, ctx)
+        let body = service.target_html_body.call(this, ctx)
+        return service._html_frame({title, assets, body})
     }
 
-    target_page_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
-    target_page_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
-    target_page_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
+    target_html_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
+    target_html_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
+    target_html_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
 
     _html_frame({title, assets, body}) {
         // the title string IS escaped, while the other elements are NOT
@@ -165,14 +166,40 @@ export class HtmlPage extends HttpService {
 }
 
 export class ReactPage extends HtmlPage {
-    /* Sends a React-based HTML page whose main content is implemented as a React component. Allows server-side rendering (SSR). */
-    target_page_body(ctx) {
+    /* Generates a React-based HTML page whose main content is rendered as a React component. Performs server-side rendering (SSR).
+       By default, the component is written to the #react-root element in the page body, and any additional
+       (meta)data is written to the #data-session element. A <script> tag is added to the page to load
+       the client-side JS code that will render the same component on the client side.
+     */
+    target_html_body(ctx) {
         /* Page is a server-side rendering of the React main component placed inside an HTML boiler-code wrapper:
            <!DOCTYPE html>, <meta> data, <title>, scripts, assets etc.
            The same component can be rendered on the client side by calling target_render() directly,
            and in this case the HTML wrapper is omitted.
          */
+        let {service} = ctx
+        let component = service.render(this, ctx)
+        let session = btoa(encodeURIComponent(JSON.stringify(ctx.request.session.dump())))
+        return `
+            <p id="data-session" style="display:none">${session}</p>
+            <div id="react-root">${component}</div>
+            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
+        `
     }
+
+    render(target, ctx, html_element = null) {
+        /* This method can be called on the server (html_element=null) or the client (html_element!=null).
+           It renders the main React component.
+         */
+        target.assertLoaded()
+        if (!html_element) print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
+
+        let view = e(this.target_view.bind(target))
+
+        return html_element ? ReactDOM.render(view, html_element) : ReactDOM.renderToString(view)
+        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    }
+
 }
 
 export class ItemAdminPage extends ReactPage {
@@ -180,7 +207,7 @@ export class ItemAdminPage extends ReactPage {
        is expected to be an instance of Item.
      */
 
-    target_page_title(ctx) {
+    target_html_title(ctx) {
         /* Get/compute a title for an HTML response page for a given request & view name. */
         let title = this.prop('html_title')
         if (title instanceof Function) title = title(ctx)           // this can still return undefined
@@ -192,7 +219,7 @@ export class ItemAdminPage extends ReactPage {
         return title
     }
 
-    target_page_head() {
+    target_html_head() {
         /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
         let globalAssets = Resources.clientAssets
         let staticAssets = this.getSchema().getAssets().renderAll()
@@ -201,14 +228,16 @@ export class ItemAdminPage extends ReactPage {
         return assets .filter(a => a && a.trim()) .join('\n')
     }
 
-    target_page_body({request, view}) {
-        let component = this.render(view)
-        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
-        return `
-            <p id="data-session" style="display:none">${session}</p>
-            <div id="react-root">${component}</div>
-            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
-        `
+    target_view({extra = null} = {}) {
+        /* Detailed (admin) view of an item. */
+        return DIV(
+            // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+            // e(this._mui_test),
+            e(this.Title.bind(this)),
+            H2('Properties'),
+            e(this.Properties.bind(this)),
+            extra,
+        )
     }
 }
 
