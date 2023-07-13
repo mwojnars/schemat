@@ -64,8 +64,6 @@ export class HtmlPage extends HttpService {
 export class RenderedPage extends HtmlPage {
     /* An HTML page that is rendered from a component (e.g., React).
        The (re)rendering can take place on the server and/or the client.
-       Context variables:
-       - ctx.props: the properties to be passed down to the component during server-side rendering in render_server()
      */
     target_html_body(ctx) {
         let {service} = ctx
@@ -128,7 +126,8 @@ export class ReactPage extends RenderedPage {
     }
 
     _make_data(target, ctx) {
-        return btoa(encodeURIComponent(JSON.stringify(ctx.request.session.dump())))
+        let data = ctx.request.session.dump()
+        return btoa(encodeURIComponent(JSON.stringify(data)))
     }
     _make_script(target, ctx) {
         return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`

@@ -905,13 +905,14 @@ export class Item {
         }
         let httpMethod = request.type
 
-        for (let endpoint of endpoints) {
+        for (let short_endpoint of endpoints) {
+            let endpoint = `${httpMethod}/${short_endpoint}`
             let context = new RequestContext({request, req, res, endpoint, item: this})
 
-            let service = this.net.resolve(`${httpMethod}/${endpoint}`)
+            let service = this.net.resolve(endpoint)
             if (service) return service.server(this, context)
 
-            let handler2 = this.getHandlers()[endpoint]             // TODO: legacy, use Protocols and API instead
+            let handler2 = this.getHandlers()[short_endpoint]             // TODO: legacy, use Protocols and API instead
             if (handler2) return handler2.run({...context, handler: handler2})
         }
 
@@ -988,6 +989,11 @@ export class Item {
             - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
          */
         this.assertLoaded()
+
+        // if `endpoint` contains a slash '/', remove the part before the slash
+        let slash = endpoint.indexOf('/')
+        if (slash >= 0) endpoint = endpoint.slice(slash + 1)
+
         if (!targetElement) print(`SSR render('${endpoint}') of ${this.id_str}`)
 
         let handler = this.getHandlers()[endpoint]
