@@ -156,121 +156,121 @@ export class RequestContext {
     }
 }
 
-export class Handler {
-    /* Utility class that holds function(s) that together implement a web handler for a specific endpoint
-       of the items in a particular category.
-       All the functions except run() get bound to the target item when called, i.e., to the item that was discovered
-       through the routing process and is responsible for handling the request.
-       As such, the functions can be viewed as methods of the Item class, with `this` bound to an Item instance.
-       All the functions accept a single argument, `context` (`ctx`), of the shape:
-
-                context = {request, req, res, item, handler, endpoint}
-     */
-
-    constructor(props = {})      { Object.assign(this, props) }
-
-    run(context) {
-        let {request, item} = context
-        let httpMethod = request.type
-        if (!httpMethod || !this[httpMethod])
-            throw new Error(`missing or incorrect request.type (httpMethod): ${httpMethod}, ${this[httpMethod]}`)
-        // print('Handler.run():', this, httpMethod, this[httpMethod])
-        return this[httpMethod].call(item, context)     // may return a Promise
-    }
-
-    // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
-    // each of the functions may return a Promise (!)
-
-    GET(ctx) {
-        let {request, endpoint, handler} = ctx
-        if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
-    }
-
-    // GET(ctx)    { return ctx.handler.page.call(this, ctx) }
-    // POST(ctx)   {
-    //     let method = `POST_${ctx.endpoint}`
-    //     if (method in this) return this[method].call(this, ctx)
-    //     ctx.request.throwNotFound(`POST handler not found for '@${ctx.endpoint}'`)
-    // }
-    // CALL(ctx)   {
-    //     let method = `CALL_${ctx.endpoint}`
-    //     if (method in this) return this[method].call(this, ctx)
-    //     ctx.request.throwNotFound(`CALL handler not found for '@${ctx.endpoint}'`)
-    // }
-
-    // lower-level functions for HTML page generation (GET requests) ...
-
-    // page(ctx) {
-    //     /* page() defines an HTML frame for the entire page and fills it out with elements
-    //        computed by other, more specific, methods of the handler. */
-    //     let {request, endpoint, handler} = ctx
-    //     if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
-    //
-    //     let body   = handler.body.call(this, ctx)
-    //     let title  = handler.title.call(this, ctx)
-    //     let common = handler.common.call(this, ctx)
-    //     let assets = handler.assets.call(this, ctx)
-    //
-    //     return dedentFull
-    //     (`
-    //         <!DOCTYPE html><html>
-    //         <head>
-    //             <title>${title}</title>
-    //             ${common}
-    //             ${assets}
-    //         </head>
-    //         <body>\n${body}\n</body></html>
-    //     `)
-    //
-    //     // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
-    // }
-
-    // title(ctx) {
-    //     /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
-    //     let name = this.getName()
-    //     let ciid = this.getStamp({html: false})
-    //     return `${name} ${ciid}`
-    // }
-    //
-    // common(ctx) {
-    //     /* Shared global HTML assets: scripts, styles. */
-    //     throw new Error('unused method (todo: confirm)')
-    // }
-    //
-    // assets(ctx) {
-    //     /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
-    //     return ''
-    // }
-
-    // body(ctx) {
-    //     /* Here, `this` is bound to the item being rendered. */
-    //     let {request, endpoint} = ctx
-    //
-    //     // let {handler, item} = ctx
-    //     // let view = e(handler.view.bind(item), ctx)
-    //     // let html = targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
-    //
-    //     let html    = this.render(endpoint)
-    //     let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
-    //     return `
-    //         <div id="page-component">${html}</div>
-    //         <p id="page-data" style="display:none">${session}</p>
-    //         <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
-    //     `
-    // }
-
-    view({endpoint}) {
-        /* React functional component that renders the actual (visible) content of the HTML response page.
-           View function is called through Item.render() and only accepts a part of the full context,
-           so that allow client-side hydration (re-rendering).
-           Here, `this` is bound to the item being rendered. */
-        let method = `VIEW_${endpoint}`
-        if (method in this) return e(this[method].bind(this))
-        throw new Request.PathNotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
-        // throw new Request.NotFound('view() function is missing in a handler')
-        // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
-    }
-}
+// export class Handler {
+//     /* Utility class that holds function(s) that together implement a web handler for a specific endpoint
+//        of the items in a particular category.
+//        All the functions except run() get bound to the target item when called, i.e., to the item that was discovered
+//        through the routing process and is responsible for handling the request.
+//        As such, the functions can be viewed as methods of the Item class, with `this` bound to an Item instance.
+//        All the functions accept a single argument, `context` (`ctx`), of the shape:
+//
+//                 context = {request, req, res, item, handler, endpoint}
+//      */
+//
+//     constructor(props = {})      { Object.assign(this, props) }
+//
+//     run(context) {
+//         let {request, item} = context
+//         let httpMethod = request.type
+//         if (!httpMethod || !this[httpMethod])
+//             throw new Error(`missing or incorrect request.type (httpMethod): ${httpMethod}, ${this[httpMethod]}`)
+//         // print('Handler.run():', this, httpMethod, this[httpMethod])
+//         return this[httpMethod].call(item, context)     // may return a Promise
+//     }
+//
+//     // top-level (most generic) handler functions; the default implementations reduce to lower-level function calls;
+//     // each of the functions may return a Promise (!)
+//
+//     GET(ctx) {
+//         let {request, endpoint, handler} = ctx
+//         if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
+//     }
+//
+//     // GET(ctx)    { return ctx.handler.page.call(this, ctx) }
+//     // POST(ctx)   {
+//     //     let method = `POST_${ctx.endpoint}`
+//     //     if (method in this) return this[method].call(this, ctx)
+//     //     ctx.request.throwNotFound(`POST handler not found for '@${ctx.endpoint}'`)
+//     // }
+//     // CALL(ctx)   {
+//     //     let method = `CALL_${ctx.endpoint}`
+//     //     if (method in this) return this[method].call(this, ctx)
+//     //     ctx.request.throwNotFound(`CALL handler not found for '@${ctx.endpoint}'`)
+//     // }
+//
+//     // lower-level functions for HTML page generation (GET requests) ...
+//
+//     // page(ctx) {
+//     //     /* page() defines an HTML frame for the entire page and fills it out with elements
+//     //        computed by other, more specific, methods of the handler. */
+//     //     let {request, endpoint, handler} = ctx
+//     //     if (`VIEW_${endpoint}` in this) return this.page({request, view: endpoint})
+//     //
+//     //     let body   = handler.body.call(this, ctx)
+//     //     let title  = handler.title.call(this, ctx)
+//     //     let common = handler.common.call(this, ctx)
+//     //     let assets = handler.assets.call(this, ctx)
+//     //
+//     //     return dedentFull
+//     //     (`
+//     //         <!DOCTYPE html><html>
+//     //         <head>
+//     //             <title>${title}</title>
+//     //             ${common}
+//     //             ${assets}
+//     //         </head>
+//     //         <body>\n${body}\n</body></html>
+//     //     `)
+//     //
+//     //     // request.throwNotFound(`GET handler/page/view not found for '@${endpoint}'`)
+//     // }
+//
+//     // title(ctx) {
+//     //     /* HTML title to be put in the meta section (head/title) of the response page. By default, the item's name & ID is returned. */
+//     //     let name = this.getName()
+//     //     let ciid = this.getStamp({html: false})
+//     //     return `${name} ${ciid}`
+//     // }
+//     //
+//     // common(ctx) {
+//     //     /* Shared global HTML assets: scripts, styles. */
+//     //     throw new Error('unused method (todo: confirm)')
+//     // }
+//     //
+//     // assets(ctx) {
+//     //     /* HTML to be put in the head section of the response page to import global assets: scripts, styles. */
+//     //     return ''
+//     // }
+//
+//     // body(ctx) {
+//     //     /* Here, `this` is bound to the item being rendered. */
+//     //     let {request, endpoint} = ctx
+//     //
+//     //     // let {handler, item} = ctx
+//     //     // let view = e(handler.view.bind(item), ctx)
+//     //     // let html = targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+//     //
+//     //     let html    = this.render(endpoint)
+//     //     let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
+//     //     return `
+//     //         <div id="page-component">${html}</div>
+//     //         <p id="page-data" style="display:none">${session}</p>
+//     //         <script async type="module"> import {boot} from "/system/local/client.js"; boot('${endpoint}'); </script>
+//     //     `
+//     // }
+//
+//     view({endpoint}) {
+//         /* React functional component that renders the actual (visible) content of the HTML response page.
+//            View function is called through Item.render() and only accepts a part of the full context,
+//            so that allow client-side hydration (re-rendering).
+//            Here, `this` is bound to the item being rendered. */
+//         let method = `VIEW_${endpoint}`
+//         if (method in this) return e(this[method].bind(this))
+//         throw new Request.PathNotFound(`GET/page/view() function missing in the handler for '@${endpoint}'`)
+//         // throw new Request.NotFound('view() function is missing in a handler')
+//         // ctx.request.throwNotFound(`GET handler/page/view not found for '@${ctx.endpoint}'`)
+//     }
+// }
 
 
 /**********************************************************************************************************************
@@ -305,8 +305,6 @@ export class Item {
     ? name     -- for fast generation of lists of hyperlinks without loading full data for each item; length limit ~100
     ? info     -- a string like `name`, but longer ~300-500 ??
     */
-
-    static Handler = Handler            // to make Handler acessible in global scope as Item.Handler
 
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
@@ -747,7 +745,7 @@ export class Item {
     //     return schema.find(keys)
     // }
 
-    getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
+    // getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
 
     mergeSnippets(key, params) {
         /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
@@ -912,8 +910,8 @@ export class Item {
             let service = this.net.resolve(endpoint)
             if (service) return service.server(this, context)
 
-            let handler2 = this.getHandlers()[short_endpoint]             // TODO: legacy, use Protocols and API instead
-            if (handler2) return handler2.run({...context, handler: handler2})
+            // let handler2 = this.getHandlers()[short_endpoint]             // TODO: legacy, use Protocols and API instead
+            // if (handler2) return handler2.run({...context, handler: handler2})
         }
 
         // for (let endpoint of endpoints) {
@@ -929,121 +927,121 @@ export class Item {
     }
 
 
-    /***  Page rendering  ***/
+    // /***  Page rendering  ***/
+    //
+    // page({title, assets, body, request, view} = {}) {
+    //     /* Generate an HTML page to be sent as a response to a GET request;
+    //        fill the page with HTML contents rendered from a view function (React functional component).
+    //        The `view` name should point to a method VIEW_{view} of the current Item's subclass.
+    //      */
+    //     assert(title === undefined)
+    //     assert(assets === undefined)
+    //     assert(body === undefined)
+    //
+    //     if (title  === undefined) title = this._htmlTitle({request, view})
+    //     if (assets === undefined) assets = this._htmlAssets()
+    //     body = (body || '') + this._htmlBody({request, view})
+    //     return dedentFull(`
+    //         <!DOCTYPE html><html>
+    //         <head>
+    //             <title>${title}</title>
+    //             ${assets}
+    //         </head>`) +
+    //         `<body>\n${body}\n</body></html>`
+    // }
+    // _htmlTitle({request, view}) {
+    //     /* Get/compute a title for an HTML response page for a given request & view name. */
+    //     let title = this.prop('html_title')
+    //     if (title instanceof Function) title = title({request, view})           // this can still return undefined
+    //     if (title === undefined) {
+    //         let name = this.getName()
+    //         let ciid = this.getStamp({html: false})
+    //         title = `${name} ${ciid}`
+    //     }
+    //     return title
+    // }
+    // _htmlAssets() {
+    //     /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
+    //     let globalAssets = Resources.clientAssets
+    //     let staticAssets = this.getSchema().getAssets().renderAll()
+    //     let customAssets = this.category?.prop('html_assets')
+    //     let assets = [globalAssets, staticAssets, customAssets]
+    //     return assets .filter(a => a && a.trim()) .join('\n')
+    // }
+    // _htmlBody({request, view}) {
+    //     let component = this.render(view)
+    //     let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
+    //     return `
+    //         <p id="page-data" style="display:none">${session}</p>
+    //         <div id="page-component">${component}</div>
+    //         <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
+    //     `
+    // }
+    //
+    // render(endpoint, targetElement = null) {
+    //     /* Render this item's `view` (name) into an HTMLElement (client-side) if `targetElement` is given,
+    //        or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
+    //        so only a part of the HTML output is actually rendered. For workaround, see:
+    //         - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
+    //         - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
+    //         - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
+    //      */
+    //     this.assertLoaded()
+    //
+    //     // if `endpoint` contains a slash '/', remove the part before the slash
+    //     let slash = endpoint.indexOf('/')
+    //     if (slash >= 0) endpoint = endpoint.slice(slash + 1)
+    //
+    //     if (!targetElement) print(`SSR render('${endpoint}') of ${this.id_str}`)
+    //
+    //     let handler = this.getHandlers()[endpoint]
+    //     let view    = e(handler.view.bind(this), {endpoint})
+    //
+    //     // let method = `VIEW_${endpoint}`
+    //     // if (!(method in this)) throw new Request.NotFound(`GET handler/page/view not found for '@${endpoint}'`)
+    //     // let view = e(this[method].bind(this))
+    //
+    //     return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
+    //     // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    // }
 
-    page({title, assets, body, request, view} = {}) {
-        /* Generate an HTML page to be sent as a response to a GET request;
-           fill the page with HTML contents rendered from a view function (React functional component).
-           The `view` name should point to a method VIEW_{view} of the current Item's subclass.
-         */
-        assert(title === undefined)
-        assert(assets === undefined)
-        assert(body === undefined)
-
-        if (title  === undefined) title = this._htmlTitle({request, view})
-        if (assets === undefined) assets = this._htmlAssets()
-        body = (body || '') + this._htmlBody({request, view})
-        return dedentFull(`
-            <!DOCTYPE html><html>
-            <head>
-                <title>${title}</title>
-                ${assets}
-            </head>`) +
-            `<body>\n${body}\n</body></html>`
-    }
-    _htmlTitle({request, view}) {
-        /* Get/compute a title for an HTML response page for a given request & view name. */
-        let title = this.prop('html_title')
-        if (title instanceof Function) title = title({request, view})           // this can still return undefined
-        if (title === undefined) {
-            let name = this.getName()
-            let ciid = this.getStamp({html: false})
-            title = `${name} ${ciid}`
-        }
-        return title
-    }
-    _htmlAssets() {
-        /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
-        let globalAssets = Resources.clientAssets
-        let staticAssets = this.getSchema().getAssets().renderAll()
-        let customAssets = this.category?.prop('html_assets')
-        let assets = [globalAssets, staticAssets, customAssets]
-        return assets .filter(a => a && a.trim()) .join('\n')
-    }
-    _htmlBody({request, view}) {
-        let component = this.render(view)
-        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
-        return `
-            <p id="page-data" style="display:none">${session}</p>
-            <div id="page-component">${component}</div>
-            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
-        `
-    }
-
-    render(endpoint, targetElement = null) {
-        /* Render this item's `view` (name) into an HTMLElement (client-side) if `targetElement` is given,
-           or to a string (server-side) otherwise. When rendering server-side, useEffect() & delayed_render() do NOT work,
-           so only a part of the HTML output is actually rendered. For workaround, see:
-            - https://github.com/kmoskwiak/useSSE  (useSSE, "use Server-Side Effect" hook)
-            - https://medium.com/swlh/how-to-use-useeffect-on-server-side-654932c51b13
-            - https://dev.to/kmoskwiak/my-approach-to-ssr-and-useeffect-discussion-k44
-         */
-        this.assertLoaded()
-
-        // if `endpoint` contains a slash '/', remove the part before the slash
-        let slash = endpoint.indexOf('/')
-        if (slash >= 0) endpoint = endpoint.slice(slash + 1)
-
-        if (!targetElement) print(`SSR render('${endpoint}') of ${this.id_str}`)
-
-        let handler = this.getHandlers()[endpoint]
-        let view    = e(handler.view.bind(this), {endpoint})
-
-        // let method = `VIEW_${endpoint}`
-        // if (!(method in this)) throw new Request.NotFound(`GET handler/page/view not found for '@${endpoint}'`)
-        // let view = e(this[method].bind(this))
-
-        return targetElement ? ReactDOM.render(view, targetElement) : ReactDOM.renderToString(view)
-        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-    }
-
-    /***  Handlers & Components  ***/
-
-    VIEW_default()      { return this.VIEW_admin() }
-    VIEW_admin()        { return this.view_admin() }
-
-    view_admin({extra = null} = {}) {
-        /* Detailed (admin) view of an item. */
-        return DIV(
-            // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
-            // e(this._mui_test),
-            this.Title(),
-            H2('Properties'),
-            this.Properties(),
-            extra,
-        )
-    }
-
-    // standard components for rendering this item's pages...
-
-    Title() {
-        /* <H1> element to be displayed as a page title. */
-        let name = this.getName()
-        let ciid = this.getStamp()
-        if (name)
-            return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
-        else
-            return H1(HTML(ciid))
-    }
-
-    Properties() {
-        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        // let changes = new Changes(this)
-        return FRAGMENT(
-                this.getSchema().displayTable({item: this}),
-                // e(changes.Buttons.bind(changes)),
-            )
-    }
+    // /***  Handlers & Components  ***/
+    //
+    // VIEW_default()      { return this.VIEW_admin() }
+    // VIEW_admin()        { return this.view_admin() }
+    //
+    // view_admin({extra = null} = {}) {
+    //     /* Detailed (admin) view of an item. */
+    //     return DIV(
+    //         // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+    //         // e(this._mui_test),
+    //         this.Title(),
+    //         H2('Properties'),
+    //         this.Properties(),
+    //         extra,
+    //     )
+    // }
+    //
+    // // standard components for rendering this item's pages...
+    //
+    // Title() {
+    //     /* <H1> element to be displayed as a page title. */
+    //     let name = this.getName()
+    //     let ciid = this.getStamp()
+    //     if (name)
+    //         return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+    //     else
+    //         return H1(HTML(ciid))
+    // }
+    //
+    // Properties() {
+    //     /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+    //     // let changes = new Changes(this)
+    //     return FRAGMENT(
+    //             this.getSchema().displayTable({item: this}),
+    //             // e(changes.Buttons.bind(changes)),
+    //         )
+    // }
 
     static setCaching(...methods) {
         /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
@@ -1092,10 +1090,10 @@ export class Item {
 
 Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
 
-Item.handlers = {
-    default: new Handler(),     // TODO: use protocols instead
-    admin:   new Handler(),     // TODO: use protocols instead
-}
+// Item.handlers = {
+//     default: new Handler(),     // TODO: use protocols instead
+//     admin:   new Handler(),     // TODO: use protocols instead
+// }
 
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
@@ -1350,77 +1348,77 @@ export class Category extends Item {
             throw new Error(`code of ${this} can only be imported through '${dpath}' path, not '${path}'; create a derived item/category on the desired path, or use an absolute import, or set the "path" property to the desired path`)
     }
 
-    Items({items, itemRemoved}) {
-        /* A list (table) of items that belong to this category. */
-        if (!items || items.length === 0) return null
-        const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-
-        return delayed_render(async () => {
-            let rows = []
-            for await (const item of items) {
-                await item.load()
-                let name = item.getName() || item.getStamp({html:false})
-                let url  = item.url()
-                rows.push(TR(
-                    TD(`${item.id} ${NBSP}`),
-                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
-                    TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
-                ))
-            }
-            return TABLE(TBODY(...rows))
-        }, [items])
-    }
-    NewItem({itemAdded}) {
-
-        let form = useRef(null)
-
-        const setFormDisabled = (disabled) => {
-            let fieldset = form.current?.getElementsByTagName('fieldset')[0]
-            if (fieldset) fieldset.disabled = disabled
-        }
-
-        const submit = async (e) => {
-            e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
-            let fdata = new FormData(form.current)
-            setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
-            // fdata.append('name', 'another name')
-            // let name = input.current.value
-            // let json = JSON.stringify(Array.from(fdata))
-
-            let data = new Data()
-            for (let [k, v] of fdata) data.push(k, v)
-
-            let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
-            let item = await this.registry.insert(draft)        // has IID now
-            form.current.reset()                                // clear input fields
-            setFormDisabled(false)
-            itemAdded(item)
-        }
-
-        return FORM({ref: form}, FIELDSET(
-            // LABEL('Name: ', INPUT({name: 'name'}), ' '),
-            INPUT({name: 'name', placeholder: 'name'}),
-            BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
-        ))
-    }
-
-    VIEW_admin() {
-        // const scan = () => this.db.scan_index('by_category', {category: this})
-        const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
-        const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
-
-        const [newItems, setNewItems] = useState([])                // newly added items
-        const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
-        const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
-
-        return this.view_admin({extra: FRAGMENT(
-            H2('Items'),
-            e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
-            H3('Add item'),
-            e(this.Items, {items: newItems, itemRemoved}),
-            e(this.NewItem.bind(this), {itemAdded}),
-        )})
-    }
+    // Items({items, itemRemoved}) {
+    //     /* A list (table) of items that belong to this category. */
+    //     if (!items || items.length === 0) return null
+    //     const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+    //
+    //     return delayed_render(async () => {
+    //         let rows = []
+    //         for await (const item of items) {
+    //             await item.load()
+    //             let name = item.getName() || item.getStamp({html:false})
+    //             let url  = item.url()
+    //             rows.push(TR(
+    //                 TD(`${item.id} ${NBSP}`),
+    //                 TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+    //                 TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+    //             ))
+    //         }
+    //         return TABLE(TBODY(...rows))
+    //     }, [items])
+    // }
+    // NewItem({itemAdded}) {
+    //
+    //     let form = useRef(null)
+    //
+    //     const setFormDisabled = (disabled) => {
+    //         let fieldset = form.current?.getElementsByTagName('fieldset')[0]
+    //         if (fieldset) fieldset.disabled = disabled
+    //     }
+    //
+    //     const submit = async (e) => {
+    //         e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
+    //         let fdata = new FormData(form.current)
+    //         setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+    //         // fdata.append('name', 'another name')
+    //         // let name = input.current.value
+    //         // let json = JSON.stringify(Array.from(fdata))
+    //
+    //         let data = new Data()
+    //         for (let [k, v] of fdata) data.push(k, v)
+    //
+    //         let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
+    //         let item = await this.registry.insert(draft)        // has IID now
+    //         form.current.reset()                                // clear input fields
+    //         setFormDisabled(false)
+    //         itemAdded(item)
+    //     }
+    //
+    //     return FORM({ref: form}, FIELDSET(
+    //         // LABEL('Name: ', INPUT({name: 'name'}), ' '),
+    //         INPUT({name: 'name', placeholder: 'name'}),
+    //         BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+    //     ))
+    // }
+    //
+    // VIEW_admin() {
+    //     // const scan = () => this.db.scan_index('by_category', {category: this})
+    //     const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+    //     const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
+    //
+    //     const [newItems, setNewItems] = useState([])                // newly added items
+    //     const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
+    //     const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
+    //
+    //     return this.view_admin({extra: FRAGMENT(
+    //         H2('Items'),
+    //         e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
+    //         H3('Add item'),
+    //         e(this.Items, {items: newItems, itemRemoved}),
+    //         e(this.NewItem.bind(this), {itemAdded}),
+    //     )})
+    // }
 }
 
 Category.setCaching('getModule', 'getItemClass', 'getSource', 'getItemSchema', 'getAssets')   //'getHandlers'
