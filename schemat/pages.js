@@ -219,18 +219,20 @@ export class CategoryAdminPage extends ItemAdminPage {
     target_component(props) {
         // const scan = () => this.db.scan_index('by_category', {category: this})
         const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
-        const [items, setItems] = useState(scan())                  // existing child items; state prevents re-scan after every itemAdded()
+        const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
+                                                            // TODO: use materialized list of items to explicitly control re-scanning
+                                                            //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
 
-        const [newItems, setNewItems] = useState([])                // newly added items
+        const [newItems, setNewItems] = useState([])        // newly added items
         const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
         const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
         const {service} = props
 
         return ItemAdminPage.prototype.target_component.call(this, {...props, extra: FRAGMENT(
             H2('Items'),
-            e(service.Items.bind(this), {items: items, itemRemoved: () => setItems(scan())}),
+            e(service.Items, {items: items, itemRemoved: () => setItems(scan())}),
             H3('Add item'),
-            e(service.Items.bind(this), {items: newItems, itemRemoved}),
+            e(service.Items, {items: newItems, itemRemoved}),
             e(service.NewItem.bind(this), {itemAdded}),
         )})
     }
