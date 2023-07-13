@@ -1,6 +1,7 @@
 import {print, assert, T, dedentFull, escape_html} from "./utils.js"
 import { NotFound, RequestFailed } from './errors.js'
 import { JSONx } from './serialize.js'
+import { Resources, ReactDOM } from './resources.js'
 
 
 /**********************************************************************************************************************/
@@ -116,8 +117,8 @@ export class HttpService extends Service {
 /**********************************************************************************************************************/
 
 export class HtmlPage extends HttpService {
-    /* Sends an HTML page in response to a browser-invoked web request. No explicit remote calls via client().
-       The page can be built out of separate strings/functions for: title, assets, meta, body, component (React) etc...
+    /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
+       In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
      */
     execute(target, ctx) {
         ctx = {...ctx, page: this}              // add `this` as `page` to the context
@@ -127,9 +128,10 @@ export class HtmlPage extends HttpService {
     }
 
     target_prepare(ctx) {
-        /* Add additional information to the target object (`this`) or elsewhere to the context, `ctx`, before the page is rendered.
-           In subclasses, prepare() is typically asynchronous to allow loading of external data from DB.
-           Here, it's kept synchronous for speed, in cases when no additional data is needed.
+        /* Adding additional information to the target object (`this`) or elsewhere to the context, `ctx`,
+           before the page rendering starts.
+           In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
+           here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
            The target object, ctx.target, can also undergo some additional processing here.
          */
     }
@@ -145,7 +147,7 @@ export class HtmlPage extends HttpService {
         return page._html_frame({title, assets, body})
     }
 
-    target_page_title(ctx)  {}      // override in subclasses; return a plain-text string or undefined
+    target_page_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
     target_page_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
     target_page_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
 
@@ -172,6 +174,44 @@ export class ReactPage extends HtmlPage {
          */
     }
 }
+
+export class ItemAdminPage extends ReactPage {
+    /* A page that displays the properties of a single item. The target (`this` in target_*() functions)
+       is expected to be an instance of Item.
+     */
+
+    target_page_title(ctx) {
+        /* Get/compute a title for an HTML response page for a given request & view name. */
+        let title = this.prop('html_title')
+        if (title instanceof Function) title = title(ctx)           // this can still return undefined
+        if (title === undefined) {
+            let name = this.getName()
+            let ciid = this.getStamp({html: false})
+            title = `${name} ${ciid}`
+        }
+        return title
+    }
+
+    target_page_head() {
+        /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
+        let globalAssets = Resources.clientAssets
+        let staticAssets = this.getSchema().getAssets().renderAll()
+        let customAssets = this.category?.prop('html_assets')
+        let assets = [globalAssets, staticAssets, customAssets]
+        return assets .filter(a => a && a.trim()) .join('\n')
+    }
+
+    target_page_body({request, view}) {
+        let component = this.render(view)
+        let session = btoa(encodeURIComponent(JSON.stringify(request.session.dump())))
+        return `
+            <p id="data-session" style="display:none">${session}</p>
+            <div id="react-root">${component}</div>
+            <script async type="module"> import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${view}'); </script>
+        `
+    }
+}
+
 
 /*************************************************************************************************/
 
