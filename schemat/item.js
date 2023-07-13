@@ -8,6 +8,7 @@ import { Resources, ReactDOM } from './resources.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
 import {HttpService, JsonService, API, TaskService, InternalService, Network} from "./services.js"
+import {ItemAdminPage} from "./pages.js";
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -1107,8 +1108,8 @@ Item.createAPI(
     {
         // http endpoints...
 
-        // 'GET/default':  new HtmlPage({title: '', assets: '', body: ''}),
-        // 'GET/item':  new ItemAdminPage(),
+        // 'GET/default':  new ItemAdminPage(),
+        // 'GET/item':     new ItemAdminPage(),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),

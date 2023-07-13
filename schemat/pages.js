@@ -10,6 +10,8 @@ import {HttpService} from "./services.js";
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
+       Context variables:
+       - ctx.service: the current HtmlPage object
      */
     execute(target, ctx) {
         ctx = {...ctx, service: this}              // add `this` service to the context
@@ -19,8 +21,7 @@ export class HtmlPage extends HttpService {
     }
 
     target_prepare(ctx) {
-        /* Adding extra information to the target object (`this`) or elsewhere to the context, `ctx`,
-           before the page rendering starts.
+        /* Add extra information to the target object (`this`) or to the context (`ctx`) before the page generation starts.
            In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
            here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
            The target object, ctx.target, can also undergo some additional processing here.
@@ -60,18 +61,45 @@ export class HtmlPage extends HttpService {
 export class RenderedPage extends HtmlPage {
     /* An HTML page that is rendered from a component (e.g., React).
        The (re)rendering can take place on the server and/or the client.
+       Context variables:
+       - ctx.props: the properties to be passed down to the component during server-side rendering in render_server()
      */
     target_html_body(ctx) {
-        /* Page is a server-side rendering of the React main component placed inside an HTML boiler-code wrapper:
-           <!DOCTYPE html>, <meta> data, <title>, scripts, assets etc.
-         */
         let {service} = ctx
-        let component = service.render(this, ctx)
+        let component = service.render_server(this, ctx)
         let data = service._make_data(this, ctx)
         let code = service._make_script(this, ctx)
         return service._component_frame({component, data, code})
     }
 
+    render_server(target, ctx) {
+        /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
+        return ''
+    }
+    render_client(target, html_element, props) {
+        /* Client-side rendering of the main component of the page to an HTML element. */
+        throw new NotImplemented('render_client() must be implemented in subclasses')
+    }
+
+    _make_data(target, ctx) {
+        /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
+        throw new NotImplemented('_make_data() must be implemented in subclasses')
+    }
+    _make_script(target, ctx) {
+        /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
+           This code will launch the client-side rendering of the same component.
+         */
+        throw new NotImplemented('_make_script() must be implemented in subclasses')
+    }
+
+    _component_frame({component, data, code}) {
+        /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
+        return `
+            <p id="page-data" style="display:none">${data}</p>
+            <div id="page-component">${component}</div>
+            <script async type="module">${code}</script>
+        `
+    }
 }
 
 export class ReactPage extends RenderedPage {
@@ -81,41 +109,29 @@ export class ReactPage extends RenderedPage {
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
+    render_server(target, ctx) {
+        print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
+        target.assertLoaded()
+        let view = e(this.target_component.bind(target), ctx.props)
+        return ReactDOM.renderToString(view)
+        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    }
+    render_client(target, html_element, props) {
+        target.assertLoaded()
+        let view = e(this.target_component.bind(target), props)
+        return ReactDOM.render(view, html_element)
+    }
+
     _make_data(target, ctx) {
-        /* Prepare data to be embedded in HTML output for use by the client-side JS code. */
         return btoa(encodeURIComponent(JSON.stringify(ctx.request.session.dump())))
     }
     _make_script(target, ctx) {
-        /* Prepare the Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
-           This code will launch the client-side rendering of the same React component.
-         */
         return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
     }
-    _component_frame({component, data, code}) {
-        /* The HTML wrapper for the React component. */
-        return `
-            <p id="page-data" style="display:none">${data}</p>
-            <div id="page-component">${component}</div>
-            <script async type="module">${code}</script>
-        `
-    }
 
-    render(target, ctx, html_element = null) {
-        /* This method can be called on the server (html_element=null) or the client (html_element!=null).
-           It renders the main React component. On the server, server-side rendering (SSR) is performed.
-         */
-        target.assertLoaded()
-        if (!html_element) print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
-
-        let view = e(this.target_view.bind(target))
-
-        return html_element ? ReactDOM.render(view, html_element) : ReactDOM.renderToString(view)
-        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-    }
-
-    target_view(ctx) {
-        /* Return the main React component to be rendered. */
-        throw new NotImplemented('target_view() must be implemented in subclasses')
+    target_component(props) {
+        /* The main React component to be rendered. */
+        throw new NotImplemented('target_component() must be implemented in subclasses')
     }
 
 }
@@ -127,10 +143,10 @@ export class ItemAdminPage extends ReactPage {
        is expected to be an instance of Item.
      */
 
-    target_html_title(ctx) {
+    target_html_title() {
         /* Get/compute a title for an HTML response page for a given request & view name. */
         let title = this.prop('html_title')
-        if (title instanceof Function) title = title(ctx)           // this can still return undefined
+        if (title instanceof Function) title = title()          // this can still return undefined
         if (title === undefined) {
             let name = this.getName()
             let ciid = this.getStamp({html: false})
@@ -148,7 +164,7 @@ export class ItemAdminPage extends ReactPage {
         return assets .filter(a => a && a.trim()) .join('\n')
     }
 
-    target_view({extra = null} = {}) {
+    target_component({extra = null} = {}) {
         /* Detailed (admin) view of an item. */
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
