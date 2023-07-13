@@ -1,23 +1,8 @@
 import {NotImplemented} from "./errors.js";
 import {dedentFull, escape_html, print} from "./utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import {
-    A,
-    BUTTON,
-    delayed_render,
-    DIV,
-    e, FIELDSET, FORM,
-    FRAGMENT,
-    H1,
-    H2, H3,
-    HTML, INPUT,
-    NBSP,
-    SPAN,
-    TABLE,
-    TBODY,
-    TD,
-    TR, useRef, useState
-} from "./react-utils.js";
+import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
+         TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
 import {HttpService} from "./services.js";
 import {Data} from "./data.js";
 
