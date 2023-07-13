@@ -483,7 +483,7 @@ export class Item {
     }
 
     _initNetwork() {
-        /* Create a .net agent and .action triggers for this item's network API. */
+        /* Create a .net connector and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
         this.net = new Network(this, role, this.constructor.api, this.constructor.actions)
         this.action = this.net.action
@@ -1011,17 +1011,12 @@ export class Item {
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
-            e(this.Title.bind(this)),
+            this.Title(),
             H2('Properties'),
-            e(this.Properties.bind(this)),
+            this.Properties(),
             extra,
         )
     }
-    // _mui_test() {
-    //     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
-    //     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
-    //     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
-    // }
 
     // standard components for rendering this item's pages...
 

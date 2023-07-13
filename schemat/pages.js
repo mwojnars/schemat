@@ -1,7 +1,7 @@
 import {NotImplemented} from "./errors.js";
 import {dedentFull, escape_html, print} from "./utils.js";
 import {Resources, ReactDOM} from './resources.js'
-import {DIV, e, H2} from "./react-utils.js";
+import {DIV, e, FRAGMENT, H1, H2, HTML, SPAN} from "./react-utils.js";
 import {HttpService} from "./services.js";
 
 
@@ -18,6 +18,9 @@ export class HtmlPage extends HttpService {
         let prepare = this.target_prepare.call(target, ctx)
         if (prepare instanceof Promise) return prepare.then(() => this.target_html.call(target, ctx))
         return this.target_html.call(target, ctx)
+
+        // view = Object.create(target, this.view)      // create a descendant object that looks like `target` but additionally contains all view.* properties & methods
+        // let prepare = view.prepare(ctx)
     }
 
     target_prepare(ctx) {
@@ -110,14 +113,16 @@ export class ReactPage extends RenderedPage {
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
     render_server(target, ctx) {
-        print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
         target.assertLoaded()
-        let view = e(this.target_component.bind(target), ctx.props)
+        print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
+        let view = e(this.target_component.bind(target), ctx)
         return ReactDOM.renderToString(view)
         // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     }
-    render_client(target, html_element, props) {
+    render_client(target, html_element, props = {}) {
+        /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
+        props = {...props, service: this}               // add `this` service to the properties
         let view = e(this.target_component.bind(target), props)
         return ReactDOM.render(view, html_element)
     }
@@ -164,16 +169,43 @@ export class ItemAdminPage extends ReactPage {
         return assets .filter(a => a && a.trim()) .join('\n')
     }
 
-    target_component({extra = null} = {}) {
+    target_component({extra = null, ...props} = {}) {
         /* Detailed (admin) view of an item. */
+        let {service} = props
         return DIV(
             // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
             // e(this._mui_test),
-            e(this.Title.bind(this)),
+            service.Title.call(this),
             H2('Properties'),
-            e(this.Properties.bind(this)),
+            service.Properties.call(this),
             extra,
         )
     }
+
+    // standard components for Item pages...
+
+    Title() {
+        /* <H1> element to be displayed as a page title. */
+        let name = this.getName()
+        let ciid = this.getStamp()
+        if (name)
+            return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+        else
+            return H1(HTML(ciid))
+    }
+
+    Properties() {
+        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+        // let changes = new Changes(this)
+        return FRAGMENT(
+                this.getSchema().displayTable({item: this}),
+                // e(changes.Buttons.bind(changes)),
+            )
+    }
 }
 
+// _mui_test() {
+//     return e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST')
+//     // WARN: when _mui_test() is used repeatedly in Page, a <style> block is output EACH time (!!!)
+//     //       A class name of the form .css-HASH is assigned, where HASH is a stable 6-letter hash of the styles
+// }
