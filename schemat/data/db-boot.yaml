@@ -32,12 +32,6 @@
       info: Source code of functions that generate static HTML response for particular
         access methods of this category's items.
       "@": CATALOG
-    handlers:
-      values:
-        "@": CODE
-      info: Body of Handler subclasses that generate HTML response for particular
-        access methods of this category's items.
-      "@": CATALOG
     views:
       values:
         "@": CODE

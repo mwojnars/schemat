@@ -338,8 +338,8 @@ export class Item {
 
     _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
-    static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
-    static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
+    // static handlers   = {}      // collection of web handlers, {name: handler}; each handler is a Handler instance
+    // static components = {}      // collection of standard components for rendering this item's pages (NOT USED)
     static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
     static api        = null    // API instance that defines this item's endpoints and protocols
 
@@ -1090,11 +1090,6 @@ export class Item {
 
 Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEndpoints', 'getSchema', 'render')
 
-// Item.handlers = {
-//     default: new Handler(),     // TODO: use protocols instead
-//     admin:   new Handler(),     // TODO: use protocols instead
-// }
-
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
 // in the context of their item like if they were regular methods of the Item (sub)class.
@@ -1291,40 +1286,41 @@ export class Category extends Item {
         // if (!body) return 'let Class = Base'
         let def  = body ? `class ${name} extends Base {\n${body}\n}` : `let ${name} = Base`
         if (name !== 'Class') def += `\nlet Class = ${name}`
-        let views = this._codeViewsHandlers()
-        let hdlrs = this._codeHandlers()
+        // let views = this._codeViewsHandlers()
+        // let hdlrs = this._codeHandlers()
         let cache = this._codeCache()
-        return [def, views, hdlrs, cache] .filter(Boolean) .join('\n')
+        return [def, cache] .filter(Boolean) .join('\n')
     }
     _codeBody() {
         /* Source code of this category's dynamic Class body. */
-        let body = this.mergeSnippets('class_body')
-        let methods = []
-        let views = this.prop('views')                              // extend body with VIEW_* methods
-        for (let {key: vname, value: vbody} of views || [])
-            methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
-        return body + methods.join('\n')
+        return this.mergeSnippets('class_body')
+        // let body = this.mergeSnippets('class_body')
+        // let methods = []
+        // let views = this.prop('views')                              // extend body with VIEW_* methods
+        // for (let {key: vname, value: vbody} of views || [])
+        //     methods.push(`VIEW_${vname}(props) {\n${vbody}\n}`)
+        // return body + methods.join('\n')
     }
-    _codeViewsHandlers() {
-        let views = this.prop('views')
-        if (!views?.length) return
-        let names = views.map(({key}) => key)
-        let hdlrs = names.map(name => `${name}: new Item.Handler()`)
-        let code  = `Class.handlers = {...Class.handlers, ${hdlrs.join(', ')}}`
-        print('_codeViewsHandlers():', code)
-        return code
-    }
-    _codeHandlers() {
-        let entries = this.prop('handlers')
-        if (!entries?.length) return
-        let className = (name) => `Handler_${this.id}_${name}`
-        let handlers = entries.map(({key: name, value: code}) =>
-            `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
-        )
-        return `Class.handlers = {...Class.handlers, \n${handlers.join(',\n')}\n}`
-        // print('_codeHandlers():', code)
-        // return code
-    }
+    // _codeViewsHandlers() {
+    //     let views = this.prop('views')
+    //     if (!views?.length) return
+    //     let names = views.map(({key}) => key)
+    //     let hdlrs = names.map(name => `${name}: new Item.Handler()`)
+    //     let code  = `Class.handlers = {...Class.handlers, ${hdlrs.join(', ')}}`
+    //     print('_codeViewsHandlers():', code)
+    //     return code
+    // }
+    // _codeHandlers() {
+    //     let entries = this.prop('handlers')
+    //     if (!entries?.length) return
+    //     let className = (name) => `Handler_${this.id}_${name}`
+    //     let handlers = entries.map(({key: name, value: code}) =>
+    //         `  ${name}: new class ${className(name)} extends Item.Handler {\n${indent(code, '    ')}\n  }`
+    //     )
+    //     return `Class.handlers = {...Class.handlers, \n${handlers.join(',\n')}\n}`
+    //     // print('_codeHandlers():', code)
+    //     // return code
+    // }
     _codeCache() {
         /* Source code of setCaching() statement for selected methods of a custom Class. */
         let methods = this.propsReversed('cached_methods')
