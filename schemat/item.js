@@ -1108,8 +1108,8 @@ Item.createAPI(
     {
         // http endpoints...
 
-        // 'GET/default':  new ItemAdminPage(),
-        // 'GET/item':     new ItemAdminPage(),
+        'GET/default':  new ItemAdminPage(),            // TODO: add explicit support for aliases
+        'GET/item':     new ItemAdminPage(),
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),

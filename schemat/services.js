@@ -248,7 +248,7 @@ export class TaskService extends JsonService {
 export class API {
     /* A set of Services exposed on particular endpoints. API can be linked to target objects via the Network adapter. */
 
-    services = {}               // {endpoint: service}
+    services = {}               // {endpoint_string: service_object}
 
     constructor(parents = [], services = {}) {
         // this.environment = environment
