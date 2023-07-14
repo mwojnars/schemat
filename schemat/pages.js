@@ -115,9 +115,9 @@ export class RenderedPage extends HtmlPage {
 
         html_body(ctx) {
             let component = this.render_server(ctx)
-            let data = this._make_data(ctx)
-            let code = this._make_script(ctx)
-            return this._component_frame({component, data, code})
+            let data = this.component_data(ctx)
+            let code = this.component_script(ctx)
+            return this.component_frame({component, data, code})
         },
 
         render_server(ctx) {
@@ -125,19 +125,19 @@ export class RenderedPage extends HtmlPage {
             return ''
         },
 
-        _make_data(ctx) {
+        component_data(ctx) {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
             throw new NotImplemented('_make_data() must be implemented in subclasses')
         },
 
-        _make_script(ctx) {
+        component_script(ctx) {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the same component.
              */
             throw new NotImplemented('_make_script() must be implemented in subclasses')
         },
 
-        _component_frame({component, data, code}) {
+        component_frame({component, data, code}) {
             /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
             return `
                 <p id="page-data" style="display:none">${data}</p>
@@ -206,12 +206,12 @@ export class ReactPage extends RenderedPage {
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
 
-        _make_data(ctx) {
+        component_data(ctx) {
             let data = ctx.request.session.dump()
             return btoa(encodeURIComponent(JSON.stringify(data)))
         },
 
-        _make_script(ctx) {
+        component_script(ctx) {
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
         },
     }
