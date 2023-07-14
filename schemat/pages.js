@@ -13,14 +13,12 @@ export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
        Context variables:
-       - ctx.service: the current HtmlPage object
+       - ctx.page: the current HtmlPage object
        - ctx.target: the target object that is being served
        - ctx.view: a descendant of the target object that additionally contains all View.* properties & methods
      */
     execute(target, ctx) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
-        // let view = Object.setPrototypeOf({...this.constructor.View}, target)
-        // ctx = {...ctx, target, view, service: this}                 // add `target`, `view` and `this` to the context
         let view = this._create_view(target, ctx)
         let prepare = view.prepare(ctx)
         if (prepare instanceof Promise) return prepare.then(() => view.generate(ctx))
@@ -32,14 +30,14 @@ export class HtmlPage extends HttpService {
            functionality as defined in the page's View inner object. The view object is a descendant of the target object.
            Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
            the target object and the page-generation functions.
-           Also, extend the context, `ctx`. Return [view, new-ctx].
+           Also, extend the context, `ctx`.
          */
         let view = Object.setPrototypeOf({...this.constructor.View}, target)
         // add `target`, `view` and `this` to the context
         ctx['target'] = target
         ctx['view'] = view
-        ctx['service'] = this
-        // ctx = {...ctx, target, view, service: this}
+        ctx['page'] = this
+        // ctx = {...ctx, target, view, page: this}
         return view
     }
 
