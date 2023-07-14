@@ -16,21 +16,35 @@ export class HtmlPage extends HttpService {
        - ctx.service: the current HtmlPage object
      */
     execute(target, ctx) {
-        ctx = {...ctx, service: this}              // add `this` service to the context
-        let prepare = this.target_prepare.call(target, ctx)
+        // `view` is a descendant of `target` that additionally contains all View.* properties & methods
+        let view = Object.setPrototypeOf({...this.constructor.View}, target)
+
+        ctx = {...ctx, target, view, service: this}                 // add `target`, `view` and `this` to the context
+        let prepare = view.prepare(ctx)
+        // let prepare = this.target_prepare.call(target, ctx)
         if (prepare instanceof Promise) return prepare.then(() => this.target_html.call(target, ctx))
         return this.target_html.call(target, ctx)
-
-        // view = Object.create(target, this.view)      // create a descendant object that looks like `target` but additionally contains all view.* properties & methods
-        // let prepare = view.prepare(ctx)
     }
 
-    target_prepare(ctx) {
-        /* Add extra information to the target object (`this`) or to the context (`ctx`) before the page generation starts.
-           In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
-           here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
-           The target object, ctx.target, can also undergo some additional processing here.
-         */
+    static View = {
+        /* A set of methods and properties that are copied to a descendant of the target object to create a "view" that
+           combines the regular interface of the target with the page-generation functionality as defined below.
+           Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
+           the target object and the page-generation functions. Adding attributes to `this` is a convenient way to pass
+           temporary data between the page-generation functions, because the attributes are added to the temporary
+           view object and not to the target object. However, any attributes defined here in View must stay read-only,
+           as they are shared between all views created from a given page class.
+        */
+
+        prepare(ctx) {
+            /* Add extra information to the view (`this`) or to the context (`ctx`) before the page generation starts.
+               In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
+               here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
+               The target object, ctx.target, can also undergo some additional processing here.
+             */
+            print(`prepare() called for ${this.constructor.name}`)
+        }
+
     }
 
     target_html(ctx) {
