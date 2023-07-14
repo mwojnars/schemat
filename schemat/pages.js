@@ -25,7 +25,7 @@ export class HtmlPage extends HttpService {
         return view.generate(ctx)
     }
 
-    _create_view(target, ctx) {
+    _create_view(target, request_context = {}) {
         /* Create a "view" object that combines the regular interface of the target object with the page-generation
            functionality as defined in the page's View. The view object is a descendant of the target object.
            Inside the page-generation functions, `this` is bound to the "view", so the code can access both
@@ -33,7 +33,7 @@ export class HtmlPage extends HttpService {
            Also, view.context is set to the context object containing at least `target` and `page` (on the client),
            plus some request-related data (on the server).
          */
-        let context = {...ctx, target, page: this}
+        let context = {...request_context, target, page: this}
         return Object.setPrototypeOf({...this.constructor.View, context}, target)
 
         // let view = Object.setPrototypeOf({...this.constructor.View}, target)
@@ -154,11 +154,11 @@ export class ReactPage extends RenderedPage {
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
 
-    render(target, html_element, props = {}) {
+    render(target, html_element) {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
-        let view = this._create_view(target, props)
-        let component = e(view.component.bind(view), props)
+        let view = this._create_view(target)
+        let component = e(view.component.bind(view))
         return ReactDOM.render(component, html_element)
     }
 
