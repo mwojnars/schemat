@@ -165,24 +165,25 @@ export class ReactPage extends RenderedPage {
     static View = {
         ...RenderedPage.View,
 
-        render_server(ctx) {
+        render_server() {
             this.assertLoaded()
-            print(`SSR render('${ctx.endpoint}') of ${this.id_str}`)
-            let view = e(this.component.bind(this), ctx)
+            print(`SSR render('${this.context.endpoint}') of ${this.id_str}`)
+            let view = e(this.component.bind(this))
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
 
-        component_data(ctx) {
-            let data = ctx.request.session.dump()
+        component_data() {
+            let data = this.context.request.session.dump()
             return btoa(encodeURIComponent(JSON.stringify(data)))
         },
 
-        component_script(ctx) {
-            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
+        component_script() {
+            let endpoint = this.context.endpoint
+            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${endpoint}');`
         },
 
-        component(props) {
+        component() {
             /* The React component to be rendered as the page's content. */
             throw new NotImplemented('component() must be implemented in subclasses')
         }
@@ -219,7 +220,7 @@ export class ItemAdminPage extends ReactPage {
             return assets .filter(a => a && a.trim()) .join('\n')
         },
 
-        component({extra = null, ...props} = {}) {
+        component({extra = null} = {}) {
             /* Detailed (admin) view of an item. */
             return DIV(
                 // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
@@ -268,7 +269,7 @@ export class CategoryAdminPage extends ItemAdminPage {
     static View = {
         ...ItemAdminPage.View,
 
-        component(props) {
+        component() {
             // const scan = () => this.db.scan_index('by_category', {category: this})
             const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
             const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
@@ -279,7 +280,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
             const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-            return ItemAdminPage.View.component.call(this, {...props, extra: FRAGMENT(
+            return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
                 H2('Items'),
                 e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
