@@ -27,18 +27,22 @@ export class HtmlPage extends HttpService {
 
     _create_view(target, ctx) {
         /* Create a "view" object that combines the regular interface of the target object with the page-generation
-           functionality as defined in the page's View inner object. The view object is a descendant of the target object.
-           Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
-           the target object and the page-generation functions.
-           Also, extend the context, `ctx`.
+           functionality as defined in the page's View. The view object is a descendant of the target object.
+           Inside the page-generation functions, `this` is bound to the "view", so the code can access both
+           the target object's properties and other page-generation functions.
+           Also, view.context is set to the context object containing at least `target` and `page` (on the client),
+           plus some request-related data (on the server).
          */
-        let view = Object.setPrototypeOf({...this.constructor.View}, target)
-        // add `target`, `view` and `this` to the context
-        ctx['target'] = target
-        ctx['view'] = view
-        ctx['page'] = this
-        // ctx = {...ctx, target, view, page: this}
-        return view
+        let context = {...ctx, target, page: this}
+        return Object.setPrototypeOf({...this.constructor.View, context}, target)
+
+        // let view = Object.setPrototypeOf({...this.constructor.View}, target)
+        // // add `target`, `view` and `this` to the context
+        // ctx['target'] = target
+        // ctx['view'] = view
+        // ctx['page'] = this
+        // // ctx = {...ctx, target, view, page: this}
+        // return view
     }
 
     static View = {
@@ -51,11 +55,13 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
+        context: undefined,     // the context object: {target, page, ...plus whatever was passed to the page's execute()}
+
         prepare(ctx) {
             /* Add extra information to the view (`this`) or to the context (`ctx`) before the page generation starts.
                In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
                here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
-               The target object, ctx.target, can also undergo some additional processing here.
+               The target object can also undergo some additional processing here.
              */
             print(`prepare() called for ${this.constructor.name}`)
         },
