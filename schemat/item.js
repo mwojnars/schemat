@@ -770,25 +770,25 @@ export class Item {
         request.item = this
         if (request.path) return this.handlePartial(request)
 
+        let httpMethod = request.type
         let {session, methods: endpoints} = request
         if (!endpoints.length) endpoints = ['default']
+
+        endpoints = endpoints.map(p => `${httpMethod}/${p}`)        // convert short endpoints to full endpoints
         // print('methods:', methods)
 
         if (session) {
             session.item = this
             if (request.app) session.app = request.app
         }
-        let httpMethod = request.type
 
-        for (let short_endpoint of endpoints) {
-            let endpoint = `${httpMethod}/${short_endpoint}`
+        for (let endpoint of endpoints) {
             let context = new RequestContext({request, endpoint})
-
             let service = this.net.resolve(endpoint)
             if (service) return service.server(this, context)
         }
 
-        request.throwNotFound(`no handler found for [${endpoints}] access method(s)`)
+        request.throwNotFound(`no service found for [${endpoints}]`)
     }
 
     static setCaching(...methods) {
