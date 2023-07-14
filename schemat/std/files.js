@@ -64,13 +64,13 @@ File.createAPI({        // endpoints...
         return txt
     }),
 
-    'GET/file':     new HttpService(function ({res, request})
+    'GET/file':     new HttpService(function ({request})
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
-        this.setMimeType(res, request.pathFull)
+        this.setMimeType(request.res, request.pathFull)
         let txt = this.read()
         if (txt === undefined) request.throwNotFound()
-        res.send(txt)
+        request.res.send(txt)
     }),
 })
 
@@ -83,9 +83,9 @@ export class FileLocal extends File {
         if (path) return this._mod_fs.readFileSync(path, {encoding})
     }
 
-    // GET_file({res}) {
+    // GET_file({request}) {
     //     let path = this.prop('path')
-    //     res.sendFile(path, {}, (err) => {if(err) res.sendStatus(err.status)})
+    //     request.res.sendFile(path, {}, (err) => {if(err) request.res.sendStatus(err.status)})
     //
     //     // TODO respect the "If-Modified-Since" http header like in django.views.static.serve(), see:
     //     // https://github.com/django/django/blob/main/django/views/static.py

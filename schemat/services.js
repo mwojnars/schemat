@@ -101,13 +101,13 @@ export class HttpService extends Service {
        should use `req` and `res` objects directly, and it is also responsible for error handling.
        client() returns response body as a raw string.
      */
-    _decodeError(res)   { throw new RequestFailed({code: res.status, message: res.statusText}) }
+    _decodeError(ret)   { throw new RequestFailed({code: ret.status, message: ret.statusText}) }
 
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)        // it's assumed the `target` is an Item instance with .url()
-        let res = await fetch(url)                      // client-side JS Response object
-        if (!res.ok) return this._decodeError(res)
-        return res.text()
+        let ret = await fetch(url)                      // client-side JS Response object
+        if (!ret.ok) return this._decodeError(ret)
+        return ret.text()
     }
     server(target, ctx)  { return this.execute(target, ctx) }
 }
@@ -128,10 +128,10 @@ export class JsonService extends HttpService {
 
     async client(target, ...args) {
         let url = target.url(this.endpoint_name)
-        let res = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
-        if (!res.ok) return this._decodeError(res)
+        let ret = await this._fetch(url, args, this.endpoint_method)        // client-side JS Response object
+        if (!ret.ok) return this._decodeError(ret)
 
-        let result = await res.text()                           // json string or empty
+        let result = await ret.text()                           // json string or empty
         if (!result) return
 
         result = JSON.parse(result)
@@ -152,14 +152,14 @@ export class JsonService extends HttpService {
         return fetch(url, params)
     }
 
-    async _decodeError(res) {
-        let error = await res.json()
-        throw new RequestFailed({...error, code: res.status})
+    async _decodeError(ret) {
+        let error = await ret.json()
+        throw new RequestFailed({...error, code: ret.status})
     }
 
     async server(target, ctx) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        let {req, res} = ctx        // Express's request and response objects
+        let {req, res} = ctx.request        // Express's request and response objects
         let out, ex
         try {
             let body = req.body

@@ -60,6 +60,9 @@ export class Request {
         static message = "URL path not found"
     }
 
+    get req()       { return this.session?.req }
+    get res()       { return this.session?.res }
+
     type            // CALL, GET, POST, (SOCK in the future); request type; there are different handler functions for different request types
     session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
@@ -100,9 +103,9 @@ export class Request {
     }
 
     copy() {
-        let req = T.clone(this)
-        req.methods = [...this.methods]
-        return req
+        let request = T.clone(this)
+        request.methods = [...this.methods]
+        return request
     }
 
     _prepare(method) {
@@ -148,8 +151,8 @@ export class Request {
 
 export class RequestContext {
     /* Wrapper around the contextual information passed to request handlers. */
-    constructor({request, req, res, endpoint}) {
-        Object.assign(this, {request, req, res, endpoint})
+    constructor({request, endpoint}) {
+        Object.assign(this, {request, endpoint})
     }
 }
 
@@ -770,7 +773,6 @@ export class Item {
         request.item = this
         if (request.path) return this.handlePartial(request)
 
-        let req, res
         let {session, methods: endpoints} = request
         if (!endpoints.length) endpoints = ['default']
         // print('methods:', methods)
@@ -778,13 +780,12 @@ export class Item {
         if (session) {
             session.item = this
             if (request.app) session.app = request.app
-            ;[req, res] = session.channels
         }
         let httpMethod = request.type
 
         for (let short_endpoint of endpoints) {
             let endpoint = `${httpMethod}/${short_endpoint}`
-            let context = new RequestContext({request, req, res, endpoint})
+            let context = new RequestContext({request, endpoint})
 
             let service = this.net.resolve(endpoint)
             if (service) return service.server(this, context)
@@ -1102,15 +1103,15 @@ Category.createAPI(
         'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
         'GET/item':     new CategoryAdminPage(),
 
-        'GET/import':   new HttpService(function ({request, res})
+        'GET/import':   new HttpService(function ({request})
         {
             /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
             this._checkPath(request)
-            res.type('js')
-            res.send(this.getSource())
+            request.res.type('js')
+            request.res.send(this.getSource())
         }),
 
-        'GET/scan':     new HttpService(async function ({res})
+        'GET/scan':     new HttpService(async function ({request})
         {
             /* Retrieve all children of this category and send to client as a JSON array.
                TODO: set a size limit & offset (pagination).
@@ -1122,7 +1123,7 @@ Category.createAPI(
                 items.push(item)
             }
             let records = items.map(item => item.recordEncoded())
-            res.json(records)
+            request.res.json(records)
         }),
 
         'POST/edit':  new TaskService({
