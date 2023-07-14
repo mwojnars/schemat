@@ -14,6 +14,8 @@ export class HtmlPage extends HttpService {
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
        Context variables:
        - ctx.service: the current HtmlPage object
+       - ctx.target: the target object that is being served
+       - ctx.view: a descendant of the target object that additionally contains all View.* properties & methods
      */
     execute(target, ctx) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
@@ -53,30 +55,52 @@ export class HtmlPage extends HttpService {
             /* Generate an HTML page server-side. Can be async.
                By default, this function calls target_html_*() functions to build separate parts of the page.
              */
-            let {service} = ctx
-            let title = service.target_html_title.call(this, ctx)
-            let assets = service.target_html_head.call(this, ctx)
-            let body = service.target_html_body.call(this, ctx)
-            return service._html_frame({title, assets, body})
-        }
+            let title = this.html_title(ctx)
+            let assets = this.html_head(ctx)
+            let body = this.html_body(ctx)
+            return this.html_frame({title, assets, body})
+        },
 
+        html_title(ctx)  {},    // override in subclasses; return a plain string to be put inside <title>...</title>
+        html_head(ctx)   {},    // override in subclasses; return an HTML string to be put inside <head>...</head>
+        html_body(ctx)   {},    // override in subclasses; return an HTML string to be put inside <body>...</body>
+
+        html_frame({title, assets, body}) {
+            // the title string IS escaped, while the other elements are NOT
+            let title_html = (title !== undefined ? `<title>${escape_html(title)}</title>` : '')
+            return dedentFull(`
+                <!DOCTYPE html><html>
+                <head>
+                    ${title_html}
+                    ${assets || ''}
+                </head>`) +
+                `<body>\n${body || ''}\n</body></html>`
+        },
     }
 
-    target_html_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
-    target_html_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
-    target_html_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
+    // target_html(ctx) {
+    //     let {service} = ctx
+    //     let title = service.target_html_title.call(this, ctx)
+    //     let assets = service.target_html_head.call(this, ctx)
+    //     let body = service.target_html_body.call(this, ctx)
+    //     return service._html_frame({title, assets, body})
+    // }
 
-    _html_frame({title, assets, body}) {
-        // the title string IS escaped, while the other elements are NOT
-        let title_html = (title !== undefined ? `<title>${escape_html(title)}</title>` : '')
-        return dedentFull(`
-            <!DOCTYPE html><html>
-            <head>
-                ${title_html}
-                ${assets || ''}
-            </head>`) +
-            `<body>\n${body || ''}\n</body></html>`
-    }
+    // target_html_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
+    // target_html_head(ctx)   {}      // override in subclasses; return an HTML string to be put inside <head>...</head>
+    // target_html_body(ctx)   {}      // override in subclasses; return an HTML string to be put inside <body>...</body>
+    //
+    // _html_frame({title, assets, body}) {
+    //     // the title string IS escaped, while the other elements are NOT
+    //     let title_html = (title !== undefined ? `<title>${escape_html(title)}</title>` : '')
+    //     return dedentFull(`
+    //         <!DOCTYPE html><html>
+    //         <head>
+    //             ${title_html}
+    //             ${assets || ''}
+    //         </head>`) +
+    //         `<body>\n${body || ''}\n</body></html>`
+    // }
 }
 
 /**********************************************************************************************************************/
@@ -85,13 +109,26 @@ export class RenderedPage extends HtmlPage {
     /* An HTML page that is rendered from a component (e.g., React).
        The (re)rendering can take place on the server and/or the client.
      */
-    target_html_body(ctx) {
-        let {service} = ctx
-        let component = service.render_server(this, ctx)
-        let data = service._make_data(this, ctx)
-        let code = service._make_script(this, ctx)
-        return service._component_frame({component, data, code})
+
+    static View = {
+        ...HtmlPage.View,
+
+        html_body(ctx) {
+            let {service} = ctx
+            let component = service.render_server(this, ctx)
+            let data = service._make_data(this, ctx)
+            let code = service._make_script(this, ctx)
+            return service._component_frame({component, data, code})
+        }
     }
+
+    // target_html_body(ctx) {
+    //     let {service} = ctx
+    //     let component = service.render_server(this, ctx)
+    //     let data = service._make_data(this, ctx)
+    //     let code = service._make_script(this, ctx)
+    //     return service._component_frame({component, data, code})
+    // }
 
     render_server(target, ctx) {
         /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
@@ -167,26 +204,50 @@ export class ItemAdminPage extends ReactPage {
        is expected to be an instance of Item.
      */
 
-    target_html_title() {
-        /* Get/compute a title for an HTML response page for a given request & view name. */
-        let title = this.prop('html_title')
-        if (title instanceof Function) title = title()          // this can still return undefined
-        if (title === undefined) {
+    static View = {
+        ...ReactPage.View,
+
+        html_title() {
+            /* Get/compute a title for an HTML response page for a given request & view name. */
+            let title = this.prop('html_title')
+            // if (title instanceof Function) title = title()          // this can still return undefined
+            if (typeof title === 'string') return title
+
             let name = this.getName()
             let ciid = this.getStamp({html: false})
-            title = `${name} ${ciid}`
+            return `${name} ${ciid}`
+        },
+
+        html_head() {
+            /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
+            let globalAssets = Resources.clientAssets
+            let staticAssets = this.getSchema().getAssets().renderAll()
+            let customAssets = this.category?.prop('html_assets')
+            let assets = [globalAssets, staticAssets, customAssets]
+            return assets .filter(a => a && a.trim()) .join('\n')
         }
-        return title
     }
 
-    target_html_head() {
-        /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
-        let globalAssets = Resources.clientAssets
-        let staticAssets = this.getSchema().getAssets().renderAll()
-        let customAssets = this.category?.prop('html_assets')
-        let assets = [globalAssets, staticAssets, customAssets]
-        return assets .filter(a => a && a.trim()) .join('\n')
-    }
+    // target_html_title() {
+    //     /* Get/compute a title for an HTML response page for a given request & view name. */
+    //     let title = this.prop('html_title')
+    //     if (title instanceof Function) title = title()          // this can still return undefined
+    //     if (title === undefined) {
+    //         let name = this.getName()
+    //         let ciid = this.getStamp({html: false})
+    //         title = `${name} ${ciid}`
+    //     }
+    //     return title
+    // }
+    //
+    // target_html_head() {
+    //     /* Render dependencies: css styles, libraries, ... as required by HTML pages of this item. */
+    //     let globalAssets = Resources.clientAssets
+    //     let staticAssets = this.getSchema().getAssets().renderAll()
+    //     let customAssets = this.category?.prop('html_assets')
+    //     let assets = [globalAssets, staticAssets, customAssets]
+    //     return assets .filter(a => a && a.trim()) .join('\n')
+    // }
 
     target_component({extra = null, ...props} = {}) {
         /* Detailed (admin) view of an item. */
