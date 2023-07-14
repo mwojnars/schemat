@@ -12,17 +12,14 @@ import {Data} from "./data.js";
 export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
-       Context variables:
-       - ctx.page: the current HtmlPage object
-       - ctx.target: the target object that is being served
-       - ctx.view: a descendant of the target object that additionally contains all View.* properties & methods
      */
-    execute(target, ctx) {
+    execute(target, request_context) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
-        let view = this._create_view(target, ctx)
-        let prepare = view.prepare(ctx)
-        if (prepare instanceof Promise) return prepare.then(() => view.generate(ctx))
-        return view.generate(ctx)
+        // and a `context` property
+        let view = this._create_view(target, request_context)
+        let prepare = view.prepare()
+        if (prepare instanceof Promise) return prepare.then(() => view.generate())
+        return view.generate()
     }
 
     _create_view(target, request_context = {}) {
@@ -35,14 +32,6 @@ export class HtmlPage extends HttpService {
          */
         let context = {...request_context, target, page: this}
         return Object.setPrototypeOf({...this.constructor.View, context}, target)
-
-        // let view = Object.setPrototypeOf({...this.constructor.View}, target)
-        // // add `target`, `view` and `this` to the context
-        // ctx['target'] = target
-        // ctx['view'] = view
-        // ctx['page'] = this
-        // // ctx = {...ctx, target, view, page: this}
-        // return view
     }
 
     static View = {
@@ -55,10 +44,10 @@ export class HtmlPage extends HttpService {
            as they are shared between all views created from a given page class.
         */
 
-        context: undefined,     // the context object: {target, page, ...plus whatever was passed to the page's execute()}
+        context: undefined,     // the context object: {target, page, ...plus request data as passed to the page's execute()}
 
-        prepare(ctx) {
-            /* Add extra information to the view (`this`) or to the context (`ctx`) before the page generation starts.
+        prepare() {
+            /* Add extra information to the view (`this` or `this.context`) before the page generation starts.
                In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
                here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
                The target object can also undergo some additional processing here.
@@ -66,19 +55,19 @@ export class HtmlPage extends HttpService {
             print(`prepare() called for ${this.constructor.name}`)
         },
 
-        generate(ctx) {
-            /* Generate an HTML page server-side. Can be async.
+        generate() {
+            /* Generate a complete HTML page server-side. Can be async.
                By default, this function calls target_html_*() functions to build separate parts of the page.
              */
-            let title = this.html_title(ctx)
-            let assets = this.html_head(ctx)
-            let body = this.html_body(ctx)
+            let title = this.html_title()
+            let assets = this.html_head()
+            let body = this.html_body()
             return this.html_frame({title, assets, body})
         },
 
-        html_title(ctx)  {},    // override in subclasses; return a plain string to be put inside <title>...</title>
-        html_head(ctx)   {},    // override in subclasses; return an HTML string to be put inside <head>...</head>
-        html_body(ctx)   {},    // override in subclasses; return an HTML string to be put inside <body>...</body>
+        html_title()  {},       // override in subclasses; return a plain string to be put inside <title>...</title>
+        html_head()   {},       // override in subclasses; return an HTML string to be put inside <head>...</head>
+        html_body()   {},       // override in subclasses; return an HTML string to be put inside <body>...</body>
 
         html_frame({title, assets, body}) {
             // the title string IS escaped, while the other elements are NOT
@@ -109,24 +98,24 @@ export class RenderedPage extends HtmlPage {
     static View = {
         ...HtmlPage.View,
 
-        html_body(ctx) {
-            let html = this.render_server(ctx)
-            let data = this.component_data(ctx)
-            let code = this.component_script(ctx)
+        html_body() {
+            let html = this.render_server()
+            let data = this.component_data()
+            let code = this.component_script()
             return this.component_frame({html, data, code})
         },
 
-        render_server(ctx) {
+        render_server() {
             /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
             return ''
         },
 
-        component_data(ctx) {
+        component_data() {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
             throw new NotImplemented('_make_data() must be implemented in subclasses')
         },
 
-        component_script(ctx) {
+        component_script() {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the component.
              */
