@@ -21,9 +21,13 @@ export class HtmlPage extends HttpService {
 
         ctx = {...ctx, target, view, service: this}                 // add `target`, `view` and `this` to the context
         let prepare = view.prepare(ctx)
+
+        if (prepare instanceof Promise) return prepare.then(() => view.generate(ctx))
+        return view.generate(ctx)
+
         // let prepare = this.target_prepare.call(target, ctx)
-        if (prepare instanceof Promise) return prepare.then(() => this.target_html.call(target, ctx))
-        return this.target_html.call(target, ctx)
+        // if (prepare instanceof Promise) return prepare.then(() => this.generate.call(target, ctx))
+        // return this.generate.call(target, ctx)
     }
 
     static View = {
@@ -43,19 +47,19 @@ export class HtmlPage extends HttpService {
                The target object, ctx.target, can also undergo some additional processing here.
              */
             print(`prepare() called for ${this.constructor.name}`)
+        },
+
+        generate(ctx) {
+            /* Generate an HTML page server-side. Can be async.
+               By default, this function calls target_html_*() functions to build separate parts of the page.
+             */
+            let {service} = ctx
+            let title = service.target_html_title.call(this, ctx)
+            let assets = service.target_html_head.call(this, ctx)
+            let body = service.target_html_body.call(this, ctx)
+            return service._html_frame({title, assets, body})
         }
 
-    }
-
-    target_html(ctx) {
-        /* Generate an HTML page server-side with `this` bound to the target object. Can be async.
-           By default, this function calls target_html_*() functions to build separate parts of the page.
-         */
-        let {service} = ctx
-        let title = service.target_html_title.call(this, ctx)
-        let assets = service.target_html_head.call(this, ctx)
-        let body = service.target_html_body.call(this, ctx)
-        return service._html_frame({title, assets, body})
     }
 
     target_html_title(ctx)  {}      // override in subclasses; return a plain string to be put inside <title>...</title>
