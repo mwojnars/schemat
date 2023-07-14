@@ -19,17 +19,32 @@ export class HtmlPage extends HttpService {
      */
     execute(target, ctx) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
-        let view = Object.setPrototypeOf({...this.constructor.View}, target)
-
-        ctx = {...ctx, target, view, service: this}                 // add `target`, `view` and `this` to the context
+        // let view = Object.setPrototypeOf({...this.constructor.View}, target)
+        // ctx = {...ctx, target, view, service: this}                 // add `target`, `view` and `this` to the context
+        let view = this._create_view(target, ctx)
         let prepare = view.prepare(ctx)
-
         if (prepare instanceof Promise) return prepare.then(() => view.generate(ctx))
         return view.generate(ctx)
 
         // let prepare = this.target_prepare.call(target, ctx)
         // if (prepare instanceof Promise) return prepare.then(() => this.generate.call(target, ctx))
         // return this.generate.call(target, ctx)
+    }
+
+    _create_view(target, ctx) {
+        /* Create a "view" object that combines the regular interface of the target object with the page-generation
+           functionality as defined in the page's View inner object. The view object is a descendant of the target object.
+           Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
+           the target object and the page-generation functions.
+           Also, extend the context, `ctx`. Return [view, new-ctx].
+         */
+        let view = Object.setPrototypeOf({...this.constructor.View}, target)
+        // add `target`, `view` and `this` to the context
+        ctx['target'] = target
+        ctx['view'] = view
+        ctx['service'] = this
+        // ctx = {...ctx, target, view, service: this}
+        return view
     }
 
     static View = {
@@ -132,7 +147,7 @@ export class RenderedPage extends HtmlPage {
 
         component_script(ctx) {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
-               This code will launch the client-side rendering of the same component.
+               This code will launch the client-side rendering of the component.
              */
             throw new NotImplemented('_make_script() must be implemented in subclasses')
         },
@@ -199,9 +214,9 @@ export class ReactPage extends RenderedPage {
 
         render_server(ctx) {
             this.assertLoaded()
-            let {service} = ctx
             print(`SSR render('${ctx.endpoint}') of ${this.id_str}`)
-            let view = e(service.target_component.bind(this), ctx)
+            let view = e(this.component.bind(this), ctx)
+            // let view = e(service.target_component.bind(this), ctx)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
@@ -214,6 +229,11 @@ export class ReactPage extends RenderedPage {
         component_script(ctx) {
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
         },
+
+        component(props) {
+            /* The main React component to be rendered. */
+            throw new NotImplemented('component() must be implemented in subclasses')
+        }
     }
 
     // render_server(target, ctx) {
@@ -223,12 +243,15 @@ export class ReactPage extends RenderedPage {
     //     return ReactDOM.renderToString(view)
     //     // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
     // }
+
     render_client(target, html_element, props = {}) {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
-        props = {...props, service: this}               // add `this` service to the properties
-        let view = e(this.target_component.bind(target), props)
-        return ReactDOM.render(view, html_element)
+        let view = this._create_view(target, props)
+        // props = {...props, service: this}               // add `this` service to the properties
+        // let component = e(this.target_component.bind(target), props)
+        let component = e(view.component.bind(view), props)
+        return ReactDOM.render(component, html_element)
     }
 
     // _make_data(target, ctx) {
@@ -238,11 +261,11 @@ export class ReactPage extends RenderedPage {
     // _make_script(target, ctx) {
     //     return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
     // }
-
-    target_component(props) {
-        /* The main React component to be rendered. */
-        throw new NotImplemented('target_component() must be implemented in subclasses')
-    }
+    //
+    // target_component(props) {
+    //     /* The main React component to be rendered. */
+    //     throw new NotImplemented('target_component() must be implemented in subclasses')
+    // }
 
 }
 
@@ -274,6 +297,19 @@ export class ItemAdminPage extends ReactPage {
             let customAssets = this.category?.prop('html_assets')
             let assets = [globalAssets, staticAssets, customAssets]
             return assets .filter(a => a && a.trim()) .join('\n')
+        },
+
+        component({extra = null, ...props} = {}) {
+            /* Detailed (admin) view of an item. */
+            let {service} = props
+            return DIV(
+                // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+                // e(this._mui_test),
+                service.Title.call(this),
+                H2('Properties'),
+                service.Properties.call(this),
+                extra,
+            )
         }
     }
 
@@ -298,18 +334,18 @@ export class ItemAdminPage extends ReactPage {
     //     return assets .filter(a => a && a.trim()) .join('\n')
     // }
 
-    target_component({extra = null, ...props} = {}) {
-        /* Detailed (admin) view of an item. */
-        let {service} = props
-        return DIV(
-            // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
-            // e(this._mui_test),
-            service.Title.call(this),
-            H2('Properties'),
-            service.Properties.call(this),
-            extra,
-        )
-    }
+    // target_component({extra = null, ...props} = {}) {
+    //     /* Detailed (admin) view of an item. */
+    //     let {service} = props
+    //     return DIV(
+    //         // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
+    //         // e(this._mui_test),
+    //         service.Title.call(this),
+    //         H2('Properties'),
+    //         service.Properties.call(this),
+    //         extra,
+    //     )
+    // }
 
     // standard components for Item pages...
 
@@ -344,26 +380,51 @@ export class ItemAdminPage extends ReactPage {
 
 export class CategoryAdminPage extends ItemAdminPage {
 
-    target_component(props) {
-        // const scan = () => this.db.scan_index('by_category', {category: this})
-        const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
-        const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
-                                                            // TODO: use materialized list of items to explicitly control re-scanning
-                                                            //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
+    static View = {
+        ...ItemAdminPage.View,
 
-        const [newItems, setNewItems] = useState([])        // newly added items
-        const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
-        const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
-        const {service} = props
+        component(props) {
+            // const scan = () => this.db.scan_index('by_category', {category: this})
+            const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+            const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
+                                                                // TODO: use materialized list of items to explicitly control re-scanning
+                                                                //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
 
-        return ItemAdminPage.prototype.target_component.call(this, {...props, extra: FRAGMENT(
-            H2('Items'),
-            e(service.Items, {items: items, itemRemoved: () => setItems(scan())}),
-            H3('Add item'),
-            e(service.Items, {items: newItems, itemRemoved}),
-            e(service.NewItem.bind(this), {itemAdded}),
-        )})
+            const [newItems, setNewItems] = useState([])        // newly added items
+            const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
+            const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
+            const {service} = props
+
+            return ItemAdminPage.View.component.call(this, {...props, extra: FRAGMENT(
+                H2('Items'),
+                e(service.Items, {items: items, itemRemoved: () => setItems(scan())}),
+                H3('Add item'),
+                e(service.Items, {items: newItems, itemRemoved}),
+                e(service.NewItem.bind(this), {itemAdded}),
+            )})
+        }
     }
+
+    // target_component(props) {
+    //     // const scan = () => this.db.scan_index('by_category', {category: this})
+    //     const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
+    //     const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
+    //                                                         // TODO: use materialized list of items to explicitly control re-scanning
+    //                                                         //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
+    //
+    //     const [newItems, setNewItems] = useState([])        // newly added items
+    //     const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
+    //     const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
+    //     const {service} = props
+    //
+    //     return ItemAdminPage.prototype.target_component.call(this, {...props, extra: FRAGMENT(
+    //         H2('Items'),
+    //         e(service.Items, {items: items, itemRemoved: () => setItems(scan())}),
+    //         H3('Add item'),
+    //         e(service.Items, {items: newItems, itemRemoved}),
+    //         e(service.NewItem.bind(this), {itemAdded}),
+    //     )})
+    // }
 
     Items({items, itemRemoved}) {
         /* A list (table) of items that belong to this category. */
