@@ -114,7 +114,6 @@ export class RenderedPage extends HtmlPage {
         ...HtmlPage.View,
 
         html_body(ctx) {
-            let {service} = ctx
             let component = this.render_server(ctx)
             let data = this._make_data(ctx)
             let code = this._make_script(ctx)
@@ -126,12 +125,12 @@ export class RenderedPage extends HtmlPage {
             return ''
         },
 
-        _make_data(target, ctx) {
+        _make_data(ctx) {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
             throw new NotImplemented('_make_data() must be implemented in subclasses')
         },
 
-        _make_script(target, ctx) {
+        _make_script(ctx) {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the same component.
              */
@@ -160,6 +159,7 @@ export class RenderedPage extends HtmlPage {
     //     /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
     //     return ''
     // }
+
     render_client(target, html_element, props) {
         /* Client-side rendering of the main component of the page to an HTML element. */
         throw new NotImplemented('render_client() must be implemented in subclasses')
