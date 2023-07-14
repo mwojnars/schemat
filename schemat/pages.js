@@ -410,15 +410,69 @@ export class CategoryAdminPage extends ItemAdminPage {
             const [newItems, setNewItems] = useState([])        // newly added items
             const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
             const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
-            const {service} = props
 
             return ItemAdminPage.View.component.call(this, {...props, extra: FRAGMENT(
                 H2('Items'),
-                e(service.Items, {items: items, itemRemoved: () => setItems(scan())}),
+                e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
-                e(service.Items, {items: newItems, itemRemoved}),
-                e(service.NewItem.bind(this), {itemAdded}),
+                e(this.Items, {items: newItems, itemRemoved}),
+                e(this.NewItem.bind(this), {itemAdded}),
             )})
+        },
+
+        Items({items, itemRemoved}) {
+            /* A list (table) of items that belong to this category. */
+            if (!items || items.length === 0) return null
+            const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+
+            return delayed_render(async () => {
+                let rows = []
+                for await (const item of items) {
+                    await item.load()
+                    let name = item.getName() || item.getStamp({html:false})
+                    let url  = item.url()
+                    rows.push(TR(
+                        TD(`${item.id} ${NBSP}`),
+                        TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+                        TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+                    ))
+                }
+                return TABLE(TBODY(...rows))
+            }, [items])
+        },
+
+        NewItem({itemAdded}) {
+
+            let form = useRef(null)
+
+            const setFormDisabled = (disabled) => {
+                let fieldset = form.current?.getElementsByTagName('fieldset')[0]
+                if (fieldset) fieldset.disabled = disabled
+            }
+
+            const submit = async (e) => {
+                e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
+                let fdata = new FormData(form.current)
+                setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+                // fdata.append('name', 'another name')
+                // let name = input.current.value
+                // let json = JSON.stringify(Array.from(fdata))
+
+                let data = new Data()
+                for (let [k, v] of fdata) data.push(k, v)
+
+                let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
+                let item = await this.registry.insert(draft)        // has IID now
+                form.current.reset()                                // clear input fields
+                setFormDisabled(false)
+                itemAdded(item)
+            }
+
+            return FORM({ref: form}, FIELDSET(
+                // LABEL('Name: ', INPUT({name: 'name'}), ' '),
+                INPUT({name: 'name', placeholder: 'name'}),
+                BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+            ))
         }
     }
 
@@ -443,58 +497,58 @@ export class CategoryAdminPage extends ItemAdminPage {
     //     )})
     // }
 
-    Items({items, itemRemoved}) {
-        /* A list (table) of items that belong to this category. */
-        if (!items || items.length === 0) return null
-        const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-
-        return delayed_render(async () => {
-            let rows = []
-            for await (const item of items) {
-                await item.load()
-                let name = item.getName() || item.getStamp({html:false})
-                let url  = item.url()
-                rows.push(TR(
-                    TD(`${item.id} ${NBSP}`),
-                    TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
-                    TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
-                ))
-            }
-            return TABLE(TBODY(...rows))
-        }, [items])
-    }
-
-    NewItem({itemAdded}) {
-
-        let form = useRef(null)
-
-        const setFormDisabled = (disabled) => {
-            let fieldset = form.current?.getElementsByTagName('fieldset')[0]
-            if (fieldset) fieldset.disabled = disabled
-        }
-
-        const submit = async (e) => {
-            e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
-            let fdata = new FormData(form.current)
-            setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
-            // fdata.append('name', 'another name')
-            // let name = input.current.value
-            // let json = JSON.stringify(Array.from(fdata))
-
-            let data = new Data()
-            for (let [k, v] of fdata) data.push(k, v)
-
-            let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
-            let item = await this.registry.insert(draft)        // has IID now
-            form.current.reset()                                // clear input fields
-            setFormDisabled(false)
-            itemAdded(item)
-        }
-
-        return FORM({ref: form}, FIELDSET(
-            // LABEL('Name: ', INPUT({name: 'name'}), ' '),
-            INPUT({name: 'name', placeholder: 'name'}),
-            BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
-        ))
-    }
+    // Items({items, itemRemoved}) {
+    //     /* A list (table) of items that belong to this category. */
+    //     if (!items || items.length === 0) return null
+    //     const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+    //
+    //     return delayed_render(async () => {
+    //         let rows = []
+    //         for await (const item of items) {
+    //             await item.load()
+    //             let name = item.getName() || item.getStamp({html:false})
+    //             let url  = item.url()
+    //             rows.push(TR(
+    //                 TD(`${item.id} ${NBSP}`),
+    //                 TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+    //                 TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+    //             ))
+    //         }
+    //         return TABLE(TBODY(...rows))
+    //     }, [items])
+    // }
+    //
+    // NewItem({itemAdded}) {
+    //
+    //     let form = useRef(null)
+    //
+    //     const setFormDisabled = (disabled) => {
+    //         let fieldset = form.current?.getElementsByTagName('fieldset')[0]
+    //         if (fieldset) fieldset.disabled = disabled
+    //     }
+    //
+    //     const submit = async (e) => {
+    //         e.preventDefault()                  // not needed when button type='button', but then Enter still submits the form (!)
+    //         let fdata = new FormData(form.current)
+    //         setFormDisabled(true)               // this must not preceed FormData(), otherwise fdata is empty
+    //         // fdata.append('name', 'another name')
+    //         // let name = input.current.value
+    //         // let json = JSON.stringify(Array.from(fdata))
+    //
+    //         let data = new Data()
+    //         for (let [k, v] of fdata) data.push(k, v)
+    //
+    //         let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
+    //         let item = await this.registry.insert(draft)        // has IID now
+    //         form.current.reset()                                // clear input fields
+    //         setFormDisabled(false)
+    //         itemAdded(item)
+    //     }
+    //
+    //     return FORM({ref: form}, FIELDSET(
+    //         // LABEL('Name: ', INPUT({name: 'name'}), ' '),
+    //         INPUT({name: 'name', placeholder: 'name'}),
+    //         BUTTON({type: 'submit', onClick: submit}, 'Create Item'),
+    //     ))
+    // }
 }
