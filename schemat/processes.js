@@ -59,7 +59,7 @@ export class ClientProcess extends SchematProcess {
         // return item.net.render(view, root)
 
         let page = item.net.api.services[view]
-        return page.render_client(item, root)
+        return page.render(item, root)
         // check()
     }
 

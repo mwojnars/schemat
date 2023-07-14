@@ -97,14 +97,19 @@ export class RenderedPage extends HtmlPage {
        The (re)rendering can take place on the server and/or the client.
      */
 
+    render(target, html_element, props) {
+        /* Client-side rendering of the main component of the page to an HTML element. */
+        throw new NotImplemented('render() must be implemented in subclasses')
+    }
+
     static View = {
         ...HtmlPage.View,
 
         html_body(ctx) {
-            let component = this.render_server(ctx)
+            let html = this.render_server(ctx)
             let data = this.component_data(ctx)
             let code = this.component_script(ctx)
-            return this.component_frame({component, data, code})
+            return this.component_frame({html, data, code})
         },
 
         render_server(ctx) {
@@ -124,19 +129,16 @@ export class RenderedPage extends HtmlPage {
             throw new NotImplemented('_make_script() must be implemented in subclasses')
         },
 
-        component_frame({component, data, code}) {
-            /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
+        component_frame({html, data, code}) {
+            /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
+               All these elements will be placed together inside <body>...</body>.
+             */
             return `
                 <p id="page-data" style="display:none">${data}</p>
-                <div id="page-component">${component}</div>
+                <div id="page-component">${html}</div>
                 <script async type="module">${code}</script>
             `
         }
-    }
-
-    render_client(target, html_element, props) {
-        /* Client-side rendering of the main component of the page to an HTML element. */
-        throw new NotImplemented('render_client() must be implemented in subclasses')
     }
 }
 
@@ -147,6 +149,14 @@ export class ReactPage extends RenderedPage {
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
+
+    render(target, html_element, props = {}) {
+        /* If called server-side, `props` are just the server-side context. */
+        target.assertLoaded()
+        let view = this._create_view(target, props)
+        let component = e(view.component.bind(view), props)
+        return ReactDOM.render(component, html_element)
+    }
 
     static View = {
         ...RenderedPage.View,
@@ -169,17 +179,9 @@ export class ReactPage extends RenderedPage {
         },
 
         component(props) {
-            /* The main React component to be rendered. */
+            /* The React component to be rendered as the page's content. */
             throw new NotImplemented('component() must be implemented in subclasses')
         }
-    }
-
-    render_client(target, html_element, props = {}) {
-        /* If called server-side, `props` are just the server-side context. */
-        target.assertLoaded()
-        let view = this._create_view(target, props)
-        let component = e(view.component.bind(view), props)
-        return ReactDOM.render(component, html_element)
     }
 }
 
