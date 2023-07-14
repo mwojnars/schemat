@@ -115,10 +115,15 @@ export class RenderedPage extends HtmlPage {
 
         html_body(ctx) {
             let {service} = ctx
-            let component = service.render_server(this, ctx)
+            let component = this.render_server(ctx)
             let data = service._make_data(this, ctx)
             let code = service._make_script(this, ctx)
             return service._component_frame({component, data, code})
+        },
+
+        render_server(ctx) {
+            /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
+            return ''
         }
     }
 
@@ -129,11 +134,11 @@ export class RenderedPage extends HtmlPage {
     //     let code = service._make_script(this, ctx)
     //     return service._component_frame({component, data, code})
     // }
-
-    render_server(target, ctx) {
-        /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
-        return ''
-    }
+    //
+    // render_server(target, ctx) {
+    //     /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
+    //     return ''
+    // }
     render_client(target, html_element, props) {
         /* Client-side rendering of the main component of the page to an HTML element. */
         throw new NotImplemented('render_client() must be implemented in subclasses')
@@ -167,13 +172,27 @@ export class ReactPage extends RenderedPage {
        the client-side JS code that will render the same component on the client side.
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
-    render_server(target, ctx) {
-        target.assertLoaded()
-        print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
-        let view = e(this.target_component.bind(target), ctx)
-        return ReactDOM.renderToString(view)
-        // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+
+    static View = {
+        ...RenderedPage.View,
+
+        render_server(ctx) {
+            this.assertLoaded()
+            let {service} = ctx
+            print(`SSR render('${ctx.endpoint}') of ${this.id_str}`)
+            let view = e(service.target_component.bind(this), ctx)
+            return ReactDOM.renderToString(view)
+            // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+        }
     }
+
+    // render_server(target, ctx) {
+    //     target.assertLoaded()
+    //     print(`SSR render('${ctx.endpoint}') of ${target.id_str}`)
+    //     let view = e(this.target_component.bind(target), ctx)
+    //     return ReactDOM.renderToString(view)
+    //     // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
+    // }
     render_client(target, html_element, props = {}) {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
