@@ -35,7 +35,7 @@ export class HtmlPage extends HttpService {
     }
 
     static View = {
-        /* A set of methods and properties that are copied to a descendant of the target object to create a "view" that
+        /* Methods and properties to be copied to a descendant of the target object to create a "view" that
            combines the regular interface of the target with the page-generation functionality as defined below.
            Inside the page-generation functions, `this` is bound to this combined "view" object, so it can access both
            the target object and the page-generation functions. Adding attributes to `this` is a convenient way to pass

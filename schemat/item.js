@@ -148,8 +148,8 @@ export class Request {
 
 export class RequestContext {
     /* Wrapper around the contextual information passed to request handlers. */
-    constructor({request, req, res, handler, endpoint, item}) {
-        Object.assign(this, {request, req, res, handler, endpoint, item})
+    constructor({request, req, res, endpoint}) {
+        Object.assign(this, {request, req, res, endpoint})
     }
 }
 
@@ -784,7 +784,7 @@ export class Item {
 
         for (let short_endpoint of endpoints) {
             let endpoint = `${httpMethod}/${short_endpoint}`
-            let context = new RequestContext({request, req, res, endpoint, item: this})
+            let context = new RequestContext({request, req, res, endpoint})
 
             let service = this.net.resolve(endpoint)
             if (service) return service.server(this, context)

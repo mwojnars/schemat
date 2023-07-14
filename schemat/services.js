@@ -159,7 +159,7 @@ export class JsonService extends HttpService {
 
     async server(target, ctx) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        let {req, res} = ctx        // req: RequestContext
+        let {req, res} = ctx        // Express's request and response objects
         let out, ex
         try {
             let body = req.body
