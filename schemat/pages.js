@@ -216,7 +216,6 @@ export class ReactPage extends RenderedPage {
             this.assertLoaded()
             print(`SSR render('${ctx.endpoint}') of ${this.id_str}`)
             let view = e(this.component.bind(this), ctx)
-            // let view = e(service.target_component.bind(this), ctx)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
@@ -248,8 +247,6 @@ export class ReactPage extends RenderedPage {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
         let view = this._create_view(target, props)
-        // props = {...props, service: this}               // add `this` service to the properties
-        // let component = e(this.target_component.bind(target), props)
         let component = e(view.component.bind(view), props)
         return ReactDOM.render(component, html_element)
     }
@@ -301,16 +298,36 @@ export class ItemAdminPage extends ReactPage {
 
         component({extra = null, ...props} = {}) {
             /* Detailed (admin) view of an item. */
-            let {service} = props
             return DIV(
                 // e(MaterialUI.Box, {component:"span", sx:{ fontSize: 16, mt: 1 }}, 'MaterialUI TEST'),
                 // e(this._mui_test),
-                service.Title.call(this),
+                this.Title(),
                 H2('Properties'),
-                service.Properties.call(this),
+                this.Properties(),
                 extra,
             )
-        }
+        },
+
+        // standard components for Item pages...
+
+        Title() {
+            /* <H1> element to be displayed as a page title. */
+            let name = this.getName()
+            let ciid = this.getStamp()
+            if (name)
+                return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+            else
+                return H1(HTML(ciid))
+        },
+
+        Properties() {
+            /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+            // let changes = new Changes(this)
+            return FRAGMENT(
+                    this.getSchema().displayTable({item: this}),
+                    // e(changes.Buttons.bind(changes)),
+                )
+        },
     }
 
     // target_html_title() {
@@ -347,26 +364,26 @@ export class ItemAdminPage extends ReactPage {
     //     )
     // }
 
-    // standard components for Item pages...
-
-    Title() {
-        /* <H1> element to be displayed as a page title. */
-        let name = this.getName()
-        let ciid = this.getStamp()
-        if (name)
-            return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
-        else
-            return H1(HTML(ciid))
-    }
-
-    Properties() {
-        /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
-        // let changes = new Changes(this)
-        return FRAGMENT(
-                this.getSchema().displayTable({item: this}),
-                // e(changes.Buttons.bind(changes)),
-            )
-    }
+    // // standard components for Item pages...
+    //
+    // Title() {
+    //     /* <H1> element to be displayed as a page title. */
+    //     let name = this.getName()
+    //     let ciid = this.getStamp()
+    //     if (name)
+    //         return H1(name, ' ', SPAN({style: {fontSize:'40%', fontWeight:"normal"}, ...HTML(ciid)}))
+    //     else
+    //         return H1(HTML(ciid))
+    // }
+    //
+    // Properties() {
+    //     /* Display this item's data as a DATA.Widget table with possibly nested Catalog objects. */
+    //     // let changes = new Changes(this)
+    //     return FRAGMENT(
+    //             this.getSchema().displayTable({item: this}),
+    //             // e(changes.Buttons.bind(changes)),
+    //         )
+    // }
 }
 
 // _mui_test() {
