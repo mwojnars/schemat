@@ -116,14 +116,35 @@ export class RenderedPage extends HtmlPage {
         html_body(ctx) {
             let {service} = ctx
             let component = this.render_server(ctx)
-            let data = service._make_data(this, ctx)
-            let code = service._make_script(this, ctx)
-            return service._component_frame({component, data, code})
+            let data = this._make_data(ctx)
+            let code = this._make_script(ctx)
+            return this._component_frame({component, data, code})
         },
 
         render_server(ctx) {
             /* Server-side rendering (SSR) of the main component of the page to an HTML string. */
             return ''
+        },
+
+        _make_data(target, ctx) {
+            /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
+            throw new NotImplemented('_make_data() must be implemented in subclasses')
+        },
+
+        _make_script(target, ctx) {
+            /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
+               This code will launch the client-side rendering of the same component.
+             */
+            throw new NotImplemented('_make_script() must be implemented in subclasses')
+        },
+
+        _component_frame({component, data, code}) {
+            /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
+            return `
+                <p id="page-data" style="display:none">${data}</p>
+                <div id="page-component">${component}</div>
+                <script async type="module">${code}</script>
+            `
         }
     }
 
@@ -144,25 +165,25 @@ export class RenderedPage extends HtmlPage {
         throw new NotImplemented('render_client() must be implemented in subclasses')
     }
 
-    _make_data(target, ctx) {
-        /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
-        throw new NotImplemented('_make_data() must be implemented in subclasses')
-    }
-    _make_script(target, ctx) {
-        /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
-           This code will launch the client-side rendering of the same component.
-         */
-        throw new NotImplemented('_make_script() must be implemented in subclasses')
-    }
-
-    _component_frame({component, data, code}) {
-        /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
-        return `
-            <p id="page-data" style="display:none">${data}</p>
-            <div id="page-component">${component}</div>
-            <script async type="module">${code}</script>
-        `
-    }
+    // _make_data(target, ctx) {
+    //     /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
+    //     throw new NotImplemented('_make_data() must be implemented in subclasses')
+    // }
+    // _make_script(target, ctx) {
+    //     /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
+    //        This code will launch the client-side rendering of the same component.
+    //      */
+    //     throw new NotImplemented('_make_script() must be implemented in subclasses')
+    // }
+    //
+    // _component_frame({component, data, code}) {
+    //     /* The HTML wrapper for the page's main component, to be placed inside <body>...</body>. */
+    //     return `
+    //         <p id="page-data" style="display:none">${data}</p>
+    //         <div id="page-component">${component}</div>
+    //         <script async type="module">${code}</script>
+    //     `
+    // }
 }
 
 export class ReactPage extends RenderedPage {
@@ -183,7 +204,16 @@ export class ReactPage extends RenderedPage {
             let view = e(service.target_component.bind(this), ctx)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
-        }
+        },
+
+        _make_data(ctx) {
+            let data = ctx.request.session.dump()
+            return btoa(encodeURIComponent(JSON.stringify(data)))
+        },
+
+        _make_script(ctx) {
+            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
+        },
     }
 
     // render_server(target, ctx) {
@@ -201,13 +231,13 @@ export class ReactPage extends RenderedPage {
         return ReactDOM.render(view, html_element)
     }
 
-    _make_data(target, ctx) {
-        let data = ctx.request.session.dump()
-        return btoa(encodeURIComponent(JSON.stringify(data)))
-    }
-    _make_script(target, ctx) {
-        return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
-    }
+    // _make_data(target, ctx) {
+    //     let data = ctx.request.session.dump()
+    //     return btoa(encodeURIComponent(JSON.stringify(data)))
+    // }
+    // _make_script(target, ctx) {
+    //     return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${ctx.endpoint}');`
+    // }
 
     target_component(props) {
         /* The main React component to be rendered. */
