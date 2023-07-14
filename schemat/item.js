@@ -48,10 +48,7 @@ const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
  */
 
 export class Request {
-    /* Custom representation of a web request (.session defined) or internal request (no .session).
-       The "web method" (.method) is mapped to a "class method" (a "handler") of a target item
-       by prepending the {request.type}_ to its name.
-     */
+    /* Custom representation of a web request (.session defined) or internal request (no .session). */
 
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
