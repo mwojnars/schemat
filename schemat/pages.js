@@ -17,7 +17,7 @@ export class HtmlPage extends HttpService {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
         // and a `context` property
         let view = this._create_view(target, request)
-        let prepare = view.prepare()
+        let prepare = view.prepare_server()
         if (prepare instanceof Promise) return prepare.then(() => view.generate())
         return view.generate()
     }
@@ -57,13 +57,13 @@ export class HtmlPage extends HttpService {
 
         context: undefined,     // the context object: {target, page, ...plus request data as passed to the page's execute()}
 
-        prepare() {
+        prepare_server() {
             /* Add extra information to the view (`this` or `this.context`) before the page generation starts.
-               In subclasses, prepare() is typically asynchronous to allow loading of external data from DB;
+               In subclasses, prepare_server() is typically asynchronous to allow loading of external data from DB;
                here, it is defined as synchronous to avoid another async call when no actual preparation is performed.
                The target object can also undergo some additional processing here.
              */
-            print(`prepare() called for ${this.constructor.name}`)
+            print(`prepare_server() called for ${this.constructor.name}`)
         },
 
         generate() {
@@ -154,16 +154,24 @@ export class ReactPage extends RenderedPage {
        The  component can be rendered on the client by calling render() directly, then the HTML wrapper is omitted.
      */
 
-    render(target, html_element) {
+    async render(target, html_element) {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
         let view = this._create_view(target)
         let component = e(view.component)
+        let prepare = view.prepare_client()
+        if (prepare instanceof Promise) await prepare
         return ReactDOM.render(component, html_element)
     }
 
     static View = {
         ...RenderedPage.View,
+
+        prepare_client() {
+            /* Add extra information to the view before the rendering starts client-side. Can be async in subclasses. */
+            print(`prepare_client() called for ${this.constructor.name}`)
+            return null
+        },
 
         render_server() {
             this.assertLoaded()
@@ -269,14 +277,18 @@ export class CategoryAdminPage extends ItemAdminPage {
     static View = {
         ...ItemAdminPage.View,
 
-        async prepare() {
+        async prepare_server() {
             // preload the items list
+            let scanned = this.registry.scan(this)
+            this.context.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
         },
 
         component() {
+            let preloaded = this.context.items               // must be pulled from response data on the client
+
             // const scan = () => this.db.scan_index('by_category', {category: this})
             const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
-            const [items, setItems] = useState(scan())          // existing child items; state prevents re-scan after every itemAdded()
+            const [items, setItems] = useState(preloaded || scan())          // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning
                                                                 //    ...and avoid React's incorrect refresh when Items (below) are called in a different way
 
@@ -286,33 +298,43 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
                 H2('Items'),
-                e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
+                e(preloaded ? this.ItemsLoaded : this.Items, {key: 'items', items: items, itemRemoved: () => setItems(scan())}),
+                // e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
                 e(this.Items, {items: newItems, itemRemoved}),
                 e(this.NewItem, {itemAdded}),
             )})
         },
 
+        ItemsLoaded({items, remove}) {
+            let rows = items.map(item => this._ItemEntry({item, remove}))
+            return TABLE(TBODY(...rows))
+        },
+
         Items({items, itemRemoved}) {
             /* A list (table) of items that belong to this category. */
             if (!items || items.length === 0) return null
             const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-            // if (T.isArray(items)) {
-            //     // all the items are already fully loaded
-            //     items.forEach(item => item.assertLoaded())
-            // }
 
-            // // materialize the list of items
-            // items = await T.arrayFromAsync(items)
+            let loaded = T.isArray(items) && items.every(item => item.isLoaded)
 
-            return delayed_render(async () => {
-                let rows = []
-                for await (const item of items) {
-                    await item.load()
-                    rows.push(this._ItemEntry({item, remove}))
-                }
-                return TABLE(TBODY(...rows))
-            }, [items])
+            // materialize the list of items
+            let items_loaded = //loaded ? items :
+                delayed_render(() => T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
+
+            if (!items_loaded) return null
+
+            let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
+            return TABLE(TBODY(...rows))
+
+            // return delayed_render(async () => {
+            //     let rows = []
+            //     for await (const item of items) {
+            //         await item.load()
+            //         rows.push(this._ItemEntry({item, remove}))
+            //     }
+            //     return TABLE(TBODY(...rows))
+            // }, [items])
         },
 
         _ItemEntry({item, remove}) {

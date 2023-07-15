@@ -238,6 +238,7 @@ export class Types {
         Object.fromEntries(await Promise.all(Object.entries(obj).map(([k, v]) => fun(k, v))))
         // Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([k, v]) => await fun(k, v))))
 
+    // async version of .map() for arrays that awaits all individual promises returned by `fun`
     static amap = async (arr, fun) => await Promise.all(arr.map(fun))
 
     static async arrayFromAsync(iterator) {
