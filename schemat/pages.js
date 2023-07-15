@@ -284,7 +284,7 @@ export class CategoryAdminPage extends ItemAdminPage {
         },
 
         component() {
-            let preloaded = this.context.items               // must be pulled from response data on the client
+            let preloaded = this.context.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
 
             // const scan = () => this.db.scan_index('by_category', {category: this})
             const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
@@ -307,6 +307,7 @@ export class CategoryAdminPage extends ItemAdminPage {
         },
 
         ItemsLoaded({items, remove}) {
+            if (!items || items.length === 0) return null
             let rows = items.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
         },
@@ -315,8 +316,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             /* A list (table) of items that belong to this category. */
             if (!items || items.length === 0) return null
             const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-
-            let loaded = T.isArray(items) && items.every(item => item.isLoaded)
+            // let loaded = T.isArray(items) && items.every(item => item.isLoaded)
 
             // materialize the list of items
             let items_loaded = //loaded ? items :
@@ -326,15 +326,6 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             let rows = items_loaded.map(item => this._ItemEntry({item, remove}))
             return TABLE(TBODY(...rows))
-
-            // return delayed_render(async () => {
-            //     let rows = []
-            //     for await (const item of items) {
-            //         await item.load()
-            //         rows.push(this._ItemEntry({item, remove}))
-            //     }
-            //     return TABLE(TBODY(...rows))
-            // }, [items])
         },
 
         _ItemEntry({item, remove}) {
