@@ -153,14 +153,6 @@ export class Request {
 }
 
 
-export class RequestContext {
-    /* Wrapper around the contextual information passed to request handlers. */
-    constructor({request, endpoint}) {
-        Object.assign(this, {request, endpoint})
-    }
-}
-
-
 /**********************************************************************************************************************
  **
  **  ITEM & CATEGORY
@@ -790,7 +782,6 @@ export class Item {
         }
 
         for (let endpoint of endpoints) {
-            // let context = new RequestContext({request, endpoint})
             let service = this.net.resolve(endpoint)
             if (service) {
                 request.settleEndpoint(endpoint)
