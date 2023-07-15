@@ -63,20 +63,20 @@ export class ClientProcess extends SchematProcess {
         // check()
     }
 
-    _read_data(node, type = "json") {
+    _read_data(node, format = "json") {
         /* Extract text contents of an element pointed to by a given selector.
-           If `type` is given, or the element has `type` attribute, and the type is "json",
+           If `format` is given, or the element has `format` attribute, and the format is "json",
            the extracted string is JSON-decoded to an object.
          */
         if (typeof node === "string")
             node = document.querySelector(node)
 
         let value = node.textContent
-        if (!type) type = node.getAttribute('type')
+        if (!format) format = node.getAttribute('format')
 
-        // decode `value` depending on the `type`
-        if (type === "json") return JSON.parse(value)
-        if (type === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
+        // decode `value` depending on the `format`
+        if (format === "json") return JSON.parse(value)
+        if (format === "json+base64") return JSON.parse(decodeURIComponent(atob(value)))
 
         return value
     }

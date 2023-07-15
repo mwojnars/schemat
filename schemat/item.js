@@ -48,7 +48,9 @@ const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
  */
 
 export class Request {
-    /* Custom representation of a web request (.session defined) or internal request (no .session). */
+    /* Custom representation of a web request (.session defined) or internal request (no .session),
+       together with context information that evolves during the routing procedure.
+     */
 
     static SEP_ROUTE  = '/'         // separator of route segments in URL paths
     static SEP_METHOD = '@'         // separator of a method name within a URL path
@@ -769,12 +771,9 @@ export class Item {
         request.item = this
         if (request.path) return this.handlePartial(request)
 
-        let httpMethod = request.type
-        let {session, methods: endpoints} = request
-        if (!endpoints.length) endpoints = ['default']
-
-        endpoints = endpoints.map(p => `${httpMethod}/${p}`)        // convert short endpoints to full endpoints
-        // print('methods:', methods)
+        let {session, methods, type} = request
+        if (!methods.length) methods = ['default']
+        let endpoints = methods.map(p => `${type}/${p}`)        // convert short endpoints to full endpoints
 
         if (session) {
             session.item = this
