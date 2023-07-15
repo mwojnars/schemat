@@ -625,8 +625,6 @@ export class Item {
     //     return schema.find(keys)
     // }
 
-    // getHandlers()   { return T.inheritedMerge(this.constructor, 'handlers') }
-
     mergeSnippets(key, params) {
         /* Retrieve all source code snippets (inherited first & own last) assigned to a given `key`.
            including the environment-specific {key}_client OR {key}_server keys; assumes the values are strings.
@@ -751,22 +749,13 @@ export class Item {
 
     handle(request) {
         /*
-        Serve a web or internal `request` by executing a handler method of `this` that implements
-        a given web method (request.method). A default web method is selected if request.method is missing.
-
-        The handler's name has a form of:    `{request.type}_{request.method}`
-        and is called with the arguments:    function handler({request, req, res, args}),
-        `this` is bound to the target item.
+        Serve a web or internal `request` by executing a corresponding service from this.net.
 
         Query parameters are passed in `req.query`, as:
         - a string if there's one occurrence of PARAM in a query string,
         - an array [val1, val2, ...] if PARAM occurs multiple times.
         A handler function can directly write to the response, and/or return a string that will be appended.
         The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
-
-        Each handler MUST be declared in the `handlers` property of this item's category,
-        otherwise it won't be recognized. The default list of handlers for an Item is defined below,
-        after Item class definition.
         */
         request.item = this
         if (request.path) return this.handlePartial(request)

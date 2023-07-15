@@ -43,10 +43,7 @@ let root_fields = new Catalog({
     item_schema  : new ITEM_SCHEMA({info: "The DATA schema for this category's items. A virtual (non-editable) field automatically imputed from the `fields` property."}),
 
     // _boot_class  : new STRING({info: "Name of a core Javascript class, subclass of Item, to be used for items of this category. If `class_body` is configured, the class is subclassed dynamically to insert the desired code. Should only be used for core Schemat categories."}),
-
     //custom_class : new BOOLEAN({info: "If true in a category, items of this category are allowed to provide their own `class_body` and `code*` implementations.", default: false}),
-    //handlers     : new CATALOG({values: new CODE(), info: "Methods for server-side handling of web requests."}),
-
     //indexes    : new CATALOG({values: new ITEM(Index)}),
 
     allow_custom_fields : new BOOLEAN({default: false, info: "If true, it is allowed to use undefined (out-of-schema) fields in items - their schema is GENERIC()"})
