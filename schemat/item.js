@@ -57,6 +57,9 @@ export class Request {
         static message = "URL path not found"
     }
 
+    throwNotFound(msg, args)  { throw new Request.PathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+
+
     get req()       { return this.session?.req }
     get res()       { return this.session?.res }
 
@@ -70,6 +73,7 @@ export class Request {
     methods = []    // names of access methods to be tried for a target item; the 1st method that's present on the item will be used, or 'default' if `methods` is empty
 
     item            // target item responsible for actual handling of the request, as found by the routing procedure
+    endpoint        // endpoint of the target item, as found by the routing procedure
 
     get position() {
         /* Current position of routing along pathFull, i.e., the length of the pathFull's prefix consumed so far. */
@@ -142,7 +146,10 @@ export class Request {
         return this
     }
 
-    throwNotFound(msg, args)  { throw new Request.PathNotFound(msg, args || {'path': this.pathFull, 'remaining': this.path}) }
+    settleEndpoint(endpoint) {
+        /* Settle the endpoint for this request. */
+        this.endpoint = endpoint
+    }
 }
 
 
@@ -785,7 +792,10 @@ export class Item {
         for (let endpoint of endpoints) {
             let context = new RequestContext({request, endpoint})
             let service = this.net.resolve(endpoint)
-            if (service) return service.server(this, context)
+            if (service) {
+                request.settleEndpoint(endpoint)
+                return service.server(this, context)
+            }
         }
 
         request.throwNotFound(`no service found for [${endpoints}]`)
