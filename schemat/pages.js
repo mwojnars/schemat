@@ -1,5 +1,5 @@
 import {NotImplemented} from "./errors.js";
-import {dedentFull, escape_html, print} from "./utils.js";
+import {dedentFull, escape_html, print, T} from "./utils.js";
 import {Resources, ReactDOM} from './resources.js'
 import { e, useState, useRef, delayed_render, NBSP, DIV, A, P, H1, H2, H3, SPAN, FORM, INPUT, FIELDSET,
          TABLE, TH, TR, TD, TBODY, BUTTON, FRAGMENT, HTML } from './react-utils.js'
@@ -258,6 +258,10 @@ export class CategoryAdminPage extends ItemAdminPage {
     static View = {
         ...ItemAdminPage.View,
 
+        async prepare() {
+            // preload the items list
+        },
+
         component() {
             // const scan = () => this.db.scan_index('by_category', {category: this})
             const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
@@ -269,34 +273,56 @@ export class CategoryAdminPage extends ItemAdminPage {
             const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
             const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
+            // const Items = this.Items.bind(this)
+
             return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
                 H2('Items'),
-                e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
+                e(this.Items, {view: this, items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
-                e(this.Items, {items: newItems, itemRemoved}),
+                e(this.Items, {view: this, items: newItems, itemRemoved}),
                 e(this.NewItem.bind(this), {itemAdded}),
             )})
         },
 
-        Items({items, itemRemoved}) {
+        Items({items, itemRemoved, view}) {
             /* A list (table) of items that belong to this category. */
             if (!items || items.length === 0) return null
             const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
+
+            // if (T.isArray(items)) {
+            //     // all the items are already fully loaded
+            //     items.forEach(item => item.assertLoaded())
+            // }
+
+            // // materialize the list of items
+            // items = await T.arrayFromAsync(items)
 
             return delayed_render(async () => {
                 let rows = []
                 for await (const item of items) {
                     await item.load()
-                    let name = item.getName() || item.getStamp({html:false})
-                    let url  = item.url()
-                    rows.push(TR(
-                        TD(`${item.id} ${NBSP}`),
-                        TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
-                        TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
-                    ))
+                    // let name = item.getName() || item.getStamp({html:false})
+                    // let url  = item.url()
+                    // let row  = TR(
+                    //     TD(`${item.id} ${NBSP}`),
+                    //     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+                    //     TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+                    // )
+                    rows.push(view._ItemEntry({item, remove}))
                 }
                 return TABLE(TBODY(...rows))
             }, [items])
+        },
+
+        _ItemEntry({item, remove}) {
+            /* A single item in the list of items. */
+            let name = item.getName() || item.getStamp({html:false})
+            let url  = item.url()
+            return TR(
+                TD(`${item.id} ${NBSP}`),
+                TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
+                TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
+            )
         },
 
         NewItem({itemAdded}) {
