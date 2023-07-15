@@ -65,7 +65,7 @@ export class Request {
     get req()       { return this.session?.req }
     get res()       { return this.session?.res }
 
-    type            // CALL, GET, POST, (SOCK in the future); request type; there are different handler functions for different request types
+    protocol        // CALL, GET, POST, (SOCK in the future); there can be different services exposed at the same endpoint-name but different protocols
     session         // Session object; only for top-level web requests (not for internal requests)
     pathFull        // initial path, trailing @method removed; stays unchanged during routing (no truncation)
     path            // remaining path to be consumed by subsequent nodes along the route;
@@ -90,7 +90,7 @@ export class Request {
 
     constructor({path, method, session}) {
         this.session = session
-        this.type =
+        this.protocol =
             !session                    ? "CALL" :          // CALL = internal call through Site.route()
             session.method === 'GET'    ? "GET"  :          // GET  = read access through HTTP GET
                                           "POST"            // POST = write access through HTTP POST
@@ -760,9 +760,9 @@ export class Item {
         request.item = this
         if (request.path) return this.handlePartial(request)
 
-        let {session, methods, type} = request
+        let {session, methods, protocol} = request
         if (!methods.length) methods = ['default']
-        let endpoints = methods.map(p => `${type}/${p}`)        // convert short endpoints to full endpoints
+        let endpoints = methods.map(p => `${protocol}/${p}`)        // convert endpoint-names to full endpoints
 
         if (session) {
             session.item = this
