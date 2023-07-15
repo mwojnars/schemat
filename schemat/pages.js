@@ -163,13 +163,14 @@ export class ReactPage extends RenderedPage {
         },
 
         component_data() {
-            let data = this.context.request.session.dump()
+            let dump = this.context.request.session.dump()
+            let data = {...dump, endpoint: this.context.request.endpoint}
             return btoa(encodeURIComponent(JSON.stringify(data)))
         },
 
         component_script() {
-            let endpoint = this.context.request.endpoint
-            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${endpoint}');`
+            // let endpoint = this.context.request.endpoint
+            return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
         },
 
         component() {
