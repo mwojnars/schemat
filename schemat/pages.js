@@ -13,16 +13,16 @@ export class HtmlPage extends HttpService {
     /* An HTTP(S) service that generates an HTML page in response to a browser-invoked web request.
        In the base class implementation, the page is built out of separate strings/functions for: title, head, body.
      */
-    execute(target, request_context) {
+    execute(target, request) {
         // `view` is a descendant of `target` that additionally contains all View.* properties & methods
         // and a `context` property
-        let view = this._create_view(target, request_context)
+        let view = this._create_view(target, request)
         let prepare = view.prepare()
         if (prepare instanceof Promise) return prepare.then(() => view.generate())
         return view.generate()
     }
 
-    _create_view(target, request_context = {}) {
+    _create_view(target, request = null) {
         /* Create a "view" object that combines the regular interface of the target object with the page-generation
            functionality as defined in the page's View. The view object is a descendant of the target object.
            Inside the page-generation functions, `this` is bound to the "view", so the code can access both
@@ -30,7 +30,7 @@ export class HtmlPage extends HttpService {
            Also, view.context is set to the context object containing at least `target` and `page` (on the client),
            plus some request-related data (on the server).
          */
-        let context = {...request_context, target, page: this}
+        let context = {request, target, page: this}
         return Object.setPrototypeOf({...this.constructor.View, context}, target)
     }
 
@@ -156,7 +156,7 @@ export class ReactPage extends RenderedPage {
 
         render_server() {
             this.assertLoaded()
-            print(`SSR render('${this.context.endpoint}') of ${this.id_str}`)
+            print(`SSR render('${this.context.request.endpoint}') of ${this.id_str}`)
             let view = e(this.component.bind(this))
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
@@ -168,7 +168,7 @@ export class ReactPage extends RenderedPage {
         },
 
         component_script() {
-            let endpoint = this.context.endpoint
+            let endpoint = this.context.request.endpoint
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start('${endpoint}');`
         },
 

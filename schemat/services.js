@@ -157,13 +157,14 @@ export class JsonService extends HttpService {
         throw new RequestFailed({...error, code: ret.status})
     }
 
-    async server(target, ctx) {
+    async server(target, request) {
         /* The request body should be empty or contain a JSON array of arguments: [...args]. */
-        let {req, res} = ctx.request        // Express's request and response objects
+        // let {req, res} = ctx.request        // Express's request and response objects
+        let {req, res} = request        // Express's request and response objects
         let out, ex
         try {
             let body = req.body
-            // let {req: {body}}  = ctx
+            // let {req: {body}}  = request
             // print(body)
 
             // the arguments may have already been JSON-parsed by middleware if mimetype=json was set in the request; it can also be {}
@@ -171,7 +172,7 @@ export class JsonService extends HttpService {
             if (!T.isArray(args)) throw new Error("incorrect format of web request")
             if (this.opts.encodeArgs) args = JSONx.decode(args)
 
-            out = this.execute(target, ctx, ...args)
+            out = this.execute(target, request, ...args)
             if (out instanceof Promise) out = await out
         }
         catch (e) {ex = e}

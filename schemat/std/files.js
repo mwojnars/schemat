@@ -56,7 +56,7 @@ export class File extends Item {
 
 File.createAPI({        // endpoints...
 
-    'CALL/text':    new InternalService(function ({request})
+    'CALL/text':    new InternalService(function (request)
     {
         /* Plain text of this File for Site.import() etc. */
         let txt = this.read()
@@ -64,7 +64,7 @@ File.createAPI({        // endpoints...
         return txt
     }),
 
-    'GET/file':     new HttpService(function ({request})
+    'GET/file':     new HttpService(function (request)
     {
         // plain text sent over HTTP with a MIME type inferred from URL file extension (!)
         this.setMimeType(request.res, request.pathFull)

@@ -790,11 +790,11 @@ export class Item {
         }
 
         for (let endpoint of endpoints) {
-            let context = new RequestContext({request, endpoint})
+            // let context = new RequestContext({request, endpoint})
             let service = this.net.resolve(endpoint)
             if (service) {
                 request.settleEndpoint(endpoint)
-                return service.server(this, context)
+                return service.server(this, request)
             }
         }
 
@@ -1110,7 +1110,7 @@ Category.createAPI(
         'GET/default':  new CategoryAdminPage(),            // TODO: add explicit support for aliases
         'GET/item':     new CategoryAdminPage(),
 
-        'GET/import':   new HttpService(function ({request})
+        'GET/import':   new HttpService(function (request)
         {
             /* Send JS source code of this category with a proper MIME type to allow client-side import(). */
             this._checkPath(request)
@@ -1118,7 +1118,7 @@ Category.createAPI(
             request.res.send(this.getSource())
         }),
 
-        'GET/scan':     new HttpService(async function ({request})
+        'GET/scan':     new HttpService(async function (request)
         {
             /* Retrieve all children of this category and send to client as a JSON array.
                TODO: set a size limit & offset (pagination).
