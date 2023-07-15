@@ -842,10 +842,9 @@ Item.setCaching('getPrototypes', 'getAncestors', 'getPath', 'getActions', 'getEn
 
 // When service functions (below) are called, `this` is always bound to the Item instance, so they execute
 // in the context of their item like if they were regular methods of the Item (sub)class.
-// The first argument, `ctx`, is a RequestContext instance, followed by action-specific list
-// of arguments. In a special case when an action is called directly on the server through item.action.XXX(),
-// `ctx` is {}, which can be a valid argument for some actions - supporting this type
-// of calls is NOT mandatory, though.
+// The first argument, `request`, is a Request instance, followed by action-specific list of arguments.
+// In a special case when an action is called directly on the server through item.action.XXX(), `request` is null,
+// which can be a valid argument for some actions - supporting this type of calls is NOT mandatory, though.
 
 Item.createAPI(
     {
@@ -861,28 +860,28 @@ Item.createAPI(
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
 
-            delete_self(ctx)   { return this.registry.db.delete(this) },
+            delete_self(request)   { return this.registry.db.delete(this) },
 
-            insert_field(ctx, path, pos, entry) {
+            insert_field(request, path, pos, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.insert(path, pos, entry)
                 return this.registry.db.update_full(this)
             },
 
-            delete_field(ctx, path) {
+            delete_field(request, path) {
                 this.data.delete(path)
                 return this.registry.db.update_full(this)
             },
 
-            update_field(ctx, path, entry) {
+            update_field(request, path, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
                 return this.registry.db.update_full(this)
             },
 
-            move_field(ctx, path, pos1, pos2) {
+            move_field(request, path, pos1, pos2) {
                 this.data.move(path, pos1, pos2)
                 return this.registry.db.update_full(this)
             },
@@ -1125,7 +1124,7 @@ Category.createAPI(
         }),
 
         'POST/edit':  new TaskService({
-            async create_item(ctx, dataState) {
+            async create_item(request, dataState) {
                 /* Create a new item in this category based on request data. */
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)

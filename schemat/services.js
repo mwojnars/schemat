@@ -30,9 +30,9 @@ export class Service {
                     // "METHOD/name", where METHOD is one of GET/POST/CALL/KAFKA..., and the name is a command name,
                     // a Kafka topic name, etc.
 
-    target_service  // a function, f(ctx, ...args), to be called on the server when the protocol is invoked;
+    target_service  // a function, f(request, ...args), to be called on the server when the protocol is invoked;
                     // inside the call, `this` is bound to a supplied "target" object, so the function behaves
-                    // like a method of the "target"; `ctx` is a RequestContext, or {} in the case when an action
+                    // like a method of the "target"; `request` is a RequestContext, or {} in the case when an action
                     // is called directly on the server through item.action.XXX() which invokes execute() instead of server()
 
     opts = {}           // configuration options
@@ -73,19 +73,19 @@ export class Service {
         throw new Error(`client-side invocation not allowed for this service`)
     }
 
-    server(target, ctx) {
+    server(target, request) {
         /* Server-side request handler for the execution of an RPC call (from client()) or a regular web request
            (from a browser). Subclasses should override this method to decode arguments in a service-specific way. 
          */
         throw new Error(`no server-side request handler for the service`)
     }
 
-    execute(target, ctx, ...args) {
-        /* The actual execution of the service function, server-side, without pre- & post-processing of web requests/responses.
-           Here, `ctx` can be empty {}, so execute() can be called directly *outside* of web request context,
-           if only the service function supports this.
+    execute(target, request, ...args) {
+        /* The actual execution of the service, server-side, without pre- & post-processing of web requests/responses.
+           Here, `request` can be null, so execute() can be called directly *outside* of a web request,
+           if only the service supports this.
          */
-        return this.target_service.call(target, ctx, ...args)
+        return this.target_service.call(target, request, ...args)
     }
 }
 
@@ -93,7 +93,7 @@ export class InternalService extends Service {
     /* A service that can only be used on CALL endpoints, i.e., on internal endpoints that handle local URL-requests
        defined as SUN routing paths but executed server-side exclusively.
      */
-    server(target, ctx)  { return this.execute(target, ctx) }
+    server(target, request)  { return this.execute(target, request) }
 }
 
 export class HttpService extends Service {
@@ -109,7 +109,7 @@ export class HttpService extends Service {
         if (!ret.ok) return this._decodeError(ret)
         return ret.text()
     }
-    server(target, ctx)  { return this.execute(target, ctx) }
+    server(target, request)  { return this.execute(target, request) }
 }
 
 
@@ -234,10 +234,10 @@ export class TaskService extends JsonService {
         return merged
     }
 
-    execute(target, ctx, task, ...args) {
+    execute(target, request, task, ...args) {
         let func = this.tasks[task]
         if (!func) throw new NotFound(`unknown task name: '${task}'`)
-        return func.call(target, ctx, ...args)
+        return func.call(target, request, ...args)
     }
 
     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
@@ -343,8 +343,8 @@ export class Network {
             if (!service) throw new Error(`undeclared API service: '${endpoint}'`)
 
             triggers[name] = serverSide
-                ? (...args) => service.execute(target, {}, ...fixed, ...args)     // may return a Promise
-                : (...args) => service.client(target, ...fixed, ...args)          // may return a Promise
+                ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
+                : (...args) => service.client(target, ...fixed, ...args)            // may return a Promise
         }
         // print('this.action:', this.action)
 
