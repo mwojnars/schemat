@@ -38,10 +38,9 @@ export class ClientProcess extends SchematProcess {
     async init() { return this._create_registry(ClientRegistry) }
 
     async start() {
-        /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element. */
+        /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
         let data = this._read_data('#page-data', 'json+base64')
-        let endpoint = data.endpoint
         this.client_db = new ClientDB(data.items)
 
         await this.init()
@@ -59,6 +58,7 @@ export class ClientProcess extends SchematProcess {
         // return item.view[view].render(root)
         // return item.net.render(view, root)
 
+        let endpoint = data.endpoint
         let page = item.net.api.services[endpoint]
         return page.render(item, root)
         // check()

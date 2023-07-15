@@ -169,7 +169,6 @@ export class ReactPage extends RenderedPage {
         },
 
         component_script() {
-            // let endpoint = this.context.request.endpoint
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
         },
 
