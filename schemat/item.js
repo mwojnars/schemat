@@ -749,13 +749,10 @@ export class Item {
 
     handle(request) {
         /*
-        Serve a web or internal `request` by executing a corresponding service from this.net.
-
+        Serve a web or internal `request` by executing the corresponding service from this.net.
         Query parameters are passed in `req.query`, as:
         - a string if there's one occurrence of PARAM in a query string,
         - an array [val1, val2, ...] if PARAM occurs multiple times.
-        A handler function can directly write to the response, and/or return a string that will be appended.
-        The function can return a Promise (async function). It can have an arbitrary name, or be anonymous.
         */
         request.item = this
         if (request.path) return this.handlePartial(request)
