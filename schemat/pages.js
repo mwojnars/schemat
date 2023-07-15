@@ -31,7 +31,18 @@ export class HtmlPage extends HttpService {
            plus some request-related data (on the server).
          */
         let context = {request, target, page: this}
-        return Object.setPrototypeOf({...this.constructor.View, context}, target)
+        let View = this.constructor.View
+        let view = Object.setPrototypeOf({...View, context}, target)
+
+        // bind View functions in `view` to the `view` object - this is to prevent React rendering/refresh errors,
+        // or the need to manually bind React component functions later on
+        for (const attr in View) {
+            let fun = View[attr]
+            if (typeof fun === "function")
+                view[attr] = fun.bind(view)
+        }
+
+        return view
     }
 
     static View = {
@@ -147,7 +158,7 @@ export class ReactPage extends RenderedPage {
         /* If called server-side, `props` are just the server-side context. */
         target.assertLoaded()
         let view = this._create_view(target)
-        let component = e(view.component.bind(view))
+        let component = e(view.component)
         return ReactDOM.render(component, html_element)
     }
 
@@ -157,7 +168,7 @@ export class ReactPage extends RenderedPage {
         render_server() {
             this.assertLoaded()
             print(`SSR render('${this.context.request.endpoint}') of ${this.id_str}`)
-            let view = e(this.component.bind(this))
+            let view = e(this.component)
             return ReactDOM.renderToString(view)
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
@@ -273,22 +284,19 @@ export class CategoryAdminPage extends ItemAdminPage {
             const itemAdded   = (item) => { setNewItems(prev => [...prev, item]) }
             const itemRemoved = (item) => { setNewItems(prev => prev.filter(i => i !== item)) }
 
-            // const Items = this.Items.bind(this)
-
             return ItemAdminPage.View.component.call(this, {extra: FRAGMENT(
                 H2('Items'),
-                e(this.Items, {view: this, items: items, itemRemoved: () => setItems(scan())}),
+                e(this.Items, {items: items, itemRemoved: () => setItems(scan())}),
                 H3('Add item'),
-                e(this.Items, {view: this, items: newItems, itemRemoved}),
-                e(this.NewItem.bind(this), {itemAdded}),
+                e(this.Items, {items: newItems, itemRemoved}),
+                e(this.NewItem, {itemAdded}),
             )})
         },
 
-        Items({items, itemRemoved, view}) {
+        Items({items, itemRemoved}) {
             /* A list (table) of items that belong to this category. */
             if (!items || items.length === 0) return null
             const remove = (item) => item.action.delete_self().then(() => itemRemoved && itemRemoved(item))
-
             // if (T.isArray(items)) {
             //     // all the items are already fully loaded
             //     items.forEach(item => item.assertLoaded())
@@ -301,21 +309,14 @@ export class CategoryAdminPage extends ItemAdminPage {
                 let rows = []
                 for await (const item of items) {
                     await item.load()
-                    // let name = item.getName() || item.getStamp({html:false})
-                    // let url  = item.url()
-                    // let row  = TR(
-                    //     TD(`${item.id} ${NBSP}`),
-                    //     TD(url !== null ? A({href: url}, name) : `${name} (no URL)`, ' ', NBSP),
-                    //     TD(BUTTON({onClick: () => remove(item)}, 'Delete')),
-                    // )
-                    rows.push(view._ItemEntry({item, remove}))
+                    rows.push(this._ItemEntry({item, remove}))
                 }
                 return TABLE(TBODY(...rows))
             }, [items])
         },
 
         _ItemEntry({item, remove}) {
-            /* A single item in the list of items. */
+            /* A single row in the list of items. */
             let name = item.getName() || item.getStamp({html:false})
             let url  = item.url()
             return TR(
