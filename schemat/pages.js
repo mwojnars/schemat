@@ -111,8 +111,8 @@ export class RenderedPage extends HtmlPage {
 
         html_body() {
             let html = this.render_server()
-            let data = this.component_data()
-            let code = this.component_script()
+            let data = this.page_data()
+            let code = this.page_script()
             return this.component_frame({html, data, code})
         },
 
@@ -121,28 +121,33 @@ export class RenderedPage extends HtmlPage {
             return ''
         },
 
-        component_data() {
+        page_data() {
             /* Data string to be embedded in HTML output for use by the client-side JS code. Must be HTML-escaped. */
-            throw new NotImplemented('_make_data() must be implemented in subclasses')
+            throw new NotImplemented('page_data() must be implemented in subclasses')
         },
 
-        component_script() {
+        page_script() {
             /* Javascript code (a string) to be pasted inside a <script> tag in HTML source of the page.
                This code will launch the client-side rendering of the component.
              */
-            throw new NotImplemented('_make_script() must be implemented in subclasses')
+            throw new NotImplemented('page_script() must be implemented in subclasses')
         },
 
         component_frame({html, data, code}) {
             /* The HTML wrapper for the page's main component, `html`, and its `data` and the launch script, `code`.
                All these elements will be placed together inside <body>...</body>.
              */
+            let data_string = this._encode_page_data(data)
             return `
-                <p id="page-data" style="display:none">${data}</p>
+                <p id="page-data" style="display:none">${data_string}</p>
                 <div id="page-component">${html}</div>
                 <script async type="module">${code}</script>
             `
-        }
+        },
+
+        _encode_page_data(data) {
+            return btoa(encodeURIComponent(JSON.stringify(data)))
+        },
     }
 }
 
@@ -181,13 +186,12 @@ export class ReactPage extends RenderedPage {
             // might use ReactDOM.hydrate() not render() in the future to avoid full re-render client-side ?? (but render() seems to perform hydration checks as well)
         },
 
-        component_data() {
+        page_data() {
             let dump = this.context.request.session.dump()
-            let data = {...dump, endpoint: this.context.request.endpoint}
-            return btoa(encodeURIComponent(JSON.stringify(data)))
+            return {...dump, endpoint: this.context.request.endpoint}
         },
 
-        component_script() {
+        page_script() {
             return `import {ClientProcess} from "/system/local/processes.js"; new ClientProcess().start();`
         },
 
