@@ -116,7 +116,8 @@ export class HttpService extends Service {
 /*************************************************************************************************/
 
 export class JsonService extends HttpService {
-    /* JSON-based communication over HTTP POST: the arguments of an RPC call and its result are encoded as JSON.
+    /* JSON-based communication over HTTP POST: the service function accepts a series of arguments, `args`, that are
+       encoded as a JSON array and sent to the server as a POST request body; the result is also encoded as JSON.
        The standard JSON object is used here, *not* JSONx, so if you want to transfer more complex Schemat-native
        objects as arguments or results, you should perform JSONx.encode/decode() before and after the call.
      */
@@ -316,11 +317,11 @@ export class Network {
 
     action      // triggers for RPC actions; every action can be called from a server or a client via action.X() call
 
-    constructor(target, role, api, actions) {
+    constructor(target, role, api) {
         this.target = target
         this.role = role
         this.api = api
-        this.action = this.createActionTriggers(actions)
+        // this.action = this.createActionTriggers(actions)
     }
 
     createActionTriggers(actions) {

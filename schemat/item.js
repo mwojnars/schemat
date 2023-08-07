@@ -363,8 +363,9 @@ export class Item {
     _initNetwork() {
         /* Create a .net connector and .action triggers for this item's network API. */
         let role = this.registry.onServer ? 'server' : 'client'
-        this.net = new Network(this, role, this.constructor.api, this.constructor.actions)
-        this.action = this.net.action
+        this.net = new Network(this, role, this.constructor.api)
+        this.action = this.net.createActionTriggers(this.constructor.actions)
+        // this.action = this.net.action
     }
 
     init() {}
@@ -1091,6 +1092,11 @@ Category.createAPI(
             this._checkPath(request)
             request.res.type('js')
             request.res.send(this.getSource())
+        }),
+
+        'GET/list_items': new HttpService(async function (request)
+        {
+            /* Retrieve all children of this category and send to client as a JSON array. */
         }),
 
         'GET/scan':     new HttpService(async function (request)
