@@ -326,7 +326,7 @@ export class CategoryAdminPage extends ItemAdminPage {
 
             // materialize the list of items
             let items_loaded = //loaded ? items :
-                delayed_render(() => T.arrayFromAsync(items).then(arr => T.amap(arr, item => item.load())), [items])
+                delayed_render(async () => T.arrayFromAsync(await items).then(arr => T.amap(arr, item => item.load())), [items])
 
             if (!items_loaded) return null
 

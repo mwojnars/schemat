@@ -242,7 +242,6 @@ export class Types {
     static amap = async (arr, fun) => await Promise.all(arr.map(fun))
 
     static async arrayFromAsync(iterator) {
-        if (iterator instanceof Promise) iterator = await iterator
         let arr = []
         for await (const v of iterator) arr.push(v)
         return arr

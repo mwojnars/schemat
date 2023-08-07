@@ -1120,7 +1120,7 @@ Category.createAPI(
                     }
                     return items.map(item => item.recordEncoded())
                 },
-                async finalize(records) {
+                finalize(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
                     let items = []
                     let db = this.registry.db
@@ -1129,7 +1129,7 @@ Category.createAPI(
                             rec.data = JSON.stringify(rec.data)
                             db._cache(rec)                  // need to cache the item in ClientDB
                         }
-                        items.push(await this.registry.getLoaded(rec.id))
+                        items.push(this.registry.getItem(rec.id))
                     }
                     return items
                 }
