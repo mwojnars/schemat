@@ -194,14 +194,31 @@ export class JsonService extends HttpService {
     }
 }
 
+export class Task {
+    /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
+       Every function below (if present) is called with `this` bound to the target object (an owner of the task).
+     */
+    prepare         // client-side function prepare(...args) to be called before sending the arguments to the server
+    process         // server-side function process(request, ...args) to be called with the arguments received from the client
+    finalize        // client-side function finalize(result, ...args) to be called with the result received from the server
+
+    constructor({prepare, process, finalize} = {}) {
+        this.prepare = prepare
+        this.process = process
+        this.finalize = finalize
+    }
+}
+
 export class TaskService extends JsonService {
     /* JSON-based service over HTTP POST that exposes multiple functions ("tasks") on a single endpoint.
        The server interprets req.body as a JSON array of the form [task-name, ...args].
        If the function completes correctly, its `result` is sent as a JSON-serialized object;
        otherwise, if an exception (`error`) occurred, it's sent as a JSON-serialized object of the form: {error}.
+       Each task is either a plain function process(request, ...args) to be called on the server, or a Task instance
+       if any pre- or postprocessing is needed on the client.
      */
 
-    tasks                 // tasks supported by this service, as {name: function} pairs
+    tasks                 // tasks supported by this service, as {name: function_or_task} pairs
 
     constructor(tasks = {}, opts = {}) {
         super(null, opts)
@@ -235,10 +252,25 @@ export class TaskService extends JsonService {
         return merged
     }
 
-    execute(target, request, task, ...args) {
-        let func = this.tasks[task]
-        if (!func) throw new NotFound(`unknown task name: '${task}'`)
-        return func.call(target, request, ...args)
+    async client(target, ...args) {
+        /* Call super.client() with optional pre- and postprocessing of the arguments and the result. */
+
+        let task_name = args[0]
+        let task = this.tasks[task_name]
+        let {prepare, finalize} = (task instanceof Task ? task : {})
+
+        if (prepare) args = prepare.call(target, ...args)
+        let result = await super.client(target, ...args)
+        if (finalize) result = finalize.call(target, result, ...args)
+
+        return result
+    }
+
+    execute(target, request, task_name, ...args) {
+        let task = this.tasks[task_name]
+        if (!task) throw new NotFound(`unknown task name: '${task_name}'`)
+        if (task instanceof Task) task = task.process
+        return task.call(target, request, ...args)
     }
 
     // ? how to detect a response was sent already ... response.writableEnded ? res.headersSent ?
