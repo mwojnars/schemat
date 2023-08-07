@@ -1094,25 +1094,25 @@ Category.createAPI(
             request.res.send(this.getSource())
         }),
 
-        'GET/scan':     new HttpService(async function (request)
-        {
-            /* Retrieve all children of this category and send to client as a JSON array.
-               TODO: set a size limit & offset (pagination).
-               TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
-             */
-            let items = []
-            for await (const item of this.registry.scan(this)) {
-                await item.load()
-                items.push(item)
-            }
-            let records = items.map(item => item.recordEncoded())
-            request.res.json(records)
-        }),
+        // 'GET/scan':     new HttpService(async function (request)
+        // {
+        //     /* Retrieve all children of this category and send to client as a JSON array.
+        //      */
+        //     let items = []
+        //     for await (const item of this.registry.scan(this)) {
+        //         await item.load()
+        //         items.push(item)
+        //     }
+        //     let records = items.map(item => item.recordEncoded())
+        //     request.res.json(records)
+        // }),
 
         'POST/list': new TaskService({
             list_items: new Task({
-                async process(request, start, limit) {
+                async process(request, offset, limit) {
                     /* Retrieve all children of this category server-side and send them to client as a JSON array of flat records. */
+                   // TODO: use size limit & offset (pagination).
+                   // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                     let items = []
                     for await (const item of this.registry.scan(this)) {
                         await item.load()

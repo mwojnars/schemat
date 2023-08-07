@@ -53,17 +53,17 @@ export class ClientDB extends Database {
         print(`ajax download [${id}]...`)
         return $.get(`${this._url}/${id}@json`)
     }
-    async *scan(cid) {
-        assert(cid || cid === 0)
-        print(`ajax category scan [${cid}]...`)
-        let records = await $.get(`${this._url}/${cid}@scan`)
-        for (const rec of records) {            // rec's shape: {id, data}
-            if (rec.data) {
-                rec.data = JSON.stringify(rec.data)
-                this._cache(rec)
-            }
-            yield rec
-        }
-    }
+    // async *scan(cid) {
+    //     assert(cid || cid === 0)
+    //     print(`ajax category scan [${cid}]...`)
+    //     let records = await $.get(`${this._url}/${cid}@scan`)
+    //     for (const rec of records) {            // rec's shape: {id, data}
+    //         if (rec.data) {
+    //             rec.data = JSON.stringify(rec.data)
+    //             this._cache(rec)
+    //         }
+    //         yield rec
+    //     }
+    // }
 }
 
