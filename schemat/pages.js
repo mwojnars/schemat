@@ -281,6 +281,8 @@ export class CategoryAdminPage extends ItemAdminPage {
     static View = {
         ...ItemAdminPage.View,
 
+        /* Below, `this` is bound to an instance of Category. */
+
         async prepare_server() {
             // preload the items list
             let scanned = this.registry.scan(this)
@@ -290,7 +292,7 @@ export class CategoryAdminPage extends ItemAdminPage {
         component() {
             let preloaded = this.context.items               // TODO: must be pulled from response data on the client to avoid re-scanning on 1st render
 
-            // const scan = () => this.db.scan_index('by_category', {category: this})
+            // const scan = () => this.action.list_items(start, limit)
             const scan = () => this.registry.scan(this)         // returns an async generator that requires "for await"
             const [items, setItems] = useState(preloaded || scan())          // existing child items; state prevents re-scan after every itemAdded()
                                                                 // TODO: use materialized list of items to explicitly control re-scanning

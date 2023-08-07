@@ -315,13 +315,10 @@ export class Network {
     role        // current network role of the `target` for the `api`; typically, 'client' or 'server'
     api         // API to be exposed on this network interface
 
-    action      // triggers for RPC actions; every action can be called from a server or a client via action.X() call
-
     constructor(target, role, api) {
         this.target = target
         this.role = role
         this.api = api
-        // this.action = this.createActionTriggers(actions)
     }
 
     createActionTriggers(actions) {
@@ -347,7 +344,6 @@ export class Network {
                 ? (...args) => service.execute(target, null, ...fixed, ...args)     // may return a Promise
                 : (...args) => service.client(target, ...fixed, ...args)            // may return a Promise
         }
-        // print('this.action:', this.action)
 
         return triggers
     }

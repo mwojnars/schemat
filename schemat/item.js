@@ -208,7 +208,8 @@ export class Item {
     expiry          // timestamp [ms] when this item should be evicted from Registry.cache; 0 = NEVER, undefined = immediate
 
     net             // Network adapter that connects this item to its network API as defined in this.constructor.api
-    action          // collection of triggers for RPC actions exposed by this item's API; every action can be called from a server or a client
+    action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
+
 
     // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
     //                 // hence it should NOT be used for reading
@@ -220,8 +221,8 @@ export class Item {
 
     _methodCache = new Map()    // cache of outputs of the methods wrapped up in Item.setCaching(); values can be Promises!
 
-    static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
     static api        = null    // API instance that defines this item's endpoints and protocols
+    static actions    = {}      // specification of action functions (RPC calls), as {action_name: [endpoint, ...fixed_args]}; each action is accessible from a server or a client
 
     static __transient__ = ['_methodCache']
 
@@ -365,7 +366,6 @@ export class Item {
         let role = this.registry.onServer ? 'server' : 'client'
         this.net = new Network(this, role, this.constructor.api)
         this.action = this.net.createActionTriggers(this.constructor.actions)
-        // this.action = this.net.action
     }
 
     init() {}
@@ -1094,11 +1094,6 @@ Category.createAPI(
             request.res.send(this.getSource())
         }),
 
-        'GET/list_items': new HttpService(async function (request)
-        {
-            /* Retrieve all children of this category and send to client as a JSON array. */
-        }),
-
         'GET/scan':     new HttpService(async function (request)
         {
             /* Retrieve all children of this category and send to client as a JSON array.
@@ -1112,6 +1107,16 @@ Category.createAPI(
             }
             let records = items.map(item => item.recordEncoded())
             request.res.json(records)
+        }),
+
+        // 'GET/list_items': new HttpService(async function (request)
+        // {
+        //     /* Retrieve all children of this category and send to client as a JSON array. */
+        // }),
+        'POST/list': new TaskService({
+            async list_items(request, start, limit) {
+                /* Retrieve all children of this category and send to client as a JSON array. */
+            },
         }),
 
         'POST/edit':  new TaskService({
@@ -1128,6 +1133,7 @@ Category.createAPI(
     },
     {
         // actions...
+        list_items:     ['POST/list', 'list_items'],
         create_item:    ['POST/edit', 'create_item'],
     }
 )
