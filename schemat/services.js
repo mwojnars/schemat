@@ -197,8 +197,9 @@ export class JsonService extends HttpService {
 export class Task {
     /* A single task supported by a TaskService, as a collection of three functions that comprise the task.
        Every function below (if present) is called with `this` bound to the target object (an owner of the task).
+       The functions can be sync or async.
      */
-    prepare         // client-side function prepare(...args) to be called before sending the arguments to the server
+    prepare         // client-side function args=prepare(...args) to be called before sending the arguments to the server
     process         // server-side function process(request, ...args) to be called with the arguments received from the client
     finalize        // client-side function finalize(result, ...args) to be called with the result received from the server
 
@@ -259,7 +260,7 @@ export class TaskService extends JsonService {
         let task = this.tasks[task_name]
         let {prepare, finalize} = (task instanceof Task ? task : {})
 
-        if (prepare) args = prepare.call(target, ...args)
+        if (prepare) args = await prepare.call(target, ...args)
         let result = await super.client(target, ...args)
         if (finalize) result = finalize.call(target, result, ...args)
 

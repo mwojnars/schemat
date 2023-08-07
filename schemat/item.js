@@ -4,7 +4,7 @@ import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
-import {HttpService, JsonService, API, TaskService, InternalService, Network} from "./services.js"
+import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 
 export const ROOT_ID = 0
@@ -1109,15 +1109,44 @@ Category.createAPI(
             request.res.json(records)
         }),
 
-        // 'GET/list_items': new HttpService(async function (request)
-        // {
-        //     /* Retrieve all children of this category and send to client as a JSON array. */
-        // }),
         'POST/list': new TaskService({
-            async list_items(request, start, limit) {
-                /* Retrieve all children of this category and send to client as a JSON array. */
-            },
+            list_items: new Task({
+                async process(request, start, limit) {
+                    /* Retrieve all children of this category server-side and send them to client as a JSON array of flat records. */
+                    let items = []
+                    for await (const item of this.registry.scan(this)) {
+                        await item.load()
+                        items.push(item)
+                    }
+                    return items.map(item => item.recordEncoded())
+                },
+                async finalize(records) {
+                    /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
+                    let items = []
+                    let db = this.registry.db
+                    for (const rec of records) {             // rec's shape: {id, data}
+                        if (rec.data) {
+                            rec.data = JSON.stringify(rec.data)
+                            db._cache(rec)                  // need to cache the item in ClientDB
+                        }
+                        items.push(await this.registry.getLoaded(rec.id))
+                    }
+                    return items
+                }
+            }),
         }),
+
+        // 'POST/list__': new TaskService({
+        //     async list_items(request, start, limit) {
+        //         /* Retrieve all children of this category and send to client as a JSON array. */
+        //         let items = []
+        //         for await (const item of this.registry.scan(this)) {
+        //             await item.load()
+        //             items.push(item)
+        //         }
+        //         return items.map(item => item.recordEncoded())
+        //     },
+        // }),
 
         'POST/edit':  new TaskService({
             async create_item(request, dataState) {
