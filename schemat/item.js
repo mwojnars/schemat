@@ -1107,7 +1107,7 @@ Category.createAPI(
         //     request.res.json(records)
         // }),
 
-        'POST/list': new TaskService({
+        'POST/read': new TaskService({
             list_items: new Task({
                 async process(request, offset, limit) {
                     /* Retrieve all children of this category server-side and send them to client as a JSON array of flat records. */
@@ -1150,7 +1150,7 @@ Category.createAPI(
     },
     {
         // actions...
-        list_items:     ['POST/list', 'list_items'],
+        list_items:     ['POST/read', 'list_items'],
         create_item:    ['POST/edit', 'create_item'],
     }
 )

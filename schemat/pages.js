@@ -287,6 +287,7 @@ export class CategoryAdminPage extends ItemAdminPage {
             // preload the items list
             let scanned = this.registry.scan(this)
             this.context.items = await T.arrayFromAsync(scanned).then(arr => T.amap(arr, item => item.load()))
+            // this.context.items = await this.action.list_items().then(arr => T.amap(arr, item => item.load()))
         },
 
         component() {
