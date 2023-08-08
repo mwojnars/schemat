@@ -103,7 +103,6 @@ export class Ring {
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
-        id = id
         return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
 

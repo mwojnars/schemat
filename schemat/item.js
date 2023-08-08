@@ -1136,18 +1136,6 @@ Category.createAPI(
             }),
         }),
 
-        // 'POST/list__': new TaskService({
-        //     async list_items(request, start, limit) {
-        //         /* Retrieve all children of this category and send to client as a JSON array. */
-        //         let items = []
-        //         for await (const item of this.registry.scan(this)) {
-        //             await item.load()
-        //             items.push(item)
-        //         }
-        //         return items.map(item => item.recordEncoded())
-        //     },
-        // }),
-
         'POST/edit':  new TaskService({
             async create_item(request, dataState) {
                 /* Create a new item in this category based on request data. */
