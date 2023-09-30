@@ -99,24 +99,35 @@ export class ExtendedCollator extends Intl.Collator {
     encodeVariableUint24(str) {
         /* Encode a string into a Uint8Array of 24-bit values, terminated by three zero bytes. */
 
-        const sortKey = this.getSortKey(str)
-        const uint8Array = new Uint8Array(sortKey.length * 3 + 3)   // 3 bytes for each 24-bit value + 3 bytes for the terminator
+        const fixedArray = this.encodeUint24(str)
+        const fixedLength = fixedArray.length
+        const uint8Array = new Uint8Array(fixedLength + 3)          // +3 to account for the terminator
 
-        for (let i = 0; i < sortKey.length; i++) {
-            const value = sortKey[i]
-            uint8Array[i * 3] = (value >> 16) & 0xFF            // Most significant 8 bits
-            uint8Array[i * 3 + 1] = (value >> 8) & 0xFF         // Middle 8 bits
-            uint8Array[i * 3 + 2] = value & 0xFF                // Least significant 8 bits
-        }
-        // Append 24-bit terminator
-        uint8Array[sortKey.length * 3] = 0
-        uint8Array[sortKey.length * 3 + 1] = 0
-        uint8Array[sortKey.length * 3 + 2] = 0
+        uint8Array.set(fixedArray)
+
+        // const sortKey = this.getSortKey(str)
+        // const uint8Array = new Uint8Array(sortKey.length * 3 + 3)   // 3 bytes for each 24-bit value + 3 bytes for the terminator
+        //
+        // for (let i = 0; i < sortKey.length; i++) {
+        //     const value = sortKey[i]
+        //     uint8Array[i * 3] = (value >> 16) & 0xFF            // Most significant 8 bits
+        //     uint8Array[i * 3 + 1] = (value >> 8) & 0xFF         // Middle 8 bits
+        //     uint8Array[i * 3 + 2] = value & 0xFF                // Least significant 8 bits
+        // }
+
+        // append 24-bit terminator
+        uint8Array[fixedLength] = 0
+        uint8Array[fixedLength + 1] = 0
+        uint8Array[fixedLength + 2] = 0
 
         return uint8Array
     }
 
     decodeVariableUint24(uint8Array) {
+        /* Decode a Uint8Array of 24-bit values, terminated by three zero bytes, into a string.
+           Return the decoded string and the number of bytes consumed from the input array.
+         */
+
         const indices = []
         let i = 0
 
