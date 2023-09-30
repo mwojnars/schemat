@@ -62,7 +62,7 @@ class FieldDescriptor {
 }
 
 class ArrayField extends FieldDescriptor {
-    /* Descriptor of a field that consists of an array of subfields. */
+    /* Descriptor of a field that consists of a (fixed) array of subfields. */
     fields          // array of FieldDescriptors
 }
 
@@ -71,6 +71,7 @@ class IndexDescriptor {
 
     key             // FieldDescriptor
     value           // FieldDescriptor
+
     category        // (?) category of items allowed in this index
 
     binary_encode(object) {

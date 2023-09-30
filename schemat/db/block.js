@@ -187,7 +187,7 @@ class FileDB extends Block {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    records  = new Map()        // preloaded item records, {id: data_json}; data is JSON-ified for mem usage & safety,
+    records  = new Map()        // preloaded item data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
     constructor(filename, params = {}) {
