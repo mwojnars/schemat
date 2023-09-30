@@ -2,26 +2,28 @@
 export class ExtendedCollator extends Intl.Collator {
     /* Extended collator that provides getSortKey() and uint8-encoding/decoding methods. */
 
-    uniqueChars         // array of all possible Unicode characters sorted by their position in the collation order;
-                        // index 0 contains null, so that all regular characters have non-zero indices
+    uniqueChars         // concatenation of all possible Unicode characters sorted by their position in the collation order;
+                        // starts with an extra character, '_', so that all regular characters have non-zero indices
     charToIndex         // mapping from char to index in uniqueChars
 
-    // approx. real memory usage as measured with profiling tools:
-    // - in browser (FF):  uniqueChars: 43 MB, charToIndex: 95 MB
+    // real memory usage as measured with profiling tools:
+    // in browser (FF):
+    //   - uniqueChars: 4.3 MB
+    //   - charToIndex: 5.1 MB
 
     constructor(locales, options) {
         super(locales, options)
 
         // generate uniqueChars containing all possible Unicode characters
         // console.log('generating uniqueChars...')
-        this.uniqueChars = []
+        let chars = []
         for (let i = 0; i <= 0x10FFFF; i++)
             if (!this.isSurrogate(i))
-                this.uniqueChars.push(String.fromCodePoint(i))
+                chars.push(String.fromCodePoint(i))
 
         // sort uniqueChars based on the collation order
-        this.uniqueChars.sort(this.compare.bind(this))
-        this.uniqueChars = [null, ...this.uniqueChars]          // prepend null to make all indices non-zero
+        chars.sort(this.compare.bind(this))
+        this.uniqueChars = '_' + chars.join('')             // prepend '_' to make all indices in charToIndex non-zero
 
         // build reverse mapping from char to index
         // console.log('building charToIndex...')
@@ -70,6 +72,7 @@ export class ExtendedCollator extends Intl.Collator {
         }
         return indices.map(index => this.uniqueChars[index]).join('')
     }
+
 
     _testOne(str) {
         const encoded = this.encodeUint32(str)
