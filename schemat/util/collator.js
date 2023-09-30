@@ -51,7 +51,7 @@ export class ExtendedCollator extends Intl.Collator {
         return Array.from(uint32Array).map(index => this.uniqueChars[index]).join('')
     }
 
-    encodeUint24Fixed(str) {
+    encodeUint24(str) {
         const sortKey = this.getSortKey(str);
         const uint8Array = new Uint8Array(sortKey.length * 3)   // 3 bytes for each 24-bit value
 
@@ -64,7 +64,7 @@ export class ExtendedCollator extends Intl.Collator {
         return uint8Array
     }
 
-    decodeUint24Fixed(uint8Array) {
+    decodeUint24(uint8Array) {
         const indices = []
         for (let i = 0; i < uint8Array.length; i += 3) {
             const value = (uint8Array[i] << 16) | (uint8Array[i + 1] << 8) | uint8Array[i + 2]
@@ -73,6 +73,42 @@ export class ExtendedCollator extends Intl.Collator {
         return indices.map(index => this.uniqueChars[index]).join('')
     }
 
+    encodeVariableUint24(str) {
+        /* Encode a string into a Uint8Array of 24-bit values, terminated by three zero bytes. */
+
+        const sortKey = this.getSortKey(str)
+        const uint8Array = new Uint8Array(sortKey.length * 3 + 3)   // 3 bytes for each 24-bit value + 3 bytes for the terminator
+
+        for (let i = 0; i < sortKey.length; i++) {
+            const value = sortKey[i]
+            uint8Array[i * 3] = (value >> 16) & 0xFF            // Most significant 8 bits
+            uint8Array[i * 3 + 1] = (value >> 8) & 0xFF         // Middle 8 bits
+            uint8Array[i * 3 + 2] = value & 0xFF                // Least significant 8 bits
+        }
+        // Append 24-bit terminator
+        uint8Array[sortKey.length * 3] = 0
+        uint8Array[sortKey.length * 3 + 1] = 0
+        uint8Array[sortKey.length * 3 + 2] = 0
+
+        return uint8Array
+    }
+
+    decodeVariableUint24(uint8Array) {
+        const indices = []
+        let i = 0
+
+        while (i < uint8Array.length - 2) {     // -2 to ensure we can read three bytes
+            if (uint8Array[i] === 0 && uint8Array[i + 1] === 0 && uint8Array[i + 2] === 0)  // check for 24-bit terminator
+                break
+            const value = (uint8Array[i] << 16) | (uint8Array[i + 1] << 8) | uint8Array[i + 2]
+            indices.push(value)
+            i += 3
+        }
+        const decodedStr = indices.map(index => this.uniqueChars[index]).join('')
+        const bytesConsumed = i + 3             // +3 to account for the terminator
+
+        return { decodedStr, bytesConsumed }
+    }
 
     _testOne(str) {
         const encoded = this.encodeUint32(str)
