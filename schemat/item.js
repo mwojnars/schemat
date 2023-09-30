@@ -642,7 +642,7 @@ export class Item {
         return JSONx.stringify(this.data)
     }
     record() {
-        /* JSON-serializable representation of the item's content as {id, data: encoded(data)}. */
+        /* JSON-serializable representation of the item's content as {id, data}. */
         assert(this.has_id())
         return {id: this.id, data: this.data}
     }

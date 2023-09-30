@@ -82,8 +82,8 @@ import { Item } from '../item.js'
  */
 
 export class Block extends Item {
-    /* TODO: physical block of storage inside a Sequence of blocks, inside the `data` or `index` of a Ring, inside a Database:
-                Database > Sequence > Ring > Block > Storage
+    /* Continuous block of consecutive records inside a Sequence, inside the `data` or `index` of a Ring, inside a database:
+           Store > Ring > Data/Index Sequence > Block > (Storage?) > Record
      */
 
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
@@ -211,6 +211,15 @@ class FileDB extends Block {
         entries = entries.map(([id, data]) => ({id, data}))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
+    }
+
+    async *_scan_index(index_spec, {start, stop, limit, reverse=false, batch_size=100} = {}) {
+        /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
+           If `limit` is defined, yield at most `limit` items.
+           If `reverse` is true, scan in the reverse order.
+           If `batch_size` is defined, yield items in batches of `batch_size` items.
+         */
+
     }
 }
 

@@ -21,8 +21,8 @@ export class ClientDB extends Database {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    records = new Map()         // cached `data` of the items received on initial or subsequent web requests;
-                                // each `data` is JSON-encoded for safety
+    cache = new Map()       // {id: data_json}, cache of items received on initial or subsequent web requests;
+                            // each data is JSON-encoded for safety, to avoid accidental modification of the cached data
 
     // base URL for AJAX calls, should contain no trailing slash '/' (!)
     get _url() { return globalThis.registry.site.systemURL() }
@@ -38,14 +38,14 @@ export class ClientDB extends Database {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            this.records.set(rec.id, rec.data)
+            this.cache.set(rec.id, rec.data)
         }
     }
 
     async select(id) {
-        /* Look up this.records for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        if (!this.records.has(id)) this._cache(await this._from_ajax(id))
-        return this.records.get(id)
+        /* Look up this.cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
+        if (!this.cache.has(id)) this._cache(await this._from_ajax(id))
+        return this.cache.get(id)
     }
 
     async _from_ajax(id) {

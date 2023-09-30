@@ -25,10 +25,10 @@ class Sequence extends AbstractSequence {
      */
 }
 
-class Data extends Sequence {}
-class Index extends Sequence {}
+class DataSequence extends Sequence {}
+class IndexSequence extends Sequence {}
 
-class Aggregate extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
+class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
     /* Aggregates can only implement *reversible* operations, like counting or integer sum.
        Min/max must be handled through a full index over the min/max-ed field.
        OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
@@ -40,3 +40,44 @@ class Store {
        when  a particular read or write cannot be performed here (multi-ring architecture).
      */
 }
+
+/**********************************************************************************************************************/
+
+class FieldDescriptor {
+    /* Descriptor of a field of a record in a data/index sequence. */
+    name            // name of a field/property of an input record/item; also used as the output name of this field
+    collator        // optional collator object that defines the sort order of this field
+    reverse         // (?) if true, the field is sorted in descending order
+
+    binary_length() {
+        /* Return the length of the binary representation of this field (if fixed length), or undefined if variable length. */
+        return undefined
+    }
+    binary_encode(object) {
+        /* Encode an object into a binary record. */
+    }
+    binary_decode(record) {
+        /* Decode a binary record into an object. */
+    }
+}
+
+class ArrayField extends FieldDescriptor {
+    /* Descriptor of a field that consists of an array of subfields. */
+    fields          // array of FieldDescriptors
+}
+
+class IndexDescriptor {
+    /* Specification of an index over a sequence of binary records, each record consisting of a `key` and a `value`. */
+
+    key             // FieldDescriptor
+    value           // FieldDescriptor
+    category        // (?) category of items allowed in this index
+
+    binary_encode(object) {
+        /* Encode an object into a binary record. */
+    }
+    binary_decode(record) {
+        /* Decode a binary record into an object. */
+    }
+}
+
