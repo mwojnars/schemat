@@ -1,15 +1,38 @@
 
 export class ExtendedCollator extends Intl.Collator {
-    /* Extended collator that provides getSortKey() and uint8-encoding/decoding methods. */
+    /*
+       Extended collator that provides getSortKey() and uint8-encoding/decoding methods.
+       The sort key is produced by mapping each character of the input string to its index in a sorted list
+       of all possible unicode characters (uniqueChars), and concatenating the resulting indices into a byte array.
+       The order of characters in uniqueChars is determined by the collation order of the locale (this.compare()).
+
+       NOTE: the resulting order of byte strings may deviate from the order of original strings as defined
+       by this.compare(s1,s2). This is because the standard .compare() uses non-lexicographic rules for sorting
+       and compares later characters in the string BEFORE checking for secondary/tertiary differences at earlier positions.
+       For example, with 'en' locale, strings ['Aa', 'Ab', 'ab'] are sorted by compare() as:
+
+            ['Aa', 'ab', 'Ab']   (the first letter is not enough to decide the order by itself),
+
+       while their byte representations from ExtendedCollator, when sorted lexicographically, yield:
+
+            ['ab', 'Aa', 'Ab']   (the first letter already puts the strings into disjoint subgroups).
+
+       The latter result, although not fully compatible with the standard .compare(), seems more intuitive and
+       appropriate in database applications.
+     */
+
 
     uniqueChars         // concatenation of all possible Unicode characters sorted by their position in the collation order;
                         // starts with an extra character, '_', so that all regular characters have non-zero indices
     charToIndex         // mapping from char to index in uniqueChars
 
-    // real memory usage as measured with profiling tools:
-    // in browser (FF):
+    // Real memory usage as measured with profiling tools:
+    // in browser (Firefox):
     //   - uniqueChars: 4.3 MB
     //   - charToIndex: 5.1 MB
+    //
+    // The memory usage is much higher (>100 MB) when uniqueChars is an array of strings instead of a single string.
+
 
     constructor(locales, options) {
         super(locales, options)
@@ -148,8 +171,8 @@ export class ExtendedCollator extends Intl.Collator {
 
 function compareBinary(a, b) {
     /* Compare lexicographically two binary arrays (Uint8Array, uint32Array) and return -1, 0 or 1.
-       The arrays can be of different lengths, in which case the shorter one is considered smaller
-       if it's a prefix of the longer one.
+       The arrays can be of different lengths, in which case the shorter one is considered smaller if it's a prefix
+       of the longer one.
      */
     const minLength = Math.min(a.length, b.length)
 
