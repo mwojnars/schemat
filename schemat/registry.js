@@ -406,7 +406,7 @@ export class ClientRegistry extends Registry {
 
         let record = await category.action.create_item(data)
         if (record) {
-            this.db._cache(record)                      // record == {id: id, data: data-encoded}
+            this.db.cache(record)                      // record == {id: id, data: data-encoded}
             return this.getItem(record.id)
         }
         throw new Error(`cannot create item ${item}`)

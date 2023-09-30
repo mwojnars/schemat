@@ -21,31 +21,31 @@ export class ClientDB extends Database {
        In the future, this class may provide long-term caching based on Web Storage (local storage or session storage).
      */
 
-    cache = new Map()       // {id: data_json}, cache of items received on initial or subsequent web requests;
-                            // each data is JSON-encoded for safety, to avoid accidental modification of the cached data
+    _cache = new Map()      // {id: data_json}, cache of item data received on initial or subsequent web requests;
+                            // each data is JSON-encoded for safety, to avoid accidental modification
 
     // base URL for AJAX calls, should contain no trailing slash '/' (!)
     get _url() { return globalThis.registry.site.systemURL() }
 
     constructor(records = []) {
         super()
-        this._cache(...records)
+        this.cache(...records)
     }
 
-    _cache(...records) {
+    cache(...records) {
         /* Save `records` in internal cache for future reference. */
         for (let rec of records) {
             if (!rec.data) continue                         // don't keep stubs
             if (typeof rec.data !== 'string')               // always keep data as a JSON-encoded string, not a flat object
                 rec = {...rec, data: JSON.stringify(rec.data)}
-            this.cache.set(rec.id, rec.data)
+            this._cache.set(rec.id, rec.data)
         }
     }
 
     async select(id) {
-        /* Look up this.cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
-        if (!this.cache.has(id)) this._cache(await this._from_ajax(id))
-        return this.cache.get(id)
+        /* Look up this._cache for a given `id` and return its `data` if found; otherwise pull it from the server-side DB. */
+        if (!this._cache.has(id)) this.cache(await this._from_ajax(id))
+        return this._cache.get(id)
     }
 
     async _from_ajax(id) {
@@ -60,7 +60,7 @@ export class ClientDB extends Database {
     //     for (const rec of records) {            // rec's shape: {id, data}
     //         if (rec.data) {
     //             rec.data = JSON.stringify(rec.data)
-    //             this._cache(rec)
+    //             this.cache(rec)
     //         }
     //         yield rec
     //     }
