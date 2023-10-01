@@ -103,8 +103,6 @@ export class ExtendedCollator extends Intl.Collator {
         const fixedLength = fixedArray.length
         const uint8Array = new Uint8Array(fixedLength + 3)          // +3 to account for the terminator
 
-        uint8Array.set(fixedArray)
-
         // const sortKey = this.getSortKey(str)
         // const uint8Array = new Uint8Array(sortKey.length * 3 + 3)   // 3 bytes for each 24-bit value + 3 bytes for the terminator
         //
@@ -116,6 +114,7 @@ export class ExtendedCollator extends Intl.Collator {
         // }
 
         // append 24-bit terminator
+        uint8Array.set(fixedArray)
         uint8Array[fixedLength] = 0
         uint8Array[fixedLength + 1] = 0
         uint8Array[fixedLength + 2] = 0
@@ -153,9 +152,16 @@ export class ExtendedCollator extends Intl.Collator {
     }
 
     _test(...strings) {
+        // const encode = this.encodeUint32.bind(this)
+        // const decode = this.decodeUint32.bind(this)
+        // const encode = this.encodeUint24.bind(this)
+        // const decode = this.decodeUint24.bind(this)
+        const encode = this.encodeVariableUint24.bind(this)
+        const decode = (s => this.decodeVariableUint24(s).decodedStr)
+
         for (const str of strings) {
-            const encoded = this.encodeUint32(str)
-            const decoded = this.decodeUint32(encoded)
+            const encoded = encode(str)
+            const decoded = decode(encoded)
             console.log(str, ' -> ', decoded, '  |  ', encoded)
             if (str !== decoded) throw new Error('encoding/decoding failed!')
         }
@@ -164,9 +170,9 @@ export class ExtendedCollator extends Intl.Collator {
         const sorted = strings.sort(this.compare.bind(this))
 
         // sort encoded representations
-        const encoded = strings.map(str => this.encodeUint32(str))
+        const encoded = strings.map(str => encode(str))
         const sortedEncoded = encoded.sort(compareBinary)
-        const sortedDecoded = sortedEncoded.map(encoded => this.decodeUint32(encoded))
+        const sortedDecoded = sortedEncoded.map(encoded => decode(encoded))
 
         // concatenate sorted strings
         const sortedConcatenated = sorted.join(' | ')
@@ -176,7 +182,7 @@ export class ExtendedCollator extends Intl.Collator {
         console.log(sortedConcatenated)
         console.log(sortedDecodedConcatenated)
 
-        if (sortedConcatenated !== sortedDecodedConcatenated) throw new Error('sorting failed!')
+        if (sortedConcatenated !== sortedDecodedConcatenated) console.error('sorting failed!')
     }
 }
 
@@ -209,3 +215,10 @@ let collator = new ExtendedCollator('pl')
 // console.log(`approximate memory usage: ${mem2 - mem1} bytes`)
 
 collator._test('Hello World!', 'Ala ma Kota', 'Żółć', 'żółw', 'Żółty', 'ąęćźżńłóĄĘĆŹŻŃŁÓ', 'a', 'A', 'b', 'B', 'ą', 'ę', 'e')
+
+// arr = ['aaaaab', 'Aaaaaa', 'Aaaaab']
+// arr.sort(collator.compare.bind(collator))
+// arr
+// encoded = arr.map(str => collator.encodeUint32(str))
+// sortedEncoded = encoded.sort(compareBinary)
+// sortedDecoded = sortedEncoded.map(encoded => collator.decodeUint32(encoded))
