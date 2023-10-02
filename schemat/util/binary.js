@@ -46,6 +46,7 @@ export class BinaryInput {
     /* An uint8 array that can be read in chunks during decoding while keeping track of the current position. */
 
     constructor(buffer) {
+        // assert(buffer instanceof Uint8Array)
         this.buffer = buffer
         this.pos = 0
     }
@@ -54,7 +55,7 @@ export class BinaryInput {
         return this.buffer.subarray(this.pos)
     }
     move(length) {
-        /* Move the current position by `length` bytes. */
+        /* Advance the current position by `length` bytes. */
         this.pos += length
     }
 }

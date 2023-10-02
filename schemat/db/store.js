@@ -49,10 +49,10 @@ class FieldDescriptor {
 
     name            // name of a field/property of an input record/item; also used as the output name of this field
     collator        // optional collator object that defines the sort order of this field
-    reverse         // (?) if true, the field is sorted in descending order
+    reverse         // (?) if true, the field sorts in descending order inside an ArrayField
 
     binary_length() {
-        /* Return the length of the binary representation of this field (if fixed length), or undefined if variable length. */
+        /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
         return undefined
     }
     binary_encode(object) {
@@ -61,7 +61,6 @@ class FieldDescriptor {
     binary_decode(record) {
         /* Decode a binary record into an object. */
     }
-
 }
 
 class ArrayField extends FieldDescriptor {
