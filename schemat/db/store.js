@@ -86,11 +86,19 @@ class BinaryOutput {
 }
 
 class BinaryInput {
-    /* An uint8 array that can be read in chunks during decoding, while keeping track of the current position. */
+    /* An uint8 array that can be read in chunks during decoding while keeping track of the current position. */
 
     constructor(buffer) {
         this.buffer = buffer
         this.pos = 0
+    }
+    current() {
+        /* Return a subarray of the remaining bytes. */
+        return this.buffer.subarray(this.pos)
+    }
+    move(length) {
+        /* Move the current position by `length` bytes. */
+        this.pos += length
     }
 }
 
