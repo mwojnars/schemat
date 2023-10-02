@@ -1,7 +1,7 @@
 
 export class ExtendedCollator extends Intl.Collator {
     /*
-       Extended collator that provides getSortKey() and uint8-encoding/decoding methods.
+       A standard collator that additionally provides getSortKey() and uint8-encoding/decoding methods.
        The sort key is produced by mapping each character of the input string to its index in a sorted list
        of all possible unicode characters (uniqueChars), and concatenating the resulting indices into a byte array.
        The order of characters in uniqueChars is determined by the collation order of the locale (this.compare()).

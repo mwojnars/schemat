@@ -45,6 +45,7 @@ class Store {
 
 class FieldDescriptor {
     /* Descriptor of a field of a record in a data/index sequence. */
+
     name            // name of a field/property of an input record/item; also used as the output name of this field
     collator        // optional collator object that defines the sort order of this field
     reverse         // (?) if true, the field is sorted in descending order
@@ -54,7 +55,7 @@ class FieldDescriptor {
         return undefined
     }
     binary_encode(object) {
-        /* Encode an object into a binary record. */
+        /* Encode a plain object into a binary record. Typically, object['name'] is read and converted to the output format. */
     }
     binary_decode(record) {
         /* Decode a binary record into an object. */
@@ -66,7 +67,7 @@ class ArrayField extends FieldDescriptor {
     fields          // array of FieldDescriptors
 }
 
-class IndexDescriptor {
+export class IndexDescriptor {
     /* Specification of an index over a sequence of binary records, each record consisting of a `key` and a `value`. */
 
     key             // FieldDescriptor

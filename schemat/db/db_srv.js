@@ -2,7 +2,7 @@ import path from 'path'
 import {BaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
-import {YamlDB} from "./block.js"
+import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 
@@ -37,7 +37,7 @@ export class Ring {
 
     async open() {
         let block
-        if (this.file) block = new YamlDB(this.file, this.opts)         // block is a local file
+        if (this.file) block = new YamlBlock(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
             block = await globalThis.registry.getLoaded(this.item)
             block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)

@@ -183,11 +183,11 @@ export class Block extends Item {
 }
 
 
-class FileDB extends Block {
+class FileBlock extends Block {
     /* Items stored in a file. For use during development only. */
 
     filename = null
-    records  = new Map()        // preloaded item data, {id: data_json}; JSON-ified for mem usage & safety,
+    records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
     constructor(filename, params = {}) {
@@ -223,7 +223,7 @@ class FileDB extends Block {
     }
 }
 
-export class YamlDB extends FileDB {
+export class YamlBlock extends FileBlock {
     /* Items stored in a YAML file. For use during development only. */
 
     async open(ring) {
@@ -251,7 +251,7 @@ export class YamlDB extends FileDB {
 
     async _flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlDB flushing ${this.records.size} items to ${this.filename}...`)
+        print(`YamlBlock flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
         let recs = flat.map(([__id, data_json]) => {
                 let data = JSON.parse(data_json)
