@@ -14,6 +14,7 @@ RESULTS:
     Math.pow():         2217ms          -- good enough
     Shift:              1505ms
     BigInt:             3707ms          -- 2x slower than Math.pow()
+    (smaller no. of iterations than on Node.js)
  */
 
 const iterations = 1e8;

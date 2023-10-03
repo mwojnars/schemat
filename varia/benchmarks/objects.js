@@ -5,7 +5,7 @@
 
 RESULTS:
   Node.js v18.14.0:   (1) 378ms, (2) 3.58s   -- 10x slower
-  browser Firefox:    (1) 5.9s,  (2) 14.0s   -- 2x slower
+  browser Firefox:    (1) 5.9s,  (2) 14.0s   -- 2x slower  ... smaller no. of iterations than on Node.js
 */
 
 class Record {
