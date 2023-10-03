@@ -48,8 +48,8 @@ class FieldDescriptor {
     /* Descriptor of a field of a record in a data/index sequence. */
 
     name            // name of a field/property of an input record/item; also used as the output name of this field
-    collator        // optional collator object that defines the sort order of this field
-    reverse         // (?) if true, the field sorts in descending order inside an ArrayField
+    // collator        // optional collator object that defines the sort order of this field
+    // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
 
     binary_length() {
         /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
@@ -66,6 +66,9 @@ class FieldDescriptor {
 class ArrayField extends FieldDescriptor {
     /* Descriptor of a field that consists of a (fixed) array of subfields. */
     fields          // array of FieldDescriptors
+
+    binary_encode(item) {
+    }
 }
 
 export class IndexDescriptor {
@@ -77,24 +80,46 @@ export class IndexDescriptor {
        decoded object may lack some fields that were not included in the index.
      */
 
-    key_descriptor          // FieldDescriptor
+    fields                  // array of 1+ FieldDescriptors to be included in the sort key
     category                // (?) category of items allowed in this index
 
     // encode_item(item) {}
     // encode_entity(entity) {}
 
-    encode_object(object) {
-        /* Encode an object into a record containing binary `key` and json-ified text `value`. */
-        const key = this.encode_key(object)
-        const value = this.encode_value(this.generate_value(object))
-        // return new Pair(key, value)
-        // return new KeyValue(key, value)
-        return {key, value}         // a record {key: Uint8Array, value: json string}
+    *encode_item(item) {
+        /* Convert an item to a list of plain objects that will be subsequently encoded into records.
+           The result list can be of any length, including:
+           - 0, if the item is not allowed in this index or doesn't contain the required fields,
+           - 2+, if some of the item's fields to be used in the key contain repeated values
+         */
+        if (!this.allowed(item)) return
+
+        const value = this.encode_value(this.generate_value(item))
+        for (const key of this.encode_key(item))
+            yield {key, value}
     }
-    encode_key(object)   { return this.key_descriptor.binary_encode(object) }
+
+    *encode_key(item) {
+        for (const field of this.fields) {
+            field.binary_encode(item)
+        }
+    }
+
+    allowed(item) {
+        if (!this.category.includes(item)) return []
+    }
+
+    // encode_object(object) {
+    //     /* Encode an object into a record containing binary `key` and json-ified text `value`. */
+    //     const key = this.encode_key(object)
+    //     const value = this.encode_value(this.generate_value(object))
+    //     // return new Pair(key, value)
+    //     // return new KeyValue(key, value)
+    //     return {key, value}         // a record {key: Uint8Array, value: json string}
+    // }
+
     encode_value(value)  { return JSON.stringify(value) }
 
-    // accepted(item) { return true }
     generate_value(item) {}
 
     decode_object(key, value) {
@@ -103,9 +128,18 @@ export class IndexDescriptor {
         return this.restore_object(this.decode_key(key), this.decode_value(value))
     }
 
-    decode_key(record)   { return this.key_descriptor.binary_decode(record, true) }
-    decode_value(record) { return this.field_value.binary_decode(record, true) }
-    restore_object(key, value) { return {...key, ...value} }
+    decode_key(record) {
+        let entry = {}
+        for (const field of this.fields) {
+            const name = field.name
+            entry[name] = field.binary_decode(record)
+        }
+        return entry
+        // return this.key_descriptor.binary_decode(record, true)
+    }
+
+    decode_value(value)         { return JSON.parse(value) }
+    restore_object(key, value)  { return {...key, ...value} }
 
 }
 
