@@ -77,17 +77,35 @@ export class IndexDescriptor {
        decoded object may lack some fields that were not included in the index.
      */
 
-    key             // FieldDescriptor
-    value           // FieldDescriptor
+    key_descriptor          // FieldDescriptor
+    category                // (?) category of items allowed in this index
 
-    category        // (?) category of items allowed in this index
+    // encode_item(item) {}
+    // encode_entity(entity) {}
 
-    binary_encode(object) {
-        /* Encode an object into a binary record. */
+    encode_object(object) {
+        /* Encode an object into a record containing binary `key` and json-ified text `value`. */
+        const key = this.encode_key(object)
+        const value = this.encode_value(this.generate_value(object))
+        // return new Pair(key, value)
+        // return new KeyValue(key, value)
+        return {key, value}         // a record {key: Uint8Array, value: json string}
     }
-    binary_decode(record) {
+    encode_key(object)   { return this.key_descriptor.binary_encode(object) }
+    encode_value(value)  { return JSON.stringify(value) }
+
+    // accepted(item) { return true }
+    generate_value(item) {}
+
+    decode_object(key, value) {
         /* Decode a binary record into an object. */
         // if the same field occurs in both key and value, the value's field overwrite the key's field
+        return this.restore_object(this.decode_key(key), this.decode_value(value))
     }
+
+    decode_key(record)   { return this.key_descriptor.binary_decode(record, true) }
+    decode_value(record) { return this.field_value.binary_decode(record, true) }
+    restore_object(key, value) { return {...key, ...value} }
+
 }
 
