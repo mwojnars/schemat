@@ -62,3 +62,14 @@ export class BinaryInput {
     }
 }
 
+function byteLengthOfInteger(n) {
+    const absN = Math.abs(n)
+    if (absN <= 0xFF) return 1
+    if (absN <= 0xFFFF) return 2
+    if (absN <= 0xFFFFFF) return 3
+    if (absN <= 0xFFFFFFFF) return 4
+    if (absN <= 0xFFFFFFFFFF) return 5
+    if (absN <= 0xFFFFFFFFFFFF) return 6
+    if (absN <= 0xFFFFFFFFFFFFFF) return 7
+    return 8
+}
