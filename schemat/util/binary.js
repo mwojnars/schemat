@@ -62,15 +62,37 @@ export class BinaryInput {
     }
 }
 
-export function byteLengthOfInteger(n) {
+export function byteLengthOfUnsignedInteger(n) {
     /* This implementation is 2-5x faster than when using Math.log(). */
-    const absN = Math.abs(n)
-    if (absN <= 0xFF) return 1
-    if (absN <= 0xFFFF) return 2
-    if (absN <= 0xFFFFFF) return 3
-    if (absN <= 0xFFFFFFFF) return 4
-    if (absN <= 0xFFFFFFFFFF) return 5
-    if (absN <= 0xFFFFFFFFFFFF) return 6
-    if (absN <= 0xFFFFFFFFFFFFFF) return 7
+    if (n < 0) throw new Error(`expected unsigned integer instead of: ${n}`)
+    if (n <= 0xFF) return 1
+    if (n <= 0xFFFF) return 2
+    if (n <= 0xFFFFFF) return 3
+    if (n <= 0xFFFFFFFF) return 4
+    if (n <= 0xFFFFFFFFFF) return 5
+    if (n <= 0xFFFFFFFFFFFF) return 6
+    if (n <= 0xFFFFFFFFFFFFFF) return 7         // this is already bigger than Number.MAX_SAFE_INTEGER, hence unsafe (!)
     return 8
+}
+
+export function byteLengthOfSignedInteger(n) {
+    if (n >= 0) {
+        if (n <= 0x7F) return 1; // 127
+        if (n <= 0x7FFF) return 2; // 32767
+        if (n <= 0x7FFFFF) return 3; // 8,388,607
+        if (n <= 0x7FFFFFFF) return 4; // 2,147,483,647
+        if (n <= 0x7FFFFFFFFF) return 5;
+        if (n <= 0x7FFFFFFFFFFF) return 6;
+        if (n <= 0x7FFFFFFFFFFFFF) return 7;
+        return 8;
+    } else {
+        if (n >= -0x80) return 1; // -128
+        if (n >= -0x8000) return 2; // -32,768
+        if (n >= -0x800000) return 3; // -8,388,608
+        if (n >= -0x80000000) return 4; // -2,147,483,648
+        if (n >= -0x8000000000) return 5;
+        if (n >= -0x800000000000) return 6;
+        if (n >= -0x80000000000000) return 7;
+        return 8;
+    }
 }
