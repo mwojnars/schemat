@@ -62,7 +62,8 @@ export class BinaryInput {
     }
 }
 
-function byteLengthOfInteger(n) {
+export function byteLengthOfInteger(n) {
+    /* This implementation is 2-5x faster than when using Math.log(). */
     const absN = Math.abs(n)
     if (absN <= 0xFF) return 1
     if (absN <= 0xFFFF) return 2

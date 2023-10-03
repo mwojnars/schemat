@@ -9,6 +9,7 @@ import {DataError, NotImplemented, ValueError} from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component, Widget } from './widget.js'
+import {byteLengthOfInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
 
@@ -355,8 +356,41 @@ export class INTEGER extends NUMBER {
         super.check(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
     }
-    binary_encode(value, last = false) {
-        return new Uint8Array([value])
+
+    binary_encode(integer, last = false) {
+        /* Magnitude of the value is detected automatically and the value is encoded on a minimum required no. of bytes,
+           between 1 and 8. The detected byte length is written to the output in the first byte.
+         */
+        const {signed} = this.props
+        const length = byteLengthOfInteger(integer)
+        const buffer = new Uint8Array(length + 1)       // +1 for the length byte
+        buffer[0] = length
+
+        // shift the value range to make it unsigned
+        let num = signed ? integer + (integer < 0 ? Math.pow(2, 8 * length) : 0) : integer
+
+        for (let i = length; i > 0; i--) {
+            buffer[i] = num & 0xFF
+            num >>= 8
+        }
+        return buffer
+    }
+
+    binary_decode(input, last = false) {
+        /* `input` must be a BinaryInput */
+        const {signed} = this.props
+        const buffer = input.current()
+        const length = buffer[0]
+
+        let num = 0
+        for (let i = 1; i <= length; i++)
+            num = (num << 8) | buffer[i]
+
+        if (signed && (buffer[1] & 0x80))       // check if the highest bit is set for signed numbers
+            num -= Math.pow(2, 8 * length)
+
+        input.move(length + 1)
+        return num
     }
 }
 
