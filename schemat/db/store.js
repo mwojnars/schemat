@@ -67,14 +67,9 @@ class FieldDescriptor {
     }
 }
 
-// class ArrayField extends FieldDescriptor {
-//     /* Descriptor of a field that consists of a (fixed) array of subfields. */
-//     fields          // array of FieldDescriptors
-// }
-
 export class IndexDescriptor {
-    /* Specification of an index over a sequence of objects translated to binary records, each record consisting
-       of a `key` (obligatory) and a `value` (optional). The index is sorted by key, and allows to retrieve the value
+    /* Specification of an index over a sequence of objects translated to records, each record consisting
+       of a binary `key` and a text `value`. The index is sorted by key and allows to retrieve the value
        for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
        and/or cloning the object when a repeated field is encountered.
        The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
@@ -84,11 +79,9 @@ export class IndexDescriptor {
     fields                  // Map of field descriptors to be included in the sort key, as {name: schema} pairs
     category                // (?) category of items allowed in this index
 
-    // encode_entry(entry) {}
-
     *encode_item(item) {
-        /* Convert an item to plain objects (entries) and encode each of them into a {key(binary), value(text)} record.
-           The result stream can be of any length, including:
+        /* Convert an item to plain objects (entries) and encode each of them as a {key, value} record.
+           The result can be of any size, including:
            - 0, if the item is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the item's fields to be used in the key contain repeated values
          */
@@ -101,30 +94,25 @@ export class IndexDescriptor {
 
     *encode_key(item) {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
-        let field_values = []
+        let bin_values = []
 
         for (const [name, schema] of this.fields) {
             const values = item.propsList(name)
-            if (!values.length) return              // missing field, skip this item
-            if (values.length >= 2 && field_values.length)
-                throw new Error(`field ${name} has multiple values, which is only allowed for the first field in index`)
+            if (!values.length) return              // no values (missing field), skip this item
+            if (values.length >= 2 && bin_values.length)
+                throw new Error(`field ${name} has multiple values, which is only allowed for the first field in the index`)
 
-            // encode the values through the field schema
-            const last = (field_values.length === this.fields.length - 1)
-            const bin_values = values.map(v => schema.binary_encode(v, last))
-            field_values.push(bin_values)
+            // encode `values` through the field schema
+            const last = (bin_values.length === this.fields.length - 1)
+            const binary = values.map(v => schema.binary_encode(v, last))
+            bin_values.push(binary)
         }
 
-        for (const field of this.fields) {
-            const value = field.value(item)
-            if (value === undefined) return
-        }
-
-        // flat array of encoded values of all fields after the first one
-        const tail = field_values.slice(1).map(values => values[0])
+        // flat array of encoded values of all fields except the first one
+        const tail = bin_values.slice(1).map(values => values[0])
 
         // iterate over the first field's values to produce all key combinations
-        for (const head of field_values[0]) {
+        for (const head of bin_values[0]) {
             let output = new BinaryOutput()
             output.write(head, ...tail)
             yield output.result()
