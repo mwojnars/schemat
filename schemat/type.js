@@ -9,7 +9,7 @@ import {DataError, NotImplemented, ValueError} from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component, Widget } from './widget.js'
-import {byteLengthOfInteger} from "./util/binary.js";
+import {byteLengthOfSignedInteger, byteLengthOfUnsignedInteger} from "./util/binary.js";
 
 // print('Temporal:', Temporal)
 
@@ -355,23 +355,32 @@ export class INTEGER extends NUMBER {
     check(value) {
         super.check(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
+        if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
+        if (this.props.min !== undefined && value < this.props.min) throw new ValueError(`the integer (${value}) is out of bounds, should be >= ${this.props.min}`)
+        if (this.props.max !== undefined && value > this.props.max) throw new ValueError(`the integer (${value}) is out of bounds, should be <= ${this.props.max}`)
+        if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
+        if (value > Number.MAX_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too large to be stored in JavaScript`)
     }
 
     binary_encode(integer, last = false) {
-        /* Magnitude of the value is detected automatically and the value is encoded on a minimum required no. of bytes,
-           between 1 and 8. The detected byte length is written to the output in the first byte.
+        /* Adaptive encoding. Magnitude of the value is detected automatically and the value is encoded on the minimum
+           required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER).
+           The detected byte length is written to the output in the first byte.
+           If the values are signed, the value range gets shifted so that negative values sort before positive ones.
          */
         const {signed} = this.props
-        const length = byteLengthOfInteger(integer)
+        const length = (signed ? byteLengthOfSignedInteger : byteLengthOfUnsignedInteger) (integer)
         const buffer = new Uint8Array(length + 1)       // +1 for the length byte
         buffer[0] = length
 
         // shift the value range to make it unsigned
-        let num = signed ? integer + (integer < 0 ? Math.pow(2, 8 * length) : 0) : integer
+        let num = signed ? integer + Math.pow(2, 8 * length - 1) : integer
 
         for (let i = length; i > 0; i--) {
-            buffer[i] = num & 0xFF
-            num >>= 8
+            buffer[i] = num % 256
+            num = Math.floor(num / 256)         // bitwise ops (num >>= 8) are incorrect for higher bytes
+            // buffer[i] = num & 0xFF
+            // num >>= 8
         }
         return buffer
     }
@@ -384,10 +393,10 @@ export class INTEGER extends NUMBER {
 
         let num = 0
         for (let i = 1; i <= length; i++)
-            num = (num << 8) | buffer[i]
+            num += buffer[i] * Math.pow(256, (length - i))
+            // num = (num << 8) | buffer[i]
 
-        if (signed && (buffer[1] & 0x80))       // check if the highest bit is set for signed numbers
-            num -= Math.pow(2, 8 * length)
+        if (signed) num -= Math.pow(2, 8 * length - 1)
 
         input.move(length + 1)
         return num
