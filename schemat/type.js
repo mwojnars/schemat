@@ -339,8 +339,6 @@ export class NUMBER extends Primitive {
         initial: 0,
         min:     undefined,         // minimum value allowed (>=)
         max:     undefined,         // maximum value allowed (<=)
-        signed:  true,              // if true, the number can be negative
-        width:   8,                 // number of bytes used to store the number in DB indexes
     }
     check(value) {
         super.check(value)
@@ -351,43 +349,52 @@ export class NUMBER extends Primitive {
 }
 
 export class INTEGER extends NUMBER {
-    /* Same as NUMBER, but with additional constraints. */
+    /* An integer value. Like a NUMBER, but with additional constraints and different binary encoding. */
+
+    static defaultProps = {
+        signed:  false,             // if true, values can be negative
+        width:   7,                 // number of bytes to be used to store SIGNED values in DB indexes; unsigned values use adaptive encoding
+    }
+
     check(value) {
         super.check(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
         if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
-        if (this.props.min !== undefined && value < this.props.min) throw new ValueError(`the integer (${value}) is out of bounds, should be >= ${this.props.min}`)
-        if (this.props.max !== undefined && value > this.props.max) throw new ValueError(`the integer (${value}) is out of bounds, should be <= ${this.props.max}`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
         if (value > Number.MAX_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too large to be stored in JavaScript`)
     }
 
     binary_encode(integer, last = false) {
+        const {signed} = this.props
+        if (signed) throw new NotImplemented(`signed integers are not implemented yet`)
+        return this.binary_encode_adaptive(integer)
+    }
+    binary_decode(input, last = false) {
+        const {signed} = this.props
+        if (signed) throw new NotImplemented(`signed integers are not implemented yet`)
+        return this.binary_decode_adaptive(input)
+    }
+
+    binary_encode_adaptive(num) {
         /* Adaptive encoding. Magnitude of the value is detected automatically and the value is encoded on the minimum
            required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER).
            The detected byte length is written to the output in the first byte.
-           If the values are signed, the value range gets shifted so that negative values sort before positive ones.
          */
-        const {signed} = this.props
-        const length = (signed ? byteLengthOfSignedInteger : byteLengthOfUnsignedInteger) (integer)
+        const length = byteLengthOfUnsignedInteger(num)
         const buffer = new Uint8Array(length + 1)       // +1 for the length byte
         buffer[0] = length
 
-        // shift the value range to make it unsigned
-        let num = signed ? integer + Math.pow(2, 8 * length - 1) : integer
-
         for (let i = length; i > 0; i--) {
-            buffer[i] = num % 256
+            buffer[i] = num & 0xFF
             num = Math.floor(num / 256)         // bitwise ops (num >>= 8) are incorrect for higher bytes
-            // buffer[i] = num & 0xFF
+            // buffer[i] = num % 256
             // num >>= 8
         }
         return buffer
     }
 
-    binary_decode(input, last = false) {
+    binary_decode_adaptive(input) {
         /* `input` must be a BinaryInput */
-        const {signed} = this.props
         const buffer = input.current()
         const length = buffer[0]
 
@@ -395,8 +402,6 @@ export class INTEGER extends NUMBER {
         for (let i = 1; i <= length; i++)
             num += buffer[i] * Math.pow(256, (length - i))
             // num = (num << 8) | buffer[i]
-
-        if (signed) num -= Math.pow(2, 8 * length - 1)
 
         input.move(length + 1)
         return num
