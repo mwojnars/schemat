@@ -7,10 +7,12 @@ export class BinaryOutput {
         this.buffers = []
     }
 
-    write(chunk) {
-        /* Append uint8/uint32 array to the output. */
-        if (chunk instanceof Uint32Array) chunk = this._uint32_to_uint8(chunk)
-        this.buffers.push(chunk)
+    write(...chunks) {
+        /* Append uint8/uint32 array(s) to the output. */
+        for (let chunk of chunks) {
+            if (chunk instanceof Uint32Array) chunk = this._uint32_to_uint8(chunk)
+            this.buffers.push(chunk)
+        }
     }
 
     _uint32_to_uint8(chunk) {

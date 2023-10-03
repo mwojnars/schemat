@@ -2,6 +2,8 @@
     Distributed no-sql data store for data records (items) and indexes.
 */
 
+import {BinaryOutput} from "../util/binary.js"
+
 
 // Section, Block, Partition
 
@@ -51,6 +53,8 @@ class FieldDescriptor {
     // collator        // optional collator object that defines the sort order of this field
     // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
 
+    value(item) {}
+
     binary_length() {
         /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
         return undefined
@@ -63,13 +67,10 @@ class FieldDescriptor {
     }
 }
 
-class ArrayField extends FieldDescriptor {
-    /* Descriptor of a field that consists of a (fixed) array of subfields. */
-    fields          // array of FieldDescriptors
-
-    binary_encode(item) {
-    }
-}
+// class ArrayField extends FieldDescriptor {
+//     /* Descriptor of a field that consists of a (fixed) array of subfields. */
+//     fields          // array of FieldDescriptors
+// }
 
 export class IndexDescriptor {
     /* Specification of an index over a sequence of objects translated to binary records, each record consisting
@@ -80,15 +81,14 @@ export class IndexDescriptor {
        decoded object may lack some fields that were not included in the index.
      */
 
-    fields                  // array of 1+ FieldDescriptors to be included in the sort key
+    fields                  // Map of field descriptors to be included in the sort key, as {name: schema} pairs
     category                // (?) category of items allowed in this index
 
-    // encode_item(item) {}
-    // encode_entity(entity) {}
+    // encode_entry(entry) {}
 
     *encode_item(item) {
-        /* Convert an item to a list of plain objects that will be subsequently encoded into records.
-           The result list can be of any length, including:
+        /* Convert an item to plain objects (entries) and encode each of them into a {key(binary), value(text)} record.
+           The result stream can be of any length, including:
            - 0, if the item is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the item's fields to be used in the key contain repeated values
          */
@@ -100,8 +100,34 @@ export class IndexDescriptor {
     }
 
     *encode_key(item) {
+        // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
+        let field_values = []
+
+        for (const [name, schema] of this.fields) {
+            const values = item.propsList(name)
+            if (!values.length) return              // missing field, skip this item
+            if (values.length >= 2 && field_values.length)
+                throw new Error(`field ${name} has multiple values, which is only allowed for the first field in index`)
+
+            // encode the values through the field schema
+            const last = (field_values.length === this.fields.length - 1)
+            const bin_values = values.map(v => schema.binary_encode(v, last))
+            field_values.push(bin_values)
+        }
+
         for (const field of this.fields) {
-            field.binary_encode(item)
+            const value = field.value(item)
+            if (value === undefined) return
+        }
+
+        // flat array of encoded values of all fields after the first one
+        const tail = field_values.slice(1).map(values => values[0])
+
+        // iterate over the first field's values to produce all key combinations
+        for (const head of field_values[0]) {
+            let output = new BinaryOutput()
+            output.write(head, ...tail)
+            yield output.result()
         }
     }
 
@@ -118,7 +144,7 @@ export class IndexDescriptor {
     //     return {key, value}         // a record {key: Uint8Array, value: json string}
     // }
 
-    encode_value(value)  { return JSON.stringify(value) }
+    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
 
     generate_value(item) {}
 
@@ -138,7 +164,7 @@ export class IndexDescriptor {
         // return this.key_descriptor.binary_decode(record, true)
     }
 
-    decode_value(value)         { return JSON.parse(value) }
+    decode_value(value)         { return value !== undefined ? JSON.parse(value) : undefined }
     restore_object(key, value)  { return {...key, ...value} }
 
 }
