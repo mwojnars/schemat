@@ -46,26 +46,26 @@ class Store {
 
 /**********************************************************************************************************************/
 
-class FieldDescriptor {
-    /* Descriptor of a field of a record in a data/index sequence. */
-
-    name            // name of a field/property of an input record/item; also used as the output name of this field
-    // collator        // optional collator object that defines the sort order of this field
-    // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
-
-    value(item) {}
-
-    binary_length() {
-        /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
-        return undefined
-    }
-    binary_encode(object) {
-        /* Encode a plain object into a binary record. Typically, object['name'] is read and converted to the output format. */
-    }
-    binary_decode(record) {
-        /* Decode a binary record into an object. */
-    }
-}
+// class FieldDescriptor {
+//     /* Descriptor of a field of a record in a data/index sequence. */
+//
+//     name            // name of a field/property of an input record/item; also used as the output name of this field
+//     // collator        // optional collator object that defines the sort order of this field
+//     // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
+//
+//     value(item) {}
+//
+//     binary_length() {
+//         /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
+//         return undefined
+//     }
+//     binary_encode(object) {
+//         /* Encode a plain object into a binary record. Typically, object['name'] is read and converted to the output format. */
+//     }
+//     binary_decode(record) {
+//         /* Decode a binary record into an object. */
+//     }
+// }
 
 export class IndexDescriptor {
     /* Specification of an index over a sequence of objects translated to records, each record consisting
@@ -100,7 +100,7 @@ export class IndexDescriptor {
             const values = item.propsList(name)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && bin_values.length)
-                throw new Error(`field ${name} has multiple values, which is only allowed for the first field in the index`)
+                throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
 
             // encode `values` through the field schema
             const last = (bin_values.length === this.fields.length - 1)

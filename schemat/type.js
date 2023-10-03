@@ -5,7 +5,7 @@ import { e, cl, st, createRef, useState, useItemLoading, delayed_render } from '
 import { A, B, I, P, PRE, DIV, SPAN, STYLE, INPUT, SELECT, OPTION, TEXTAREA, BUTTON, FLEX, FRAGMENT, HTML, NBSP } from './react-utils.js'
 import { ItemLoadingHOC } from './react-utils.js'
 import { T, assert, print, trycatch, truncate, concat } from './utils.js'
-import { DataError, ValueError } from './errors.js'
+import {DataError, NotImplemented, ValueError} from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Path } from './data.js'
 import { Assets, Component, Widget } from './widget.js'
@@ -171,6 +171,25 @@ export class Schema {
             return impute.call(item)
     }
 
+    /*** binary encoding for indexing ***/
+
+    binary_encode(value, last = false) {
+        /* Encode a value to Uint8Array. If last=false and the binary representation has variable length,
+           the terminator symbol/sequence or length specification should be included in the output,
+           so that binary_decode() can detect the length of the encoded sequence (this length can be smaller
+           than the length of the entire record).
+         */
+        throw new NotImplemented(`binary_encode() is not implemented for ${this}`)
+    }
+
+    binary_decode(input, last = false) {
+        /* Decode a binary input (Uint8Array) back into an application-level value or object.
+           If last=false, the encoded value may be followed by another value in the input,
+           so the decoder must be able to detect the end of the encoded value by itself.
+         */
+        throw new NotImplemented(`binary_decode() is not implemented for ${this}`)
+    }
+
 
     /***  UI  ***/
 
@@ -195,6 +214,7 @@ export class Schema {
         return e(this.constructor.Widget, {...props, schema: this})
     }
 }
+
 
 Schema.Widget = class extends Widget {
     /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
@@ -310,6 +330,7 @@ export class BOOLEAN extends Primitive {
     static stype = "boolean"
     static defaultProps = {initial: false}
 }
+
 export class NUMBER extends Primitive {
     /* Floating-point number */
     static stype = "number"
@@ -317,6 +338,8 @@ export class NUMBER extends Primitive {
         initial: 0,
         min:     undefined,         // minimum value allowed (>=)
         max:     undefined,         // maximum value allowed (<=)
+        signed:  true,              // if true, the number can be negative
+        width:   8,                 // number of bytes used to store the number in DB indexes
     }
     check(value) {
         super.check(value)
@@ -325,11 +348,15 @@ export class NUMBER extends Primitive {
         if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
     }
 }
+
 export class INTEGER extends NUMBER {
     /* Same as NUMBER, but with additional constraints. */
     check(value) {
         super.check(value)
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
+    }
+    binary_encode(value, last = false) {
+        return new Uint8Array([value])
     }
 }
 
