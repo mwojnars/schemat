@@ -352,8 +352,8 @@ export class INTEGER extends NUMBER {
     /* An integer value. Like a NUMBER, but with additional constraints and different binary encoding. */
 
     static defaultProps = {
-        signed:  false,             // if true, values can be negative
-        length:  7,                 // number of bytes to be used to store SIGNED values in DB indexes; unsigned values use adaptive encoding
+        signed:  false,         // if true, values can be negative
+        length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 7 (for signed int)
     }
 
     check(value) {
@@ -365,15 +365,26 @@ export class INTEGER extends NUMBER {
     }
 
     binary_encode(integer, last = false) {
-        const {signed} = this.props
-        if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
-        return this._encode_uint(integer)
+        let {signed, length} = this.props
+        if (!signed) return this._encode_uint(integer, length)
+        // if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
+
+        // for signed integers, shift the value range upwards and encode as unsigned
+        length = length || 7
+        integer += Math.pow(2, 8*length - 1)            // TODO: memorize all Math.pow(2,k) here and below
+        assert(integer >= 0)
+        return this._encode_uint(integer, length)
     }
 
     binary_decode(input, last = false) {
-        const {signed} = this.props
-        if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
-        return this._decode_uint(input)
+        let {signed, length} = this.props
+        if (!signed) return this._decode_uint(input, length)
+        // if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
+
+        // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
+        length = length || 7
+        const shift = Math.pow(2, 8*length - 1)
+        return this._decode_uint(input, length) - shift
     }
 
     _encode_uint(num, length = 0) {
@@ -408,7 +419,7 @@ export class INTEGER extends NUMBER {
 
         let num = 0
         for (let i = 0; i < length; i++)
-            num += buffer[offset + i] * Math.pow(256, (length - i - 1))
+            num += buffer[offset + i] * Math.pow(2, 8 * (length - i - 1))
             // num = (num << 8) | buffer[i]
 
         input.move(length + offset)
