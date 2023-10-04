@@ -351,9 +351,11 @@ export class NUMBER extends Primitive {
 export class INTEGER extends NUMBER {
     /* An integer value. Like a NUMBER, but with additional constraints and different binary encoding. */
 
+    DEFAULT_LENGTH_SIGNED = 6   // default length of the binary representation in bytes, for signed integers
+
     static defaultProps = {
         signed:  false,         // if true, values can be negative
-        length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 7 (for signed int)
+        length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
 
     check(value) {
@@ -370,7 +372,7 @@ export class INTEGER extends NUMBER {
         // if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
 
         // for signed integers, shift the value range upwards and encode as unsigned
-        length = length || 7
+        length = length || this.constructor.DEFAULT_LENGTH_SIGNED
         integer += Math.pow(2, 8*length - 1)            // TODO: memorize all Math.pow(2,k) here and below
         assert(integer >= 0)
         return this._encode_uint(integer, length)
@@ -382,7 +384,7 @@ export class INTEGER extends NUMBER {
         // if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
 
         // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
-        length = length || 7
+        length = length || this.constructor.DEFAULT_LENGTH_SIGNED
         const shift = Math.pow(2, 8*length - 1)
         return this._decode_uint(input, length) - shift
     }

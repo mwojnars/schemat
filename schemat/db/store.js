@@ -134,7 +134,9 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
     encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
 
-    generate_value(item) {}
+    generate_value(item) {
+        /* Override this method to generate a `value` part of a record to be stored in the index. */
+    }
 
     decode_object(key, value) {
         /* Decode a binary record into an object. */
