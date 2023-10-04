@@ -351,7 +351,7 @@ export class NUMBER extends Primitive {
 export class INTEGER extends NUMBER {
     /* An integer value. Like a NUMBER, but with additional constraints and different binary encoding. */
 
-    DEFAULT_LENGTH_SIGNED = 6   // default length of the binary representation in bytes, for signed integers
+    static DEFAULT_LENGTH_SIGNED = 6    // default length of the binary representation in bytes, for signed integers
 
     static defaultProps = {
         signed:  false,         // if true, values can be negative
