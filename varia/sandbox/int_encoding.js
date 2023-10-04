@@ -37,40 +37,71 @@ function byteLengthOfSignedInteger(n) {
     }
 }
 
-function encode(integer, signed = true) {
-        /* Magnitude of the value is detected automatically and the value is encoded on a minimum required no. of bytes,
-           between 1 and 8. The detected byte length is written to the output in the first byte.
-         */
-        const length = (signed ? byteLengthOfSignedInteger : byteLengthOfUnsignedInteger) (integer)
-        const buffer = new Uint8Array(length + 1)       // +1 for the length byte
-        buffer[0] = length
+// function encode(integer, signed = true) {
+//     /* Magnitude of the value is detected automatically and the value is encoded on a minimum required no. of bytes,
+//        between 1 and 8. The detected byte length is written to the output in the first byte.
+//      */
+//     const length = (signed ? byteLengthOfSignedInteger : byteLengthOfUnsignedInteger) (integer)
+//     const buffer = new Uint8Array(length + 1)       // +1 for the length byte
+//     buffer[0] = length
+//
+//     // shift the value range to make it unsigned
+//     let num = signed ? integer + Math.pow(2, 8*length - 1) : integer
+//
+//     for (let i = length; i > 0; i--) {
+//         buffer[i] = num & 0xFF
+//         num = Math.floor(num / 256)
+//     }
+//     return buffer
+// }
+//
+// function decode(buffer, signed = true) {
+//     const length = buffer[0]
+//     let num = 0
+//
+//     for (let i = 1; i <= length; i++)
+//         num += buffer[i] * Math.pow(256, (length - i))
+//
+//     if (signed)
+//         num -= Math.pow(2, 8*length - 1)
+//
+//     return num
+// }
 
-        // shift the value range to make it unsigned
-        let num = signed ? integer + Math.pow(2, 8*length - 1) : integer
+function encode(num, length = 0) {
+    const adaptive = !length
+    const offset = adaptive ? 1 : 0
+    if (adaptive) length = byteLengthOfUnsignedInteger(num)
 
-        for (let i = length; i > 0; i--) {
-            buffer[i] = num & 0xFF
-            num = Math.floor(num / 256)
-        }
-        return buffer
+    const buffer = new Uint8Array(length + offset)          // +1 for the length byte in adaptive mode
+    if (adaptive) buffer[0] = length
+
+    for (let i = offset + length - 1; i >= offset; i--) {
+        buffer[i] = num & 0xFF
+        num = Math.floor(num / 256)         // bitwise ops (num >>= 8) are incorrect for higher bytes
+        // buffer[i] = num % 256
+        // num >>= 8
     }
+    return buffer
+}
 
-function decode(buffer, signed = true) {
-        const length = buffer[0]
-        let num = 0
+function decode(buffer, length = 0) {
+    const adaptive = !length
+    const offset = adaptive ? 1 : 0
 
-        for (let i = 1; i <= length; i++)
-            num += buffer[i] * Math.pow(256, (length - i))
+    if (adaptive) length = buffer[0]
 
-        if (signed)
-            num -= Math.pow(2, 8*length - 1)
+    let num = 0
+    for (let i = 0; i < length; i++)
+        num += buffer[offset + i] * Math.pow(256, (length - i - 1))
+        // num = (num << 8) | buffer[i]
 
-        return num
-    }
+    return num
+}
 
-function test(n, signed = true) {
-    let m = decode(encode(n, signed), signed)
-    console.log(m === n, m, encode(n, signed))
+function test(n, arg = 0) {
+    let m = decode(encode(n, arg), arg)
+    console.log(m === n, m, encode(n, arg))
 }
 
 function upper_bound(start = 0, signed = true) {

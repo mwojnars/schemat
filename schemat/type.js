@@ -353,7 +353,7 @@ export class INTEGER extends NUMBER {
 
     static defaultProps = {
         signed:  false,             // if true, values can be negative
-        width:   7,                 // number of bytes to be used to store SIGNED values in DB indexes; unsigned values use adaptive encoding
+        length:  7,                 // number of bytes to be used to store SIGNED values in DB indexes; unsigned values use adaptive encoding
     }
 
     check(value) {
@@ -367,25 +367,29 @@ export class INTEGER extends NUMBER {
     binary_encode(integer, last = false) {
         const {signed} = this.props
         if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
-        return this._encode_adaptive_uint(integer)
+        return this._encode_uint(integer)
     }
 
     binary_decode(input, last = false) {
         const {signed} = this.props
         if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
-        return this._decode_adaptive_uint(input)
+        return this._decode_uint(input)
     }
 
-    _encode_adaptive_uint(num) {
-        /* Adaptive encoding of unsigned integer. Magnitude of the value is detected automatically and the value 
-           is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER).
-           The detected byte length is written to the output in the first byte.
+    _encode_uint(num, length = 0) {
+        /* Binary encoding of an unsigned integer in a field of `length` bytes.
+           If length is missing or 0, magnitude of the value is detected automatically and the value
+           is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
+           - in such case the detected byte length is written to the output in the first byte.
          */
-        const length = byteLengthOfUnsignedInteger(num)
-        const buffer = new Uint8Array(length + 1)       // +1 for the length byte
-        buffer[0] = length
+        const adaptive = !length
+        const offset = adaptive ? 1 : 0
+        if (adaptive) length = byteLengthOfUnsignedInteger(num)
 
-        for (let i = length; i > 0; i--) {
+        const buffer = new Uint8Array(length + offset)          // +1 for the length byte in adaptive mode
+        if (adaptive) buffer[0] = length
+
+        for (let i = offset + length - 1; i >= offset; i--) {
             buffer[i] = num & 0xFF
             num = Math.floor(num / 256)         // bitwise ops (num >>= 8) are incorrect for higher bytes
             // buffer[i] = num % 256
@@ -394,17 +398,20 @@ export class INTEGER extends NUMBER {
         return buffer
     }
 
-    _decode_adaptive_uint(input) {
-        /* `input` must be a BinaryInput */
+    _decode_uint(input, length = 0) {
+        /* `input` must be a BinaryInput. */
+        const adaptive = !length
+        const offset = adaptive ? 1 : 0
         const buffer = input.current()
-        const length = buffer[0]
+
+        if (adaptive) length = buffer[0]
 
         let num = 0
-        for (let i = 1; i <= length; i++)
-            num += buffer[i] * Math.pow(256, (length - i))
+        for (let i = 0; i < length; i++)
+            num += buffer[offset + i] * Math.pow(256, (length - i - 1))
             // num = (num << 8) | buffer[i]
 
-        input.move(length + 1)
+        input.move(length + offset)
         return num
     }
 }
