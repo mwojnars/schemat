@@ -62,6 +62,29 @@ export class BinaryInput {
     }
 }
 
+/**********************************************************************************************************************/
+
+export function compareUint8Arrays(arr1, arr2) {
+    /* Compare two Uint8Arrays byte by byte. Return -1 if arr1 < arr2, 1 if arr1 > arr2, 0 if arr1 === arr2. */
+
+    const minLength = Math.min(arr1.length, arr2.length)
+
+    for (let i = 0; i < minLength; i++)
+        if (arr1[i] < arr2[i])
+            return -1
+        else if (arr1[i] > arr2[i])
+            return 1
+
+    // At this point, all bytes up to minLength are equal.
+    // If one of the arrays is longer, it's considered "greater".
+    if (arr1.length < arr2.length)
+        return -1
+    else if (arr1.length > arr2.length)
+        return 1
+
+    return 0        // Both arrays are fully equal
+}
+
 export function byteLengthOfUnsignedInteger(n) {
     /* This implementation is 2-5x faster than when using Math.log(). */
     if (n < 0) throw new Error(`expected unsigned integer instead of: ${n}`)
