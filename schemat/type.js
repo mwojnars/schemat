@@ -366,18 +366,19 @@ export class INTEGER extends NUMBER {
 
     binary_encode(integer, last = false) {
         const {signed} = this.props
-        if (signed) throw new NotImplemented(`signed integers are not implemented yet`)
-        return this.binary_encode_adaptive(integer)
-    }
-    binary_decode(input, last = false) {
-        const {signed} = this.props
-        if (signed) throw new NotImplemented(`signed integers are not implemented yet`)
-        return this.binary_decode_adaptive(input)
+        if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
+        return this._encode_adaptive_uint(integer)
     }
 
-    binary_encode_adaptive(num) {
-        /* Adaptive encoding. Magnitude of the value is detected automatically and the value is encoded on the minimum
-           required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER).
+    binary_decode(input, last = false) {
+        const {signed} = this.props
+        if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
+        return this._decode_adaptive_uint(input)
+    }
+
+    _encode_adaptive_uint(num) {
+        /* Adaptive encoding of unsigned integer. Magnitude of the value is detected automatically and the value 
+           is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER).
            The detected byte length is written to the output in the first byte.
          */
         const length = byteLengthOfUnsignedInteger(num)
@@ -393,7 +394,7 @@ export class INTEGER extends NUMBER {
         return buffer
     }
 
-    binary_decode_adaptive(input) {
+    _decode_adaptive_uint(input) {
         /* `input` must be a BinaryInput */
         const buffer = input.current()
         const length = buffer[0]

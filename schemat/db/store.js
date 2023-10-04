@@ -67,9 +67,9 @@ class Store {
 //     }
 // }
 
-export class IndexDescriptor {
+export class IndexDescriptor {  // ShapeOfSequence, Shape
     /* Specification of an index over a sequence of objects translated to records, each record consisting
-       of a binary `key` and a text `value`. The index is sorted by key and allows to retrieve the value
+       of a binary `key` and a json `value`. The index is sorted by key and allows to retrieve the value
        for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
        and/or cloning the object when a repeated field is encountered.
        The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
