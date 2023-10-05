@@ -59,6 +59,8 @@ export class BinaryInput {
     move(length) {
         /* Advance the current position by `length` bytes. */
         this.pos += length
+        if (this.pos > this.buffer.length)
+            throw new Error(`BinaryInput: trying to read position ${this.pos} in a buffer of length ${this.buffer.length}`)
     }
 }
 

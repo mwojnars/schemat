@@ -2,7 +2,9 @@
     Distributed no-sql data store for data records (items) and indexes.
 */
 
-import {BinaryOutput} from "../util/binary.js"
+import {assert} from "../utils.js";
+import {JSONx} from "../serialize.js";
+import {BinaryInput, BinaryOutput} from "../util/binary.js"
 
 
 // Section, Block, Partition
@@ -76,7 +78,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
        decoded object may lack some fields that were not included in the index.
      */
 
-    fields                  // Map of field descriptors to be included in the sort key, as {name: schema} pairs
+    fields                  // {name: schema}, a Map of object fields and their schemas to be included in the sort key
     category                // (?) category of items allowed in this index
 
     *encode_item(item) {
@@ -132,10 +134,11 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     //     return {key, value}         // a record {key: Uint8Array, value: json string}
     // }
 
-    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
+    encode_value(value)  { return value !== undefined ? JSONx.stringify(value) : undefined }
 
     generate_value(item) {
-        /* Override this method to generate a `value` part of a record to be stored in the index. */
+        /* Override this method to generate a `value` object to be stringified through JSONx and stored
+           as a part of a record in the index. */
     }
 
     decode_object(key, value) {
@@ -145,17 +148,30 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     }
 
     decode_key(record) {
+        const input = new BinaryInput(record)
         let entry = {}
-        for (const field of this.fields) {
-            const name = field.name
-            entry[name] = field.binary_decode(record)
+
+        for (let i = 0; i < this.fields.length; i++) {
+            const [name, schema] = this.fields[i]
+            const last = (i === this.fields.length - 1)
+            entry[name] = schema.binary_decode(input, last)
         }
+        assert(input.pos === record.length)
+
         return entry
-        // return this.key_descriptor.binary_decode(record, true)
     }
 
-    decode_value(value)         { return value !== undefined ? JSON.parse(value) : undefined }
+    decode_value(value)         { return value !== undefined ? JSONx.parse(value) : undefined }
     restore_object(key, value)  { return {...key, ...value} }
 
 }
 
+export class DataDescriptor extends IndexDescriptor {
+    /* Specification of a data sequence. */
+
+    generate_value(item) {
+        /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
+        assert(item.isLoaded)
+        return item.data
+    }
+}
