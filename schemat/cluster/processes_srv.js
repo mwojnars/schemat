@@ -109,7 +109,7 @@ export class AdminProcess extends BackendProcess {
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
         let data = await source.select(id)
-        await target.save([db], null, newid, data)
+        await target.save(null, newid, data)
 
         if (!sameID) {
             // // update children of a category item: change their CID to `new_iid`

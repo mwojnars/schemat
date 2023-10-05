@@ -100,13 +100,13 @@ export class Ring extends Item {
         return this.block.update(id, ...edits)
     }
 
-    async save([db], block, id, data) {
+    async save(block, id, data) {
         /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
            This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
-        return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
+        return this.writable(id) ? block.save(id, data) : this.db.forward_save([this], id, data)
     }
 
     async delete(id) {
@@ -119,7 +119,7 @@ export class Ring extends Item {
             if (await this.block._select(id))
                 this.throwReadOnly({id})
             else
-                return db.forward_delete([this], id)
+                return this.db.forward_delete([this], id)
 
         return this.block.delete(id)
     }
@@ -282,7 +282,7 @@ export class ServerDB extends Database {
     forward_save([ring], id, data) {
         /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
         let next = this._next(ring)
-        if (next) return next.save([this], null, id, data)
+        if (next) return next.save(null, id, data)
         if (ring.readonly) throw new ServerDB.RingReadOnly({id})
         assert(!ring.validIID(id))
         throw new ServerDB.InvalidID({id})
