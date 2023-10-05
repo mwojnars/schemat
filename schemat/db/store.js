@@ -127,19 +127,20 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         if (!this.category.includes(item)) return []
     }
 
-    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
-
     generate_value(item) {
         /* Override this method to generate a `value` object that will be stringified through JSON and stored
            as a part of a record in the index. */
     }
+
+    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
+    decode_value(value)  { return value !== undefined ? JSON.parse(value) : undefined }
 
     decode_object(key, value) {
         /* Decode a binary record into an object. If the same field occurs in both key and value, the value's field
             overwrites the key's field, as the former typically contains more information than the latter
            (e.g. the full string instead of just the prefix).
          */
-        return this.restore_object(this.decode_key(key), this.decode_value(value))
+        return {...this.decode_key(key), ...this.decode_value(value)}
     }
 
     decode_key(record) {
@@ -155,10 +156,6 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
         return entry
     }
-
-    decode_value(value)         { return value !== undefined ? JSON.parse(value) : undefined }
-    restore_object(key, value)  { return {...key, ...value} }
-
 }
 
 export class DataDescriptor extends IndexDescriptor {
