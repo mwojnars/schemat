@@ -140,14 +140,14 @@ export class Block extends Item {
 
     async select([db, ring], id) {
         let data = await this._select(id)
-        return data !== undefined ? data : db.forward_select([ring], id)
+        return data !== undefined ? data : db.forward_select([this.ring], id)
     }
 
     async insert([db, ring], id, data) {
-        if (id !== undefined) await this.assertUniqueID(id)             // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.autoincrement + 1, ring.start_iid)      // use the next available ID
+        if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
+        else id = Math.max(this.autoincrement + 1, this.ring.start_iid)     // use the next available ID
 
-        ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+        this.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
         await this.save(id, data)
@@ -161,12 +161,12 @@ export class Block extends Item {
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let data = await this._select(id)
-        if (data === undefined) return db.forward_update([ring], id, ...edits)
+        if (data === undefined) return db.forward_update([this.ring], id, ...edits)
 
         for (const edit of edits)
             data = edit.process(data)
 
-        return ring.writable() ? this.save(id, data) : db.forward_save([ring], id, data)
+        return this.ring.writable() ? this.save(id, data) : db.forward_save([this.ring], id, data)
     }
 
     async delete([db, ring], id) {
@@ -175,7 +175,7 @@ export class Block extends Item {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        return done ? done : db.forward_delete([ring], id)
+        return done ? done : db.forward_delete([this.ring], id)
     }
 
     /***  override in subclasses  ***/
@@ -235,7 +235,7 @@ export class YamlBlock extends FileBlock {
     /* Items stored in a YAML file. For use during development only. */
 
     async open(ring) {
-        await super.open()
+        await super.open(ring)
         this._mod_YAML = (await import('yaml')).default
 
         let file = this._mod_fs.readFileSync(this.filename, 'utf8')
@@ -247,7 +247,7 @@ export class YamlBlock extends FileBlock {
         for (let record of records) {
             let id = T.pop(record, '__id')
 
-            ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             this.autoincrement = Math.max(this.autoincrement, id)
