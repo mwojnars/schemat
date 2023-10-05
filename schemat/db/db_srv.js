@@ -106,7 +106,7 @@ export class Ring extends Item {
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
-        return this.writable(id) ? block.save(id, data) : this.db.forward_save([this], id, data)
+        return this.writable(id) ? block.save(id, data) : this.db.forward_save(this, id, data)
     }
 
     async delete(id) {
@@ -119,7 +119,7 @@ export class Ring extends Item {
             if (await this.block._select(id))
                 this.throwReadOnly({id})
             else
-                return this.db.forward_delete([this], id)
+                return this.db.forward_delete(this, id)
 
         return this.block.delete(id)
     }
@@ -141,10 +141,10 @@ export class Ring extends Item {
 
     /***  Forwards  ***/
 
-    forward_select(id)              { return this.db.forward_select([this], id) }
-    forward_update(id, ...edits)    { return this.db.forward_update([this], id, ...edits) }
-    forward_save(id, data)          { return this.db.forward_save([this], id, data) }
-    forward_delete(id)              { return this.db.forward_delete([this], id) }
+    forward_select(id)              { return this.db.forward_select(this, id) }
+    forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
+    forward_save(id, data)          { return this.db.forward_save(this, id, data) }
+    forward_delete(id)              { return this.db.forward_delete(this, id) }
 }
 
 
@@ -212,7 +212,7 @@ export class ServerDB extends Database {
         /* Find a ring that directly preceeds `ring` in this.rings. Return the top ring if `ring` if undefined,
            or undefined if `ring` has no predecessor, or throw RingUnknown if `ring` cannot be found.
          */
-        if (ring === undefined) return this.top
+        if (!ring) return this.top
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new ServerDB.RingUnknown()
         if (pos > 0) return this.rings[pos-1]
@@ -222,7 +222,7 @@ export class ServerDB extends Database {
         /* Find a ring that directly succeeds `ring` in this.rings. Return the bottom ring if `ring` is undefined,
            or undefined if `ring` has no successor, or throw RingUnknown if `ring` cannot be found.
          */
-        if (ring === undefined) return this.bottom
+        if (!ring) return this.bottom
         let pos = this.rings.indexOf(ring)
         if (pos < 0) throw new ServerDB.RingUnknown()
         if (pos < this.rings.length-1) return this.rings[pos+1]
@@ -231,8 +231,8 @@ export class ServerDB extends Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)                { return this.forward_select([], id) }      // returns a json string (`data`) or undefined
-    async update(id, ...edits)      { return this.forward_update([], id, ...edits) }
+    async select(id)                { return this.forward_select(null, id) }    // returns a json string (`data`) or undefined
+    async update(id, ...edits)      { return this.forward_update(null, id, ...edits) }
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
@@ -252,7 +252,7 @@ export class ServerDB extends Database {
 
     async delete(item_or_id) {
         let id = T.isNumber(item_or_id) ? item_or_id : item_or_id.id
-        return this.forward_delete([], id)
+        return this.forward_delete(null, id)
     }
 
     async *scan() {
@@ -264,13 +264,13 @@ export class ServerDB extends Database {
 
     /***  CRUD forwarding to other rings  ***/
 
-    forward_select([ring], id) {
+    forward_select(ring, id) {
         let prev = this._prev(ring)
         if (prev) return prev.select(id)
         throw new ItemNotFound({id})
     }
 
-    forward_update([ring], id, ...edits) {
+    forward_update(ring, id, ...edits) {
         /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
            if the current `ring` doesn't contain the requested `id`. */
         assert(edits.length, 'missing edits')
@@ -279,7 +279,7 @@ export class ServerDB extends Database {
         throw new ItemNotFound({id})
     }
 
-    forward_save([ring], id, data) {
+    forward_save(ring, id, data) {
         /* Forward a save(id, data) operation to a higher ring; called when the current ring is not allowed to save the update. */
         let next = this._next(ring)
         if (next) return next.save(null, id, data)
@@ -288,7 +288,7 @@ export class ServerDB extends Database {
         throw new ServerDB.InvalidID({id})
     }
 
-    forward_delete([ring], id) {
+    forward_delete(ring, id) {
         let prev = this._prev(ring)
         if (prev) return prev.delete(id)
         throw new ItemNotFound({id})
