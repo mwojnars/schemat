@@ -92,12 +92,12 @@ export class Ring extends Item {
         item.id = await this.block.insert(item.id, item.dumpData())
     }
 
-    async update([db], id, ...edits) {
+    async update(id, ...edits) {
         /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
            writing this particular `id`. The `id` is searched for in the current ring and below.
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        return this.block.update([db], id, ...edits)
+        return this.block.update(id, ...edits)
     }
 
     async save([db], block, id, data) {
@@ -109,7 +109,7 @@ export class Ring extends Item {
         return this.writable(id) ? block.save(id, data) : db.forward_save([this], id, data)
     }
 
-    async delete([db], id) {
+    async delete(id) {
         /* Find and delete the top-most occurrence of the item's ID in this Ring or a lower Ring in the stack (through .prevDB).
            Return true on success, or false if the `id` was not found (no modifications done then).
          */
@@ -121,7 +121,7 @@ export class Ring extends Item {
             else
                 return db.forward_delete([this], id)
 
-        return this.block.delete([db], id)
+        return this.block.delete(id)
     }
 
 
@@ -275,7 +275,7 @@ export class ServerDB extends Database {
            if the current `ring` doesn't contain the requested `id`. */
         assert(edits.length, 'missing edits')
         let prev = this._prev(ring)
-        if (prev) return prev.update([this], id, ...edits)
+        if (prev) return prev.update(id, ...edits)
         throw new ItemNotFound({id})
     }
 
@@ -290,7 +290,7 @@ export class ServerDB extends Database {
 
     forward_delete([ring], id) {
         let prev = this._prev(ring)
-        if (prev) return prev.delete([this], id)
+        if (prev) return prev.delete(id)
         throw new ItemNotFound({id})
     }
 }

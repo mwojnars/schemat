@@ -131,7 +131,7 @@ export class AdminProcess extends BackendProcess {
         }
 
         // remove the old item from DB
-        try { await source.delete([db], id) }
+        try { await source.delete(id) }
         catch (ex) {
             if (ex instanceof Ring.ReadOnly) print('WARNING: could not delete the old item as the ring is read-only')
         }
@@ -164,7 +164,7 @@ export class AdminProcess extends BackendProcess {
                 await ring.insert(item)
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
-                await ring.delete([db], id)
+                await ring.delete(id)
                 await ring.block._flush()
             }
         }

@@ -155,7 +155,7 @@ export class Block extends Item {
         return id
     }
 
-    async update([db], id, ...edits) {
+    async update(id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -169,7 +169,7 @@ export class Block extends Item {
         return this.ring.writable() ? this.save(id, data) : this.ring.forward_save(id, data)
     }
 
-    async delete([db], id) {
+    async delete(id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
