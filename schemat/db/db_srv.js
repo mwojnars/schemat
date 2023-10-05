@@ -17,7 +17,7 @@ export class Ring {
 
     block                   // physical storage of this ring's primary data (the items)
 
-    name                    // human-readable name of this ring for findRing()
+    name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
@@ -146,7 +146,7 @@ export class Ring {
  */
 
 export class ServerDB extends Database {
-    /* A number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
+    /* Container for a number of Rings stacked on top of each other. Each select/insert/delete is executed on the outermost
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */
@@ -168,13 +168,25 @@ export class ServerDB extends Database {
     get bottom()    { return this.rings[0] }
     get reversed()  { return this.rings.slice().reverse() }
 
+    async init_as_cluster_database(rings) {
+        /* Set rings for self while updating the global registry, so that subsequent ring objects (items)
+           can be loaded from lower rings.
+         */
+        for (const spec of rings) {
+            let ring = new Ring(spec)
+            await ring.open()
+            this.append(ring)
+            await registry.boot()       // reload `root` and `site` to have the most relevant objects after a next ring is added
+        }
+    }
+
     append(ring) {
         /* The ring must be already open. */
         // if (this.top) this.top.stack(ring)
         this.rings.push(ring)
     }
 
-    async findRing({item, name}) {
+    async find_ring({item, name}) {
         /* Return the top-most ring that contains a given item's ID (`item`), or has a given ring name (`name`).
            Return undefined if not found. Can be called to check if an item ID or a ring name exists.
          */

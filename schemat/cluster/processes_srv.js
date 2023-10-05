@@ -95,12 +95,12 @@ export class AdminProcess extends BackendProcess {
         if (!sameID && await db.select(newid)) throw new Error(`target ID already exists: [${newid}]`)
 
         // identify the source ring
-        let source = await db.findRing({item: id})
+        let source = await db.find_ring({item: id})
         if (source === undefined) throw new Error(`item not found: [${id}]`)
         if (source.readonly) throw new Error(`the ring '${source.name}' containing the [${id}] record is read-only, could not delete the old record after rename`)
 
         // identify the target ring
-        let target = ringName ? await db.findRing({name: ringName}) : bottom ? db.bottom : source
+        let target = ringName ? await db.find_ring({name: ringName}) : bottom ? db.bottom : source
 
         if (sameID && source === target)
             throw new Error(`trying to move a record [${id}] to the same ring (${source.name}) without change of ID`)

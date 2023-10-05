@@ -37,13 +37,7 @@ export class Cluster extends Item {
 
         let db = this.db = new ServerDB()
         let rings = this.prop('rings')
-
-        for (const spec of rings) {
-            let ring = new Ring(spec)
-            await ring.open()
-            db.append(ring)
-            await this.registry.boot()   // reload `root` and `site` to have the most relevant objects after a next ring is added
-        }
+        return db.init_as_cluster_database(rings)
 
         // // load the cluster's full and ultimate data from the bootstrap DB;
         // // this may override the db property with the ultimate DB object
