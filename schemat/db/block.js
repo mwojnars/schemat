@@ -123,16 +123,9 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async save(id, data) {
-        /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
-        await this._save(id, data)
-        this.dirty = true
-        this.flush()
-    }
-
-    async notify(type, id, data = null) {
-        /* Notify the ring that an item has been modified. */
-        // return this.ring.notify(type, id, data)
+    async notify(event, id, data = null) {
+        /* Notify this block's listeners (derived Sequences) that a record has been modified. */
+        return this.ring.notify(event, id, data)
     }
 
 
@@ -151,7 +144,6 @@ export class Block extends Item {
 
         this.autoincrement = Math.max(id, this.autoincrement)
         await this.save(id, data)
-        await this.notify('insert', id, data)
         return id
     }
 
@@ -175,7 +167,16 @@ export class Block extends Item {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
+        await this.notify('del', id)
         return done ? done : this.ring.forward_delete(id)
+    }
+
+    async save(id, data) {
+        /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
+        await this._save(id, data)
+        this.dirty = true
+        this.flush()
+        await this.notify('put', id, data)
     }
 
     /***  override in subclasses  ***/

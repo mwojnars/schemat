@@ -82,6 +82,8 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     fields                  // {name: schema}, a Map of object fields and their schemas to be included in the sort key
     category                // (?) category of items allowed in this index
 
+    // {id, data}
+
     *encode_item(item) {
         /* Encode an item as a stream of {key, value} record(s). The result stream can be of any size, including:
            - 0, if the item is not allowed in this index or doesn't contain the required fields,

@@ -23,6 +23,7 @@ export class Ring extends Item {
 
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
     stop_iid                // (optional) maximum IID of all items
+    indexes = new Map()     // {name: Index} of all indexes in this ring
 
     constructor({file, item, name, ...opts}) {
         super(globalThis.registry)
@@ -145,6 +146,14 @@ export class Ring extends Item {
     forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
     forward_save(id, data)          { return this.db.forward_save(this, id, data) }
     forward_delete(id)              { return this.db.forward_delete(this, id) }
+
+    /***  Events  ***/
+
+    notify(event, id, data = null) {
+        for (const index of this.indexes.values())
+            index.receive(event, id, data)
+    }
+
 }
 
 
