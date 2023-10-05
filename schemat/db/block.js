@@ -138,12 +138,12 @@ export class Block extends Item {
 
     /***  CRUD operations  ***/
 
-    async select([db, ring], id) {
+    async select([db], id) {
         let data = await this._select(id)
         return data !== undefined ? data : db.forward_select([this.ring], id)
     }
 
-    async insert([db, ring], id, data) {
+    async insert([db], id, data) {
         if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
         else id = Math.max(this.autoincrement + 1, this.ring.start_iid)     // use the next available ID
 
@@ -155,7 +155,7 @@ export class Block extends Item {
         return id
     }
 
-    async update([db, ring], id, ...edits) {
+    async update([db], id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
@@ -169,7 +169,7 @@ export class Block extends Item {
         return this.ring.writable() ? this.save(id, data) : db.forward_save([this.ring], id, data)
     }
 
-    async delete([db, ring], id) {
+    async delete([db], id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
