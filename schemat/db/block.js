@@ -140,7 +140,7 @@ export class Block extends Item {
 
     async select([db], id) {
         let data = await this._select(id)
-        return data !== undefined ? data : db.forward_select([this.ring], id)
+        return data !== undefined ? data : this.ring.forward_select(id)
     }
 
     async insert([db], id, data) {
@@ -161,12 +161,12 @@ export class Block extends Item {
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let data = await this._select(id)
-        if (data === undefined) return db.forward_update([this.ring], id, ...edits)
+        if (data === undefined) return this.ring.forward_update(id, ...edits)
 
         for (const edit of edits)
             data = edit.process(data)
 
-        return this.ring.writable() ? this.save(id, data) : db.forward_save([this.ring], id, data)
+        return this.ring.writable() ? this.save(id, data) : this.ring.forward_save(id, data)
     }
 
     async delete([db], id) {
@@ -175,7 +175,7 @@ export class Block extends Item {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        return done ? done : db.forward_delete([this.ring], id)
+        return done ? done : this.ring.forward_delete(id)
     }
 
     /***  override in subclasses  ***/

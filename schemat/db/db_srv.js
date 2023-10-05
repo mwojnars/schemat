@@ -15,6 +15,7 @@ import {EditData} from "./edits.js";
 
 export class Ring extends Item {
 
+    db                      // the Database this ring belongs to
     block                   // physical storage of this ring's primary data (the items)
 
     name                    // human-readable name of this ring for find_ring()
@@ -36,7 +37,8 @@ export class Ring extends Item {
         this.stop_iid = stop_iid
     }
 
-    async open() {
+    async open(db) {
+        this.db = db
         let block
         if (this.file) block = new YamlBlock(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
@@ -138,6 +140,12 @@ export class Ring extends Item {
         yield* this.block._scan_index(name, {start, stop, limit, reverse, batch_size})
     }
 
+    /***  Forwards  ***/
+
+    forward_select(id)              { return this.db.forward_select([this], id) }
+    forward_update(id, ...edits)    { return this.db.forward_update([this], id, ...edits) }
+    forward_save(id, data)          { return this.db.forward_save([this], id, data) }
+    forward_delete(id)              { return this.db.forward_delete([this], id) }
 }
 
 
@@ -176,7 +184,7 @@ export class ServerDB extends Database {
          */
         for (const spec of rings) {
             let ring = new Ring(spec)
-            await ring.open()
+            await ring.open(this)
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
