@@ -80,17 +80,16 @@ export class Ring extends Item {
         return this.block._select(id)
     }
 
-    async select([db], id) {
+    async select(id) {
         /* Find the top-most occurrence of an item in the database, `db`, starting at this ring.
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
         // todo: find the right block (in Sequence)
-        return this.block.select([db], id)
+        return this.block.select(id)
     }
 
-    async insert([db], item) {
-        /* `db` is unused (for now). */
-        item.id = await this.block.insert([db], item.id, item.dumpData())
+    async insert(item) {
+        item.id = await this.block.insert(item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {
@@ -246,7 +245,7 @@ export class ServerDB extends Database {
          */
         let id = item.id
         for (const ring of this.reversed)
-            if (ring.writable(id)) return ring.insert([this], item)
+            if (ring.writable(id)) return ring.insert(item)
 
         throw new ServerDB.NotInsertable({id})
     }
@@ -267,7 +266,7 @@ export class ServerDB extends Database {
 
     forward_select([ring], id) {
         let prev = this._prev(ring)
-        if (prev) return prev.select([this], id)
+        if (prev) return prev.select(id)
         throw new ItemNotFound({id})
     }
 

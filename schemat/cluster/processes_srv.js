@@ -108,7 +108,7 @@ export class AdminProcess extends BackendProcess {
         print(`move: changing item's ID=[${id}] to ID=[${newid}] ...`)
 
         // load the item from its current ID; save a copy under the new ID, this will propagate to a higher ring if `id` can't be stored in `target`
-        let data = await source.select([db], id)
+        let data = await source.select(id)
         await target.save([db], null, newid, data)
 
         if (!sameID) {
@@ -157,11 +157,11 @@ export class AdminProcess extends BackendProcess {
             let ids = records.map(rec => rec.id)
 
             for (const id of ids) {
-                let data = await ring.select([db], id)          // the record might have been modified during this loop - must re-read
+                let data = await ring.select(id)          // the record might have been modified during this loop - must re-read
                 let item = await globalThis.registry.itemFromRecord({id: id, data})
                 print(`reinserting item [${id}]...`)
                 item.id = undefined
-                await ring.insert([db], item)
+                await ring.insert(item)
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
                 await ring.delete([db], id)
