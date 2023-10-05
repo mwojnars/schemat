@@ -5,6 +5,7 @@
 import {assert} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput} from "../util/binary.js"
+import {INTEGER} from "../type.js";
 
 
 // Section, Block, Partition
@@ -71,9 +72,9 @@ class Store {
 
 export class IndexDescriptor {  // ShapeOfSequence, Shape
     /* Specification of an index over a sequence of objects translated to records, each record consisting
-       of a binary `key` and a json `value`. The index is sorted by key and allows to retrieve the value
+       of a binary `key` and a json `value`. The index is sorted by the key and allows to retrieve the value
        for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
-       and/or cloning the object when a repeated field is encountered.
+       and/or cloning the record when a repeated field is encountered.
        The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
        decoded object may lack some fields that were not included in the index.
      */
@@ -145,11 +146,12 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
     decode_key(record) {
         const input = new BinaryInput(record)
+        const length = this.fields.length
         let entry = {}
 
-        for (let i = 0; i < this.fields.length; i++) {
+        for (let i = 0; i < length; i++) {
             const [name, schema] = this.fields[i]
-            const last = (i === this.fields.length - 1)
+            const last = (i === length - 1)
             entry[name] = schema.binary_decode(input, last)
         }
         assert(input.pos === record.length)
@@ -160,6 +162,10 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
 export class DataDescriptor extends IndexDescriptor {
     /* Specification of a data sequence. */
+
+    fields = new Map(Object.entries({
+        id:  new INTEGER(),
+    }))
 
     generate_value(item) {
         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
