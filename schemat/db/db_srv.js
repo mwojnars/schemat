@@ -83,12 +83,12 @@ export class Ring extends Item {
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
         // todo: find the right block (in Sequence)
-        return this.block.select([db, this], id)
+        return this.block.select([db], id)
     }
 
     async insert([db], item) {
         /* `db` is unused (for now). */
-        item.id = await this.block.insert([db, this], item.id, item.dumpData())
+        item.id = await this.block.insert([db], item.id, item.dumpData())
     }
 
     async update([db], id, ...edits) {
@@ -96,7 +96,7 @@ export class Ring extends Item {
            writing this particular `id`. The `id` is searched for in the current ring and below.
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        return this.block.update([db, this], id, ...edits)
+        return this.block.update([db], id, ...edits)
     }
 
     async save([db], block, id, data) {
@@ -120,7 +120,7 @@ export class Ring extends Item {
             else
                 return db.forward_delete([this], id)
 
-        return this.block.delete([db, this], id)
+        return this.block.delete([db], id)
     }
 
 
