@@ -82,8 +82,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     category                // (?) category of items allowed in this index
 
     *encode_item(item) {
-        /* Convert an item to plain objects (entries) and encode each of them as a {key, value} record.
-           The result can be of any size, including:
+        /* Encode an item as a stream of {key, value} record(s). The result stream can be of any size, including:
            - 0, if the item is not allowed in this index or doesn't contain the required fields,
            - 2+, if some of the item's fields to be used in the key contain repeated values
          */
@@ -91,11 +90,14 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
         const value = this.encode_value(this.generate_value(item))
         for (const key of this.encode_key(item))
-            yield {key, value}
+            yield {key, value}                          // a record, {key: Uint8Array, value: json-string}
+            // new Pair(key, value)
+            // new KeyValue(key, value)
     }
 
     *encode_key(item) {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
+        let length = this.fields.size
         let bin_values = []
 
         for (const [name, schema] of this.fields) {
@@ -105,7 +107,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
                 throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
 
             // encode `values` through the field schema
-            const last = (bin_values.length === this.fields.length - 1)
+            const last = (bin_values.length === length - 1)
             const binary = values.map(v => schema.binary_encode(v, last))
             bin_values.push(binary)
         }
@@ -125,25 +127,18 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         if (!this.category.includes(item)) return []
     }
 
-    // encode_object(object) {
-    //     /* Encode an object into a record containing binary `key` and json-ified text `value`. */
-    //     const key = this.encode_key(object)
-    //     const value = this.encode_value(this.generate_value(object))
-    //     // return new Pair(key, value)
-    //     // return new KeyValue(key, value)
-    //     return {key, value}         // a record {key: Uint8Array, value: json string}
-    // }
-
     encode_value(value)  { return value !== undefined ? JSONx.stringify(value) : undefined }
 
     generate_value(item) {
-        /* Override this method to generate a `value` object to be stringified through JSONx and stored
+        /* Override this method to generate a `value` object that will be stringified through JSONx and stored
            as a part of a record in the index. */
     }
 
     decode_object(key, value) {
-        /* Decode a binary record into an object. */
-        // if the same field occurs in both key and value, the value's field overwrite the key's field
+        /* Decode a binary record into an object. If the same field occurs in both key and value, the value's field
+            overwrites the key's field, as the former typically contains more information than the latter
+           (e.g. the full string instead of just the prefix).
+         */
         return this.restore_object(this.decode_key(key), this.decode_value(value))
     }
 
