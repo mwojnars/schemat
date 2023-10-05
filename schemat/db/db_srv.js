@@ -13,7 +13,7 @@ import {EditData} from "./edits.js";
  **
  */
 
-export class Ring {
+export class Ring extends Item {
 
     block                   // physical storage of this ring's primary data (the items)
 
@@ -24,6 +24,7 @@ export class Ring {
     stop_iid                // (optional) maximum IID of all items
 
     constructor({file, item, name, ...opts}) {
+        super(globalThis.registry)
         this.file = file
         this.item = item
         this.opts = opts
@@ -100,6 +101,7 @@ export class Ring {
 
     async save([db], block, id, data) {
         /* 2nd phase of update: save updated item's `data` under the `id`. Forward to a higher ring if needed.
+           This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
@@ -169,14 +171,14 @@ export class ServerDB extends Database {
     get reversed()  { return this.rings.slice().reverse() }
 
     async init_as_cluster_database(rings) {
-        /* Set rings for self while updating the global registry, so that subsequent ring objects (items)
+        /* Set and load rings for self while updating the global registry, so that subsequent ring objects (items)
            can be loaded from lower rings.
          */
         for (const spec of rings) {
             let ring = new Ring(spec)
             await ring.open()
             this.append(ring)
-            await registry.boot()       // reload `root` and `site` to have the most relevant objects after a next ring is added
+            await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
     }
 

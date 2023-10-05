@@ -90,6 +90,7 @@ export class Block extends Item {
 
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
+    ring                    // the ring this block belongs to
     dirty                   // true when the block contains unsaved modifications
 
 
@@ -100,6 +101,7 @@ export class Block extends Item {
 
 
     open(ring) {
+        this.ring = ring
         this.dirty = false
     }
 
@@ -128,6 +130,11 @@ export class Block extends Item {
         this.flush()
     }
 
+    async notify(type, id, data = null) {
+        /* Notify the ring that an item has been modified. */
+        // return this.ring.notify(type, id, data)
+    }
+
 
     /***  CRUD operations  ***/
 
@@ -144,6 +151,7 @@ export class Block extends Item {
 
         this.autoincrement = Math.max(id, this.autoincrement)
         await this.save(id, data)
+        await this.notify('insert', id, data)
         return id
     }
 
