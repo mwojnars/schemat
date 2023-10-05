@@ -127,10 +127,10 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         if (!this.category.includes(item)) return []
     }
 
-    encode_value(value)  { return value !== undefined ? JSONx.stringify(value) : undefined }
+    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
 
     generate_value(item) {
-        /* Override this method to generate a `value` object that will be stringified through JSONx and stored
+        /* Override this method to generate a `value` object that will be stringified through JSON and stored
            as a part of a record in the index. */
     }
 
@@ -156,7 +156,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         return entry
     }
 
-    decode_value(value)         { return value !== undefined ? JSONx.parse(value) : undefined }
+    decode_value(value)         { return value !== undefined ? JSON.parse(value) : undefined }
     restore_object(key, value)  { return {...key, ...value} }
 
 }
@@ -167,6 +167,6 @@ export class DataDescriptor extends IndexDescriptor {
     generate_value(item) {
         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
         assert(item.isLoaded)
-        return item.data
+        return JSONx.encode(item.data)
     }
 }
