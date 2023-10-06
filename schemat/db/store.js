@@ -90,12 +90,44 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
            - 2+, if some of the item's fields to be used in the key contain repeated values
          */
         if (!this.allowed(item)) return
-
         const value = this.encode_value(this.generate_value(item))
         for (const key of this.encode_key(item))
             yield {key, value}                          // a record, {key: Uint8Array, value: json-string}
             // new Pair(key, value)
             // new KeyValue(key, value)
+    }
+
+    *generate_records(item) {
+        /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
+           The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
+         */
+        if (!this.allowed(item)) return
+        const value = this.generate_value(item)
+        for (const key of this.generate_keys(item))
+            yield {key, value}
+            // new PlainRecord(key, value)
+    }
+
+    *generate_keys(item) {
+        /* Generate a stream of keys, each key being an array of field values (not encoded). */
+
+        // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
+        let field_values = []
+
+        for (const name of this.fields.keys()) {
+            const values = item.propsList(name)
+            if (!values.length) return              // no values (missing field), skip this item
+            if (values.length >= 2 && field_values.length)
+                throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
+            field_values.push(values)
+        }
+
+        // flat array of encoded values of all fields except the first one
+        const tail = field_values.slice(1).map(values => values[0])
+
+        // iterate over the first field's values to produce all key combinations
+        for (const head of field_values[0])
+            yield [head, ...tail]
     }
 
     *encode_key(item) {
@@ -172,6 +204,6 @@ export class DataDescriptor extends IndexDescriptor {
     generate_value(item) {
         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
         assert(item.isLoaded)
-        return JSONx.encode(item.data)
+        return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
     }
 }

@@ -149,7 +149,7 @@ export class Ring extends Item {
 
     /***  Events  ***/
 
-    notify(event, id, data = null) {
+    notify(event, id, data = null) {            // propagate() ?
         for (const index of this.indexes.values())
             index.receive(event, id, data)
     }
