@@ -264,10 +264,10 @@
     "@": 0
   "@": Data
 - __id: 10
-  name: Schema
-  info: Category of items that represent schema types. Some of the items are
+  name: Type
+  info: Category of items that represent data types. Some of the items are
     wrappers around system types (STRING, INTEGER etc.), while some others
-    implement new schema types by themselves using dynamic code.
+    implement new types by themselves using dynamic code.
   class_path: /system/local/type_schema.js:SchemaPrototype
   fields:
     class_path:

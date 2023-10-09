@@ -614,7 +614,7 @@ export class Record extends Catalog {
     /* A Catalog with unique keys for all entries; no labels; comments allowed. */
 }
 
-// class CATALOG extends Schema {
+// class CATALOG extends Type {
 //     use_keys Y/N
 //         allow_duplicate
 //         allow_missing

@@ -131,9 +131,9 @@ async function create_categories(Category) {
         cached_methods: "spacesRev",
     })
 
-    cat.Schema = await Category.new(10, {
-        name        : "Schema",
-        info        : "Category of items that represent schema types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new schema types by themselves using dynamic code.",
+    cat.Type = await Category.new(10, {
+        name        : "Type",
+        info        : "Category of items that represent data types. Some of the items are wrappers around system types (STRING, INTEGER etc.), while some others implement new types by themselves using dynamic code.",
         class_path  : '/system/local/type_schema.js:SchemaPrototype',
         fields      : C({
             class_path  : new STRING(),
@@ -152,7 +152,7 @@ async function create_categories(Category) {
 
     // cat.STRING = await Category.new(12, {
     //     name        : "STRING",
-    //     prototype   : cat.Schema,
+    //     prototype   : cat.Type,
     //     class_path  : '/system/local/type.js:STRING',
     // })
 
@@ -204,7 +204,7 @@ async function create_items(cat, Category) {
         }),
     })
 
-    // item.STRING = await cat.Schema.new({
+    // item.STRING = await cat.Type.new({
     //     name            : "STRING",
     //     class_path      : "/system/local/type.js:STRING",
     // })

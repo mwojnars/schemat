@@ -10,9 +10,8 @@ import { Item } from './item.js'
 /**********************************************************************************************************************/
 
 export class SchemaPrototype extends Item {
-    /* Schema implemented as an item that's stored in DB. May point back to a plain schema class or provide its own
-       encode/decode through dynamic code.
-     */
+    /* Data type implemented as an item that's kept in DB. May point back to a plain type class or have dynamic code. */
+
     async init() {
         let [path, name] = this._splitClasspath(this.prop('class_path'))
         this.schemaClass = await this.registry.import(path, name || 'default')

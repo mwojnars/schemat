@@ -21,11 +21,11 @@ export function is_valid_field_name(name) {
 
 /**********************************************************************************************************************
  **
- **  SCHEMA base class
+ **  TYPE base class
  **
  */
 
-export class Schema {
+export class Type {
 
     isCatalog()     { return false }
     isCompound()    { return this.isCatalog() }     // "compound" schema implements a custom mergeEntries(), which prevents some optimizations
@@ -216,14 +216,14 @@ export class Schema {
 }
 
 
-Schema.Widget = class extends Widget {
-    /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog)
-       values matching a particular schema.
+Type.Widget = class extends Widget {
+    /* Base class for UI "view-edit" widgets that display and let users edit atomic (non-catalog) values
+       of a particular data type.
      */
-    static scope = 'Schema'
+    static scope = 'Type'
 
     static defaultProps = {
-        schema: undefined,      // parent Schema object
+        schema: undefined,      // parent Type object
         value:  undefined,      // value object to be displayed by render()
         save:   undefined,      // callback save(newValue), called after `value` was edited by user
         flash:  undefined,      // callback flash(message, positive) for displaying confirmation messages after edits
@@ -313,7 +313,7 @@ Schema.Widget = class extends Widget {
  **
  */
 
-export class Primitive extends Schema {
+export class Primitive extends Type {
     /* Base class for schemas of primitive JSON-serializable python types. */
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
@@ -665,7 +665,7 @@ export class DATETIME extends STRING {
  **
  */
 
-export class GENERIC extends Schema {
+export class GENERIC extends Type {
     /* Accept objects of any class, optionally restricted to the instances of this.type or this.constructor.type. */
 
     static defaultProps = {
@@ -684,7 +684,7 @@ export class GENERIC extends Schema {
 
     static Widget = class extends TEXT.Widget {
         /* Display raw JSON representation of a value using a standard text editor */
-        empty(value)    { return Schema.Widget.prototype.empty.call(this, value) }
+        empty(value)    { return Type.Widget.prototype.empty.call(this, value) }
         view(value)     { return JSONx.stringify(value) }               // JSON string is pretty-printed for edit
         encode(value)   { return JSONx.stringify(value, null, 2) }      // JSON string is pretty-printed for edit
         decode(value)   { return JSONx.parse(value) }
@@ -699,16 +699,16 @@ export let generic_string = new STRING()
 /**********************************************************************************************************************/
 
 export class SCHEMA extends GENERIC {
-    static defaultProps = {class: Schema}
+    static defaultProps = {class: Type}
 
     static Widget = class extends GENERIC.Widget {
-        scope = 'Schema-SCHEMA'
+        scope = 'Type-SCHEMA'
         static style = () => this.safeCSS({stopper: '|'})
         `
             .default|   { color: #888; }
             .info|      { font-style: italic; }
         `
-        viewer()  { return Schema.Widget.prototype.viewer.call(this) }
+        viewer()  { return Type.Widget.prototype.viewer.call(this) }
         view() {
             let {value: schema} = this.props
             if (schema instanceof SchemaWrapper) {
@@ -756,7 +756,7 @@ export class SCHEMA extends GENERIC {
 
 /**********************************************************************************************************************/
 
-export class ITEM extends Schema {
+export class ITEM extends Type {
     /*
     Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
     ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
@@ -767,7 +767,7 @@ export class ITEM extends Schema {
         exact:     false,           // if true, the items must belong to this exact `category`, not any of its subcategories
     }
 
-    static Widget = ItemLoadingHOC(class extends Schema.Widget {
+    static Widget = ItemLoadingHOC(class extends Type.Widget {
         view() {
             let {value: item, loaded} = this.props      // `loaded` function is provided by a HOC wrapper, ItemLoadingHOC
             if (!loaded(item))                          // SSR outputs "loading..." only (no actual item loading), hence warnings must be suppressed client-side
@@ -816,7 +816,7 @@ export class ITEM extends Schema {
  **
  */
 
-export class MAP extends Schema {
+export class MAP extends Type {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
     Outputs an object with keys and values encoded through their own schema.
@@ -840,10 +840,10 @@ export class MAP extends Schema {
     }
 }
 
-export class RECORD extends Schema {
+export class RECORD extends Type {
     /*
-    Schema of dict-like objects that contain a number of named fields, each one having ITS OWN schema
-    - unlike in MAP, where all values share the same schema. RECORD does not encode keys, but passes them unmodified.
+    Data type of dict-like objects that contain a number of named fields, each one having ITS OWN type
+    - unlike in MAP, where all values share the same type. RECORD does not encode keys, but passes them unmodified.
     `this.type`, if present, is an exact class (NOT a base class) of accepted objects.
     */
 
@@ -864,13 +864,13 @@ export class RECORD extends Schema {
  **
  */
 
-export class CATALOG extends Schema {
+export class CATALOG extends Type {
     /*
-    Schema of an object of the Catalog class or its subclass.
+    Data type of objects of the Catalog class or its subclass.
     Validates each `value` of a catalog's entry through a particular "subschema" - the subschema may depend
     on the entry's key, or be shared by all entries regardless of the key.
 
-    The schema may restrict the set of permitted keys in different ways:
+    The type instance may restrict the set of permitted keys in different ways:
     - require that a key name belongs to a predefined set of "fields"
     - no duplicate key names (across all non-missing names)
     - no duplicates for a particular key name -- encoded in the key's subschema, subschema.repeated=false
@@ -976,7 +976,7 @@ export class CATALOG extends Schema {
 CATALOG.Table = class extends Component {
     /* A set of function components for displaying a Catalog in a tabular form. */
 
-    static scope = 'Schema-CATALOG'
+    static scope = 'Type-CATALOG'
     static style = () => this.safeCSS({stopper: '|'})
     `
         .catalog-d0       { width: 100%; font-size: 1rem; }
@@ -1411,7 +1411,7 @@ export class OWN_SCHEMA extends SCHEMA {
 
 /**********************************************************************************************************************/
 
-// export class VIRTUAL_FIELD extends Schema {
+// export class VIRTUAL_FIELD extends Type {
 //     /* A virtual field is a field that is not stored in the database, but is computed on the fly from other fields.
 //        It is used to implement computed fields, such as "name" for a person (first_name + last_name).
 //        The value is computed lazily (upon request) by a function `compute` that takes the item as an argument.
@@ -1445,17 +1445,17 @@ export class OWN_SCHEMA extends SCHEMA {
  **
  */
 
-export class SchemaWrapper extends Schema {
-    /* Wrapper for a schema type implemented as an item of the Schema category (object of SchemaPrototype class).
-       Specifies a schema type + property values (schema constraints etc.) to be used during encoding/decoding.
+export class SchemaWrapper extends Type {
+    /* Wrapper for a data type implemented as an item of the Type category (object of SchemaPrototype class).
+       Specifies a type item + property values (type constraints etc.).
      */
 
     static defaultProps = {
-        prototype:  undefined,          // item of the Schema category (instance of SchemaPrototype) implementing `this.schema`
+        prototype:  undefined,          // item of the Type category (instance of SchemaPrototype) implementing `this.schema`
         properties: {},                 // properties to be passed to `prototype` to create `this.schema`
     }
 
-    schema                              // the actual Schema instance to be used for encode/decode, provided by `prototype` during init()
+    schema                              // the actual Type instance to be used for encode/decode, provided by `prototype` during init()
     
     async init() {
         if (this.schema) return
