@@ -191,6 +191,12 @@ export class Registry {
 
     /***  Items manipulation  ***/
 
+    cache(item) {
+        /* Add `item` to the cache. This may override an existing item instance with the same ID. */
+        assert(item.id !== undefined, `cannot cache an item without an ID: ${item}`)
+        this._cache.set(item.id, item)
+    }
+
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
@@ -203,7 +209,7 @@ export class Registry {
         if (item) return item
 
         let stub = new Item(this, id)
-        this._cache.set(id, stub)       // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        this.cache(stub)                // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 
@@ -229,7 +235,7 @@ export class Registry {
             let item = this.itemFromRecord(record, cid)         // this returns undefined if the item is not of the requested category
             if (item instanceof Promise) item = await item
             if (item) {
-                this._cache.set(item.id, item)
+                this.cache(item)
                 yield item
                 count++
             }
