@@ -28,16 +28,16 @@ export function is_valid_field_name(name) {
 export class Type {
 
     isCatalog()     { return false }
-    isCompound()    { return this.isCatalog() }     // "compound" schema implements a custom mergeEntries(), which prevents some optimizations
+    isCompound()    { return this.isCatalog() }     // "compound" type implements a custom mergeEntries(), which prevents some optimizations
     isRepeated()    { return this.props.repeated }
     isEditable()    { return this.props.editable }
 
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
-        info     : undefined,   // human-readable description of this schema: what values are accepted and how they are interpreted
+        info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
         blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value
-        initial  : undefined,   // initial value assigned to a newly created data element of this schema
-        repeated : undefined,   // if true, the field described by this schema can be repeated, typically inside a CATALOG/RECORD/DATA
+        initial  : undefined,   // initial value assigned to a newly created data element of this type
+        repeated : undefined,   // if true, the field described by this type can be repeated, typically inside a CATALOG/RECORD/DATA
         default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
                                 // since repeated properties behave like lists of varying length, and zero is a valid length,
                                 // default value is NOT used for them and should be left undefined (TODO: check & enforce this constraint)
@@ -45,11 +45,11 @@ export class Type {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 
-        editable : true,        // if true, the field described by this schema can be edited by the user;
+        editable : true,        // if true, the field described by this type can be edited by the user;
                                 // typically set to false for imputed fields
 
         // TODO: to be added in the future...
-        // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one schema to another
+        // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one type to another
         // compress: undefined,     // whether to compress JSON output in stringify/parse()
     }
 
@@ -88,10 +88,10 @@ export class Type {
         return (typeof initial === 'function') ? initial() : initial
     }
 
-    instanceof(schemaClass) {
-        /* Check if this schema is an instance of a particular `schemaClass`, OR is a SchemaWrapper
-           around a `schemaClass` (implemented in SchemaWrapper.instanceof()). */
-        return this instanceof schemaClass
+    instanceof(typeClass) {
+        /* Check if this type is an instance of a particular `typeClass`, OR is a SchemaWrapper
+           around a `typeClass` (implemented in SchemaWrapper.instanceof()). */
+        return this instanceof typeClass
     }
 
     validate(obj) {
@@ -100,7 +100,7 @@ export class Type {
         return this.normalize(obj)              // cleans up and preprocesses the `obj` to a canonical form
     }
     check(obj) {
-        /* Check if the object (before normalization) is valid for this schema, throw an exception if not. */
+        /* Check if the object (before normalization) is valid for this type, throw an exception if not. */
         if (!this.props.blank && (obj === null || obj === undefined))
             throw new ValueError(`expected a non-blank value, but got '${obj}' instead`)
     }
@@ -109,24 +109,10 @@ export class Type {
         return obj
     }
 
-    // binaryEncode(obj) {
-    //     /* Encode an object to a binary form for use as a key inside a DB index.
-    //        The encoding may or may NOT be reversible with binaryDecode(), depending on the schema.
-    //      */
-    //     throw new NotImplemented(`binaryEncode() is not implemented for ${this}`)
-    // }
-    // binaryDecode(bin) {
-    //     /* Decode a binary key to an object. If this schema's binary encoding is not reversible
-    //        (like for collated strings), throw IrreversibleError; such objects can still be used inside keys,
-    //        but typically their original value must be stored separately in the record's value field.
-    //      */
-    //     throw new NotImplemented(`binaryDecode() is not implemented for ${this}`)
-    // }
-
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
 
     combineStreams(streamsOfEntries, item) {
-        /* Combine streams of inherited entries whose .value matches this schema. Return an array of entries.
+        /* Combine streams of inherited entries whose .value matches this type. Return an array of entries.
            The streams are either concatenated, or the entries are merged into one, depending on `prop.repeated`.
            In the latter case, the default value (if present) is included in the merge as the last entry.
            `item` is an argument to downstream impute().
@@ -138,18 +124,18 @@ export class Type {
 
     mergeEntries(streamsOfEntries, item) {
         /* Only used for single-valued schemas (when prop.repeated == false).
-           Merge the values of multiple streams of inherited entries whose .value matches this schema (TODO: check against incompatible inheritance).
+           Merge the values of multiple streams of inherited entries whose .value matches this type (TODO: check against incompatible inheritance).
            Return an entry whose .value is the result of the merge, or undefined if the value cannot be determined.
-           The merged value may include or consist of the schema's imputed value (props.impute()) or default (props.default).
+           The merged value may include or consist of the type's imputed value (props.impute()) or default (props.default).
            The entry returned can be synthetic and contain {value} attribute only.
            Base class implementation returns the first entry of `streamsOfEntries`, or the default value, or imputed value.
-           Subclasses may provide a different implementation - in such case the schema is considered "compound"
+           Subclasses may provide a different implementation - in such case the type is considered "compound"
            and should return isCompound() == true to prevent simplified merging in Item.entries().
          */
         assert(!this.isRepeated())
         for (let entries of streamsOfEntries) {
             let arr = [...entries]                          // convert an iterator to an array
-            if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued schema")
+            if (arr.length > 1) throw new Error("multiple values present for a key in a single-valued type")
             if (arr.length < 1) continue
             return arr[0]
         }
@@ -159,7 +145,7 @@ export class Type {
     }
 
     impute(item) {
-        /* Impute a value for an `item`s field described by this schema.
+        /* Impute a value for an `item`s field described by this type.
            This may return the default value (if present), or run the props.impute() property function.
          */
         let value = this.props.default
@@ -178,6 +164,9 @@ export class Type {
         /* Create a sort key and return as Uint8Array. If last=false and the binary representation has variable length,
            the terminator symbol/sequence or length specification should be included in the output,
            so that binary_decode() can detect the length of the encoded sequence when another value follows.
+           The encoding may or may NOT be reversible, depending on the type.
+           For example, it may be irreversible for some collated strings - such objects can still be used
+           inside keys, but typically their original value must be stored separately in the record's value field.
          */
         throw new NotImplemented(`binary_encode() is not implemented for ${this}`)
     }
@@ -195,10 +184,10 @@ export class Type {
 
     // Clients should call getAssets() and display(), other methods & attrs are for internal use ...
 
-    static Widget       // "view-edit" widget that displays and lets users edit values of this schema
+    static Widget       // "view-edit" widget that displays and lets users edit values of this type
 
     getAssets() {
-        /* Walk through all nested schema objects, collect their CSS styles and assets and return as an Assets instance.
+        /* Walk through all nested Type objects, collect their CSS styles and assets and return as an Assets instance.
            this.collect() is called internally - it should be overriden in subclasses instead of this method.
          */
         let assets = new Assets()
@@ -211,7 +200,7 @@ export class Type {
     }
 
     display(props) {
-        return e(this.constructor.Widget, {...props, schema: this})
+        return e(this.constructor.Widget, {...props, type: this})
     }
 }
 
@@ -309,7 +298,7 @@ Type.Widget = class extends Widget {
 
 /**********************************************************************************************************************
  **
- **  PRIMITIVE schema types
+ **  PRIMITIVE data types
  **
  */
 
@@ -457,7 +446,7 @@ export class STRING extends Textual {
     }
 }
 export class URL extends STRING {
-    /* For now, URL schema does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
+    /* For now, URL type does NOT check if the string is a valid URL, only modifies the display to make the string a hyperlink. */
     static Widget = class extends STRING.Widget {
         view(v) { return A({href: v}, v) }
     }
@@ -661,7 +650,7 @@ export class DATETIME extends STRING {
 
 /**********************************************************************************************************************
  **
- **  ATOMIC schema types
+ **  ATOMIC data types
  **
  */
 
@@ -691,7 +680,7 @@ export class GENERIC extends Type {
     }
 }
 
-// the most generic schema for encoding/decoding of objects of any types
+// the most generic type for encoding/decoding of objects of any types
 export let generic_schema = new GENERIC()
 export let generic_string = new STRING()
 
@@ -710,17 +699,17 @@ export class SCHEMA extends GENERIC {
         `
         viewer()  { return Type.Widget.prototype.viewer.call(this) }
         view() {
-            let {value: schema} = this.props
-            if (schema instanceof SchemaWrapper) {
-                if (!schema.schema) return "SchemaWrapper (not loaded)"
-                schema = schema.schema
+            let {value: type} = this.props
+            if (type instanceof SchemaWrapper) {
+                if (!type.schema) return "SchemaWrapper (not loaded)"
+                type = type.schema
             }
-            let dflt = `${schema.props.default}`
-            return SPAN(`${schema}`,
-                    schema.props.default !== undefined &&
+            let dflt = `${type.props.default}`
+            return SPAN(`${type}`,
+                    type.props.default !== undefined &&
                         SPAN(cl('default'), {title: `default value: ${truncate(dflt,1000)}`}, ` (${truncate(dflt,100)})`),
-                    schema.props.info &&
-                        SPAN(cl('info'), ` • ${schema.props.info}`),   // smaller dot: &middot;  larger dot: •
+                    type.props.info &&
+                        SPAN(cl('info'), ` • ${type.props.info}`),   // smaller dot: &middot;  larger dot: •
                     )
         }
     }
@@ -749,7 +738,7 @@ export class SCHEMA extends GENERIC {
 //       1) derived: transient non-editable hidden; refreshed on item's data change
 //       2) imputed: persistent editable displayed; not refreshed ??
 //
-//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a schema)
+//       1) impute on read -- similar to using a category default when value missing (but there, the value is declared with a type)
 //       2) impute on write
 //     */
 // }
@@ -812,21 +801,21 @@ export class ITEM extends Type {
 
 /**********************************************************************************************************************
  **
- **  COMPOUND schema types
+ **  COMPOUND data types
  **
  */
 
 export class MAP extends Type {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
-    Outputs an object with keys and values encoded through their own schema.
-    If no schema is provided, `generic_schema` is used as a default for values, or STRING() for keys.
+    Outputs an object with keys and values encoded through their own type.
+    If no type is provided, `generic_schema` is used as a default for values, or STRING() for keys.
     */
 
     static defaultProps = {
         class:      Object,                     // class of input objects
-        keys:       new STRING(),               // schema of keys of app-layer dicts
-        values:     generic_schema,             // schema of values of app-layer dicts
+        keys:       new STRING(),               // Type of keys of app-layer dicts
+        values:     generic_schema,             // Type of values of app-layer dicts
     }
 
     collect(assets) {
@@ -853,8 +842,8 @@ export class RECORD extends Type {
     }
 
     collect(assets) {
-        for (let schema of Object.values(this.props.fields))
-            schema.collect(assets)
+        for (let type of Object.values(this.props.fields))
+            type.collect(assets)
     }
 }
 
@@ -883,8 +872,8 @@ export class CATALOG extends Type {
     isCatalog() { return true }
 
     static defaultProps = {
-        keys:       new STRING({blank: true}),      // schema of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
-        values:     new GENERIC({multi: true}),     // schema of all values in the catalog
+        keys:       new STRING({blank: true}),      // Type of all keys in the catalog; must be an instance of STRING or its subclass; mainly for validation
+        values:     new GENERIC({multi: true}),     // Type of all values in the catalog
         initial:    () => new Catalog(),
         repeated:   false,                          // typically, CATALOG fields are not repeated, so that their content gets merged during inheritance (which requires repeated=false)
         // keys_mandatory : false,
@@ -893,13 +882,13 @@ export class CATALOG extends Type {
         // keys_empty_ok  : false,
     }
 
-    subschema(key)  { return this.props.values }    // schema of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subschema(key)  { return this.props.values }    // Type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
     constructor(props = {}) {
         super(props)
         let {keys} = props
-        if (keys && !(keys.instanceof(STRING))) throw new DataError(`schema of keys must be an instance of STRING or its subclass, not ${keys}`)
+        if (keys && !(keys.instanceof(STRING))) throw new DataError(`data type of keys must be an instance of STRING or its subclass, not ${keys}`)
     }
 
     collect(assets) {
@@ -916,13 +905,13 @@ export class CATALOG extends Type {
     }
 
     find(path = null) {
-        /* Return a (nested) subschema at a given `path`, or `this` if `path` is empty.
+        /* Return a (nested) subtype at a given `path`, or `this` if `path` is empty.
            The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
-        return Path.find(this, path, (schema, key) => {
-            if (!schema.isCatalog()) throw new Error(`schema path not found: ${path}`)
-            return [schema.subschema(key)]
+        return Path.find(this, path, (type, key) => {
+            if (!type.isCatalog()) throw new Error(`data type path not found: ${path}`)
+            return [type.subschema(key)]
         })
     }
 
@@ -938,7 +927,7 @@ export class CATALOG extends Type {
         return {value: Catalog.merge(catalogs, !this.isRepeated())}                   // merge entries
 
         // TODO: inside Catalog.merge(), if repeated=false, overlapping entries should be merged recursively
-        //       through combine() of props.values schema
+        //       through combine() of props.values type
     }
 
     displayTable(props) { return e(this.constructor.Table, {...props, path: [], schema: this}) }
@@ -1071,13 +1060,13 @@ CATALOG.Table = class extends Component {
     }
     delete(action)  { return DIV(cl('delete'), {onClick: action, title: "Delete this entry"}) }
 
-    // info(schema)    { return schema.info ? {title: schema.info} : null }
-    //     if (!schema.info) return null
-    //     return I(cl('icon-info'), {title: schema.info}, '?')
-    //     // return I(cl('icon-info material-icons'), {title: schema.info}, 'help_outline') //'question_mark','\ue88e','info'
-    //     // return I(cl("bi bi-info-circle icon-info"), {title: schema.info})
-    //     // return I(cl("icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: schema.info}, '\uf431')
-    //     // let text = FRAGMENT(schema.info, '\n', A({href: "./readmore"}, "read more..."))
+    // info(type)    { return type.info ? {title: type.info} : null }
+    //     if (!type.info) return null
+    //     return I(cl('icon-info'), {title: type.info}, '?')
+    //     // return I(cl('icon-info material-icons'), {title: type.info}, 'help_outline') //'question_mark','\ue88e','info'
+    //     // return I(cl("bi bi-info-circle icon-info"), {title: type.info})
+    //     // return I(cl("icon-info"), st({fontFamily: 'bootstrap-icons !important'}), {title: type.info}, '\uf431')
+    //     // let text = FRAGMENT(type.info, '\n', A({href: "./readmore"}, "read more..."))
     //     // return e(MaterialUI.Tooltip, {title: text},
     //     //            I(cls, st({marginLeft: '9px', color: '#aaa', fontSize: '0.9em'})))
     //     // styled.i.attrs(cls) `margin-left: 9px; color: #aaa; font-size: 0.9em;`
@@ -1334,11 +1323,11 @@ CATALOG.Table = class extends Component {
 
 export class DATA extends CATALOG {
     /* Like CATALOG, but provides distinct value schemas for different predefined keys (fields) of a catalog.
-       Primarily used for encoding Item.data. Not intended for other uses.
+       Primarily used as a data type for Item.data. Not intended for other uses.
      */
 
     static defaultProps = {
-        fields: {},             // object with field names and their schemas; null means a default schema should be used for a given field
+        fields: {},             // object with field names and their types; null means a default data type should be used for a given field
         strict: true,           // if true, only fields listed in `fields` are allowed; generic_schema is assumed for other fields
     }
 
@@ -1355,8 +1344,8 @@ export class DATA extends CATALOG {
         return fields[key] || this.props.values
     }
     collect(assets) {
-        for (let schema of this._all_schemas())  //Object.values(this.props.fields))
-            schema.collect(assets)
+        for (let type of this._all_schemas())  //Object.values(this.props.fields))
+            type.collect(assets)
         this.constructor.Table.collect(assets)
     }
     _all_schemas() { return Object.values(this.props.fields) }
@@ -1441,7 +1430,7 @@ export class OWN_SCHEMA extends SCHEMA {
 
 /**********************************************************************************************************************
  **
- **  SCHEMA WRAPPER (schema in DB)
+ **  SCHEMA WRAPPER (data type stored in DB)
  **
  */
 
