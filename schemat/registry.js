@@ -243,19 +243,13 @@ export class Registry {
         }
     }
 
-    itemFromRecord(record, cid) {
+    itemFromRecord(record /*ItemRecord*/, cid) {
         /* Convert an ItemRecord into a booted item. If category's id is provided (`cid`), only return the item when
-           the category's id matches, otherwise return undefined. May return a Promise. */
-        // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
-        assert(record instanceof ItemRecord)
-        const {id, json: dataJson} = record
-        if (isRoot(record.id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
-
-        let data = record.data
-        assert (data instanceof Data)
-
-        if (cid === undefined || cid === data.get('__category__')?.id)
-            return Item.createBooted(this, record)  //.id, {dataJson})
+           the category's id matches, otherwise return undefined. May return a Promise.
+         */
+        if (isRoot(record.id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined      // special handling for the root item
+        if (cid === undefined || cid === record.data.get('__category__')?.id)                           // skip if category doesn't match
+            return Item.createBooted(this, record)
     }
 
 

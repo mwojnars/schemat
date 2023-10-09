@@ -255,26 +255,14 @@ export class Item {
         this.id = id
     }
 
-    static async createBooted(registry, record) {
+    static async createBooted(registry, record /*ItemRecord*/ ) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
            In any case, the item returned is *booted* (this.data is initialized).
          */
-        assert(record instanceof ItemRecord)
         let item = new Item(registry, record.id)
         return item.reload(record.data)
     }
-
-    // static async createBooted(registry, id, {data, dataJson} = {}) {
-    //     /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
-    //        or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
-    //        The item returned is *booted* (this.data is initialized).
-    //      */
-    //     let item = new Item(registry, id)
-    //     assert(data || dataJson)
-    //     data = data || item._decodeData(dataJson)
-    //     return item.reload(data)
-    // }
 
     static createAPI(endpoints, actions = {}) {
         /* Create .api and .actions of this Item (sub)class. */
@@ -932,7 +920,7 @@ export class Category extends Item {
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createBooted(this.registry, new ItemRecord(iid, data)) //iid, {data})
+        return Item.createBooted(this.registry, new ItemRecord(iid, data))
     }
 
     async getItemClass() {
