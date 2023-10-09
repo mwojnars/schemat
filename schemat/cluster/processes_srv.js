@@ -10,7 +10,7 @@ import {DataServer, WebServer} from "./servers.js";
 import {Ring} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
-import {ItemRecord} from "../records.js";
+import {ItemRecord} from "../db/records.js";
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'

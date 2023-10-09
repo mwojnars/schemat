@@ -6,7 +6,7 @@ import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
-import {ItemRecord} from "./records.js";
+import {ItemRecord} from "./db/records.js";
 
 export const ROOT_ID = 0
 export const SITE_ID = 1

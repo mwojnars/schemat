@@ -1,5 +1,9 @@
-import {assert} from "./utils.js";
-import {JSONx} from "./serialize.js";
+/*
+    Low-level representation of items and index records, for storage and transmission from/to the database.
+ */
+
+import {assert} from "../utils.js";
+import {JSONx} from "../serialize.js";
 
 /**********************************************************************************************************************/
 
@@ -15,6 +19,8 @@ export class PlainRecord {
 }
 
 export class ItemRecord {
+    /* Item as a {id, data} pair, with the data initialized from a JSONx string or a Data object. */
+
     id                          // item ID
     _data_object                // item data as a Data object decoded from _data_json
     _data_json                  // item data as a JSONx-encoded string

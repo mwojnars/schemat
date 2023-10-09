@@ -1,7 +1,7 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
-import {ItemRecord} from "../records.js";
+import {ItemRecord} from "./records.js";
 
 // import { Kafka } from 'kafkajs'
 
