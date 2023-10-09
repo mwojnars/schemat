@@ -196,6 +196,7 @@ export class Item {
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
 
+    _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
     dataJson        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
     // _db          // the origin database of this item; undefined in newborn items
@@ -237,6 +238,11 @@ export class Item {
     has_id(id = null) {
         return id !== null ? id === this.id : this.id !== undefined
     }
+
+    // get record() {
+    //     /* Return the ItemRecord object that contains this item's data as loaded from DB during last load(). */
+    //     return this._record || (this._record = new ItemRecord(this.id, this.dataJson))
+    // }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
@@ -641,14 +647,9 @@ export class Item {
         return JSONx.stringify(this.data)
     }
 
-    record() {
-        /* JSON-serializable representation of the item's content as {id, data}. */
-        assert(this.has_id())
-        return {id: this.id, data: this.data}
-    }
-
     recordEncoded() {
-        return JSONx.encode(this.record())
+        assert(this.has_id())
+        return JSONx.encode({id: this.id, data: this.data})
     }
 
 
