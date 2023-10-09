@@ -80,16 +80,17 @@ class Index {
 //     }
 // }
 
-export class IndexDescriptor {  // ShapeOfSequence, Shape
-    /* Specification of an index over a sequence of objects translated to records, each record consisting
-       of a binary `key` and a json `value`. The index is sorted by the key and allows to retrieve the value
+export class SequenceDescriptor {  // ShapeOfSequence, Shape
+    /* Specification of a sequence of objects translated to records, each record consisting
+       of a binary `key` and a json `value`. The sequence is sorted by the key and allows to retrieve the value
        for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
        and/or cloning the record when a repeated field is encountered.
        The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
        decoded object may lack some fields that were not included in the index.
      */
 
-    fields                  // {name: type}, a Map of object fields and their data types to be included in the sort key
+    schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
+    schema_value            // array of item's property names to be included in the value object (repeated values excluded)
     category                // (?) category of items allowed in this index
 
     // {id, data}
@@ -124,7 +125,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (const name of this.fields.keys()) {
+        for (const name of this.schema_key.keys()) {
             const values = item.propsList(name)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
@@ -142,10 +143,10 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
     *encode_key(item) {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
-        let length = this.fields.size
+        let length = this.schema_key.size
         let bin_values = []
 
-        for (const [name, type] of this.fields) {
+        for (const [name, type] of this.schema_key) {
             const values = item.propsList(name)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && bin_values.length)
@@ -175,6 +176,8 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     generate_value(item) {
         /* Override this method to generate a `value` object that will be stringified through JSON and stored
            as a part of a record in the index. */
+        if (!this.schema_value.length) return undefined
+        return item.propObject(...this.schema_value)
     }
 
     encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
@@ -190,11 +193,11 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
 
     decode_key(record) {
         const input = new BinaryInput(record)
-        const length = this.fields.length
+        const length = this.schema_key.length
         let entry = {}
 
         for (let i = 0; i < length; i++) {
-            const [name, type] = this.fields[i]
+            const [name, type] = this.schema_key[i]
             const last = (i === length - 1)
             entry[name] = type.binary_decode(input, last)
         }
@@ -204,10 +207,10 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
     }
 }
 
-export class DataDescriptor extends IndexDescriptor {
+export class DataDescriptor extends SequenceDescriptor {
     /* Specification of a data sequence. */
 
-    fields = new Map(Object.entries({
+    schema_key = new Map(Object.entries({
         id:  new INTEGER(),
     }))
 
