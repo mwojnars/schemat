@@ -650,12 +650,6 @@ export class Item {
         return JSONx.stringify(this.data)
     }
 
-    recordEncoded() {
-        return this.record.encoded()
-        // assert(this.has_id())
-        // return JSONx.encode({id: this.id, data: this.data})
-    }
-
 
     /***  Routing & handling of requests (server-side)  ***/
 
@@ -847,7 +841,7 @@ Item.createAPI(
 
         'CALL/default': new InternalService(function() { return this }),
         'CALL/item':    new InternalService(function() { return this }),
-        'GET/json':     new JsonService(function() { return this.recordEncoded() }),
+        'GET/json':     new JsonService(function() { return this.record.encoded() }),
 
         // item's edit actions for use in the admin interface...
         'POST/edit':  new TaskService({
@@ -1111,7 +1105,7 @@ Category.createAPI(
         //         await item.load()
         //         items.push(item)
         //     }
-        //     let records = items.map(item => item.recordEncoded())
+        //     let records = items.map(item => item.record.encoded())
         //     request.res.json(records)
         // }),
 
@@ -1126,7 +1120,7 @@ Category.createAPI(
                         await item.load()
                         items.push(item)
                     }
-                    return items.map(item => item.recordEncoded())
+                    return items.map(item => item.record.encoded())
                 },
                 finalize(records) {
                     /* Convert records to items client-side and keep in local cache (ClientDB) to avoid repeated web requests. */
@@ -1150,7 +1144,7 @@ Category.createAPI(
                 let data = await (new Data).__setstate__(dataState)
                 let item = await this.new(data)
                 await this.registry.db.insert(item)
-                return item.recordEncoded()
+                return item.record.encoded()
                 // TODO: check constraints: schema, fields, max lengths of fields and of full data - to close attack vectors
             },
         }, //{encodeResult: false}    // avoid unnecessary JSONx-decoding by the client before putting the record in client-side DB
