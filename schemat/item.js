@@ -640,11 +640,13 @@ export class Item {
         /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
         return JSONx.stringify(this.data)
     }
+
     record() {
         /* JSON-serializable representation of the item's content as {id, data}. */
         assert(this.has_id())
         return {id: this.id, data: this.data}
     }
+
     recordEncoded() {
         return JSONx.encode(this.record())
     }
@@ -912,10 +914,9 @@ export class Category extends Item {
     }
 
     async new(data, iid) {
-        /*
-        Create a newborn item of this category (not yet in DB) and set its `data`; connect it with this.registry;
-        set its IID if given. The order of `data` and `iid` arguments can be swapped.
-        */
+        /* Create a newborn item of this category (not yet in DB) and set its `data`; connect it with this.registry;
+           set its IID if given. The order of `data` and `iid` arguments can be swapped.
+         */
         if (typeof data === 'number') [data, iid] = [iid, data]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
