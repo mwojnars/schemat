@@ -233,6 +233,7 @@ export class Registry {
 
         for await (const record of records) {
             if (limit !== undefined && count >= limit) break
+            if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
             let item = this.itemFromRecord(record, cid)         // this returns undefined if the item is not of the requested category
             if (item instanceof Promise) item = await item
             if (item) {
@@ -243,13 +244,18 @@ export class Registry {
         }
     }
 
+    _checkCategory(record, cid) {
+        /* Check if a given ItemRecord belongs to a given category. */
+        return cid === undefined || cid === record.data.get('__category__')?.id
+    }
+
     itemFromRecord(record /*ItemRecord*/, cid) {
         /* Convert an ItemRecord into a booted item. If category's id is provided (`cid`), only return the item when
            the category's id matches, otherwise return undefined. May return a Promise.
          */
         if (isRoot(record.id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined      // special handling for the root item
-        if (cid === undefined || cid === record.data.get('__category__')?.id)                           // skip if category doesn't match
-            return Item.createBooted(this, record)
+        // if (cid === undefined || cid === record.data.get('__category__')?.id)
+        return Item.createBooted(this, record)
     }
 
 
