@@ -239,10 +239,13 @@ export class Item {
         return id !== null ? id === this.id : this.id !== undefined
     }
 
-    // get record() {
-    //     /* Return the ItemRecord object that contains this item's data as loaded from DB during last load(). */
-    //     return this._record || (this._record = new ItemRecord(this.id, this.dataJson))
-    // }
+    get record() {
+        /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
+        assert(this.has_id())
+        assert(this.isLoaded)
+        return new ItemRecord(this.id, this.data)       // no caching in this._record, for now, to avoid problems with refresh after user's modifications
+        // return this._record || (this._record = new ItemRecord(this.id, this.data))
+    }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
     assertLoaded()  { if (!this.isLoaded) throw new ItemNotLoaded(this) }
@@ -648,8 +651,9 @@ export class Item {
     }
 
     recordEncoded() {
-        assert(this.has_id())
-        return JSONx.encode({id: this.id, data: this.data})
+        return this.record.encoded()
+        // assert(this.has_id())
+        // return JSONx.encode({id: this.id, data: this.data})
     }
 
 
@@ -850,6 +854,8 @@ Item.createAPI(
 
             delete_self(request)   { return this.registry.db.delete(this) },
 
+            // TODO: in all the methods below, `this` should be copied and reloaded after modifications
+
             insert_field(request, path, pos, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
@@ -866,6 +872,7 @@ Item.createAPI(
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
+                // this.registry._cache.evict(this.id)
                 return this.registry.db.update_full(this)
             },
 

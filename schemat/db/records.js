@@ -55,6 +55,10 @@ export class ItemRecord {
         return this._data_plain = JSONx.encode(this._data_object)
     }
 
+    encoded() {
+        return {id: this.id, data: this.data_plain}
+    }
+
     constructor(id, data) {
         /* ItemRecord can be initialized either with a JSON string `data`, or a Data object. */
         this.id = id
