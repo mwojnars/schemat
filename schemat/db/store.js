@@ -218,10 +218,18 @@ export class DataDescriptor extends SequenceDescriptor {
 
 export class IndexByCategoryDescriptor extends SequenceDescriptor {
     /* Specification of an index that maps category IDs to item IDs. */
-    schema_key = new Map([['__category__', new INTEGER()]])
+    schema_key = new Map([['__category__', new INTEGER()]]);
+
+    *generate_keys(item) {
+        yield [item.category.id]
+    }
 
     generate_value(item) {
         return item.id
+    }
+
+    decode_object(key, value) {
+
     }
 }
 
