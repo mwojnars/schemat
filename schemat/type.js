@@ -856,13 +856,13 @@ export class RECORD extends Type {
 export class CATALOG extends Type {
     /*
     Data type of objects of the Catalog class or its subclass.
-    Validates each `value` of a catalog's entry through a particular "subschema" - the subschema may depend
+    Validates each `value` of a catalog's entry through a particular "subtype" - the subtype may depend
     on the entry's key, or be shared by all entries regardless of the key.
 
     The type instance may restrict the set of permitted keys in different ways:
     - require that a key name belongs to a predefined set of "fields"
     - no duplicate key names (across all non-missing names)
-    - no duplicates for a particular key name -- encoded in the key's subschema, subschema.repeated=false
+    - no duplicates for a particular key name -- encoded in the key's subtype, subtype.repeated=false
     other constraints:
     - mandatory keys (empty key='' allowed)
     - empty key not allowed (by default key_empty_allowed=false)
@@ -882,7 +882,7 @@ export class CATALOG extends Type {
         // keys_empty_ok  : false,
     }
 
-    subschema(key)  { return this.props.values }    // Type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
+    subtype(key)  { return this.props.values }    // Type of values of a `key`; subclasses should throw an exception or return undefined if `key` is not allowed
     getValidKeys()  { return undefined }
 
     constructor(props = {}) {
@@ -905,13 +905,13 @@ export class CATALOG extends Type {
     }
 
     find(path = null) {
-        /* Return a (nested) subtype at a given `path`, or `this` if `path` is empty.
+        /* Return a (nested) type at a given `path`, or `this` if `path` is empty.
            The path is an array of keys on subsequent levels of nesting, some keys can be missing (null/undefined)
            if the corresponding subcatalog accepts this. The path may span nested CATALOGs at arbitrary depths.
          */
         return Path.find(this, path, (type, key) => {
             if (!type.isCatalog()) throw new Error(`data type path not found: ${path}`)
-            return [type.subschema(key)]
+            return [type.subtype(key)]
         })
     }
 
@@ -1184,13 +1184,13 @@ CATALOG.Table = class extends Component {
     //     /* Check that the key name at position `pos` in `entries` is allowed to be changed to `key`
     //        according to the `schema`; return true, or alert the user and raise an exception. */
     //     // verify that a `key` name is allowed by the catalog's schema
-    //     let subschema = trycatch(() => schema.subschema(key))
-    //     if (!subschema) {
+    //     let subtype = trycatch(() => schema.subtype(key))
+    //     if (!subtype) {
     //         let msg = `The name "${key}" for a key is not permitted by the schema.`
     //         alert(msg); throw new Error(msg)
     //     }
     //     // check against duplicate names, if duplicates are not allowed
-    //     if (!subschema.repeated)
+    //     if (!subtype.repeated)
     //         for (let ent of entries) {}
     //     return true
     // }
@@ -1230,7 +1230,7 @@ CATALOG.Table = class extends Component {
                `catalogSchema` is a DATA schema of a parent catalog, for checking if `key` is valid or not.
              */
 
-            let schema = trycatch(() => catalogSchema.subschema(key))
+            let schema = trycatch(() => catalogSchema.subtype(key))
             if (key !== undefined && !schema) {                  // verify if `key` name is allowed by the parent catalog
                 alert(`The name "${key}" for a key is not permitted by the schema.`)
                 key = undefined
@@ -1289,7 +1289,7 @@ CATALOG.Table = class extends Component {
         {
             let {key}   = entry
             let isnew   = (entry.id === 'new')
-            let vschema = isnew ? undefined : schema.subschema(key)
+            let vschema = isnew ? undefined : schema.subtype(key)
             let color   = getColor(pos)
 
             // insert `pos` as the 1st arg in all actions of `run`
@@ -1322,8 +1322,8 @@ CATALOG.Table = class extends Component {
 }
 
 export class DATA extends CATALOG {
-    /* Like CATALOG, but provides distinct value schemas for different predefined keys (fields) of a catalog.
-       Primarily used as a data type for Item.data. Not intended for other uses.
+    /* Like CATALOG, but provides distinct value types for different predefined keys (fields) of a catalog.
+       Primarily used as a data type for Item.data, not intended for other uses.
      */
 
     static defaultProps = {
@@ -1337,18 +1337,18 @@ export class DATA extends CATALOG {
 
     get(key) { return this.props.fields[key] || (!this.props.strict && generic_type) || undefined }
 
-    subschema(key) {
+    subtype(key) {
         let {fields} = this.props
         if (!fields.hasOwnProperty(key))
             throw new DataError(`unknown data field "${key}", expected one of [${Object.getOwnPropertyNames(fields)}]`)
         return fields[key] || this.props.values
     }
     collect(assets) {
-        for (let type of this._all_schemas())  //Object.values(this.props.fields))
+        for (let type of this._all_subtypes())  //Object.values(this.props.fields))
             type.collect(assets)
         this.constructor.Table.collect(assets)
     }
-    _all_schemas() { return Object.values(this.props.fields) }
+    _all_subtypes() { return Object.values(this.props.fields) }
 
     getValidKeys() {
         let fields = Object.getOwnPropertyNames(this.props.fields)
@@ -1365,8 +1365,8 @@ export class DATA_GENERIC extends DATA {
         fields: {},
         strict: false,
     }
-    subschema(key)  { return this.props.fields[key] || generic_type }
-    _all_schemas()  { return [...super._all_schemas(), generic_type] }
+    subtype(key)  { return this.props.fields[key] || generic_type }
+    _all_subtypes()  { return [...super._all_subtypes(), generic_type] }
 }
 
 

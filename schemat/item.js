@@ -525,13 +525,13 @@ export class Item {
 
         if (schemaless) entries = concat(streams().map(stream => [...stream]))
         else {
-            let schema = this.getSchema().get(prop)
-            if (!schema) throw new Error(`not in schema: '${prop}'`)
+            let type = this.getSchema().get(prop)
+            if (!type) throw new Error(`not in schema: '${prop}'`)
 
-            if (!schema.isRepeated() && !schema.isCompound() && this.data.has(prop))
+            if (!type.isRepeated() && !type.isCompound() && this.data.has(prop))
                 entries = [this.data.getEntry(prop)]                        // non-repeated value is present in `this`, can skip inheritance to speed up
             else
-                entries = schema.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
+                entries = type.combineStreams(streams(), this)            // `default` or `impute` property of the schema may be applied here
 
             this._dataAll.set(prop, entries)
         }
@@ -903,11 +903,11 @@ export class Category extends Item {
         // explicit async initialization to load sublinked items
 
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the
-        //       initialized schema object won't get replaced with a new one at some point
+        //       initialized type object won't get replaced with a new one at some point
 
         for (const entry of this.entriesRaw('fields')) {
             let fields = entry.value
-            let calls  = fields.map(({value: schema}) => schema.init()).filter(res => res instanceof Promise)
+            let calls  = fields.map(({value: type}) => type.init()).filter(res => res instanceof Promise)
             if (calls.length) await Promise.all(calls)
         }
     }

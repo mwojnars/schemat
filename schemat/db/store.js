@@ -89,7 +89,7 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
        decoded object may lack some fields that were not included in the index.
      */
 
-    fields                  // {name: schema}, a Map of object fields and their schemas to be included in the sort key
+    fields                  // {name: type}, a Map of object fields and their data types to be included in the sort key
     category                // (?) category of items allowed in this index
 
     // {id, data}
@@ -145,15 +145,15 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         let length = this.fields.size
         let bin_values = []
 
-        for (const [name, schema] of this.fields) {
+        for (const [name, type] of this.fields) {
             const values = item.propsList(name)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && bin_values.length)
                 throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
 
-            // encode `values` through the field schema
+            // encode `values` through the field type
             const last = (bin_values.length === length - 1)
-            const binary = values.map(v => schema.binary_encode(v, last))
+            const binary = values.map(v => type.binary_encode(v, last))
             bin_values.push(binary)
         }
 
@@ -194,9 +194,9 @@ export class IndexDescriptor {  // ShapeOfSequence, Shape
         let entry = {}
 
         for (let i = 0; i < length; i++) {
-            const [name, schema] = this.fields[i]
+            const [name, type] = this.fields[i]
             const last = (i === length - 1)
-            entry[name] = schema.binary_decode(input, last)
+            entry[name] = type.binary_decode(input, last)
         }
         assert(input.pos === record.length)
 
