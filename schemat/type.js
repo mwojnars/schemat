@@ -89,8 +89,8 @@ export class Type {
     }
 
     instanceof(typeClass) {
-        /* Check if this type is an instance of a particular `typeClass`, OR is a SchemaWrapper
-           around a `typeClass` (implemented in SchemaWrapper.instanceof()). */
+        /* Check if this type is an instance of a particular `typeClass`, OR is a TypeWrapper
+           around a `typeClass` (implemented in TypeWrapper.instanceof()). */
         return this instanceof typeClass
     }
 
@@ -700,8 +700,8 @@ export class SCHEMA extends GENERIC {
         viewer()  { return Type.Widget.prototype.viewer.call(this) }
         view() {
             let {value: type} = this.props
-            if (type instanceof SchemaWrapper) {
-                if (!type.schema) return "SchemaWrapper (not loaded)"
+            if (type instanceof TypeWrapper) {
+                if (!type.schema) return "TypeWrapper (not loaded)"
                 type = type.schema
             }
             let dflt = `${type.props.default}`
@@ -1430,17 +1430,17 @@ export class OWN_SCHEMA extends SCHEMA {
 
 /**********************************************************************************************************************
  **
- **  SCHEMA WRAPPER (data type stored in DB)
+ **  TYPE WRAPPER (data type stored in DB)
  **
  */
 
-export class SchemaWrapper extends Type {
-    /* Wrapper for a data type implemented as an item of the Type category (object of SchemaPrototype class).
+export class TypeWrapper extends Type {
+    /* Wrapper for a data type implemented as an item of the Type category (object of TypeItem class).
        Specifies a type item + property values (type constraints etc.).
      */
 
     static defaultProps = {
-        prototype:  undefined,          // item of the Type category (instance of SchemaPrototype) implementing `this.schema`
+        prototype:  undefined,          // item of the Type category (instance of TypeItem) implementing `this.schema`
         properties: {},                 // properties to be passed to `prototype` to create `this.schema`
     }
 
@@ -1450,8 +1450,8 @@ export class SchemaWrapper extends Type {
         if (this.schema) return
         let {prototype, properties} = this.props
         await prototype.load()
-        let {SchemaPrototype} = await import('./type_schema.js')
-        assert(prototype instanceof SchemaPrototype)
+        let {TypeItem} = await import('./type_item.js')
+        assert(prototype instanceof TypeItem)
         this.schema = prototype.createSchema(properties)
     }
     instanceof(cls)     { return this.schema instanceof cls }

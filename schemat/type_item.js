@@ -1,5 +1,5 @@
 /*
-    The SchemaPrototype class here depends on Item, that's why it's placed in a separate file rather than type.js
+    The TypeItem class depends on Item, that's why it's placed in a separate file rather than type.js
     - to avoid circular dependencies when some other files (dependencies of item.js) want to import type.js.
  */
 
@@ -9,7 +9,7 @@ import { Item } from './item.js'
 
 /**********************************************************************************************************************/
 
-export class SchemaPrototype extends Item {
+export class TypeItem extends Item {
     /* Data type implemented as an item that's kept in DB. May point back to a plain type class or have dynamic code. */
 
     async init() {

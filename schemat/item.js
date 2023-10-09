@@ -899,7 +899,7 @@ export class Category extends Item {
     init() { return this._initSchema() }
 
     async _initSchema() {
-        // initialize schema objects inside `fields`; in particular, SchemaWrapper class requires
+        // initialize schema objects inside `fields`; in particular, TypeWrapper class requires
         // explicit async initialization to load sublinked items
 
         // TODO: move initialization somewhere else; here, we don't have a guarantee that the

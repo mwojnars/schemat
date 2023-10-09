@@ -20,7 +20,7 @@
       =:
         - "@": 102
         - {}
-      "@": SchemaWrapper
+      "@": TypeWrapper
     "@": Catalog
   class_init: |
     // DRAFT...

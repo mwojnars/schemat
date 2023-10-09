@@ -123,9 +123,9 @@ export class Registry {
         classpath.setMany("", Catalog, Data)                    // add Catalog & Data to the classpath
         await classpath.setModule("", "./db/edits.js")          // add all Edit (sub)types for intra-cluster communication
 
-        // add all schema subtypes (all-caps class names) + SchemaWrapper
+        // add all schema subtypes (all-caps class names) + TypeWrapper
         await classpath.setModule("", "./type.js", {accept: (name) =>
-                name.toUpperCase() === name || name === 'SchemaWrapper'
+                name.toUpperCase() === name || name === 'TypeWrapper'
         })
 
         this.classpath = classpath
