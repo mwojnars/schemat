@@ -646,7 +646,7 @@ export class Item {
     }
 
     dumpData() {
-        /* Dump this.data to a JSON string using schema-aware (if schema=true) encoding of nested values. */
+        /* Dump this.data to a JSONx string with encoding of nested values. */
         return JSONx.stringify(this.data)
     }
 

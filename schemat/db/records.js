@@ -34,7 +34,7 @@ export class ItemRecord {
         return this._data_plain || (this._data_json && this._parse_data()) || (this._data_object && this._encode_data())
     }
 
-    get json() {
+    get data_json() {
         return this._data_json || this._stringify_data()
     }
 
@@ -57,6 +57,10 @@ export class ItemRecord {
 
     encoded() {
         return {id: this.id, data: this.data_plain}
+    }
+    
+    stringified() {
+        return {id: this.id, data: this.data_json}
     }
 
     constructor(id, data) {
