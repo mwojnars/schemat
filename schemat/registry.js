@@ -106,7 +106,7 @@ export class Registry {
     site                    // fully loaded Site instance that will handle all web requests
     session                 // current web Session, or undefined; max. one session is active at a given moment
 
-    cache = new ItemsCache()
+    _cache = new ItemsCache()
 
 
     /***  Initialization  ***/
@@ -199,11 +199,11 @@ export class Registry {
         if (isRoot(id)) return this.root
 
         // ID requested was already loaded/created? return the existing instance
-        let item = this.cache.get(id)
+        let item = this._cache.get(id)
         if (item) return item
 
         let stub = new Item(this, id)
-        this.cache.set(id, stub)        // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        this._cache.set(id, stub)       // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
 
@@ -229,7 +229,7 @@ export class Registry {
             let item = this.itemFromRecord(record, cid)         // this returns undefined if the item is not of the requested category
             if (item instanceof Promise) item = await item
             if (item) {
-                this.cache.set(item.id, item)
+                this._cache.set(item.id, item)
                 yield item
                 count++
             }
@@ -237,7 +237,7 @@ export class Registry {
     }
 
     itemFromRecord(record, cid) {
-        /* Convert a record from DB into a booted item. If category's id is provided (`cid`), return the item only when
+        /* Convert an {id, data} record into a booted item. If category's id is provided (`cid`), only return the item when
            the category's id matches, otherwise return undefined. May return a Promise. */
         // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
         const {id, data: dataJson} = record
@@ -406,7 +406,7 @@ export class ClientRegistry extends Registry {
 
         let record = await category.action.create_item(data)
         if (record) {
-            this.db.cache(record)                      // record == {id: id, data: data-encoded}
+            this.db.cache(record)                       // record == {id: id, data: data-encoded}
             return this.getItem(record.id)
         }
         throw new Error(`cannot create item ${item}`)
