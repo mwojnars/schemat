@@ -158,7 +158,7 @@ export class AdminProcess extends BackendProcess {
 
             for (const id of ids) {
                 let data = await ring.select(id)          // the record might have been modified during this loop - must re-read
-                let item = await globalThis.registry.itemFromRecord({id: id, data})
+                let item = await globalThis.registry.itemFromRecord({id, data})
                 print(`reinserting item [${id}]...`)
                 item.id = undefined
                 await ring.insert(item)
