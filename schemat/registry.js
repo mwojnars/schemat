@@ -234,8 +234,10 @@ export class Registry {
         for await (const record of records) {
             if (limit !== undefined && count >= limit) break
             if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
-            let item = this.itemFromRecord(record, cid)         // this returns undefined if the item is not of the requested category
+
+            let item = this.makeItem(record)
             if (item instanceof Promise) item = await item
+
             if (item) {
                 this.cache(item)
                 yield item
@@ -249,12 +251,11 @@ export class Registry {
         return cid === undefined || cid === record.data.get('__category__')?.id
     }
 
-    itemFromRecord(record /*ItemRecord*/, cid) {
-        /* Convert an ItemRecord into a booted item. If category's id is provided (`cid`), only return the item when
-           the category's id matches, otherwise return undefined. May return a Promise.
+    makeItem(record /*ItemRecord*/) {
+        /* Create a new booted item from an ItemRecord, or return an existing singleton root item if the ID is ROOT_ID.
+           May return a Promise.
          */
-        if (isRoot(record.id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined      // special handling for the root item
-        // if (cid === undefined || cid === record.data.get('__category__')?.id)
+        if (isRoot(record.id)) return this.root             // don't create a duplicate for the root item, it must be a singleton
         return Item.createBooted(this, record)
     }
 
