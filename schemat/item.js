@@ -197,7 +197,6 @@ export class Item {
                     // or accessed after await load(), or through item.get()
 
     _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
-    dataJson        // JSON string containing encoded .data as loaded from DB during last load(); undefined in a newborn item
 
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
@@ -335,11 +334,7 @@ export class Item {
     async _loadData() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
         let json = await this.registry.loadData(this.id)
-        return this._decodeData(json)
-    }
-    _decodeData(json) {
-        /* Decode a JSON-encoded data string into an object and save the original string in this.dataJson. */
-        return JSONx.parse(this.dataJson = json)
+        return JSONx.parse(json)
     }
 
     setExpiry(ttl) {

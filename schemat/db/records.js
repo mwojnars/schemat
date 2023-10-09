@@ -58,7 +58,7 @@ export class ItemRecord {
     encoded() {
         return {id: this.id, data: this.data_plain}
     }
-    
+
     stringified() {
         return {id: this.id, data: this.data_json}
     }
