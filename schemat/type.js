@@ -200,7 +200,7 @@ export class Type {
     }
 
     display(props) {
-        return e(this.constructor.Widget, {...props, type: this})
+        return e(this.constructor.Widget, {...props, schema: this})
     }
 }
 
