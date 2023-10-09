@@ -52,11 +52,6 @@ class Store {
 class MemorySequence extends Sequence {
 }
 
-class Index {
-    descriptor          // IndexDescriptor that defines this index's key and value
-    sequence            // Sequence that holds this index's records
-}
-
 /**********************************************************************************************************************/
 
 // class FieldDescriptor {
@@ -92,8 +87,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
     schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
     schema_value            // array of item's property names to be included in the value object (repeated values excluded)
     category                // (?) category of items allowed in this index
-
-    // {id, data}
 
     *encode_item(item) {
         /* Encode an item as a stream of {key, value} record(s). The result stream can be of any size, including:
@@ -210,13 +203,35 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
 export class DataDescriptor extends SequenceDescriptor {
     /* Specification of a data sequence. */
 
-    schema_key = new Map(Object.entries({
-        id:  new INTEGER(),
-    }))
+    schema_key = new Map([['id', new INTEGER()]]);
+
+    *generate_keys(item) {
+        yield [item.id]
+    }
 
     generate_value(item) {
         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
         assert(item.isLoaded)
         return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
     }
+}
+
+export class IndexByCategoryDescriptor extends SequenceDescriptor {
+    /* Specification of an index that maps category IDs to item IDs. */
+    schema_key = new Map([['__category__', new INTEGER()]])
+
+    generate_value(item) {
+        return item.id
+    }
+}
+
+/**********************************************************************************************************************/
+
+export class Index {
+    descriptor          // IndexDescriptor that defines this index's key and value
+    sequence            // Sequence that holds this index's records
+}
+
+export class IndexByCategory extends Index {
+    descriptor = new IndexByCategoryDescriptor()
 }

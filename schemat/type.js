@@ -747,7 +747,7 @@ export class TYPE extends GENERIC {
 
 export class ITEM extends Type {
     /*
-    Reference to an Item, encoded as ID=(CID,IID), or just IID if an exact `category` was provided.
+    Reference to an Item, encoded as {"@": id} during serialization through JSONx.
     ITEM without parameters is equivalent to GENERIC(Item), however, ITEM can also be parameterized,
     which is not possible with a GENERIC.
     */

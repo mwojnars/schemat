@@ -5,6 +5,7 @@ import {Item} from "../item.js"
 import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
+import {IndexByCategory} from "./store.js";
 
 
 /**********************************************************************************************************************
@@ -48,6 +49,10 @@ export class Ring extends Item {
         }
         await block.open(this)
         this.block = block
+
+        this.indexes = new Map([
+            ['category__item', new IndexByCategory()],          // index of items sorted by category
+        ])
     }
 
     async erase() {
@@ -150,8 +155,8 @@ export class Ring extends Item {
     /***  Change propagation  ***/
 
     propagate(change, id, data = null) {
-        for (const index of this.indexes.values())
-            index.receive(change, id, data)
+        // for (const index of this.indexes.values())
+        //     index.receive(change, id, data)
     }
 
 }
