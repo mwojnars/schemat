@@ -6,6 +6,7 @@ import { Path, Catalog, Data } from './data.js'
 import {DATA, DATA_GENERIC, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
+import {ItemRecord} from "./records.js";
 
 export const ROOT_ID = 0
 export const SITE_ID = 1
@@ -254,16 +255,26 @@ export class Item {
         this.id = id
     }
 
-    static async createBooted(registry, id, {data, dataJson} = {}) {
+    static async createBooted(registry, record) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
-           or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
-           The item returned is *booted* (this.data is initialized).
+           or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
+           In any case, the item returned is *booted* (this.data is initialized).
          */
-        let item = new Item(registry, id)
-        assert(data || dataJson)
-        data = data || item._decodeData(dataJson)
-        return item.reload(data)
+        assert(record instanceof ItemRecord)
+        let item = new Item(registry, record.id)
+        return item.reload(record.data)
     }
+
+    // static async createBooted(registry, id, {data, dataJson} = {}) {
+    //     /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
+    //        or an instance loaded from DB and filled out with `data` (object) or `dataJson` (encoded json string).
+    //        The item returned is *booted* (this.data is initialized).
+    //      */
+    //     let item = new Item(registry, id)
+    //     assert(data || dataJson)
+    //     data = data || item._decodeData(dataJson)
+    //     return item.reload(data)
+    // }
 
     static createAPI(endpoints, actions = {}) {
         /* Create .api and .actions of this Item (sub)class. */
@@ -921,7 +932,7 @@ export class Category extends Item {
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createBooted(this.registry, iid, {data})
+        return Item.createBooted(this.registry, new ItemRecord(iid, data)) //iid, {data})
     }
 
     async getItemClass() {

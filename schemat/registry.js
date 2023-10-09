@@ -249,11 +249,13 @@ export class Registry {
         // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
         assert(record instanceof ItemRecord)
         const {id, json: dataJson} = record
-        if (isRoot(id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
-        let data = JSONx.parse(dataJson)
-        if (!(data instanceof Data)) data = new Data(data)
+        if (isRoot(record.id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
+
+        let data = record.data
+        assert (data instanceof Data)
+
         if (cid === undefined || cid === data.get('__category__')?.id)
-            return Item.createBooted(this, id, {dataJson})
+            return Item.createBooted(this, record)  //.id, {dataJson})
     }
 
 
