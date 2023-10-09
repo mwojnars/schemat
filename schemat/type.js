@@ -175,10 +175,9 @@ export class Schema {
     /*** binary encoding for indexing ***/
 
     binary_encode(value, last = false) {
-        /* Encode a value to Uint8Array. If last=false and the binary representation has variable length,
+        /* Create a sort key and return as Uint8Array. If last=false and the binary representation has variable length,
            the terminator symbol/sequence or length specification should be included in the output,
-           so that binary_decode() can detect the length of the encoded sequence (this length can be smaller
-           than the length of the entire record).
+           so that binary_decode() can detect the length of the encoded sequence when another value follows.
          */
         throw new NotImplemented(`binary_encode() is not implemented for ${this}`)
     }

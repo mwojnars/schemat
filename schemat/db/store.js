@@ -49,6 +49,16 @@ class Store {
 
 /**********************************************************************************************************************/
 
+class MemorySequence extends Sequence {
+}
+
+class Index {
+    descriptor          // IndexDescriptor that defines this index's key and value
+    sequence            // Sequence that holds this index's records
+}
+
+/**********************************************************************************************************************/
+
 // class FieldDescriptor {
 //     /* Descriptor of a field of a record in a data/index sequence. */
 //

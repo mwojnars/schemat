@@ -123,9 +123,9 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async notify(event, id, data = null) {
-        /* Notify this block's listeners (derived Sequences) that a record has been modified. */
-        return this.ring.notify(event, id, data)
+    async propagate(change, id, data = null) {
+        /* Propagate a change in this block to the listeners (derived Sequences) in the same ring. */
+        return this.ring.propagate(change, id, data)
     }
 
 
@@ -167,7 +167,7 @@ export class Block extends Item {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        await this.notify('del', id)
+        await this.propagate('del', id)
         return done ? done : this.ring.forward_delete(id)
     }
 
@@ -176,7 +176,7 @@ export class Block extends Item {
         await this._save(id, data)
         this.dirty = true
         this.flush()
-        await this.notify('put', id, data)
+        await this.propagate('set', id, data)
     }
 
     /***  override in subclasses  ***/

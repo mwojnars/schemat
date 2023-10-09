@@ -147,11 +147,11 @@ export class Ring extends Item {
     forward_save(id, data)          { return this.db.forward_save(this, id, data) }
     forward_delete(id)              { return this.db.forward_delete(this, id) }
 
-    /***  Events  ***/
+    /***  Change propagation  ***/
 
-    notify(event, id, data = null) {            // propagate() ?
+    propagate(change, id, data = null) {
         for (const index of this.indexes.values())
-            index.receive(event, id, data)
+            index.receive(change, id, data)
     }
 
 }
