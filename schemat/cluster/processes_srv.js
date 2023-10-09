@@ -10,6 +10,7 @@ import {DataServer, WebServer} from "./servers.js";
 import {Ring} from "../db/db_srv.js";
 import {SchematProcess} from "../processes.js";
 import {ServerRegistry} from "../registry_srv.js";
+import {ItemRecord} from "../records.js";
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]
 const __dirname  = path.dirname(__filename) + '/..'
@@ -158,7 +159,7 @@ export class AdminProcess extends BackendProcess {
 
             for (const id of ids) {
                 let data = await ring.select(id)          // the record might have been modified during this loop - must re-read
-                let item = await globalThis.registry.itemFromRecord({id, data})
+                let item = await globalThis.registry.itemFromRecord(new ItemRecord(id, data))
                 print(`reinserting item [${id}]...`)
                 item.id = undefined
                 await ring.insert(item)

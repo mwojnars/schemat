@@ -1,3 +1,4 @@
+import {assert} from "./utils.js";
 import {JSONx} from "./serialize.js";
 
 /**********************************************************************************************************************/
@@ -32,5 +33,14 @@ export class ItemRecord {
 
     _encode_data() {
         return this._data_json = JSONx.stringify(this._data_object)
+    }
+
+    constructor(id, data) {
+        /* ItemRecord can be initialized either with a JSON string in `data`, or a Data object. */
+        this.id = id
+
+        assert(data, `missing 'data' for ItemRecord, id=${id}`)
+        if (typeof data === 'string') this._data_json = data
+        else this._data_object = data
     }
 }

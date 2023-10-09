@@ -1,6 +1,7 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
+import {ItemRecord} from "../records.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -217,7 +218,7 @@ class FileBlock extends Block {
 
     async *_scan() {
         let entries = [...this.records.entries()]
-        entries = entries.map(([id, data]) => ({id, data}))
+        entries = entries.map(([id, data]) => (new ItemRecord(id, data)))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
     }

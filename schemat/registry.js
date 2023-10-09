@@ -6,6 +6,7 @@ import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './boot/root.js'
+import {ItemRecord} from "./records.js";
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -243,10 +244,11 @@ export class Registry {
     }
 
     itemFromRecord(record, cid) {
-        /* Convert an {id, data} record into a booted item. If category's id is provided (`cid`), only return the item when
+        /* Convert an ItemRecord into a booted item. If category's id is provided (`cid`), only return the item when
            the category's id matches, otherwise return undefined. May return a Promise. */
         // yield isRoot(id) ? this.root : Item.createBooted(this, id, {dataJson})
-        const {id, data: dataJson} = record
+        assert(record instanceof ItemRecord)
+        const {id, json: dataJson} = record
         if (isRoot(id)) return cid === undefined || cid === ROOT_ID ? this.root : undefined
         let data = JSONx.parse(dataJson)
         if (!(data instanceof Data)) data = new Data(data)
