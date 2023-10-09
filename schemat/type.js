@@ -681,17 +681,17 @@ export class GENERIC extends Type {
 }
 
 // the most generic type for encoding/decoding of objects of any types
-export let generic_schema = new GENERIC()
+export let generic_type = new GENERIC()
 export let generic_string = new STRING()
 
 
 /**********************************************************************************************************************/
 
-export class SCHEMA extends GENERIC {
+export class TYPE extends GENERIC {
     static defaultProps = {class: Type}
 
     static Widget = class extends GENERIC.Widget {
-        scope = 'Type-SCHEMA'
+        scope = 'Type-TYPE'
         static style = () => this.safeCSS({stopper: '|'})
         `
             .default|   { color: #888; }
@@ -715,7 +715,7 @@ export class SCHEMA extends GENERIC {
     }
 }
 
-// export class FIELD extends SCHEMA {
+// export class FIELD extends TYPE {
 //
 //     unique          // if true (default), the field cannot be repeated (max. one value allowed) ...single
 //     //repeated        // if true, the field can occur multiple times in an item
@@ -809,13 +809,13 @@ export class MAP extends Type {
     /*
     Accepts plain objects as data values, or objects of a given `type`.
     Outputs an object with keys and values encoded through their own type.
-    If no type is provided, `generic_schema` is used as a default for values, or STRING() for keys.
+    If no type is provided, `generic_type` is used as a default for values, or STRING() for keys.
     */
 
     static defaultProps = {
         class:      Object,                     // class of input objects
         keys:       new STRING(),               // Type of keys of app-layer dicts
-        values:     generic_schema,             // Type of values of app-layer dicts
+        values:     generic_type,             // Type of values of app-layer dicts
     }
 
     collect(assets) {
@@ -1328,14 +1328,14 @@ export class DATA extends CATALOG {
 
     static defaultProps = {
         fields: {},             // object with field names and their types; null means a default data type should be used for a given field
-        strict: true,           // if true, only fields listed in `fields` are allowed; generic_schema is assumed for other fields
+        strict: true,           // if true, only fields listed in `fields` are allowed; generic_type is assumed for other fields
     }
 
     isValidKey(key) {
         return is_valid_field_name(key) && (!this.props.strict || Object.hasOwn(this.props.fields, key))
     }
 
-    get(key) { return this.props.fields[key] || (!this.props.strict && generic_schema) || undefined }
+    get(key) { return this.props.fields[key] || (!this.props.strict && generic_type) || undefined }
 
     subschema(key) {
         let {fields} = this.props
@@ -1365,12 +1365,12 @@ export class DATA_GENERIC extends DATA {
         fields: {},
         strict: false,
     }
-    subschema(key)  { return this.props.fields[key] || generic_schema }
-    _all_schemas()  { return [...super._all_schemas(), generic_schema] }
+    subschema(key)  { return this.props.fields[key] || generic_type }
+    _all_schemas()  { return [...super._all_schemas(), generic_type] }
 }
 
 
-export class ITEM_SCHEMA extends SCHEMA {
+export class ITEM_SCHEMA extends TYPE {
     /* An (imputed) instance of DATA schema for items in a category (the category's `fields` combined into a DATA instance). */
 
     static defaultProps = {
@@ -1385,7 +1385,7 @@ export class ITEM_SCHEMA extends SCHEMA {
     }
 }
 
-export class OWN_SCHEMA extends SCHEMA {
+export class OWN_SCHEMA extends TYPE {
     /* An (imputed) instance of DATA schema for the item (self), imputed from the category. */
 
     static defaultProps = {

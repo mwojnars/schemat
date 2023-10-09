@@ -61,7 +61,7 @@
       "@": STRING
     fields:
       values:
-        "@": SCHEMA
+        "@": TYPE
       info: Fields must have unique names.
       default:
         __category__:
@@ -282,7 +282,7 @@
       "@": GENERIC
     properties:
       values:
-        "@": SCHEMA
+        "@": TYPE
       "@": CATALOG
     "@": Catalog
   __category__:

@@ -4,7 +4,7 @@ Creating core items from scratch and storing them as initial items in DB.
 
 import {print, assert} from '../utils.js'
 import {SITE_ID} from '../item.js'
-import {GENERIC, SCHEMA, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
+import {GENERIC, TYPE, BOOLEAN, NUMBER, STRING, TEXT, CODE, ITEM, CATALOG, PATH} from '../type.js'
 import {Catalog} from "../data.js"
 
 // import {fileURLToPath} from 'url'
@@ -140,7 +140,7 @@ async function create_categories(Category) {
             encode      : new CODE({info: "Body of a function with the signature `encode(obj,props={})`. Should return a state that encodes the input object/value, `obj`."}),
             decode      : new CODE(),
             initial     : new GENERIC(),
-            properties  : new CATALOG({values: new SCHEMA()}),
+            properties  : new CATALOG({values: new TYPE()}),
         }),
     })
 

@@ -3,7 +3,7 @@ import { NotFound, ItemDataNotLoaded, ItemNotLoaded } from './errors.js'
 
 import { JSONx } from './serialize.js'
 import { Path, Catalog, Data } from './data.js'
-import {DATA, DATA_GENERIC, generic_schema} from "./type.js"
+import {DATA, DATA_GENERIC, generic_type} from "./type.js"
 import {HttpService, JsonService, API, Task, TaskService, InternalService, Network} from "./services.js"
 import {CategoryAdminPage, ItemAdminPage} from "./pages.js";
 
