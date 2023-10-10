@@ -125,7 +125,7 @@ export class Block extends Item {
     }
 
     async propagate(change, id, data = null) {
-        /* Propagate a change in this block to the listeners (derived Sequences) in the same ring. */
+        /* Propagate a change in this block to derived Sequences in the same ring. */
         return this.ring.propagate(change, id, data)
     }
 
@@ -164,20 +164,22 @@ export class Block extends Item {
 
     async delete(id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
+        let data_old = await this._select(id)
         let done = this._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        await this.propagate('del', id)
+        await this.propagate(id, data_old)
         return done ? done : this.ring.forward_delete(id)
     }
 
     async save(id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
+        let data_old = await this._select(id) || null
         await this._save(id, data)
         this.dirty = true
         this.flush()
-        await this.propagate('set', id, data)
+        await this.propagate(id, data_old, data)
     }
 
     /***  override in subclasses  ***/

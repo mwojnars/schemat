@@ -50,9 +50,17 @@ export class Ring extends Item {
         await block.open(this)
         this.block = block
 
+        // await this._init_indexes()
+    }
+
+    async _init_indexes() {
         this.indexes = new Map([
             ['category__item', new IndexByCategory()],          // index of items sorted by category
         ])
+
+        for await (let record of this.scan())
+            for (let [name, index] of this.indexes)
+                index.apply(record.id, null, record.data)
     }
 
     async erase() {
@@ -154,9 +162,13 @@ export class Ring extends Item {
 
     /***  Change propagation  ***/
 
-    propagate(change, id, data = null) {
+    propagate(id, data_old, data_new) {
+        /* Propagate a change in an item's data to all indexes in this ring. Insertion/deletion is indicated by
+           null in `data_old` or `data_new`, respectively.
+         */
+        print(`propagate ${id}: ${data_old} -> ${data_new}`)
         // for (const index of this.indexes.values())
-        //     index.receive(change, id, data)
+        //     index.apply(id, data_old, data_new)
     }
 
 }

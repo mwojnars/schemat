@@ -24,16 +24,16 @@ class Block extends AbstractSequence {
 
 // MasterBlock / SlaveBlock
 
-class Sequence extends AbstractSequence {
+class Sequence__ extends AbstractSequence {
     /* Distributed Sequence consisting of multiple - possibly overlapping (replicated) - Blocks.
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks.
      */
 }
 
-class DataSequence extends Sequence {}
-class IndexSequence extends Sequence {}
+class DataSequence extends Sequence__ {}
+class IndexSequence extends Sequence__ {}
 
-class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
+class AggregateSequence extends Sequence__ {}     // or Cube like in OLAP databases e.g. Apache Druid ?
     /* Aggregates can only implement *reversible* operations, like counting or integer sum.
        Min/max must be handled through a full index over the min/max-ed field.
        OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
@@ -49,7 +49,12 @@ class Store {
 
 /**********************************************************************************************************************/
 
-class MemorySequence extends Sequence {
+class Sequence {
+
+    descriptor          // SequenceDescriptor that defines this sequence's key and value
+    blocks              // array of Blocks that make up this sequence
+    splits              // array of split points between blocks
+
 }
 
 /**********************************************************************************************************************/
