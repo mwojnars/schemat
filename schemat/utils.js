@@ -195,6 +195,7 @@ export class CustomMap extends Map {
      */
 
     constructor(iterable) {
+        if (!iterable) { super(); return }
         super([...iterable].map(([k, v]) => [this.convert(k), v]))
     }
 
