@@ -3,7 +3,7 @@
 import { print, assert, T } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
-import { Catalog, Data, ItemsCache, ItemsCount } from './data.js'
+import { Catalog, Data, ItemsCache, Counter } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './boot/root.js'
 
@@ -336,8 +336,8 @@ export class Session {
 
     releaseMutex        // release function for registry.sessionMutex to be called at the end of this session
 
-    itemsRequested = new ItemsCount()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
-    itemsLoaded    = new ItemsCount()       // for each item ID: no. of times the item data was loaded through registry.loadData()
+    itemsRequested = new Counter()       // for each item ID: no. of times the item was requested through registry.getItem() during this session
+    itemsLoaded    = new Counter()       // for each item ID: no. of times the item data was loaded through registry.loadData()
 
     constructor(registry, req, res) {
         this.registry = registry

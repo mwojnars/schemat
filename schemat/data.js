@@ -79,11 +79,11 @@ export class Path {
  **
  */
 
-export class ItemsCount extends Map {
-    /* A special case of ItemsMap where values are integers that hold counts of item occurrences. */
-    add(id, increment = 1) {
-        let count = (this.get(id) || 0) + increment
-        this.set(id, count)
+export class Counter extends Map {
+    /* A Map that holds counts of key occurrences. */
+    add(key, increment = 1) {
+        let count = (this.get(key) || 0) + increment
+        this.set(key, count)
         return count
     }
     total()     { let t = 0; this.forEach(v => t += v); return t }
