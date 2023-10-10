@@ -7,11 +7,11 @@ import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput} from "../util/binary.js";
 
 
-/**********************************************************************************************************************/
-
 // EMPTY token marks an empty value in a record
 export const EMPTY = Symbol('empty')
 
+
+/**********************************************************************************************************************/
 
 export class Record {
 
@@ -65,17 +65,32 @@ export class Record {
     _decode_value() {
         return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
     }
+
+    constructor(schema, plain = null, binary = null) {
+        this.schema = schema
+        if (plain) {
+            this._key = plain.key
+            this._value = plain.value
+        }
+        if (binary) {
+            this._binary_key = binary.key
+            this._string_value = binary.value
+        }
+    }
 }
 
-// export class BinaryRecord {
-//     key                         // Uint8Array
-//     value                       // string (JSON), or undefined
-// }
-//
-// export class PlainRecord {
-//     key                         // array of 1+ field values - JS objects or primitives
-//     value                       // object to be JSON-stringified, or undefined
-// }
+export class BinaryRecord extends Record {
+    /* A Record initialized with encoded (binary) data. */
+
+    constructor(schema, key, value)     { super(schema, null, {key, value}) }
+}
+
+export class PlainRecord extends Record {
+    /* A Record initialized with decoded (plain) data. */
+
+    constructor(schema, key, value)     { super(schema, {key, value}, null) }
+}
+
 
 /**********************************************************************************************************************/
 
