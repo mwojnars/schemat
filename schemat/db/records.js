@@ -15,7 +15,6 @@ export const EMPTY = Symbol('empty')
 
 export class Record {
 
-    // schema                  // {name: type}, a Map of field names and Types to be included in the key;
     schema                  // array of Types of consecutive fields in the key;
                             // typically, `schema` is taken from the parent Sequence of this record
 
@@ -29,6 +28,19 @@ export class Record {
     get value()             { return this._value !== undefined ? this._value : this._decode_value() }
     get binary_key()        { return this._binary_key || this._encode_key() }
     get string_value()      { return this._string_value || this._encode_value() }
+
+    _encode_key() {
+        let output = new BinaryOutput()
+        let length = this.schema.length
+
+        for (let i = 0; i < length; i++) {
+            const type = this.schema[i]
+            const last = (i === length - 1)
+            const bin  = type.binary_encode(this._key[i], last)
+            output.write(bin)
+        }
+        return this._binary_key = output.result()
+    }
 
     _decode_key() {
         let input = new BinaryInput(this._binary_key)
@@ -45,23 +57,13 @@ export class Record {
 
         return this._key = key
     }
-    
-    _decode_value() {
-        return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
+
+    _encode_value() {
+        return this._string_value = (this._value === EMPTY ? '' : JSON.stringify(this._value))
     }
 
-    _encode_key() {
-        let output = new BinaryOutput()
-        let length = this.schema.length
-
-        for (let i = 0; i < length; i++) {
-            const type = this.schema[i]
-            const last = (i === length - 1)
-            const bin  = type.binary_encode(this._key[i], last)
-            output.write(bin)
-        }
-
-        return this._binary_key = output.result()
+    _decode_value() {
+        return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
     }
 }
 
