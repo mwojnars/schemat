@@ -1,9 +1,9 @@
 "use strict";
 
-import { print, assert, T } from './utils.js'
+import { print, assert, Counter } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
-import { Catalog, Data, ItemsCache, Counter } from './data.js'
+import { Catalog, Data, ItemsCache } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './boot/root.js'
 

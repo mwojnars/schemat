@@ -75,19 +75,9 @@ export class Path {
 
 /**********************************************************************************************************************
  **
- **  CONTAINERS of ITEMS
+ **  CACHE of ITEMS
  **
  */
-
-export class Counter extends Map {
-    /* A Map that holds counts of key occurrences. */
-    add(key, increment = 1) {
-        let count = (this.get(key) || 0) + increment
-        this.set(key, count)
-        return count
-    }
-    total()     { let t = 0; this.forEach(v => t += v); return t }
-}
 
 export class ItemsCache extends Map {
     /* A cache of Item instances; provides manually-invoked eviction by LRU and per-item TTL.
