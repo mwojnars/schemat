@@ -263,20 +263,26 @@ export class Index extends Sequence {
 
         // delete old records
         for (let [key, value] of del_records)
-            this._find_block(key).delete(key)
+            this._find_block(key).del(key)
 
         // (over)write new records
         for (let [key, value] of put_records)
             this._find_block(key).put(key, value)
     }
 
+    *map(input_record) {
+        /* Perform transformation of the input record, as defined by this index, and output any number (0+)
+           of output records to be stored in the index. The input record is a {key, value} pair, where key is a Uint8Array and value is a json string.
+         */
+    }
+
     _make_plan(change) {
-        /* Make a plan of index updates in response to a `change` in the source sequence.
+        /* Make an update execution plan in response to a `change` in the source sequence.
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
-        const {key, value_old, value_new} = change
-        print(`apply ${key}: ${value_old} -> ${value_new}`)
+        // const {key, value_old, value_new} = change
+        // print(`apply ${key}: ${value_old} -> ${value_new}`)
 
         let out_records_old = [...this.descriptor.generate_records(change.record_old)]
         let out_records_new = [...this.descriptor.generate_records(change.record_new)]

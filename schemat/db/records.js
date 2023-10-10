@@ -4,19 +4,78 @@
 
 import {assert} from "../utils.js";
 import {JSONx} from "../serialize.js";
+import {BinaryInput, BinaryOutput} from "../util/binary.js";
 
 
 /**********************************************************************************************************************/
 
-export class BinaryRecord {
-    key                         // Uint8Array
-    value                       // string (JSON), or undefined
+// EMPTY token marks an empty value in a record
+export const EMPTY = Symbol('empty')
+
+
+export class Record {
+
+    // schema                  // {name: type}, a Map of field names and Types to be included in the key;
+    schema                  // array of Types of consecutive fields in the key;
+                            // typically, `schema` is taken from the parent Sequence of this record
+
+    _key                    // array of fields decoded from the binary key
+    _value                  // object parsed from JSON string, or EMPTY (empty value)
+
+    _binary_key             // `key` encoded as Uint8Array through `schema`
+    _string_value           // JSON-stringified `value`, or empty string (when empty value)
+
+    get key()               { return this._key || this._decode_key() }
+    get value()             { return this._value !== undefined ? this._value : this._decode_value() }
+    get binary_key()        { return this._binary_key || this._encode_key() }
+    get string_value()      { return this._string_value || this._encode_value() }
+
+    _decode_key() {
+        let input = new BinaryInput(this._binary_key)
+        let length = this.schema.length
+        let key = []
+
+        for (let i = 0; i < length; i++) {
+            const type = this.schema[i]
+            const last = (i === length - 1)
+            const val  = type.binary_decode(input, last)
+            key.push(val)
+        }
+        assert(input.pos === this._binary_key.length)
+
+        return this._key = key
+    }
+    
+    _decode_value() {
+        return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
+    }
+
+    _encode_key() {
+        let output = new BinaryOutput()
+        let length = this.schema.length
+
+        for (let i = 0; i < length; i++) {
+            const type = this.schema[i]
+            const last = (i === length - 1)
+            const bin  = type.binary_encode(this._key[i], last)
+            output.write(bin)
+        }
+
+        return this._binary_key = output.result()
+    }
 }
 
-export class PlainRecord {
-    key                         // array of 1+ field values - JS objects or primitives
-    value                       // object to be JSON-stringified, or undefined
-}
+// export class BinaryRecord {
+//     key                         // Uint8Array
+//     value                       // string (JSON), or undefined
+// }
+//
+// export class PlainRecord {
+//     key                         // array of 1+ field values - JS objects or primitives
+//     value                       // object to be JSON-stringified, or undefined
+// }
+
+/**********************************************************************************************************************/
 
 export class ItemRecord {
     /* Raw item as an {id, data} pair, with the data initialized from a JSONx string or a Data object. */
@@ -76,9 +135,10 @@ export class ItemRecord {
 /**********************************************************************************************************************/
 
 export class Change {
-    /* Change of a record in a data sequence or index.
-       For value_old and value_new, null means the record is missing (insertion or deletion), and undefined means the
-       record exists, but the value is empty (update).
+    /* Change of a binary record in a Sequence to be propagated to derived sequences.
+       `key` should be a Uint8Array; `value_*` should be json strings.
+       For value_old and value_new, null means the corresponding old/new record is missing  (which represents
+       insertion or deletion), and empty string (or undefined) means the record exists, but its value is empty.
      */
 
     key
