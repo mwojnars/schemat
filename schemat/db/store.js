@@ -157,7 +157,7 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
     }
 
     allowed(item) {
-        if (!this.category.includes(item)) return []
+        if (!item || !this.category.includes(item)) return []
     }
 
     generate_value(item) {
@@ -254,31 +254,32 @@ class Sequence {
 
 export class Index extends Sequence {
 
-    source              // DataSequence that this index is derived from
+    // source              // Sequence that this index is derived from
 
     apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
 
         const [del_records, put_records] = this._make_plan(change)
 
-        // let block = this._find_block(key)
-        // block.apply(change)
+        // delete old records
+        for (let [key, value] of del_records)
+            this._find_block(key).delete(key)
 
+        // (over)write new records
+        for (let [key, value] of put_records)
+            this._find_block(key).put(key, value)
     }
 
     _make_plan(change) {
         /* Make a plan of index updates in response to a `change` in the source sequence.
-           The plan is a pair of BinaryMaps: {key: value}, one for records to be deleted, and one for records
+           The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
         const {key, value_old, value_new} = change
         print(`apply ${key}: ${value_old} -> ${value_new}`)
 
-        let in_record_old = {key, value: value_old}
-        let in_record_new = {key, value: value_new}
-
         let out_records_old = [...this.descriptor.generate_records(change.record_old)]
-        let out_records_new = [...this.descriptor.generate_records(in_record_new)]
+        let out_records_new = [...this.descriptor.generate_records(change.record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = new BinaryMap(out_records_old.map(rec => [rec.key, rec.value]))

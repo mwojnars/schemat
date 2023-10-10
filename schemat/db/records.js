@@ -76,17 +76,19 @@ export class ItemRecord {
 /**********************************************************************************************************************/
 
 export class Change {
-    /* Change of a record in a data sequence or index. */
+    /* Change of a record in a data sequence or index.
+       For value_old and value_new, null means the record is missing (insertion or deletion), and undefined means the
+       record exists, but the value is empty (update).
+     */
 
     key
-    value_old
-    value_new
+    value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
+    value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
 
-    get record_old() {
-        return new {key: this.key, value: this.value_old}
-    }
+    get record_old()    { return this.value_old === null ? null : {key: this.key, value: this.value_old} }
+    get record_new()    { return this.value_new === null ? null : {key: this.key, value: this.value_new} }
 
-    constructor(key, value_old, value_new) {
+    constructor(key, value_old = null, value_new = null) {
         this.key = key
         this.value_old = value_old
         this.value_new = value_new
