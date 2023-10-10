@@ -271,8 +271,8 @@ export class Index extends Sequence {
     }
 
     *map(input_record) {
-        /* Perform transformation of the input record, as defined by this index, and output any number (0+)
-           of output records to be stored in the index. The input record is a {key, value} pair, where key is a Uint8Array and value is a json string.
+        /* Perform transformation of the input Record, as defined by this index, and output any number (0+)
+           of output records to be stored in the index.
          */
     }
 

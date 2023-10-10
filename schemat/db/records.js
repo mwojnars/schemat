@@ -115,7 +115,6 @@ export class ItemRecord {
     }
 
     _decode_data() {
-        // return this._data_object = JSONx.parse(this._data_json)
         return this._data_object = JSONx.decode(this.data_plain)
     }
     
@@ -152,7 +151,7 @@ export class ItemRecord {
 /**********************************************************************************************************************/
 
 export class Change {
-    /* Change of a binary record in a Sequence to be propagated to derived sequences.
+    /* Change of a binary Record in a Sequence to be propagated to derived sequences.
        `key` should be a Uint8Array; `value_*` should be json strings.
        For value_old and value_new, null means the corresponding old/new record is missing  (which represents
        insertion or deletion), and empty string (or undefined) means the record exists, but its value is empty.
