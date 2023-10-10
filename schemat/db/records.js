@@ -2,11 +2,11 @@
     Low-level representation of items and index records, for storage and transmission from/to the database.
  */
 
-import {assert} from "../utils.js";
+import {assert, CustomMap} from "../utils.js";
 import {JSONx} from "../serialize.js";
 
-/**********************************************************************************************************************/
 
+/**********************************************************************************************************************/
 
 export class BinaryRecord {
     key                         // Uint8Array
@@ -88,3 +88,13 @@ export class Change {
         this.value_new = value_new
     }
 }
+
+/**********************************************************************************************************************/
+
+export class BinaryMap extends CustomMap {
+    /* A Map that holds binary keys (Uint8Array, Uint32Array). */
+
+    convert(key)    { return [...key].join(",") }
+    reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
+}
+
