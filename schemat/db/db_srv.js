@@ -6,7 +6,8 @@ import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./store.js";
-import {Change} from "./records.js";
+import {Change, PlainRecord} from "./records.js";
+import {INTEGER} from "../type.js";
 
 
 /**********************************************************************************************************************
@@ -26,6 +27,8 @@ export class Ring extends Item {
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
     stop_iid                // (optional) maximum IID of all items
     indexes = new Map()     // {name: Index} of all indexes in this ring
+
+    _data_schema = [new INTEGER()]      // (temporary)
 
     constructor({file, item, name, ...opts}) {
         super(globalThis.registry)
@@ -61,7 +64,9 @@ export class Ring extends Item {
 
         for await (let record of this.scan())                   // PlainRecord?
             for (let [name, index] of this.indexes) {
-                const change = new Change(record.id, null, record.data)
+                // const change = new Change(record.id, null, record.data)
+                const plain = new PlainRecord(this._data_schema, record.id)
+                const change = new Change(plain.binary_key, null, record.data_json)
                 index.apply(change)
             }
     }

@@ -25,7 +25,7 @@ export class Record {
     _string_value           // JSON-stringified `value`, or empty string (when empty value)
 
     get key()               { return this._key || this._decode_key() }
-    get value()             { return this._value !== undefined ? this._value : this._decode_value() }
+    get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || this._encode_key() }
     get string_value()      { return this._string_value || this._encode_value() }
 
@@ -70,7 +70,7 @@ export class Record {
         this.schema = schema
         if (plain) {
             this._key = plain.key
-            this._value = plain.value
+            this._value = (plain.value === undefined ? EMPTY : plain.value)
         }
         if (binary) {
             this._binary_key = binary.key
@@ -151,13 +151,13 @@ export class ItemRecord {
 /**********************************************************************************************************************/
 
 export class Change {
-    /* Change of a binary Record in a Sequence to be propagated to derived sequences.
+    /* Data change in a binary record of a Sequence, to be propagated to derived sequences.
        `key` should be a Uint8Array; `value_*` should be json strings.
        For value_old and value_new, null means the corresponding old/new record is missing  (which represents
        insertion or deletion), and empty string (or undefined) means the record exists, but its value is empty.
      */
 
-    key
+    key                 // binary key
     value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
     value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
 
