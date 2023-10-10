@@ -229,11 +229,26 @@ export class IndexByCategoryDescriptor extends SequenceDescriptor {
 
 /**********************************************************************************************************************/
 
+class Block__ {}
+
+class MemoryBlock extends Block__ {
+    apply(change) {
+        const {key, value_old, value_new} = change
+    }
+}
+
 class Sequence {
 
     descriptor          // SequenceDescriptor that defines this sequence's key and value
     blocks              // array of Blocks that make up this sequence
     splits              // array of split points between blocks
+
+    constructor() {
+        this.blocks = [new MemoryBlock()]
+    }
+
+    // get block() { return this.blocks[0] }
+    _find_block(key) { return this.blocks[0] }
 
 }
 
@@ -245,7 +260,23 @@ export class Index extends Sequence {
         /* Update the index to apply a change that originated in the source sequence. */
         const {key, value_old, value_new} = change
         print(`apply ${key}: ${value_old} -> ${value_new}`)
+
+        // let block = this._find_block(key)
+        // block.apply(change)
+
+        let in_record_old = {key, value: value_old}
+        let in_record_new = {key, value: value_new}
+
+        let out_records_old = [...this.descriptor.generate_records(in_record_old)]
+        let out_records_new = [...this.descriptor.generate_records(in_record_new)]
+
+        // compare "old" and "new" output records to find different keys, or different values for a key...
+
+        // for each "old" key that's not in "new", delete it
+
+        // for each "new" key that's not in "old" or has a different value than in "old", (re-)insert it
     }
+
 }
 
 export class IndexByCategory extends Index {
