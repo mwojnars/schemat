@@ -187,6 +187,27 @@ export function sleep(millis) {
 
 /*************************************************************************************************/
 
+export class CustomMap {
+    /* A Map that holds custom objects as keys. The keys are converted to a primitive type and then inserted to the map.
+       The conversion is done by a subclass-specific `convert()` method (mandatory).
+       If `reverse()` method is also defined in a subclass, the conversion is reversible, and the original objects
+       can be iterated over with keys() or entries(). Otherwise, these two methods return the converted keys.
+     */
+
+    convert(key)    { throw new Error(`CustomMap.convert() must be overridden in a subclass`) }
+    reverse(key)    { return key }      // by default, return the converted key not the original one
+
+    has(key)        { return super.has(this.convert(key)) }
+    get(key)        { return super.get(this.convert(key)) }
+    set(key, value) { return super.set(this.convert(key), value) }
+    delete(key)     { return super.delete(this.convert(key)) }
+
+    *keys()         { for (const key of super.keys()) yield this.reverse(key) }
+    *entries()      { for (const [key, value] of super.entries()) yield [this.reverse(key), value] }
+    *[Symbol.iterator]() { yield* this.entries() }
+}
+
+
 export class Counter extends Map {
     /* A Map that holds counts of key occurrences. */
     add(key, increment = 1) {
