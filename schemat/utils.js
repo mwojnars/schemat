@@ -187,12 +187,16 @@ export function sleep(millis) {
 
 /*************************************************************************************************/
 
-export class CustomMap {
+export class CustomMap extends Map {
     /* A Map that holds custom objects as keys. The keys are converted to a primitive type and then inserted to the map.
        The conversion is done by a subclass-specific `convert()` method (mandatory).
        If `reverse()` method is also defined in a subclass, the conversion is reversible, and the original objects
        can be iterated over with keys() or entries(). Otherwise, these two methods return the converted keys.
      */
+
+    constructor(iterable) {
+        super([...iterable].map(([k, v]) => [this.convert(k), v]))
+    }
 
     convert(key)    { throw new Error(`CustomMap.convert() must be overridden in a subclass`) }
     reverse(key)    { return key }      // by default, return the converted key not the original one
