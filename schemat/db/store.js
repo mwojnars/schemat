@@ -4,7 +4,7 @@
 
 import {assert, print} from "../utils.js";
 import {JSONx} from "../serialize.js";
-import {BinaryInput, BinaryOutput} from "../util/binary.js"
+import {BinaryInput, BinaryOutput, BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 
 
@@ -270,11 +270,25 @@ export class Index extends Sequence {
         let out_records_old = [...this.descriptor.generate_records(in_record_old)]
         let out_records_new = [...this.descriptor.generate_records(in_record_new)]
 
-        // compare "old" and "new" output records to find different keys, or different values for a key...
+        // del/put plan: records to be deleted from, or written to, the index
+        let del_records = new BinaryMap(out_records_old.map(rec => [rec.key, rec.value]))
+        let put_records = new BinaryMap(out_records_new.map(rec => [rec.key, rec.value]))
 
-        // for each "old" key that's not in "new", delete it
+        this._prune_plan(del_records, put_records)
+    }
 
-        // for each "new" key that's not in "old" or has a different value than in "old", (re-)insert it
+    _prune_plan(del_records, put_records) {
+        /* Prune the del/put index update plan:
+           1) skip the records that are identical in `del_records` and `put_records`;
+           2) don't explicitly delete records that will be overwritten with a new value anyway
+         */
+        if (!del_records.size || !put_records.size) return
+        for (let key of del_records.keys())
+            if (put_records.has(key)) {
+                if (put_records.get(key) === del_records.get(key))      // "put" not needed when old/new values are equal
+                    put_records.delete(key)
+                del_records.delete(key)
+            }
     }
 
 }
