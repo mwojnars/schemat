@@ -72,3 +72,19 @@ export class ItemRecord {
         else this._data_object = data
     }
 }
+
+/**********************************************************************************************************************/
+
+export class Change {
+    /* Change of a record in a data sequence or index. */
+
+    key
+    value_old
+    value_new
+
+    constructor(key, value_old, value_new) {
+        this.key = key
+        this.value_old = value_old
+        this.value_new = value_new
+    }
+}

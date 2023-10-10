@@ -2,7 +2,7 @@
     Distributed no-sql data store for data records (items) and indexes.
 */
 
-import {assert} from "../utils.js";
+import {assert, print} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput} from "../util/binary.js"
 import {INTEGER} from "../type.js";
@@ -44,17 +44,6 @@ class Store {
        Like a database, but with custom query API (no SQL) and the ability to fall back on another store (ring)
        when  a particular read or write cannot be performed here (multi-ring architecture).
      */
-}
-
-
-/**********************************************************************************************************************/
-
-class Sequence {
-
-    descriptor          // SequenceDescriptor that defines this sequence's key and value
-    blocks              // array of Blocks that make up this sequence
-    splits              // array of split points between blocks
-
 }
 
 /**********************************************************************************************************************/
@@ -240,9 +229,23 @@ export class IndexByCategoryDescriptor extends SequenceDescriptor {
 
 /**********************************************************************************************************************/
 
-export class Index {
-    descriptor          // IndexDescriptor that defines this index's key and value
-    sequence            // Sequence that holds this index's records
+class Sequence {
+
+    descriptor          // SequenceDescriptor that defines this sequence's key and value
+    blocks              // array of Blocks that make up this sequence
+    splits              // array of split points between blocks
+
+}
+
+export class Index extends Sequence {
+
+    source              // DataSequence that this index is derived from
+
+    apply(change) {
+        /* Update the index to apply a change that originated in the source sequence. */
+        const {key, value_old, value_new} = change
+        print(`apply ${key}: ${value_old} -> ${value_new}`)
+    }
 }
 
 export class IndexByCategory extends Index {

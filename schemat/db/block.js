@@ -1,7 +1,7 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
-import {ItemRecord} from "./records.js";
+import {Change, ItemRecord} from "./records.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -124,9 +124,10 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async propagate(change, id, data = null) {
+    async propagate(id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        return this.ring.propagate(change, id, data)
+        const change = new Change(id, data_old, data_new)
+        return this.ring.propagate(change)
     }
 
 
