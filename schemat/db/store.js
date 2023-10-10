@@ -258,16 +258,26 @@ export class Index extends Sequence {
 
     apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
-        const {key, value_old, value_new} = change
-        print(`apply ${key}: ${value_old} -> ${value_new}`)
+
+        const [del_records, put_records] = this._make_plan(change)
 
         // let block = this._find_block(key)
         // block.apply(change)
 
+    }
+
+    _make_plan(change) {
+        /* Make a plan of index updates in response to a `change` in the source sequence.
+           The plan is a pair of BinaryMaps: {key: value}, one for records to be deleted, and one for records
+           to be written to the index sequence.
+         */
+        const {key, value_old, value_new} = change
+        print(`apply ${key}: ${value_old} -> ${value_new}`)
+
         let in_record_old = {key, value: value_old}
         let in_record_new = {key, value: value_new}
 
-        let out_records_old = [...this.descriptor.generate_records(in_record_old)]
+        let out_records_old = [...this.descriptor.generate_records(change.record_old)]
         let out_records_new = [...this.descriptor.generate_records(in_record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
@@ -275,6 +285,8 @@ export class Index extends Sequence {
         let put_records = new BinaryMap(out_records_new.map(rec => [rec.key, rec.value]))
 
         this._prune_plan(del_records, put_records)
+
+        return [del_records, put_records]
     }
 
     _prune_plan(del_records, put_records) {

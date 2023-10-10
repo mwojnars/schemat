@@ -82,6 +82,10 @@ export class Change {
     value_old
     value_new
 
+    get record_old() {
+        return new {key: this.key, value: this.value_old}
+    }
+
     constructor(key, value_old, value_new) {
         this.key = key
         this.value_old = value_old
