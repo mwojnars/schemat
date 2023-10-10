@@ -1,3 +1,5 @@
+import {CustomMap} from "../utils.js";
+
 /**********************************************************************************************************************/
 
 export class BinaryOutput {
@@ -121,3 +123,13 @@ export function byteLengthOfSignedInteger(n) {
         return 8;
     }
 }
+
+/**********************************************************************************************************************/
+
+export class BinaryMap extends CustomMap {
+    /* A Map that holds binary keys (Uint8Array, Uint32Array). */
+
+    convert(key)    { return [...key].join(",") }
+    reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
+}
+
