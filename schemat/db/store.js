@@ -7,6 +7,7 @@ import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {ItemRecord} from "./records.js";
+import {Item} from "../item.js";
 
 
 // Section, Block, Partition
@@ -288,7 +289,7 @@ export class Index extends Sequence {
         // const {key, value_old, value_new} = change
         // print(`apply ${key}: ${value_old} -> ${value_new}`)
 
-        // map each input record (old & new) to an array of 0+ output records
+        // map each source record (old & new) to an array of 0+ index records
         let out_records_old = [...this.map(change.record_old)]
         let out_records_new = [...this.map(change.record_new)]
 
@@ -326,8 +327,9 @@ export class IndexByCategory extends PrimaryIndex {
     // descriptor = new IndexByCategoryDescriptor()
 
     *map(input_record /*Record*/) {
-        let {id, data} = ItemRecord.from_binary(input_record)
-
+        let item_record = ItemRecord.from_binary(input_record)
+        // let item = await Item.createBooted(item_record)
+        // let {id, data} = item_record
     }
 
     schema = new Map([['__category__', new INTEGER()]]);

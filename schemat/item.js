@@ -263,7 +263,7 @@ export class Item {
         this.id = id
     }
 
-    static async createBooted(registry, record /*ItemRecord*/ ) {
+    static async createBooted(record /*ItemRecord*/, registry = globalThis.registry) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no IID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
            In any case, the item returned is *booted* (this.data is initialized).
@@ -918,7 +918,7 @@ export class Category extends Item {
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createBooted(this.registry, new ItemRecord(iid, data))
+        return Item.createBooted(new ItemRecord(iid, data), this.registry)
     }
 
     async getItemClass() {

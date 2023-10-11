@@ -255,7 +255,7 @@ export class Registry {
            May return a Promise.
          */
         if (isRoot(record.id)) return this.root             // don't create a duplicate for the root item, it must be a singleton
-        return Item.createBooted(this, record)
+        return Item.createBooted(record, this)
     }
 
 
