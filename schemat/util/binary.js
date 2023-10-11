@@ -157,10 +157,13 @@ export function asciiToBinary_Nodejs(str) {
 /**********************************************************************************************************************/
 
 export class BinaryMap extends CustomMap {
-    /* A Map that holds binary keys (Uint8Array, Uint32Array). */
+    /* A Map that holds Uint8Array binary keys. */
 
-    convert(key)    { return [...key].join(",") }
-    reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
+    convert(key)    { return binaryToString(key) }
+    reverse(str)    { return asciiToBinary(str) }
+
+    // convert(key)    { return [...key].join(",") }
+    // reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
 }
 
 
