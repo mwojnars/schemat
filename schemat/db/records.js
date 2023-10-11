@@ -2,7 +2,7 @@
     Low-level representation of items and index records, for storage and transmission from/to the database.
  */
 
-import {assert} from "../utils.js";
+import {assert, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput} from "../util/binary.js";
 
@@ -71,10 +71,13 @@ export class Record {
         if (plain) {
             this._key = plain.key
             this._value = (plain.value === undefined ? EMPTY : plain.value)
+            assert(T.isArray(this._key), `invalid key: ${this._key}`)
         }
         if (binary) {
             this._binary_key = binary.key
             this._string_value = binary.value
+            assert(this._binary_key instanceof Uint8Array, `invalid binary key: ${this._binary_key}`)
+            assert(typeof this._string_value === 'string', `invalid string value: ${this._string_value}`)
         }
     }
 }

@@ -65,7 +65,7 @@ export class Ring extends Item {
         for await (let record of this.scan())                   // PlainRecord?
             for (let [name, index] of this.indexes) {
                 // const change = new Change(record.id, null, record.data)
-                const plain = new PlainRecord(this._data_schema, record.id)
+                const plain = new PlainRecord(this._data_schema, [record.id])
                 const change = new Change(plain.binary_key, null, record.data_json)
                 index.apply(change)
             }
