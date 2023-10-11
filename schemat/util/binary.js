@@ -127,6 +127,35 @@ export function byteLengthOfSignedInteger(n) {
 
 /**********************************************************************************************************************/
 
+export function binaryToString(uint8array) {
+    /* Convert Uint8Array to a regular (ASCII) string by mapping bytes to characters one-to-one. */
+    return String.fromCharCode(...uint8array)
+}
+export function binaryToString_Nodejs(uint8array) {
+    /* This only works in Node.js. */
+    return Buffer.from(uint8array).toString('ascii')
+}
+
+export function asciiToBinary(str) {
+    /* Convert an ASCII string (a regular string containing only ASCII characters) to Uint8Array.
+       Assert:  asciiToBinary(binaryToString(uint8)) === uint8
+     */
+    const arr = new Uint8Array(str.length)
+    for (let i = 0; i < str.length; i++)
+        arr[i] = str.charCodeAt(i)
+    return arr
+}
+export function asciiToBinary_Nodejs(str) {
+    /* This only works in Node.js. */
+    return new Uint8Array(Buffer.from(str, 'ascii'))
+}
+
+// const arr = Uint8Array.from({ length: 256 }, (_, i) => i)
+// asciiToBinary(binaryToString(arr)) is equal `arr`
+
+
+/**********************************************************************************************************************/
+
 export class BinaryMap extends CustomMap {
     /* A Map that holds binary keys (Uint8Array, Uint32Array). */
 
