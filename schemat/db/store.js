@@ -6,6 +6,7 @@ import {assert, print} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
+import {ItemRecord} from "./records.js";
 
 
 // Section, Block, Partition
@@ -78,8 +79,12 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
        decoded object may lack some fields that were not included in the index.
      */
 
+    schema                  // array of Types of consecutive fields in the key
+    fields_key              // array of field names to be included in the key
+    fields_value            // array of field names to be included in the value
+
     schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
-    schema_value            // array of item's property names to be included in the value object (repeated values excluded)
+    schema_value            // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
     category                // (?) category of items allowed in this index
 
     *encode_item(item) {
@@ -103,7 +108,7 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
         const value = this.generate_value(item)
         for (const key of this.generate_keys(item))
             yield {key, value}
-            // new PlainRecord(key, value)
+            // new PlainRecord(this.schema, key, value)
     }
 
     *generate_keys(item) {
@@ -215,21 +220,20 @@ export class IndexByCategoryDescriptor extends SequenceDescriptor {
     schema_key = new Map([['__category__', new INTEGER()]]);
 
     *generate_keys(item) {
-        yield [item.category.id]
-    }
-
-    generate_value(item) {
-        return item.id
+        yield [item.category.id, item.id]
     }
 
     decode_object(key, value) {
-
     }
 }
 
 /**********************************************************************************************************************/
 
-class Block__ {}
+class Block__ {
+
+    put(key, value)     { assert(false) }
+    del(key)            { assert(false) }
+}
 
 class MemoryBlock extends Block__ {
     apply(change) {
@@ -247,7 +251,6 @@ class Sequence {
         this.blocks = [new MemoryBlock()]
     }
 
-    // get block() { return this.blocks[0] }
     _find_block(key) { return this.blocks[0] }
 
 }
@@ -274,6 +277,7 @@ export class Index extends Sequence {
         /* Perform transformation of the input Record, as defined by this index, and output any number (0+)
            of output records to be stored in the index.
          */
+        // return this.descriptor.generate_records(input_record)
     }
 
     _make_plan(change) {
@@ -284,8 +288,9 @@ export class Index extends Sequence {
         // const {key, value_old, value_new} = change
         // print(`apply ${key}: ${value_old} -> ${value_new}`)
 
-        let out_records_old = [...this.descriptor.generate_records(change.record_old)]
-        let out_records_new = [...this.descriptor.generate_records(change.record_new)]
+        // map each input record (old & new) to an array of 0+ output records
+        let out_records_old = [...this.map(change.record_old)]
+        let out_records_new = [...this.map(change.record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = new BinaryMap(out_records_old.map(rec => [rec.key, rec.value]))
@@ -312,6 +317,22 @@ export class Index extends Sequence {
 
 }
 
-export class IndexByCategory extends Index {
-    descriptor = new IndexByCategoryDescriptor()
+export class PrimaryIndex extends Index {
+    /* An index that's built directly from the data sequence, so input records represent items. */
+
+}
+
+export class IndexByCategory extends PrimaryIndex {
+    // descriptor = new IndexByCategoryDescriptor()
+
+    *map(input_record /*Record*/) {
+        let {id, data} = ItemRecord.from_binary(input_record)
+
+    }
+
+    schema = new Map([['__category__', new INTEGER()]]);
+
+    *generate_keys(item) {
+        yield [item.category.id, item.id]
+    }
 }
