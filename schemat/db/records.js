@@ -1,10 +1,12 @@
 /*
     Low-level representation of items and index records, for storage and transmission from/to the database.
+    Instances of Record, ItemRecord, Change - should be used as IMMUTABLE objects, i.e., once created,
+    they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
 import {assert, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
-import {BinaryInput, BinaryOutput} from "../util/binary.js";
+import {BinaryInput, BinaryOutput, fnv1aHash} from "../util/binary.js";
 import {Data} from "../data.js";
 
 
@@ -25,10 +27,13 @@ export class Record {
     _binary_key             // `key` encoded as Uint8Array through `schema`
     _string_value           // JSON-stringified `value`, or empty string (when empty value)
 
+    _hash                   // hash computed from _binary_key and _string_value combined
+
     get key()               { return this._key || this._decode_key() }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || this._encode_key() }
     get string_value()      { return this._string_value || this._encode_value() }
+    get hash()              { return this._hash || this._compute_hash() }
 
     _encode_key() {
         let output = new BinaryOutput()
@@ -65,6 +70,28 @@ export class Record {
 
     _decode_value() {
         return this._value = (this._string_value === '' ? EMPTY : JSON.parse(this._string_value))
+    }
+
+    _compute_hash() {
+        let key = this.binary_key                                   // Uint8Array
+        let val = new TextEncoder().encode(this.string_value)       // value string converted to Uint8Array
+
+        // write [length of key] + `key` + `val` into a single Uint8Array
+        let offset = 4                                              // 4 bytes for the length of key
+        let length = offset + key.length + val.length               // total length of the result
+        let result = new Uint8Array(length)
+
+        // write key.length into the first 4 bytes of result
+        result[0] = (key.length >> 24) & 0xFF
+        result[1] = (key.length >> 16) & 0xFF
+        result[2] = (key.length >>  8) & 0xFF
+        result[3] =  key.length        & 0xFF
+
+        // append key and val to result
+        result.set(key, offset)
+        result.set(val, offset + key.length)
+
+        return this._hash = fnv1aHash(result)
     }
 
     constructor(schema, plain = null, binary = null) {

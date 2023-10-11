@@ -137,7 +137,7 @@ export class BinaryMap extends CustomMap {
 
 /**********************************************************************************************************************/
 
-function fnv1aHash(uint8array) {
+export function fnv1aHash(uint8array) {
     /* Fowler–Noll–Vo (FNV-1a) hash function for a Uint8Array. Calculations are performed on 32-bit integers. */
 
     let hash = 2166136261
