@@ -5,6 +5,7 @@
 import {assert, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput} from "../util/binary.js";
+import {Data} from "../data.js";
 
 
 // EMPTY token marks an empty value in a record
@@ -141,13 +142,23 @@ export class ItemRecord {
         return {id: this.id, data: this.data_json}
     }
 
+    static from_binary(binary_record /*Record*/) {
+        /* Create an ItemRecord from a binary data record, where key = [id], and value is a JSONx-serialized Data object. */
+        let json = binary_record.string_value        // plain object, JSONx-encoded Data of an item
+        let key = binary_record.key                  // array of key fields, decoded
+        let id = key[0]
+        return new ItemRecord(id, json)
+    }
+
     constructor(id, data) {
-        /* ItemRecord can be initialized either with a JSON string `data`, or a Data object. */
+        /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
         this.id = id
 
         assert(data, `missing 'data' for ItemRecord, id=${id}`)
         if (typeof data === 'string') this._data_json = data
         else this._data_object = data
+        // else if (data instanceof Data) this._data_object = data
+        // else this._data_plain = data
     }
 }
 
