@@ -45,6 +45,9 @@ export class Type {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 
+        // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
+        // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
+
         editable : true,        // if true, the field described by this type can be edited by the user;
                                 // typically set to false for imputed fields
 
