@@ -124,6 +124,7 @@ export function byteLengthOfSignedInteger(n) {
     }
 }
 
+
 /**********************************************************************************************************************/
 
 export class BinaryMap extends CustomMap {
@@ -133,3 +134,21 @@ export class BinaryMap extends CustomMap {
     reverse(str)    { return new Uint8Array(str.split(',').map(byte => +byte)) }
 }
 
+
+/**********************************************************************************************************************/
+
+function fnv1aHash(uint8array) {
+    /* Fowler–Noll–Vo (FNV-1a) hash function for a Uint8Array. Calculations are performed on 32-bit integers. */
+
+    let hash = 2166136261
+
+    for (let byte of uint8array) {
+        hash ^= byte
+        hash *= 16777619
+        hash &= 0xFFFFFFFF          // to ensure the hash remains a 32-bit number
+    }
+
+    return hash
+}
+
+// console.log(fnv1aHash(new Uint8Array([1, 2, 3, 4, 5])))
