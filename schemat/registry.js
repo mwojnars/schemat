@@ -144,7 +144,7 @@ export class Registry {
         /* Create the RootCategory object, ID=(0,0), and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
-        let root = this.root = new RootCategory(this)
+        let root = this.root = new RootCategory()
 
         // try loading `root` from the DB first...
         if (this.db)
@@ -208,7 +208,7 @@ export class Registry {
         let item = this._cache.get(id)
         if (item) return item
 
-        let stub = new Item(this, id)
+        let stub = new Item(id)
         this.cache(stub)                // a stub, until loaded, has no expiry date that means immediate removal at the end of session
         return stub
     }
@@ -255,7 +255,7 @@ export class Registry {
            May return a Promise.
          */
         if (isRoot(record.id)) return this.root             // don't create a duplicate for the root item, it must be a singleton
-        return Item.createBooted(record, this)
+        return Item.createBooted(record)
     }
 
 

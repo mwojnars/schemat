@@ -128,7 +128,7 @@ export class PlainRecord extends Record {
 export class ItemRecord {
     /* Raw item as an {id, data} pair, with the data initialized from a JSONx string or a Data object. */
 
-    id                          // item ID
+    id                          // item ID; can be undefined (new item, not yet inserted into DB)
     _data_object                // item data as a Data object decoded from _data_plain
     _data_plain                 // item data as a plain JS object parsed form _data_json or encoded from _data_object
     _data_json                  // item data as a JSONx-encoded and JSON-stringified string
