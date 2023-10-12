@@ -848,11 +848,13 @@ Item.createAPI(
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.insert(path, pos, entry)
+                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
             delete_field(request, path) {
                 this.data.delete(path)
+                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
@@ -866,6 +868,7 @@ Item.createAPI(
 
             move_field(request, path, pos1, pos2) {
                 this.data.move(path, pos1, pos2)
+                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 

@@ -200,9 +200,7 @@ export class Registry {
     }
 
     unregister(item) {
-        /* Remove an item with a given ID from the cache - if this exact item is still there.
-           The returned promise can be ignored: item's finalization (.end()) may continue in the background.
-         */
+        /* Remove an item with a given ID from the cache, if only this exact item is still there. */
         if (this._cache.get(item.id) === item)
             this._cache.delete(item.id)
     }
