@@ -326,7 +326,7 @@ export class IndexByCategory extends PrimaryIndex {
 
     async *map(input_record /*Record*/) {
         let item_record = ItemRecord.from_binary(input_record)
-        let item = await Item.createBooted(item_record)
+        let item = await Item.from_record(item_record)
         // let {id, data} = item_record
     }
 

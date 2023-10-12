@@ -262,7 +262,7 @@ export class Item {
         if (id !== undefined) this.id = id
     }
 
-    static async createBooted(record /*ItemRecord*/) {
+    static async from_record(record /*ItemRecord*/) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
            In any case, the item returned is *booted* (this.data is initialized).
@@ -912,15 +912,15 @@ export class Category extends Item {
         }
     }
 
-    async new(data, iid) {
-        /* Create a newborn item of this category (not yet in DB) and set its `data`; connect it with this.registry;
-           set its IID if given. The order of `data` and `iid` arguments can be swapped.
+    async new(data, id) {
+        /* Create a newborn item of this category (not yet in DB) and set its `data`; set its ID if given.
+           The order of `data` and `id` arguments can be swapped.
          */
-        if (typeof data === 'number') [data, iid] = [iid, data]
+        if (typeof data === 'number') [data, id] = [id, data]
         assert(data)
         if (!(data instanceof Data)) data = new Data(data)
         data.set('__category__', this)
-        return Item.createBooted(new ItemRecord(iid, data))
+        return Item.from_record(new ItemRecord(id, data))
     }
 
     async getItemClass() {

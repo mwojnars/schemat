@@ -245,7 +245,7 @@ export class Registry {
             // yield this.makeItem(record)
 
             count++
-            let item = await Item.createBooted(record)
+            let item = await Item.from_record(record)
             yield this.register(item)
         }
     }
