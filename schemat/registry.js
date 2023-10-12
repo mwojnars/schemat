@@ -145,6 +145,7 @@ export class Registry {
            or from the predefined `root_data`.
          */
         let root = this.root = new RootCategory()
+        this.register(root)
 
         // try loading `root` from the DB first...
         if (this.db)
@@ -191,9 +192,9 @@ export class Registry {
 
     /***  Items manipulation  ***/
 
-    cache(item) {
+    register(item) {
         /* Add `item` to the cache. This may override an existing item instance with the same ID. */
-        assert(item.id !== undefined, `cannot cache an item without an ID: ${item}`)
+        assert(item.id !== undefined, `cannot register an item without an ID: ${item}`)
         this._cache.set(item.id, item)
         return item
     }
@@ -207,7 +208,7 @@ export class Registry {
 
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
-           if present, otherwise a stub is created anew and saved in this.cache for future calls.
+           if present, otherwise a stub is created anew and saved in this._cache for future calls.
          */
         this.session?.countRequested(id)
         if (isRoot(id)) return this.root
@@ -217,7 +218,7 @@ export class Registry {
         if (item) return item
 
         let stub = new Item(id)
-        return this.cache(stub)         // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        return this.register(stub)         // a stub, until loaded, has no expiry date that means immediate removal at the end of session
     }
 
     async getLoaded(id)     { return this.getItem(id).load() }
@@ -244,7 +245,7 @@ export class Registry {
 
             count++
             let item = await Item.createBooted(record)
-            yield this.cache(item)
+            yield this.register(item)
         }
     }
 
@@ -257,7 +258,7 @@ export class Registry {
     //     /* Create a new booted item from an ItemRecord, or return an existing singleton root item if the ID is ROOT_ID. */
     //     // if (isRoot(record.id)) return this.root             // root item must stay a singleton, don't create duplicates
     //     let item = await Item.createBooted(record)
-    //     return this.cache(item)
+    //     return this.register(item)
     // }
 
 
