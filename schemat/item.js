@@ -242,8 +242,7 @@ export class Item {
         /* ItemRecord containing this item's {id, data} as loaded from DB or assigned directly later on. */
         assert(this.has_id())
         assert(this.isLoaded)
-        return new ItemRecord(this.id, this.data)       // no caching in this._record, for now, to avoid problems with refresh after user's modifications
-        // return this._record || (this._record = new ItemRecord(this.id, this.data))
+        return this._record || (this._record = new ItemRecord(this.id, this.data))
     }
 
     assertData()    { if (!this.data) throw new ItemDataNotLoaded(this) }   // check that .data is loaded, but maybe not fully initialized yet
