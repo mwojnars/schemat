@@ -12,22 +12,17 @@ import {Item} from "../item.js";
 
 // Section, Block, Partition
 
-class AbstractSequence {
-    /* Ordered sequence of key-value records, possibly distributed and/or replicated.
-       Keys and values (payload) can be composite.
-     */
-}
-
-class Block extends AbstractSequence {
+class Block {
     /* Non-replicated, non-distributed part of a Sequence, physically located on a single device.
        Optionally contains an unmutable specification of the [start,end) range of supported keys.
      */
 }
-
 // MasterBlock / SlaveBlock
 
-class Sequence__ extends AbstractSequence {
-    /* Distributed Sequence consisting of multiple - possibly overlapping (replicated) - Blocks.
+class Sequence__ {
+    /* Ordered sequence of key-value records, possibly distributed and/or replicated.
+       Keys and values (payload) can be composite.
+       May consist of multiple - possibly overlapping (replicated) - Blocks.
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks.
      */
 }
@@ -245,7 +240,7 @@ class MemoryBlock extends Block__ {
     del(key)            { this.records.delete(key) }
 }
 
-class Sequence {
+class Sequence {    // Series?
 
     descriptor          // SequenceDescriptor that defines this sequence's key and value
     blocks              // array of Blocks that make up this sequence

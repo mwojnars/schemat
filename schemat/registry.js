@@ -141,7 +141,7 @@ export class Registry {
     }
 
     async _init_root() {
-        /* Create the RootCategory object, ID=(0,0), and load its contents either from the DB (if present there)
+        /* Create the RootCategory object, ID=0, and load its contents either from the DB (if present there)
            or from the predefined `root_data`.
          */
         let root = this.root = new RootCategory()
@@ -198,6 +198,13 @@ export class Registry {
         return item
     }
 
+    evict(id) {
+        /* Remove an item with a given ID from the cache.
+           The returned promise can be ignored: item's finalization (.end()) may continue in the background.
+         */
+        return this._cache.evict(id)
+    }
+
     getItem(id, {version = null} = {}) {
         /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
            if present, otherwise a stub is created anew and saved in this.cache for future calls.
@@ -233,11 +240,11 @@ export class Registry {
         for await (const record of records) {
             if (limit !== undefined && count >= limit) break
             if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
-            yield this.makeItem(record)
+            // yield this.makeItem(record)
+
             count++
-            // let item = this.makeItem(record)
-            // if (item instanceof Promise) item = await item
-            // yield this.cache(item)
+            let item = await Item.createBooted(record)
+            yield this.cache(item)
         }
     }
 
@@ -246,12 +253,12 @@ export class Registry {
         return cid === undefined || cid === record.data.get('__category__')?.id
     }
 
-    async makeItem(record /*ItemRecord*/) {
-        /* Create a new booted item from an ItemRecord, or return an existing singleton root item if the ID is ROOT_ID. */
-        if (isRoot(record.id)) return this.root             // don't create a duplicate for the root item, it must be a singleton
-        let item = await Item.createBooted(record)
-        return this.cache(item)
-    }
+    // async makeItem(record /*ItemRecord*/) {
+    //     /* Create a new booted item from an ItemRecord, or return an existing singleton root item if the ID is ROOT_ID. */
+    //     // if (isRoot(record.id)) return this.root             // root item must stay a singleton, don't create duplicates
+    //     let item = await Item.createBooted(record)
+    //     return this.cache(item)
+    // }
 
 
     /***  Object <=> classpath mapping (for de/serialization)  ***/

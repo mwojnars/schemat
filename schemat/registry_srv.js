@@ -45,7 +45,7 @@ export class ServerRegistry extends Registry {
     }
     async stopSession(releaseMutex) {
         assert(this.session, 'trying to stop a web session when none was started')
-        await this._cache.evict()
+        await this.evict()
         delete this.session
         releaseMutex()
     }

@@ -1124,7 +1124,8 @@ Category.createAPI(
                     for (const rec of records) {             // rec's shape: {id, data}
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
-                            db.cache(rec)                  // need to cache the item in ClientDB
+                            db.cache(rec)                   // need to cache the item in ClientDB
+                            this.registry.evict(rec.id)     // evict the item from the Registry to allow re-loading
                         }
                         items.push(this.registry.getItem(rec.id))
                     }
