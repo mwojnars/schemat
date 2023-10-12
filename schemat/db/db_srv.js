@@ -67,7 +67,7 @@ export class Ring extends Item {
                 // const change = new Change(record.id, null, record.data)
                 const plain = new PlainRecord(this._data_schema, [record.id])
                 const change = new Change(plain.binary_key, null, record.data_json)
-                index.apply(change)
+                await index.apply(change)
             }
     }
 
@@ -175,7 +175,7 @@ export class Ring extends Item {
            null in `data_old` or `data_new`, respectively.
          */
         // for (const index of this.indexes.values())
-        //     index.apply(change)
+        //     index.apply(change)      // (no need to await, the result is not used)
     }
 
 }

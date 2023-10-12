@@ -237,9 +237,12 @@ class Block__ {
 }
 
 class MemoryBlock extends Block__ {
-    apply(change) {
-        const {key, value_old, value_new} = change
-    }
+
+    records = new BinaryMap()
+
+    get(key)            { return this.records.get(key) }
+    put(key, value)     { this.records.set(key, value) }
+    del(key)            { this.records.delete(key) }
 }
 
 class Sequence {
@@ -260,10 +263,10 @@ export class Index extends Sequence {
 
     // source              // Sequence that this index is derived from
 
-    apply(change) {
+    async apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
 
-        const [del_records, put_records] = this._make_plan(change)
+        const [del_records, put_records] = await this._make_plan(change)
 
         // delete old records
         for (let [key, value] of del_records)
@@ -281,7 +284,7 @@ export class Index extends Sequence {
         // return this.descriptor.generate_records(input_record)
     }
 
-    _make_plan(change) {
+    async _make_plan(change) {
         /* Make an update execution plan in response to a `change` in the source sequence.
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
@@ -326,9 +329,9 @@ export class PrimaryIndex extends Index {
 export class IndexByCategory extends PrimaryIndex {
     // descriptor = new IndexByCategoryDescriptor()
 
-    *map(input_record /*Record*/) {
+    async *map(input_record /*Record*/) {
         let item_record = ItemRecord.from_binary(input_record)
-        // let item = await Item.createBooted(item_record)
+        let item = await Item.createBooted(item_record)
         // let {id, data} = item_record
     }
 

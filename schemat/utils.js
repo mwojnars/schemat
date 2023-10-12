@@ -194,7 +194,7 @@ export class CustomMap extends Map {
        can be iterated over with keys() or entries(). Otherwise, these two methods return the converted keys.
      */
 
-    constructor(iterable) {
+    constructor(iterable = null) {
         if (!iterable) { super(); return }
         super([...iterable].map(([k, v]) => [this.convert(k), v]))
     }

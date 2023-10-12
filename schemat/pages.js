@@ -366,7 +366,7 @@ export class CategoryAdminPage extends ItemAdminPage {
                 let data = new Data()
                 for (let [k, v] of fdata) data.push(k, v)
 
-                let draft = await this.new(data)                    // item with no IID yet; TODO: validate & encode `data` through category's schema
+                let draft = await this.new(data)                    // item with no IID yet; TODO: validate `data` through category's schema
                 let item = await this.registry.insert(draft)        // has IID now
                 form.current.reset()                                // clear input fields
                 setFormDisabled(false)
