@@ -375,7 +375,7 @@ export class Item {
         /* Optional item-specific initialization after this.data is loaded.
            Subclasses may override this method as either sync or async.
          */
-    end() {}
+    cleanup() {}
         /* Custom clean up to be executed after the item was evicted from the Registry cache. Can be async. */
 
     instanceof(category) {
@@ -861,7 +861,7 @@ Item.createAPI(
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
                 this.data.update(path, entry)
-                // this.registry._cache.evict(this.id)
+                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
@@ -1125,7 +1125,7 @@ Category.createAPI(
                         if (rec.data) {
                             rec.data = JSON.stringify(rec.data)
                             db.cache(rec)                   // need to cache the item in ClientDB
-                            this.registry.evict(rec.id)     // evict the item from the Registry to allow re-loading
+                            // this.registry.unregister(rec.id)     // evict the item from the Registry to allow re-loading
                         }
                         items.push(this.registry.getItem(rec.id))
                     }

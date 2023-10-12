@@ -199,16 +199,17 @@ export class Registry {
         return item
     }
 
-    evict(id) {
-        /* Remove an item with a given ID from the cache.
+    unregister(item) {
+        /* Remove an item with a given ID from the cache - if this exact item is still there.
            The returned promise can be ignored: item's finalization (.end()) may continue in the background.
          */
-        return this._cache.evict(id)
+        if (this._cache.get(item.id) === item)
+            this._cache.delete(item.id)
     }
 
     getItem(id, {version = null} = {}) {
-        /* Get a read-only instance of an item with a given ID, possibly a stub. A cached copy is returned,
-           if present, otherwise a stub is created anew and saved in this._cache for future calls.
+        /* Get a registered instance of an item with a given ID, possibly a stub. An existing instance is returned,
+           this._cache, or a stub is created anew and saved for future calls.
          */
         this.session?.countRequested(id)
         if (isRoot(id)) return this.root
@@ -231,7 +232,9 @@ export class Registry {
         return this.db.select(id)
     }
     async *scan(category = null, {limit} = {}) {
-        /* Load from DB all items of a given category ordered by IID. Each item's data is already loaded. A generator. */
+        /* Scan the main data sequence in DB in the ID order. Yield all items, or only those belonging to `category`.
+           The items returned are fully loaded and registered in the cache for future retrieval.
+         */
         if (category) category.assertLoaded()
 
         let count = 0
