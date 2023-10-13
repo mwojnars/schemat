@@ -272,7 +272,7 @@ export class Item {
          */
         // TODO: if the record is already cached in binary registry, return the cached item instead of creating a new one
         let item = new Item(record.id)
-        return item.reload(record.data)
+        return item.reload(record)
     }
 
     static createAPI(endpoints, actions = {}) {
@@ -292,9 +292,9 @@ export class Item {
         return this.reload()                            // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async reload(data = null) {
+    async reload(record = null /*ItemRecord*/) {
         if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
-        return this.isLoading = this.boot(data)         // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.isLoading = this.boot(record)       // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
     async refresh() {
@@ -302,13 +302,13 @@ export class Item {
         return this.registry.getItem(this.id).load()
     }
 
-    async boot(data = null) {
+    async boot(record = null) {
         /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
            Set up the class and prototypes. Call init().
          */
         try {
-            data = data || await this._loadData()
-            this.data = data instanceof Data ? data : new Data(data)
+            this.data = record?.data || await this._loadData()
+            this._record = record
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto

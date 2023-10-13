@@ -6,6 +6,7 @@ import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache } from './data.js'
 import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
 import { root_data } from './boot/root.js'
+import {ItemRecord} from "./db/records.js";
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
@@ -159,7 +160,7 @@ export class Registry {
 
         // ...only when the above fails due to missing data, load from the predefined `root_data`
         if (!root.isLoaded) {
-            await root.reload(root_data)
+            await root.reload(new ItemRecord(ROOT_ID, root_data))
             print("Registry._init_root(): root category loaded from root_data")
         }
 
