@@ -97,7 +97,9 @@ export class JSONx {
     decode(state) {
         /*
         Reverse operation to encode(): takes an encoded JSON-serializable `state` and converts back to an object.
-        This function is MUTATING: the internal contents of `state` may get modified to avoid sub-object copy (!).
+
+        WARNING: the returned object may contain `state` or a part of it internally - any modifications in `state`
+                 object after this call may indirectly change the result (!).
         */
         let registry = globalThis.schemat.registry
         let isdict = T.isDict(state)
@@ -115,6 +117,7 @@ export class JSONx {
             cls = T.getClass(state)                 // cls=null denotes a class of null value
 
         else if (JSONx.ATTR_CLASS in state) {
+            state = {...state}                      // avoid mutating the original `state` object when doing T.pop() below
             let classname = T.pop(state, JSONx.ATTR_CLASS)
             if (JSONx.ATTR_STATE in state) {
                 let state_attr = T.pop(state, JSONx.ATTR_STATE)
@@ -158,14 +161,19 @@ export class JSONx {
         return state.map(v => this.decode(v))
     }
     encode_dict(obj) {
-        /* Encode recursively all non-primitive objects inside `state` dictionary. Drop keys with `undefined` value. */
-        for (let [key, value] of Object.entries(obj)) {
+        /* Encode recursively all non-primitive objects inside `obj`. Skip properties with `undefined` value. */
+        let out = {...obj}
+
+        for (let [key, value] of Object.entries(out))
             if (typeof key !== "string")
                 throw new Error(`Non-serializable object state, contains a non-string key: ${key}`)
-            if (value === undefined)
-                delete obj[key]
-        }
-        return T.mapDict(obj, (k, v) => [k, this.encode(v)])
+            else if (value === undefined)
+                delete out[key]
+            else
+                out[key] = this.encode(value)
+
+        return out
+        // return T.mapDict(obj, (k, v) => [k, this.encode(v)])
     }
     decode_dict(state) {
         /* Decode recursively all non-primitive objects inside `state` dictionary. */
