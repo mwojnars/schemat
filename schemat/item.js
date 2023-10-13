@@ -215,9 +215,6 @@ export class Item {
     action          // triggers for RPC actions of this item; every action can be called from a server or a client via action.X() call
 
 
-    // editable        // true if this item's data can be modified through .edit(); editable item may contain uncommitted changes,
-    //                 // hence it should NOT be used for reading
-
     _dataAll = new Map()        // map of computed entries per field, {field: array_of_entries}; for repeated fields,
                                 // each array consists of own data (from item.data) + inherited from ancestors, or schema default / imputed;
                                 // for non-repeated fields, the arrays are singletons
@@ -297,15 +294,7 @@ export class Item {
         if (this.isLoaded) return assert(!record) && this
         if (this.isLoading) return assert(!record) && this.isLoading    // wait for a previous load to complete instead of starting a new one
         return this.isLoading = this._reload(record)                    // keep a Promise that will eventually load this item's data to avoid race conditions
-
-        // // if loading has already started, wait rather than load again
-        // return this.isLoading || this.reload(record)
     }
-
-    // async reload(record = null /*ItemRecord*/) {
-    //     if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
-    //     return this.isLoading = this._reload(record)    // keep a Promise that will eventually load this item's data to avoid race conditions
-    // }
 
     async _reload(record = null) {
         /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
