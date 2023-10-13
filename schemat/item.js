@@ -287,22 +287,21 @@ export class Item {
     }
 
     async load(record = null /*ItemRecord*/) {
-        /* Load full data of this item from DB or from `record`, if not loaded yet. Return this object.
+        /* Load full data of this item from `record` or from DB, if not loaded yet. Return this object.
            The data can only be loaded ONCE for a given Item instance due to item's immutability.
            If you want to refresh the data, create a new instance or use refresh() instead.
          */
         if (this.isLoaded) return assert(!record) && this
         if (this.isLoading) return assert(!record) && this.isLoading    // wait for a previous load to complete instead of starting a new one
-        return this.isLoading = this._reload(record)                    // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.isLoading = this._load(record)                      // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async _reload(record = null) {
-        /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
-           Set up the class and prototypes. Call init().
-         */
+    async _load(record = null /*ItemRecord*/) {
+        /* Load this.data from `record` or DB. Set up the class and prototypes. Call init(). */
         try {
-            this.data = record?.data || await this._loadData()
-            // this._record = record
+            record = record || await this._load_record()
+            this.data = record.data
+            // this.data = record?.data || await this._loadData()
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
@@ -329,12 +328,10 @@ export class Item {
     }
 
     async _load_record() {
-    }
-
-    async _loadData() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
         let json = await this.registry.loadData(this.id)
-        return JSONx.parse(json)
+        return new ItemRecord(this.id, json)
+        // return JSONx.parse(json)
     }
 
     setExpiry(ttl) {
