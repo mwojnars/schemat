@@ -198,6 +198,9 @@ export class Item {
 
     _record         // ItemRecord object that contains this item's data as loaded from DB during last load(); undefined in a newborn item
 
+    mutable = false // true if this item's data can be modified through .edit(); editable item may contain uncommitted
+                    // changes and must be EXCLUDED from Registry
+
     // _db          // the origin database of this item; undefined in newborn items
     // _ring        // the origin ring of this item; updates are first sent to this ring and only moved to an outer one if this one is read-only
 
@@ -267,6 +270,7 @@ export class Item {
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
            In any case, the item returned is *booted* (this.data is initialized).
          */
+        // TODO: if the record is already cached in binary registry, return the cached item instead of creating a new one
         let item = new Item(record.id)
         return item.reload(record.data)
     }

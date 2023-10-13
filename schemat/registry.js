@@ -210,14 +210,14 @@ export class Registry {
            this._cache, or a stub is created anew and saved for future calls.
          */
         this.session?.countRequested(id)
-        if (isRoot(id)) return this.root
+        // if (isRoot(id)) return this.root
 
-        // ID requested was already loaded/created? return the existing instance
-        let item = this._cache.get(id)
-        if (item) return item
+        // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
+        // a stub has no expiry date until filled with data
+        let item = this._cache.get(id) || this.register(new Item(id))
 
-        let stub = new Item(id)
-        return this.register(stub)         // a stub, until loaded, has no expiry date that means immediate removal at the end of session
+        assert(!item.mutable)
+        return item
     }
 
     async getLoaded(id)     { return this.getItem(id).load() }
