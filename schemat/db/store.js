@@ -6,7 +6,7 @@ import {assert, print} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
-import {ItemRecord} from "./records.js";
+import {PlainRecord} from "./records.js";
 import {Item} from "../item.js";
 
 
@@ -81,7 +81,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
 
     schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
     schema_value            // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
-    category                // (?) category of items allowed in this index
 
     *encode_item(item) {
         /* Encode an item as a stream of {key, value} record(s). The result stream can be of any size, including:
@@ -94,17 +93,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
             yield {key, value}                          // a record, {key: Uint8Array, value: json-string}
             // new Pair(key, value)
             // new KeyValue(key, value)
-    }
-
-    *generate_records(item) {
-        /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
-           The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
-         */
-        if (!this.allowed(item)) return
-        const value = this.generate_value(item)
-        for (const key of this.generate_keys(item))
-            yield {key, value}
-            // new PlainRecord(this.schema, key, value)
     }
 
     *generate_keys(item) {
@@ -155,10 +143,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
             output.write(head, ...tail)
             yield output.result()
         }
-    }
-
-    allowed(item) {
-        if (!item || !this.category.includes(item)) return []
     }
 
     generate_value(item) {
@@ -215,10 +199,6 @@ export class IndexByCategoryDescriptor extends SequenceDescriptor {
     /* Specification of an index that maps category IDs to item IDs. */
     schema_key = new Map([['__category__', new INTEGER()]]);
 
-    *generate_keys(item) {
-        yield [item.category.id, item.id]
-    }
-
     decode_object(key, value) {
     }
 }
@@ -261,6 +241,7 @@ export class Index extends Sequence {
     async apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
 
+        // del_records and put_records are BinaryMaps, {binary_key: string_value}
         const [del_records, put_records] = await this._make_plan(change)
 
         // delete old records
@@ -274,9 +255,9 @@ export class Index extends Sequence {
 
     *map(input_record) {
         /* Perform transformation of the input Record, as defined by this index, and output any number (0+)
-           of output records to be stored in the index.
+           of output Records to be stored in the index.
          */
-        // return this.descriptor.generate_records(input_record)
+        throw new Error('not implemented')
     }
 
     async _make_plan(change) {
@@ -292,8 +273,8 @@ export class Index extends Sequence {
         let out_records_new = [...this.map(change.record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
-        let del_records = new BinaryMap(out_records_old.map(rec => [rec.key, rec.value]))
-        let put_records = new BinaryMap(out_records_new.map(rec => [rec.key, rec.value]))
+        let del_records = new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
+        let put_records = new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
 
         this._prune_plan(del_records, put_records)
 
@@ -316,21 +297,34 @@ export class Index extends Sequence {
 
 }
 
-export class PrimaryIndex extends Index {
-    /* An index that's built directly from the data sequence, so input records represent items. */
+export class BasicIndex extends Index {
+    /* An index that receives record updates from the base data sequence, so input records represent items. */
+
+    category                // category of items allowed in this index
+
+    *generate_records(item) {
+        /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
+           The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
+         */
+        if (!this.accept(item)) return
+        const value = this.generate_value(item)
+        for (const key of this.generate_keys(item))
+            yield new PlainRecord(this.schema, key, value)    //{key, value}
+    }
+
+    accept(item)    { return item && (!this.category || item.category.is(this.category)) }
 
 }
 
-export class IndexByCategory extends PrimaryIndex {
+export class IndexByCategory extends BasicIndex {
     // descriptor = new IndexByCategoryDescriptor()
 
-    async *map(input_record /*Record*/) {
-        let item_record = ItemRecord.from_binary(input_record)
-        let item = await Item.from_record(item_record)
-        // let {id, data} = item_record
-    }
+    // schema = new Map([['__category__', new INTEGER()]]);
 
-    schema = new Map([['__category__', new INTEGER()]]);
+    async *map(input_record /*Record*/) {
+        let item = await Item.from_binary(input_record)
+        yield* this.generate_records(item)
+    }
 
     *generate_keys(item) {
         yield [item.category.id, item.id]

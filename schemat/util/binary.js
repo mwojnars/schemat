@@ -1,4 +1,4 @@
-import {CustomMap} from "../utils.js";
+import {assert, CustomMap} from "../utils.js";
 
 /**********************************************************************************************************************/
 
@@ -129,10 +129,12 @@ export function byteLengthOfSignedInteger(n) {
 
 export function binaryToString(uint8array) {
     /* Convert Uint8Array to a regular (ASCII) string by mapping bytes to characters one-to-one. */
+    assert(uint8array instanceof Uint8Array)
     return String.fromCharCode(...uint8array)
 }
 export function binaryToString_Nodejs(uint8array) {
     /* This only works in Node.js. */
+    assert(uint8array instanceof Uint8Array)
     return Buffer.from(uint8array).toString('ascii')
 }
 
