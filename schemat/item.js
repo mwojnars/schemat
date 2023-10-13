@@ -283,6 +283,11 @@ export class Item {
         this.actions = base ? {...base.actions, ...actions} : actions
     }
 
+    async refresh() {
+        /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
+        return this.registry.getItem(this.id).load()
+    }
+
     async load() {
         /* Load full data of this item (this.data) if not loaded yet. Return this object. */
         // if field !== null && field in this.isLoaded: return      // this will be needed when partial loading from indexes is available
@@ -294,21 +299,16 @@ export class Item {
 
     async reload(record = null /*ItemRecord*/) {
         if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
-        return this.isLoading = this.boot(record)       // keep a Promise that will eventually load this item's data to avoid race conditions
+        return this.isLoading = this._reload(record)    // keep a Promise that will eventually load this item's data to avoid race conditions
     }
 
-    async refresh() {
-        /* Get the most current instance of this item from the registry - can differ from `this` (!) - and make sure it's loaded. */
-        return this.registry.getItem(this.id).load()
-    }
-
-    async boot(record = null) {
+    async _reload(record = null) {
         /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
            Set up the class and prototypes. Call init().
          */
         try {
             this.data = record?.data || await this._loadData()
-            this._record = record
+            // this._record = record
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
