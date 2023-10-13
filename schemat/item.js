@@ -776,6 +776,13 @@ export class Item {
         request.throwNotFound(`no service found for [${endpoints}]`)
     }
 
+    make_editable() {
+        /* Mark this item as editable and remove it from the Registry. */
+        this.registry.unregister(this)
+        this.mutable = true
+        return this
+    }
+
     static setCaching(...methods) {
         /* In the class'es prototype, replace each method from `methods` with cached(method) wrapper.
            The wrapper utilizes the `_methodCache` property of an Item instance to store cached values.
@@ -851,28 +858,28 @@ Item.createAPI(
             insert_field(request, path, pos, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema([...path, entry.key]).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
+                this.make_editable()
                 this.data.insert(path, pos, entry)
-                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
             delete_field(request, path) {
+                this.make_editable()
                 this.data.delete(path)
-                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
             update_field(request, path, entry) {
                 // if (entry.value !== undefined) entry.value = this.getSchema(path).decode(entry.value)
                 if (entry.value !== undefined) entry.value = JSONx.decode(entry.value)
+                this.make_editable()
                 this.data.update(path, entry)
-                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
             move_field(request, path, pos1, pos2) {
+                this.make_editable()
                 this.data.move(path, pos1, pos2)
-                this.registry.unregister(this)
                 return this.registry.db.update_full(this)
             },
 
