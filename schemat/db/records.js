@@ -4,7 +4,7 @@
     they should not be modified (except for lazy internal calculation of missing derived fields).
  */
 
-import {assert, T} from "../utils.js";
+import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, fnv1aHash} from "../util/binary.js";
 import {Data} from "../data.js";
@@ -147,10 +147,14 @@ export class ItemRecord {
 
     _decode_data() {
         return this._data_object = JSONx.decode(this.data_plain)
+        // if (!(this._data_object instanceof Data)) assert(false)
+        // return this._data_object
     }
     
     _parse_data() {
         return this._data_plain = JSON.parse(this._data_json)
+        // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+        // return this._data_plain
     }
     
     _stringify_data() {
@@ -159,9 +163,13 @@ export class ItemRecord {
 
     _encode_data() {
         return this._data_plain = JSONx.encode(this._data_object)
+        // if(!(JSONx.decode(this._data_plain) instanceof Data)) assert(false)
+        // return this._data_plain
     }
 
     encoded() {
+        // if(!(JSONx.decode(this.data_plain) instanceof Data)) assert(false)
+        assert(this.id !== undefined, `missing 'id' in ItemRecord.encoded(), data=${this.data_plain}`)
         return {id: this.id, data: this.data_plain}
     }
 
@@ -180,12 +188,18 @@ export class ItemRecord {
     constructor(id, data) {
         /* `id` is a Number; `data` is either a JSONx string, or a Data object. */
         this.id = id
-
         assert(data, `missing 'data' for ItemRecord, id=${id}`)
+
         if (typeof data === 'string') this._data_json = data
-        else this._data_object = data
-        // else if (data instanceof Data) this._data_object = data
-        // else this._data_plain = data
+        else if (data instanceof Data) this._data_object = data
+        else
+            assert(false, `plain data objects not accepted for ItemRecord, id=${id}: ${data}`)
+            // for now, it's not needed to accept plain objects as data - this can change later
+
+        // else {
+        //     assert(JSONx.decode(data) instanceof Data, `invalid 'data' for ItemRecord, id=${id}: ${data}`)
+        //     this._data_plain = data
+        // }
     }
 }
 
