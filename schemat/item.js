@@ -191,7 +191,10 @@ export class Item {
 
     // static CODE_DOMAIN = 'schemat'      // domain name to be prepended in source code identifiers of dynamically loaded code
 
-    id              // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
+    _id             // Item ID (IID) of this item; globally unique (for a persisted item) or undefined (for a newly created item)
+
+    get id()        { return this._id }
+    set id(id)      { assert(!this._id || this._id === id); this._id = id; if (this._record) this._record.id = id }
 
     data            // data fields of this item, as a Data object; can hold a Promise, so it always should be awaited for,
                     // or accessed after await load(), or through item.get()
@@ -300,8 +303,10 @@ export class Item {
         /* Load this.data from `record` or DB. Set up the class and prototypes. Call init(). */
         try {
             record = record || await this._load_record()
+            assert(record instanceof ItemRecord)
+
             this.data = record.data
-            // this.data = record?.data || await this._loadData()
+            this._record = record
 
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
@@ -330,8 +335,8 @@ export class Item {
     async _load_record() {
         if (!this.has_id()) throw new Error(`trying to load item's data with missing or incomplete ID: ${this.id_str}`)
         let json = await this.registry.loadData(this.id)
+        assert(typeof json === 'string', json)
         return new ItemRecord(this.id, json)
-        // return JSONx.parse(json)
     }
 
     setExpiry(ttl) {

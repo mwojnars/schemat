@@ -41,6 +41,7 @@ export class ClientProcess extends SchematProcess {
         /* In-browser startup of Schemat rendering. Initial data is read from the page's HTML element #page-data. */
 
         let data = this._read_data('#page-data', 'json+base64')
+        print('page data:', data)
         this.client_db = new ClientDB(data.items)
 
         await this.init()
