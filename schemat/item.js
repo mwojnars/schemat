@@ -265,14 +265,15 @@ export class Item {
         if (id !== undefined) this.id = id
     }
 
-    static async from_record(record /*ItemRecord*/) {
+    static async from_record(record /*ItemRecord*/, use_registry = true) {
         /* Create a new item instance: either a newborn one (intended for insertion to DB, no ID yet);
            or an instance loaded from DB and filled out with data from `record` (an ItemRecord).
            In any case, the item returned is *booted* (this.data is initialized).
          */
-        // TODO: if the record is already cached in binary registry, return the cached item instead of creating a new one
+        // TODO: if the record is already cached in binary registry, return the cached item...
+        // TODO: otherwise, create a new item and cache it in binary registry
         let item = new Item(record.id)
-        return item.reload(record)
+        return item.load(record)
     }
 
     static createAPI(endpoints, actions = {}) {
@@ -288,19 +289,23 @@ export class Item {
         return this.registry.getItem(this.id).load()
     }
 
-    async load() {
-        /* Load full data of this item (this.data) if not loaded yet. Return this object. */
-        // if field !== null && field in this.isLoaded: return      // this will be needed when partial loading from indexes is available
-        // if (this.data) return this.data         //field === null ? this.data : T.getOwnProperty(this.data, field)
-        if (this.isLoaded) return this
-        if (this.isLoading) return this.isLoading       // loading has already started, should wait rather than load again
-        return this.reload()                            // keep a Promise that will eventually load this item's data to avoid race conditions
+    async load(record = null /*ItemRecord*/) {
+        /* Load full data of this item from DB or from `record`, if not loaded yet. Return this object.
+           The data can only be loaded ONCE for a given Item instance due to item's immutability.
+           If you want to refresh the data, create a new instance or use refresh() instead.
+         */
+        if (this.isLoaded) return assert(!record) && this
+        if (this.isLoading) return assert(!record) && this.isLoading    // wait for a previous load to complete instead of starting a new one
+        return this.isLoading = this._reload(record)                    // keep a Promise that will eventually load this item's data to avoid race conditions
+
+        // // if loading has already started, wait rather than load again
+        // return this.isLoading || this.reload(record)
     }
 
-    async reload(record = null /*ItemRecord*/) {
-        if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
-        return this.isLoading = this._reload(record)    // keep a Promise that will eventually load this item's data to avoid race conditions
-    }
+    // async reload(record = null /*ItemRecord*/) {
+    //     if (this.isLoading) await this.isLoading        // wait for a previous reload to complete; this is only needed when called directly, not through load()
+    //     return this.isLoading = this._reload(record)    // keep a Promise that will eventually load this item's data to avoid race conditions
+    // }
 
     async _reload(record = null) {
         /* (Re)initialize this item. Load this.data from a DB if data=null, or from a `data` object (POJO or Data).
@@ -332,6 +337,9 @@ export class Item {
         } finally {
             this.isLoading = false                              // cleanup to allow another load attempt, even after an error
         }
+    }
+
+    async _load_record() {
     }
 
     async _loadData() {
