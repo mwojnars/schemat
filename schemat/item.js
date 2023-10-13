@@ -237,6 +237,10 @@ export class Item {
     get isLoaded()      { return this.data && !this.isLoading }         // false if still loading, even if .data has already been created (but not fully initialized)
     get isCategory()    { return this.instanceof(this.registry.root) }
 
+    is(item) {
+        return this.id !== undefined && this.id === item.id
+    }
+
     has_id(id = null) {
         return id !== null ? id === this.id : this.id !== undefined
     }
@@ -263,6 +267,11 @@ export class Item {
         /* Creates an item stub, `id` can be undefined. To set this.data, load() or reload() must be called afterwards. */
         this.registry = globalThis.registry
         if (id !== undefined) this.id = id
+    }
+
+    static async from_binary(binary_record /*Record*/) {
+        let item_record = ItemRecord.from_binary(binary_record)
+        return Item.from_record(item_record)
     }
 
     static async from_record(record /*ItemRecord*/, use_registry = true) {
