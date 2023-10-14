@@ -75,24 +75,8 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
        decoded object may lack some fields that were not included in the index.
      */
 
-    fields_key              // array of field names to be included in the key
-    fields_value            // array of field names to be included in the value
-
     schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
     schema_value            // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
-
-    *encode_item(item) {
-        /* Encode an item as a stream of {key, value} record(s). The result stream can be of any size, including:
-           - 0, if the item is not allowed in this index or doesn't contain the required fields,
-           - 2+, if some of the item's fields to be used in the key contain repeated values
-         */
-        if (!this.allowed(item)) return
-        const value = this.encode_value(this.generate_value(item))
-        for (const key of this.encode_key(item))
-            yield {key, value}                          // a record, {key: Uint8Array, value: json-string}
-            // new Pair(key, value)
-            // new KeyValue(key, value)
-    }
 
     *encode_key(item) {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
@@ -120,13 +104,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
             output.write(head, ...tail)
             yield output.result()
         }
-    }
-
-    generate_value(item) {
-        /* Override this method to generate a `value` object that will be stringified through JSON and stored
-           as a part of a record in the index. */
-        if (!this.schema_value.length) return undefined
-        return item.propObject(...this.schema_value)
     }
 
     encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
@@ -275,12 +252,12 @@ export class Index extends Sequence {
 }
 
 export class BasicIndex extends Index {
-    /* An index that receives record updates from the base data sequence, so input records represent items. */
+    /* An index that receives record updates from the base data sequence (input records represent items). */
 
     category            // category of items allowed in this index
 
-    fields              // {name: type}, a Map of fields to be included in the sort key and their Types
-    schema_value        // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
+    fields              // {name: type}, a Map of item properties and their Types to be included as fields in the sort key
+    properties          // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
 
     _field_names        // array of names of consecutive fields in the key
     _field_types        // array of Types of consecutive fields in the key (key's schema)
@@ -291,6 +268,9 @@ export class BasicIndex extends Index {
     *generate_records(item) {
         /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
            The key is an array of field values; the value is a plain JS object that can be stringified through JSON.
+           The result stream can be of any size, including:
+           - 0, if the item is not allowed in this index or doesn't contain the required fields,
+           - 2+, if some of the item's fields to be used in the key contain repeated values.
          */
         if (!this.accept(item)) return
         const value = this.generate_value(item)
@@ -298,8 +278,13 @@ export class BasicIndex extends Index {
             yield new PlainRecord(this.field_types, key, value)
     }
 
-    accept(item)            { return item && (!this.category || item.category.is(this.category)) }
-    generate_value(item)    { return undefined }
+    accept(item) { return item && (!this.category || item.category.is(this.category)) }
+
+    generate_value(item) {
+        /* Generate an object that will be stringified through JSON and stored as `value` in the index record. */
+        if (!this.properties?.length) return undefined
+        return item.propObject(...this.properties)
+    }
 
     *generate_keys(item) {
         /* Generate a stream of keys, each being an array of field values (not encoded). */
