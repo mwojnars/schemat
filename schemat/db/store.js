@@ -51,87 +51,71 @@ class Store {
 //     name            // name of a field/property of an input record/item; also used as the output name of this field
 //     // collator        // optional collator object that defines the sort order of this field
 //     // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
-//
-//     value(item) {}
-//
-//     binary_length() {
-//         /* Return the length of the binary representation of this field if the field has a fixed length, or undefined otherwise. */
-//         return undefined
-//     }
-//     binary_encode(object) {
-//         /* Encode a plain object into a binary record. Typically, object['name'] is read and converted to the output format. */
-//     }
-//     binary_decode(record) {
-//         /* Decode a binary record into an object. */
-//     }
 // }
 
-export class SequenceDescriptor {  // ShapeOfSequence, Shape
-    /* Specification of a sequence of objects translated to records, each record consisting
-       of a binary `key` and a json `value`. The sequence is sorted by the key and allows to retrieve the value
-       for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
-       and/or cloning the record when a repeated field is encountered.
-       The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
-       decoded object may lack some fields that were not included in the index.
-     */
-
-    schema_key              // {name: type}, a Map of fields to be included in the sort key and their Types
-    schema_value            // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
-
-    *encode_key(item) {
-        // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
-        let length = this.schema_key.size
-        let bin_values = []
-
-        for (const [name, type] of this.schema_key) {
-            const values = item.propsList(name)
-            if (!values.length) return              // no values (missing field), skip this item
-            if (values.length >= 2 && bin_values.length)
-                throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
-
-            // encode `values` through the field type
-            const last = (bin_values.length === length - 1)
-            const binary = values.map(v => type.binary_encode(v, last))
-            bin_values.push(binary)
-        }
-
-        // flat array of encoded values of all fields except the first one
-        const tail = bin_values.slice(1).map(values => values[0])
-
-        // iterate over the first field's values to produce all key combinations
-        for (const head of bin_values[0]) {
-            let output = new BinaryOutput()
-            output.write(head, ...tail)
-            yield output.result()
-        }
-    }
-
-    encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
-    decode_value(value)  { return value !== undefined ? JSON.parse(value) : undefined }
-
-    decode_object(key, value) {
-        /* Decode a binary record into an object. If the same field occurs in both key and value, the value's field
-            overwrites the key's field, as the former typically contains more information than the latter
-           (e.g. the full string instead of just the prefix).
-         */
-        return {...this.decode_key(key), ...this.decode_value(value)}
-    }
-
-    decode_key(record) {
-        const input = new BinaryInput(record)
-        const length = this.schema_key.length
-        let entry = {}
-
-        for (let i = 0; i < length; i++) {
-            const [name, type] = this.schema_key[i]
-            const last = (i === length - 1)
-            entry[name] = type.binary_decode(input, last)
-        }
-        assert(input.pos === record.length)
-
-        return entry
-    }
-}
+// export class SequenceDescriptor {  // ShapeOfSequence, Shape
+//     /* Specification of a sequence of objects translated to records, each record consisting
+//        of a binary `key` and a json `value`. The sequence is sorted by the key and allows to retrieve the value
+//        for a given key or range of keys. Typically, the objects are derived from items by selecting a subset of fields
+//        and/or cloning the record when a repeated field is encountered.
+//        The decoding is a reverse operation to encoding and should yield the original object. Note, however, that the
+//        decoded object may lack some fields that were not included in the index.
+//      */
+//
+//     *encode_key(item) {
+//         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
+//         let length = this.schema_key.size
+//         let bin_values = []
+//
+//         for (const [name, type] of this.schema_key) {
+//             const values = item.propsList(name)
+//             if (!values.length) return              // no values (missing field), skip this item
+//             if (values.length >= 2 && bin_values.length)
+//                 throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
+//
+//             // encode `values` through the field type
+//             const last = (bin_values.length === length - 1)
+//             const binary = values.map(v => type.binary_encode(v, last))
+//             bin_values.push(binary)
+//         }
+//
+//         // flat array of encoded values of all fields except the first one
+//         const tail = bin_values.slice(1).map(values => values[0])
+//
+//         // iterate over the first field's values to produce all key combinations
+//         for (const head of bin_values[0]) {
+//             let output = new BinaryOutput()
+//             output.write(head, ...tail)
+//             yield output.result()
+//         }
+//     }
+//
+//     encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
+//     decode_value(value)  { return value !== undefined ? JSON.parse(value) : undefined }
+//
+//     decode_object(key, value) {
+//         /* Decode a binary record into an object. If the same field occurs in both key and value, the value's field
+//             overwrites the key's field, as the former typically contains more information than the latter
+//            (e.g. the full string instead of just the prefix).
+//          */
+//         return {...this.decode_key(key), ...this.decode_value(value)}
+//     }
+//
+//     decode_key(record) {
+//         const input = new BinaryInput(record)
+//         const length = this.schema_key.length
+//         let entry = {}
+//
+//         for (let i = 0; i < length; i++) {
+//             const [name, type] = this.schema_key[i]
+//             const last = (i === length - 1)
+//             entry[name] = type.binary_decode(input, last)
+//         }
+//         assert(input.pos === record.length)
+//
+//         return entry
+//     }
+// }
 
 export class DataDescriptor extends SequenceDescriptor {
     /* Specification of a data sequence. */
@@ -189,6 +173,9 @@ class Sequence {    // Series?
 }
 
 export class Index extends Sequence {
+    /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
+       allows to retrieve the value for a given key or range of keys.
+     */
 
     // source              // Sequence that this index is derived from
 
@@ -252,7 +239,11 @@ export class Index extends Sequence {
 }
 
 export class BasicIndex extends Index {
-    /* An index that receives record updates from the base data sequence (input records represent items). */
+    /* An index that receives record updates from the base data sequence (input records represent items).
+       Output records are created by selecting 1+ item properties as fields in a sort key; the record is cloned
+       when a repeated field is encountered; the (optional) value is generated by selecting a subset of item properties,
+       without repetitions (for repeated fields, only the first value gets included in the record).
+     */
 
     category            // category of items allowed in this index
 
