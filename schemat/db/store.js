@@ -75,7 +75,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
        decoded object may lack some fields that were not included in the index.
      */
 
-    schema                  // array of Types of consecutive fields in the key
     fields_key              // array of field names to be included in the key
     fields_value            // array of field names to be included in the value
 
@@ -93,28 +92,6 @@ export class SequenceDescriptor {  // ShapeOfSequence, Shape
             yield {key, value}                          // a record, {key: Uint8Array, value: json-string}
             // new Pair(key, value)
             // new KeyValue(key, value)
-    }
-
-    *generate_keys(item) {
-        /* Generate a stream of keys, each key being an array of field values (not encoded). */
-
-        // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
-        let field_values = []
-
-        for (const name of this.schema_key.keys()) {
-            const values = item.propsList(name)
-            if (!values.length) return              // no values (missing field), skip this item
-            if (values.length >= 2 && field_values.length)
-                throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
-            field_values.push(values)
-        }
-
-        // flat array of encoded values of all fields except the first one
-        const tail = field_values.slice(1).map(values => values[0])
-
-        // iterate over the first field's values to produce all key combinations
-        for (const head of field_values[0])
-            yield [head, ...tail]
     }
 
     *encode_key(item) {
@@ -300,7 +277,16 @@ export class Index extends Sequence {
 export class BasicIndex extends Index {
     /* An index that receives record updates from the base data sequence, so input records represent items. */
 
-    category                // category of items allowed in this index
+    category            // category of items allowed in this index
+
+    fields              // {name: type}, a Map of fields to be included in the sort key and their Types
+    schema_value        // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
+
+    _field_names        // array of names of consecutive fields in the key
+    _field_types        // array of Types of consecutive fields in the key (key's schema)
+
+    get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
+    get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
 
     *generate_records(item) {
         /* Generate a stream of records, each record being a {key, value} pair, NOT encoded.
@@ -309,17 +295,40 @@ export class BasicIndex extends Index {
         if (!this.accept(item)) return
         const value = this.generate_value(item)
         for (const key of this.generate_keys(item))
-            yield new PlainRecord(this.schema, key, value)    //{key, value}
+            yield new PlainRecord(this.field_types, key, value)
     }
 
-    accept(item)    { return item && (!this.category || item.category.is(this.category)) }
+    accept(item)            { return item && (!this.category || item.category.is(this.category)) }
+    generate_value(item)    { return undefined }
+
+    *generate_keys(item) {
+        /* Generate a stream of keys, each being an array of field values (not encoded). */
+
+        // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
+        let field_values = []
+
+        for (const name of this.field_names) {
+            const values = item.propsList(name)
+            if (!values.length) return              // no values (missing field), skip this item
+            if (values.length >= 2 && field_values.length)
+                throw new Error(`key field ${name} has multiple values, which is allowed only for the first field in the index`)
+            field_values.push(values)
+        }
+
+        // flat array of encoded values of all fields except the first one
+        const tail = field_values.slice(1).map(values => values[0])
+
+        // iterate over the first field's values to produce all key combinations
+        for (const head of field_values[0])
+            yield [head, ...tail]
+    }
 
 }
 
 export class IndexByCategory extends BasicIndex {
     // descriptor = new IndexByCategoryDescriptor()
 
-    // schema = new Map([['__category__', new INTEGER()]]);
+    schema = [new INTEGER(), new INTEGER()]         // [category ID, item ID]
 
     async *map(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)
