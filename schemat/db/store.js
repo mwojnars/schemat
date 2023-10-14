@@ -133,13 +133,6 @@ export class DataDescriptor extends SequenceDescriptor {
     }
 }
 
-export class IndexByCategoryDescriptor extends SequenceDescriptor {
-    /* Specification of an index that maps category IDs to item IDs. */
-    schema_key = new Map([['__category__', new INTEGER()]]);
-
-    decode_object(key, value) {
-    }
-}
 
 /**********************************************************************************************************************/
 
@@ -149,7 +142,7 @@ class Block__ {
     del(key)            { assert(false) }
 }
 
-class MemoryBlock extends Block__ {
+export class MemoryBlock extends Block__ {
 
     records = new BinaryMap()
 
@@ -158,7 +151,7 @@ class MemoryBlock extends Block__ {
     del(key)            { this.records.delete(key) }
 }
 
-class Sequence {    // Series?
+export class Sequence {    // Series?
 
     descriptor          // SequenceDescriptor that defines this sequence's key and value
     blocks              // array of Blocks that make up this sequence
@@ -302,9 +295,9 @@ export class BasicIndex extends Index {
 }
 
 export class IndexByCategory extends BasicIndex {
-    // descriptor = new IndexByCategoryDescriptor()
+    /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
-    schema = [new INTEGER(), new INTEGER()]         // [category ID, item ID]
+    _field_types = [new INTEGER(), new INTEGER()]           // [category ID, item ID]
 
     async *map(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)
