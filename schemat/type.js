@@ -35,7 +35,7 @@ export class Type {
     // common properties of schemas; can be utilized by subclasses or callers:
     static defaultProps = {
         info     : undefined,   // human-readable description of this type: what values are accepted and how they are interpreted
-        blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value
+        blank    : undefined,   // if true, `null` and `undefined` are treated as a valid value: stored and then decoded as "null"
         initial  : undefined,   // initial value assigned to a newly created data element of this type
         repeated : undefined,   // if true, the field described by this type can be repeated, typically inside a CATALOG/RECORD/DATA
         default  : undefined,   // default value to be used for a non-repeated property when no explicit value was provided;
@@ -98,18 +98,16 @@ export class Type {
     }
 
     validate(obj) {
-        /* Validate and preprocess an object to be encoded. */
+        /* Validate an object to be encoded, clean it up and convert to a canonical form if needed.
+           Return the processed object, or raise an exception if the object is invalid.
+         */
         this.check(obj)                         // raises an exception if `obj` is invalid
-        return this.normalize(obj)              // cleans up and preprocesses the `obj` to a canonical form
+        return obj
     }
     check(obj) {
         /* Check if the object (before normalization) is valid for this type, throw an exception if not. */
         if (!this.props.blank && (obj === null || obj === undefined))
             throw new ValueError(`expected a non-blank value, but got '${obj}' instead`)
-    }
-    normalize(obj) {
-        /* Clean up and/or convert the object to a canonical form before encoding. */
-        return obj
     }
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
@@ -446,8 +444,8 @@ export class Textual extends Primitive {
 }
 
 export class STRING extends Textual {
-    normalize(value) {
-        return super.normalize(value).trim()        // trim leading/trailing whitespace
+    validate(value) {
+        return super.validate(value).trim()             // trim leading/trailing whitespace
     }
 }
 export class URL extends STRING {
