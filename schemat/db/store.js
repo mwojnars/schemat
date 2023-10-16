@@ -313,7 +313,7 @@ export class BasicIndex extends Index {
 export class IndexByCategory extends BasicIndex {
     /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
-    _field_types = [new INTEGER(), new INTEGER()]           // [category ID, item ID]
+    _field_types = [new INTEGER({blank: true}), new INTEGER()]           // [category ID, item ID]
 
     async *map(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)

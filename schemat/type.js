@@ -103,7 +103,7 @@ export class Type {
          */
         if (value === null || value === undefined)
             if (this.props.blank) return null
-            else throw new ValueError(`expected a non-blank value, but got '${value}' instead`)
+            else throw new ValueError(`expected a non-blank (non-missing) value, got '${value}' instead`)
         return value
     }
 
@@ -355,23 +355,21 @@ export class INTEGER extends NUMBER {
         return value
     }
 
-    binary_encode(integer, last = false) {
-        integer = this.validate(integer)
+    binary_encode(value, last = false) {
+        value = this.validate(value)
         let {signed, length} = this.props
-        if (!signed) return this._encode_uint(integer, length)
-        // if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
+        if (!signed) return this._encode_uint(value, length)
 
         // for signed integers, shift the value range upwards and encode as unsigned
         length = length || this.constructor.DEFAULT_LENGTH_SIGNED
-        integer += Math.pow(2, 8*length - 1)            // TODO: memorize all Math.pow(2,k) here and below
-        assert(integer >= 0)
-        return this._encode_uint(integer, length)
+        value += Math.pow(2, 8*length - 1)                  // TODO: memorize all Math.pow(2,k) here and below
+        assert(value >= 0)
+        return this._encode_uint(value, length)
     }
 
     binary_decode(input, last = false) {
         let {signed, length} = this.props
         if (!signed) return this._decode_uint(input, length)
-        // if (signed) throw new NotImplemented(`binary decoding of signed integers is not implemented yet`)
 
         // decode as unsigned and shift the value range downwards after decoding to restore the original signed value
         length = length || this.constructor.DEFAULT_LENGTH_SIGNED
@@ -379,43 +377,59 @@ export class INTEGER extends NUMBER {
         return this._decode_uint(input, length) - shift
     }
 
-    _encode_uint(num, length = 0) {
+    _encode_uint(value, length = 0) {
         /* Binary encoding of an unsigned integer in a field of `length` bytes.
            If length is missing or 0, magnitude of the value is detected automatically and the value
            is encoded on the minimum required no. of bytes, between 1 and 7 (larger values exceed MAX_SAFE_INTEGER)
            - in such case the detected byte length is written to the output in the first byte.
          */
+        const {blank} = this.props
         const adaptive = !length
         const offset = adaptive ? 1 : 0
-        if (adaptive) length = byteLengthOfUnsignedInteger(num)
+
+        if (!blank) assert(value !== null)
+
+        if (adaptive)
+            length = (value !== null) ? byteLengthOfUnsignedInteger(value) : 0          // length=0 encodes null in adaptive mode
+        else if (blank)
+            if (value === null) value = 0                       // in non-adaptive mode, 0 is reserved for "null", hence shifting all values by +1
+            else value += 1
 
         const buffer = new Uint8Array(length + offset)          // +1 for the length byte in adaptive mode
         if (adaptive) buffer[0] = length
 
         for (let i = offset + length - 1; i >= offset; i--) {
-            buffer[i] = num & 0xFF
-            num = Math.floor(num / 256)         // bitwise ops (num >>= 8) are incorrect for higher bytes
-            // buffer[i] = num % 256
-            // num >>= 8
+            buffer[i] = value & 0xFF
+            value = Math.floor(value / 256)             // bitwise ops (value >>= 8) are incorrect for higher bytes
         }
         return buffer
     }
 
     _decode_uint(input, length = 0) {
         /* `input` must be a BinaryInput. */
+        const {blank} = this.props
         const adaptive = !length
         const offset = adaptive ? 1 : 0
         const buffer = input.current()
 
         if (adaptive) length = buffer[0]
 
-        let num = 0
+        let value = 0
         for (let i = 0; i < length; i++)
-            num += buffer[offset + i] * Math.pow(2, 8 * (length - i - 1))
-            // num = (num << 8) | buffer[i]
+            value += buffer[offset + i] * Math.pow(2, 8 * (length - i - 1))
+            // value = (value << 8) | buffer[i]
+
+        if (adaptive && length === 0) {
+            assert(blank)
+            value = null                                        // length=0 encodes null in adaptive mode
+        }
+
+        if (!adaptive && blank)
+            if (value === 0) value = null                       // in non-adaptive mode, 0 is reserved for "null"
+            else value -= 1
 
         input.move(length + offset)
-        return num
+        return value
     }
 }
 
