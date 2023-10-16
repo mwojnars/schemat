@@ -130,7 +130,7 @@ class Store {
 /**********************************************************************************************************************/
 
 export class Block {
-    /* A continuous subrange of a Sequence physically located on a single device.
+    /* A continuous subrange of a Sequence physically located on a single machine.
        Unit of data replication and distribution (in the future).
      */
 
@@ -185,6 +185,9 @@ export class Index extends Sequence {
     async apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
 
+        const {key, value_old, value_new} = change
+        print(`apply ${key}: ${value_old} -> ${value_new}`)
+
         // del_records and put_records are BinaryMaps, {binary_key: string_value}
         const [del_records, put_records] = await this._make_plan(change)
 
@@ -209,9 +212,6 @@ export class Index extends Sequence {
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
-        // const {key, value_old, value_new} = change
-        // print(`apply ${key}: ${value_old} -> ${value_new}`)
-
         // map each source record (old & new) to an array of 0+ index records
         let out_records_old = [...this.map(change.record_old)]
         let out_records_new = [...this.map(change.record_new)]

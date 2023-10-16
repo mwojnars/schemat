@@ -49,7 +49,7 @@ export class Ring extends Item {
         if (this.file) block = new YamlBlock(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
             block = await globalThis.registry.getLoaded(this.item)
-            block.setExpiry('never')                           // prevent eviction of this item from Registry's cache (!)
+            block.setExpiry('never')                            // prevent eviction of this item from Registry's cache (!)
         }
         await block.open(this)
         this.block = block
@@ -59,16 +59,18 @@ export class Ring extends Item {
 
     async _init_indexes() {
         this.indexes = new Map([
-            ['category__item', new IndexByCategory()],          // index of items sorted by category
+            ['category_item', new IndexByCategory()],           // index of item IDs sorted by parent category ID
         ])
 
-        for await (let record of this.scan())                   // PlainRecord?
+        for await (let record of this.scan()) {
+            print(`_init_indexes() input record: ${record}`)
             for (let [name, index] of this.indexes) {
                 // const change = new Change(record.id, null, record.data)
                 const plain = new PlainRecord(this._data_schema, [record.id])
                 const change = new Change(plain.binary_key, null, record.data_json)
                 await index.apply(change)
             }
+        }
     }
 
     async erase() {
