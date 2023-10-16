@@ -195,8 +195,8 @@ export class CustomMap extends Map {
      */
 
     constructor(iterable = null) {
-        if (!iterable) { super(); return }
-        super([...iterable].map(([k, v]) => [this.convert(k), v]))
+        super()
+        for (const [k, v] of iterable || []) this.set(k, v)
     }
 
     convert(key)    { throw new Error(`CustomMap.convert() must be overridden in a subclass`) }
