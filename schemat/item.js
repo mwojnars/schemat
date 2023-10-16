@@ -282,6 +282,11 @@ export class Item {
         // TODO: if the record is already cached in binary registry, return the cached item...
         // TODO: otherwise, create a new item and cache it in binary registry
         let item = new Item(record.id)
+
+        // root category's class must be set before loading the item's data - this is needed inside DB blocks,
+        // when instantiating temporary items from data records
+        if (record.id === ROOT_ID) T.setClass(item, RootCategory)
+
         return item.load(record)
     }
 
@@ -320,8 +325,9 @@ export class Item {
             let proto = this.initPrototypes()                   // load prototypes
             if (proto instanceof Promise) await proto
 
+            // let category = (this.id === ROOT_ID) ? this : this.category
             let category = this.category                        // this.data is already loaded, so __category__ should be available
-            // assert(category)
+            assert(category)
 
             if (category && !category.isLoaded && category !== this)
                 await category.load()
@@ -914,6 +920,11 @@ export class Category extends Item {
     A category is an item that describes other items: their schema and functionality;
     also acts as a manager that controls access to and creation of new items within category.
     */
+
+    // get category() {
+    //     if (this.id === ROOT_ID) return this        // root category is a category for itself
+    //     return super.category
+    // }
 
     init() { return this._initSchema() }
 

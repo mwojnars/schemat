@@ -188,15 +188,15 @@ export class Index extends Sequence {
         const {key, value_old, value_new} = change
         print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
-        // del_records and put_records are BinaryMaps, {binary_key: string_value}
+        // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         const [del_records, put_records] = await this._make_plan(change)
 
         // delete old records
-        for (let [key, value] of del_records)
+        for (let [key, value] of del_records || [])
             this._find_block(key).del(key)
 
         // (over)write new records
-        for (let [key, value] of put_records)
+        for (let [key, value] of put_records || [])
             this._find_block(key).put(key, value)
     }
 
@@ -223,8 +223,8 @@ export class Index extends Sequence {
         let out_records_new = in_record_new && await T.arrayFromAsync(this.map(in_record_new))
 
         // del/put plan: records to be deleted from, or written to, the index
-        let del_records = new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
-        let put_records = new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
+        let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
+        let put_records = out_records_new && new BinaryMap(out_records_new.map(rec => [rec.binary_key, rec.string_value]))
 
         this._prune_plan(del_records, put_records)
 
@@ -236,7 +236,7 @@ export class Index extends Sequence {
            1) skip the records that are identical in `del_records` and `put_records`;
            2) don't explicitly delete records that will be overwritten with a new value anyway
          */
-        if (!del_records.size || !put_records.size) return
+        if (!del_records?.size || !put_records?.size) return
         for (let key of del_records.keys())
             if (put_records.has(key)) {
                 if (put_records.get(key) === del_records.get(key))      // "put" not needed when old/new values are equal
