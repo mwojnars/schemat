@@ -213,8 +213,10 @@ export class Index extends Sequence {
            to be written to the index sequence.
          */
 
-        let in_record_old = change.record_old(this.field_types)
-        let in_record_new = change.record_new(this.field_types)
+        const _data_schema = [new INTEGER()]        // TODO: use this.source.schema instead
+
+        let in_record_old = change.record_old(_data_schema)
+        let in_record_new = change.record_new(_data_schema)
 
         // map each source record (old & new) to an array of 0+ index records
         let out_records_old = in_record_old && await T.arrayFromAsync(this.map(in_record_old))
