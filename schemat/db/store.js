@@ -2,7 +2,7 @@
     Distributed no-sql data store for data records (items) and indexes.
 */
 
-import {assert, print} from "../utils.js";
+import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
@@ -186,7 +186,7 @@ export class Index extends Sequence {
         /* Update the index to apply a change that originated in the source sequence. */
 
         const {key, value_old, value_new} = change
-        print(`apply ${key}: ${value_old} -> ${value_new}`)
+        print(`apply(): binary key [${key}], ${value_old} -> ${value_new}`)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}
         const [del_records, put_records] = await this._make_plan(change)
@@ -200,7 +200,7 @@ export class Index extends Sequence {
             this._find_block(key).put(key, value)
     }
 
-    *map(input_record) {
+    async *map(input_record) {
         /* Perform transformation of the input Record, as defined by this index, and output any number (0+)
            of output Records to be stored in the index.
          */
@@ -213,8 +213,10 @@ export class Index extends Sequence {
            to be written to the index sequence.
          */
         // map each source record (old & new) to an array of 0+ index records
-        let out_records_old = [...this.map(change.record_old)]
-        let out_records_new = [...this.map(change.record_new)]
+        let out_records_old = await T.arrayFromAsync(this.map(change.record_old))
+        let out_records_new = await T.arrayFromAsync(this.map(change.record_new))
+        // let out_records_old = [...this.map(change.record_old)]
+        // let out_records_new = [...this.map(change.record_new)]
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
