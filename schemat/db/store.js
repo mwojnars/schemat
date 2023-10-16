@@ -4,20 +4,13 @@
 
 import {assert, print} from "../utils.js";
 import {JSONx} from "../serialize.js";
-import {BinaryInput, BinaryOutput, BinaryMap} from "../util/binary.js"
+import {BinaryInput, BinaryOutput, BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord} from "./records.js";
 import {Item} from "../item.js";
 
 
 // Section, Block, Partition
-
-class Block {
-    /* Non-replicated, non-distributed part of a Sequence, physically located on a single device.
-       Optionally contains an unmutable specification of the [start,end) range of supported keys.
-     */
-}
-// MasterBlock / SlaveBlock
 
 class Sequence__ {
     /* Ordered sequence of key-value records, possibly distributed and/or replicated.
@@ -117,39 +110,56 @@ class Store {
 //     }
 // }
 
-export class DataDescriptor extends SequenceDescriptor {
-    /* Specification of a data sequence. */
-
-    schema_key = new Map([['id', new INTEGER()]]);
-
-    *generate_keys(item) {
-        yield [item.id]
-    }
-
-    generate_value(item) {
-        /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
-        assert(item.isLoaded)
-        return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
-    }
-}
+// export class DataDescriptor extends SequenceDescriptor {
+//     /* Specification of a data sequence. */
+//
+//     schema_key = new Map([['id', new INTEGER()]]);
+//
+//     *generate_keys(item) {
+//         yield [item.id]
+//     }
+//
+//     generate_value(item) {
+//         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
+//         assert(item.isLoaded)
+//         return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
+//     }
+// }
 
 
 /**********************************************************************************************************************/
 
-class Block__ {
+export class Block {
+    /* A continuous subrange of a Sequence physically located on a single device.
+       Unit of data replication and distribution (in the future).
+     */
 
+    get(key)            { assert(false) }
     put(key, value)     { assert(false) }
     del(key)            { assert(false) }
 }
 
-export class MemoryBlock extends Block__ {
+export class MemoryBlock extends Block {
 
     records = new BinaryMap()
 
     get(key)            { return this.records.get(key) }
     put(key, value)     { this.records.set(key, value) }
     del(key)            { this.records.delete(key) }
+
+    *scan_range(start = null /*Uint8Array*/, stop = null /*Uint8Array*/) {
+        /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
+           are binary keys (Uint8Array).
+         */
+        let sorted_keys = [...this.records.keys()].sort(compareUint8Arrays)
+        let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
+        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
+        for (let key of sorted_keys.slice(start_index, stop_index))
+            yield [key, this.records.get(key)]
+    }
 }
+
+/**********************************************************************************************************************/
 
 export class Sequence {    // Series?
 
