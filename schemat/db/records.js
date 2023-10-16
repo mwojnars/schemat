@@ -179,6 +179,7 @@ export class ItemRecord {
 
     static from_binary(binary_record /*Record*/) {
         /* Create an ItemRecord from a binary data record, where key = [id], and value is a JSONx-serialized Data object. */
+        assert(binary_record instanceof Record, `invalid binary_record: ${binary_record}, should be a Record`)
         let json = binary_record.string_value        // plain object, JSONx-encoded Data of an item
         let key = binary_record.key                  // array of key fields, decoded
         let id = key[0]
@@ -216,8 +217,8 @@ export class RecordChange {
     value_old           // null if missing record (insertion); undefined if empty value, but record exists (update)
     value_new           // null if missing record (deletion); undefined if empty value, but record exists (update)
 
-    get record_old()    { return this.value_old === null ? null : {key: this.key, value: this.value_old} }
-    get record_new()    { return this.value_new === null ? null : {key: this.key, value: this.value_new} }
+    record_old(schema)  { return this.value_old !== null && new BinaryRecord(schema, this.key, this.value_old) }
+    record_new(schema)  { return this.value_new !== null && new BinaryRecord(schema, this.key, this.value_new) }
 
     constructor(key, value_old = null, value_new = null) {
         this.key = key

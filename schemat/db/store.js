@@ -186,7 +186,7 @@ export class Index extends Sequence {
         /* Update the index to apply a change that originated in the source sequence. */
 
         const {key, value_old, value_new} = change
-        print(`apply(): binary key [${key}], ${value_old} -> ${value_new}`)
+        print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}
         const [del_records, put_records] = await this._make_plan(change)
@@ -212,11 +212,13 @@ export class Index extends Sequence {
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
+
+        let in_record_old = change.record_old(this.field_types)
+        let in_record_new = change.record_new(this.field_types)
+
         // map each source record (old & new) to an array of 0+ index records
-        let out_records_old = await T.arrayFromAsync(this.map(change.record_old))
-        let out_records_new = await T.arrayFromAsync(this.map(change.record_new))
-        // let out_records_old = [...this.map(change.record_old)]
-        // let out_records_new = [...this.map(change.record_new)]
+        let out_records_old = in_record_old && await T.arrayFromAsync(this.map(in_record_old))
+        let out_records_new = in_record_new && await T.arrayFromAsync(this.map(in_record_new))
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
