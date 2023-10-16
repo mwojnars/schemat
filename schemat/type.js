@@ -97,17 +97,14 @@ export class Type {
         return this instanceof typeClass
     }
 
-    validate(obj) {
-        /* Validate an object to be encoded, clean it up and convert to a canonical form if needed.
-           Return the processed object, or raise an exception if the object is invalid.
+    validate(value) {
+        /* Validate an object/value to be encoded, clean it up and convert to a canonical form if needed.
+           Return the processed value, or raise an exception if the value is invalid.
          */
-        this.check(obj)                         // raises an exception if `obj` is invalid
-        return obj
-    }
-    check(obj) {
-        /* Check if the object (before normalization) is valid for this type, throw an exception if not. */
-        if (!this.props.blank && (obj === null || obj === undefined))
-            throw new ValueError(`expected a non-blank value, but got '${obj}' instead`)
+        if (value === null || value === undefined)
+            if (this.props.blank) return null
+            else throw new ValueError(`expected a non-blank value, but got '${value}' instead`)
+        return value
     }
 
     toString()      { return this.constructor.name }            //JSON.stringify(this._fields).slice(0, 60)
@@ -308,11 +305,12 @@ export class Primitive extends Type {
 
     static stype        // the predefined standard type (typeof...) of app-layer values; same type for db-layer values
 
-    check(value) {
-        super.check(value)
+    validate(value) {
+        if ((value = super.validate(value)) === null) return value
         let t = this.constructor.stype
-        if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return
-        throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
+        // if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return value
+        if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got ${value} (${typeof value}) instead`)
+        return value
     }
 }
 
@@ -329,11 +327,12 @@ export class NUMBER extends Primitive {
         min:     undefined,         // minimum value allowed (>=)
         max:     undefined,         // maximum value allowed (<=)
     }
-    check(value) {
-        super.check(value)
+    validate(value) {
+        if ((value = super.validate(value)) === null) return value
         let {min, max} = this.props
         if (min !== undefined && value < min) throw new ValueError(`the number (${value}) is out of bounds, should be >= ${min}`)
         if (max !== undefined && value > max) throw new ValueError(`the number (${value}) is out of bounds, should be <= ${max}`)
+        return value
     }
 }
 
@@ -347,8 +346,8 @@ export class INTEGER extends NUMBER {
         length:  undefined,     // number of bytes to be used to store values in DB indexes; adaptive encoding if undefined (for uint), or 6 (for signed int)
     }
 
-    check(value) {
-        super.check(value)
+    validate(value) {
+        if ((value = super.validate(value)) === null) return value
         if (!Number.isInteger(value)) throw new ValueError(`expected an integer, got ${value} instead`)
         if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
@@ -357,7 +356,7 @@ export class INTEGER extends NUMBER {
     }
 
     binary_encode(integer, last = false) {
-        this.check(integer)
+        integer = this.validate(integer)
         let {signed, length} = this.props
         if (!signed) return this._encode_uint(integer, length)
         // if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
@@ -642,8 +641,10 @@ export class PATH extends STRING {
 export class DATE extends STRING {
     /* Date (no time, no timezone). Serialized to a string "YYYY-MM-DD". */
 
-    check(value) {
+    validate(value) {
+        if ((value = super.validate(value)) === null) return value
         if (!(value instanceof Date)) throw new ValueError(`expected a Date, got ${value} instead`)
+        return value
     }
 }
 
@@ -665,11 +666,12 @@ export class GENERIC extends Type {
         //types: undefined,
     }
 
-    check(obj) {
-        super.check(obj)
+    validate(obj) {
+        if ((obj = super.validate(obj)) === null) return obj
         let {class: class_} = this.props
         if (class_ && !(obj instanceof class_))
             throw new ValueError(`invalid object type, expected an instance of ${class_}, got ${obj} instead`)
+        return obj
         // let types = this._types
         // return !types || types.length === 0 || types.filter((base) => obj instanceof base).length > 0
     }
