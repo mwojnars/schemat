@@ -278,7 +278,7 @@ export class BasicIndex extends Index {
             yield new PlainRecord(this.field_types, key, value)
     }
 
-    accept(item) { return item && (!this.category || item.category.is(this.category)) }
+    accept(item) { return item && (!this.category || item.category?.is(this.category)) }
 
     generate_value(item) {
         /* Generate an object that will be stringified through JSON and stored as `value` in the index record. */
@@ -321,6 +321,6 @@ export class IndexByCategory extends BasicIndex {
     }
 
     *generate_keys(item) {
-        yield [item.category.id, item.id]
+        yield [item.category?.id, item.id]
     }
 }

@@ -53,8 +53,6 @@ export class Ring extends Item {
         }
         await block.open(this)
         this.block = block
-
-        // await this._init_indexes()
     }
 
     async _init_indexes() {
@@ -222,6 +220,8 @@ export class ServerDB extends Database {
             this.append(ring)
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
+        // for (const ring of this.rings)
+        //     await ring._init_indexes()              // TODO: temporary
     }
 
     append(ring) {

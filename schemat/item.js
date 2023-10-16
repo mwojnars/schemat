@@ -324,8 +324,8 @@ export class Item {
             // when instantiating temporary items from data records (so new Item() is called, not new RootCategory())
             if (record.id === ROOT_ID) T.setClass(this, RootCategory)
 
-            let category = this.category                        // this.data is already loaded, so __category__ should be available
-            assert(category)
+            // this.data is already loaded, so __category__ should be available IF defined (except non-categorized objects)
+            let category = this.category
 
             if (category && !category.isLoaded && category !== this)
                 await category.load()

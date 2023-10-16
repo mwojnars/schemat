@@ -355,9 +355,11 @@ export class INTEGER extends NUMBER {
         if (!this.props.signed && value < 0) throw new ValueError(`expected a positive integer, got ${value} instead`)
         if (value < Number.MIN_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too small to be stored in JavaScript`)
         if (value > Number.MAX_SAFE_INTEGER) throw new ValueError(`the integer (${value}) is too large to be stored in JavaScript`)
+        return value
     }
 
     binary_encode(integer, last = false) {
+        this.check(integer)
         let {signed, length} = this.props
         if (!signed) return this._encode_uint(integer, length)
         // if (signed) throw new NotImplemented(`binary encoding of signed integers is not implemented yet`)
