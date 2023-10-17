@@ -18,8 +18,7 @@ export const EMPTY = Symbol('empty')
 
 export class Record {
 
-    schema                  // array of Types of consecutive fields in the key;
-                            // typically, `schema` is taken from the parent Sequence of this record
+    schema                  // SequenceSchema of the parent Sequence of this record
 
     _key                    // array of fields decoded from the binary key
     _value                  // object or plain JS value parsed from JSON string, or EMPTY (empty value)
@@ -68,16 +67,13 @@ export class Record {
         return this._key = key
     }
 
-    // _key_to_object() {
-    //     let obj = {}
-    //     let length = types.length
-    //     for (let i = 0; i < length; i++) {
-    //         const field = types[i].name
-    //         const value = this._key[i]
-    //         obj[field] = value
-    //     }
-    //     return this._object_key = obj
-    // }
+    _key_to_object() {
+        let names = this.schema.field_names
+        let key = this.key
+        let obj = {}
+        for (let i = 0; i < names.length; i++) obj[names[i]] = key[i]
+        return this._object_key = obj
+    }
 
     _encode_value() {
         return this._string_value = (this._value === EMPTY ? '' : JSON.stringify(this._value))
@@ -259,7 +255,7 @@ export class SequenceSchema {
     properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
 
     _field_names        // array of names of consecutive fields in the key
-    _field_types        // array of Types of consecutive fields in the key (key's schema)
+    _field_types        // array of Types of consecutive fields in the key
 
     get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
     get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
