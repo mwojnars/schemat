@@ -147,7 +147,7 @@ export class MemoryBlock extends Block {
     put(key, value)     { this.records.set(key, value) }
     del(key)            { this.records.delete(key) }
 
-    *scan_block({start = null /*Uint8Array*/, stop = null /*Uint8Array*/}) {
+    *scan_block({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array).
          */
@@ -187,9 +187,9 @@ export class Sequence {    // Series?
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
 
-        // // convert `start` and `stop` to binary keys (Uint8Array)
-        // start = start && this.schema.encode_key(start)
-        // stop = stop && this.schema.encode_key(stop)
+        // convert `start` and `stop` to binary keys (Uint8Array)
+        start = start && this.schema.encode_key(start)
+        stop = stop && this.schema.encode_key(stop)
 
         let block = this._find_block(start)
 
