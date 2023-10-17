@@ -6,7 +6,7 @@ import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryInput, BinaryOutput, BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
-import {BinaryRecord, PlainRecord} from "./records.js";
+import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
 
 
@@ -273,14 +273,14 @@ export class BasicIndex extends Index {
 
     category            // category of items allowed in this index
 
-    fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
-    properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
-
-    _field_names        // array of names of consecutive fields in the key
-    _field_types        // array of Types of consecutive fields in the key (key's schema)
-
-    get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
-    get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
+    // fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
+    // properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
+    //
+    // _field_names        // array of names of consecutive fields in the key
+    // _field_types        // array of Types of consecutive fields in the key (key's schema)
+    //
+    // get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
+    // get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
 
     async *map_record(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)
@@ -297,15 +297,15 @@ export class BasicIndex extends Index {
         if (!this.accept(item)) return
         const value = this.generate_value(item)
         for (const key of this.generate_keys(item))
-            yield new PlainRecord(this.field_types, key, value)
+            yield new PlainRecord(this.schema.field_types, key, value)
     }
 
     accept(item) { return item && (!this.category || item.category?.is(this.category)) }
 
     generate_value(item) {
         /* Generate an object that will be stringified through JSON and stored as `value` in the index record. */
-        if (!this.properties?.length) return undefined
-        return item.propObject(...this.properties)
+        if (!this.schema.properties?.length) return undefined
+        return item.propObject(...this.schema.properties)
     }
 
     *generate_keys(item) {
@@ -314,7 +314,7 @@ export class BasicIndex extends Index {
         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
         let field_values = []
 
-        for (const name of this.field_names) {
+        for (const name of this.schema.field_names) {
             const values = item.propsList(name)
             if (!values.length) return              // no values (missing field), skip this item
             if (values.length >= 2 && field_values.length)
@@ -335,7 +335,12 @@ export class BasicIndex extends Index {
 export class IndexByCategory extends BasicIndex {
     /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
-    _field_types = [new INTEGER({blank: true}), new INTEGER()];          // [category ID, item ID]
+    schema = new SequenceSchema(new Map([
+        ['@category', new INTEGER({blank: true})],
+        ['@item',     new INTEGER()],
+    ]));
+
+    // _field_types = [new INTEGER({blank: true}), new INTEGER()];          // [category ID, item ID]
 
     *generate_keys(item) {
         yield [item.category?.id, item.id]

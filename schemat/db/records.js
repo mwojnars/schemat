@@ -233,5 +233,17 @@ export class RecordChange {
 export class SequenceSchema {
     /* Schema of a Sequence, i.e., an array of Types of consecutive fields in the key. */
 
-    types                   // array of Types of consecutive fields in the key
+    fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
+    properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
+
+    _field_names        // array of names of consecutive fields in the key
+    _field_types        // array of Types of consecutive fields in the key (key's schema)
+
+    get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
+    get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
+
+    constructor(fields, properties = []) {
+        this.fields = fields
+        this.properties = properties
+    }
 }
