@@ -22,9 +22,10 @@ export class Record {
                             // typically, `schema` is taken from the parent Sequence of this record
 
     _key                    // array of fields decoded from the binary key
-    _value                  // object parsed from JSON string, or EMPTY (empty value)
+    _value                  // object or plain JS value parsed from JSON string, or EMPTY (empty value)
 
     _binary_key             // `key` encoded as Uint8Array through `schema`
+    _object_key             // object representation of the key, as {field: value}
     _string_value           // JSON-stringified `value`, or empty string (when empty value)
 
     _hash                   // hash computed from _binary_key and _string_value combined
@@ -32,15 +33,17 @@ export class Record {
     get key()               { return this._key || this._decode_key() }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || this._encode_key() }
+    get object_key()        { return this._object_key || (this._object_key = this._key_to_object()) }
     get string_value()      { return this._string_value || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
     _encode_key() {
+        let types  = this.schema
         let output = new BinaryOutput()
-        let length = this.schema.length
+        let length = types.length
 
         for (let i = 0; i < length; i++) {
-            const type = this.schema[i]
+            const type = types[i]
             const last = (i === length - 1)
             const bin  = type.binary_encode(this._key[i], last)
             output.write(bin)
@@ -49,12 +52,13 @@ export class Record {
     }
 
     _decode_key() {
-        let input = new BinaryInput(this._binary_key)
-        let length = this.schema.length
+        let types  = this.schema
+        let input  = new BinaryInput(this._binary_key)
+        let length = types.length
         let key = []
 
         for (let i = 0; i < length; i++) {
-            const type = this.schema[i]
+            const type = types[i]
             const last = (i === length - 1)
             const val  = type.binary_decode(input, last)
             key.push(val)
@@ -63,6 +67,17 @@ export class Record {
 
         return this._key = key
     }
+
+    // _key_to_object() {
+    //     let obj = {}
+    //     let length = types.length
+    //     for (let i = 0; i < length; i++) {
+    //         const field = types[i].name
+    //         const value = this._key[i]
+    //         obj[field] = value
+    //     }
+    //     return obj
+    // }
 
     _encode_value() {
         return this._string_value = (this._value === EMPTY ? '' : JSON.stringify(this._value))

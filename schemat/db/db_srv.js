@@ -57,7 +57,7 @@ export class Ring extends Item {
 
     async _init_indexes() {
         this.indexes = new Map([
-            ['category_item', new IndexByCategory()],           // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory()],       // index of item IDs sorted by parent category ID
         ])
 
         for await (let record /*ItemRecord*/ of this.scan()) {

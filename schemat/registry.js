@@ -233,15 +233,13 @@ export class Registry {
            The items returned are fully loaded and registered in the cache for future retrieval.
          */
         if (category) category.assertLoaded()
-
         let count = 0
         let cid = category?.id
-        let records = this.db.scan(cid)         // the cid argument is only used (and needed!) on the client side where this.db is AjaxDB
+        let records = this.db.scan()
 
         for await (const record of records) {
             if (limit !== undefined && count >= limit) break
             if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
-            // yield this.makeItem(record)
 
             count++
             let item = await Item.from_record(record)
@@ -249,17 +247,18 @@ export class Registry {
         }
     }
 
+    async *scan_items_in_category(category) {
+        let records = this.db.scan_index('idx_category_item')               // stream of Records
+        for await (const record of records) {
+            let {cid, id} = record.object_key
+            yield this.getLoaded(id)
+        }
+    }
+
     _checkCategory(record, cid) {
         /* Check if a given ItemRecord belongs to a given category. */
         return cid === undefined || cid === record.data.get('__category__')?.id
     }
-
-    // async makeItem(record /*ItemRecord*/) {
-    //     /* Create a new booted item from an ItemRecord, or return an existing singleton root item if the ID is ROOT_ID. */
-    //     // if (isRoot(record.id)) return this.root             // root item must stay a singleton, don't create duplicates
-    //     let item = await Item.createBooted(record)
-    //     return this.register(item)
-    // }
 
 
     /***  Object <=> classpath mapping (for de/serialization)  ***/
