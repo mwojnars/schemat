@@ -29,43 +29,12 @@ export class Record {
 
     _hash                   // hash computed from _binary_key and _string_value combined
 
-    get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) } //this._decode_key() }
+    get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
-    get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) } //this._encode_key() }
+    get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) }
     get object_key()        { return this._object_key || this._key_to_object() }
     get string_value()      { return this._string_value || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
-
-    // _encode_key() {
-    //     let types  = this.schema.field_types
-    //     let output = new BinaryOutput()
-    //     let length = types.length
-    //
-    //     for (let i = 0; i < length; i++) {
-    //         const type = types[i]
-    //         const last = (i === length - 1)
-    //         const bin  = type.binary_encode(this._key[i], last)
-    //         output.write(bin)
-    //     }
-    //     return this._binary_key = output.result()
-    // }
-
-    // _decode_key() {
-    //     let types  = this.schema.field_types
-    //     let input  = new BinaryInput(this._binary_key)
-    //     let length = types.length
-    //     let key = []
-    //
-    //     for (let i = 0; i < length; i++) {
-    //         const type = types[i]
-    //         const last = (i === length - 1)
-    //         const val  = type.binary_decode(input, last)
-    //         key.push(val)
-    //     }
-    //     assert(input.pos === this._binary_key.length)
-    //
-    //     return this._key = key
-    // }
 
     _key_to_object() {
         let names = this.schema.field_names
