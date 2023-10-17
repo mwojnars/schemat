@@ -327,11 +327,17 @@ export class IndexByCategory extends BasicIndex {
     /* Index that maps category IDs to item IDs: the key is [category ID, item ID], empty value. */
 
     schema = new SequenceSchema(new Map([
-        ['@category', new INTEGER({blank: true})],
-        ['@item',     new INTEGER()],
+        ['cid', new INTEGER({blank: true})],
+        ['id',  new INTEGER()],
     ]));
 
     *generate_keys(item) {
         yield [item.category?.id, item.id]
     }
 }
+
+
+export const _data_schema = new SequenceSchema(
+    new Map([['id', new INTEGER()]]),
+)
+

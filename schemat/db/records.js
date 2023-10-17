@@ -33,7 +33,7 @@ export class Record {
     get key()               { return this._key || this._decode_key() }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || this._encode_key() }
-    get object_key()        { return this._object_key || (this._object_key = this._key_to_object()) }
+    get object_key()        { return this._object_key || this._key_to_object() }
     get string_value()      { return this._string_value || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
@@ -76,7 +76,7 @@ export class Record {
     //         const value = this._key[i]
     //         obj[field] = value
     //     }
-    //     return obj
+    //     return this._object_key = obj
     // }
 
     _encode_value() {
@@ -115,7 +115,9 @@ export class Record {
     }
 
     constructor(schema, plain = null, binary = null) {
+        // assert(schema instanceof SequenceSchema)
         this.schema = schema
+
         if (plain) {
             this._key = plain.key
             this._value = (plain.value === undefined ? EMPTY : plain.value)
