@@ -171,7 +171,7 @@ export class Sequence {    // Series?
         this.blocks = [new MemoryBlock()]
     }
 
-    _find_block(key) { return this.blocks[0] }
+    _find_block(binary_key)     { return this.blocks[0] }
 
     generate_value(input_object) {
         /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
@@ -186,7 +186,13 @@ export class Sequence {    // Series?
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
+
+        // // convert `start` and `stop` to binary keys (Uint8Array)
+        // start = start && this.schema.encode_key(start)
+        // stop = stop && this.schema.encode_key(stop)
+
         let block = this._find_block(start)
+
         for await (let [key, value] of block.scan_block({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
     }

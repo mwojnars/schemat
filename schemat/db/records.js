@@ -31,24 +31,24 @@ export class Record {
 
     get key()               { return this._key || this._decode_key() }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
-    get binary_key()        { return this._binary_key || this._encode_key() }
+    get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) } //this._encode_key() }
     get object_key()        { return this._object_key || this._key_to_object() }
     get string_value()      { return this._string_value || this._encode_value() }
     get hash()              { return this._hash || this._compute_hash() }
 
-    _encode_key() {
-        let types  = this.schema.field_types
-        let output = new BinaryOutput()
-        let length = types.length
-
-        for (let i = 0; i < length; i++) {
-            const type = types[i]
-            const last = (i === length - 1)
-            const bin  = type.binary_encode(this._key[i], last)
-            output.write(bin)
-        }
-        return this._binary_key = output.result()
-    }
+    // _encode_key() {
+    //     let types  = this.schema.field_types
+    //     let output = new BinaryOutput()
+    //     let length = types.length
+    //
+    //     for (let i = 0; i < length; i++) {
+    //         const type = types[i]
+    //         const last = (i === length - 1)
+    //         const bin  = type.binary_encode(this._key[i], last)
+    //         output.write(bin)
+    //     }
+    //     return this._binary_key = output.result()
+    // }
 
     _decode_key() {
         let types  = this.schema.field_types
@@ -266,4 +266,24 @@ export class SequenceSchema {
     }
 
     empty_value()       { return !this.properties?.length }
+
+    encode_key(key) {
+        /* `key` is an array of field values. The array can be shorter than this.field_types (!) - this may happen
+           when a key is used for a partial match, as a lower/upper bound in a scan() operation.
+         */
+        let types  = this.field_types
+        let output = new BinaryOutput()
+        let length = Math.min(types.length, key.length)
+
+        assert(key.length <= types.length, `key length ${key.length} > field types length ${types.length}`)
+
+        for (let i = 0; i < length; i++) {
+            const type = types[i]
+            const last = (i === types.length - 1)
+            const bin  = type.binary_encode(key[i], last)
+            output.write(bin)
+        }
+        return output.result()
+    }
+
 }
