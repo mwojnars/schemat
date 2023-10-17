@@ -149,14 +149,14 @@ export class Ring extends Item {
 
     async *scan()   { yield* this.block._scan() }       // yield all items in this ring as ItemRecord objects
 
-    async *scan_index(name, start, stop, {limit=null, reverse=false, batch_size=100} = {}) {
+    async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)      // Index object
-        yield* index.scan_sequence(start, stop, {limit, reverse, batch_size})
+        yield* index.scan_sequence({start, stop, limit, reverse, batch_size})
     }
 
     /***  Forwards  ***/
@@ -294,9 +294,9 @@ export class ServerDB extends Database {
         yield* merge(Item.orderAscID, ...streams)
     }
 
-    async *scan_index(name, start, stop, opts) {
+    async *scan_index(name, opts) {
         /* Yields a stream of matching Records merge-sorted from all the rings. */
-        let streams = this.rings.map(r => r.scan_index(name, start, stop, opts))
+        let streams = this.rings.map(r => r.scan_index(name, opts))
         yield* merge(Record.compare, ...streams)
     }
 

@@ -147,7 +147,7 @@ export class MemoryBlock extends Block {
     put(key, value)     { this.records.set(key, value) }
     del(key)            { this.records.delete(key) }
 
-    *scan_block(start = null /*Uint8Array*/, stop = null /*Uint8Array*/) {
+    *scan_block({start = null /*Uint8Array*/, stop = null /*Uint8Array*/}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array).
          */
@@ -180,14 +180,14 @@ export class Sequence {    // Series?
         return undefined
     }
 
-    async *scan_sequence(start = null, stop = null, {limit = null, reverse = false, batch_size = 100} = {}) {
+    async *scan_sequence({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
            If `limit` is defined, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is defined, yield items in batches of `batch_size` items.
          */
         let block = this._find_block(start)
-        for await (let [key, value] of block.scan_block(start, stop))
+        for await (let [key, value] of block.scan_block({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
     }
 }
