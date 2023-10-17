@@ -29,7 +29,7 @@ export class Record {
 
     _hash                   // hash computed from _binary_key and _string_value combined
 
-    get key()               { return this._key || this._decode_key() }
+    get key()               { return this._key || (this._key = this.schema.decode_key(this._binary_key)) } //this._decode_key() }
     get value()             { let val = (this._value !== undefined ? this._value : this._decode_value()); return val === EMPTY ? undefined : val }
     get binary_key()        { return this._binary_key || (this._binary_key = this.schema.encode_key(this._key)) } //this._encode_key() }
     get object_key()        { return this._object_key || this._key_to_object() }
@@ -50,22 +50,22 @@ export class Record {
     //     return this._binary_key = output.result()
     // }
 
-    _decode_key() {
-        let types  = this.schema.field_types
-        let input  = new BinaryInput(this._binary_key)
-        let length = types.length
-        let key = []
-
-        for (let i = 0; i < length; i++) {
-            const type = types[i]
-            const last = (i === length - 1)
-            const val  = type.binary_decode(input, last)
-            key.push(val)
-        }
-        assert(input.pos === this._binary_key.length)
-
-        return this._key = key
-    }
+    // _decode_key() {
+    //     let types  = this.schema.field_types
+    //     let input  = new BinaryInput(this._binary_key)
+    //     let length = types.length
+    //     let key = []
+    //
+    //     for (let i = 0; i < length; i++) {
+    //         const type = types[i]
+    //         const last = (i === length - 1)
+    //         const val  = type.binary_decode(input, last)
+    //         key.push(val)
+    //     }
+    //     assert(input.pos === this._binary_key.length)
+    //
+    //     return this._key = key
+    // }
 
     _key_to_object() {
         let names = this.schema.field_names
@@ -268,8 +268,8 @@ export class SequenceSchema {
     empty_value()       { return !this.properties?.length }
 
     encode_key(key) {
-        /* `key` is an array of field values. The array can be shorter than this.field_types (!) - this may happen
-           when a key is used for a partial match, as a lower/upper bound in a scan() operation.
+        /* `key` is an array of field values. The array can be shorter than this.field_types ("partial key")
+           - this may happen when a key is used for a partial match as a lower/upper bound in a scan() operation.
          */
         let types  = this.field_types
         let output = new BinaryOutput()
@@ -286,4 +286,21 @@ export class SequenceSchema {
         return output.result()
     }
 
+    decode_key(binary_key) {
+        /* Decode a `binary_key` (Uint8Array) back into an array of field values. Partial keys are NOT supported here. */
+        let types  = this.field_types
+        let input  = new BinaryInput(binary_key)
+        let length = types.length
+        let key = []
+
+        for (let i = 0; i < length; i++) {
+            const type = types[i]
+            const last = (i === length - 1)
+            const val  = type.binary_decode(input, last)
+            key.push(val)
+        }
+        assert(input.pos === binary_key.length)
+
+        return key
+    }
 }
