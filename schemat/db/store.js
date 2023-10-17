@@ -188,7 +188,7 @@ export class Sequence {    // Series?
          */
         let block = this._find_block(start)
         for await (let [key, value] of block.scan_block(start, stop))
-            yield new BinaryRecord(this.schema.field_types, key, value)
+            yield new BinaryRecord(this.schema, key, value)
     }
 }
 
@@ -230,7 +230,7 @@ export class Index extends Sequence {
            to be written to the index sequence.
          */
 
-        const _data_schema = [new INTEGER()]        // TODO: use this.source.schema instead
+        // const _data_schema = [new INTEGER()]        // TODO: use this.source.schema instead
 
         let in_record_old = change.record_old(_data_schema)
         let in_record_new = change.record_new(_data_schema)
@@ -288,7 +288,7 @@ export class BasicIndex extends Index {
         if (!this.accept(item)) return
         const value = this.generate_value(item)
         for (const key of this.generate_keys(item))
-            yield new PlainRecord(this.schema.field_types, key, value)
+            yield new PlainRecord(this.schema, key, value)
     }
 
     accept(item) { return item && (!this.category || item.category?.is(this.category)) }

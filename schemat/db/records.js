@@ -38,7 +38,7 @@ export class Record {
     get hash()              { return this._hash || this._compute_hash() }
 
     _encode_key() {
-        let types  = this.schema
+        let types  = this.schema.field_types
         let output = new BinaryOutput()
         let length = types.length
 
@@ -52,7 +52,7 @@ export class Record {
     }
 
     _decode_key() {
-        let types  = this.schema
+        let types  = this.schema.field_types
         let input  = new BinaryInput(this._binary_key)
         let length = types.length
         let key = []
@@ -115,7 +115,7 @@ export class Record {
     }
 
     constructor(schema, plain = null, binary = null) {
-        // assert(schema instanceof SequenceSchema)
+        assert(schema instanceof SequenceSchema)
         this.schema = schema
 
         if (plain) {
