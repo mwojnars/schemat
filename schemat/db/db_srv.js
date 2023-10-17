@@ -60,10 +60,9 @@ export class Ring extends Item {
             ['category_item', new IndexByCategory()],           // index of item IDs sorted by parent category ID
         ])
 
-        for await (let record of this.scan()) {
+        for await (let record /*ItemRecord*/ of this.scan()) {
             print(`_init_indexes() input record: ${record}`)
             for (let [name, index] of this.indexes) {
-                // const change = new RecordChange(record.id, null, record.data)
                 const plain = new PlainRecord(this._data_schema, [record.id])
                 const change = new RecordChange(plain.binary_key, null, record.data_json)
                 await index.apply(change)
@@ -149,7 +148,7 @@ export class Ring extends Item {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan()   { yield* this.block._scan() }
+    async *scan()   { yield* this.block._scan() }       // yield all items in this ring as ItemRecord objects
 
     async *scan_index(name, {start, stop, limit, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
@@ -158,7 +157,7 @@ export class Ring extends Item {
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)      // Index object
-        yield* this.block._scan_index(name, {start, stop, limit, reverse, batch_size})
+        yield* index._scan_index(name, {start, stop, limit, reverse, batch_size})
     }
 
     /***  Forwards  ***/

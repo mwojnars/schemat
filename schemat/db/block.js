@@ -227,15 +227,6 @@ class FileBlock extends Block {
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
         yield* entries
     }
-
-    async *_scan_index(index_spec, {start, stop, limit, reverse=false, batch_size=100} = {}) {
-        /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
-           If `limit` is defined, yield at most `limit` items.
-           If `reverse` is true, scan in the reverse order.
-           If `batch_size` is defined, yield items in batches of `batch_size` items.
-         */
-
-    }
 }
 
 export class YamlBlock extends FileBlock {

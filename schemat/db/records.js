@@ -228,3 +228,10 @@ export class RecordChange {
     }
 }
 
+/**********************************************************************************************************************/
+
+export class SequenceSchema {
+    /* Schema of a Sequence, i.e., an array of Types of consecutive fields in the key. */
+
+    types                   // array of Types of consecutive fields in the key
+}
