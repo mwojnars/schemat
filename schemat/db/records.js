@@ -231,7 +231,7 @@ export class RecordChange {
 /**********************************************************************************************************************/
 
 export class SequenceSchema {
-    /* Schema of a Sequence, i.e., an array of Types of consecutive fields in the key. */
+    /* Schema of a Sequence: defines the sequence's key and value. */
 
     fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
     properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
@@ -246,4 +246,6 @@ export class SequenceSchema {
         this.fields = fields
         this.properties = properties
     }
+
+    empty_value()       { return !this.properties?.length }
 }

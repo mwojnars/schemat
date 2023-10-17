@@ -188,7 +188,7 @@ export class Sequence {    // Series?
          */
         let block = this._find_block(start)
         for await (let [key, value] of block.scan_block(start, stop))
-            yield new BinaryRecord(this.schema, key, value)
+            yield new BinaryRecord(this.schema.field_types, key, value)
     }
 }
 
@@ -273,15 +273,6 @@ export class BasicIndex extends Index {
 
     category            // category of items allowed in this index
 
-    // fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
-    // properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
-    //
-    // _field_names        // array of names of consecutive fields in the key
-    // _field_types        // array of Types of consecutive fields in the key (key's schema)
-    //
-    // get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
-    // get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
-
     async *map_record(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)
         yield* this.generate_records(item)
@@ -304,7 +295,7 @@ export class BasicIndex extends Index {
 
     generate_value(item) {
         /* Generate an object that will be stringified through JSON and stored as `value` in the index record. */
-        if (!this.schema.properties?.length) return undefined
+        if (this.schema.empty_value()) return undefined
         return item.propObject(...this.schema.properties)
     }
 
@@ -339,8 +330,6 @@ export class IndexByCategory extends BasicIndex {
         ['@category', new INTEGER({blank: true})],
         ['@item',     new INTEGER()],
     ]));
-
-    // _field_types = [new INTEGER({blank: true}), new INTEGER()];          // [category ID, item ID]
 
     *generate_keys(item) {
         yield [item.category?.id, item.id]
