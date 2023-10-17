@@ -1136,8 +1136,7 @@ Category.createAPI(
                    // TODO: use size limit & offset (pagination).
                    // TODO: let declare if full items (loaded), or meta-only, or naked stubs should be sent.
                     let items = []
-                    // for await (const item of this.registry.scan(this)) {
-                    for await (const item of this.registry.scan_items_in_category(this)) {
+                    for await (const item of this.registry.scan_category(this)) {
                         await item.load()
                         items.push(item)
                     }

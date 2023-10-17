@@ -209,7 +209,6 @@ export class Registry {
            this._cache, or a stub is created anew and saved for future calls.
          */
         this.session?.countRequested(id)
-        // if (isRoot(id)) return this.root
 
         // ID requested was already loaded/created? return the existing instance, or create a stub (empty item) otherwise;
         // a stub has no expiry date until filled with data
@@ -229,7 +228,7 @@ export class Registry {
         return this.db.select(id)
     }
     async *scan(category = null, {limit} = {}) {
-        /* Scan the main data sequence in DB in the ID order. Yield all items, or only those belonging to `category`.
+        /* Scan the main data sequence in DB. Yield all items, or only those belonging to `category`.
            The items returned are fully loaded and registered in the cache for future retrieval.
          */
         if (category) category.assertLoaded()
@@ -247,8 +246,8 @@ export class Registry {
         }
     }
 
-    async *scan_items_in_category(category) {
-        print(`Registry.scan_items_in_category(${category})`)
+    async *scan_category(category) {
+        print(`Registry.scan_category(${category})`)
         let target_cid = category?.id
         let records = this.db.scan_index('idx_category_item')               // stream of plain Records
         for await (const record of records) {

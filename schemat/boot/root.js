@@ -78,7 +78,7 @@ let root_fields = new Catalog({
 })
 
 export let root_data = new Data({
-    name        : "Root Category",
+    name        : "Category",
     info        : "Category of items that represent categories",
     class_path  : '/system/local/item.js:Category',
     // _boot_class : 'schemat.item.Category',      //  '/system/item.js/Category'

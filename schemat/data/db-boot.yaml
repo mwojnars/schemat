@@ -1,5 +1,5 @@
 - __id: 0
-  name: Root Category
+  name: Category
   info: Category of items that represent categories
   class_path: /system/local/item.js:Category
   cache_ttl: 60
