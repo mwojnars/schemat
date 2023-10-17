@@ -174,7 +174,9 @@ export class Sequence {    // Series?
     _find_block(key) { return this.blocks[0] }
 
     generate_value(input_object) {
-        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record. */
+        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
+           If undefined is returned, the record will consist of a key only.
+         */
         return undefined
     }
 
@@ -215,8 +217,8 @@ export class Index extends Sequence {
             this._find_block(key).put(key, value) //|| print(`put [${key}]`)
     }
 
-    async *map(input_record) {
-        /* Perform transformation of the input Record, as defined by this index, and output any number (0+)
+    async *map_record(input_record) {
+        /* Perform transformation of the input Record, as defined by this index, and yield any number (0+)
            of output Records to be stored in the index.
          */
         throw new Error('not implemented')
@@ -234,8 +236,8 @@ export class Index extends Sequence {
         let in_record_new = change.record_new(_data_schema)
 
         // map each source record (old & new) to an array of 0+ index records
-        let out_records_old = in_record_old && await T.arrayFromAsync(this.map(in_record_old))
-        let out_records_new = in_record_new && await T.arrayFromAsync(this.map(in_record_new))
+        let out_records_old = in_record_old && await T.arrayFromAsync(this.map_record(in_record_old))
+        let out_records_new = in_record_new && await T.arrayFromAsync(this.map_record(in_record_new))
 
         // del/put plan: records to be deleted from, or written to, the index
         let del_records = out_records_old && new BinaryMap(out_records_old.map(rec => [rec.binary_key, rec.string_value]))
@@ -271,8 +273,8 @@ export class BasicIndex extends Index {
 
     category            // category of items allowed in this index
 
-    fields              // {name: type}, a Map of item properties and their Types to be included as fields in the sort key
-    properties          // array of item's property names to be included in the value object (for repeated fields, only the first value is included)
+    fields              // {name: type}, a Map of names and Types of fields to be included in the sequence's key
+    properties          // array of property names to be included in the value object (for repeated props of an item, only the first value is included)
 
     _field_names        // array of names of consecutive fields in the key
     _field_types        // array of Types of consecutive fields in the key (key's schema)
@@ -280,7 +282,7 @@ export class BasicIndex extends Index {
     get field_names()   { return this._field_names || (this._field_names = [...this.fields.keys()]) }
     get field_types()   { return this._field_types || (this._field_types = [...this.fields.values()]) }
 
-    async *map(input_record /*Record*/) {
+    async *map_record(input_record /*Record*/) {
         let item = await Item.from_binary(input_record)
         yield* this.generate_records(item)
     }
