@@ -6,7 +6,7 @@
 
 import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
-import {BinaryInput, BinaryOutput, fnv1aHash} from "../util/binary.js";
+import {BinaryInput, BinaryOutput, compareUint8Arrays, fnv1aHash} from "../util/binary.js";
 import {Data} from "../data.js";
 
 
@@ -92,6 +92,11 @@ export class Record {
         result.set(val, offset + key.length)
 
         return this._hash = fnv1aHash(result)
+    }
+
+    static compare(rec1, rec2) {
+        /* Compare two records by their binary keys (byte order). */
+        return compareUint8Arrays(rec1.binary_key, rec2.binary_key)
     }
 
     constructor(schema, plain = null, binary = null) {

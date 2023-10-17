@@ -6,7 +6,7 @@ import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./store.js";
-import {RecordChange, PlainRecord} from "./records.js";
+import {RecordChange, PlainRecord, Record} from "./records.js";
 import {INTEGER} from "../type.js";
 
 
@@ -150,14 +150,14 @@ export class Ring extends Item {
 
     async *scan()   { yield* this.block._scan() }       // yield all items in this ring as ItemRecord objects
 
-    async *scan_index(name, {start, stop, limit, reverse=false, batch_size=100} = {}) {
+    async *scan_index(name, start, stop, {limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
            If `limit` is not null, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)      // Index object
-        yield* index._scan_index(name, {start, stop, limit, reverse, batch_size})
+        yield* index.scan_sequence(start, stop, {limit, reverse, batch_size})
     }
 
     /***  Forwards  ***/
@@ -293,6 +293,12 @@ export class ServerDB extends Database {
         /* Scan each ring and merge the sorted streams of entries. */
         let streams = this.rings.map(r => r.scan())
         yield* merge(Item.orderAscID, ...streams)
+    }
+
+    async *scan_index(name, start, stop, opts) {
+        /* Yields a stream of matching Records merge-sorted from all the rings. */
+        let streams = this.rings.map(r => r.scan_index(name, start, stop, opts))
+        yield* merge(Record.compare, ...streams)
     }
 
 
