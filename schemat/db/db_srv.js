@@ -273,8 +273,8 @@ export class ServerDB extends Database {
     }
 
     async insert(item) {
-        /* Find the top-most ring where the item's ID is writable and insert there.
-           The ID can be full or partial: [CID,IID] or [CID,undefined]; item.iid is filled with the inserted IID.
+        /* Find the top-most ring where the item's ID is writable and insert there. If a new ID is assigned,
+           it is written to item.id.
          */
         let id = item.id
         for (const ring of this.reversed)
@@ -295,9 +295,11 @@ export class ServerDB extends Database {
     }
 
     async *scan_index(name, opts) {
-        /* Yields a stream of matching Records merge-sorted from all the rings. */
+        /* Yield a stream of plain Records from the index, merge-sorted from all the rings. */
         let streams = this.rings.map(r => r.scan_index(name, opts))
         yield* merge(Record.compare, ...streams)
+        // TODO: apply `limit` to the merged stream
+        // TODO: apply `batch_size` to the merged stream and yield in batches
     }
 
 

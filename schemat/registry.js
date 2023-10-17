@@ -247,17 +247,14 @@ export class Registry {
     }
 
     async *scan_category(category) {
-        // print(`Registry.scan_category(${category})`)
         let target_cid = category?.id
         let start = category ? [target_cid] : null
         let stop = category ? [target_cid + 1] : null
-        // let start = null, stop = null
         let records = this.db.scan_index('idx_category_item', {start, stop})        // stream of plain Records
 
         for await (const record of records) {
             let {cid, id} = record.object_key
             assert(target_cid === undefined || target_cid === cid)
-            // if (target_cid !== undefined && target_cid !== cid) continue     // skip if category doesn't match
             yield this.getLoaded(id)
         }
     }
