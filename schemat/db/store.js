@@ -202,8 +202,8 @@ export class Index extends Sequence {
     async apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
 
-        const {key, value_old, value_new} = change
-        print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
+        // const {key, value_old, value_new} = change
+        // print(`apply(), binary key [${key}]:\n   ${value_old} \n->\n   ${value_new}`)
 
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         const [del_records, put_records] = await this._make_plan(change)
