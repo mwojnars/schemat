@@ -17,7 +17,7 @@ import {RecordChange, Record} from "./records.js";
 
 export class Ring extends Item {
 
-    data                    // DataSequence with all items of this ring /TODO
+    data                    // DataSequence with all items of this ring
 
     db                      // the Database this ring belongs to
     block                   // physical storage of this ring's primary data (the items)
@@ -217,10 +217,11 @@ export class ServerDB extends Database {
             let ring = new Ring(spec)
             await ring.open(this)
             this.append(ring)
+            // await ring._init_indexes()              // TODO: temporary
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
         }
-        for (const ring of this.rings)
-            await ring._init_indexes()              // TODO: temporary
+        // for (const ring of this.rings)
+        //     await ring._init_indexes()              // TODO: temporary
     }
 
     append(ring) {

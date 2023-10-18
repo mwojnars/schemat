@@ -236,7 +236,7 @@ export class Registry {
         let cid = category?.id
         let records = this.db.scan()
 
-        for await (const record of records) {
+        for await (const record of records) {                   // stream of ItemRecords
             if (limit !== undefined && count >= limit) break
             if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
 
