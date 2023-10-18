@@ -229,14 +229,15 @@ export class Registry {
         this.session?.countLoaded(id)
         return this.db.select(id)
     }
-    async *scan(category = null, {limit} = {}) {
+
+    async *scan_all(category = null, {limit} = {}) {
         /* Scan the main data sequence in DB. Yield all items, or only those belonging to `category`.
            The items returned are fully loaded and registered in the cache for future retrieval.
          */
         if (category) category.assertLoaded()
         let count = 0
         let cid = category?.id
-        let records = this.db.scan()
+        let records = this.db.scan_all()
 
         for await (const record of records) {                   // stream of ItemRecords
             if (limit !== undefined && count >= limit) break

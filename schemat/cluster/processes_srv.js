@@ -120,7 +120,7 @@ export class AdminProcess extends BackendProcess {
 
             // update references
             let newItem = globalThis.registry.getItem(newid)
-            for await (let ref of globalThis.registry.scan()) {           // search for references to `id` in a referrer item, `ref`
+            for await (let ref of globalThis.registry.scan_all()) {           // search for references to `id` in a referrer item, `ref`
                 await ref.load()
                 let prev_json = ref.record.data_json
                 ref.data.transform({value: item => item instanceof Item && item.has_id(id) ? newItem : item})
@@ -146,7 +146,7 @@ export class AdminProcess extends BackendProcess {
            to a new format. All rings in the DB must be set as writable (!), otherwise the update will write a copy
            of an item in another ring instead of updating in place.
          */
-        for await (let item of globalThis.registry.scan())
+        for await (let item of globalThis.registry.scan_all())
             await this.db.update_full(item)
     }
 
@@ -155,7 +155,7 @@ export class AdminProcess extends BackendProcess {
         let db = this.db
         for (let ring of db.rings) {
             if (ring.readonly) continue
-            let records = await T.arrayFromAsync(ring.scan())
+            let records = await T.arrayFromAsync(ring.scan_all())
             let ids = records.map(rec => rec.id)
 
             for (const id of ids) {
@@ -181,7 +181,7 @@ export class AdminProcess extends BackendProcess {
         let transform = (it => it instanceof Item && it.id === old_id ? item : it)
 
         for (let ring of db.rings) {
-            for await (const record of ring.scan()) {        // search for references to `old_id` in a referrer item, `ref`
+            for await (const record of ring.scan_all()) {        // search for references to `old_id` in a referrer item, `ref`
 
                 let id = record.id
                 let data = JSONx.transform(record.data, transform)

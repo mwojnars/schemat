@@ -61,7 +61,7 @@ export class Ring extends Item {
             ['idx_category_item', new IndexByCategory(this.data)],      // index of item IDs sorted by parent category ID
         ])
 
-        for await (let record /*ItemRecord*/ of this.scan()) {
+        for await (let record /*ItemRecord*/ of this.scan_all()) {
             for (let index of this.indexes.values()) {
                 const binary_key = this.data.schema.encode_key([record.id])
                 const change = new RecordChange(binary_key, null, record.data_json)
@@ -148,7 +148,7 @@ export class Ring extends Item {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan()   { yield* this.block._scan() }       // yield all items in this ring as ItemRecord objects
+    async *scan_all()   { yield* this.block._scan() }       // yield all items in this ring as ItemRecord objects
 
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.
@@ -290,9 +290,9 @@ export class ServerDB extends Database {
         return this.forward_delete(null, id)
     }
 
-    async *scan() {
+    async *scan_all() {
         /* Scan each ring and merge the sorted streams of entries. */
-        let streams = this.rings.map(r => r.scan())
+        let streams = this.rings.map(r => r.scan_all())
         yield* merge(Item.orderAscID, ...streams)
     }
 
