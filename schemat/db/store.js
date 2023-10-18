@@ -4,7 +4,7 @@
 
 import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
-import {BinaryInput, BinaryOutput, BinaryMap, compareUint8Arrays} from "../util/binary.js"
+import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
@@ -159,13 +159,11 @@ export class Index extends Sequence {
            The plan is a pair of BinaryMaps, {key: value}, one for records to be deleted, and one for records
            to be written to the index sequence.
          */
-
         const source_schema = this.source.schema
-
         let in_record_old = change.record_old(source_schema)
         let in_record_new = change.record_new(source_schema)
 
-        // map each source record (old & new) to an array of 0+ index records
+        // map each source record (old & new) to an array of 0+ output records to be saved/removed in the index
         let out_records_old = in_record_old && await T.arrayFromAsync(this.map_record(in_record_old))
         let out_records_new = in_record_new && await T.arrayFromAsync(this.map_record(in_record_new))
 
@@ -250,7 +248,6 @@ export class BasicIndex extends Index {
         for (const head of field_values[0])
             yield [head, ...tail]
     }
-
 }
 
 export class IndexByCategory extends BasicIndex {
@@ -275,11 +272,6 @@ class AggregateSequence extends Sequence {}     // or Cube like in OLAP database
      */
 
 /**********************************************************************************************************************/
-
-export const _data_schema = new SequenceSchema(
-    new Map([['id', new INTEGER()]]),
-    // value encoding is handled outside schema through method overloading
-)
 
 export class DataSequence extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
