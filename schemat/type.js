@@ -722,8 +722,8 @@ export class TYPE extends GENERIC {
         view() {
             let {value: type} = this.props
             if (type instanceof TypeWrapper) {
-                if (!type.schema) return "TypeWrapper (not loaded)"
-                type = type.schema
+                if (!type.real_type) return "TypeWrapper (not loaded)"
+                type = type.real_type
             }
             let dflt = `${type.props.default}`
             return SPAN(`${type}`,
@@ -1461,23 +1461,23 @@ export class TypeWrapper extends Type {
      */
 
     static defaultProps = {
-        prototype:  undefined,          // item of the Type category (instance of TypeItem) implementing `this.schema`
-        properties: {},                 // properties to be passed to `prototype` to create `this.schema`
+        prototype:  undefined,          // item of the Type category (instance of TypeItem) implementing this.real_type
+        properties: {},                 // properties to be passed to `prototype` to create this.real_type
     }
 
-    schema                              // the actual Type instance to be used for encode/decode, provided by `prototype` during init()
+    real_type                           // the actual Type instance to be used for encode/decode, provided by `prototype` during init()
     
     async init() {
-        if (this.schema) return
+        if (this.real_type) return
         let {prototype, properties} = this.props
         await prototype.load()
         let {TypeItem} = await import('./type_item.js')
         assert(prototype instanceof TypeItem)
-        this.schema = prototype.createSchema(properties)
+        this.real_type = await prototype.create_real_type(properties)
     }
-    instanceof(cls)     { return this.schema instanceof cls }
-    validate(obj)       { return this.schema.validate(obj) }
-    display(props)      { return this.schema.display(props) }
+    instanceof(cls)     { return this.real_type instanceof cls }
+    validate(obj)       { return this.real_type.validate(obj) }
+    display(props)      { return this.real_type.display(props) }
 
     __getstate__()          { return [this.props.prototype, this.props.properties] }
     __setstate__(state)     {
