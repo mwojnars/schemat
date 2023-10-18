@@ -6,7 +6,7 @@ import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory, _data_schema} from "./store.js";
-import {RecordChange, PlainRecord, Record} from "./records.js";
+import {RecordChange, Record} from "./records.js";
 import {INTEGER} from "../type.js";
 
 
@@ -62,8 +62,8 @@ export class Ring extends Item {
 
         for await (let record /*ItemRecord*/ of this.scan()) {
             for (let [name, index] of this.indexes) {
-                const plain = new PlainRecord(_data_schema, [record.id])
-                const change = new RecordChange(plain.binary_key, null, record.data_json)
+                const binary_key = _data_schema.encode_key([record.id])
+                const change = new RecordChange(binary_key, null, record.data_json)
                 await index.apply(change)
             }
         }
