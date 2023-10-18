@@ -4,12 +4,14 @@ import { print, assert, Counter } from './utils.js'
 import { ItemNotFound, NotImplemented } from './errors.js'
 import { JSONx } from './serialize.js'
 import { Catalog, Data, ItemsCache } from './data.js'
-import { Item, RootCategory, ROOT_ID, SITE_ID } from './item.js'
+import { Item, RootCategory, ROOT_ID, SITE_CATEGORY_ID } from './item.js'
 import { root_data } from './boot/root.js'
 import {ItemRecord} from "./db/records.js";
 
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
+
+// const SITE_ID = 1004        // fixed ID of the Site item to be loaded upon startup
 
 
 export function isRoot(id) { return id === ROOT_ID }
@@ -181,7 +183,7 @@ export class Registry {
     async _find_site() {
         /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
         assert(this.onServer)
-        let Site = await this.getLoaded(SITE_ID)
+        let Site = await this.getLoaded(SITE_CATEGORY_ID)
         let scan = this.scan(Site, {limit: 1})
         let ret  = await scan.next()
         if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
