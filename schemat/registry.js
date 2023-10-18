@@ -230,20 +230,16 @@ export class Registry {
         return this.db.select(id)
     }
 
-    async *scan_all(category = null, {limit} = {}) {
-        /* Scan the main data sequence in DB. Yield all items, or only those belonging to `category`.
-           The items returned are fully loaded and registered in the cache for future retrieval.
-         */
-        if (category) category.assertLoaded()
+    async *scan_all({limit} = {}) {
+        /* Scan the main data sequence in DB. Yield items, loaded and registered in the cache for future use. */
+        // if (category) category.assertLoaded()
+        // let cid = category?.id
         let count = 0
-        let cid = category?.id
         let records = this.db.scan_all()
 
         for await (const record of records) {                   // stream of ItemRecords
-            if (limit !== undefined && count >= limit) break
-            if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
-
-            count++
+            if (limit !== undefined && count++ >= limit) break
+            // if (!this._checkCategory(record, cid)) continue     // skip if category doesn't match
             let item = await Item.from_record(record)
             yield this.register(item)
         }
