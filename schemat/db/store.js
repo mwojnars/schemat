@@ -38,14 +38,6 @@ class Store {
 
 /**********************************************************************************************************************/
 
-// class FieldDescriptor {
-//     /* Descriptor of a field of a record in a data/index sequence. */
-//
-//     name            // name of a field/property of an input record/item; also used as the output name of this field
-//     // collator        // optional collator object that defines the sort order of this field
-//     // reverse         // (?) if true, the field sorts in descending order inside an ArrayField
-// }
-
 // export class SequenceDescriptor {  // ShapeOfSequence, Shape
 //     /* Specification of a sequence of objects translated to records, each record consisting
 //        of a binary `key` and a json `value`. The sequence is sorted by the key and allows to retrieve the value
@@ -55,58 +47,12 @@ class Store {
 //        decoded object may lack some fields that were not included in the index.
 //      */
 //
-//     *encode_key(item) {
-//         // array of arrays of encoded field values to be used in the key(s); only the first field can have multiple values
-//         let length = this.schema_key.size
-//         let bin_values = []
-//
-//         for (const [name, type] of this.schema_key) {
-//             const values = item.propsList(name)
-//             if (!values.length) return              // no values (missing field), skip this item
-//             if (values.length >= 2 && bin_values.length)
-//                 throw new Error(`field ${name} has multiple values, which is allowed only for the first field in the index`)
-//
-//             // encode `values` through the field type
-//             const last = (bin_values.length === length - 1)
-//             const binary = values.map(v => type.binary_encode(v, last))
-//             bin_values.push(binary)
-//         }
-//
-//         // flat array of encoded values of all fields except the first one
-//         const tail = bin_values.slice(1).map(values => values[0])
-//
-//         // iterate over the first field's values to produce all key combinations
-//         for (const head of bin_values[0]) {
-//             let output = new BinaryOutput()
-//             output.write(head, ...tail)
-//             yield output.result()
-//         }
-//     }
-//
-//     encode_value(value)  { return value !== undefined ? JSON.stringify(value) : undefined }
-//     decode_value(value)  { return value !== undefined ? JSON.parse(value) : undefined }
-//
 //     decode_object(key, value) {
 //         /* Decode a binary record into an object. If the same field occurs in both key and value, the value's field
 //             overwrites the key's field, as the former typically contains more information than the latter
 //            (e.g. the full string instead of just the prefix).
 //          */
 //         return {...this.decode_key(key), ...this.decode_value(value)}
-//     }
-//
-//     decode_key(record) {
-//         const input = new BinaryInput(record)
-//         const length = this.schema_key.length
-//         let entry = {}
-//
-//         for (let i = 0; i < length; i++) {
-//             const [name, type] = this.schema_key[i]
-//             const last = (i === length - 1)
-//             entry[name] = type.binary_decode(input, last)
-//         }
-//         assert(input.pos === record.length)
-//
-//         return entry
 //     }
 // }
 

@@ -45,6 +45,8 @@ export class Type {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 
+        // reverse              // if true, the field sorts in descending order in UI and/or in DB indexes
+
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
 
@@ -445,8 +447,8 @@ export class Textual extends Primitive {
     static stype = "string"
     static defaultProps = {
         initial: '',
-        // locale/collation: undefined,   // collation to use for (one-way!) encoding of strings for storage and indexing
-        // charcase: false,            // 'upper'/'lower' - only upper/lower case characters allowed
+        // collator                 // optional collator object that defines the sort order and provides a (possibly one-way!) binary encoding for indexing
+        // charcase: false,         // 'upper'/'lower' - only upper/lower case characters allowed
     }
 
     static Widget = class extends Primitive.Widget {
