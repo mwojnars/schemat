@@ -2,7 +2,6 @@ import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
 import {RecordChange, ItemRecord} from "./records.js";
-import {_data_schema} from "./store.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -127,7 +126,8 @@ export class Block extends Item {
 
     async propagate(id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const binary_key = _data_schema.encode_key([id])
+        const data_schema = this.ring.data.schema
+        const binary_key = data_schema.encode_key([id])
         const change = new RecordChange(binary_key, data_old, data_new)
         return this.ring.propagate(change)
     }

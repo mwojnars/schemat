@@ -121,7 +121,13 @@ export class Index extends Sequence {
        allows to retrieve the value for a given key or range of keys.
      */
 
-    // source              // Sequence that this index is derived from
+    source              // Sequence that this index is derived from
+
+    constructor(source) {
+        super()
+        this.source = source
+        assert(source instanceof Sequence)
+    }
 
     async apply(change) {
         /* Update the index to apply a change that originated in the source sequence. */
@@ -154,10 +160,10 @@ export class Index extends Sequence {
            to be written to the index sequence.
          */
 
-        // const _data_schema = [new INTEGER()]        // TODO: use this.source.schema instead
+        const source_schema = this.source.schema
 
-        let in_record_old = change.record_old(_data_schema)
-        let in_record_new = change.record_new(_data_schema)
+        let in_record_old = change.record_old(source_schema)
+        let in_record_new = change.record_new(source_schema)
 
         // map each source record (old & new) to an array of 0+ index records
         let out_records_old = in_record_old && await T.arrayFromAsync(this.map_record(in_record_old))

@@ -5,7 +5,7 @@ import {Item} from "../item.js"
 import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
-import {IndexByCategory, _data_schema, DataSequence} from "./store.js";
+import {IndexByCategory, DataSequence} from "./store.js";
 import {RecordChange, Record} from "./records.js";
 
 
@@ -58,12 +58,12 @@ export class Ring extends Item {
 
     async _init_indexes() {
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory()],       // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this.data)],      // index of item IDs sorted by parent category ID
         ])
 
         for await (let record /*ItemRecord*/ of this.scan()) {
             for (let index of this.indexes.values()) {
-                const binary_key = _data_schema.encode_key([record.id])
+                const binary_key = this.data.schema.encode_key([record.id])
                 const change = new RecordChange(binary_key, null, record.data_json)
                 await index.apply(change)
             }
