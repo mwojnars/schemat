@@ -172,8 +172,8 @@ export class Ring extends Item {
         /* Propagate a change in an item's data to all indexes in this ring. Insertion/deletion is indicated by
            null in `data_old` or `data_new`, respectively.
          */
-        // for (const index of this.indexes.values())
-        //     index.apply(change)      // (no need to await, the result is not used)
+        for (const index of this.indexes.values())
+            index.apply(change)                         // no need to await, the result is not used
     }
 
 }
