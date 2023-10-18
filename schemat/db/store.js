@@ -12,23 +12,6 @@ import {Item} from "../item.js";
 
 // Section, Block, Partition
 
-class Sequence__ {
-    /* Ordered sequence of key-value records, possibly distributed and/or replicated.
-       Keys and values (payload) can be composite.
-       May consist of multiple - possibly overlapping (replicated) - Blocks.
-       Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks.
-     */
-}
-
-class DataSequence extends Sequence__ {}
-class IndexSequence extends Sequence__ {}
-
-class AggregateSequence extends Sequence__ {}     // or Cube like in OLAP databases e.g. Apache Druid ?
-    /* Aggregates can only implement *reversible* operations, like counting or integer sum.
-       Min/max must be handled through a full index over the min/max-ed field.
-       OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
-     */
-
 class Store {
     /* A Data sequence coupled with any number of Indexes and Aggregates.
        Like a database, but with custom query API (no SQL) and the ability to fall back on another store (ring)
@@ -55,23 +38,6 @@ class Store {
 //         return {...this.decode_key(key), ...this.decode_value(value)}
 //     }
 // }
-
-// export class DataDescriptor extends SequenceDescriptor {
-//     /* Specification of a data sequence. */
-//
-//     schema_key = new Map([['id', new INTEGER()]]);
-//
-//     *generate_keys(item) {
-//         yield [item.id]
-//     }
-//
-//     generate_value(item) {
-//         /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
-//         assert(item.isLoaded)
-//         return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
-//     }
-// }
-
 
 /**********************************************************************************************************************/
 
@@ -105,13 +71,19 @@ export class MemoryBlock extends Block {
     }
 }
 
+
 /**********************************************************************************************************************/
 
 export class Sequence {    // Series?
+    /* Ordered sequence of key-value records, possibly distributed and/or replicated. TODO
+       Keys and values (payload) can be composite.
+       May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
+       Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
+     */
 
     schema          // SequenceSchema that defines this sequence's key and value
-    blocks          // array of Blocks that make up this sequence
     splits          // array of split points between blocks
+    blocks          // array of Blocks that make up this sequence
 
     constructor() {
         this.blocks = [new MemoryBlock()]
@@ -288,8 +260,40 @@ export class IndexByCategory extends BasicIndex {
     }
 }
 
+/**********************************************************************************************************************/
+
+class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
+    /* Aggregates can only implement *reversible* operations, like counting or integer sum.
+       Min/max must be handled through a full index over the min/max-ed field.
+       OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
+     */
+
+/**********************************************************************************************************************/
 
 export const _data_schema = new SequenceSchema(
     new Map([['id', new INTEGER()]]),
+    // value encoding is handled outside schema through method overloading
 )
+
+export class DataSequence extends Sequence {
+    /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
+       Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
+     */
+
+    schema = new SequenceSchema(
+        new Map([['id', new INTEGER()]]),
+        // value encoding is handled outside schema: through method overloading
+    );
+
+    *generate_keys(item) {
+        assert(item.id !== undefined)
+        yield [item.id]
+    }
+
+    generate_value(item) {
+        /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
+        assert(item.isLoaded)
+        return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
+    }
+}
 

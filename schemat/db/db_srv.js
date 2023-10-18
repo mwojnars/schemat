@@ -5,9 +5,8 @@ import {Item} from "../item.js"
 import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
-import {IndexByCategory, _data_schema} from "./store.js";
+import {IndexByCategory, _data_schema, DataSequence} from "./store.js";
 import {RecordChange, Record} from "./records.js";
-import {INTEGER} from "../type.js";
 
 
 /**********************************************************************************************************************
@@ -18,6 +17,8 @@ import {INTEGER} from "../type.js";
 
 export class Ring extends Item {
 
+    data                    // DataSequence with all items of this ring /TODO
+
     db                      // the Database this ring belongs to
     block                   // physical storage of this ring's primary data (the items)
 
@@ -27,8 +28,6 @@ export class Ring extends Item {
     start_iid = 0           // minimum IID of all items; helps maintain separation of IDs between different rings stacked together
     stop_iid                // (optional) maximum IID of all items
     indexes = new Map()     // {name: Index} of all indexes in this ring
-
-    _data_schema = [new INTEGER()]      // (temporary)
 
     constructor({file, item, name, ...opts}) {
         super(globalThis.registry)
@@ -45,6 +44,8 @@ export class Ring extends Item {
 
     async open(db) {
         this.db = db
+        this.data = new DataSequence()
+
         let block
         if (this.file) block = new YamlBlock(this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
