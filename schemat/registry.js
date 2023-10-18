@@ -11,7 +11,7 @@ import {ItemRecord} from "./db/records.js";
 // import * as mod_types from './type.js'
 // import {LitElement, html, css} from "https://unpkg.com/lit-element/lit-element.js?module";
 
-// const SITE_ID = 1004        // fixed ID of the Site item to be loaded upon startup
+const SITE_ID = 1004        // fixed ID of the Site item to be loaded upon startup
 
 
 export function isRoot(id) { return id === ROOT_ID }
@@ -135,7 +135,7 @@ export class Registry {
         // print('initClasspath() done')
     }
 
-    async boot(site_id = null) {
+    async boot(site_id = SITE_ID) {
         /* (Re)create/load `this.root` and `this.site`. The latter will be left undefined if not present in the DB. */
         this.root = await this._init_root()             // always returns a valid object, possibly created from `root_data`
         this.site = await this._init_site(site_id)      // may return an undefined
@@ -167,28 +167,28 @@ export class Registry {
         return root
     }
 
-    async _init_site(site_id = null) {
+    async _init_site(site_id) {
         /* (Re)load and return the `site` object, if present in the database, otherwise return undefined. */
         if (!this.db) return
         try {
-            if (!site_id)
-                if (this.onClient) return
-                else site_id = await this._find_site()
+            // if (!site_id)
+            //     if (this.onClient) return
+            //     else site_id = await this._find_site()
             return await this.getLoaded(site_id)
         } catch (ex) {
             if (!(ex instanceof ItemNotFound)) throw ex
         }
     }
 
-    async _find_site() {
-        /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
-        assert(this.onServer)
-        let Site = await this.getLoaded(SITE_CATEGORY_ID)
-        let scan = this.scan(Site, {limit: 1})
-        let ret  = await scan.next()
-        if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
-        return ret.value.id
-    }
+    // async _find_site() {
+    //     /* Retrieve an ID of the first Site item (CID=1) found by scanCategory() in the DB. */
+    //     assert(this.onServer)
+    //     let Site = await this.getLoaded(SITE_CATEGORY_ID)
+    //     let scan = this.scan(Site, {limit: 1})
+    //     let ret  = await scan.next()
+    //     if (!ret || ret.done) throw new ItemNotFound(`no Site item found in the database`)
+    //     return ret.value.id
+    // }
 
 
     /***  Items manipulation  ***/
