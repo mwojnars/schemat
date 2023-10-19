@@ -24,7 +24,6 @@ export class Ring extends Item {
     data                    // DataSequence with all items of this ring
 
     db                      // the Database this ring belongs to
-    block                   // physical storage of this ring's primary data (the items)
 
     name                    // human-readable name of this ring for find_ring()
     readonly                // if true, the ring does NOT accept modifications: inserts/updates/deletes
@@ -121,7 +120,7 @@ export class Ring extends Item {
            This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
-        return this.writable(id) ? this.data.block.save(REQ(this), id, data) : this.db.forward_save(this, id, data)
+        return this.writable(id) ? this.data.save(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
     async delete(id) {
@@ -131,7 +130,7 @@ export class Ring extends Item {
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
-            if (await this.data.block._select(id))
+            if (await this.data.select_local(REQ(this), id))
                 this.throwReadOnly({id})
             else
                 return this.db.forward_delete(this, id)
@@ -142,7 +141,7 @@ export class Ring extends Item {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan_all()   { yield* this.data.block._scan() }       // yield all items in this ring as ItemRecord objects
+    async *scan_all()   { yield* this.data.scan_all() }       // yield all items in this ring as ItemRecord objects
 
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.

@@ -153,6 +153,12 @@ export class DataSequence extends Sequence {
         return done ? done : req.forward_delete(id)
     }
 
+    async save(req, id, data) {
+        return this.block.save(req, id, data)
+    }
+
+    async *scan_all()   { yield* this.block._scan() }               // yield all items as ItemRecord objects
+
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
         this.block.autoincrement = 0
