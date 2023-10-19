@@ -47,12 +47,12 @@ export class Ring extends Item {
         this.data = new DataSequence()
 
         let block
-        if (this.file) block = new YamlBlock(this.file, this.opts)         // block is a local file
+        if (this.file) block = new YamlBlock(this, this.file, this.opts)         // block is a local file
         else {                                                  // block is an item that must be loaded from a lower ring
             block = await globalThis.registry.getLoaded(this.item)
             block.setExpiry('never')                            // prevent eviction of this item from Registry's cache (!)
         }
-        await block.open(this)
+        await block.open()
         this.block = block
     }
 

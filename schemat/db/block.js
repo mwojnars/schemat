@@ -100,9 +100,12 @@ export class Block extends Item {
 
     async assertUniqueID(id, msg)                   { if (await this._select(id)) throw new Block.ItemExists(msg, {id}) }
 
-
-    open(ring) {
+    constructor(ring) {
+        super()
         this.ring = ring
+    }
+
+    open() {
         this.dirty = false
     }
 
@@ -205,12 +208,12 @@ class FileBlock extends Block {
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    constructor(filename, params = {}) {
-        super(params)
+    constructor(ring, filename) {
+        super(ring)
         this.filename = filename
     }
-    async open(ring) {
-        super.open(ring)
+    async open() {
+        super.open()
         let fs = this._mod_fs = await import('fs')
         try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
         catch(ex) {}
@@ -232,8 +235,10 @@ class FileBlock extends Block {
 export class YamlBlock extends FileBlock {
     /* Items stored in a YAML file. For use during development only. */
 
-    async open(ring) {
-        await super.open(ring)
+    async open() {
+        /* Load records from this.filename file into this.records. */
+
+        await super.open()
         this._mod_YAML = (await import('yaml')).default
 
         let file = this._mod_fs.readFileSync(this.filename, 'utf8')

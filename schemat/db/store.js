@@ -8,6 +8,7 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
+import {NotImplemented} from "../errors.js";
 
 
 // Section, Block, Partition
@@ -41,19 +42,25 @@ class Store {
 
 /**********************************************************************************************************************/
 
-export class Block {
+export class Block__ {
     /* A continuous subrange of a Sequence physically located on a single machine.
        Unit of data replication and distribution (TODO).
        In all the methods, records are fully encoded: keys are binary and values are strings.
        Records are arranged by key in a byte order.
      */
 
+    ring                // Ring that owns this block
+
+    open(ring)          { this.ring = ring }
+
     get(key)            { assert(false) }
     put(key, value)     { assert(false) }
     del(key)            { assert(false) }
+    erase()             { assert(false) }
+    *scan_block(opts)   { assert(false) }
 }
 
-export class MemoryBlock extends Block {
+export class MemoryBlock extends Block__ {
 
     records = new BinaryMap()
 
@@ -71,15 +78,37 @@ export class MemoryBlock extends Block {
         for (let key of sorted_keys.slice(start_index, stop_index))
             yield [key, this.records.get(key)]
     }
+
+    erase()     { this.records.clear(); return this.flush() }       // may return a Promise
+    flush()     {}
 }
 
-export class YamlBlock extends MemoryBlock {
-    /* A block stored in a YAML file. */
+export class FileBlock extends MemoryBlock {
 
     filename
+    _mod_fs
+
+    constructor(filename) {
+        super()
+        this.filename = filename
+    }
+
+    async open(ring) {
+        super.open()
+        let fs = this._mod_fs = await import('fs')
+        try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
+        catch(ex) {}
+    }
+}
+
+export class YamlBlock extends FileBlock {
+    /* A block stored in a YAML file. */
+
 
 
 }
+
+/**********************************************************************************************************************/
 
 class DataRequest {
     /* Specification of an internal request for data access/modification, as sent from an edge node,
@@ -91,11 +120,12 @@ class DataRequest {
      */
 
     origin              // node that originated the request and will receive the response
-    req_id              // identifier of the request local to the origin node, for matching incoming responses with requests
+    ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
 
     database            // database that received the request
     ring                // database ring that received the request
     sequence            // data or index sequence that received the request - owner of the target block
+    block               // target block that will process the request and send the response; for logging and debugging
 
     response            // ??
 }
@@ -120,13 +150,6 @@ export class Sequence {    // Series?
     }
 
     _find_block(binary_key)     { return this.blocks[0] }
-
-    generate_value(input_object) {
-        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
-           If undefined is returned, the record will consist of a key only.
-         */
-        return undefined
-    }
 
     async *scan_sequence({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
@@ -252,7 +275,9 @@ export class BasicIndex extends Index {
     accept(item) { return item && (!this.category || item.category?.is(this.category)) }
 
     generate_value(item) {
-        /* Generate an object that will be stringified through JSON and stored as `value` in the index record. */
+        /* Generate a JS object that will be stringified through JSON and stored as `value` in this sequence's record.
+           If undefined is returned, the record will consist of a key only.
+         */
         if (this.schema.empty_value()) return undefined
         return item.propObject(...this.schema.properties)
     }
