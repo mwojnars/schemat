@@ -183,7 +183,7 @@ export class Block extends Item {
 
     async open() {
         this.dirty = false
-        this.autoincrement = await this.storage.open()
+        this.autoincrement = await this.storage.open(this)
     }
 
     async flush(timeout_sec = this.FLUSH_TIMEOUT) {
@@ -269,6 +269,7 @@ export class Block extends Item {
     async *scan_all() { yield* this.storage._scan() }
 }
 
+
 class YamlBlock extends Block {
     constructor(ring, filename) {
         super(ring)
@@ -276,6 +277,12 @@ class YamlBlock extends Block {
     }
 }
 
+
+/**********************************************************************************************************************
+ **
+ **  STORAGE
+ **
+ */
 
 class Storage {
 
@@ -301,7 +308,6 @@ class FileStorage extends Storage {
         this.filename = filename
     }
     async open() {
-        // super.open()
         let fs = this._mod_fs = await import('fs')
         try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
         catch(ex) {}
@@ -323,7 +329,7 @@ class FileStorage extends Storage {
 export class YamlStorage extends FileStorage {
     /* Items stored in a YAML file. For use during development only. */
 
-    async open() {
+    async open(block) {
         /* Load records from this.filename file into this.records. */
 
         await super.open()
@@ -339,7 +345,7 @@ export class YamlStorage extends FileStorage {
             let id = T.pop(record, '__id')
 
             this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            // await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            await block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
 
