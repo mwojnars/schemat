@@ -43,7 +43,9 @@ class Store {
 
 export class Block {
     /* A continuous subrange of a Sequence physically located on a single machine.
-       Unit of data replication and distribution (in the future).
+       Unit of data replication and distribution (TODO).
+       In all the methods, records are fully encoded: keys are binary and values are strings.
+       Records are arranged by key in a byte order.
      */
 
     get(key)            { assert(false) }
@@ -71,14 +73,23 @@ export class MemoryBlock extends Block {
     }
 }
 
+export class YamlBlock extends MemoryBlock {
+    /* A block stored in a YAML file. */
+
+    filename
+
+
+}
 
 /**********************************************************************************************************************/
 
 export class Sequence {    // Series?
-    /* Ordered sequence of key-value records, possibly distributed and/or replicated. TODO
+    /* Ordered sequence of key-value records, possibly distributed and/or replicated (TODO).
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
+       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence subclass),
+       and is also used as a basis for implementation of indexes (the Index subclass).
      */
 
     schema          // SequenceSchema that defines this sequence's key and value

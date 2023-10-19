@@ -102,7 +102,7 @@ export class Ring extends Item {
     }
 
     async select(id) {
-        /* Find the top-most occurrence of an item in the database, `db`, starting at this ring.
+        /* Find the top-most occurrence of an item in the database starting at this ring.
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
         // todo: find the right block (in Sequence)
