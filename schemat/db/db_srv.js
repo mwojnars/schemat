@@ -125,7 +125,7 @@ export class Ring extends Item {
            writing this particular `id`. The `id` is searched for in the current ring and below.
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        return this.block.update(REQ(this), id, ...edits)
+        return this.data.update(REQ(this), id, ...edits)
     }
 
     async save(block, id, data) {
@@ -144,12 +144,12 @@ export class Ring extends Item {
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
-            if (await this.block._select(id))
+            if (await this.data.block._select(id))
                 this.throwReadOnly({id})
             else
                 return this.db.forward_delete(this, id)
 
-        return this.block.delete(REQ(this), id)
+        return this.data.delete(REQ(this), id)
     }
 
 

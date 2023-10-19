@@ -108,6 +108,31 @@ export class DataSequence {
         return id
     }
 
+    async update(req, id, ...edits) {
+        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
+           Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
+           in this block (if the ring permits), or forward the write request back to a higher ring.
+         */
+        let data = await this.block._select(id)
+        if (data === undefined) return req.forward_update(id, ...edits)
+
+        for (const edit of edits)
+            data = edit.process(data)
+
+        return req.ring.writable() ? this.block.save(req, id, data) : req.forward_save(id, data)
+    }
+
+    async delete(req, id) {
+        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
+        let data_old = await this.block._select(id)
+        let done = this.block._delete(id)
+        if (done instanceof Promise) done = await done
+        if (done) this.block.dirty = true
+        this.block.flush()
+        await this.block.propagate(req, id, data_old)
+        return done ? done : req.forward_delete(id)
+    }
+
 }
 
 
@@ -166,31 +191,6 @@ export class Block extends Item {
 
 
     /***  CRUD operations  ***/
-
-    async update(req, id, ...edits) {
-        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
-           Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
-           in this block (if the ring permits), or forward the write request back to a higher ring.
-         */
-        let data = await this._select(id)
-        if (data === undefined) return req.forward_update(id, ...edits)
-
-        for (const edit of edits)
-            data = edit.process(data)
-
-        return req.ring.writable() ? this.save(req, id, data) : req.forward_save(id, data)
-    }
-
-    async delete(req, id) {
-        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let data_old = await this._select(id)
-        let done = this._delete(id)
-        if (done instanceof Promise) done = await done
-        if (done) this.dirty = true
-        this.flush()
-        await this.propagate(req, id, data_old)
-        return done ? done : req.forward_delete(id)
-    }
 
     async save(req, id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
