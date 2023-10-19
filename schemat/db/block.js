@@ -116,60 +116,37 @@ export class DataSequence extends Sequence {
     async select(req, id) {
         req = req.set_sequence(this)
         let block = this._find_block_by_id(id)
-        let data = await block._select(id)
-        return data !== undefined ? data : req.forward_select(id)
+        return block.select_or_forward(req, id)
+        // let data = await block._select(id)
+        // return data !== undefined ? data : req.forward_select(id)
     }
 
     async insert(req, id, data) {
-        // calculate the `id` if not provided, update `autoincrement`, and write the data
-        if (id !== undefined) await this.block.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.block.autoincrement + 1, req.ring.start_iid)      // use the next available ID
-
-        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
-
-        this.block.autoincrement = Math.max(id, this.block.autoincrement)
-        await this.block.save(req, id, data)
-        return id
+        let block = this._find_block_by_id(id)
+        return block.insert(req, id, data)
     }
 
     async update(req, id, ...edits) {
-        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
-           Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
-           in this block (if the ring permits), or forward the write request back to a higher ring.
-         */
-        let data = await this.block._select(id)
-        if (data === undefined) return req.forward_update(id, ...edits)
-
-        for (const edit of edits)
-            data = edit.process(data)
-
-        return req.ring.writable() ? this.block.save(req, id, data) : req.forward_save(id, data)
+        let block = this._find_block_by_id(id)
+        return block.update(req, id, ...edits)
     }
 
     async delete(req, id) {
-        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let data_old = await this.block._select(id)
-        let done = this.block._delete(id)
-        if (done instanceof Promise) done = await done
-        if (done) this.block.dirty = true
-        this.block.flush()
-        await this.block.propagate(req, id, data_old)
-        return done ? done : req.forward_delete(id)
+        let block = this._find_block_by_id(id)
+        return block.delete(req, id)
     }
 
     async save(req, id, data) {
-        return this.block.save(req, id, data)
+        let block = this._find_block_by_id(id)
+        return block.save(req, id, data)
     }
 
-    async *scan_all()   { yield* this.block._scan() }               // yield all items as ItemRecord objects
-
-    async erase() {
-        /* Remove all records from this sequence; open() should be called first. */
-        this.block.autoincrement = 0
-        await this.block._erase()
-        return this.block.flush()
+    async *scan_all() {
+        /* Yield all items as ItemRecord objects. */
+        yield* this.block._scan()
     }
 
+    async erase() { return this.block.erase() }
     async flush() { return this.block.flush() }
 }
 
@@ -181,7 +158,7 @@ export class DataSequence extends Sequence {
 
 export class Block extends Item {
     /* Continuous block of consecutive records inside a Sequence, inside the `data` or `index` of a Ring, inside a database:
-           Store > Ring > Data/Index Sequence > Block > (Storage?) > Record
+           Database > Ring > Data/Index Sequence > Block > Storage > Record
      */
 
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
@@ -228,6 +205,48 @@ export class Block extends Item {
 
     /***  CRUD operations  ***/
 
+    async select_or_forward(req, id) {
+        let data = await this._select(id)
+        return data !== undefined ? data : req.forward_select(id)
+    }
+
+    async insert(req, id, data) {
+        // calculate the `id` if not provided, update `autoincrement`, and write the data
+        if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
+        else id = Math.max(this.autoincrement + 1, req.ring.start_iid)      // use the next available ID
+
+        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+
+        this.autoincrement = Math.max(id, this.autoincrement)
+        await this.save(req, id, data)
+        return id
+    }
+
+    async update(req, id, ...edits) {
+        /* Check if `id` is present in this block. If not, pass the request to a lower ring.
+           Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
+           in this block (if the ring permits), or forward the write request back to a higher ring.
+         */
+        let data = await this._select(id)
+        if (data === undefined) return req.forward_update(id, ...edits)
+
+        for (const edit of edits)
+            data = edit.process(data)
+
+        return req.ring.writable() ? this.save(req, id, data) : req.forward_save(id, data)
+    }
+
+    async delete(req, id) {
+        /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
+        let data_old = await this._select(id)
+        let done = this._delete(id)
+        if (done instanceof Promise) done = await done
+        if (done) this.dirty = true
+        this.flush()
+        await this.propagate(req, id, data_old)
+        return done ? done : req.forward_delete(id)
+    }
+
     async save(req, id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
         let data_old = await this._select(id) || null
@@ -235,6 +254,13 @@ export class Block extends Item {
         this.dirty = true
         this.flush()
         await this.propagate(req, id, data_old, data)
+    }
+
+    async erase() {
+        /* Remove all records from this sequence; open() should be called first. */
+        this.autoincrement = 0
+        await this._erase()
+        return this.flush()
     }
 
     /***  override in subclasses  ***/
