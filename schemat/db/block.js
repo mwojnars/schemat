@@ -105,14 +105,18 @@ export class DataSequence extends Sequence {
         this.block.setExpiry('never')                       // prevent eviction of this item from Registry's cache (!)
     }
 
+    _find_block_by_id(id) { return this.block }
+
     async select_local(req, id) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
-        return this.block._select(id)
+        let block = this._find_block_by_id(id)
+        return block._select(id)
     }
 
     async select(req, id) {
         req = req.set_sequence(this)
-        let data = await this.block._select(id)
+        let block = this._find_block_by_id(id)
+        let data = await block._select(id)
         return data !== undefined ? data : req.forward_select(id)
     }
 
