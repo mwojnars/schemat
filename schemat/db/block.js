@@ -150,25 +150,25 @@ export class Block extends Item {
         req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        await this.save(id, data)
+        await this.save(req, id, data)
         return id
     }
 
-    async update(id, ...edits) {
+    async update(req, id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
         let data = await this._select(id)
-        if (data === undefined) return this.ring.forward_update(id, ...edits)
+        if (data === undefined) return req.forward_update(id, ...edits)
 
         for (const edit of edits)
             data = edit.process(data)
 
-        return this.ring.writable() ? this.save(id, data) : this.ring.forward_save(id, data)
+        return req.ring.writable() ? this.save(req, id, data) : req.forward_save(id, data)
     }
 
-    async delete(id) {
+    async delete(req, id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
         let data_old = await this._select(id)
         let done = this._delete(id)
@@ -176,10 +176,10 @@ export class Block extends Item {
         if (done) this.dirty = true
         this.flush()
         await this.propagate(id, data_old)
-        return done ? done : this.ring.forward_delete(id)
+        return done ? done : req.forward_delete(id)
     }
 
-    async save(id, data) {
+    async save(req, id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
         let data_old = await this._select(id) || null
         await this._save(id, data)

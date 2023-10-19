@@ -30,6 +30,9 @@ export class DataRequest {
         this.block = block
     }
 
-    forward_select(id)      { return this.database.forward_select(this.ring, id) }
+    forward_select(id)                  { return this.database.forward_select(this.ring, id) }
+    forward_update(id, ...edits)        { return this.database.forward_update(this.ring, id, ...edits) }
+    forward_save(id, data)              { return this.database.forward_save(this.ring, id, data) }
+    forward_delete(id)                  { return this.database.forward_delete(this.ring, id) }
 }
 

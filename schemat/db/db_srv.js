@@ -122,7 +122,7 @@ export class Ring extends Item {
            writing this particular `id`. The `id` is searched for in the current ring and below.
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        return this.block.update(id, ...edits)
+        return this.block.update(REQ(this), id, ...edits)
     }
 
     async save(block, id, data) {
@@ -131,7 +131,7 @@ export class Ring extends Item {
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
         block = block || this.block
-        return this.writable(id) ? block.save(id, data) : this.db.forward_save(this, id, data)
+        return this.writable(id) ? block.save(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
     async delete(id) {
@@ -146,7 +146,7 @@ export class Ring extends Item {
             else
                 return this.db.forward_delete(this, id)
 
-        return this.block.delete(id)
+        return this.block.delete(REQ(this), id)
     }
 
 
@@ -167,9 +167,9 @@ export class Ring extends Item {
     /***  Forwards  ***/
 
     // forward_select(id)              { return this.db.forward_select(this, id) }
-    forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
-    forward_save(id, data)          { return this.db.forward_save(this, id, data) }
-    forward_delete(id)              { return this.db.forward_delete(this, id) }
+    // forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
+    // forward_save(id, data)          { return this.db.forward_save(this, id, data) }
+    // forward_delete(id)              { return this.db.forward_delete(this, id) }
 
     /***  Change propagation  ***/
 
