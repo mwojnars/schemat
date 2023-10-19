@@ -2,7 +2,7 @@ import path from 'path'
 import {BaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
-import {DataSequence, YamlBlock} from "./block.js"
+import {DataSequence} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./store.js";

@@ -143,7 +143,7 @@ export class DataSequence extends Sequence {
 
     async *scan_all() {
         /* Yield all items as ItemRecord objects. */
-        yield* this.block._scan()
+        yield* this.block.scan_all()
     }
 
     async erase() { return this.block.erase() }
@@ -168,19 +168,22 @@ export class Block extends Item {
     ring                    // the ring this block belongs to
     dirty                   // true when the block contains unsaved modifications
 
+    storage                 // storage for this block's records
+
 
     static Error = class extends BaseError          {}
     static ItemExists = class extends Block.Error   { static message = "item with this ID already exists" }
 
-    async assertUniqueID(id, msg)                   { if (await this._select(id)) throw new Block.ItemExists(msg, {id}) }
+    async assertUniqueID(id, msg)                   { if (await this.storage._select(id)) throw new Block.ItemExists(msg, {id}) }
 
     constructor(ring) {
         super()
         this.ring = ring
     }
 
-    open() {
+    async open() {
         this.dirty = false
+        this.autoincrement = await this.storage.open()
     }
 
     async flush(timeout_sec = this.FLUSH_TIMEOUT) {
@@ -189,7 +192,7 @@ export class Block extends Item {
         if (!this.dirty) return
         if (timeout_sec === 0) {
             this.dirty = false
-            return this._flush()
+            return this.storage._flush()
         }
         setTimeout(() => this.flush(0), timeout_sec * 1000)
     }
@@ -206,7 +209,7 @@ export class Block extends Item {
     /***  CRUD operations  ***/
 
     async select_or_forward(req, id) {
-        let data = await this._select(id)
+        let data = await this.storage._select(id)
         return data !== undefined ? data : req.forward_select(id)
     }
 
@@ -227,7 +230,7 @@ export class Block extends Item {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let data = await this._select(id)
+        let data = await this.storage._select(id)
         if (data === undefined) return req.forward_update(id, ...edits)
 
         for (const edit of edits)
@@ -238,8 +241,8 @@ export class Block extends Item {
 
     async delete(req, id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let data_old = await this._select(id)
-        let done = this._delete(id)
+        let data_old = await this.storage._select(id)
+        let done = this.storage._delete(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
@@ -249,8 +252,8 @@ export class Block extends Item {
 
     async save(req, id, data) {
         /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
-        let data_old = await this._select(id) || null
-        await this._save(id, data)
+        let data_old = await this.storage._select(id) || null
+        await this.storage._save(id, data)
         this.dirty = true
         this.flush()
         await this.propagate(req, id, data_old, data)
@@ -259,11 +262,22 @@ export class Block extends Item {
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
         this.autoincrement = 0
-        await this._erase()
+        await this.storage._erase()
         return this.flush()
     }
 
-    /***  override in subclasses  ***/
+    async *scan_all() { yield* this.storage._scan() }
+}
+
+class YamlBlock extends Block {
+    constructor(ring, filename) {
+        super(ring)
+        this.storage = new YamlStorage(ring, filename)
+    }
+}
+
+
+class Storage {
 
     // these methods can be ASYNC in subclasses (!)
     _select(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
@@ -272,11 +286,9 @@ export class Block extends Item {
     _erase()                { throw new NotImplemented() }
     _flush()                { throw new NotImplemented() }
     *_scan(opts)            { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
-
 }
 
-
-class FileBlock extends Block {
+class FileStorage extends Storage {
     /* Items stored in a file. For use during development only. */
 
     filename = null
@@ -284,11 +296,12 @@ class FileBlock extends Block {
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
     constructor(ring, filename) {
-        super(ring)
+        super()
+        this.ring = ring
         this.filename = filename
     }
     async open() {
-        super.open()
+        // super.open()
         let fs = this._mod_fs = await import('fs')
         try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
         catch(ex) {}
@@ -307,7 +320,7 @@ class FileBlock extends Block {
     }
 }
 
-export class YamlBlock extends FileBlock {
+export class YamlStorage extends FileStorage {
     /* Items stored in a YAML file. For use during development only. */
 
     async open() {
@@ -319,20 +332,21 @@ export class YamlBlock extends FileBlock {
         let file = this._mod_fs.readFileSync(this.filename, 'utf8')
         let records = this._mod_YAML.parse(file) || []
 
-        this.autoincrement = 0
+        let max_id = 0
         this.records.clear()
 
         for (let record of records) {
             let id = T.pop(record, '__id')
 
             this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            // await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
-            this.autoincrement = Math.max(this.autoincrement, id)
+            max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
             this.records.set(id, JSON.stringify(data))
         }
+        return max_id
     }
 
     async _flush() {
