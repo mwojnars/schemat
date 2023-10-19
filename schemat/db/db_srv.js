@@ -217,8 +217,6 @@ export class ServerDB extends Database {
             await globalThis.registry.boot()        // reload `root` and `site` to have the most relevant objects after a next ring is added
             await ring._init_indexes()              // TODO: temporary
         }
-        // for (const ring of this.rings)
-        //     await ring._init_indexes()              // TODO: temporary
     }
 
     append(ring) {

@@ -144,6 +144,7 @@ export class Block extends Item {
     }
 
     async insert(req, id, data) {
+        // calculate the `id` if not provided, update `autoincrement`, and write the data
         if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
         else id = Math.max(this.autoincrement + 1, req.ring.start_iid)      // use the next available ID
 
