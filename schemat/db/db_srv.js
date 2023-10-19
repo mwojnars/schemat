@@ -164,13 +164,6 @@ export class Ring extends Item {
         yield* index.scan_sequence({start, stop, limit, reverse, batch_size})
     }
 
-    /***  Forwards  ***/
-
-    // forward_select(id)              { return this.db.forward_select(this, id) }
-    // forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
-    // forward_save(id, data)          { return this.db.forward_save(this, id, data) }
-    // forward_delete(id)              { return this.db.forward_delete(this, id) }
-
     /***  Change propagation  ***/
 
     propagate(change) {

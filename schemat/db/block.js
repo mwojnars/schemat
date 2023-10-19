@@ -127,12 +127,12 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async propagate(id, data_old = null, data_new = null) {
+    async propagate(req, id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const data_schema = this.ring.data.schema
+        const data_schema = req.ring.data.schema
         const binary_key = data_schema.encode_key([id])
         const change = new RecordChange(binary_key, data_old, data_new)
-        return this.ring.propagate(change)
+        return req.ring.propagate(change)
     }
 
 
@@ -175,7 +175,7 @@ export class Block extends Item {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        await this.propagate(id, data_old)
+        await this.propagate(req, id, data_old)
         return done ? done : req.forward_delete(id)
     }
 
@@ -185,7 +185,7 @@ export class Block extends Item {
         await this._save(id, data)
         this.dirty = true
         this.flush()
-        await this.propagate(id, data_old, data)
+        await this.propagate(req, id, data_old, data)
     }
 
     /***  override in subclasses  ***/
