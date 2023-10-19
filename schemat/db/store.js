@@ -81,6 +81,25 @@ export class YamlBlock extends MemoryBlock {
 
 }
 
+class DataRequest {
+    /* Specification of an internal request for data access/modification, as sent from an edge node,
+       through the database, ring, sequence, and down to a specific data/index block.
+       The request object tracks the origin and the processing path of the request, so that the target block
+       can send the response back or notify about a failure. The request object is created on the edge node and
+       is passed down the chain of objects, with more information added at each step.
+       The request object can be serialized to binary and sent over TCP or Kafka to another node in the cluster.
+     */
+
+    origin              // node that originated the request and will receive the response
+    req_id              // identifier of the request local to the origin node, for matching incoming responses with requests
+
+    database            // database that received the request
+    ring                // database ring that received the request
+    sequence            // data or index sequence that received the request - owner of the target block
+
+    response            // ??
+}
+
 /**********************************************************************************************************************/
 
 export class Sequence {    // Series?
