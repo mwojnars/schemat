@@ -83,30 +83,27 @@ export class MemoryBlock extends Block__ {
     flush()     {}
 }
 
-export class FileBlock extends MemoryBlock {
-
-    filename
-    _mod_fs
-
-    constructor(filename) {
-        super()
-        this.filename = filename
-    }
-
-    async open(ring) {
-        super.open()
-        let fs = this._mod_fs = await import('fs')
-        try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
-        catch(ex) {}
-    }
-}
-
-export class YamlBlock extends FileBlock {
-    /* A block stored in a YAML file. */
-
-
-
-}
+// export class FileBlock extends MemoryBlock {
+//
+//     filename
+//     _mod_fs
+//
+//     constructor(filename) {
+//         super()
+//         this.filename = filename
+//     }
+//
+//     async open(ring) {
+//         super.open()
+//         let fs = this._mod_fs = await import('fs')
+//         try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
+//         catch(ex) {}
+//     }
+// }
+//
+// export class YamlBlock extends FileBlock {
+//     /* A block stored in a YAML file. */
+// }
 
 
 /**********************************************************************************************************************/
@@ -116,7 +113,7 @@ export class Sequence {    // Series?
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
-       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence subclass),
+       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence__ subclass),
        and is also used as a basis for implementation of indexes (the Index subclass).
      */
 
@@ -307,7 +304,7 @@ class AggregateSequence extends Sequence {}     // or Cube like in OLAP database
 
 /**********************************************************************************************************************/
 
-export class DataSequence extends Sequence {
+export class DataSequence__ extends Sequence {
     /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */

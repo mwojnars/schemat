@@ -5,7 +5,7 @@ import {Item} from "../item.js"
 import {YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
-import {IndexByCategory, DataSequence} from "./store.js";
+import {IndexByCategory, DataSequence__} from "./store.js";
 import {RecordChange, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 
@@ -21,7 +21,7 @@ function REQ(ring) { return new DataRequest({ring}) }
 
 export class Ring extends Item {
 
-    data                    // DataSequence with all items of this ring
+    data__                  // DataSequence__ with all items of this ring
 
     db                      // the Database this ring belongs to
     block                   // physical storage of this ring's primary data (the items)
@@ -48,7 +48,7 @@ export class Ring extends Item {
 
     async open(db) {
         this.db = db
-        this.data = new DataSequence()
+        this.data__ = new DataSequence__()
 
         let block
         if (this.file) block = new YamlBlock(this, this.file, this.opts)         // block is a local file
@@ -62,12 +62,12 @@ export class Ring extends Item {
 
     async _init_indexes() {
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this.data)],      // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this.data__)],      // index of item IDs sorted by parent category ID
         ])
 
         for await (let record /*ItemRecord*/ of this.scan_all()) {
             for (let index of this.indexes.values()) {
-                const binary_key = this.data.schema.encode_key([record.id])
+                const binary_key = this.data__.schema.encode_key([record.id])
                 const change = new RecordChange(binary_key, null, record.data_json)
                 await index.apply(change)
             }

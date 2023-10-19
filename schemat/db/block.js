@@ -129,7 +129,7 @@ export class Block extends Item {
 
     async propagate(req, id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const data_schema = req.ring.data.schema
+        const data_schema = req.ring.data__.schema
         const binary_key = data_schema.encode_key([id])
         const change = new RecordChange(binary_key, data_old, data_new)
         return req.ring.propagate(change)
