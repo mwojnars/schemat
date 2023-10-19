@@ -33,10 +33,11 @@ export class Ring extends Item {
     stop_iid                // (optional) maximum IID of all items
     indexes = new Map()     // {name: Index} of all indexes in this ring
 
-    constructor({file, item, name, ...opts}) {
+    constructor({name, ...opts}) {
         super(globalThis.registry)
-        this.file = file
-        this.item = item
+        // this.file = file
+        // this.item = item
+        let {file} = opts
         this.opts = opts
         this.name = name || (file && path.basename(file, path.extname(file)))
 
@@ -50,16 +51,21 @@ export class Ring extends Item {
         this.db = db
         this.data__ = new DataSequence__()
 
-        let block
-        if (this.file) block = new YamlBlock(this, this.file, this.opts)         // block is a local file
-        else {                                                  // block is an item that must be loaded from a lower ring
-            block = await globalThis.registry.getLoaded(this.item)
-            block.setExpiry('never')                            // prevent eviction of this item from Registry's cache (!)
-        }
-        await block.open()
-        this.block = block
+        // let {file, item} = this.opts
+        //
+        // let block
+        // if (file) block = new YamlBlock(this, file, this.opts)         // block is a local file
+        // else {                                                  // block is an item that must be loaded from a lower ring
+        //     block = await globalThis.registry.getLoaded(item)
+        //     block.setExpiry('never')                            // prevent eviction of this item from Registry's cache (!)
+        // }
+        // await block.open()
+        // this.block = block
+        //
+        // this.data = new DataSequence(this, block)
 
-        this.data = new DataSequence(this, block)
+        this.data = new DataSequence(this, this.opts)
+        await this.data.open()
     }
 
     async _init_indexes() {
@@ -112,12 +118,10 @@ export class Ring extends Item {
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
         return this.data.select(REQ(this), id)
-        // return this.block.select(REQ(this), id)
     }
 
     async insert(item) {
         item.id = await this.data.insert(REQ(this), item.id, item.dumpData())
-        // item.id = await this.block.insert(REQ(this), item.id, item.dumpData())
     }
 
     async update(id, ...edits) {

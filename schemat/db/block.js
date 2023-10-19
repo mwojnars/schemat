@@ -85,9 +85,22 @@ import {Sequence} from "./store.js";
 
 export class DataSequence {
 
-    constructor(ring, block) {
+    // constructor(ring, block) {
+    //     this.ring = ring
+    //     this.block = block
+    // }
+
+    constructor(ring, {file, item} = {}) {
         this.ring = ring
-        this.block = block
+
+        // block is a local file, or an item that must be loaded from a lower ring
+        this.block = file ? new YamlBlock(ring, file) : globalThis.registry.getLoaded(item)
+    }
+
+    async open() {
+        await this.block
+        await this.block.open()
+        this.block.setExpiry('never')                       // prevent eviction of this item from Registry's cache (!)
     }
 
     async select_local(req, id) {
@@ -145,6 +158,7 @@ export class DataSequence {
         return this.block.flush()
     }
 
+    async flush() { return this.block.flush() }
 }
 
 

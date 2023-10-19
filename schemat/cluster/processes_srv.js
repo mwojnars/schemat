@@ -168,7 +168,7 @@ export class AdminProcess extends BackendProcess {
                 print(`...new id=[${item.id}]`)
                 await this._update_references(id, item)
                 await ring.delete(id)
-                await ring.block._flush()
+                await ring.data.flush()
             }
         }
     }
@@ -192,7 +192,7 @@ export class AdminProcess extends BackendProcess {
                 else {
                     print(`...updating reference(s) in item [${id}]`)
                     await db.update(id, new EditData(data))
-                    await ring.block._flush()
+                    await ring.data.flush()
                 }
             }
         }

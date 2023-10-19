@@ -279,7 +279,7 @@ async function create_items(cat, Category) {
 export async function bootstrap(registry, ring) {
     /* Create core items and store in DB. All existing items in DB are removed! */
     
-    print(`Starting full RESET of DB, core items will be created anew in: ${ring.block.filename}`)
+    print(`Starting full RESET of DB, core items will be created anew in: ${ring.data.block.filename}`)
 
     let Category = registry.root
     let cats  = await create_categories(Category)               // create non-root categories & leaf items
@@ -288,6 +288,6 @@ export async function bootstrap(registry, ring) {
     // insert to DB and assign IIDs if missing
     for (let item of [Category, ...Object.values(cats), ...Object.values(items)])
         await ring.insert(item)
-    await ring.block.flush()
+    await ring.data.flush()
 }
 
