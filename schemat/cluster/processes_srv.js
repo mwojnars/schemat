@@ -64,10 +64,13 @@ export class AdminProcess extends BackendProcess {
         /* Generate the core system items anew and save. */
         let {bootstrap} = await import('../boot/bootstrap.js')
 
-        let ring = new Ring({file: path_db_boot || (DB_ROOT + '/db-boot.yaml')})
+        let file = path_db_boot || (DB_ROOT + '/db-boot.yaml')
+        let ring = new Ring({file})
 
         await ring.open()
         await ring.erase()
+
+        print(`Starting full RESET of DB, core items will be created anew in: ${file}`)
 
         return bootstrap(this.registry, ring)
     }

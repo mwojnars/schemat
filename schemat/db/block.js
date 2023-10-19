@@ -80,7 +80,7 @@ import {INTEGER} from "../type.js";
 
 /**********************************************************************************************************************
  **
- **  BLOCKS
+ **  DATA SEQUENCE
  **
  */
 
@@ -163,6 +163,11 @@ export class DataSequence extends Sequence {
     async flush() { return this.block.flush() }
 }
 
+/**********************************************************************************************************************
+ **
+ **  BLOCKS
+ **
+ */
 
 export class Block extends Item {
     /* Continuous block of consecutive records inside a Sequence, inside the `data` or `index` of a Ring, inside a database:
