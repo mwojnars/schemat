@@ -2,7 +2,7 @@ import path from 'path'
 import {BaseError, ItemNotFound} from "../errors.js"
 import {T, assert, print, merge} from '../utils.js'
 import {Item} from "../item.js"
-import {YamlBlock} from "./block.js"
+import {DataSequence, YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory, DataSequence__} from "./store.js";
@@ -58,6 +58,8 @@ export class Ring extends Item {
         }
         await block.open()
         this.block = block
+
+        this.data = new DataSequence(this, block)
     }
 
     async _init_indexes() {
@@ -109,12 +111,13 @@ export class Ring extends Item {
         /* Find the top-most occurrence of an item in the database starting at this ring.
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
-        // todo: find the right block (in Sequence)
-        return this.block.select(REQ(this), id)
+        return this.data.select(REQ(this), id)
+        // return this.block.select(REQ(this), id)
     }
 
     async insert(item) {
-        item.id = await this.block.insert(REQ(this), item.id, item.dumpData())
+        item.id = await this.data.insert(REQ(this), item.id, item.dumpData())
+        // item.id = await this.block.insert(REQ(this), item.id, item.dumpData())
     }
 
     async update(id, ...edits) {

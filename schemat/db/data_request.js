@@ -1,6 +1,8 @@
 
 /**********************************************************************************************************************/
 
+import {assert} from "../utils.js";
+
 export class DataRequest {
     /* Internal network request for data access/modification. Sent from an edge node, through the database,
        ring, sequence, and down to a specific data/index block.
@@ -28,6 +30,12 @@ export class DataRequest {
         this.ring = ring
         this.sequence = sequence
         this.block = block
+    }
+
+    set_sequence(sequence) {
+        assert(!this.sequence)
+        this.sequence = sequence
+        return this
     }
 
     forward_select(id)                  { return this.database.forward_select(this.ring, id) }

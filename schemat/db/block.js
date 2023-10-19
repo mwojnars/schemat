@@ -2,6 +2,7 @@ import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
 import {RecordChange, ItemRecord} from "./records.js";
+import {Sequence} from "./store.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -82,6 +83,34 @@ import {RecordChange, ItemRecord} from "./records.js";
  **
  */
 
+export class DataSequence {
+
+    constructor(ring, block) {
+        this.ring = ring
+        this.block = block
+    }
+
+    async select(req, id) {
+        req = req.set_sequence(this)
+        let data = await this.block._select(id)
+        return data !== undefined ? data : req.forward_select(id)
+    }
+
+    async insert(req, id, data) {
+        // calculate the `id` if not provided, update `autoincrement`, and write the data
+        if (id !== undefined) await this.block.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
+        else id = Math.max(this.block.autoincrement + 1, req.ring.start_iid)      // use the next available ID
+
+        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+
+        this.block.autoincrement = Math.max(id, this.block.autoincrement)
+        await this.block.save(req, id, data)
+        return id
+    }
+
+}
+
+
 export class Block extends Item {
     /* Continuous block of consecutive records inside a Sequence, inside the `data` or `index` of a Ring, inside a database:
            Store > Ring > Data/Index Sequence > Block > (Storage?) > Record
@@ -137,23 +166,6 @@ export class Block extends Item {
 
 
     /***  CRUD operations  ***/
-
-    async select(req, id) {
-        let data = await this._select(id)
-        return data !== undefined ? data : req.forward_select(id)
-    }
-
-    async insert(req, id, data) {
-        // calculate the `id` if not provided, update `autoincrement`, and write the data
-        if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.autoincrement + 1, req.ring.start_iid)      // use the next available ID
-
-        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
-
-        this.autoincrement = Math.max(id, this.autoincrement)
-        await this.save(req, id, data)
-        return id
-    }
 
     async update(req, id, ...edits) {
         /* Check if `id` is present in this block. If not, pass the request to a lower ring.
