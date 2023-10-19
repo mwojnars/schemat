@@ -90,6 +90,11 @@ export class DataSequence {
         this.block = block
     }
 
+    async select_local(req, id) {
+        /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
+        return this.block._select(id)
+    }
+
     async select(req, id) {
         req = req.set_sequence(this)
         let data = await this.block._select(id)
@@ -133,6 +138,13 @@ export class DataSequence {
         return done ? done : req.forward_delete(id)
     }
 
+    async erase() {
+        /* Remove all records from this sequence; open() should be called first. */
+        this.block.autoincrement = 0
+        await this.block._erase()
+        return this.block.flush()
+    }
+
 }
 
 
@@ -172,13 +184,6 @@ export class Block extends Item {
             return this._flush()
         }
         setTimeout(() => this.flush(0), timeout_sec * 1000)
-    }
-
-    async erase() {
-        /* Remove all records from this block; open() should be called first. */
-        this.autoincrement = 0
-        await this._erase()
-        return this.flush()
     }
 
     async propagate(req, id, data_old = null, data_new = null) {

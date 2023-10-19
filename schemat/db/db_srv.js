@@ -79,7 +79,7 @@ export class Ring extends Item {
     async erase() {
         /* Remove all records from this ring; open() should be called first. */
         if (this.readonly) this.throwReadOnly()
-        return this.block.erase()
+        return this.data.erase()
     }
 
 
@@ -104,7 +104,7 @@ export class Ring extends Item {
 
     async select_local(id) {
         /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
-        return this.block._select(id)
+        return this.data.select_local(REQ(this), id)
     }
 
     async select(id) {
