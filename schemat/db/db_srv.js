@@ -7,6 +7,7 @@ import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory, DataSequence} from "./store.js";
 import {RecordChange, Record} from "./records.js";
+import {DataRequest} from "./data_request.js";
 
 
 /**********************************************************************************************************************
@@ -14,6 +15,9 @@ import {RecordChange, Record} from "./records.js";
  **  Data RING
  **
  */
+
+function REQ(ring) { return new DataRequest({ring}) }
+
 
 export class Ring extends Item {
 
@@ -106,11 +110,11 @@ export class Ring extends Item {
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
         // todo: find the right block (in Sequence)
-        return this.block.select(id)
+        return this.block.select(REQ(this), id)
     }
 
     async insert(item) {
-        item.id = await this.block.insert(item.id, item.dumpData())
+        item.id = await this.block.insert(REQ(this), item.id, item.dumpData())
     }
 
     async update(id, ...edits) {
@@ -162,7 +166,7 @@ export class Ring extends Item {
 
     /***  Forwards  ***/
 
-    forward_select(id)              { return this.db.forward_select(this, id) }
+    // forward_select(id)              { return this.db.forward_select(this, id) }
     forward_update(id, ...edits)    { return this.db.forward_update(this, id, ...edits) }
     forward_save(id, data)          { return this.db.forward_save(this, id, data) }
     forward_delete(id)              { return this.db.forward_delete(this, id) }

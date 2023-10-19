@@ -138,16 +138,16 @@ export class Block extends Item {
 
     /***  CRUD operations  ***/
 
-    async select(id) {
+    async select(req, id) {
         let data = await this._select(id)
-        return data !== undefined ? data : this.ring.forward_select(id)
+        return data !== undefined ? data : req.forward_select(id)
     }
 
-    async insert(id, data) {
+    async insert(req, id, data) {
         if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.autoincrement + 1, this.ring.start_iid)     // use the next available ID
+        else id = Math.max(this.autoincrement + 1, req.ring.start_iid)      // use the next available ID
 
-        this.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
         await this.save(id, data)
