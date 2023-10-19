@@ -309,11 +309,6 @@ export class DataSequence__ extends Sequence {
        Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
      */
 
-    schema = new SequenceSchema(
-        new Map([['id', new INTEGER()]]),
-        // value encoding is handled outside schema: through method overloading
-    );
-
     *generate_keys(item) {
         assert(item.id !== undefined)
         yield [item.id]

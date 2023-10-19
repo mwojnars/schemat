@@ -1,8 +1,9 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
-import {RecordChange, ItemRecord} from "./records.js";
+import {RecordChange, ItemRecord, SequenceSchema} from "./records.js";
 import {Sequence} from "./store.js";
+import {INTEGER} from "../type.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -83,14 +84,15 @@ import {Sequence} from "./store.js";
  **
  */
 
-export class DataSequence {
+export class DataSequence extends Sequence {
 
-    // constructor(ring, block) {
-    //     this.ring = ring
-    //     this.block = block
-    // }
+    schema = new SequenceSchema(
+        new Map([['id', new INTEGER()]]),
+        // value encoding is handled outside schema: through method overloading
+    );
 
     constructor(ring, {file, item} = {}) {
+        super()
         this.ring = ring
 
         // block is a local file, or an item that must be loaded from a lower ring
@@ -202,7 +204,7 @@ export class Block extends Item {
 
     async propagate(req, id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const data_schema = req.ring.data__.schema
+        const data_schema = req.ring.data.schema
         const binary_key = data_schema.encode_key([id])
         const change = new RecordChange(binary_key, data_old, data_new)
         return req.ring.propagate(change)

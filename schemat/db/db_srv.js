@@ -5,7 +5,7 @@ import {Item} from "../item.js"
 import {DataSequence, YamlBlock} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
-import {IndexByCategory, DataSequence__} from "./store.js";
+import {IndexByCategory} from "./store.js";
 import {RecordChange, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 
@@ -21,7 +21,7 @@ function REQ(ring) { return new DataRequest({ring}) }
 
 export class Ring extends Item {
 
-    data__                  // DataSequence__ with all items of this ring
+    data                    // DataSequence with all items of this ring
 
     db                      // the Database this ring belongs to
     block                   // physical storage of this ring's primary data (the items)
@@ -35,8 +35,7 @@ export class Ring extends Item {
 
     constructor({name, ...opts}) {
         super(globalThis.registry)
-        // this.file = file
-        // this.item = item
+
         let {file} = opts
         this.opts = opts
         this.name = name || (file && path.basename(file, path.extname(file)))
@@ -49,33 +48,18 @@ export class Ring extends Item {
 
     async open(db) {
         this.db = db
-        this.data__ = new DataSequence__()
-
-        // let {file, item} = this.opts
-        //
-        // let block
-        // if (file) block = new YamlBlock(this, file, this.opts)         // block is a local file
-        // else {                                                  // block is an item that must be loaded from a lower ring
-        //     block = await globalThis.registry.getLoaded(item)
-        //     block.setExpiry('never')                            // prevent eviction of this item from Registry's cache (!)
-        // }
-        // await block.open()
-        // this.block = block
-        //
-        // this.data = new DataSequence(this, block)
-
         this.data = new DataSequence(this, this.opts)
-        await this.data.open()
+        return this.data.open()
     }
 
     async _init_indexes() {
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this.data__)],      // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this.data)],      // index of item IDs sorted by parent category ID
         ])
 
         for await (let record /*ItemRecord*/ of this.scan_all()) {
             for (let index of this.indexes.values()) {
-                const binary_key = this.data__.schema.encode_key([record.id])
+                const binary_key = this.data.schema.encode_key([record.id])
                 const change = new RecordChange(binary_key, null, record.data_json)
                 await index.apply(change)
             }
