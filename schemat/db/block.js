@@ -126,12 +126,12 @@ export class DataSequence extends Sequence {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
         let [key, block] = this._prepare(id)
-        return block.get(req, id)
+        return block.get(req, key)
     }
 
     async put(req, id, data) {
         let [key, block] = this._prepare(id)
-        return block.put(req, id, data)
+        return block.put(req, key, data)
     }
 
     async *scan_all() {
@@ -207,21 +207,17 @@ export class Block extends Item {
 
     /***  low-level API (no request forwarding)  ***/
 
-    async get(req, id) {
-        let key = req.make_key(id)
-        return this.storage.get(key)
-    }
+    async get(req, key)     { return this.storage.get(key) }
 
-    async put(req, id, data) {
+    async put(req, key, data) {
         /* Write the `data` here in this block under the `id` and propagate the change to indexes.
            No forward of the request to another ring/block.
          */
-        let key = req.make_key(id)
         let data_old = await this.storage.get(key) || null
         await this.storage.put(key, data)
         this.dirty = true
         this.flush()
-        await this.propagate(req, id, data_old, data)
+        await this.propagate(req, key, data_old, data)
     }
 
     async del(key) {
@@ -249,9 +245,8 @@ export class Block extends Item {
         setTimeout(() => this.flush(0), timeout_sec * 1000)
     }
 
-    async propagate(req, id, data_old = null, data_new = null) {
+    async propagate(req, key, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const key = req.make_key(id)
         const change = new RecordChange(key, data_old, data_new)
         return req.ring.propagate(change)
     }
@@ -282,7 +277,9 @@ class DataBlock extends Block {
         req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        await this.put(req, id, data)
+
+        let key = req.make_key(id)
+        await this.put(req, key, data)
         return id
     }
 
@@ -298,7 +295,7 @@ class DataBlock extends Block {
         for (const edit of edits)
             data = edit.process(data)
 
-        return req.ring.writable() ? this.put(req, id, data) : req.forward_save(id, data)
+        return req.ring.writable() ? this.put(req, key, data) : req.forward_save(id, data)
     }
 
     async delete(req, id) {
@@ -309,7 +306,7 @@ class DataBlock extends Block {
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
-        await this.propagate(req, id, data_old)
+        await this.propagate(req, key, data_old)
         return done ? done : req.forward_delete(id)
     }
 }
@@ -340,22 +337,6 @@ class Storage {
     erase()             { throw new NotImplemented() }
     flush()             { }
 }
-
-// class BinaryMapExt extends BinaryMap {
-//
-//     get(id) {
-//         if (typeof id === 'number') id = _data_schema.encode_key([id])
-//         return super.get(id)
-//     }
-//     set(id, data) {
-//         if (typeof id === 'number') id = _data_schema.encode_key([id])
-//         return super.set(id, data)
-//     }
-//     delete(id) {
-//         if (typeof id === 'number') id = _data_schema.encode_key([id])
-//         return super.delete(id)
-//     }
-// }
 
 class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
