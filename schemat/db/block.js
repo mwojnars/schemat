@@ -183,7 +183,7 @@ export class Block extends Item {
 
     async open() {
         this.dirty = false
-        this.autoincrement = await this.storage.open(this)
+        this.autoincrement = await this.storage.open(this.ring, this)
     }
 
     async flush(timeout_sec = this.FLUSH_TIMEOUT) {
@@ -273,7 +273,7 @@ export class Block extends Item {
 class YamlBlock extends Block {
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlStorage(ring, filename)
+        this.storage = new YamlStorage(filename)
     }
 }
 
@@ -302,15 +302,9 @@ class FileStorage extends Storage {
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    constructor(ring, filename) {
+    constructor(filename) {
         super()
-        this.ring = ring
         this.filename = filename
-    }
-    async open() {
-        let fs = this._mod_fs = await import('fs')
-        try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
-        catch(ex) {}
     }
     async _erase()  { this.records.clear() }
 
@@ -329,10 +323,14 @@ class FileStorage extends Storage {
 export class YamlStorage extends FileStorage {
     /* Items stored in a YAML file. For use during development only. */
 
-    async open(block) {
+    async open(ring, block) {
         /* Load records from this.filename file into this.records. */
 
-        await super.open()
+        // create an empty file if it doesn't exist yet
+        let fs = this._mod_fs = await import('fs')
+        try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }
+        catch(ex) {}
+
         this._mod_YAML = (await import('yaml')).default
 
         let file = this._mod_fs.readFileSync(this.filename, 'utf8')
@@ -344,7 +342,7 @@ export class YamlStorage extends FileStorage {
         for (let record of records) {
             let id = T.pop(record, '__id')
 
-            this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
             await block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
