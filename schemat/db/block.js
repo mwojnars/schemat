@@ -97,17 +97,21 @@ export class DataSequence extends Sequence {
         this.ring = ring
 
         // block is a local file, or an item that must be loaded from a lower ring
-        this.block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
+        let block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
+
+        this.blocks = [block]
     }
 
     async open() {
-        await this.block
-        await this.block.open()
-        this.block.setExpiry('never')                       // prevent eviction of this item from Registry's cache (!)
+        for (let block of this.blocks) {
+            await block
+            await block.open()
+            block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
+        }
     }
 
     _make_key(id)               { return id !== undefined ? this.schema.encode_key([id]) : undefined }
-    _find_block(binary_key)     { return this.block }
+    _find_block(binary_key)     { return this.blocks[0] }
 
     _prepare(req, id) {
         let key = this._make_key(id)
@@ -132,17 +136,18 @@ export class DataSequence extends Sequence {
 
     async *scan_all() {
         /* Yield all items of this sequence as ItemRecord objects. */
-        for await (let record of this.block.scan())
-            if (record instanceof ItemRecord) yield record
-            else {
-                let [key, value] = record
-                let binary = new BinaryRecord(this.schema, key, value)
-                yield ItemRecord.from_binary(binary)
-            }
+        for (let block of this.blocks)
+            for await (let record of block.scan())
+                if (record instanceof ItemRecord) yield record
+                else {
+                    let [key, value] = record
+                    let binary = new BinaryRecord(this.schema, key, value)
+                    yield ItemRecord.from_binary(binary)
+                }
     }
 
-    erase()     { return this.block.erase() }
-    flush()     { return this.block.flush() }
+    erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
+    flush()     { return Promise.all(this.blocks.map(b => b.flush())) }
 
 
     /***  high-level API (with request forwarding)  ***/
