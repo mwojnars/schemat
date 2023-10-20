@@ -295,17 +295,12 @@ class Storage {
     *_scan(opts)            { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 }
 
-class FileStorage extends Storage {
-    /* Items stored in a file. For use during development only. */
+class MemoryStorage extends Storage {
+    /* All items stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
-    filename = null
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    constructor(filename) {
-        super()
-        this.filename = filename
-    }
     async _erase()  { this.records.clear() }
 
     _select(id)     { return this.records.get(id) }
@@ -320,8 +315,15 @@ class FileStorage extends Storage {
     }
 }
 
-export class YamlStorage extends FileStorage {
+export class YamlStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */
+
+    filename
+
+    constructor(filename) {
+        super()
+        this.filename = filename
+    }
 
     async open(ring, block) {
         /* Load records from this.filename file into this.records. */
