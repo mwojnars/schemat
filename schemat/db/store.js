@@ -1,7 +1,3 @@
-/*
-    Distributed no-sql data store for data records (items) and indexes.
-*/
-
 import {assert, print, T} from "../utils.js";
 import {JSONx} from "../serialize.js";
 import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
@@ -13,12 +9,12 @@ import {MemoryBlock, Sequence} from "./block.js";
 
 // Section, Block, Partition
 
-class Store {
-    /* A Data sequence coupled with any number of Indexes and Aggregates.
-       Like a database, but with custom query API (no SQL) and the ability to fall back on another store (ring)
-       when  a particular read or write cannot be performed here (multi-ring architecture).
-     */
-}
+// class Store {
+//     /* A Data sequence coupled with any number of Indexes and Aggregates.
+//        Like a database, but with custom query API (no SQL) and the ability to fall back on another store (ring)
+//        when  a particular read or write cannot be performed here (multi-ring architecture).
+//      */
+// }
 
 /**********************************************************************************************************************/
 
