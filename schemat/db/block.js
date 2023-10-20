@@ -85,12 +85,6 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
  **
  */
 
-const _data_schema = new SequenceSchema(
-    new Map([['id', new INTEGER()]]),
-    // value encoding is handled outside schema: through method overloading
-);
-
-
 export class DataSequence extends Sequence {
 
     schema = new SequenceSchema(
@@ -315,7 +309,7 @@ class YamlDataBlock extends DataBlock {
 
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlDataStorage(filename)
+        this.storage = new YamlDataStorage(filename, ring, this)
     }
 }
 
@@ -369,12 +363,14 @@ export class YamlDataStorage extends MemoryStorage {
 
     filename
 
-    constructor(filename) {
+    constructor(filename, ring, block) {
         super()
         this.filename = filename
+        this.ring = ring
+        this.block = block
     }
 
-    async open(ring, block) {
+    async open() {
         /* Load records from this.filename file into this.records. */
 
         // create an empty file if it doesn't exist yet
@@ -393,13 +389,13 @@ export class YamlDataStorage extends MemoryStorage {
         for (let record of records) {
             let id = T.pop(record, '__id')
 
-            ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-            await block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
+            this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
+            await this.block.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
 
             max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
-            let key = _data_schema.encode_key([id])
+            let key = this.ring.data.schema.encode_key([id])
 
             this.records.set(key, JSON.stringify(data))
         }
@@ -411,7 +407,7 @@ export class YamlDataStorage extends MemoryStorage {
         print(`YamlDataStorage flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
         let recs = flat.map(([key, data_json]) => {
-            let __id = _data_schema.decode_key(key)[0]
+            let __id = this.ring.data.schema.decode_key(key)[0]
             let data = JSON.parse(data_json)
                 return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
             })
