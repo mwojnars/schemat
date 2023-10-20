@@ -1,7 +1,7 @@
 
 /**********************************************************************************************************************/
 
-import {assert} from "../utils.js";
+import {assert, T} from "../utils.js";
 
 export class DataRequest {
     /* Internal network request for data access/modification. Sent from an edge node, through the database,
@@ -32,6 +32,8 @@ export class DataRequest {
         this.block = block
     }
 
+    clone()     { return T.clone(this) }
+
     append_path(path = {}) {
         // copy all properties from `path` to this request object
         for (const [key, value] of Object.entries(path)) {
@@ -41,8 +43,8 @@ export class DataRequest {
         return this
     }
 
-    make_key(id) {
-        // for temporary use in DataSequence and Block
+    encode_id(id) {
+        /* Use the ring's data schema to encode item ID to a binary key. */
         if (id === undefined) return undefined
         return this.ring.data.schema.encode_key([id])
     }

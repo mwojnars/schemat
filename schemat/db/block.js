@@ -257,7 +257,7 @@ class DataBlock extends Block {
     }
 
     async select(req, id) {
-        let key = req.make_key(id)
+        let key = req.encode_id(id)
         let data = await this.storage.get(key)
         return data !== undefined ? data : req.forward_select(id)
     }
@@ -271,7 +271,7 @@ class DataBlock extends Block {
 
         this.autoincrement = Math.max(id, this.autoincrement)
 
-        let key = req.make_key(id)
+        let key = req.encode_id(id)
         await this.put(req, key, data)
 
         // TODO: auto-increment `key` not `id`, then decode
@@ -285,7 +285,7 @@ class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let key = req.make_key(id)
+        let key = req.encode_id(id)
         let data = await this.storage.get(key)
         if (data === undefined) return req.forward_update(id, ...edits)
 
@@ -297,7 +297,7 @@ class DataBlock extends Block {
 
     async delete(req, id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let key = req.make_key(id)
+        let key = req.encode_id(id)
         let data_old = await this.storage.get(key)
         let done = this.storage.del(key)
         if (done instanceof Promise) done = await done
