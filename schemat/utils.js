@@ -210,6 +210,12 @@ export class CustomMap extends Map {
     *keys()         { for (const key of super.keys()) yield this.reverse(key) }
     *entries()      { for (const [key, value] of super.entries()) yield [this.reverse(key), value] }
     *[Symbol.iterator]() { yield* this.entries() }
+
+    *keys_decoded()     { yield* this.keys() }
+    *keys_encoded()     { yield* super.keys() }
+
+    *entries_decoded()  { yield* this.entries() }
+    *entries_encoded()  { yield* super.entries() }
 }
 
 
