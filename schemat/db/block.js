@@ -327,13 +327,13 @@ class YamlDataBlock extends DataBlock {
 
 class Storage {
 
-    // all methods can be ASYNC in subclasses... (!)
+    // all the methods below can be ASYNC in subclasses... (!)
     
-    get(key)            { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
+    get(key)            { throw new NotImplemented() }      // return JSON string stored under the binary `key`, or undefined
     put(key, value)     { throw new NotImplemented() }      // no return value
     del(key)            { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
 
-    *scan(opts)         { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
+    *scan(opts)         { throw new NotImplemented() }      // generator of [binary-key, json-value] pairs
     erase()             { throw new NotImplemented() }
     flush()             { }
 }
@@ -343,10 +343,10 @@ class MemoryStorage extends Storage {
 
     records = new BinaryMap()       // preloaded records, {binary-key: json-data}
 
-    async erase()       { this.records.clear(); return this.flush() }
     get(key)            { return this.records.get(key) }
-    del(key)            { return this.records.delete(key) }
     put(key, value)     { this.records.set(key, value) }
+    del(key)            { return this.records.delete(key) }
+    erase()             { this.records.clear(); return this.flush() }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
