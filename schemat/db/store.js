@@ -8,7 +8,7 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {NotImplemented} from "../errors.js";
+import {Sequence} from "./block.js";
 
 
 // Section, Block, Partition
@@ -85,39 +85,6 @@ export class MemoryBlock extends Block__ {
 
 
 /**********************************************************************************************************************/
-
-export class Sequence {    // Series?
-    /* Ordered sequence of key-value records, possibly distributed and/or replicated (TODO).
-       Keys and values (payload) can be composite.
-       May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
-       Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
-       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence__ subclass),
-       and is also used as a basis for implementation of indexes (the Index subclass).
-     */
-
-    schema          // SequenceSchema that defines this sequence's key and value
-    splits          // array of split points between blocks
-    blocks          // array of Blocks that make up this sequence
-
-    _find_block(binary_key)     { return this.blocks[0] }
-
-    async *scan_sequence({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
-        /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
-           If `limit` is defined, yield at most `limit` items.
-           If `reverse` is true, scan in the reverse order.
-           If `batch_size` is defined, yield items in batches of `batch_size` items.
-         */
-
-        // convert `start` and `stop` to binary keys (Uint8Array)
-        start = start && this.schema.encode_key(start)
-        stop = stop && this.schema.encode_key(stop)
-
-        let block = this._find_block(start)
-
-        for await (let [key, value] of block.scan({start, stop}))
-            yield new BinaryRecord(this.schema, key, value)
-    }
-}
 
 export class Index extends Sequence {
     /* Sequence of records consisting of a binary `key` and a json `value`. The sequence is sorted by the key and
