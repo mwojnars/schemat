@@ -126,7 +126,7 @@ export class DataSequence extends Sequence {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
         let [key, block] = this._prepare(id)
-        return block.get(id)
+        return block.get(req, id)
     }
 
     async put(req, id, data) {
@@ -195,12 +195,6 @@ export class Block extends Item {
 
     storage                 // storage for this block's records
 
-
-    static Error = class extends BaseError          {}
-    static ItemExists = class extends Block.Error   { static message = "item with this ID already exists" }
-
-    async assertUniqueID(id, msg)                   { if (await this.storage.get(id)) throw new Block.ItemExists(msg, {id}) }
-
     constructor(ring) {
         super()
         this.ring = ring
@@ -213,14 +207,18 @@ export class Block extends Item {
 
     /***  low-level API (no request forwarding)  ***/
 
-    async get(id) { return this.storage.get(id) }
+    async get(req, id) {
+        let key = req.make_key(id)
+        return this.storage.get(key)
+    }
 
     async put(req, id, data) {
         /* Write the `data` here in this block under the `id` and propagate the change to indexes.
            No forward of the request to another ring/block.
          */
-        let data_old = await this.storage.get(id) || null
-        await this.storage.put(id, data)
+        let key = req.make_key(id)
+        let data_old = await this.storage.get(key) || null
+        await this.storage.put(key, data)
         this.dirty = true
         this.flush()
         await this.propagate(req, id, data_old, data)
@@ -253,14 +251,22 @@ export class Block extends Item {
 
     async propagate(req, id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const binary_key = req.make_key(id)
-        const change = new RecordChange(binary_key, data_old, data_new)
+        const key = req.make_key(id)
+        const change = new RecordChange(key, data_old, data_new)
         return req.ring.propagate(change)
     }
 }
 
 class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
+
+    static Error = class extends BaseError {}
+    static ItemExists = class extends DataBlock.Error   { static message = "item with this ID already exists" }
+
+    async assertUniqueID(id, msg) {
+        let key = this.ring.data._make_key(id)
+        if (await this.storage.get(key)) throw new DataBlock.ItemExists(msg, {id})
+    }
 
     async select(req, id) {
         let key = req.make_key(id)
