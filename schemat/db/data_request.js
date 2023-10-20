@@ -38,6 +38,12 @@ export class DataRequest {
         return this
     }
 
+    make_key(id) {
+        // for temporary use in DataSequence and Block
+        if (id === undefined) return undefined
+        return this.ring.data.schema.encode_key([id])
+    }
+
     forward_select(id)                  { return this.database.forward_select(this.ring, id) }
     forward_update(id, ...edits)        { return this.database.forward_update(this.ring, id, ...edits) }
     forward_save(id, data)              { return this.database.forward_save(this.ring, id, data) }

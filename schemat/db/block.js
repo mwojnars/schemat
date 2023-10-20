@@ -204,12 +204,9 @@ export class Block extends Item {
         this.autoincrement = await this.storage.open(this.ring, this)
     }
 
-
     /***  low-level API (no request forwarding)  ***/
 
-    async get(id) {
-        return this.storage.get(id)
-    }
+    async get(id) { return this.storage.get(id) }
 
     async put(req, id, data) {
         /* Write the `data` here in this block under the `id` and propagate the change to indexes.
@@ -220,6 +217,11 @@ export class Block extends Item {
         this.dirty = true
         this.flush()
         await this.propagate(req, id, data_old, data)
+    }
+
+    async del(id) {
+        return this.storage.del(id)
+        // TODO: this.propagate()
     }
 
     async *scan(opts = {}) { yield* this.storage.scan(opts) }
@@ -244,14 +246,14 @@ export class Block extends Item {
 
     async propagate(req, id, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
-        const data_schema = req.ring.data.schema
-        const binary_key = data_schema.encode_key([id])
+        const binary_key = req.make_key(id)
         const change = new RecordChange(binary_key, data_old, data_new)
         return req.ring.propagate(change)
     }
+}
 
-
-    /***  high-level API (with request forwarding)  ***/
+class DataBlock extends Block {
+    /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
     async select(req, id) {
         let data = await this.storage.get(id)
@@ -296,8 +298,7 @@ export class Block extends Item {
     }
 }
 
-
-class YamlBlock extends Block {
+class YamlBlock extends DataBlock {
     constructor(ring, filename) {
         super(ring)
         this.storage = new YamlStorage(filename)
