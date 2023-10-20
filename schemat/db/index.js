@@ -4,7 +4,8 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {MemoryBlock, Sequence} from "./block.js";
+import {MemoryBlock} from "./block.js";
+import {Sequence} from "./sequence.js";
 
 
 // Section, Block, Partition
