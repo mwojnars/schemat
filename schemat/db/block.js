@@ -247,10 +247,10 @@ export class Block extends Item {
         await this.storage.put(key, data)
         this.dirty = true
         this.flush()
-        await this.propagate(req, key, data_old, data)
+        if (req) await this.propagate(req, key, data_old, data)     // TODO: drop "if"
     }
 
-    async del(key) {
+    async del(req, key) {
         return this.storage.del(key)
         // TODO: this.propagate()
     }
@@ -282,7 +282,7 @@ export class Block extends Item {
     }
 }
 
-class DataBlock extends Block {
+export class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
     static Error = class extends BaseError {}
@@ -345,11 +345,19 @@ class DataBlock extends Block {
     }
 }
 
-class YamlDataBlock extends DataBlock {
+export class YamlDataBlock extends DataBlock {
 
     constructor(ring, filename) {
         super(ring)
         this.storage = new YamlDataStorage(filename, ring, this)
+    }
+}
+
+export class MemoryBlock extends Block {
+
+    constructor(ring) {
+        super(ring)
+        this.storage = new MemoryStorage()
     }
 }
 
@@ -360,7 +368,7 @@ class YamlDataBlock extends DataBlock {
  **
  */
 
-class Storage {
+export class Storage {
 
     // all the methods below can be ASYNC in subclasses... (!)
     
@@ -374,7 +382,7 @@ class Storage {
     get size()          { }                                 // number of records in this storage, or undefined if not implemented
 }
 
-class MemoryStorage extends Storage {
+export class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
     records = new BinaryMap()       // preloaded records, {binary-key: json-data}

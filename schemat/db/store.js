@@ -8,7 +8,7 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {Sequence} from "./block.js";
+import {MemoryBlock, Sequence} from "./block.js";
 
 
 // Section, Block, Partition
@@ -42,46 +42,46 @@ class Store {
 
 /**********************************************************************************************************************/
 
-export class Block__ {
-    /* A continuous subrange of a Sequence physically located on a single machine.
-       Unit of data replication and distribution (TODO).
-       In all the methods, records are fully encoded: keys are binary and values are strings.
-       Records are arranged by key in a byte order.
-     */
-
-    ring                // Ring that owns this block
-
-    open(ring)          { this.ring = ring }
-
-    get(key)            { assert(false) }
-    put(key, value)     { assert(false) }
-    del(key)            { assert(false) }
-    erase()             { assert(false) }
-    *scan(opts)   { assert(false) }
-}
-
-export class MemoryBlock extends Block__ {
-
-    records = new BinaryMap()
-
-    get(key)            { return this.records.get(key) }
-    put(key, value)     { this.records.set(key, value) }
-    del(key)            { this.records.delete(key) }
-
-    *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
-        /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
-           are binary keys (Uint8Array).
-         */
-        let sorted_keys = [...this.records.keys()].sort(compareUint8Arrays)
-        let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
-        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
-        for (let key of sorted_keys.slice(start_index, stop_index))
-            yield [key, this.records.get(key)]
-    }
-
-    erase()     { this.records.clear(); return this.flush() }       // may return a Promise
-    flush()     {}
-}
+// export class Block__ {
+//     /* A continuous subrange of a Sequence physically located on a single machine.
+//        Unit of data replication and distribution (TODO).
+//        In all the methods, records are fully encoded: keys are binary and values are strings.
+//        Records are arranged by key in a byte order.
+//      */
+//
+//     ring                // Ring that owns this block
+//
+//     open(ring)          { this.ring = ring }
+//
+//     get(key)            { assert(false) }
+//     put(key, value)     { assert(false) }
+//     del(key)            { assert(false) }
+//     erase()             { assert(false) }
+//     *scan(opts)   { assert(false) }
+// }
+//
+// export class MemoryBlock extends Block__ {
+//
+//     records = new BinaryMap()
+//
+//     get(key)            { return this.records.get(key) }
+//     put(key, value)     { this.records.set(key, value) }
+//     del(key)            { this.records.delete(key) }
+//
+//     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
+//         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
+//            are binary keys (Uint8Array).
+//          */
+//         let sorted_keys = [...this.records.keys()].sort(compareUint8Arrays)
+//         let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
+//         let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
+//         for (let key of sorted_keys.slice(start_index, stop_index))
+//             yield [key, this.records.get(key)]
+//     }
+//
+//     erase()     { this.records.clear(); return this.flush() }       // may return a Promise
+//     flush()     {}
+// }
 
 
 /**********************************************************************************************************************/
@@ -109,13 +109,15 @@ export class Index extends Sequence {
         // del_records and put_records are BinaryMaps, {binary_key: string_value}, or null/undefined
         const [del_records, put_records] = await this._make_plan(change)
 
+        let req = null      // TODO: request object, only used when another propagation step is to be done
+
         // delete old records
         for (let [key, value] of del_records || [])
-            this._find_block(key).del(key) //|| print(`deleted [${key}]`)
+            this._find_block(key).del(req, key) //|| print(`deleted [${key}]`)
 
         // (over)write new records
         for (let [key, value] of put_records || [])
-            this._find_block(key).put(key, value) //|| print(`put [${key}]`)
+            this._find_block(key).put(req, key, value) //|| print(`put [${key}]`)
     }
 
     async *map_record(input_record) {
