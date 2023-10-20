@@ -109,16 +109,15 @@ export class DataSequence extends Sequence {
 
     async select_local(req, id) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
+        assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
         let block = this._find_block_by_id(id)
-        return block._select(id)
+        return block.select_local(id)
     }
 
     async select(req, id) {
         req = req.set_sequence(this)
         let block = this._find_block_by_id(id)
-        return block.select_or_forward(req, id)
-        // let data = await block._select(id)
-        // return data !== undefined ? data : req.forward_select(id)
+        return block.select(req, id)
     }
 
     async insert(req, id, data) {
@@ -207,8 +206,12 @@ export class Block extends Item {
 
 
     /***  CRUD operations  ***/
-
-    async select_or_forward(req, id) {
+    
+    async select_local(id) {
+        return this.storage._select(id)
+    }
+    
+    async select(req, id) {
         let data = await this.storage._select(id)
         return data !== undefined ? data : req.forward_select(id)
     }
@@ -262,7 +265,7 @@ export class Block extends Item {
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
         this.autoincrement = 0
-        await this.storage._erase()
+        await this.storage.erase()
         return this.flush()
     }
 
@@ -290,7 +293,7 @@ class Storage {
     _select(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
     _save(id, data)         { throw new NotImplemented() }      // no return value
     _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
-    _erase()                { throw new NotImplemented() }
+    erase()                 { throw new NotImplemented() }
     _flush()                { throw new NotImplemented() }
     *_scan(opts)            { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 }
@@ -301,7 +304,7 @@ class MemoryStorage extends Storage {
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    async _erase()  { this.records.clear() }
+    async erase()  { this.records.clear() }
 
     _select(id)     { return this.records.get(id) }
     _delete(id)     { return this.records.delete(id) }
