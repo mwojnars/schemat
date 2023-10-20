@@ -5,7 +5,7 @@ import {Item} from "../item.js"
 import {DataSequence} from "./block.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
-import {IndexByCategory} from "./store.js";
+import {IndexByCategory} from "./index.js";
 import {RecordChange, Record} from "./records.js";
 import {DataRequest} from "./data_request.js";
 
