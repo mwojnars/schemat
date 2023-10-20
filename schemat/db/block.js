@@ -96,7 +96,7 @@ export class DataSequence extends Sequence {
         this.ring = ring
 
         // block is a local file, or an item that must be loaded from a lower ring
-        this.block = file ? new YamlBlock(ring, file) : globalThis.registry.getLoaded(item)
+        this.block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
     }
 
     async open() {
@@ -298,10 +298,10 @@ class DataBlock extends Block {
     }
 }
 
-class YamlBlock extends DataBlock {
+class YamlDataBlock extends DataBlock {
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlStorage(filename)
+        this.storage = new YamlDataStorage(filename)
     }
 }
 
@@ -345,7 +345,7 @@ class MemoryStorage extends Storage {
     }
 }
 
-export class YamlStorage extends MemoryStorage {
+export class YamlDataStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */
 
     filename
@@ -387,7 +387,7 @@ export class YamlStorage extends MemoryStorage {
 
     async flush() {
         /* Save the entire database (this.records) to a file. */
-        print(`YamlBlock flushing ${this.records.size} items to ${this.filename}...`)
+        print(`YamlDataStorage flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
         let recs = flat.map(([__id, data_json]) => {
                 let data = JSON.parse(data_json)
