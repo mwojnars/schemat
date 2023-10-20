@@ -124,7 +124,7 @@ export class DataSequence extends Sequence {
 
     async *scan_all() {
         /* Yield all items as ItemRecord objects. */
-        yield* this.block.scan_all()
+        yield* this.block.scan()
     }
 
     async erase() { return this.block.erase() }
@@ -209,7 +209,7 @@ export class Block extends Item {
         await this.propagate(req, id, data_old, data)
     }
 
-    async *scan_all() { yield* this.storage.scan() }
+    async *scan(opts = {}) { yield* this.storage.scan(opts) }
 
     async erase() {
         /* Remove all records from this sequence; open() should be called first. */
