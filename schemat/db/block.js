@@ -105,10 +105,8 @@ export class DataSequence extends Sequence {
         this.block.setExpiry('never')                       // prevent eviction of this item from Registry's cache (!)
     }
 
-    _find_block_by_id(id)       { return this.block }
+    _make_key(id)               { return id !== undefined ? this.schema.encode_key([id]) : undefined }
     _find_block(binary_key)     { return this.block }
-
-    _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
 
     _prepare(id) {
         let key = this._make_key(id)
@@ -154,7 +152,9 @@ export class DataSequence extends Sequence {
 
     async insert(req, id, data) {
         let [key, block] = this._prepare(id)
-        return block.insert(req, id, data)
+        let new_key = block.insert(req, id, data)
+        return new_key
+        // return this.schema.decode_key(new_key)[0]
     }
 
     async update(req, id, ...edits) {
