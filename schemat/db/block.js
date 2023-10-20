@@ -107,12 +107,31 @@ export class DataSequence extends Sequence {
 
     _find_block_by_id(id) { return this.block }
 
-    async select_local(req, id) {
+
+    /***  low-level API (no request forwarding)  ***/
+
+    async get(req, id) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
         let block = this._find_block_by_id(id)
-        return block.select_local(id)
+        return block.get(id)
     }
+
+    async put(req, id, data) {
+        let block = this._find_block_by_id(id)
+        return block.put(req, id, data)
+    }
+
+    async *scan_all() {
+        /* Yield all items as ItemRecord objects. */
+        yield* this.block.scan_all()
+    }
+
+    async erase() { return this.block.erase() }
+    async flush() { return this.block.flush() }
+
+
+    /***  high-level API (with request forwarding)  ***/
 
     async select(req, id) {
         req = req.set_sequence(this)
@@ -134,19 +153,6 @@ export class DataSequence extends Sequence {
         let block = this._find_block_by_id(id)
         return block.delete(req, id)
     }
-
-    async put(req, id, data) {
-        let block = this._find_block_by_id(id)
-        return block.put(req, id, data)
-    }
-
-    async *scan_all() {
-        /* Yield all items as ItemRecord objects. */
-        yield* this.block.scan_all()
-    }
-
-    async erase() { return this.block.erase() }
-    async flush() { return this.block.flush() }
 }
 
 /**********************************************************************************************************************
@@ -185,6 +191,33 @@ export class Block extends Item {
         this.autoincrement = await this.storage.open(this.ring, this)
     }
 
+
+    /***  low-level API (no request forwarding)  ***/
+
+    async get(id) {
+        return this.storage.get(id)
+    }
+
+    async put(req, id, data) {
+        /* Write the `data` here in this block under the `id` and propagate the change to indexes.
+           No forward of the request to another ring/block.
+         */
+        let data_old = await this.storage.get(id) || null
+        await this.storage.put(id, data)
+        this.dirty = true
+        this.flush()
+        await this.propagate(req, id, data_old, data)
+    }
+
+    async *scan_all() { yield* this.storage.scan() }
+
+    async erase() {
+        /* Remove all records from this sequence; open() should be called first. */
+        this.autoincrement = 0
+        await this.storage.erase()
+        return this.flush()
+    }
+
     async flush(timeout_sec = this.FLUSH_TIMEOUT) {
         /* The flushing is only executed if this.dirty=true. The operation can be delayed by `timeout_sec` seconds
            to combine multiple consecutive updates in one write - in such case you do NOT want to await it. */
@@ -205,12 +238,8 @@ export class Block extends Item {
     }
 
 
-    /***  CRUD operations  ***/
-    
-    async select_local(id) {
-        return this.storage.get(id)
-    }
-    
+    /***  high-level API (with request forwarding)  ***/
+
     async select(req, id) {
         let data = await this.storage.get(id)
         return data !== undefined ? data : req.forward_select(id)
@@ -252,26 +281,6 @@ export class Block extends Item {
         await this.propagate(req, id, data_old)
         return done ? done : req.forward_delete(id)
     }
-
-    async put(req, id, data) {
-        /* Write the `data` here in this block under the `id` and propagate the change to indexes.
-           No forward of the request to another ring/block.
-         */
-        let data_old = await this.storage.get(id) || null
-        await this.storage.put(id, data)
-        this.dirty = true
-        this.flush()
-        await this.propagate(req, id, data_old, data)
-    }
-
-    async erase() {
-        /* Remove all records from this sequence; open() should be called first. */
-        this.autoincrement = 0
-        await this.storage.erase()
-        return this.flush()
-    }
-
-    async *scan_all() { yield* this.storage.scan() }
 }
 
 
