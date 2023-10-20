@@ -226,8 +226,8 @@ export class Block extends Item {
         await this.propagate(req, id, data_old, data)
     }
 
-    async del(id) {
-        return this.storage.del(id)
+    async del(key) {
+        return this.storage.del(key)
         // TODO: this.propagate()
     }
 
@@ -263,7 +263,8 @@ class DataBlock extends Block {
     /* High-level API (with request forwarding) for query processing in the blocks of the main data sequence. */
 
     async select(req, id) {
-        let data = await this.storage.get(id)
+        let key = req.make_key(id)
+        let data = await this.storage.get(key)
         return data !== undefined ? data : req.forward_select(id)
     }
 
@@ -284,7 +285,8 @@ class DataBlock extends Block {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let data = await this.storage.get(id)
+        let key = req.make_key(id)
+        let data = await this.storage.get(key)
         if (data === undefined) return req.forward_update(id, ...edits)
 
         for (const edit of edits)
@@ -295,8 +297,9 @@ class DataBlock extends Block {
 
     async delete(req, id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let data_old = await this.storage.get(id)
-        let done = this.storage.del(id)
+        let key = req.make_key(id)
+        let data_old = await this.storage.get(key)
+        let done = this.storage.del(key)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
@@ -351,10 +354,7 @@ class BinaryMapExt extends BinaryMap {
 class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
-    records = new BinaryMapExt()
-
-    // records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
-    //                             // so that callers are forced to create a new deep copy of a data object on every access
+    records = new BinaryMapExt()            // preloaded records, {binary-key: json-data}
 
     async erase()   { this.records.clear(); return this.flush() }
 
