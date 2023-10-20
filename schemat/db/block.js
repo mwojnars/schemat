@@ -332,9 +332,9 @@ class Storage {
 
     // all methods can be ASYNC in subclasses... (!)
     
-    get(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
-    put(id, data)       { throw new NotImplemented() }      // no return value
-    del(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
+    get(key)            { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
+    put(key, value)     { throw new NotImplemented() }      // no return value
+    del(key)            { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
 
     *scan(opts)         { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
     erase()             { throw new NotImplemented() }
@@ -362,11 +362,11 @@ class MemoryStorage extends Storage {
 
     records = new BinaryMapExt()            // preloaded records, {binary-key: json-data}
 
-    async erase()   { this.records.clear(); return this.flush() }
+    async erase()       { this.records.clear(); return this.flush() }
 
-    get(id)         { return this.records.get(id) }
-    del(id)         { return this.records.delete(id) }
-    put(id, data)   { this.records.set(id, data) }
+    get(key)            { return this.records.get(key) }
+    del(key)            { return this.records.delete(key) }
+    put(key, value)     { this.records.set(key, value) }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
@@ -378,12 +378,6 @@ class MemoryStorage extends Storage {
         for (let key of sorted_keys.slice(start_index, stop_index))
             yield [key, this.records.get(key)]
     }
-    // async *scan() {
-    //     let entries = [...this.records.entries()]
-    //     entries = entries.map(([id, data]) => (new ItemRecord(id, data)))
-    //     entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
-    //     yield* entries
-    // }
 }
 
 export class YamlDataStorage extends MemoryStorage {
