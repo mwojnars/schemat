@@ -311,7 +311,7 @@ export class Primitive extends Type {
         if ((value = super.validate(value)) === null) return value
         let t = this.constructor.stype
         // if (typeof value === t || (this.props.blank && (value === null || value === undefined))) return value
-        if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got a ${typeof value} instead (${value})`)
+        if (typeof value !== t) throw new ValueError(`expected a primitive value of type "${t}", got "${typeof value}" instead (${value})`)
         return value
     }
 }

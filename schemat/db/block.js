@@ -4,6 +4,7 @@ import { Item } from '../item.js'
 import {RecordChange, ItemRecord, SequenceSchema, BinaryRecord} from "./records.js";
 import {Sequence} from "./store.js";
 import {INTEGER} from "../type.js";
+import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
 
 // import { Kafka } from 'kafkajs'
 
@@ -83,6 +84,12 @@ import {INTEGER} from "../type.js";
  **  DATA SEQUENCE
  **
  */
+
+const _data_schema = new SequenceSchema(
+    new Map([['id', new INTEGER()]]),
+    // value encoding is handled outside schema: through method overloading
+);
+
 
 export class DataSequence extends Sequence {
 
@@ -325,11 +332,29 @@ class Storage {
     flush()             { }
 }
 
+class BinaryMapExt extends BinaryMap {
+
+    get(id) {
+        if (typeof id === 'number') id = _data_schema.encode_key([id])
+        return super.get(id)
+    }
+    set(id, data) {
+        if (typeof id === 'number') id = _data_schema.encode_key([id])
+        return super.set(id, data)
+    }
+    delete(id) {
+        if (typeof id === 'number') id = _data_schema.encode_key([id])
+        return super.delete(id)
+    }
+}
+
 class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
-    records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
-                                // so that callers are forced to create a new deep copy of a data object on every access
+    records = new BinaryMapExt()
+
+    // records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
+    //                             // so that callers are forced to create a new deep copy of a data object on every access
 
     async erase()   { this.records.clear(); return this.flush() }
 
@@ -337,12 +362,22 @@ class MemoryStorage extends Storage {
     del(id)         { return this.records.delete(id) }
     put(id, data)   { this.records.set(id, data) }
 
-    async *scan() {
-        let entries = [...this.records.entries()]
-        entries = entries.map(([id, data]) => (new ItemRecord(id, data)))
-        entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
-        yield* entries
+    *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
+        /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
+           are binary keys (Uint8Array).
+         */
+        let sorted_keys = [...this.records.keys()].sort(compareUint8Arrays)
+        let start_index = start ? sorted_keys.findIndex(key => compareUint8Arrays(key, start) >= 0) : 0
+        let stop_index = stop ? sorted_keys.findIndex(key => compareUint8Arrays(key, stop) >= 0) : sorted_keys.length
+        for (let key of sorted_keys.slice(start_index, stop_index))
+            yield [key, this.records.get(key)]
     }
+    // async *scan() {
+    //     let entries = [...this.records.entries()]
+    //     entries = entries.map(([id, data]) => (new ItemRecord(id, data)))
+    //     entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
+    //     yield* entries
+    // }
 }
 
 export class YamlDataStorage extends MemoryStorage {
@@ -389,8 +424,9 @@ export class YamlDataStorage extends MemoryStorage {
         /* Save the entire database (this.records) to a file. */
         print(`YamlDataStorage flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
-        let recs = flat.map(([__id, data_json]) => {
-                let data = JSON.parse(data_json)
+        let recs = flat.map(([key, data_json]) => {
+            let __id = _data_schema.decode_key(key)[0]
+            let data = JSON.parse(data_json)
                 return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
             })
         let out = this._mod_YAML.stringify(recs)
