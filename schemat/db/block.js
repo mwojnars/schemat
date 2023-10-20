@@ -109,9 +109,11 @@ export class DataSequence extends Sequence {
     _make_key(id)               { return id !== undefined ? this.schema.encode_key([id]) : undefined }
     _find_block(binary_key)     { return this.block }
 
-    _prepare(id) {
+    _prepare(req, id) {
         let key = this._make_key(id)
-        return [key, this._find_block(key)]
+        let block = this._find_block(key)
+        req.append_path({sequence: this, block})
+        return [key, block]
     }
 
     /***  low-level API (no request forwarding)  ***/
@@ -119,12 +121,12 @@ export class DataSequence extends Sequence {
     async get(req, id) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
-        let [key, block] = this._prepare(id)
+        let [key, block] = this._prepare(req, id)
         return block.get(req, key)
     }
 
     async put(req, id, data) {
-        let [key, block] = this._prepare(id)
+        let [key, block] = this._prepare(req, id)
         return block.put(req, key, data)
     }
 
@@ -146,25 +148,22 @@ export class DataSequence extends Sequence {
     /***  high-level API (with request forwarding)  ***/
 
     async select(req, id) {
-        req = req.set_sequence(this)
-        let [key, block] = this._prepare(id)
+        let [key, block] = this._prepare(req, id)
         return block.select(req, id)
     }
 
     async insert(req, id, data) {
-        let [key, block] = this._prepare(id)
-        let new_key = block.insert(req, id, data)
-        return new_key
-        // return this.schema.decode_key(new_key)[0]
+        let [key, block] = this._prepare(req, id)
+        return block.insert(req, id, data)
     }
 
     async update(req, id, ...edits) {
-        let [key, block] = this._prepare(id)
+        let [key, block] = this._prepare(req, id)
         return block.update(req, id, ...edits)
     }
 
     async delete(req, id) {
-        let [key, block] = this._prepare(id)
+        let [key, block] = this._prepare(req, id)
         return block.delete(req, id)
     }
 }
@@ -274,6 +273,10 @@ class DataBlock extends Block {
 
         let key = req.make_key(id)
         await this.put(req, key, data)
+
+        // TODO: auto-increment `key` not `id`, then decode
+        // id = this.schema.decode_key(new_key)[0]
+
         return id
     }
 

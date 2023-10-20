@@ -32,9 +32,12 @@ export class DataRequest {
         this.block = block
     }
 
-    set_sequence(sequence) {
-        assert(!this.sequence)
-        this.sequence = sequence
+    append_path(path = {}) {
+        // copy all properties from `path` to this request object
+        for (const [key, value] of Object.entries(path)) {
+            assert(!this[key])
+            this[key] = value
+        }
         return this
     }
 
