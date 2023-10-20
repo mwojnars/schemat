@@ -1,7 +1,7 @@
 import { assert, print, T } from '../utils.js'
 import { BaseError, NotImplemented } from '../errors.js'
 import { Item } from '../item.js'
-import {RecordChange, ItemRecord, SequenceSchema} from "./records.js";
+import {RecordChange, ItemRecord, SequenceSchema, BinaryRecord} from "./records.js";
 import {Sequence} from "./store.js";
 import {INTEGER} from "../type.js";
 
@@ -123,8 +123,14 @@ export class DataSequence extends Sequence {
     }
 
     async *scan_all() {
-        /* Yield all items as ItemRecord objects. */
-        yield* this.block.scan()
+        /* Yield all items of this sequence as ItemRecord objects. */
+        for await (let record of this.block.scan())
+            if (record instanceof ItemRecord) yield record
+            else {
+                let [key, value] = record
+                let binary = new BinaryRecord(this.schema, key, value)
+                yield ItemRecord.from_binary(binary)
+            }
     }
 
     async erase() { return this.block.erase() }
@@ -317,7 +323,7 @@ class MemoryStorage extends Storage {
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    async erase()   { this.records.clear() }
+    async erase()   { this.records.clear(); return this.flush() }
 
     get(id)         { return this.records.get(id) }
     del(id)         { return this.records.delete(id) }

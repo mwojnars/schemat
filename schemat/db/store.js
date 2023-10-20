@@ -57,7 +57,7 @@ export class Block__ {
     put(key, value)     { assert(false) }
     del(key)            { assert(false) }
     erase()             { assert(false) }
-    *scan_block(opts)   { assert(false) }
+    *scan(opts)   { assert(false) }
 }
 
 export class MemoryBlock extends Block__ {
@@ -68,7 +68,7 @@ export class MemoryBlock extends Block__ {
     put(key, value)     { this.records.set(key, value) }
     del(key)            { this.records.delete(key) }
 
-    *scan_block({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
+    *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
            are binary keys (Uint8Array).
          */
@@ -82,28 +82,6 @@ export class MemoryBlock extends Block__ {
     erase()     { this.records.clear(); return this.flush() }       // may return a Promise
     flush()     {}
 }
-
-// export class FileBlock extends MemoryBlock {
-//
-//     filename
-//     _mod_fs
-//
-//     constructor(filename) {
-//         super()
-//         this.filename = filename
-//     }
-//
-//     async open(ring) {
-//         super.open()
-//         let fs = this._mod_fs = await import('fs')
-//         try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }           // create an empty file if it doesn't exist yet
-//         catch(ex) {}
-//     }
-// }
-//
-// export class YamlBlock extends FileBlock {
-//     /* A block stored in a YAML file. */
-// }
 
 
 /**********************************************************************************************************************/
@@ -140,7 +118,7 @@ export class Sequence {    // Series?
 
         let block = this._find_block(start)
 
-        for await (let [key, value] of block.scan_block({start, stop}))
+        for await (let [key, value] of block.scan({start, stop}))
             yield new BinaryRecord(this.schema, key, value)
     }
 }
