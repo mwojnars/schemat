@@ -341,29 +341,28 @@ class Storage {
     flush()             { }
 }
 
-class BinaryMapExt extends BinaryMap {
-
-    get(id) {
-        if (typeof id === 'number') id = _data_schema.encode_key([id])
-        return super.get(id)
-    }
-    set(id, data) {
-        if (typeof id === 'number') id = _data_schema.encode_key([id])
-        return super.set(id, data)
-    }
-    delete(id) {
-        if (typeof id === 'number') id = _data_schema.encode_key([id])
-        return super.delete(id)
-    }
-}
+// class BinaryMapExt extends BinaryMap {
+//
+//     get(id) {
+//         if (typeof id === 'number') id = _data_schema.encode_key([id])
+//         return super.get(id)
+//     }
+//     set(id, data) {
+//         if (typeof id === 'number') id = _data_schema.encode_key([id])
+//         return super.set(id, data)
+//     }
+//     delete(id) {
+//         if (typeof id === 'number') id = _data_schema.encode_key([id])
+//         return super.delete(id)
+//     }
+// }
 
 class MemoryStorage extends Storage {
     /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
-    records = new BinaryMapExt()            // preloaded records, {binary-key: json-data}
+    records = new BinaryMap()       // preloaded records, {binary-key: json-data}
 
     async erase()       { this.records.clear(); return this.flush() }
-
     get(key)            { return this.records.get(key) }
     del(key)            { return this.records.delete(key) }
     put(key, value)     { this.records.set(key, value) }
@@ -415,7 +414,9 @@ export class YamlDataStorage extends MemoryStorage {
             max_id = Math.max(max_id, id)
 
             let data = '__data' in record ? record.__data : record
-            this.records.set(id, JSON.stringify(data))
+            let key = _data_schema.encode_key([id])
+
+            this.records.set(key, JSON.stringify(data))
         }
         return max_id
     }
