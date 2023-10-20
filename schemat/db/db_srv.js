@@ -5,7 +5,7 @@ import {Item} from "../item.js"
 import {Database} from "./db.js"
 import {EditData} from "./edits.js";
 import {IndexByCategory} from "./index.js";
-import {RecordChange, Record} from "./records.js";
+import {RecordChange, Record, ItemRecord} from "./records.js";
 import {DataRequest} from "./data_request.js";
 import {DataSequence} from "./sequence.js";
 
@@ -141,7 +141,11 @@ export class Ring extends Item {
 
     /***  Indexes and Transforms  ***/
 
-    async *scan_all()   { yield* this.data.scan_all() }       // yield all items in this ring as ItemRecord objects
+    async* scan_all() {
+        /* Yield all items of this ring as ItemRecord objects. */
+        for await (let record of this.data.scan())
+            yield ItemRecord.from_binary(record)
+    }
 
     async *scan_index(name, {start, stop, limit=null, reverse=false, batch_size=100} = {}) {
         /* Scan an index `name` in the range [`start`, `stop`) and yield the results.

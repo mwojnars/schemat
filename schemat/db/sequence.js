@@ -95,12 +95,6 @@ export class DataSequence extends Sequence {
         return block.put(req, key, data)
     }
 
-    async* scan_all() {
-        /* Yield all items of this sequence as ItemRecord objects. */
-        for await (let record of this.scan())
-            yield ItemRecord.from_binary(record)
-    }
-
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
     flush()     { return Promise.all(this.blocks.map(b => b.flush())) }
 
