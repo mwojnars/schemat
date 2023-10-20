@@ -173,7 +173,7 @@ export class Block extends Item {
     static Error = class extends BaseError          {}
     static ItemExists = class extends Block.Error   { static message = "item with this ID already exists" }
 
-    async assertUniqueID(id, msg)                   { if (await this.storage._select(id)) throw new Block.ItemExists(msg, {id}) }
+    async assertUniqueID(id, msg)                   { if (await this.storage.get(id)) throw new Block.ItemExists(msg, {id}) }
 
     constructor(ring) {
         super()
@@ -191,7 +191,7 @@ export class Block extends Item {
         if (!this.dirty) return
         if (timeout_sec === 0) {
             this.dirty = false
-            return this.storage._flush()
+            return this.storage.flush()
         }
         setTimeout(() => this.flush(0), timeout_sec * 1000)
     }
@@ -208,11 +208,11 @@ export class Block extends Item {
     /***  CRUD operations  ***/
     
     async select_local(id) {
-        return this.storage._select(id)
+        return this.storage.get(id)
     }
     
     async select(req, id) {
-        let data = await this.storage._select(id)
+        let data = await this.storage.get(id)
         return data !== undefined ? data : req.forward_select(id)
     }
 
@@ -233,7 +233,7 @@ export class Block extends Item {
            Otherwise, load the data associated with `id`, apply `edits` to it, and save a modified item
            in this block (if the ring permits), or forward the write request back to a higher ring.
          */
-        let data = await this.storage._select(id)
+        let data = await this.storage.get(id)
         if (data === undefined) return req.forward_update(id, ...edits)
 
         for (const edit of edits)
@@ -244,8 +244,8 @@ export class Block extends Item {
 
     async delete(req, id) {
         /* Try deleting the `id`, forward to a deeper ring if the id is not present here in this block. */
-        let data_old = await this.storage._select(id)
-        let done = this.storage._delete(id)
+        let data_old = await this.storage.get(id)
+        let done = this.storage.del(id)
         if (done instanceof Promise) done = await done
         if (done) this.dirty = true
         this.flush()
@@ -254,9 +254,11 @@ export class Block extends Item {
     }
 
     async save(req, id, data) {
-        /* Write the `data` here in this block under the `id`. No forward to another ring/block. */
-        let data_old = await this.storage._select(id) || null
-        await this.storage._save(id, data)
+        /* Write the `data` here in this block under the `id` and propagate the change to indexes.
+           No forward of the request to another ring/block.
+         */
+        let data_old = await this.storage.get(id) || null
+        await this.storage.put(id, data)
         this.dirty = true
         this.flush()
         await this.propagate(req, id, data_old, data)
@@ -269,7 +271,7 @@ export class Block extends Item {
         return this.flush()
     }
 
-    async *scan_all() { yield* this.storage._scan() }
+    async *scan_all() { yield* this.storage.scan() }
 }
 
 
@@ -289,28 +291,30 @@ class YamlBlock extends Block {
 
 class Storage {
 
-    // these methods can be ASYNC in subclasses (!)
-    _select(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
-    _save(id, data)         { throw new NotImplemented() }      // no return value
-    _delete(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
-    erase()                 { throw new NotImplemented() }
-    _flush()                { throw new NotImplemented() }
-    *_scan(opts)            { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
+    // all methods can be ASYNC in subclasses... (!)
+    
+    get(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
+    put(id, data)       { throw new NotImplemented() }      // no return value
+    del(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
+    
+    erase()             { throw new NotImplemented() }
+    flush()             { throw new NotImplemented() }
+    *scan(opts)         { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
 }
 
 class MemoryStorage extends Storage {
-    /* All items stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
+    /* All records stored in a Map in memory. Possibly synchronized with a plain file on disk (implemented in subclasses). */
 
     records  = new Map()        // preloaded items data, {id: data_json}; JSON-ified for mem usage & safety,
                                 // so that callers are forced to create a new deep copy of a data object on every access
 
-    async erase()  { this.records.clear() }
+    async erase()   { this.records.clear() }
 
-    _select(id)     { return this.records.get(id) }
-    _delete(id)     { return this.records.delete(id) }
-    _save(id, data) { this.records.set(id, data) }
+    get(id)         { return this.records.get(id) }
+    del(id)         { return this.records.delete(id) }
+    put(id, data)   { this.records.set(id, data) }
 
-    async *_scan() {
+    async *scan() {
         let entries = [...this.records.entries()]
         entries = entries.map(([id, data]) => (new ItemRecord(id, data)))
         entries.sort(Item.orderAscID)               // the entries must be sorted to allow correct merging over rings
@@ -358,7 +362,7 @@ export class YamlStorage extends MemoryStorage {
         return max_id
     }
 
-    async _flush() {
+    async flush() {
         /* Save the entire database (this.records) to a file. */
         print(`YamlBlock flushing ${this.records.size} items to ${this.filename}...`)
         let flat = [...this.records.entries()]
