@@ -98,7 +98,6 @@ export class DataSequence extends Sequence {
 
         // block is a local file, or an item that must be loaded from a lower ring
         let block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
-
         this.blocks = [block]
     }
 
@@ -137,13 +136,11 @@ export class DataSequence extends Sequence {
     async *scan_all() {
         /* Yield all items of this sequence as ItemRecord objects. */
         for (let block of this.blocks)
-            for await (let record of block.scan())
-                if (record instanceof ItemRecord) yield record
-                else {
-                    let [key, value] = record
-                    let binary = new BinaryRecord(this.schema, key, value)
-                    yield ItemRecord.from_binary(binary)
-                }
+            for await (let record of block.scan()) {
+                let [key, value] = record
+                let binary = new BinaryRecord(this.schema, key, value)
+                yield ItemRecord.from_binary(binary)
+            }
     }
 
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }
