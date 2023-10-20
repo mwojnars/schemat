@@ -108,18 +108,24 @@ export class DataSequence extends Sequence {
     _find_block_by_id(id)       { return this.block }
     _find_block(binary_key)     { return this.block }
 
+    _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
+
+    _prepare(id) {
+        let key = this._make_key(id)
+        return [key, this._find_block(key)]
+    }
 
     /***  low-level API (no request forwarding)  ***/
 
     async get(req, id) {
         /* Read item's data from this sequence, no forward to a lower ring. Return undefined if `id` not found. */
         assert(false, "this method seems to be not used (or maybe only with an Item ring?)")
-        let block = this._find_block_by_id(id)
+        let [key, block] = this._prepare(id)
         return block.get(id)
     }
 
     async put(req, id, data) {
-        let block = this._find_block_by_id(id)
+        let [key, block] = this._prepare(id)
         return block.put(req, id, data)
     }
 
@@ -140,30 +146,24 @@ export class DataSequence extends Sequence {
 
     /***  high-level API (with request forwarding)  ***/
 
-    make_key(id) { return this.schema.encode_key([id]) }
-
     async select(req, id) {
         req = req.set_sequence(this)
-        let key = this.make_key(id)
-        let block = this._find_block(key)
+        let [key, block] = this._prepare(id)
         return block.select(req, id)
     }
 
     async insert(req, id, data) {
-        let key = this.make_key(id)
-        let block = this._find_block(key)
+        let [key, block] = this._prepare(id)
         return block.insert(req, id, data)
     }
 
     async update(req, id, ...edits) {
-        let key = this.make_key(id)
-        let block = this._find_block(key)
+        let [key, block] = this._prepare(id)
         return block.update(req, id, ...edits)
     }
 
     async delete(req, id) {
-        let key = this.make_key(id)
-        let block = this._find_block(key)
+        let [key, block] = this._prepare(id)
         return block.delete(req, id)
     }
 }
