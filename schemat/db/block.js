@@ -91,6 +91,8 @@ export class Sequence {    // Series?
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
        The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence__ subclass),
        and is also used as a basis for implementation of indexes (the Index subclass).
+
+           Database > Ring > Data/Index Sequence > Block > Storage > Record
      */
 
     schema          // SequenceSchema that defines this sequence's key and value
@@ -212,8 +214,8 @@ export class DataSequence extends Sequence {
  */
 
 export class Block extends Item {
-    /* Continuous block of consecutive records inside a Sequence, inside the `data` or `index` of a Ring, inside a database:
-           Database > Ring > Data/Index Sequence > Block > Storage > Record
+    /* A continuous subrange of records of a data/index sequence, physically located on a single machine.
+       Records are arranged by key according to byte order. Unit of data replication and distribution (TODO).
      */
 
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
