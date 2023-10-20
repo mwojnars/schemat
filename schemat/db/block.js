@@ -86,6 +86,9 @@ import {BinaryMap, compareUint8Arrays} from "../util/binary.js";
  */
 
 export class DataSequence extends Sequence {
+    /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
+       Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
+     */
 
     schema = new SequenceSchema(
         new Map([['id', new INTEGER()]]),

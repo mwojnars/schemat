@@ -99,10 +99,6 @@ export class Sequence {    // Series?
     splits          // array of split points between blocks
     blocks          // array of Blocks that make up this sequence
 
-    constructor() {
-        this.blocks = [new MemoryBlock()]
-    }
-
     _find_block(binary_key)     { return this.blocks[0] }
 
     async *scan_sequence({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
@@ -133,6 +129,7 @@ export class Index extends Sequence {
     constructor(source) {
         super()
         this.source = source
+        this.blocks = [new MemoryBlock()]
         assert(source instanceof Sequence)
     }
 
@@ -274,28 +271,9 @@ export class IndexByCategory extends BasicIndex {
 
 /**********************************************************************************************************************/
 
-class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
-    /* Aggregates can only implement *reversible* operations, like counting or integer sum.
-       Min/max must be handled through a full index over the min/max-ed field.
-       OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
-     */
-
-/**********************************************************************************************************************/
-
-export class DataSequence__ extends Sequence {
-    /* Data sequence. The main sequence in the database. Consists of item records, {key: item-id, value: item-data}.
-       Supports direct inserts (of new items) with auto-assignment and autoincrement of ID.
-     */
-
-    *generate_keys(item) {
-        assert(item.id !== undefined)
-        yield [item.id]
-    }
-
-    generate_value(item) {
-        /* In the main data sequence, `value` of a record is the full .data of the item stored in this record. */
-        assert(item.isLoaded)
-        return JSONx.encode(item.data)          // return a plain object that can be stringified with JSON
-    }
-}
+// class AggregateSequence extends Sequence {}     // or Cube like in OLAP databases e.g. Apache Druid ?
+//     /* Aggregates can only implement *reversible* operations, like counting or integer sum.
+//        Min/max must be handled through a full index over the min/max-ed field.
+//        OR, we must somehow guarantee that the source data is never modified, only appended to (immutable source).
+//      */
 
