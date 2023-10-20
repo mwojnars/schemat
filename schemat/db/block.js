@@ -105,7 +105,8 @@ export class DataSequence extends Sequence {
         this.block.setExpiry('never')                       // prevent eviction of this item from Registry's cache (!)
     }
 
-    _find_block_by_id(id) { return this.block }
+    _find_block_by_id(id)       { return this.block }
+    _find_block(binary_key)     { return this.block }
 
 
     /***  low-level API (no request forwarding)  ***/
@@ -139,24 +140,30 @@ export class DataSequence extends Sequence {
 
     /***  high-level API (with request forwarding)  ***/
 
+    make_key(id) { return this.schema.encode_key([id]) }
+
     async select(req, id) {
         req = req.set_sequence(this)
-        let block = this._find_block_by_id(id)
+        let key = this.make_key(id)
+        let block = this._find_block(key)
         return block.select(req, id)
     }
 
     async insert(req, id, data) {
-        let block = this._find_block_by_id(id)
+        let key = this.make_key(id)
+        let block = this._find_block(key)
         return block.insert(req, id, data)
     }
 
     async update(req, id, ...edits) {
-        let block = this._find_block_by_id(id)
+        let key = this.make_key(id)
+        let block = this._find_block(key)
         return block.update(req, id, ...edits)
     }
 
     async delete(req, id) {
-        let block = this._find_block_by_id(id)
+        let key = this.make_key(id)
+        let block = this._find_block(key)
         return block.delete(req, id)
     }
 }

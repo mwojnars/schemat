@@ -93,7 +93,7 @@ export class Ring extends Item {
 
     async select_local(id) {
         /* Read item's data from this ring, no forward to a lower ring. Return undefined if `id` not found. */
-        return this.data.select_local(REQ(this), id)
+        return this.data.get(REQ(this), id)
     }
 
     async select(id) {
@@ -130,7 +130,7 @@ export class Ring extends Item {
 
         // in a read-only ring no delete can be done: check if the `id` exists and either forward or throw an error
         if (this.readonly)
-            if (await this.data.select_local(REQ(this), id))
+            if (await this.select_local(REQ(this), id))
                 this.throwReadOnly({id})
             else
                 return this.db.forward_delete(this, id)
