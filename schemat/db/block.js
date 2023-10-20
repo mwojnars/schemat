@@ -135,9 +135,9 @@ export class DataSequence extends Sequence {
         return block.delete(req, id)
     }
 
-    async save(req, id, data) {
+    async put(req, id, data) {
         let block = this._find_block_by_id(id)
-        return block.save(req, id, data)
+        return block.put(req, id, data)
     }
 
     async *scan_all() {
@@ -224,7 +224,7 @@ export class Block extends Item {
         req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
-        await this.save(req, id, data)
+        await this.put(req, id, data)
         return id
     }
 
@@ -239,7 +239,7 @@ export class Block extends Item {
         for (const edit of edits)
             data = edit.process(data)
 
-        return req.ring.writable() ? this.save(req, id, data) : req.forward_save(id, data)
+        return req.ring.writable() ? this.put(req, id, data) : req.forward_save(id, data)
     }
 
     async delete(req, id) {
@@ -253,7 +253,7 @@ export class Block extends Item {
         return done ? done : req.forward_delete(id)
     }
 
-    async save(req, id, data) {
+    async put(req, id, data) {
         /* Write the `data` here in this block under the `id` and propagate the change to indexes.
            No forward of the request to another ring/block.
          */
@@ -296,10 +296,10 @@ class Storage {
     get(id)             { throw new NotImplemented() }      // return JSON-encoded `data` (a string) stored under the `id`, or undefined
     put(id, data)       { throw new NotImplemented() }      // no return value
     del(id)             { throw new NotImplemented() }      // return true if `key` found and deleted, false if not found
-    
-    erase()             { throw new NotImplemented() }
-    flush()             { throw new NotImplemented() }
+
     *scan(opts)         { throw new NotImplemented() }      // generator of {id, data} records ordered by ID
+    erase()             { throw new NotImplemented() }
+    flush()             { }
 }
 
 class MemoryStorage extends Storage {

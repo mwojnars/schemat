@@ -120,7 +120,7 @@ export class Ring extends Item {
            This is called after the 1st phase which consisted of top-down search for the `id` in the stack of rings.
            `block` serves as a hint of which block of `this` actually contains the `id` - can be null (after forward).
          */
-        return this.writable(id) ? this.data.save(REQ(this), id, data) : this.db.forward_save(this, id, data)
+        return this.writable(id) ? this.data.put(REQ(this), id, data) : this.db.forward_save(this, id, data)
     }
 
     async delete(id) {
