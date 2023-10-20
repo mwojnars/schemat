@@ -317,63 +317,6 @@ class YamlDataBlock extends DataBlock {
         super(ring)
         this.storage = new YamlDataStorage(filename)
     }
-
-    // filename
-    //
-    // constructor(ring, filename) {
-    //     super(ring)
-    //     this.filename = filename
-    //     this.storage = new MemoryStorage()
-    //     // this.storage = new YamlDataStorage(filename)
-    // }
-    //
-    // async open() {
-    //     /* Load records from this.filename file into this.storage. */
-    //
-    //     await super.open()
-    //
-    //     // create an empty file if it doesn't exist yet
-    //     let fs = this._mod_fs = await import('fs')
-    //     try { fs.writeFileSync(this.filename, '', {flag: 'wx'}) }
-    //     catch(ex) {}
-    //
-    //     this._mod_YAML = (await import('yaml')).default
-    //
-    //     let file = this._mod_fs.readFileSync(this.filename, 'utf8')
-    //     let records = this._mod_YAML.parse(file) || []
-    //
-    //     let max_id = 0
-    //     this.storage.erase()
-    //
-    //     for (let record of records) {
-    //         let id = T.pop(record, '__id')
-    //
-    //         this.ring.assertValidID(id, `item ID loaded from ${this.filename} is outside the valid bounds for this ring`)
-    //         await this.assertUniqueID(id, `duplicate item ID loaded from ${this.filename}`)
-    //
-    //         max_id = Math.max(max_id, id)
-    //
-    //         let data = '__data' in record ? record.__data : record
-    //         let key = _data_schema.encode_key([id])
-    //
-    //         this.storage.put(key, JSON.stringify(data))
-    //     }
-    //
-    //     this.autoincrement = max_id
-    // }
-    //
-    // async flush() {
-    //     /* Save the entire database (this.records) to a file. */
-    //     print(`YamlDataStorage flushing ${this.storage.size} items to ${this.filename}...`)
-    //     let flat = [...this.storage.records.entries()]
-    //     let recs = flat.map(([key, data_json]) => {
-    //         let __id = _data_schema.decode_key(key)[0]
-    //         let data = JSON.parse(data_json)
-    //             return T.isDict(data) ? {__id, ...data} : {__id, __data: data}
-    //         })
-    //     let out = this._mod_YAML.stringify(recs)
-    //     this._mod_fs.writeFileSync(this.filename, out, 'utf8')
-    // }
 }
 
 
