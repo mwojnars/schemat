@@ -27,7 +27,7 @@ export class Sequence {    // Series?
 
     _find_block(binary_key)     { return this.blocks[0] }
 
-    async* scan_sequence({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
+    async* scan({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
            If `limit` is defined, yield at most `limit` items.
            If `reverse` is true, scan in the reverse order.
@@ -97,7 +97,7 @@ export class DataSequence extends Sequence {
 
     async* scan_all() {
         /* Yield all items of this sequence as ItemRecord objects. */
-        for await (let record of this.scan_sequence())
+        for await (let record of this.scan())
             yield ItemRecord.from_binary(record)
     }
 

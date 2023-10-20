@@ -150,7 +150,7 @@ export class Ring extends Item {
            If `batch_size` is not null, yield items in batches of `batch_size` items.
          */
         let index = this.indexes.get(name)      // Index object
-        yield* index.scan_sequence({start, stop, limit, reverse, batch_size})
+        yield* index.scan({start, stop, limit, reverse, batch_size})
     }
 
     /***  Change propagation  ***/
