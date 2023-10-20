@@ -145,8 +145,8 @@ export class DataSequence extends Sequence {
             }
     }
 
-    async erase() { return this.block.erase() }
-    async flush() { return this.block.flush() }
+    erase()     { return this.block.erase() }
+    flush()     { return this.block.flush() }
 
 
     /***  high-level API (with request forwarding)  ***/
@@ -336,6 +336,7 @@ class Storage {
     *scan(opts)         { throw new NotImplemented() }      // generator of [binary-key, json-value] pairs
     erase()             { throw new NotImplemented() }
     flush()             { }
+    size()              { }                                 // return the number of records in this storage, or undefined if not implemented
 }
 
 class MemoryStorage extends Storage {
@@ -346,7 +347,9 @@ class MemoryStorage extends Storage {
     get(key)            { return this.records.get(key) }
     put(key, value)     { this.records.set(key, value) }
     del(key)            { return this.records.delete(key) }
-    erase()             { this.records.clear(); return this.flush() }
+
+    erase()             { this.records.clear() }
+    size()              { return this.records.size }
 
     *scan({start /*Uint8Array*/, stop /*Uint8Array*/} = {}) {
         /* Iterate over records in this block whose keys are in the [start, stop) range, where `start` and `stop`
