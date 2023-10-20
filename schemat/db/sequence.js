@@ -15,7 +15,7 @@ export class Sequence {    // Series?
        Keys and values (payload) can be composite.
        May consist of multiple - possibly overlapping (replicated) - Blocks. TODO
        Maintains a map of blocks. Allows reshaping (splitting, merging) of blocks. TODO
-       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence__ subclass),
+       The Sequence is a NoSQL counterpart of a table in a relational database (DataSequence subclass),
        and is also used as a basis for implementation of indexes (the Index subclass).
 
            Database > Ring > Data/Index Sequence > Block > Storage > Record
@@ -97,12 +97,8 @@ export class DataSequence extends Sequence {
 
     async* scan_all() {
         /* Yield all items of this sequence as ItemRecord objects. */
-        for (let block of this.blocks)
-            for await (let record of block.scan()) {
-                let [key, value] = record
-                let binary = new BinaryRecord(this.schema, key, value)
-                yield ItemRecord.from_binary(binary)
-            }
+        for await (let record of this.scan_sequence())
+            yield ItemRecord.from_binary(record)
     }
 
     erase()     { return Promise.all(this.blocks.map(b => b.erase())) }

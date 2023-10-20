@@ -1,8 +1,7 @@
 import {assert, print, T} from "../utils.js";
-import {JSONx} from "../serialize.js";
-import {BinaryMap, compareUint8Arrays} from "../util/binary.js"
+import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
-import {BinaryRecord, PlainRecord, SequenceSchema} from "./records.js";
+import {PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
 import {MemoryBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
