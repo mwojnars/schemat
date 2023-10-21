@@ -58,7 +58,7 @@ export class DataRequest {
 
 
     constructor(actor = null, command = null, ...args) {
-        if (actor) this.make_step(actor, command, args)
+        if (actor) this.make_step(actor, command, ...args)
     }
 
     clone() {
@@ -86,7 +86,7 @@ export class DataRequest {
         return this.current_ring.data.schema.encode_key([id])
     }
 
-    forward_select(id)                  { return this.current_db.forward_select(this.current_ring, id) }
+    forward_select(id)                  { return this.current_db.forward_select(this) }
     forward_update(id, ...edits)        { return this.current_db.forward_update(this.current_ring, id, ...edits) }
     forward_save(id, data)              { return this.current_db.forward_save(this.current_ring, id, data) }
     forward_delete(id)                  { return this.current_db.forward_delete(this.current_ring, id) }

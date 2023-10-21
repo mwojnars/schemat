@@ -106,11 +106,11 @@ export class Ring extends Item {
         return this.data.get(REQ(this), id)
     }
 
-    async select(id) {
+    async select(req) {
         /* Find the top-most occurrence of an item in the database starting at this ring.
            If found, return a JSON-encoded data; otherwise throw ItemNotFound.
          */
-        return this.data.select(REQ(this), id)
+        return this.data.select(req.make_step(this), ...req.args)
     }
 
     async insert(item) {
@@ -265,7 +265,7 @@ export class ServerDB extends Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)                { return this.forward_select(null, id) }    // returns a json string (`data`) or undefined
+    async select(id)                { return this.forward_select(new DataRequest(this, 'select', id)) }    // returns a json string (`data`) or undefined
     async update(id, ...edits)      { return this.forward_update(null, id, ...edits) }
 
     async update_full(item) {
@@ -306,10 +306,11 @@ export class ServerDB extends Database {
 
     /***  CRUD forwarding to other rings  ***/
 
-    forward_select(ring, id) {
-        let prev = this._prev(ring)
-        if (prev) return prev.select(id)
-        throw new ItemNotFound({id})
+    forward_select(req) {
+        // print(`forward_select(${req.command}, ${req.args})`)
+        let prev = this._prev(req.current_ring)
+        if (prev) return prev.select(req)
+        throw new ItemNotFound({id: req.args[0]})
     }
 
     forward_update(ring, id, ...edits) {
