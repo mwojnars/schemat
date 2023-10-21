@@ -3,7 +3,7 @@ import {BinaryMap} from "../util/binary.js"
 import {INTEGER} from "../type.js";
 import {PlainRecord, SequenceSchema} from "./records.js";
 import {Item} from "../item.js";
-import {MemoryBlock} from "./block.js";
+import {MemoryBlock, YamlIndexBlock} from "./block.js";
 import {Sequence} from "./sequence.js";
 
 
@@ -25,10 +25,11 @@ export class Index extends Sequence {
 
     source              // Sequence that this index is derived from
 
-    constructor(source) {
+    constructor(ring, source, filename) {
         super()
         this.source = source
-        this.blocks = [new MemoryBlock()]
+        this.blocks = [new YamlIndexBlock(ring, filename)]
+        // this.blocks = [new MemoryBlock()]
         assert(source instanceof Sequence)
     }
 

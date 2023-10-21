@@ -3,7 +3,7 @@ import {fileURLToPath} from "url"
 
 import {print, T} from "../utils.js"
 import {Item} from "../item.js"
-import {Ring, ServerDB} from "../db/db_srv.js"
+import {ServerDB} from "../db/db_srv.js"
 
 
 const __filename = fileURLToPath(import.meta.url)       // or: process.argv[1]

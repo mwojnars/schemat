@@ -37,6 +37,7 @@ export class Ring extends Item {
 
         let {file} = opts
         this.opts = opts
+        this.file = file
         this.name = name || (file && path.basename(file, path.extname(file)))
 
         let {readonly = false, start_iid = 0, stop_iid} = opts
@@ -52,8 +53,10 @@ export class Ring extends Item {
     }
 
     async _init_indexes() {
+        let filename = this.file.replace(/\.yaml$/, '.idx_category_item.jl')
+
         this.indexes = new Map([
-            ['idx_category_item', new IndexByCategory(this.data)],      // index of item IDs sorted by parent category ID
+            ['idx_category_item', new IndexByCategory(this, this.data, filename)],      // index of item IDs sorted by parent category ID
         ])
 
         for await (let record /*ItemRecord*/ of this.scan_all()) {

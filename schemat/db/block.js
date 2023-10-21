@@ -287,7 +287,7 @@ export class YamlIndexBlock extends MemoryBlock {
 
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlIndexStorage(filename, ring, this)
+        this.storage = new YamlIndexStorage(filename)
     }
 }
 
@@ -299,7 +299,6 @@ export class YamlIndexStorage extends MemoryStorage {
     constructor(filename, ring) {
         super()
         this.filename = filename
-        this.ring = ring
     }
 
     async open() {
@@ -322,7 +321,7 @@ export class YamlIndexStorage extends MemoryStorage {
         print(`YamlIndexStorage flushing ${this.records.size} records to ${this.filename}...`)
 
         let lines = [...this.records.entries()].map(([binary_key, json_value]) => {
-            let key = Array.from(binary_key)
+            let key = JSON.stringify(Array.from(binary_key))
             return json_value ? `[${key}, ${json_value}]` : `[${key}]`
         })
 
@@ -330,7 +329,7 @@ export class YamlIndexStorage extends MemoryStorage {
         // let lines = recs.map(rec => JSON.stringify(rec) + '\n')
         // let lines = recs.map(([key, value]) => `key, value\n`)
 
-        fs.appendFileSync(this.filename, lines.join(''), 'utf8')
+        fs.writeFileSync(this.filename, lines.join('\n'), 'utf8')
     }
 }
 
