@@ -14,12 +14,17 @@ export class Actor {
 }
 
 export class RequestStep {
-    actor               // object that processed the request at this step: a database, ring, sequence, block, ...
-    role                // type of actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
+    actor           // object that processed the request at this step: a database, ring, sequence, block, ...
+    role            // type of the actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
 
-    constructor(actor) {
+    command         // (optional) command name, e.g.: 'select', 'update', 'delete', 'insert', ...
+    args            // (optional) command arguments, e.g. [id, data] for 'save' command
+
+    constructor(actor, command, args) {
         this.actor = actor
-        this.role = actor.role || actor.constructor.role
+        this.role = actor.constructor.role
+        this.command = command
+        this.args = args
     }
 }
 
@@ -32,17 +37,28 @@ export class DataRequest {
        The request object can be serialized to binary and sent over TCP or Kafka to another node in the cluster.
      */
 
-    origin              // node that originated the request and will receive the response
-    ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
+    // uuid                // unique identifier of the request, global across the cluster; for logging and debugging
+    // ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
+    //
+    // origin              // node that originated the request and will receive the response
+    // database            // database that received the request
+    // ring                // database ring that received the request
+    // sequence            // data or index sequence that received the request - owner of the target block
+    // block               // target block that will process the request and send the response; for logging and debugging
+    // response            // ??
 
-    database            // database that received the request
-    ring                // database ring that received the request
-    sequence            // data or index sequence that received the request - owner of the target block
-    block               // target block that will process the request and send the response; for logging and debugging
+    path = []              // array of RequestStep(s) that the request has gone through so far
 
-    response            // ??
+    command                 // the most recent `command` on the path that was not undefined
+    args                    // array of arguments that was provided for the `command` in its corresponding step
 
-    path                // array of RequestStep(s) that the request has gone through so far
+    // current_[ROLE] properties contain the last actor on the `path` of a given type:
+    // - current_db
+    // - current_ring
+    // - current_data
+    // - current_index
+    // - current_block
+    // etc...
 
 
     constructor({origin, ident, database, ring, sequence, block} = {}) {
@@ -56,25 +72,36 @@ export class DataRequest {
 
     clone()     { return T.clone(this) }
 
-    next(...actors) {
-        /* Append `steps` to the request path and return this object. */
-        this.path = this.path || []
-        for (const actor of actors)
-            this.path.push(new RequestStep(actor))
+    make_step(actor, command, ...args) {
+        /* Append a new step to the request path and return this object. */
+        const step = new RequestStep(actor, command, args)
+        this.path.push(step)
+
+        if (step.role) this[`current_${step.role}`] = actor
+        if (command) {
+            this.command = command
+            this.args = args
+        }
+
         return this
     }
 
-    append_path(path = {}) {
-        // copy all properties from `path` to this request object
-        for (const [key, value] of Object.entries(path)) {
-            assert(!this[key])
-            this[key] = value
-        }
-        return this
-    }
+    // req.current_ring
+    // req.current_step .current_actor .current_role .current_command .current_args
+
+    // back_step() {}  // remove the last step from the path
+
+    // append_path(path = {}) {
+    //     // copy all properties from `path` to this request object
+    //     for (const [key, value] of Object.entries(path)) {
+    //         assert(!this[key])
+    //         this[key] = value
+    //     }
+    //     return this
+    // }
 
     encode_id(id) {
-        /* Use the ring's data schema to encode item ID to a binary key. */
+        /* Use the ring's data schema to encode item ID as a binary key. */
         if (id === undefined) return undefined
         return this.ring.data.schema.encode_key([id])
     }

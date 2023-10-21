@@ -85,7 +85,7 @@ export class DataSequence extends Sequence {
     _prepare(req, id) {
         let key = this._make_key(id)
         let block = this._find_block(key)
-        req.append_path({sequence: this, block})
+        req.make_step(this).make_step(block)
         return [key, block]
     }
 
