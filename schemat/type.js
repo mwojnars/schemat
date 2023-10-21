@@ -45,13 +45,18 @@ export class Type {
         impute   : undefined,   // a function to be used for imputation of missing values; `this` references the item;
                                 // only called for non-repeated properties, when `default`==undefined and there are no inherited values
 
-        // reverse              // if true, the field sorts in descending order in UI and/or in DB indexes
-
         // readonly : undefined,   // if true, the field described by this type cannot be edited by the user;
         // hidden   : undefined,   // if true, the field described by this type is not displayed in the UI;
 
-        editable : true,        // if true, the field described by this type can be edited by the user;
+        // locked  : undefined,   // if true, the field described by this type cannot be modified by the user in the UI
+        editable : true,        // if false, the field described by this type cannot be edited by the user in the UI;
                                 // typically set to false for imputed fields
+
+        immutable: undefined,   // if true, the property described by this type cannot be modified after item's creation, neither by the user nor by the system;
+                                // for example, immutable=true for the `source` sequence of a derived index (to change the source you should recreate the index)
+
+        // collation: undefined,  // collation to be used for sorting and comparison of values of this type; if undefined, the default collation is used
+        // descending           // if true, the field sorts in descending order in UI and/or in DB indexes
 
         // TODO: to be added in the future...
         // deprecated: undefined,   // indicator that this field should no longer be used; for smooth transition from one type to another
