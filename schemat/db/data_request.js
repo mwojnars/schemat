@@ -65,7 +65,7 @@ export class DataRequest {
         this.origin = origin
         this.ident = ident
         this.database = database || ring.db
-        this.ring = ring
+        this.current_ring = ring
         this.sequence = sequence
         this.block = block
     }
@@ -103,12 +103,12 @@ export class DataRequest {
     encode_id(id) {
         /* Use the ring's data schema to encode item ID as a binary key. */
         if (id === undefined) return undefined
-        return this.ring.data.schema.encode_key([id])
+        return this.current_ring.data.schema.encode_key([id])
     }
 
-    forward_select(id)                  { return this.database.forward_select(this.ring, id) }
-    forward_update(id, ...edits)        { return this.database.forward_update(this.ring, id, ...edits) }
-    forward_save(id, data)              { return this.database.forward_save(this.ring, id, data) }
-    forward_delete(id)                  { return this.database.forward_delete(this.ring, id) }
+    forward_select(id)                  { return this.database.forward_select(this.current_ring, id) }
+    forward_update(id, ...edits)        { return this.database.forward_update(this.current_ring, id, ...edits) }
+    forward_save(id, data)              { return this.database.forward_save(this.current_ring, id, data) }
+    forward_delete(id)                  { return this.database.forward_delete(this.current_ring, id) }
 }
 

@@ -96,7 +96,7 @@ export class Block extends Item {
     async propagate(req, key, data_old = null, data_new = null) {
         /* Propagate a change in this block to derived Sequences in the same ring. */
         const change = new RecordChange(key, data_old, data_new)
-        return req.ring.propagate(change)
+        return req.current_ring.propagate(change)
     }
 }
 
@@ -120,9 +120,9 @@ export class DataBlock extends Block {
     async insert(req, id, data) {
         // calculate the `id` if not provided, update `autoincrement`, and write the data
         if (id !== undefined) await this.assertUniqueID(id)                 // the uniqueness check is only needed when the ID came from the caller;
-        else id = Math.max(this.autoincrement + 1, req.ring.start_iid)      // use the next available ID
+        else id = Math.max(this.autoincrement + 1, req.current_ring.start_iid)      // use the next available ID
 
-        req.ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
+        req.current_ring.assertValidID(id, `candidate ID for a new item is outside of the valid set for this ring`)
 
         this.autoincrement = Math.max(id, this.autoincrement)
 
@@ -147,7 +147,7 @@ export class DataBlock extends Block {
         for (const edit of edits)
             data = edit.process(data)
 
-        return req.ring.writable() ? this.put(req, key, data) : req.forward_save(id, data)
+        return req.current_ring.writable() ? this.put(req, key, data) : req.forward_save(id, data)
     }
 
     async delete(req, id) {
