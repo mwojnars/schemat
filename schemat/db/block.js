@@ -318,7 +318,7 @@ export class YamlIndexStorage extends MemoryStorage {
         this.records.clear()
 
         for (let [key, value] of records)
-            this.records.set(Uint8Array.from(key), JSON.stringify(value))
+            this.records.set(Uint8Array.from(key), value ? JSON.stringify(value) : '')
     }
 
     async flush() {

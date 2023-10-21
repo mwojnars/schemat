@@ -59,13 +59,16 @@ export class Ring extends Item {
             ['idx_category_item', new IndexByCategory(this, this.data, filename)],      // index of item IDs sorted by parent category ID
         ])
 
-        for await (let record /*ItemRecord*/ of this.scan_all()) {
-            for (let index of this.indexes.values()) {
-                const binary_key = this.data.schema.encode_key([record.id])
-                const change = new RecordChange(binary_key, null, record.data_json)
-                await index.apply(change)
-            }
-        }
+        for (let index of this.indexes.values())
+            await index.open()
+
+        // for await (let record /*ItemRecord*/ of this.scan_all()) {
+        //     for (let index of this.indexes.values()) {
+        //         const binary_key = this.data.schema.encode_key([record.id])
+        //         const change = new RecordChange(binary_key, null, record.data_json)
+        //         await index.apply(change)
+        //     }
+        // }
     }
 
     async erase() {

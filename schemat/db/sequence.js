@@ -27,6 +27,14 @@ export class Sequence {    // Series?
 
     _find_block(binary_key)     { return this.blocks[0] }
 
+    async open() {
+        for (let block of this.blocks) {
+            await block
+            await block.open()
+            block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
+        }
+    }
+
     async* scan({start = null, stop = null, limit = null, reverse = false, batch_size = 100} = {}) {
         /* Scan this sequence in the [`start`, `stop`) range and yield BinaryRecords.
            If `limit` is defined, yield at most `limit` items.
@@ -62,14 +70,6 @@ export class DataSequence extends Sequence {
         // block is a local file, or an item that must be loaded from a lower ring
         let block = file ? new YamlDataBlock(ring, file) : globalThis.registry.getLoaded(item)
         this.blocks = [block]
-    }
-
-    async open() {
-        for (let block of this.blocks) {
-            await block
-            await block.open()
-            block.setExpiry('never')            // prevent eviction of this item from Registry's cache (!)
-        }
     }
 
     _make_key(id)   { return id !== undefined ? this.schema.encode_key([id]) : undefined }
