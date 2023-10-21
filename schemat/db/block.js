@@ -29,12 +29,10 @@ export class Block extends Item {
      */
 
     FLUSH_TIMEOUT = 1       // todo: make the timeout configurable and 0 by default
-
     autoincrement = 0       // current maximum IID; a new record is assigned iid=autoincrement+1
 
     ring                    // the ring this block belongs to
     dirty                   // true when the block contains unsaved modifications
-
     storage                 // storage for this block's records
 
     constructor(ring) {
@@ -63,8 +61,15 @@ export class Block extends Item {
     }
 
     async del(req, key) {
-        return this.storage.del(key)
-        // TODO: this.propagate()
+        let data = await this.storage.get(key)
+        if (data === undefined) return false        // TODO: inside index, notify about data inconsistency (there should no missing records)
+
+        let deleted = this.storage.del(key)
+        this.dirty = true
+        this.flush()
+        if (req) await this.propagate(req, key, data)               // TODO: drop "if"
+
+        return deleted
     }
 
     async *scan(opts = {}) { yield* this.storage.scan(opts) }
