@@ -117,12 +117,12 @@ export class Ring extends Item {
         item.id = await this.data.insert(REQ(this), item.id, item.dumpData())
     }
 
-    async update(id, ...edits) {
+    async update(req) {
         /* Apply `edits` to an item's data and store under the `id` in this ring, or any higher one that allows
            writing this particular `id`. The `id` is searched for in the current ring and below.
            FUTURE: `edits` may contain tests, for example, for a specific item's version to apply the edits to.
          */
-        return this.data.update(REQ(this), id, ...edits)
+        return this.data.update(req.make_step(this), ...req.args)
     }
 
     async save(id, data) {
@@ -265,8 +265,15 @@ export class ServerDB extends Database {
 
     /***  Data access & modification (CRUD operations)  ***/
 
-    async select(id)                { return this.forward_select(new DataRequest(this, 'select', id)) }    // returns a json string (`data`) or undefined
-    async update(id, ...edits)      { return this.forward_update(null, id, ...edits) }
+    async select(id) {
+        // returns a json string (`data`) or undefined
+        return this.forward_select(new DataRequest(this, 'select', id))
+    }
+
+    async update(id, ...edits) {
+        assert(edits.length, 'missing edits')
+        return this.forward_update(new DataRequest(this, 'update', id, ...edits))
+    }
 
     async update_full(item) {
         /* Replace all data inside the item's record in DB with item.data. */
@@ -313,13 +320,12 @@ export class ServerDB extends Database {
         throw new ItemNotFound({id: req.args[0]})
     }
 
-    forward_update(ring, id, ...edits) {
+    forward_update(req) {
         /* Forward an update(id, edits) operation to a lower ring; called during the top-down search phase,
            if the current `ring` doesn't contain the requested `id`. */
-        assert(edits.length, 'missing edits')
-        let prev = this._prev(ring)
-        if (prev) return prev.update(id, ...edits)
-        throw new ItemNotFound({id})
+        let prev = this._prev(req.current_ring)
+        if (prev) return prev.update(req)
+        throw new ItemNotFound({id: req.args[0]})
     }
 
     forward_save(ring, id, data) {

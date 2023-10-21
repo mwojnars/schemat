@@ -114,7 +114,7 @@ export class DataBlock extends Block {
     async select(req, id) {
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
-        return data !== undefined ? data : req.forward_select(id)
+        return data !== undefined ? data : req.forward_select()
     }
 
     async insert(req, id, data) {
@@ -142,7 +142,7 @@ export class DataBlock extends Block {
          */
         let key = req.encode_id(id)
         let data = await this.storage.get(key)
-        if (data === undefined) return req.forward_update(id, ...edits)
+        if (data === undefined) return req.forward_update()
 
         for (const edit of edits)
             data = edit.process(data)
