@@ -21,6 +21,8 @@ function REQ(ring) { return new DataRequest({ring}) }
 
 export class Ring extends Item {
 
+    static role = 'ring'    // for use in RequestStep and DataRequest
+
     data                    // DataSequence with all items of this ring
 
     db                      // the Database this ring belongs to
@@ -189,8 +191,9 @@ export class ServerDB extends Database {
        ring possible; while each update - on the innermost ring starting at the outermost ring containing a given ID.
        If ItemNotFound/ReadOnly is caught, the next ring is tried.
      */
+    static role = 'db'      // for use in RequestStep and DataRequest
 
-    rings = []          // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
+    rings = []              // [0] is the innermost ring (bottom of the stack), [-1] is the outermost ring (top)
 
 
     /***  Errors & internal checks  ***/

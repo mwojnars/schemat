@@ -3,9 +3,24 @@ import {assert, T} from "../utils.js";
 
 /**********************************************************************************************************************/
 
+export class Actor {
+    /* A "virtual" base interface for all classes that can process a data request.
+       Specifies what properties and methods a request processor should have.
+       This class is defined here for documenting purposes; it is not actually used anywhere in the codebase,
+       only because JavaScript doesn't have interfaces nor multiple inheritance.
+     */
+
+    static role
+}
+
 export class RequestStep {
-    type                // type of the object, e.g., 'db', 'ring', 'data', 'index', 'block'
-    object              // object that the request is being sent to, e.g., a database, ring, sequence, or block
+    actor               // object that processed the request at this step: a database, ring, sequence, block, ...
+    role                // type of actor: 'app', 'db', 'ring', 'data', 'index', 'block', ... or undefined
+
+    constructor(actor) {
+        this.actor = actor
+        this.role = actor.role || actor.constructor.role
+    }
 }
 
 export class DataRequest {
@@ -41,8 +56,12 @@ export class DataRequest {
 
     clone()     { return T.clone(this) }
 
-    next(...steps) {
-        /* Append `steps` to the request path and return the request object. */
+    next(...actors) {
+        /* Append `steps` to the request path and return this object. */
+        this.path = this.path || []
+        for (const actor of actors)
+            this.path.push(new RequestStep(actor))
+        return this
     }
 
     append_path(path = {}) {
