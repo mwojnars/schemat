@@ -288,15 +288,15 @@ export class YamlDataStorage extends MemoryStorage {
  **
  */
 
-export class YamlIndexBlock extends MemoryBlock {
+export class JsonlIndexBlock extends MemoryBlock {
 
     constructor(ring, filename) {
         super(ring)
-        this.storage = new YamlIndexStorage(filename)
+        this.storage = new JsonIndexStorage(filename)
     }
 }
 
-export class YamlIndexStorage extends MemoryStorage {
+export class JsonIndexStorage extends MemoryStorage {
     /* Items stored in a YAML file. For use during development only. */
 
     filename
