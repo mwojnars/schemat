@@ -49,30 +49,34 @@ export class DataRequest {
 
     path = []              // array of RequestStep(s) that the request has gone through so far
 
-    command                 // the most recent `command` on the path that was not undefined
-    args                    // array of arguments that was provided for the `command` in its corresponding step
+    command                 // the most recent `command` on the path that's not null
+    args                    // array of arguments that accompany the `command` in its corresponding step
 
-    // current_[ROLE] properties contain the last actor on the `path` of a given type:
-    // - current_db
-    // - current_ring
-    // - current_data
-    // - current_index
-    // - current_block
+    // .current_[ROLE] properties contain the last actor on the `path` of a given type:
+    //   - current_db
+    //   - current_ring
+    //   - current_data
+    //   - current_index
+    //   - current_block
     // etc...
 
 
-    constructor({origin, ident, database, ring, sequence, block} = {}) {
-        this.origin = origin
-        this.ident = ident
-        this.database = database || ring.db
-        this.current_ring = ring
-        this.sequence = sequence
-        this.block = block
+    // constructor({origin, ident, database, ring, sequence, block} = {}) {
+    //     this.origin = origin
+    //     this.ident = ident
+    //     this.current_db = database || ring.db
+    //     this.current_ring = ring
+    //     this.sequence = sequence
+    //     this.block = block
+    // }
+
+    constructor(actor = null, command = null, ...args) {
+        if (actor) this.make_step(actor, command, args)
     }
 
     clone()     { return T.clone(this) }
 
-    make_step(actor, command, ...args) {
+    make_step(actor, command = null, ...args) {
         /* Append a new step to the request path and return this object. */
         const step = new RequestStep(actor, command, args)
         this.path.push(step)
@@ -82,7 +86,6 @@ export class DataRequest {
             this.command = command
             this.args = args
         }
-
         return this
     }
 
@@ -106,9 +109,9 @@ export class DataRequest {
         return this.current_ring.data.schema.encode_key([id])
     }
 
-    forward_select(id)                  { return this.database.forward_select(this.current_ring, id) }
-    forward_update(id, ...edits)        { return this.database.forward_update(this.current_ring, id, ...edits) }
-    forward_save(id, data)              { return this.database.forward_save(this.current_ring, id, data) }
-    forward_delete(id)                  { return this.database.forward_delete(this.current_ring, id) }
+    forward_select(id)                  { return this.current_db.forward_select(this.current_ring, id) }
+    forward_update(id, ...edits)        { return this.current_db.forward_update(this.current_ring, id, ...edits) }
+    forward_save(id, data)              { return this.current_db.forward_save(this.current_ring, id, data) }
+    forward_delete(id)                  { return this.current_db.forward_delete(this.current_ring, id) }
 }
 

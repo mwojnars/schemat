@@ -16,7 +16,7 @@ import {DataSequence} from "./sequence.js";
  **
  */
 
-function REQ(ring) { return new DataRequest({ring}) }
+function REQ(ring) { return new DataRequest(ring.db).make_step(ring) }
 
 
 export class Ring extends Item {
