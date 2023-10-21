@@ -19,6 +19,7 @@ export class RequestStep {
 
     command         // (optional) command name, e.g.: 'select', 'update', 'delete', 'insert', ...
     args            // (optional) command arguments, e.g. [id, data] for 'save' command
+    // response     // (optional) response from the actor after the step is completed
 
     constructor(actor, command, args) {
         this.actor = actor
@@ -39,42 +40,32 @@ export class DataRequest {
 
     // uuid                // unique identifier of the request, global across the cluster; for logging and debugging
     // ident               // identifier of the request, local to the origin node; for matching incoming responses with requests
-    //
-    // origin              // node that originated the request and will receive the response
-    // database            // database that received the request
-    // ring                // database ring that received the request
-    // sequence            // data or index sequence that received the request - owner of the target block
-    // block               // target block that will process the request and send the response; for logging and debugging
-    // response            // ??
+    // debug               // true if detailed debugging information should be logged for this request
 
     path = []              // array of RequestStep(s) that the request has gone through so far
 
     command                 // the most recent `command` on the path that's not null
     args                    // array of arguments that accompany the `command` in its corresponding step
 
-    // .current_[ROLE] properties contain the last actor on the `path` of a given type:
-    //   - current_db
-    //   - current_ring
-    //   - current_data
-    //   - current_index
-    //   - current_block
-    // etc...
+    // `current_[ROLE]` properties contain the last actor on the `path` of a given type;
+    // they are updated automatically when a new step is added to the path; these properties include:
+    current_db
+    current_ring
+    current_data
+    current_index
+    current_block
+    // etc... (whatever roles are defined for actors on the path)
 
-
-    // constructor({origin, ident, database, ring, sequence, block} = {}) {
-    //     this.origin = origin
-    //     this.ident = ident
-    //     this.current_db = database || ring.db
-    //     this.current_ring = ring
-    //     this.sequence = sequence
-    //     this.block = block
-    // }
 
     constructor(actor = null, command = null, ...args) {
         if (actor) this.make_step(actor, command, args)
     }
 
-    clone()     { return T.clone(this) }
+    clone() {
+        let dup = T.clone(this)
+        dup.path = [...this.path]           // individual steps are NOT cloned!
+        return dup
+    }
 
     make_step(actor, command = null, ...args) {
         /* Append a new step to the request path and return this object. */
@@ -88,20 +79,6 @@ export class DataRequest {
         }
         return this
     }
-
-    // req.current_ring
-    // req.current_step .current_actor .current_role .current_command .current_args
-
-    // back_step() {}  // remove the last step from the path
-
-    // append_path(path = {}) {
-    //     // copy all properties from `path` to this request object
-    //     for (const [key, value] of Object.entries(path)) {
-    //         assert(!this[key])
-    //         this[key] = value
-    //     }
-    //     return this
-    // }
 
     encode_id(id) {
         /* Use the ring's data schema to encode item ID as a binary key. */
